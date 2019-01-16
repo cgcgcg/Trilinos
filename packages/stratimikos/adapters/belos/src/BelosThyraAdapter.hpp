@@ -339,6 +339,12 @@ namespace Belos {
       // Create a multivector to hold the result (m by n)
       int m = A.domain()->dim();
       int n = mv.domain()->dim();
+#if 0
+      for (int i = 0; i < m; i++)
+        for (int j = 0; j < n; j++)
+          B(i,j) = mv.col(j)->dot(*A.col(i));
+      return;
+#endif
       // Create a view of the B object!
       Teuchos::RCP< TMVB >
         B_thyra = Thyra::createMembersView(
