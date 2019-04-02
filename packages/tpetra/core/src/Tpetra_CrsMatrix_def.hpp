@@ -7024,7 +7024,7 @@ namespace Tpetra {
       return;
     }
     const Teuchos::Comm<int>& comm = *pComm;
-    const int myRank = comm.getSize ();
+    const int myRank = comm.getRank ();
 
     std::unique_ptr<std::string> prefix;
     if (verbose) {
