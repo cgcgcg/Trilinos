@@ -54,6 +54,10 @@
 #include <sstream>
 #include <type_traits>
 
+#include <Teuchos_DefaultMpiComm.hpp>
+#include <Teuchos_OpaqueWrapper.hpp>
+#include "mpi.h"
+
 namespace Tpetra {
 
   namespace Details {
@@ -65,7 +69,8 @@ namespace Tpetra {
       DISTRIBUTOR_ISEND, // Use MPI_Isend (Teuchos::isend)
       DISTRIBUTOR_RSEND, // Use MPI_Rsend (Teuchos::readySend)
       DISTRIBUTOR_SEND,  // Use MPI_Send (Teuchos::send)
-      DISTRIBUTOR_SSEND  // Use MPI_Ssend (Teuchos::ssend)
+      DISTRIBUTOR_SSEND, // Use MPI_Ssend (Teuchos::ssend)
+      DISTRIBUTOR_ALLTOALL     // Use MPI Alltoall
     };
 
     /// \brief Convert an EDistributorSendType enum value to a string.
@@ -1246,12 +1251,14 @@ namespace Tpetra {
       std::cerr << os.str();
     }
 
+    const bool setupRequests = (sendType != Details::DISTRIBUTOR_ALLTOALL);
+
     // Post the nonblocking receives.  It's common MPI wisdom to post
     // receives before sends.  In MPI terms, this means favoring
     // adding to the "posted queue" (of receive requests) over adding
     // to the "unexpected queue" (of arrived messages not yet matched
     // with a receive).
-    {
+    if (setupRequests) {
 #ifdef HAVE_TPETRA_DISTRIBUTOR_TIMINGS
       Teuchos::TimeMonitor timeMonRecvs (*timer_doPosts3TA_recvs_);
 #endif // HAVE_TPETRA_DISTRIBUTOR_TIMINGS
@@ -1387,6 +1394,9 @@ namespace Tpetra {
             ssend<int, Packet> (tmpSend.getRawPtr (),
                                 as<int> (tmpSend.size ()),
                                 procsTo_[p], tag, *comm_);
+          }
+          else if (sendType == Details::DISTRIBUTOR_ALLTOALL) {
+            // nothing to do
           } else {
             TEUCHOS_TEST_FOR_EXCEPTION(
               true, std::logic_error,
@@ -1398,6 +1408,49 @@ namespace Tpetra {
         else { // "Sending" the message to myself
           selfNum = p;
         }
+      }
+
+      if (sendType == Details::DISTRIBUTOR_ALLTOALL) {
+        ArrayRCP<int> sendcounts, sdispls, recvcounts, rdispls;
+        sendcounts.resize(comm_->getSize());
+        sdispls.resize(comm_->getSize());
+        recvcounts.resize(comm_->getSize());
+        rdispls.resize(comm_->getSize());
+
+        size_t curBufOffset = 0;
+        for (size_type i = 0; i < actualNumReceives; ++i) {
+          const size_t curBufLen = lengthsFrom_[i] * numPackets;
+          if (procsFrom_[i] != myRank) {
+            rdispls[procsFrom_[i]] = curBufOffset * sizeof(Packet);
+            recvcounts[procsFrom_[i]] = curBufLen * sizeof(Packet);
+          }
+          else { // Receiving from myself
+            selfReceiveOffset = curBufOffset; // Remember the self-recv offset
+          }
+          curBufOffset += curBufLen;
+        }
+
+        for (size_t i = 0; i < numBlocks; ++i) {
+          size_t p = i + procIndex;
+          if (p > (numBlocks - 1)) {
+            p -= numBlocks;
+          }
+          sdispls[procsTo_[p]] = startsTo_[p] * numPackets * sizeof(Packet);
+          sendcounts[procsTo_[p]] = lengthsTo_[p] * numPackets * sizeof(Packet);
+        }
+
+        Teuchos::RCP<const Teuchos::OpaqueWrapper<MPI_Comm> > rawComm = Teuchos::rcp_dynamic_cast<const Teuchos::MpiComm<int> >(comm_)->getRawMpiComm();
+
+        if (verbose_) {
+          std::ostringstream os;
+          os << *prefix << "Fast: Alltoallv" << endl;
+          std::cerr << os.str ();
+        }
+        Teuchos::ConstValueTypeSerializationBuffer<int,Packet> charSendBuffer(exports.size(), exports.getRawPtr());
+        Teuchos::ValueTypeSerializationBuffer<int,Packet> charRecvBuffer(imports.size(), imports.getRawPtr());
+        MPI_Alltoallv(charSendBuffer.getCharBuffer(), sendcounts.getRawPtr(), sdispls.getRawPtr(), MPI_CHAR,
+                      charRecvBuffer.getCharBuffer(), recvcounts.getRawPtr(), rdispls.getRawPtr(), MPI_CHAR,
+                      *rawComm);
       }
 
       if (selfMessage_) {
@@ -1643,12 +1696,14 @@ namespace Tpetra {
       as<size_type> (selfMessage_ ? 1 : 0);
     requests_.resize (0);
 
+    const bool setupRequests = (sendType != Details::DISTRIBUTOR_ALLTOALL);
+
     // Post the nonblocking receives.  It's common MPI wisdom to post
     // receives before sends.  In MPI terms, this means favoring
     // adding to the "posted queue" (of receive requests) over adding
     // to the "unexpected queue" (of arrived messages not yet matched
     // with a receive).
-    {
+    if (setupRequests) {
 #ifdef HAVE_TPETRA_DISTRIBUTOR_TIMINGS
       Teuchos::TimeMonitor timeMonRecvs (*timer_doPosts4TA_recvs_);
 #endif // HAVE_TPETRA_DISTRIBUTOR_TIMINGS
@@ -1773,6 +1828,9 @@ namespace Tpetra {
                                 as<int> (tmpSend.size ()),
                                 procsTo_[p], tag, *comm_);
           }
+          else if (sendType == Details::DISTRIBUTOR_ALLTOALL) {
+            // nothing to do
+          }
           else {
             TEUCHOS_TEST_FOR_EXCEPTION(
               true, std::logic_error,
@@ -1784,6 +1842,59 @@ namespace Tpetra {
         else { // "Sending" the message to myself
           selfNum = p;
         }
+      }
+
+      if (sendType == Details::DISTRIBUTOR_ALLTOALL) {
+        ArrayRCP<int> sendcounts, sdispls, recvcounts, rdispls;
+        sendcounts.resize(comm_->getSize());
+        sdispls.resize(comm_->getSize());
+        recvcounts.resize(comm_->getSize());
+        rdispls.resize(comm_->getSize());
+
+        size_t curBufferOffset = 0;
+        size_t curLIDoffset = 0;
+        for (size_type i = 0; i < actualNumReceives; ++i) {
+          size_t totalPacketsFrom_i = 0;
+          for (size_t j = 0; j < lengthsFrom_[i]; ++j) {
+            totalPacketsFrom_i += numImportPacketsPerLID[curLIDoffset+j];
+          }
+          curLIDoffset += lengthsFrom_[i];
+          if (procsFrom_[i] != myProcID && totalPacketsFrom_i) {
+            rdispls[procsFrom_[i]] = curBufferOffset * sizeof(Packet);
+            recvcounts[procsFrom_[i]] = totalPacketsFrom_i * sizeof(Packet);
+
+          }
+          else { // Receiving these packet(s) from myself
+            selfReceiveOffset = curBufferOffset; // Remember the offset
+          }
+          curBufferOffset += totalPacketsFrom_i;
+        }
+
+        for (size_t i = 0; i < numBlocks; ++i) {
+          size_t p = i + procIndex;
+          if (p > (numBlocks - 1)) {
+            p -= numBlocks;
+          }
+          if (procsTo_[p] != myProcID && packetsPerSend[p] > 0) {
+            sdispls[procsTo_[p]] = sendPacketOffsets[p] * sizeof(Packet);
+            sendcounts[procsTo_[p]] = packetsPerSend[p] * sizeof(Packet);
+          }
+
+        }
+
+        Teuchos::RCP<const Teuchos::OpaqueWrapper<MPI_Comm> > rawComm = Teuchos::rcp_dynamic_cast<const Teuchos::MpiComm<int> >(comm_)->getRawMpiComm();
+
+        if (verbose_) {
+          std::ostringstream os;
+          os << "Proc " << myProcID
+             << ": doPosts(4 args, Teuchos::ArrayRCP, fast) Alltoallv" << endl;
+          std::cerr << os.str ();
+        }
+        Teuchos::ConstValueTypeSerializationBuffer<int,Packet> charSendBuffer(exports.size(), exports.getRawPtr());
+        Teuchos::ValueTypeSerializationBuffer<int,Packet> charRecvBuffer(imports.size(), imports.getRawPtr());
+        MPI_Alltoallv(charSendBuffer.getCharBuffer(), sendcounts.getRawPtr(), sdispls.getRawPtr(), MPI_CHAR,
+                      charRecvBuffer.getCharBuffer(), recvcounts.getRawPtr(), rdispls.getRawPtr(), MPI_CHAR,
+                      *rawComm);
       }
 
       if (selfMessage_) {
@@ -2237,12 +2348,14 @@ namespace Tpetra {
       std::cerr << os.str();
     }
 
+    const bool setupRequests = (sendType != Details::DISTRIBUTOR_ALLTOALL);
+
     // Post the nonblocking receives.  It's common MPI wisdom to post
     // receives before sends.  In MPI terms, this means favoring
     // adding to the "posted queue" (of receive requests) over adding
     // to the "unexpected queue" (of arrived messages not yet matched
     // with a receive).
-    {
+    if (setupRequests) {
 #ifdef HAVE_TPETRA_DISTRIBUTOR_TIMINGS
       Teuchos::TimeMonitor timeMonRecvs (*timer_doPosts3KV_recvs_);
 #endif // HAVE_TPETRA_DISTRIBUTOR_TIMINGS
@@ -2383,6 +2496,9 @@ namespace Tpetra {
             ssend<int> (tmpSend,
                         as<int> (tmpSend.size ()),
                         procsTo_[p], tag, *comm_);
+          }
+          else if (sendType == Details::DISTRIBUTOR_ALLTOALL) {
+            // nothing to do
           } else {
             TEUCHOS_TEST_FOR_EXCEPTION(
               true,
@@ -2395,6 +2511,55 @@ namespace Tpetra {
         else { // "Sending" the message to myself
           selfNum = p;
         }
+      }
+
+      if (sendType == Details::DISTRIBUTOR_ALLTOALL) {
+        typedef typename ExpView::non_const_value_type Packet;
+        using Kokkos::Compat::persistingView;
+
+        Teuchos::ArrayRCP<int> sendcounts, sdispls, recvcounts, rdispls;
+        size_t commSize = comm_->getSize();
+        sendcounts.resize(commSize);
+        sdispls.resize(commSize);
+        recvcounts.resize(commSize);
+        rdispls.resize(commSize);
+
+        size_t curBufferOffset = 0;
+        for (size_type i = 0; i < actualNumReceives; ++i) {
+          const size_t curBufLen = lengthsFrom_[i] * numPackets*sizeof(Packet);
+          if (procsFrom_[i] != myRank) {
+            rdispls[procsFrom_[i]] = curBufferOffset;
+            recvcounts[procsFrom_[i]] = curBufLen;
+          }
+          else { // Receiving from myself
+            selfReceiveOffset = curBufferOffset; // Remember the self-recv offset
+          }
+          curBufferOffset += curBufLen;
+        }
+
+        for (size_t i = 0; i < numBlocks; ++i) {
+          size_t p = i + procIndex;
+          if (p > (numBlocks - 1)) {
+            p -= numBlocks;
+          }
+          if (procsTo_[p] != myRank) {
+            sdispls[procsTo_[p]] = startsTo_[p]*numPackets*sizeof(Packet);
+            sendcounts[procsTo_[p]] = lengthsTo_[p]*numPackets*sizeof(Packet);
+          }
+        }
+
+        Teuchos::RCP<const Teuchos::OpaqueWrapper<MPI_Comm> > rawComm = Teuchos::rcp_dynamic_cast<const Teuchos::MpiComm<int> >(comm_)->getRawMpiComm();
+
+        // kick off alltoallv
+        if (verbose_) {
+          std::ostringstream os;
+          os << "Proc " << myRank << ": doPosts(3 args, Kokkos, fast): Calling Alltoallv" << endl;
+          std::cerr << os.str ();
+        }
+        MPI_Alltoallv(persistingView (exports).getRawPtr(), sendcounts.getRawPtr(), sdispls.getRawPtr(), MPI_CHAR,
+                      persistingView (imports).getRawPtr(), recvcounts.getRawPtr(), rdispls.getRawPtr(), MPI_CHAR,
+                      *rawComm);
+
       }
 
       if (selfMessage_) {
@@ -2665,12 +2830,14 @@ namespace Tpetra {
       as<size_type> (selfMessage_ ? 1 : 0);
     requests_.resize (0);
 
+    const bool setupRequests = (sendType != Details::DISTRIBUTOR_ALLTOALL);
+
     // Post the nonblocking receives.  It's common MPI wisdom to post
     // receives before sends.  In MPI terms, this means favoring
     // adding to the "posted queue" (of receive requests) over adding
     // to the "unexpected queue" (of arrived messages not yet matched
     // with a receive).
-    {
+    if (setupRequests) {
 #ifdef HAVE_TPETRA_DISTRIBUTOR_TIMINGS
       Teuchos::TimeMonitor timeMonRecvs (*timer_doPosts4KV_recvs_);
 #endif // HAVE_TPETRA_DISTRIBUTOR_TIMINGS
@@ -2794,6 +2961,9 @@ namespace Tpetra {
                         as<int> (tmpSend.size ()),
                         procsTo_[p], tag, *comm_);
           }
+          else if (sendType == Details::DISTRIBUTOR_ALLTOALL) {
+            // nothing to do
+          }
           else {
             TEUCHOS_TEST_FOR_EXCEPTION(
               true, std::logic_error,
@@ -2805,6 +2975,60 @@ namespace Tpetra {
         else { // "Sending" the message to myself
           selfNum = p;
         }
+      }
+
+      if (sendType == Details::DISTRIBUTOR_ALLTOALL) {
+
+        typedef typename ExpView::non_const_value_type Packet;
+        using Kokkos::Compat::persistingView;
+
+        Teuchos::ArrayRCP<int> sendcounts, sdispls, recvcounts, rdispls;
+        size_t commSize = comm_->getSize();
+        sendcounts.resize(commSize);
+        sdispls.resize(commSize);
+        recvcounts.resize(commSize);
+        rdispls.resize(commSize);
+
+        size_t curBufferOffset = 0;
+        size_t curLIDoffset = 0;
+        for (size_type i = 0; i < actualNumReceives; ++i) {
+          size_t totalPacketsFrom_i = 0;
+          for (size_t j = 0; j < lengthsFrom_[i]; ++j) {
+            totalPacketsFrom_i += numImportPacketsPerLID[curLIDoffset+j];
+          }
+          curLIDoffset += lengthsFrom_[i];
+          if (procsFrom_[i] != myProcID && totalPacketsFrom_i) {
+            rdispls[procsFrom_[i]] = curBufferOffset*sizeof(Packet);
+            recvcounts[procsFrom_[i]] = totalPacketsFrom_i*sizeof(Packet);
+          }
+          else { // Receiving these packet(s) from myself
+            selfReceiveOffset = curBufferOffset; // Remember the offset
+          }
+          curBufferOffset += totalPacketsFrom_i;
+        }
+
+        for (size_t i = 0; i < numBlocks; ++i) {
+          size_t p = i + procIndex;
+          if (p > (numBlocks - 1)) {
+            p -= numBlocks;
+          }
+          if (procsTo_[p] != myProcID) {
+            sdispls[procsTo_[p]] = sendPacketOffsets[p]*sizeof(Packet);
+            sendcounts[procsTo_[p]] = packetsPerSend[p]*sizeof(Packet);
+          }
+        }
+
+        Teuchos::RCP<const Teuchos::OpaqueWrapper<MPI_Comm> > rawComm = Teuchos::rcp_dynamic_cast<const Teuchos::MpiComm<int> >(comm_)->getRawMpiComm();
+
+        // kick off alltoallv
+        if (verbose_) {
+          std::ostringstream os;
+          os << "Proc " << myProcID << ": doPosts(4 args, Kokkos, fast) Calling Alltoallv" << endl;
+          std::cerr << os.str ();
+        }
+        MPI_Alltoallv(persistingView (exports).getRawPtr(), sendcounts.getRawPtr(), sdispls.getRawPtr(), MPI_CHAR,
+                      persistingView (imports).getRawPtr(), recvcounts.getRawPtr(), rdispls.getRawPtr(), MPI_CHAR,
+                      *rawComm);
       }
 
       if (selfMessage_) {
