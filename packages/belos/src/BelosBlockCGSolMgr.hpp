@@ -414,6 +414,8 @@ namespace Belos {
 
     //! Whether or not the parameters have been set (via \c setParameters()).
     bool isSet_;
+
+    Teuchos::RCP<CGIterationState<ScalarType,MV> > state_;
   };
 
 
@@ -942,9 +944,11 @@ ReturnType BlockCGSolMgr<ScalarType,MV,OP,true>::solve() {
       RCP<MV> R_0 = MVT::CloneViewNonConst( *(rcp_const_cast<MV>(problem_->getInitResVec())), currIdx );
 
       // Set the new state and initialize the solver.
-      CGIterationState<ScalarType,MV> newstate;
-      newstate.R = R_0;
-      block_cg_iter->initializeCG(newstate);
+      if (state_.is_null())
+        state_ = Teuchos::rcp(new CGIterationState<ScalarType,MV>());
+      state_->R = R_0;
+      block_cg_iter->initializeCG(*state_);
+      *state_ = block_cg_iter->getState();
 
       while(1) {
 

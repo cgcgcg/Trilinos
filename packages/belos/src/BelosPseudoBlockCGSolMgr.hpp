@@ -359,6 +359,8 @@ namespace Belos {
 
     // Internal state variables.
     bool isSet_;
+
+    Teuchos::RCP<CGIterationState<ScalarType,MV> > state_;
   };
 
 
@@ -831,9 +833,11 @@ ReturnType PseudoBlockCGSolMgr<ScalarType,MV,OP,true>::solve ()
       Teuchos::RCP<MV> R_0 = MVT::CloneViewNonConst( *(Teuchos::rcp_const_cast<MV>(problem_->getInitResVec())), currIdx );
 
       // Get a new state struct and initialize the solver.
-      CGIterationState<ScalarType,MV> newState;
-      newState.R = R_0;
-      block_cg_iter->initializeCG(newState);
+      if (state_.is_null())
+        state_ = Teuchos::rcp(new CGIterationState<ScalarType,MV>());
+      state_->R = R_0;
+      block_cg_iter->initializeCG(*state_);
+      *state_ = block_cg_iter->getState();
 
       while(1) {
 

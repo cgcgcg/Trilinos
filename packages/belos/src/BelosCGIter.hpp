@@ -161,6 +161,7 @@ class CGIter : virtual public CGIteration<ScalarType,MV,OP> {
     state.P = P_;
     state.AP = AP_;
     state.Z = Z_;
+    state.S = S_;
     return state;
   }
 
@@ -253,7 +254,7 @@ class CGIter : virtual public CGIteration<ScalarType,MV,OP> {
   // Internal methods
   //
   //! Method for initalizing the state storage needed by CG.
-  void setStateSize();
+  void setStateSize(CGIterationState<ScalarType,MV>& newstate);
   
   //
   // Classes inputed through constructor that define the linear problem to be solved.
@@ -339,7 +340,7 @@ class CGIter : virtual public CGIteration<ScalarType,MV,OP> {
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // Setup the state storage.
   template <class ScalarType, class MV, class OP>
-  void CGIter<ScalarType,MV,OP>::setStateSize ()
+  void CGIter<ScalarType,MV,OP>::setStateSize (CGIterationState<ScalarType,MV>& newstate)
   {
     if (!stateStorageInitialized_) {
 
@@ -351,13 +352,16 @@ class CGIter : virtual public CGIteration<ScalarType,MV,OP> {
 	return;
       }
       else {
-	
+
 	// Initialize the state storage
-	// If the subspace has not be initialized before, generate it using the LHS or RHS from lp_.
-	if (R_ == Teuchos::null) {
-	  // Get the multivector that is not null.
-	  Teuchos::RCP<const MV> tmp = ( (rhsMV!=Teuchos::null)? rhsMV: lhsMV );
-	  TEUCHOS_TEST_FOR_EXCEPTION(tmp == Teuchos::null,std::invalid_argument,
+        Teuchos::RCP<const MV> tmp = ( (rhsMV!=Teuchos::null)? rhsMV: lhsMV );
+
+        if (!newstate.S.is_null() && MVT::GetNumberVecs(*newstate.S) == 2) {
+          S_ = Teuchos::rcp_const_cast<MV>(newstate.S);
+          R_ = Teuchos::rcp_const_cast<MV>(newstate.R);
+          Z_ = Teuchos::rcp_const_cast<MV>(newstate.Z);
+        } else {
+          TEUCHOS_TEST_FOR_EXCEPTION(tmp == Teuchos::null,std::invalid_argument,
 			     "Belos::CGIter::setStateSize(): linear problem does not specify multivectors to clone from.");
           S_ = MVT::Clone( *tmp, 2 );
           std::vector<int> index(1,0);
@@ -365,9 +369,20 @@ class CGIter : virtual public CGIteration<ScalarType,MV,OP> {
           R_ = MVT::CloneViewNonConst( *S_, index );
           index[0] = 1;
           Z_ = MVT::CloneViewNonConst( *S_, index );
-	  P_ = MVT::Clone( *tmp, 1 );
-	  AP_ = MVT::Clone( *tmp, 1 );
-
+        }
+        if (!newstate.P.is_null() && MVT::GetNumberVecs(*newstate.P) == 1) {
+          P_ = Teuchos::rcp_const_cast<MV>(newstate.P);
+        } else {
+          TEUCHOS_TEST_FOR_EXCEPTION(tmp == Teuchos::null,std::invalid_argument,
+			     "Belos::CGIter::setStateSize(): linear problem does not specify multivectors to clone from.");
+          P_ = MVT::Clone( *tmp, 1 );
+        }
+        if (!newstate.AP.is_null() && MVT::GetNumberVecs(*newstate.AP) == 1) {
+          AP_ = Teuchos::rcp_const_cast<MV>(newstate.AP);
+        } else {
+          TEUCHOS_TEST_FOR_EXCEPTION(tmp == Teuchos::null,std::invalid_argument,
+			     "Belos::CGIter::setStateSize(): linear problem does not specify multivectors to clone from.");
+          AP_ = MVT::Clone( *tmp, 1 );
         }
 
         // Tracking information for condition number estimation
@@ -389,8 +404,7 @@ class CGIter : virtual public CGIteration<ScalarType,MV,OP> {
   void CGIter<ScalarType,MV,OP>::initializeCG(CGIterationState<ScalarType,MV>& newstate)
   {
     // Initialize the state storage if it isn't already.
-    if (!stateStorageInitialized_) 
-      setStateSize();
+    setStateSize(newstate);
 
     TEUCHOS_TEST_FOR_EXCEPTION(!stateStorageInitialized_,std::invalid_argument,
 		       "Belos::CGIter::initialize(): Cannot initialize state storage!");

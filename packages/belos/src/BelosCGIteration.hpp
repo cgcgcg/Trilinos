@@ -73,10 +73,23 @@ namespace Belos {
 
     /*! \brief The matrix A applied to current decent direction vector */
     Teuchos::RCP<const MV> AP;
+
+    /*! \brief The current [residual, preconditioned residual]. */
+    Teuchos::RCP<const MV> S;
     
     CGIterationState() : R(Teuchos::null), Z(Teuchos::null), 
-		    P(Teuchos::null), AP(Teuchos::null)
+                         P(Teuchos::null), AP(Teuchos::null), S(Teuchos::null)
     {}
+
+    CGIterationState&
+    operator=(const CGIterationState& rhs) {
+      R = rhs.R;
+      Z = rhs.Z;
+      P = rhs.P;
+      AP = rhs.AP;
+      S = rhs.S;
+      return *this;
+    }
   };
 
   //! @name CGIteration Exceptions
