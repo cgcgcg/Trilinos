@@ -646,11 +646,6 @@ namespace Belos {
     // Set new linear systems using the indices in index.
     rhsIndex_ = index;
     
-    // Compute the new block linear system.
-    // ( first clean up old linear system )
-    curB_ = Teuchos::null;
-    curX_ = Teuchos::null;
-   
     // Create indices for the new linear system.
     int validIdx = 0, ivalidIdx = 0;
     blocksize_ = rhsIndex_.size();
@@ -731,12 +726,7 @@ namespace Belos {
       Teuchos::RCP<MV> tptr = MVT::CloneViewNonConst( *curX_, newIndex );
       MVT::SetBlock( *tptr, vldIndex, *X_ );
     }
-    //
-    // Clear the current vectors of this linear system so that any future calls
-    // to get the vectors for this system return null pointers.
-    //
-    curX_ = Teuchos::null;
-    curB_ = Teuchos::null;
+
     rhsIndex_.resize(0);
   }
   
