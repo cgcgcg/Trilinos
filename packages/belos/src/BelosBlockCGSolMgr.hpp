@@ -946,7 +946,10 @@ ReturnType BlockCGSolMgr<ScalarType,MV,OP,true>::solve() {
       // Set the new state and initialize the solver.
       if (state_.is_null())
         state_ = Teuchos::rcp(new CGIterationState<ScalarType,MV>());
-      state_->R = R_0;
+      if (state_->R.is_null())
+        state_->R = R_0;
+      else
+        MVT::Assign( *R_0, *rcp_const_cast<MV>(state_->R) );
       block_cg_iter->initializeCG(*state_);
       *state_ = block_cg_iter->getState();
 

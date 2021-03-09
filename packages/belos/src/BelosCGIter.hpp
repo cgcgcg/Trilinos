@@ -254,7 +254,7 @@ class CGIter : virtual public CGIteration<ScalarType,MV,OP> {
   // Internal methods
   //
   //! Method for initalizing the state storage needed by CG.
-  void setStateSize(CGIterationState<ScalarType,MV>& newstate);
+  void setStateSize(CGIterationState<ScalarType,MV>& newstate, bool leftAndRightPrec);
   
   //
   // Classes inputed through constructor that define the linear problem to be solved.
@@ -313,6 +313,8 @@ class CGIter : virtual public CGIteration<ScalarType,MV,OP> {
 
   Teuchos::RCP<MV> S_;
 
+  Teuchos::RCP<MV> tmp_;
+
 };
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -340,7 +342,7 @@ class CGIter : virtual public CGIteration<ScalarType,MV,OP> {
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // Setup the state storage.
   template <class ScalarType, class MV, class OP>
-  void CGIter<ScalarType,MV,OP>::setStateSize (CGIterationState<ScalarType,MV>& newstate)
+  void CGIter<ScalarType,MV,OP>::setStateSize (CGIterationState<ScalarType,MV>& newstate, bool leftAndRightPrec)
   {
     if (!stateStorageInitialized_) {
 
@@ -384,6 +386,15 @@ class CGIter : virtual public CGIteration<ScalarType,MV,OP> {
 			     "Belos::CGIter::setStateSize(): linear problem does not specify multivectors to clone from.");
           AP_ = MVT::Clone( *tmp, 1 );
         }
+        if (leftAndRightPrec) {
+          if (!newstate.tmp.is_null() && MVT::GetNumberVecs(*newstate.tmp) == 1) {
+            tmp_ = Teuchos::rcp_const_cast<MV>(newstate.tmp);
+          } else {
+            TEUCHOS_TEST_FOR_EXCEPTION(tmp == Teuchos::null,std::invalid_argument,
+			     "Belos::CGIter::setStateSize(): linear problem does not specify multivectors to clone from.");
+            tmp_ = MVT::Clone( *tmp, 1 );
+          }
+        }
 
         // Tracking information for condition number estimation
         if(numEntriesForCondEst_ > 0) {
@@ -404,7 +415,7 @@ class CGIter : virtual public CGIteration<ScalarType,MV,OP> {
   void CGIter<ScalarType,MV,OP>::initializeCG(CGIterationState<ScalarType,MV>& newstate)
   {
     // Initialize the state storage if it isn't already.
-    setStateSize(newstate);
+    setStateSize(newstate, !lp_->getLeftPrec().is_null() && !lp_->getRightPrec().is_null() );
 
     TEUCHOS_TEST_FOR_EXCEPTION(!stateStorageInitialized_,std::invalid_argument,
 		       "Belos::CGIter::initialize(): Cannot initialize state storage!");
@@ -436,8 +447,8 @@ class CGIter : virtual public CGIteration<ScalarType,MV,OP> {
       if ( lp_->getLeftPrec() != Teuchos::null ) {
         lp_->applyLeftPrec( *R_, *Z_ );
         if ( lp_->getRightPrec() != Teuchos::null ) {
-          Teuchos::RCP<MV> tmp = MVT::CloneCopy( *Z_ );
-          lp_->applyRightPrec( *tmp, *Z_ );
+          MVT::Assign( *Z_, *tmp_ );
+          lp_->applyRightPrec( *tmp_, *Z_ );
         }
       }
       else if ( lp_->getRightPrec() != Teuchos::null ) {
@@ -538,8 +549,8 @@ class CGIter : virtual public CGIteration<ScalarType,MV,OP> {
       if ( lp_->getLeftPrec() != Teuchos::null ) {
         lp_->applyLeftPrec( *R_, *Z_ );
         if ( lp_->getRightPrec() != Teuchos::null ) {
-          Teuchos::RCP<MV> tmp = MVT::CloneCopy( *Z_);
-          lp_->applyRightPrec( *tmp, *Z_ );
+          MVT::Assign( *Z_, *tmp_ );
+          lp_->applyRightPrec( *tmp_, *Z_ );
         }
       }
       else if ( lp_->getRightPrec() != Teuchos::null ) {

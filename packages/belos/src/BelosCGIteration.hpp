@@ -76,9 +76,13 @@ namespace Belos {
 
     /*! \brief The current [residual, preconditioned residual]. */
     Teuchos::RCP<const MV> S;
+
+    /*! \brief Temporary vector needed when left and right preconditioning is used. */
+    Teuchos::RCP<const MV> tmp;
     
     CGIterationState() : R(Teuchos::null), Z(Teuchos::null), 
-                         P(Teuchos::null), AP(Teuchos::null), S(Teuchos::null)
+                         P(Teuchos::null), AP(Teuchos::null), S(Teuchos::null),
+                         tmp(Teuchos::null)
     {}
 
     CGIterationState&
@@ -88,6 +92,7 @@ namespace Belos {
       P = rhs.P;
       AP = rhs.AP;
       S = rhs.S;
+      tmp = rhs.tmp;
       return *this;
     }
   };
