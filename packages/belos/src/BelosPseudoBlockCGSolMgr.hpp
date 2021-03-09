@@ -829,15 +829,21 @@ ReturnType PseudoBlockCGSolMgr<ScalarType,MV,OP,true>::solve ()
       // Reset the number of calls that the status test output knows about.
       outputTest_->resetNumCalls();
 
-      // Get the current residual for this block of linear systems.
-      Teuchos::RCP<MV> R_0 = MVT::CloneViewNonConst( *(Teuchos::rcp_const_cast<MV>(problem_->getInitResVec())), currIdx );
-
       // Get a new state struct and initialize the solver.
       if (state_.is_null())
         state_ = Teuchos::rcp(new CGIterationState<ScalarType,MV>());
-      state_->R = R_0;
+
+      // Get the current residual for this block of linear systems.
+      if (state_->R.is_null() || MVT::GetNumberVecs( *state_->R ) != Teuchos::as<int>(currIdx.size()) ) {
+        state_->R = MVT::CloneViewNonConst( *(Teuchos::rcp_const_cast<MV>(problem_->getInitResVec())), currIdx );
+      } else {
+        MVT::SetBlock( *Teuchos::rcp_const_cast<MV>(problem_->getInitResVec()), currIdx, *Teuchos::rcp_const_cast<MV>(state_->R) );
+      }
+
       block_cg_iter->initializeCG(*state_);
       *state_ = block_cg_iter->getState();
+
+      Teuchos::RCP<MV> R_0;
 
       while(1) {
 
