@@ -997,11 +997,15 @@ namespace MueLu {
         // On intermediate levels, we do cycles
         RCP<Level> Coarse = Levels_[startLevel+1];
         {
+          {
+            RCP<TimeMonitor> BarrierTime = rcp(new TimeMonitor(*this, prefix + "Solve : presmoothing barrier" + levelSuffix1, Timings0));
+            X.getMap()->getComm()->barrier();
+          }
           // ============== PRESMOOTHING ==============
           RCP<TimeMonitor> STime;
           if (!useStackedTimer)
             STime                     = rcp(new TimeMonitor(*this, prefix + "Solve : smoothing (total)"      , Timings0));
-          RCP<TimeMonitor> SLevelTime = rcp(new TimeMonitor(*this, prefix + "Solve : smoothing" + levelSuffix, Timings0));
+          RCP<TimeMonitor> SLevelTime = rcp(new TimeMonitor(*this, prefix + "Solve : presmoothing" + levelSuffix, Timings0));
 
           if (Fine->IsAvailable("PreSmoother")) {
             RCP<SmootherBase> preSmoo = Fine->Get< RCP<SmootherBase> >("PreSmoother");
@@ -1012,6 +1016,10 @@ namespace MueLu {
 
         RCP<MultiVector> residual;
         {
+          {
+            RCP<TimeMonitor> BarrierTime = rcp(new TimeMonitor(*this, prefix + "Solve : residual barrier" + levelSuffix1, Timings0));
+            X.getMap()->getComm()->barrier();
+          }
           RCP<TimeMonitor> ATime;
           if (!useStackedTimer)
             ATime                     = rcp(new TimeMonitor(*this, prefix + "Solve : residual calculation (total)"      , Timings0));
@@ -1033,6 +1041,10 @@ namespace MueLu {
         RCP<MultiVector> coarseRhs, coarseX;
         //        const bool initializeWithZeros = true;
         {
+          {
+            RCP<TimeMonitor> BarrierTime = rcp(new TimeMonitor(*this, prefix + "Solve : restriction barrier" + levelSuffix1, Timings0));
+            X.getMap()->getComm()->barrier();
+          }
           // ============== RESTRICTION ==============
           RCP<TimeMonitor> RTime;
           if (!useStackedTimer)
@@ -1055,6 +1067,10 @@ namespace MueLu {
 
         coarseX = coarseX_[startLevel];
         if (!doPRrebalance_ && !importer.is_null()) {
+          {
+            RCP<TimeMonitor> BarrierTime = rcp(new TimeMonitor(*this, prefix + "Solve : import barrier pre" + levelSuffix1, Timings0));
+            coarseX->getMap()->getComm()->barrier();
+          }
           RCP<TimeMonitor> ITime;
           if (!useStackedTimer)
             ITime                     = rcp(new TimeMonitor(*this, prefix + "Solve : import (total)"       , Timings0));
@@ -1064,6 +1080,10 @@ namespace MueLu {
           RCP<MultiVector> coarseTmp = coarseImport_[startLevel];
           coarseTmp->doImport(*coarseRhs, *importer, Xpetra::INSERT);
           coarseRhs.swap(coarseTmp);
+          {
+            RCP<TimeMonitor> BarrierTime = rcp(new TimeMonitor(*this, prefix + "Solve : import barrier post" + levelSuffix1, Timings0));
+            coarseX->getMap()->getComm()->barrier();
+          }
         }
 
         RCP<Operator> Ac = Coarse->Get< RCP<Operator> >("A");
@@ -1091,6 +1111,10 @@ namespace MueLu {
         }
 
         if (!doPRrebalance_ && !importer.is_null()) {
+          {
+            RCP<TimeMonitor> BarrierTime = rcp(new TimeMonitor(*this, prefix + "Solve : export barrier pre" + levelSuffix1, Timings0));
+            coarseX->getMap()->getComm()->barrier();
+          }
           RCP<TimeMonitor> ITime;
           if (!useStackedTimer)
             ITime                     = rcp(new TimeMonitor(*this, prefix + "Solve : export (total)"      ,  Timings0));
@@ -1100,9 +1124,18 @@ namespace MueLu {
           RCP<MultiVector> coarseTmp = coarseExport_[startLevel];
           coarseTmp->doExport(*coarseX, *importer, Xpetra::INSERT);
           coarseX.swap(coarseTmp);
+
+          {
+            RCP<TimeMonitor> BarrierTime = rcp(new TimeMonitor(*this, prefix + "Solve : export barrier post" + levelSuffix1, Timings0));
+            coarseX->getMap()->getComm()->barrier();
+          }
         }
 
         {
+          {
+            RCP<TimeMonitor> BarrierTime = rcp(new TimeMonitor(*this, prefix + "Solve : prolongation barrier" + levelSuffix1, Timings0));
+            coarseX->getMap()->getComm()->barrier();
+          }
           // ============== PROLONGATION ==============
           RCP<TimeMonitor> PTime;
           if (!useStackedTimer)
@@ -1122,11 +1155,15 @@ namespace MueLu {
         }
 
         {
+          {
+            RCP<TimeMonitor> BarrierTime = rcp(new TimeMonitor(*this, prefix + "Solve : postsmoothing barrier" + levelSuffix1, Timings0));
+            X.getMap()->getComm()->barrier();
+          }
           // ============== POSTSMOOTHING ==============
           RCP<TimeMonitor> STime;
           if (!useStackedTimer)
             STime                     = rcp(new TimeMonitor(*this, prefix + "Solve : smoothing (total)"      , Timings0));
-          RCP<TimeMonitor> SLevelTime = rcp(new TimeMonitor(*this, prefix + "Solve : smoothing" + levelSuffix, Timings0));
+          RCP<TimeMonitor> SLevelTime = rcp(new TimeMonitor(*this, prefix + "Solve : postsmoothing" + levelSuffix, Timings0));
 
           if (Fine->IsAvailable("PostSmoother")) {
             RCP<SmootherBase> postSmoo = Fine->Get< RCP<SmootherBase> >("PostSmoother");
@@ -1530,6 +1567,11 @@ namespace MueLu {
     int N = Levels_.size();
     if( ( (sizeOfAllocatedLevelMultiVectors_ == numvecs && residual_.size() == N) || numvecs<=0 ) && !forceMapCheck) return;
 
+    RCP<Level>  Fine = Levels_[0];
+    std::string label        = FormattingHelper::getColonLabel(Fine->getObjectLabel());
+    std::string prefix       = label + this->ShortClassName() + ": ";
+    RCP<TimeMonitor> AllocTime = rcp(new TimeMonitor(*this, prefix + "Allocate", Timings0));
+    
     // If, somehow, we changed the number of levels, delete everything first
     if(residual_.size() != N) {
       DeleteLevelMultiVectors();

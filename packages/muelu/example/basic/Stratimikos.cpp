@@ -155,6 +155,7 @@ int MainWrappers<double,LocalOrdinal,GlobalOrdinal,Node>::main_(Teuchos::Command
     std::string materialFile;                           clp.setOption("material",              &materialFile,      "material data file");
     int         numVectors        = 1;                  clp.setOption("multivector",           &numVectors,        "number of rhs to solve simultaneously");
     int         numSolves         = 1;                  clp.setOption("numSolves",             &numSolves,         "number of times the system should be solved");
+    bool        reBuild           = false;              clp.setOption("reBuild", "noReBuild",  &reBuild,           "re-build the preconditioner for numSolves > 1");
 
     switch (clp.parse(argc,argv)) {
       case Teuchos::CommandLineProcessor::PARSE_HELP_PRINTED:        return EXIT_SUCCESS;
@@ -255,11 +256,19 @@ int MainWrappers<double,LocalOrdinal,GlobalOrdinal,Node>::main_(Teuchos::Command
     success = (status.solveStatus == Thyra::SOLVE_STATUS_CONVERGED);
 
     for (int solveno = 1; solveno < numSolves; solveno++) {
-      if (!precFactory.is_null())
+      if (!precFactory.is_null() && reBuild)
         Thyra::initializePrec<double>(*precFactory, thyraA, prec.ptr());
-      thyraX->assign(0.);
 
-      status = Thyra::solve<Scalar>(*thyraInverseA, Thyra::NOTRANS, *thyraB, thyraX.ptr());
+      thyraX->assign(0.);
+      {
+        Teuchos::TimeMonitor all(*TimeMonitor::getNewTimer(std::string("1st solve")));
+        status = Thyra::solve<Scalar>(*thyraInverseA, Thyra::NOTRANS, *thyraB, thyraX.ptr());
+      }
+      thyraX->assign(0.);
+      {
+        Teuchos::TimeMonitor all(*TimeMonitor::getNewTimer(std::string("2nd solve")));
+        status = Thyra::solve<Scalar>(*thyraInverseA, Thyra::NOTRANS, *thyraB, thyraX.ptr());
+      }
 
       success = success && (status.solveStatus == Thyra::SOLVE_STATUS_CONVERGED);
     }

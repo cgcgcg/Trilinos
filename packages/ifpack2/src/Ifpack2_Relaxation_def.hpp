@@ -1034,10 +1034,12 @@ void Relaxation<MatrixType>::compute ()
        "Please report this bug to the Ifpack2 developers.");
     IsComputed_ = false;
 
-    Diagonal_ = Teuchos::null;
-    // A_->getLocalDiagCopy fills in all Vector entries, even if the
-    // matrix has no stored entries in the corresponding rows.
-    Diagonal_ = rcp (new vector_type (A_->getRowMap (), false));
+    if (Diagonal_.is_null()) {
+      Diagonal_ = Teuchos::null;
+      // A_->getLocalDiagCopy fills in all Vector entries, even if the
+      // matrix has no stored entries in the corresponding rows.
+      Diagonal_ = rcp (new vector_type (A_->getRowMap (), false));
+    }
 
     // Extract the diagonal entries.  The CrsMatrix static graph
     // version is faster for subsequent calls to compute(), since it
