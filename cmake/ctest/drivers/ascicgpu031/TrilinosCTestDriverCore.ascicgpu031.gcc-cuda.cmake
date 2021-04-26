@@ -71,6 +71,7 @@ MACRO(TRILINOS_SYSTEM_SPECIFIC_CTEST_DRIVER)
   ENDIF()
 
   SET(Trilinos_REPOSITORY_LOCATION_NIGHTLY_DEFAULT "git@gitlab-ex.sandia.gov:trilinos-project/Trilinos.git")
+  SET(Trilinos_BRANCH "TpetraDualViewRefactor" )
 
   SET(CTEST_DASHBOARD_ROOT  "${TRILINOS_CMAKE_DIR}/../../${BUILD_DIR_NAME}" )
   SET(CTEST_NOTES_FILES     "${CTEST_SCRIPT_DIRECTORY}/${CTEST_SCRIPT_NAME}" )
@@ -81,12 +82,19 @@ MACRO(TRILINOS_SYSTEM_SPECIFIC_CTEST_DRIVER)
   SET(Trilinos_CTEST_DO_ALL_AT_ONCE FALSE)
   SET_DEFAULT(Trilinos_EXCLUDE_PACKAGES             ${EXTRA_EXCLUDE_PACKAGES} TriKota Optika Pamgen)
 
+  # Select package disables
+  set (Trilinos_ENABLE_Gtest OFF CACHE BOOL "Gtest just does not build" FORCE)
+  set (Trilinos_ENABLE_ShyLU_NodeTacho OFF CACHE BOOL "Can't test Tacho with CUDA without RDC" FORCE)
+  set (Trilinos_ENABLE_Shards OFF CACHE BOOL "Shards does not build" FORCE)
+  set (Trilinos_ENABLE_Epetra OFF CACHE BOOL "We do not want Epetra" FORCE)
+
   SET(EXTRA_SYSTEM_CONFIGURE_OPTIONS
       "-DCMAKE_BUILD_TYPE:STRING=${BUILD_TYPE}"
 
-      "-DTrilinos_ENABLE_COMPLEX:BOOL=OFF"
       # Adding the following as a possible fix for github issue #2115.
-      "-DCMAKE_CXX_USE_RESPONSE_FILE_FOR_OBJECTS:BOOL=ON"
+      #KDD This flag appears to be unnecessary in April 2021, and it
+      #KDD breaks building of Zoltan tests
+      #KDD "-DCMAKE_CXX_USE_RESPONSE_FILE_FOR_OBJECTS:BOOL=ON"
 
       ### ALWAYS AND EVERYWHERE ###
       "-DTrilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON"
@@ -96,8 +104,11 @@ MACRO(TRILINOS_SYSTEM_SPECIFIC_CTEST_DRIVER)
       "-DTrilinos_ENABLE_DEPENDENCY_UNIT_TESTS:BOOL=OFF"
       "-DTeuchos_GLOBALLY_REDUCE_UNITTEST_RESULTS:BOOL=ON"
 
+      "-DTrilinos_ENABLE_COMPLEX=ON"
+      "-DTeuchos_ENABLE_COMPLEX=ON"
+      "-DTpetra_INST_COMPLEX_DOUBLE=ON"
+
       ### COMPILERS AND FLAGS ###
-      "-DTrilinos_ENABLE_CXX11:BOOL=ON"
       "-DCMAKE_CXX_FLAGS:STRING='-Wall -Wno-unknown-pragmas -Wno-unused-but-set-variable -Wno-inline -Wshadow'"
       "-DTrilinos_ENABLE_Fortran:BOOL=OFF"
 

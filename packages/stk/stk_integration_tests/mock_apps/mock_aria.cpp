@@ -2,7 +2,7 @@
 #include <stk_util/parallel/Parallel.hpp>
 #include <stk_coupling/Constants.hpp>
 #include <stk_coupling/Utils.hpp>
-#include <stk_coupling/CommSplitting.hpp>
+#include <stk_coupling/SplitComms.hpp>
 #include <stk_coupling/SyncInfo.hpp>
 #include <stk_coupling/Version.hpp>
 #include <stk_transfer/ReducedDependencyGeometricTransfer.hpp>
@@ -78,8 +78,13 @@ public:
     m_iAmRootRank = myAppRank == 0;
 
     const std::vector<int>& otherColors = m_splitComms.get_other_colors();
-    if (otherColors.size() > 1) {
-      mock_utils::exchange_and_print_info(m_splitComms, m_appName, color);
+    if (otherColors.size() != 1) {
+      if (otherColors.empty()) {
+        std::cout << m_appName << " No other colors, not running in MPMD mode." <<std::endl;
+      }
+      else {
+        mock_utils::exchange_and_print_info(m_splitComms, m_appName, color);
+      }
       return;
     }
 
@@ -330,7 +335,7 @@ int main(int argc, char** argv)
 {
   MockAria app;
   app.read_input_and_setup_split_comms(argc, argv);
-  if (app.get_number_of_other_coupled_apps() > 1) {
+  if (app.get_number_of_other_coupled_apps() != 1) {
     return 0;
   }
 
