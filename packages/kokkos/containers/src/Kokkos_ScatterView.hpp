@@ -834,8 +834,8 @@ class ScatterView<DataType, Layout, DeviceType, Op, ScatterNonDuplicated,
     static_assert(std::is_same<typename dest_type::array_layout, Layout>::value,
                   "ScatterView contribute destination has different layout");
     static_assert(
-        Kokkos::Impl::VerifyExecutionCanAccessMemorySpace<
-            memory_space, typename dest_type::memory_space>::value,
+        Kokkos::Impl::SpaceAccessibility<
+            execution_space, typename dest_type::memory_space>::accessible,
         "ScatterView contribute destination memory space not accessible");
     if (dest.data() == internal_view.data()) return;
     Kokkos::Impl::Experimental::ReduceDuplicates<execution_space,
@@ -1061,8 +1061,8 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
                                Kokkos::LayoutRight>::value,
                   "ScatterView deep_copy destination has different layout");
     static_assert(
-        Kokkos::Impl::VerifyExecutionCanAccessMemorySpace<
-            memory_space, typename dest_type::memory_space>::value,
+        Kokkos::Impl::SpaceAccessibility<
+            execution_space, typename dest_type::memory_space>::accessible,
         "ScatterView deep_copy destination memory space not accessible");
     bool is_equal = (dest.data() == internal_view.data());
     size_t start  = is_equal ? 1 : 0;
@@ -1290,8 +1290,8 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, Op,
                                Kokkos::LayoutLeft>::value,
                   "ScatterView deep_copy destination has different layout");
     static_assert(
-        Kokkos::Impl::VerifyExecutionCanAccessMemorySpace<
-            memory_space, typename dest_type::memory_space>::value,
+        Kokkos::Impl::SpaceAccessibility<
+            execution_space, typename dest_type::memory_space>::accessible,
         "ScatterView deep_copy destination memory space not accessible");
     auto extent   = internal_view.extent(internal_view_type::rank - 1);
     bool is_equal = (dest.data() == internal_view.data());
@@ -1439,21 +1439,21 @@ template <typename Op          = Kokkos::Experimental::ScatterSum,
 ScatterView<
     RT, typename ViewTraits<RT, RP...>::array_layout,
     typename ViewTraits<RT, RP...>::device_type, Op,
-    typename Kokkos::Impl::if_c<
+    std::conditional_t<
         std::is_same<Duplication, void>::value,
         typename Kokkos::Impl::Experimental::DefaultDuplication<
             typename ViewTraits<RT, RP...>::execution_space>::type,
-        Duplication>::type,
-    typename Kokkos::Impl::if_c<
+        Duplication>,
+    std::conditional_t<
         std::is_same<Contribution, void>::value,
         typename Kokkos::Impl::Experimental::DefaultContribution<
             typename ViewTraits<RT, RP...>::execution_space,
-            typename Kokkos::Impl::if_c<
+            typename std::conditional_t<
                 std::is_same<Duplication, void>::value,
                 typename Kokkos::Impl::Experimental::DefaultDuplication<
                     typename ViewTraits<RT, RP...>::execution_space>::type,
-                Duplication>::type>::type,
-        Contribution>::type>
+                Duplication>>::type,
+        Contribution>>
 create_scatter_view(View<RT, RP...> const& original_view) {
   return original_view;  // implicit ScatterView constructor call
 }
