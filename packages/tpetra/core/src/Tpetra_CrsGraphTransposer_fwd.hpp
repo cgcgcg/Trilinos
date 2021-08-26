@@ -1,9 +1,8 @@
 // @HEADER
 // ***********************************************************************
 //
-//           Panzer: A partial differential equation assembly
-//       engine for strongly coupled complex multiphysics systems
-//                 Copyright (2011) Sandia Corporation
+//          Tpetra: Templated Linear Algebra Services Package
+//                 Copyright (2008) Sandia Corporation
 //
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
@@ -35,22 +34,26 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// Questions? Contact Roger P. Pawlowski (rppawlo@sandia.gov) and
-// Eric C. Cyr (eccyr@sandia.gov)
-// ***********************************************************************
+// Questions? Contact Michael A. Heroux (maherou@sandia.gov)
+//
+// ************************************************************************
 // @HEADER
 
-#include "Kokkos_View_Fad.hpp"
+#ifndef TPETRA_CRSGRAPHTRANSPOSER_FWD_HPP
+#define TPETRA_CRSGRAPHTRANSPOSER_FWD_HPP
 
-#include "PanzerDiscFE_config.hpp"
+#include "Tpetra_Details_DefaultTypes.hpp"
 
-#include "Panzer_ExplicitTemplateInstantiation.hpp"
+/// \file Tpetra_CrsGraphTransposer_fwd.hpp
+/// \brief Forward declaration of Tpetra::CrsGraphTransposer
 
-#include "Panzer_ScatterResidual_Epetra_decl.hpp"
-#include "Panzer_ScatterResidual_Epetra_impl.hpp"
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+namespace Tpetra {
+template<class LocalOrdinal = ::Tpetra::Details::DefaultTypes::local_ordinal_type,
+         class GlobalOrdinal = ::Tpetra::Details::DefaultTypes::global_ordinal_type,
+         class Node = ::Tpetra::Details::DefaultTypes::node_type>
+class CrsGraphTransposer;
+} // namespace Tpetra
+#endif // DOXYGEN_SHOULD_SKIP_THIS
 
-#ifdef Panzer_BUILD_HESSIAN_SUPPORT
-#include "Panzer_ScatterResidual_Epetra_Hessian_impl.hpp"
-#endif
-
-PANZER_INSTANTIATE_TEMPLATE_CLASS_FOUR_T(panzer::ScatterResidual_Epetra,int,int)
+#endif // TPETRA_CRSGRAPHTRANSPOSER_FWD_HPP
