@@ -1,9 +1,9 @@
 // @HEADER
+//
 // ***********************************************************************
 //
-//           Panzer: A partial differential equation assembly
-//       engine for strongly coupled complex multiphysics systems
-//                 Copyright (2011) Sandia Corporation
+//        MueLu: A package for multigrid based preconditioning
+//                  Copyright 2012 Sandia Corporation
 //
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
@@ -35,23 +35,28 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// Questions? Contact Roger P. Pawlowski (rppawlo@sandia.gov) and
-// Eric C. Cyr (eccyr@sandia.gov)
+// Questions? Contact
+//                    Jonathan Hu       (jhu@sandia.gov)
+//                    Andrey Prokopenko (aprokop@sandia.gov)
+//                    Ray Tuminaro      (rstumin@sandia.gov)
+//
 // ***********************************************************************
+//
 // @HEADER
+#ifndef MUELU_SEMICOARSENPFACTORY_KOKKOS_FWD_HPP
+#define MUELU_SEMICOARSENPFACTORY_KOKKOS_FWD_HPP
 
-#include "Kokkos_View_Fad.hpp"
+#include "MueLu_ConfigDefs.hpp"
+#if defined(HAVE_MUELU_KOKKOS_REFACTOR)
 
-#include "PanzerDiscFE_config.hpp"
+namespace MueLu {
+  template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+  class SemiCoarsenPFactory_kokkos;
+}
 
-#include "Panzer_ExplicitTemplateInstantiation.hpp"
-#include "Panzer_Traits.hpp"
-
-#include "Panzer_ScatterDirichletResidual_Tpetra_decl.hpp"
-#include "Panzer_ScatterDirichletResidual_Tpetra_impl.hpp"
-
-#ifdef Panzer_BUILD_HESSIAN_SUPPORT
-#include "Panzer_ScatterDirichletResidual_Tpetra_Hessian_impl.hpp"
+#ifndef MUELU_SEMICOARSENPFACTORY_KOKKOS_SHORT
+#define MUELU_SEMICOARSENPFACTORY_KOKKOS_SHORT
 #endif
 
-PANZER_INSTANTIATE_TEMPLATE_CLASS_FOUR_T(panzer::ScatterDirichletResidual_Tpetra,int,panzer::GlobalOrdinal)
+#endif // HAVE_MUELU_KOKKOS_REFACTOR
+#endif // MUELU_SEMICOARSENPFACTORY_KOKKOS_FWD_HPP
