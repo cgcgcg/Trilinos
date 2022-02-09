@@ -172,10 +172,10 @@ namespace panzer {
     else if ( (basis_type == "HGrad") && (cell_type == "Tetrahedron") && (basis_order == 1) )
       basis = Teuchos::rcp( new Intrepid2::Basis_HGRAD_TET_C1_FEM<ExecutionSpace,OutputValueType,PointValueType> );
 
-    else if ( (basis_type == "HGrad") && (cell_type == "Tetrahedron") && (basis_order == 2) )
-      basis = Teuchos::rcp( new Intrepid2::Basis_HGRAD_TET_C2_FEM<ExecutionSpace,OutputValueType,PointValueType> );
+    // else if ( (basis_type == "HGrad") && (cell_type == "Tetrahedron") && (basis_order == 2) )
+    //   basis = Teuchos::rcp( new Intrepid2::Basis_HGRAD_TET_C2_FEM<ExecutionSpace,OutputValueType,PointValueType> );
 
-    else if ( (basis_type == "HGrad") && (cell_type == "Tetrahedron") && (basis_order > 2) )
+    else if ( (basis_type == "HGrad") && (cell_type == "Tetrahedron") && (basis_order > 1) )
       basis = Teuchos::rcp( new Intrepid2::Basis_HGRAD_TET_Cn_FEM<ExecutionSpace,OutputValueType,PointValueType>(basis_order, point_type) );
 
     else if ( (basis_type == "HCurl") && (cell_type == "Tetrahedron") && (basis_order == 1) )
