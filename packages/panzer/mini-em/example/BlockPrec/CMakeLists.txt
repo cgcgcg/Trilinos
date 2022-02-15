@@ -13,6 +13,7 @@ TRIBITS_ADD_EXECUTABLE(
 TRIBITS_COPY_FILES_TO_BINARY_DIR(CopyBlockPrecFiles
   SOURCE_FILES
   maxwell.xml maxwell2D.xml
+  maxwell-1stOrder.xml maxwell-2ndOrder.xml maxwell-3rdOrder.xml maxwell-4thOrder.xml
   maxwell-blob-R0.xml maxwell-blob-R1.xml maxwell-blob-R2.xml maxwell-blob-R3.xml maxwell-blob-R4.xml
   maxwell-bdot-small.xml maxwell-bdot-medium.xml maxwell-bdot-large.xml
   maxwell-exterior-small.xml maxwell-exterior-medium.xml maxwell-exterior-large.xml
@@ -233,3 +234,17 @@ IF (NOT Kokkos_ENABLE_CUDA AND ${PACKAGE_NAME}_ENABLE_ML AND MueLu_ENABLE_Epetra
     )
 
 ENDIF()
+
+
+#################################################
+# CG
+
+TRIBITS_ADD_TEST(
+   BlockPrec
+   NAME "MiniEM-BlockPrec_RefMaxwell_highOrder"
+   ARGS
+   "--solver=CG --linAlgebra=Tpetra --inputFile=maxwell-2ndOrder.xml"
+   "--solver=CG --linAlgebra=Tpetra --inputFile=maxwell-3rdOrder.xml"
+   COMM mpi
+   NUM_MPI_PROCS 4
+   )

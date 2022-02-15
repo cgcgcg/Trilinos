@@ -2,21 +2,43 @@
 
   <ParameterList name="Mesh">
     <Parameter name="Source" type="string" value="Inline Mesh" />
+    <!-- <Parameter name="Source" type="string" value="Pamgen Mesh" /> -->
+    <!-- <Parameter name="Source" type="string" value="Exodus File" /> -->
+
+    <ParameterList name="Exodus File">
+      <Parameter name="dt" type="double" value="6.0e-12"/>
+      <ParameterList name="Exodus Parameters">
+        <Parameter name="File Name" type="string" value="blob/blob.g" />
+      </ParameterList>
+    </ParameterList>
+
+    <ParameterList name="Pamgen Mesh">
+      <Parameter name="dt" type="double" value="6.0e-12"/>
+      <ParameterList name="Pamgen Parameters">
+        <Parameter name="File Name" type="string" value="pamgen.gen"/>
+      </ParameterList>
+    </ParameterList>
 
     <ParameterList name="Inline Mesh">
-      <Parameter name="Mesh Dimension" type="int" value="2"/>
-      <Parameter name="Mesh Type" type="string" value="quad"/>
-      <!-- <Parameter name="Mesh Type" type="string" value="tet"/> -->
+      <Parameter name="Mesh Dimension" type="int" value="3"/>
+      <!-- <Parameter name="Mesh Type" type="string" value="quad"/> -->
+      <Parameter name="Mesh Type" type="string" value="tet"/>
       <Parameter name="CFL" type="double" value="4.0"/>
       <ParameterList name="Mesh Factory Parameter List">
+        <Parameter name="X Procs" type="int" value="-1" />
+        <Parameter name="Y Procs" type="int" value="-1" />
+        <Parameter name="Z Procs" type="int" value="-1" />
         <Parameter name="X Blocks" type="int" value="1" />
         <Parameter name="Y Blocks" type="int" value="1" />
-        <Parameter name="X Elements" type="int" value="100" />
-        <Parameter name="Y Elements" type="int" value="100" />
+        <Parameter name="Z Blocks" type="int" value="1" />
+        <Parameter name="X Elements" type="int" value="5" />
+        <Parameter name="Y Elements" type="int" value="5" />
+        <Parameter name="Z Elements" type="int" value="5" />
         <!-- <ParameterList name="Periodic BCs"> -->
-        <!--   <Parameter name="Count" type="int" value="2"/> -->
-        <!--   <Parameter name="Periodic Condition 1" type="string" value="x-all 1e-8: top;bottom"/> -->
-        <!--   <Parameter name="Periodic Condition 2" type="string" value="y-all 1e-8: left;right"/> -->
+        <!--   <Parameter name="Count" type="int" value="3"/> -->
+        <!--   <Parameter name="Periodic Condition 1" type="string" value="xz-all 1e-8: top;bottom"/> -->
+        <!--   <Parameter name="Periodic Condition 2" type="string" value="yz-all 1e-8: left;right"/> -->
+        <!--   <Parameter name="Periodic Condition 3" type="string" value="xy-all 1e-8: front;back"/> -->
         <!-- </ParameterList> -->
       </ParameterList>
     </ParameterList>
@@ -25,18 +47,18 @@
 
 
   <ParameterList name="Block ID to Physics ID Mapping">
-    <Parameter name="eblock-0_0" type="string" value="Maxwell Physics"/>
+    <Parameter name="eblock-0_0_0" type="string" value="Maxwell Physics"/>
   </ParameterList>
 
   <ParameterList name="Block ID to Auxiliary Physics ID Mapping">
-    <Parameter name="eblock-0_0" type="string" value="Auxiliary Physics Block"/>
+    <Parameter name="eblock-0_0_0" type="string" value="Auxiliary Physics Block"/>
   </ParameterList>
 
-   <ParameterList name="Assembly">
-     <Parameter name="Field Order"           type="string" value="blocked: B_face E_edge"/>
-     <Parameter name="Auxiliary Field Order" type="string" value="blocked: AUXILIARY_NODE AUXILIARY_EDGE"/>
-     <Parameter name="Workset Size" type="int" value="2000"/>
-   </ParameterList>
+  <ParameterList name="Assembly">
+    <Parameter name="Field Order"           type="string" value="blocked: B_face E_edge"/>
+    <Parameter name="Auxiliary Field Order" type="string" value="blocked: AUXILIARY_NODE AUXILIARY_EDGE AUXILIARY_NODE_LO AUXILIARY_EDGE_LO"/>
+    <Parameter name="Workset Size" type="int" value="2000"/>
+  </ParameterList>
 
   <ParameterList name="Physics Blocks">
     <!-- The 2x2 Maxwell system -->
@@ -44,8 +66,8 @@
     <ParameterList name="Maxwell Physics">
       <ParameterList>
         <Parameter name="Type"                 type="string" value="Maxwell"/>
-        <Parameter name="Basis Order"          type="int"    value="1"/>
-        <Parameter name="Integration Order"    type="int"    value="2"/>
+        <Parameter name="Basis Order"          type="int"    value="2"/>
+        <Parameter name="Integration Order"    type="int"    value="4"/>
         <Parameter name="Model ID"             type="string" value="electromagnetics"/>
         <Parameter name="Permittivity"         type="string" value="epsilon"/>
         <Parameter name="Conductivity"         type="string" value="sigma"/>
@@ -60,8 +82,8 @@
         <Parameter name="Type"              type="string" value="Auxiliary Curl Curl"/>
         <Parameter name="DOF Name"          type="string" value="AUXILIARY_EDGE"/>
         <Parameter name="Basis Type"        type="string" value="HCurl"/>
-        <Parameter name="Basis Order"       type="int"    value="1"/>
-        <Parameter name="Integration Order" type="int"    value="2"/>
+        <Parameter name="Basis Order"       type="int"    value="2"/>
+        <Parameter name="Integration Order" type="int"    value="4"/>
         <Parameter name="Model ID"          type="string" value="electromagnetics_aux"/>
         <Parameter name="Field Multipliers" type="string" value="dt,1/mu"/>
       </ParameterList>
@@ -69,6 +91,15 @@
       <ParameterList name="Auxiliary Mass Physics">
         <Parameter name="Type"              type="string" value="Auxiliary Mass Matrix"/>
         <Parameter name="DOF Name"          type="string" value="AUXILIARY_NODE"/>
+        <Parameter name="Basis Type"        type="string" value="HGrad"/>
+        <Parameter name="Basis Order"       type="int"    value="2"/>
+        <Parameter name="Integration Order" type="int"    value="4"/>
+        <Parameter name="Model ID"          type="string" value="electromagnetics_aux"/>
+        <Parameter name="Field Multipliers" type="string" value="mu,1/dt"/>
+      </ParameterList>
+      <ParameterList name="Auxiliary Mass Physics LO">
+        <Parameter name="Type"              type="string" value="Auxiliary Mass Matrix"/>
+        <Parameter name="DOF Name"          type="string" value="AUXILIARY_NODE_LO"/>
         <Parameter name="Basis Type"        type="string" value="HGrad"/>
         <Parameter name="Basis Order"       type="int"    value="1"/>
         <Parameter name="Integration Order" type="int"    value="2"/>
@@ -80,17 +111,17 @@
         <Parameter name="Type"              type="string" value="Auxiliary Mass Matrix"/>
         <Parameter name="DOF Name"          type="string" value="AUXILIARY_EDGE"/>
         <Parameter name="Basis Type"        type="string" value="HCurl"/>
+        <Parameter name="Basis Order"       type="int"    value="2"/>
+        <Parameter name="Integration Order" type="int"    value="4"/>
+        <Parameter name="Model ID"          type="string" value="electromagnetics_aux"/>
+      </ParameterList>
+      <ParameterList name="Auxiliary Edge Mass Physics LO">
+        <Parameter name="Type"              type="string" value="Auxiliary Mass Matrix"/>
+        <Parameter name="DOF Name"          type="string" value="AUXILIARY_EDGE_LO"/>
+        <Parameter name="Basis Type"        type="string" value="HCurl"/>
         <Parameter name="Basis Order"       type="int"    value="1"/>
         <Parameter name="Integration Order" type="int"    value="2"/>
         <Parameter name="Model ID"          type="string" value="electromagnetics_aux"/>
-      </ParameterList>
-      <!-- Weak gradient used by augmentation preconditioner -->
-      <ParameterList name="Auxiliary Gradient Physics">
-        <Parameter name="Type"              type="string" value="Auxiliary Weak Gradient"/>
-        <Parameter name="Vector Name"       type="string" value="AUXILIARY_EDGE"/>
-        <Parameter name="Scalar Name"       type="string" value="AUXILIARY_NODE"/>
-        <Parameter name="Basis Order"       type="int"    value="1"/>
-        <Parameter name="Integration Order" type="int"    value="2"/>
       </ParameterList>
     </ParameterList>
   </ParameterList>
@@ -100,7 +131,10 @@
     <!-- Note: 1/dt is added at runtime -->
     <ParameterList name="electromagnetics">
       <ParameterList name="CURRENT">
-        <Parameter name="Type" type="string" value="GAUSSIAN PULSE"/>
+        <Parameter name="Type" type="string" value="RANDOM"/>
+        <Parameter name="seed" type="unsigned int" value="0"/>
+        <Parameter name="range min" type="double" value="0"/>
+        <Parameter name="range max" type="double" value="1"/>
       </ParameterList>
       <!-- Permittivity -->
       <ParameterList name="epsilon">
@@ -142,6 +176,11 @@
         <Parameter name="mu" type="double" value="1.2566370614e-6"/>
         <Parameter name="DoF Name" type="string" value="AUXILIARY_EDGE"/>
       </ParameterList>
+      <ParameterList name="epsilon">
+        <Parameter name="Type" type="string" value="PERMITTIVITY"/>
+        <Parameter name="epsilon" type="double" value="8.854187817e-12"/>
+        <Parameter name="DoF Name" type="string" value="AUXILIARY_EDGE"/>
+      </ParameterList>
     </ParameterList>
   </ParameterList>
 
@@ -159,23 +198,41 @@
       <Parameter name="Target" type="string" value="AUXILIARY_EDGE"/>
       <Parameter name="Op" type="string" value="grad"/>
     </ParameterList>
+
+    <ParameterList name="Discrete Gradient LO">
+      <Parameter name="Source" type="string" value="AUXILIARY_NODE_LO"/>
+      <Parameter name="Target" type="string" value="AUXILIARY_EDGE_LO"/>
+      <Parameter name="Op" type="string" value="grad"/>
+    </ParameterList>
+
+    <ParameterList name="Interpolation Hgrad">
+      <Parameter name="Source" type="string" value="AUXILIARY_NODE_LO"/>
+      <Parameter name="Target" type="string" value="AUXILIARY_NODE"/>
+      <Parameter name="Op" type="string" value="value"/>
+    </ParameterList>
+
+    <ParameterList name="Interpolation Hcurl">
+      <Parameter name="Source" type="string" value="AUXILIARY_EDGE_LO"/>
+      <Parameter name="Target" type="string" value="AUXILIARY_EDGE"/>
+      <Parameter name="Op" type="string" value="value"/>
+    </ParameterList>
   </ParameterList>
 
   <ParameterList name="Responses">
-    <ParameterList name="Electromagnetic Energy">
-      <Parameter name="Type" type="string" value="Functional"/>
-      <Parameter name="Field Name" type="string" value="EM_ENERGY"/>
-      <Parameter name="Element Blocks" type="string" value="eblock-0_0"/>
-      <Parameter name="Evaluation Types" type="string" value="Residual"/>
-      <Parameter name="Requires Cell Integral" type="bool" value="true"/>
-    </ParameterList>
-    <ParameterList name="Electromagnetic Energy/dt^2">
-      <Parameter name="Type" type="string" value="Functional"/>
-      <Parameter name="Field Name" type="string" value="EM_ENERGY/dt^2"/>
-      <Parameter name="Element Blocks" type="string" value="eblock-0_0"/>
-      <Parameter name="Evaluation Types" type="string" value="Residual"/>
-      <Parameter name="Requires Cell Integral" type="bool" value="true"/>
-    </ParameterList>
+    <!-- <ParameterList name="Electromagnetic Energy"> -->
+    <!--   <Parameter name="Type" type="string" value="Functional"/> -->
+    <!--   <Parameter name="Field Name" type="string" value="EM_ENERGY"/> -->
+    <!--   <Parameter name="Element Blocks" type="string" value="eblock-0_0_0"/> -->
+    <!--   <Parameter name="Evaluation Types" type="string" value="Residual"/> -->
+    <!--   <Parameter name="Requires Cell Integral" type="bool" value="true"/> -->
+    <!-- </ParameterList> -->
+    <!-- <ParameterList name="Electromagnetic Energy/dt^2"> -->
+    <!--   <Parameter name="Type" type="string" value="Functional"/> -->
+    <!--   <Parameter name="Field Name" type="string" value="EM_ENERGY/dt^2"/> -->
+    <!--   <Parameter name="Element Blocks" type="string" value="eblock-0_0_0"/> -->
+    <!--   <Parameter name="Evaluation Types" type="string" value="Residual"/> -->
+    <!--   <Parameter name="Requires Cell Integral" type="bool" value="true"/> -->
+    <!-- </ParameterList> -->
   </ParameterList>
 
   <ParameterList name="Boundary Conditions">
@@ -183,42 +240,42 @@
     <!-- <ParameterList> -->
     <!--   <Parameter name="Type" type="string" value="Dirichlet"/> -->
     <!--   <Parameter name="Sideset ID" type="string" value="top"/> -->
-    <!--   <Parameter name="Element Block ID" type="string" value="eblock-0_0"/> -->
+    <!--   <Parameter name="Element Block ID" type="string" value="eblock-0_0_0"/> -->
     <!--   <Parameter name="Equation Set Name" type="string" value="E_edge"/> -->
     <!--   <Parameter name="Strategy" type="string" value="Constant"/> -->
     <!-- </ParameterList> -->
     <!-- <ParameterList> -->
     <!--   <Parameter name="Type" type="string" value="Dirichlet"/> -->
     <!--   <Parameter name="Sideset ID" type="string" value="bottom"/> -->
-    <!--   <Parameter name="Element Block ID" type="string" value="eblock-0_0"/> -->
+    <!--   <Parameter name="Element Block ID" type="string" value="eblock-0_0_0"/> -->
     <!--   <Parameter name="Equation Set Name" type="string" value="E_edge"/> -->
     <!--   <Parameter name="Strategy" type="string" value="Constant"/> -->
     <!-- </ParameterList> -->
     <!-- <ParameterList> -->
     <!--   <Parameter name="Type" type="string" value="Dirichlet"/> -->
     <!--   <Parameter name="Sideset ID" type="string" value="left"/> -->
-    <!--   <Parameter name="Element Block ID" type="string" value="eblock-0_0"/> -->
+    <!--   <Parameter name="Element Block ID" type="string" value="eblock-0_0_0"/> -->
     <!--   <Parameter name="Equation Set Name" type="string" value="E_edge"/> -->
     <!--   <Parameter name="Strategy" type="string" value="Constant"/> -->
     <!-- </ParameterList> -->
     <!-- <ParameterList> -->
     <!--   <Parameter name="Type" type="string" value="Dirichlet"/> -->
     <!--   <Parameter name="Sideset ID" type="string" value="right"/> -->
-    <!--   <Parameter name="Element Block ID" type="string" value="eblock-0_0"/> -->
+    <!--   <Parameter name="Element Block ID" type="string" value="eblock-0_0_0"/> -->
     <!--   <Parameter name="Equation Set Name" type="string" value="E_edge"/> -->
     <!--   <Parameter name="Strategy" type="string" value="Constant"/> -->
     <!-- </ParameterList> -->
     <!-- <ParameterList> -->
     <!--   <Parameter name="Type" type="string" value="Dirichlet"/> -->
     <!--   <Parameter name="Sideset ID" type="string" value="front"/> -->
-    <!--   <Parameter name="Element Block ID" type="string" value="eblock-0_0"/> -->
+    <!--   <Parameter name="Element Block ID" type="string" value="eblock-0_0_0"/> -->
     <!--   <Parameter name="Equation Set Name" type="string" value="E_edge"/> -->
     <!--   <Parameter name="Strategy" type="string" value="Constant"/> -->
     <!-- </ParameterList> -->
     <!-- <ParameterList> -->
     <!--   <Parameter name="Type" type="string" value="Dirichlet"/> -->
     <!--   <Parameter name="Sideset ID" type="string" value="back"/> -->
-    <!--   <Parameter name="Element Block ID" type="string" value="eblock-0_0"/> -->
+    <!--   <Parameter name="Element Block ID" type="string" value="eblock-0_0_0"/> -->
     <!--   <Parameter name="Equation Set Name" type="string" value="E_edge"/> -->
     <!--   <Parameter name="Strategy" type="string" value="Constant"/> -->
     <!-- </ParameterList> -->
@@ -227,42 +284,42 @@
     <!-- <ParameterList> -->
     <!--   <Parameter name="Type" type="string" value="Dirichlet"/> -->
     <!--   <Parameter name="Sideset ID" type="string" value="top"/> -->
-    <!--   <Parameter name="Element Block ID" type="string" value="eblock-0_0"/> -->
+    <!--   <Parameter name="Element Block ID" type="string" value="eblock-0_0_0"/> -->
     <!--   <Parameter name="Equation Set Name" type="string" value="B_face"/> -->
     <!--   <Parameter name="Strategy" type="string" value="Constant"/> -->
     <!-- </ParameterList> -->
     <!-- <ParameterList> -->
     <!--   <Parameter name="Type" type="string" value="Dirichlet"/> -->
     <!--   <Parameter name="Sideset ID" type="string" value="bottom"/> -->
-    <!--   <Parameter name="Element Block ID" type="string" value="eblock-0_0"/> -->
+    <!--   <Parameter name="Element Block ID" type="string" value="eblock-0_0_0"/> -->
     <!--   <Parameter name="Equation Set Name" type="string" value="B_face"/> -->
     <!--   <Parameter name="Strategy" type="string" value="Constant"/> -->
     <!-- </ParameterList> -->
     <!-- <ParameterList> -->
     <!--   <Parameter name="Type" type="string" value="Dirichlet"/> -->
     <!--   <Parameter name="Sideset ID" type="string" value="left"/> -->
-    <!--   <Parameter name="Element Block ID" type="string" value="eblock-0_0"/> -->
+    <!--   <Parameter name="Element Block ID" type="string" value="eblock-0_0_0"/> -->
     <!--   <Parameter name="Equation Set Name" type="string" value="B_face"/> -->
     <!--   <Parameter name="Strategy" type="string" value="Constant"/> -->
     <!-- </ParameterList> -->
     <!-- <ParameterList> -->
     <!--   <Parameter name="Type" type="string" value="Dirichlet"/> -->
     <!--   <Parameter name="Sideset ID" type="string" value="right"/> -->
-    <!--   <Parameter name="Element Block ID" type="string" value="eblock-0_0"/> -->
+    <!--   <Parameter name="Element Block ID" type="string" value="eblock-0_0_0"/> -->
     <!--   <Parameter name="Equation Set Name" type="string" value="B_face"/> -->
     <!--   <Parameter name="Strategy" type="string" value="Constant"/> -->
     <!-- </ParameterList> -->
     <!-- <ParameterList> -->
     <!--   <Parameter name="Type" type="string" value="Dirichlet"/> -->
     <!--   <Parameter name="Sideset ID" type="string" value="front"/> -->
-    <!--   <Parameter name="Element Block ID" type="string" value="eblock-0_0"/> -->
+    <!--   <Parameter name="Element Block ID" type="string" value="eblock-0_0_0"/> -->
     <!--   <Parameter name="Equation Set Name" type="string" value="B_face"/> -->
     <!--   <Parameter name="Strategy" type="string" value="Constant"/> -->
     <!-- </ParameterList> -->
     <!-- <ParameterList> -->
     <!--   <Parameter name="Type" type="string" value="Dirichlet"/> -->
     <!--   <Parameter name="Sideset ID" type="string" value="back"/> -->
-    <!--   <Parameter name="Element Block ID" type="string" value="eblock-0_0"/> -->
+    <!--   <Parameter name="Element Block ID" type="string" value="eblock-0_0_0"/> -->
     <!--   <Parameter name="Equation Set Name" type="string" value="B_face"/> -->
     <!--   <Parameter name="Strategy" type="string" value="Constant"/> -->
     <!-- </ParameterList> -->

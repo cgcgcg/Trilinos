@@ -4,6 +4,7 @@
 #include "Intrepid2_OrientationTools.hpp"
 #include "Intrepid2_LagrangianInterpolation.hpp"
 #include "Thyra_EpetraThyraWrappers.hpp"
+#include <MatrixMarket_Tpetra.hpp>
 
 class CurlRequestCallback : public Teko::RequestCallback<Teko::LinearOp> {
 private:
@@ -180,7 +181,7 @@ void addDiscreteCurlToRequestHandler(
     Kokkos::deep_copy(curlAtDofCoordsNonOriented, curlAtDofCoordsNonOriented_d);
 
     // create the global curl matrix
-    RCP<matrix> curl_matrix = rcp(new matrix(rowmap,colmap,basisCoeffsLI.extent(1)));
+    RCP<matrix> curl_matrix = rcp(new matrix(rowmap,colmap,hcurlCardinality));
 
     // get IDs for edges and faces
     auto fLIDs_k = face_ugi->getLIDs();
@@ -278,6 +279,12 @@ void addDiscreteCurlToRequestHandler(
       }//end element loop
     }//end element block loop
     curl_matrix->fillComplete(domainmap,rangemap);
+
+    {
+      std::string filename = "disc-curl.mm";
+
+      Tpetra::MatrixMarket::Writer<Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal> >::writeSparseFile(filename, curl_matrix);
+    }
 
     RCP<Thyra::LinearOpBase<Scalar> > thyra_curl = Thyra::tpetraLinearOp<Scalar,LocalOrdinal,GlobalOrdinal,typename matrix::node_type>(Thyra::createVectorSpace<Scalar,LocalOrdinal,GlobalOrdinal>(rangemap),
                                                                                                                                        Thyra::createVectorSpace<Scalar,LocalOrdinal,GlobalOrdinal>(domainmap),

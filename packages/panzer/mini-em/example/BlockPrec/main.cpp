@@ -56,9 +56,11 @@
 #include "MiniEM_AddFieldsToMesh.hpp"
 #include "MiniEM_OperatorRequestCallback.hpp"
 #include "MiniEM_FullMaxwellPreconditionerFactory.hpp"
+#include "MiniEM_HigherOrderMaxwellPreconditionerFactory.hpp"
 #include "MiniEM_FullMaxwellPreconditionerFactory_Augmentation.hpp"
 #include "MiniEM_DiscreteGradient.hpp"
 #include "MiniEM_DiscreteCurl.hpp"
+#include "MiniEM_Interpolation.hpp"
 
 #include <string>
 #include <iostream>
@@ -126,7 +128,7 @@ enum linearAlgebraType {
   linAlgEpetra
 };
 
-template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class blockedLinObjFactory>
+template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class blockedLinObjFactory, bool useTpetra>
 int main_(Teuchos::CommandLineProcessor &clp, int argc,char * argv[])
 {
 
@@ -232,6 +234,8 @@ int main_(Teuchos::CommandLineProcessor &clp, int argc,char * argv[])
     Teuchos::ParameterList & assembly_pl             = input_params->sublist("Assembly");
     Teuchos::ParameterList & block_to_physics_pl     = input_params->sublist("Block ID to Physics ID Mapping");
     Teuchos::ParameterList & block_to_aux_physics_pl = input_params->sublist("Block ID to Auxiliary Physics ID Mapping");
+    Teuchos::ParameterList & ops_pl                  = input_params->sublist("Operators");
+    Teuchos::ParameterList & aux_ops_pl              = input_params->sublist("Auxiliary Operators");
     Teuchos::ParameterList & bcs_pl                  = input_params->sublist("Boundary Conditions");
     Teuchos::ParameterList & aux_bcs_pl              = input_params->sublist("Auxiliary Boundary Conditions");
     Teuchos::ParameterList & closure_models          = input_params->sublist("Closure Models");
@@ -511,6 +515,10 @@ int main_(Teuchos::CommandLineProcessor &clp, int argc,char * argv[])
     RCP<Teko::Cloneable> clone = rcp(new Teko::AutoClone<mini_em::FullMaxwellPreconditionerFactory>());
     Teko::PreconditionerFactory::addPreconditionerFactory("Full Maxwell Preconditioner",clone);
 
+    // add higher-order maxwell solver to teko
+    RCP<Teko::Cloneable> cloneHO = rcp(new Teko::AutoClone<mini_em::HigherOrderMaxwellPreconditionerFactory>());
+    Teko::PreconditionerFactory::addPreconditionerFactory("Higher Order Maxwell Preconditioner",cloneHO);
+
     RCP<Teko::Cloneable> cloneAug = rcp(new Teko::AutoClone<mini_em::FullMaxwellPreconditionerFactory_Augmentation>());
     Teko::PreconditionerFactory::addPreconditionerFactory("Full Maxwell Preconditioner: Augmentation",cloneAug);
 
@@ -524,16 +532,58 @@ int main_(Teuchos::CommandLineProcessor &clp, int argc,char * argv[])
                                                        rcp_dynamic_cast<panzer::BlockedDOFManager>(auxDofManager,true)));
     req_handler->addRequestCallback(callback);
 
-    // add discrete gradient
-    {
-      Teuchos::TimeMonitor tMdiscGrad(*Teuchos::TimeMonitor::getNewTimer(std::string("Mini-EM: add discrete gradient")));
-      addDiscreteGradientToRequestHandler(auxLinObjFactory,req_handler);
-    }
+    if (useTpetra) {
+      for (auto it = ops_pl.begin(); it != ops_pl.end(); ++it) {
+        std::string name = it->first;
+        Teuchos::ParameterList pl = it->second.getValue<Teuchos::ParameterList>(0);
+        const std::string src = pl.get<std::string>("Source");
+        const std::string tgt = pl.get<std::string>("Target");
+        const std::string op = pl.get<std::string>("Op","value");
+        const bool waitForRequest = pl.get<bool>("waitForRequest",true);
+        const bool dump = pl.get<bool>("dump",false);
+        Intrepid2::EOperator eOp;
+        if (op == "value")
+          eOp = Intrepid2::OPERATOR_VALUE;
+        else if (op == "grad")
+            eOp = Intrepid2::OPERATOR_GRAD;
+        else if (op == "curl")
+            eOp = Intrepid2::OPERATOR_CURL;
+        else
+          TEUCHOS_ASSERT(false);
+        addInterpolationToRequestHandler(name, linObjFactory, req_handler, src, tgt, eOp, waitForRequest, dump, workset_size);
+      }
 
-    // add discrete curl
-    {
-      Teuchos::TimeMonitor tMdiscCurl(*Teuchos::TimeMonitor::getNewTimer(std::string("Mini-EM: add discrete curl")));
-      addDiscreteCurlToRequestHandler(linObjFactory,req_handler);
+      for (auto it = aux_ops_pl.begin(); it != aux_ops_pl.end(); ++it) {
+        std::string name = it->first;
+        Teuchos::ParameterList pl = it->second.getValue<Teuchos::ParameterList>(0);
+        const std::string src = pl.get<std::string>("Source");
+        const std::string tgt = pl.get<std::string>("Target");
+        const std::string op = pl.get<std::string>("Op","value");
+        const bool waitForRequest = pl.get<bool>("waitForRequest",true);
+        const bool dump = pl.get<bool>("dump",false);
+        Intrepid2::EOperator eOp;
+        if (op == "value")
+          eOp = Intrepid2::OPERATOR_VALUE;
+        else if (op == "grad")
+            eOp = Intrepid2::OPERATOR_GRAD;
+        else if (op == "curl")
+            eOp = Intrepid2::OPERATOR_CURL;
+        else
+          TEUCHOS_ASSERT(false);
+        addInterpolationToRequestHandler(name, auxLinObjFactory, req_handler, src, tgt, eOp, waitForRequest, dump, workset_size);
+      }
+    } else {
+      // add discrete gradient
+      if ((solver == MUELU_REFMAXWELL) or (solver == ML_REFMAXWELL)) {
+        Teuchos::TimeMonitor tMdiscGrad(*Teuchos::TimeMonitor::getNewTimer(std::string("Mini-EM: add discrete gradient")));
+        addDiscreteGradientToRequestHandler(auxLinObjFactory,req_handler);
+      }
+
+      // add discrete curl
+      if ((solver == MUELU_REFMAXWELL) or (solver == ML_REFMAXWELL)) {
+        Teuchos::TimeMonitor tMdiscCurl(*Teuchos::TimeMonitor::getNewTimer(std::string("Mini-EM: add discrete curl")));
+        addDiscreteCurlToRequestHandler(linObjFactory,req_handler);
+      }
     }
 
     // build linear solver
@@ -778,7 +828,7 @@ int main(int argc,char * argv[]){
     // if (useComplex) {
 // #if defined(HAVE_TPETRA_COMPLEX_DOUBLE)
 //       typedef typename panzer::BlockedTpetraLinearObjFactory<panzer::Traits,std::complex<double>,int,panzer::GlobalOrdinal> blockedLinObjFactory;
-//       retVal = main_<std::complex<double>,int,panzer::GlobalOrdinal,blockedLinObjFactory>(clp, argc, argv);
+//       retVal = main_<std::complex<double>,int,panzer::GlobalOrdinal,blockedLinObjFactory,true>(clp, argc, argv);
 // #else
 //       std::cout << std::endl
 //                 << "WARNING" << std::endl
@@ -787,12 +837,12 @@ int main(int argc,char * argv[]){
 // #endif
 //     } else {
       typedef typename panzer::BlockedTpetraLinearObjFactory<panzer::Traits,double,int,panzer::GlobalOrdinal> blockedLinObjFactory;
-      retVal = main_<double,int,panzer::GlobalOrdinal,blockedLinObjFactory>(clp, argc, argv);
+      retVal = main_<double,int,panzer::GlobalOrdinal,blockedLinObjFactory,true>(clp, argc, argv);
 //    }
   } else if (linAlgebra == linAlgEpetra) {
     // TEUCHOS_ASSERT(!useComplex);
     typedef typename panzer::BlockedEpetraLinearObjFactory<panzer::Traits,int> blockedLinObjFactory;
-    retVal = main_<double,int,int,blockedLinObjFactory>(clp, argc, argv);
+    retVal = main_<double,int,int,blockedLinObjFactory,false>(clp, argc, argv);
   } else
     TEUCHOS_ASSERT(false);
 

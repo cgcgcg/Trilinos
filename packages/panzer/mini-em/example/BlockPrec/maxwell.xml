@@ -25,6 +25,9 @@
       <!-- <Parameter name="Mesh Type" type="string" value="tet"/> -->
       <Parameter name="CFL" type="double" value="4.0"/>
       <ParameterList name="Mesh Factory Parameter List">
+        <Parameter name="X Procs" type="int" value="-1" />
+        <Parameter name="Y Procs" type="int" value="-1" />
+        <Parameter name="Z Procs" type="int" value="-1" />
         <Parameter name="X Blocks" type="int" value="1" />
         <Parameter name="Y Blocks" type="int" value="1" />
         <Parameter name="Z Blocks" type="int" value="1" />
@@ -164,6 +167,22 @@
         <Parameter name="mu" type="double" value="1.2566370614e-6"/>
         <Parameter name="DoF Name" type="string" value="AUXILIARY_EDGE"/>
       </ParameterList>
+    </ParameterList>
+  </ParameterList>
+
+  <ParameterList name="Operators">
+    <ParameterList name="Discrete Curl">
+      <Parameter name="Source" type="string" value="E_edge"/>
+      <Parameter name="Target" type="string" value="B_face"/>
+      <Parameter name="Op" type="string" value="curl"/>
+    </ParameterList>
+  </ParameterList>
+
+  <ParameterList name="Auxiliary Operators">
+    <ParameterList name="Discrete Gradient">
+      <Parameter name="Source" type="string" value="AUXILIARY_NODE"/>
+      <Parameter name="Target" type="string" value="AUXILIARY_EDGE"/>
+      <Parameter name="Op" type="string" value="grad"/>
     </ParameterList>
   </ParameterList>
 

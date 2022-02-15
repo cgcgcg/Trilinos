@@ -3,6 +3,7 @@
 #include "Thyra_TpetraLinearOp.hpp"
 #include "Thyra_EpetraThyraWrappers.hpp"
 #include "Tpetra_Import.hpp"
+#include <MatrixMarket_Tpetra.hpp>
 
 class GradientRequestCallback : public Teko::RequestCallback<Teko::LinearOp> {
 private:
@@ -151,6 +152,12 @@ void addDiscreteGradientToRequestHandler(
       }//end element loop
     }//end element block loop
     grad_matrix->fillComplete(domainmap,rangemap);
+
+    {
+      std::string filename = "disc-grad.mm";
+
+      Tpetra::MatrixMarket::Writer<Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal> >::writeSparseFile(filename, grad_matrix);
+    }
 
     RCP<Thyra::LinearOpBase<double> > thyra_gradient = Thyra::tpetraLinearOp<Scalar,LocalOrdinal,GlobalOrdinal,typename matrix::node_type>(Thyra::createVectorSpace<Scalar,LocalOrdinal,GlobalOrdinal>(rangemap),
                                                                                                                                            Thyra::createVectorSpace<Scalar,LocalOrdinal,GlobalOrdinal>(domainmap),
