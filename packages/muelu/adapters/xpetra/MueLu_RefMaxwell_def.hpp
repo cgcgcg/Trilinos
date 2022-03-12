@@ -1211,10 +1211,13 @@ namespace MueLu {
       if (!syncTimers_)
         return Teuchos::rcp(new Teuchos::TimeMonitor(*Teuchos::TimeMonitor::getNewTimer(name)));
       else {
-        if (comm.is_null())
+        if (comm.is_null()) {
+          SM_Matrix_->getRowMap()->getComm()->barrier();
           return Teuchos::rcp(new Teuchos::SyncTimeMonitor(*Teuchos::TimeMonitor::getNewTimer(name), SM_Matrix_->getRowMap()->getComm().ptr()));
-        else
+        } else {
+          comm->barrier();
           return Teuchos::rcp(new Teuchos::SyncTimeMonitor(*Teuchos::TimeMonitor::getNewTimer(name), comm.ptr()));
+        }
       }
     } else
       return Teuchos::null;

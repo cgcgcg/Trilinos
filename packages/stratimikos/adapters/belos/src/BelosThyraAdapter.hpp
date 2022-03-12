@@ -59,9 +59,12 @@
 #include <Thyra_DetachedMultiVectorView.hpp>
 #include <Thyra_MultiVectorBase.hpp>
 #include <Thyra_MultiVectorStdOps.hpp>
+#include "Thyra_SpmdVectorSpaceBase.hpp"
 #ifdef HAVE_BELOS_TSQR
 #  include <Thyra_TsqrAdaptor.hpp>
 #endif // HAVE_BELOS_TSQR
+
+#define BELOS_THYRA_SYNC_TIMERS 1
 
 #include <Teuchos_TimeMonitor.hpp>
 
@@ -299,11 +302,21 @@ namespace Belos {
                          const ScalarType beta,  const TMVB& B, TMVB& mv )
     {
       using Teuchos::tuple; using Teuchos::ptrInArg; using Teuchos::inoutArg;
+#if defined(BELOS_THYRA_SYNC_TIMERS)
+      auto vs = Teuchos::rcp_dynamic_cast<const Thyra::SpmdVectorSpaceBase<ScalarType> >(A.domain());
+      if (!vs.is_null())
+        vs->getComm()->barrier();
+#endif
 
       Teuchos::TimeMonitor tM(*Teuchos::TimeMonitor::getNewTimer(std::string("Belos::MVT::MvAddMv")));
 
       Thyra::linear_combination<ScalarType>(
         tuple(alpha, beta)(), tuple(ptrInArg(A), ptrInArg(B))(), Teuchos::ScalarTraits<ScalarType>::zero(), inoutArg(mv));
+
+#if defined(BELOS_THYRA_SYNC_TIMERS)
+      if (!vs.is_null())
+        vs->getComm()->barrier();
+#endif
     }
 
     /*! \brief Scale each element of the vectors in \c *this with \c alpha.
@@ -355,9 +368,18 @@ namespace Belos {
      */
     static void MvDot( const TMVB& mv, const TMVB& A, std::vector<ScalarType>& b )
       {
+#if defined(BELOS_THYRA_SYNC_TIMERS)
+        auto vs = Teuchos::rcp_dynamic_cast<const Thyra::SpmdVectorSpaceBase<ScalarType> >(mv.domain());
+        if (!vs.is_null())
+          vs->getComm()->barrier();
+#endif
         Teuchos::TimeMonitor tM(*Teuchos::TimeMonitor::getNewTimer(std::string("Belos::MVT::MvDot")));
 
         Thyra::dots(mv, A, Teuchos::arrayViewFromVector(b));
+#if defined(BELOS_THYRA_SYNC_TIMERS)
+        if (!vs.is_null())
+          vs->getComm()->barrier();
+#endif
       }
 
     //@}
@@ -370,6 +392,11 @@ namespace Belos {
     */
     static void MvNorm( const TMVB& mv, std::vector<magType>& normvec,
       NormType type = TwoNorm ) {
+#if defined(BELOS_THYRA_SYNC_TIMERS)
+      auto vs = Teuchos::rcp_dynamic_cast<const Thyra::SpmdVectorSpaceBase<ScalarType> >(mv.domain());
+      if (!vs.is_null())
+        vs->getComm()->barrier();
+#endif
       Teuchos::TimeMonitor tM(*Teuchos::TimeMonitor::getNewTimer(std::string("Belos::MVT::MvNorm")));
 
       if(type == TwoNorm)
@@ -382,6 +409,10 @@ namespace Belos {
         TEUCHOS_TEST_FOR_EXCEPTION(true, std::invalid_argument,
                            "Belos::MultiVecTraits::MvNorm (Thyra specialization): "
                            "invalid norm type. Must be either TwoNorm, OneNorm or InfNorm");
+#if defined(BELOS_THYRA_SYNC_TIMERS)
+      if (!vs.is_null())
+        vs->getComm()->barrier();
+#endif
     }
 
     //@}
