@@ -103,6 +103,7 @@ namespace MueLu {
     verbMap["parameters1"]    = Parameters1;
     verbMap["statistics0"]    = Statistics0;
     verbMap["statistics1"]    = Statistics1;
+    verbMap["summary"]        = Summary;
     verbMap["timings0"]       = Timings0;
     verbMap["timings1"]       = Timings1;
     verbMap["timingsByLevel"] = TimingsByLevel;

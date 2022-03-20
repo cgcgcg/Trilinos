@@ -70,6 +70,7 @@ namespace MueLu {
       Statistics0     = 0x00010000, //!< Print statistics that do not involve significant additional computation
       Statistics1     = 0x00020000, //!< Print more statistics
       Statistics2     = 0x00040000, //!< Print even more statistics
+      Summary         = 0x00080000, //!< Print multigrid summary
 
       Timings0        = 0x00100000, //!< High level timing information (use Teuchos::TimeMonitor::summarize() to print)
       Timings1        = 0x00200000, //!< Detailed timing information   (use Teuchos::TimeMonitor::summarize() to print)
@@ -87,7 +88,7 @@ namespace MueLu {
       // Predefined combinations of MsgType
       // Can be used in user code or examples. Do not used as input parameters of IsPrint() or GetOStream().
       Warnings        = Warnings0 | Warnings00 | Warnings1 | PerfWarnings, //!< Print all warning messages
-      Runtime         = Runtime0 | Runtime1,                               //!< Print description of what is going on
+      Runtime         = Summary | Runtime0 | Runtime1,                     //!< Print description of what is going on
       Parameters      = Parameters0 | Parameters1,                         //!< Print parameters
       Statistics      = Statistics0 | Statistics1 | Statistics2,           //!< Print all statistics
       Timings         = Timings0 | Timings1 | TimingsByLevel,              //!< Print all timing information
@@ -97,7 +98,7 @@ namespace MueLu {
       //
       None    = 0,
       Low     = Errors | Warnings0 | Statistics0,
-      Medium  = Errors | Warnings0 | Runtime0 | Parameters0 | Statistics0 | Statistics1 | Timings0,
+      Medium  = Errors | Warnings0 | Summary  | Runtime0 | Parameters0 | Statistics0 | Statistics1 | Timings0,
       High    = Errors | Warnings  | Runtime  | Parameters  | Statistics0 | Statistics1  | Timings,
 #ifdef HAVE_MUELU_DEBUG
       Extreme = Errors | Warnings  | Runtime  | Parameters  | Statistics  | Timings | External | Developer | Debug,

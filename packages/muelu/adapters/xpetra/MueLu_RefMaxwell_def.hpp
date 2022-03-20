@@ -1012,7 +1012,7 @@ namespace MueLu {
       }
     }
 
-    describe(GetOStream(Runtime0));
+    describe(GetOStream(Summary));
 
 #ifdef HAVE_MUELU_CUDA
     if (parameterList_.get<bool>("refmaxwell: cuda profile setup", false)) cudaProfilerStop();
