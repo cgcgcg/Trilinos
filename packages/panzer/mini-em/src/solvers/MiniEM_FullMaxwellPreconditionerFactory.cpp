@@ -83,6 +83,21 @@ Teko::LinearOp FullMaxwellPreconditionerFactory::buildPreconditionerOperator(Tek
    // for refmaxwell: Q_rho = M_0(mu / dt) so that the addon is:
    // M_1(1) * D_0 * M_0(mu / dt)^-1 * D_0^T * M_1(1)
 
+   // Modify the system
+   if (simplifyFaraday_) {
+     RCP<Teuchos::FancyOStream> out = Teko::getOutputStream();
+     *out << std::endl;
+     *out << "*** WARNING ***" << std::endl;
+     *out << "We are modifying the linear system. That's not a friendly thing to do." << std::endl;
+     *out << std::endl;
+
+     Teko::LinearOp Q_B  = Teko::getBlock(0,0,blo);
+     Teko::LinearOp id_B = getIdentityMatrix(Q_B, 1/dt);
+     Teko::LinearOp hoC  = getRequestHandler()->request<Teko::LinearOp>(Teko::RequestMesg("Discrete Curl"));
+     Teko::setBlock(0,0,blo,id_B);
+     Teko::setBlock(0,1,blo,hoC);
+   }
+
    // Extract the blocks
    Teko::LinearOp Q_B   = Teko::getBlock(0,0,blo);
    Teko::LinearOp K     = Teko::getBlock(0,1,blo);
@@ -168,7 +183,7 @@ Teko::LinearOp FullMaxwellPreconditionerFactory::buildPreconditionerOperator(Tek
 
    // Inverse of B mass matrix
    Teko::LinearOp invQ_B;
-   {
+   if (!simplifyFaraday_) {
      Teuchos::TimeMonitor tm(*Teuchos::TimeMonitor::getNewTimer("MaxwellPreconditioner: Inverse Q_B"));
      // Are we building a solver or a preconditioner?
      if (useAsPreconditioner) {
@@ -349,13 +364,16 @@ Teko::LinearOp FullMaxwellPreconditionerFactory::buildPreconditionerOperator(Tek
        Teko::setBlock(1,1,invL,id_E);
        Teko::endBlockFill(invL);
 
-       Teko::BlockedLinearOp invDiag = Teko::createBlockedOp();
-       Teko::beginBlockFill(invDiag,rows,rows);
-       Teko::setBlock(0,0,invDiag,Teko::scale(1/dt,invQ_B));
-       Teko::setBlock(1,1,invDiag,id_E);
-       Teko::endBlockFill(invDiag);
+       if (!simplifyFaraday_) {
+         Teko::BlockedLinearOp invDiag = Teko::createBlockedOp();
+         Teko::beginBlockFill(invDiag,rows,rows);
+         Teko::setBlock(0,0,invDiag,Teko::scale(1/dt,invQ_B));
+         Teko::setBlock(1,1,invDiag,id_E);
+         Teko::endBlockFill(invDiag);
 
-       return Teko::multiply(invU, Teko::multiply(Teko::toLinearOp(invL), Teko::toLinearOp(invDiag)));
+         return Teko::multiply(invU, Teko::multiply(Teko::toLinearOp(invL), Teko::toLinearOp(invDiag)));
+       } else
+         return Teko::multiply(invU, Teko::toLinearOp(invL));
      } else
        return invU;
    }
@@ -374,6 +392,7 @@ void FullMaxwellPreconditionerFactory::initializeFromParameterList(const Teuchos
    dump                   = params.get("Dump",false);
    doDebug                = params.get("Debug",false);
    useAsPreconditioner    = params.get("Use as preconditioner",false);
+   simplifyFaraday_       = params.get("Simplify Faraday",true) && use_discrete_curl_;
 
    if(pl.isSublist("S_E Preconditioner") && pl.sublist("S_E Preconditioner").isParameter("Type"))
      S_E_prec_type_ = pl.sublist("S_E Preconditioner").get<std::string>("Type");
