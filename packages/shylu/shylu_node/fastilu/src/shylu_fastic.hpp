@@ -53,6 +53,7 @@
 #include <cstdlib>
 #include <cmath>
 #include <ctime>
+#include <string>
 
 #include <assert.h>
 #include <Kokkos_Core.hpp>
@@ -69,18 +70,23 @@ class FastICPrec
 {
 
     public:
+        typedef typename Teuchos::ScalarTraits<Scalar>::magnitudeType Real;
         typedef Kokkos::View<Ordinal *, ExecSpace> OrdinalArray;
         typedef Kokkos::View<Scalar *, ExecSpace> ScalarArray;
+        typedef Kokkos::View<Real *, ExecSpace> RealArray;
         typedef Kokkos::View<Ordinal *, typename ExecSpace::array_layout, Kokkos::Serial, 
-                Kokkos::MemoryUnmanaged> UMOrdinalArray;
+                             Kokkos::MemoryUnmanaged> UMOrdinalArray;
         typedef Kokkos::View<Scalar *, typename ExecSpace::array_layout, Kokkos::Serial, 
-                Kokkos::MemoryUnmanaged> UMScalarArray;
+                             Kokkos::MemoryUnmanaged> UMScalarArray;
         typedef FastICPrec<Ordinal, Scalar, ExecSpace> FastPrec;
 
         typedef Kokkos::View<Ordinal *, Kokkos::HostSpace> OrdinalArrayHost;
         typedef Kokkos::View<Scalar  *, Kokkos::HostSpace>  ScalarArrayHost;
         typedef typename OrdinalArray::host_mirror_type OrdinalArrayMirror;
         typedef typename ScalarArray::host_mirror_type  ScalarArrayMirror;
+
+        using STS = Kokkos::ArithTraits<Scalar>;
+        using RTS = Kokkos::ArithTraits<Real>;
 
     private:
         double computeTime;
@@ -92,6 +98,7 @@ class FastICPrec
         Ordinal nFact;
         Ordinal nTrisol;
         Ordinal level;
+        Ordinal blkSzIC;
         Ordinal blkSz;
         Scalar omega;
         Scalar shift;
@@ -127,7 +134,7 @@ class FastICPrec
         OrdinalArrayMirror aColIdx_;
 
         //Diagonal scaling factors
-        ScalarArray diagFact;
+        RealArray diagFact;
         ScalarArray diagElems;
         ScalarArray diagElemsInv;
         // mirrors
@@ -139,15 +146,23 @@ class FastICPrec
         ScalarArray xTemp;
         ScalarArray onesVector;
 
+        //This will have the continuation initial
+        //guess if guessFlag=1
         Teuchos::RCP<FastPrec> initGuessPrec;
 
+        // forward/backwar substitution for standard SpTrsv
+        using MemSpace = typename ExecSpace::memory_space;
+        using KernelHandle = KokkosKernels::Experimental::KokkosKernelsHandle <Ordinal, Ordinal, Scalar, ExecSpace, MemSpace, MemSpace >;
+        bool standard_sptrsv;
+        KernelHandle khL;
+        KernelHandle khLt;
 
     public:
-        FastICPrec(OrdinalArray &aRowMapIn, OrdinalArray &aColIdxIn, ScalarArray &aValIn, Ordinal nRow_,
-                Ordinal nFact_, Ordinal nTrisol_, Ordinal level_, Scalar omega_, 
-                Scalar shift_, Ordinal guessFlag_, Ordinal blkSz_)
+        FastICPrec(OrdinalArray &aRowMapIn, OrdinalArray &aColIdxIn, ScalarArray &aValIn, Ordinal nRow_, bool standard_sptrsv_,
+                   Ordinal nFact_, Ordinal nTrisol_, Ordinal level_, Scalar omega_, Scalar shift_, Ordinal guessFlag_, Ordinal blkSzIC_, Ordinal blkSz_)
         {
             nRows = nRow_;
+            standard_sptrsv = standard_sptrsv_;
             nFact = nFact_;
             nTrisol = nTrisol_;
             computeTime = 0.0;
@@ -166,13 +181,14 @@ class FastICPrec
             omega = omega_;
             guessFlag = guessFlag_;
             shift = shift_;
+            blkSzIC = blkSzIC_;
             blkSz = blkSz_;
 
-            const Scalar one = Kokkos::ArithTraits<Scalar>::one();
+            const Scalar one = STS::one();
             onesVector = ScalarArray("onesVector", nRow_);
             Kokkos::deep_copy(onesVector, one);
 
-            diagFact = ScalarArray("diagFact", nRow_);
+            diagFact = RealArray("diagFact", nRow_);
             diagElems = ScalarArray("diagElems", nRow_);
             diagElemsInv = ScalarArray("diagElems", nRow_);
             xOld = ScalarArray("xOld", nRow_);
@@ -180,8 +196,8 @@ class FastICPrec
 
             if (level > 0)
             {
-                initGuessPrec = Teuchos::rcp(new FastPrec(aRowMapIn, aColIdxIn, aValIn, nRow_, 3, 5, 
-                            level_ - 1, omega_, shift_, guessFlag_, blkSz_));
+                initGuessPrec = Teuchos::rcp(new FastPrec(aRowMapIn, aColIdxIn, aValIn, nRow_, standard_sptrsv, 3, 5, 
+                                                          level_-1, omega_, shift_, guessFlag_, blkSzIC_, blkSz_));
             }
 
         }
@@ -517,28 +533,23 @@ class FastICPrec
             aVal_ = Kokkos::create_mirror(aVal);
 
             //Copy the host matrix into the initialized a;
-            Ordinal aHostPtr = 0;
             for (Ordinal i = 0; i < nRows; i++)
             {
-                #ifdef SHYLU_DEBUG
-                Ordinal check = aHostPtr;
-                #endif
                 for(Ordinal k = aRowMap_[i]; k < aRowMap_[i+1]; k++)
                 {
                     Ordinal col = aColIdx_[k];
                     #ifdef FASTIC_DEBUG_OUTPUT
                     std::cout << "col =" << col << std::endl;
                     #endif
-                    
-                    if (col == aColIdxHost[aHostPtr])
+                    for(Ordinal aHostPtr = aRowMapHost[i]; aHostPtr < aRowMapHost[i+1]; aHostPtr++)
                     {
-                       aVal_[k] = aValHost[aHostPtr]; 
-                       aHostPtr++;
+                        if (col == aColIdxHost[aHostPtr])
+                        {
+                            aVal_[k] = aValHost[aHostPtr]; 
+                            break;
+                        }
                     }
                 }
-                #ifdef SHYLU_DEBUG
-                assert((aHostPtr - check) == (aRowMapHost[i+1] - aRowMapHost[i]));
-                #endif
             }
             lVal = ScalarArray("lVal", lRowMap_[nRows]);
             ltVal = ScalarArray("ltVal", lRowMap_[nRows]);
@@ -646,6 +657,7 @@ class FastICPrec
 
         void applyDiagonalScaling()
         {
+            const Real one = RTS::one();
             int anext = 0;
             //First fill Aj and extract the diagonal scaling factors
             //Use diag array to store scaling factors since
@@ -658,8 +670,7 @@ class FastICPrec
                     aRowIdx_[anext++] = i;
                     if (aColIdx_[k] == i) 
                     {
-                        diagFact_[i] = 1.0/std::sqrt(std::fabs(aVal_[k]));
-                        //diagFact[i] = std::sqrt(std::fabs(aVal[k]));
+                        diagFact_[i] = one/RTS::sqrt(STS::abs(aVal_[k]));
                         #ifdef FASTIC_DEBUG_OUTPUT
                         std::cout << "diagFact["<<i<<"]="<<aVal[k]<<std::endl;
                         #endif
@@ -670,8 +681,7 @@ class FastICPrec
             //Now go through each element of A and apply the scaling
             int row;
             int col;
-            double sc1, sc2;
-
+            Real sc1, sc2;
             for (int i = 0; i < nRows; i++) 
             {
                 for (int k = aRowMap_[i]; k < aRowMap_[i+1]; k++) 
@@ -689,6 +699,7 @@ class FastICPrec
 
         void applyManteuffelShift()
         {
+            const Scalar one = STS::one();
             //Scalar shift = 0.05;
             for (Ordinal i = 0; i < nRows; i++) 
             {
@@ -698,7 +709,7 @@ class FastICPrec
                     Ordinal col = aColIdx_[k];
                     if (row != col)
                     {
-                        aVal_[k] = (1.0/(1.0 + shift))*aVal_[k];
+                        aVal_[k] = (one/(one + shift))*aVal_[k];
                     }
                 }
             }
@@ -706,7 +717,7 @@ class FastICPrec
 
         void applyDD(ScalarArray &x, ScalarArray &y)
         {
-            ParScalFunctor<Ordinal, Scalar, ExecSpace> parScal(nRows, x, y, diagElemsInv);
+            ParScalFunctor<Ordinal, Scalar, Scalar, ExecSpace> parScal(nRows, x, y, diagElemsInv);
             ExecSpace().fence();
             Kokkos::parallel_for(nRows, parScal);
             ExecSpace().fence();
@@ -714,7 +725,7 @@ class FastICPrec
         }
         void applyD(ScalarArray &x, ScalarArray &y)
         {
-            ParScalFunctor<Ordinal, Scalar, ExecSpace> parScal(nRows, x, y, diagFact);
+            ParScalFunctor<Ordinal, Scalar, Real, ExecSpace> parScal(nRows, x, y, diagFact);
             ExecSpace().fence();
             Kokkos::parallel_for(nRows, parScal);
             ExecSpace().fence();
@@ -817,13 +828,13 @@ class FastICPrec
 
         void compute()
         {
+            const Scalar one = STS::one();
             Kokkos::Timer timer;
             if((level > 0) && (guessFlag != 0))
             {
                 initGuessPrec->compute();
             }
             numericILU();
-            Ordinal blkSzIC = 4096;
             FastICFunctor<Ordinal, Scalar, ExecSpace> icFunctor(aRowMap_[nRows], blkSzIC,
                     aRowMap, aColIdx, aRowIdx, aVal, lRowMap, lColIdx, lVal, diagElems, omega);
             ExecSpace().fence();
@@ -846,10 +857,32 @@ class FastICPrec
             diagElemsInv_ = Kokkos::create_mirror(diagElemsInv);
             for (int i = 0; i < nRows; i++) 
             {
-                diagElemsInv_[i] = 1.0/diagElems_[i];
+                diagElemsInv_[i] = one/diagElems_[i];
             }
             Kokkos::deep_copy(diagElemsInv, diagElemsInv_);
             transposeL();
+
+            if (standard_sptrsv) {
+                #if defined(KOKKOSKERNELS_ENABLE_TPL_CUSPARSE)
+                KokkosSparse::Experimental::SPTRSVAlgorithm algo = KokkosSparse::Experimental::SPTRSVAlgorithm::SPTRSV_CUSPARSE;
+                #else
+                KokkosSparse::Experimental::SPTRSVAlgorithm algo = KokkosSparse::Experimental::SPTRSVAlgorithm::SEQLVLSCHD_TP1;
+                #endif
+                // setup L solve
+                khL.create_sptrsv_handle(algo, nRows, true);
+                #if defined(KOKKOSKERNELS_ENABLE_TPL_CUSPARSE)
+                KokkosSparse::Experimental::sptrsv_symbolic(&khL, lRowMap, lColIdx, lVal);
+                #else
+                KokkosSparse::Experimental::sptrsv_symbolic(&khL, lRowMap, lColIdx);
+                #endif
+                // setup Lt solve
+                khLt.create_sptrsv_handle(algo, nRows, false);
+                #if defined(KOKKOSKERNELS_ENABLE_TPL_CUSPARSE)
+                KokkosSparse::Experimental::sptrsv_symbolic(&khLt, ltRowMap, ltColIdx, ltVal);
+                #else
+                KokkosSparse::Experimental::sptrsv_symbolic(&khLt, ltRowMap, ltColIdx);
+                #endif
+            }
         }
 
         void apply(ScalarArray &x, ScalarArray &y)
@@ -862,9 +895,16 @@ class FastICPrec
             ExecSpace().fence();
 
             applyD(x, xTemp);
-            applyLIC(xTemp, y);
-            //applyDD(y, xTemp);
-            applyLT(y, xTemp);
+            if (standard_sptrsv) {
+                // solve with L
+                KokkosSparse::Experimental::sptrsv_solve(&khL, lRowMap, lColIdx, lVal, xTemp, y);
+                // solve with Lt
+                KokkosSparse::Experimental::sptrsv_solve(&khLt, ltRowMap, ltColIdx, ltVal, y, xTemp);
+            } else {
+                applyLIC(xTemp, y);
+                //applyDD(y, xTemp);
+                applyLT(y, xTemp);
+            }
             applyD(xTemp, y);
 
 //            ParCopyFunctor<Ordinal, Scalar, ExecSpace> parCopyFunctor2(nRows, y, xTemp);
@@ -881,7 +921,12 @@ class FastICPrec
         {
             return nFact;
         }
-        
+
+        std::string getSpTrsvType() const
+        {
+            return (standard_sptrsv ? "Standard" : "Fast");
+        }
+
         Ordinal getNTrisol() const
         {
             return nTrisol;
@@ -910,7 +955,7 @@ class FastICPrec
         {
             //Compute the L2 norm of the nonlinear residual (A - LLt) on sparsity pattern
             //
-            Scalar sum = 0.0;
+            Scalar sum = STS::zero();
             for (int i = 0 ; i < nRows; i++)
             {
                 int row = i;
@@ -950,7 +995,7 @@ class FastICPrec
         friend class JacobiIterFunctor<Ordinal, Scalar, ExecSpace>;
         friend class ParCopyFunctor<Ordinal, Scalar, ExecSpace>;
         friend class JacobiIterFunctorT<Ordinal, Scalar, ExecSpace>;
-        friend class ParScalFunctor<Ordinal, Scalar, ExecSpace>;
+        friend class ParScalFunctor<Ordinal, Scalar, Real, ExecSpace>;
         friend class MemoryPrimeFunctorN<Ordinal, Scalar, ExecSpace>;
         friend class MemoryPrimeFunctorNnzCoo<Ordinal, Scalar, ExecSpace>;
         friend class MemoryPrimeFunctorNnzCsr<Ordinal, Scalar, ExecSpace>;

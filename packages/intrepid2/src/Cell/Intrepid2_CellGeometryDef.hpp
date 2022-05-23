@@ -513,9 +513,19 @@ namespace Intrepid2
   cellToNodes_(cellToNodes),
   nodes_(nodes)
   {
-    numCells_ = cellToNodes.extent_int(0);
-    numNodesPerCell_ = cellToNodes.extent_int(1);
-    INTREPID2_TEST_FOR_EXCEPTION_DEVICE_SAFE(numNodesPerCell_ != cellTopo.getNodeCount(), std::invalid_argument, "cellToNodes.extent(1) does not match the cell topology node count");
+    if(cellToNodes.is_allocated())
+    {
+      numCells_ = cellToNodes.extent_int(0);
+      numNodesPerCell_ = cellToNodes.extent_int(1);
+      INTREPID2_TEST_FOR_EXCEPTION_DEVICE_SAFE(numNodesPerCell_ != cellTopo.getNodeCount(), std::invalid_argument, "cellToNodes.extent(1) does not match the cell topology node count");
+    }
+    else
+    {
+      numCells_ = nodes.extent_int(0);
+      numNodesPerCell_ = nodes.extent_int(1);
+      INTREPID2_TEST_FOR_EXCEPTION_DEVICE_SAFE(numNodesPerCell_ != cellTopo.getNodeCount(), std::invalid_argument, "nodes.extent(1) does not match the cell topology node count");
+    }
+    
   
     if (!claimAffine)
     {
@@ -941,7 +951,7 @@ namespace Intrepid2
   template<class PointScalar, int spaceDim, typename DeviceType>
   void CellGeometry<PointScalar,spaceDim,DeviceType>::initializeOrientations()
   {
-    using HostExecSpace = typename Kokkos::Impl::is_space<DeviceType>::host_mirror_space::execution_space ;
+    using HostExecSpace = Kokkos::DefaultHostExecutionSpace;
     
     const bool isGridType = (cellGeometryType_ == TENSOR_GRID) || (cellGeometryType_ == UNIFORM_GRID);
     const int numOrientations = isGridType ? numCellsPerGridCell(subdivisionStrategy_) : numCells();
