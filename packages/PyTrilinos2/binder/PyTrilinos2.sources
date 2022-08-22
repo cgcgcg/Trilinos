@@ -36,7 +36,6 @@ Teuchos_ParameterListAcceptor.cpp
 Tpetra_Details_DistributorPlan.cpp
 Tpetra_Import_decl.cpp
 Tpetra_RowMatrix_decl.cpp
-Tpetra_Include.cpp
+PyTrilinos2_Tpetra_ETI.cpp
 Teuchos_SerializationTraits.cpp
 Tpetra_MultiVector_decl_1.cpp
-Teuchos_Include_Pybind11.cpp

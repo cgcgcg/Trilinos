@@ -1,6 +1,6 @@
 #include <Teuchos_BLAS_types.hpp>
 #include <Teuchos_DataAccess.hpp>
-#include <Teuchos_Include_Pybind11.hpp>
+#include <PyTrilinos2_Teuchos_Custom.hpp>
 #include <Teuchos_Range1D.hpp>
 #include <cwchar>
 #include <ios>

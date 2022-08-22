@@ -3,7 +3,7 @@
 #include <Teuchos_CommandLineProcessor.hpp>
 #include <Teuchos_CompileTimeAssert.hpp>
 #include <Teuchos_ENull.hpp>
-#include <Teuchos_Include_Pybind11.hpp>
+#include <PyTrilinos2_Teuchos_Custom.hpp>
 #include <Teuchos_OpaqueWrapper.hpp>
 #include <Teuchos_ParameterList.hpp>
 #include <Teuchos_PerformanceMonitorBase.hpp>

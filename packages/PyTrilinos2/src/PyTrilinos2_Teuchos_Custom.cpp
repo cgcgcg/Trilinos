@@ -1,4 +1,4 @@
-#include <Teuchos_Include_Pybind11.hpp>
+#include <PyTrilinos2_Teuchos_Custom.hpp>
 
 #if PY_VERSION_HEX >= 0x03000000
 

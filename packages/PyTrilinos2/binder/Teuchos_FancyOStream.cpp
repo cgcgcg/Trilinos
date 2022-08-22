@@ -7,8 +7,8 @@
 #include <Teuchos_ENull.hpp>
 #include <Teuchos_FancyOStream.hpp>
 #include <Teuchos_FilteredIterator.hpp>
-#include <Teuchos_Include.hpp>
-#include <Teuchos_Include_Pybind11.hpp>
+#include <PyTrilinos2_Teuchos_ETI.hpp>
+#include <PyTrilinos2_Teuchos_Custom.hpp>
 #include <Teuchos_LabeledObject.hpp>
 #include <Teuchos_ParameterEntry.hpp>
 #include <Teuchos_ParameterEntryValidator.hpp>
@@ -894,7 +894,7 @@ void bind_Teuchos_FancyOStream(std::function< pybind11::module &(std::string con
 	// Teuchos::sublist(const class Teuchos::RCP<const class Teuchos::ParameterList> &, const std::string &) file:Teuchos_ParameterList.hpp line:1588
 	M("Teuchos").def("sublist", (class Teuchos::RCP<const class Teuchos::ParameterList> (*)(const class Teuchos::RCP<const class Teuchos::ParameterList> &, const std::string &)) &Teuchos::sublist, "Return a RCP to a sublist in another RCP-ed parameter list.\n\nC++: Teuchos::sublist(const class Teuchos::RCP<const class Teuchos::ParameterList> &, const std::string &) --> class Teuchos::RCP<const class Teuchos::ParameterList>", pybind11::arg("paramList"), pybind11::arg("name"));
 
-	// Teuchos::initiate(class Teuchos::ParameterList) file:Teuchos_Include.hpp line:4
+	// Teuchos::initiate(class Teuchos::ParameterList) file:PyTrilinos2_Teuchos_ETI.hpp line:4
 	M("Teuchos").def("initiate", (void (*)(class Teuchos::ParameterList)) &Teuchos::initiate, "C++: Teuchos::initiate(class Teuchos::ParameterList) --> void", pybind11::arg("p"));
 
 }

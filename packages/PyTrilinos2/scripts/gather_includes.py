@@ -1,6 +1,17 @@
 import glob
 import os
 
+def get_angular_include(line):
+    first=True
+    for i in range(len(line)):
+        if line[i] == '"':
+            if first:
+                line = line[:i] + '<' + line[i+1:]
+                first = False
+            else:
+                line = line[:i] + '>' + line[i+1:]
+    return line
+
 def make_all_includes(all_include_filename, folders):
     all_includes = []
     for folder in folders:
@@ -12,15 +23,7 @@ def make_all_includes(all_include_filename, folders):
             with open(filename, 'r') as fh:
                 for line in fh:
                     if line.startswith('#include'):
-                        first=True
-                        for i in range(len(line)):
-                            if line[i] == '"':
-                                if first:
-                                    line = line[:i] + '<' + line[i+1:]
-                                    first = False
-                                else:
-                                    line = line[:i] + '>' + line[i+1:]
-                        all_includes.append(line.strip())
+                        all_includes.append(get_angular_include(line).strip())
     all_includes = list(set(all_includes))
     # This is to ensure that the list is always the same and doesn't
     # depend on the filesystem state.  Not technically necessary, but
@@ -37,15 +40,7 @@ def make_all_includes_from_filenames(all_include_filename, filenames):
         with open(filename, 'r') as fh:
             for line in fh:
                 if line.startswith('#include'):
-                    first=True
-                    for i in range(len(line)):
-                        if line[i] == '"':
-                            if first:
-                                line = line[:i] + '<' + line[i+1:]
-                                first = False
-                            else:
-                                line = line[:i] + '>' + line[i+1:]
-                    all_includes.append(line.strip())
+                    all_includes.append(get_angular_include(line).strip())
     all_includes = list(set(all_includes))
     # This is to ensure that the list is always the same and doesn't
     # depend on the filesystem state.  Not technically necessary, but
@@ -72,14 +67,7 @@ def copy_and_angular_includes(filenames, from_dir, to_dir):
             with open(to_dir+'/'+file_name+write_extension, 'w') as to_f:
                 for line in from_f:
                     if line.startswith('#include'):
-                        first=True
-                        for i in range(len(line)):
-                            if line[i] == '"':
-                                if first:
-                                    line = line[:i] + '<' + line[i+1:]
-                                    first = False
-                                else:
-                                    line = line[:i] + '>' + line[i+1:]
+                        line = get_angular_include(line)
                     to_f.write(f'{line}')
     return output_filenames
 

@@ -22,7 +22,7 @@
 #include <Teuchos_ENull.hpp>
 #include <Teuchos_FancyOStream.hpp>
 #include <Teuchos_FilteredIterator.hpp>
-#include <Teuchos_Include_Pybind11.hpp>
+#include <PyTrilinos2_Teuchos_Custom.hpp>
 #include <Teuchos_ParameterEntry.hpp>
 #include <Teuchos_ParameterEntryValidator.hpp>
 #include <Teuchos_ParameterList.hpp>

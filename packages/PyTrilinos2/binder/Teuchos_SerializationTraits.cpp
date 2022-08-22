@@ -1,4 +1,4 @@
-#include <Teuchos_Include_Pybind11.hpp>
+#include <PyTrilinos2_Teuchos_Custom.hpp>
 #include <Teuchos_SerializationTraits.hpp>
 #include <sstream> // __str__
 

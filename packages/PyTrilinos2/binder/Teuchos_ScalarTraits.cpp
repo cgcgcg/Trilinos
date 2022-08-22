@@ -4,7 +4,7 @@
 #include <Teuchos_Describable.hpp>
 #include <Teuchos_ENull.hpp>
 #include <Teuchos_FancyOStream.hpp>
-#include <Teuchos_Include_Pybind11.hpp>
+#include <PyTrilinos2_Teuchos_Custom.hpp>
 #include <Teuchos_LabeledObject.hpp>
 #include <Teuchos_PerformanceMonitorBase.hpp>
 #include <Teuchos_PtrDecl.hpp>
