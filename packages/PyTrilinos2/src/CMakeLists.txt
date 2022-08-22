@@ -1,0 +1,15 @@
+FILE(GLOB PYTRILINOS2_SRC *.cpp)
+MESSAGE("PYTRILINOS2_SRC = ${PYTRILINOS2_SRC}")
+FILE(COPY ${PYTRILINOS2_SRC} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
+file(STRINGS ${CMAKE_CURRENT_BINARY_DIR}/../binder/PyTrilinos2.sources BINDER_SRCS)
+list(TRANSFORM BINDER_SRCS PREPEND "../binder/")
+list(APPEND PYTRILINOS2_SRC ${BINDER_SRCS})
+
+MESSAGE("PYTRILINOS2_SRC with binder = ${PYTRILINOS2_SRC}")
+
+pybind11_add_module(PyTrilinos2 ${PYTRILINOS2_SRC})
+target_include_directories(PyTrilinos2 PUBLIC ${Trilinos_INCLUDE_DIRS} ${Mpi4Py_INCLUDE_DIR} /home/knliege/dev/binder/binder/source /home/knliege/dev/PyTrilinos2/src/include)
+target_compile_features(PyTrilinos2 PUBLIC cxx_std_14)
+target_link_libraries(PyTrilinos2 PRIVATE ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES})
+set_target_properties(PyTrilinos2 PROPERTIES SUFFIX ".so")
