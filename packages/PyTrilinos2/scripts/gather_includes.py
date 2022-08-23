@@ -2,7 +2,18 @@ import glob
 import os
 import sys
 
-def get_angular_include(line):
+def get_without_subfolder(line):
+    last_index=-1
+    for i in range(len(line)):
+        if line[i] == '/':
+            last_index = i
+        if line[i] == '<':
+            first_index = i
+    if last_index == -1:
+        return line
+    return line[:first_index+1]+line[last_index+1:]
+
+def get_angular_include(line, remove_subfolder=False):
     first=True
     for i in range(len(line)):
         if line[i] == '"':
@@ -11,6 +22,8 @@ def get_angular_include(line):
                 first = False
             else:
                 line = line[:i] + '>' + line[i+1:]
+    if remove_subfolder:
+        return get_without_subfolder(line)
     return line
 
 def make_all_includes(all_include_filename, folders):
@@ -68,7 +81,7 @@ def copy_and_angular_includes(filenames, to_dir):
             with open(to_dir+'/'+file_name+write_extension, 'w') as to_f:
                 for line in from_f:
                     if line.startswith('#include'):
-                        line = get_angular_include(line)
+                        line = get_angular_include(line, True)
                     to_f.write(f'{line}')
     return output_filenames
 
