@@ -1,5 +1,6 @@
 import glob
 import os
+import sys
 
 def get_angular_include(line):
     first=True
@@ -72,29 +73,13 @@ def copy_and_angular_includes(filenames, from_dir, to_dir):
     return output_filenames
 
 if __name__ == '__main__':
+    CMAKE_CURRENT_SOURCE_DIR = sys.argv[1]
+    CMAKE_CURRENT_BINARY_DIR = sys.argv[2]
+    all_header_list = sys.argv[3]
+    binder_include_name = sys.argv[4]
 
-    cwd = os.getcwd()
-    trilinos_include = '/home/knliege/local/trilinos/albany_release/include'
-    tpetra_src = '/home/knliege/dev/trilinos/Trilinos/packages/tpetra/core/src'
-    tpetra_build = '/home/knliege/dev/trilinos/Trilinos_Release_B/packages/tpetra/core/src'
+    with open(all_header_list, 'r') as fh:
+        all_include_filenames = fh.read().splitlines()
 
-    teuchos_include_list = 'Teuchos_header_list.txt'
-    tpetra_include_list = 'All_header_list.txt'
-    tpetra_src_list = 'Tpetra_src_list.txt'
-    tpetra_build_list = 'Tpetra_build_list.txt'
-
-    with open(teuchos_include_list, 'r') as fh:
-        teuchos_include_filenames = fh.read().splitlines()
-
-    copy_and_angular_includes(['Teuchos_Include.hpp'], cwd+'/include', cwd+'/include_teuchos_tmp')
-    teuchos_include_filenames = copy_and_angular_includes(teuchos_include_filenames, trilinos_include, cwd+'/include_teuchos_tmp')
-    
-    with open(tpetra_include_list, 'r') as fh:
-        tpetra_include_filenames = fh.read().splitlines()
-
-    copy_and_angular_includes(['Teuchos_Include.hpp'], cwd+'/include', cwd+'/include_tpetra_tmp')
-    copy_and_angular_includes(['Tpetra_Include.hpp'], cwd+'/include', cwd+'/include_tpetra_tmp')
-    copy_and_angular_includes(tpetra_include_filenames, trilinos_include, cwd+'/include_tpetra_tmp')
-
-    make_all_includes_from_filenames('teuchos_includes.hpp', [cwd+'/include/Teuchos_Binder.hpp'])
-    make_all_includes_from_filenames('tpetra_includes.hpp', [cwd+'/include/Tpetra_Binder.hpp'])
+    copy_and_angular_includes(all_include_filenames, trilinos_include, CMAKE_CURRENT_BINARY_DIR+'/include_tmp')
+    make_all_includes_from_filenames(CMAKE_CURRENT_BINARY_DIR+'/'+binder_include_name, [CMAKE_CURRENT_SOURCE_DIR+'/src/PyTrilinos2_Binder_Input.hpp'])
