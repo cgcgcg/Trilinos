@@ -54,17 +54,17 @@ def make_all_includes_from_filenames(all_include_filename, filenames):
 
 # https://github.com/RosettaCommons/binder/issues/212
 
-def copy_and_angular_includes(filenames, from_dir, to_dir):
+def copy_and_angular_includes(filenames, to_dir):
     output_filenames = []
     # loops over the files, replace include " " by include < > and write them in the to_dir:
     for filename in filenames:
-        file_name, file_extension = os.path.splitext(filename)
+        file_name, file_extension = os.path.splitext(os.path.basename(filename))
         if file_extension == '.cpp':
             write_extension = '_cpp.hpp'
         else:
             write_extension = file_extension
         output_filenames.append(file_name+write_extension)
-        with open(from_dir+'/'+filename, 'r') as from_f:
+        with open(filename, 'r') as from_f:
             with open(to_dir+'/'+file_name+write_extension, 'w') as to_f:
                 for line in from_f:
                     if line.startswith('#include'):
@@ -81,5 +81,5 @@ if __name__ == '__main__':
     with open(all_header_list, 'r') as fh:
         all_include_filenames = fh.read().splitlines()
 
-    copy_and_angular_includes(all_include_filenames, trilinos_include, CMAKE_CURRENT_BINARY_DIR+'/include_tmp')
-    make_all_includes_from_filenames(CMAKE_CURRENT_BINARY_DIR+'/'+binder_include_name, [CMAKE_CURRENT_SOURCE_DIR+'/src/PyTrilinos2_Binder_Input.hpp'])
+    copy_and_angular_includes(all_include_filenames, CMAKE_CURRENT_BINARY_DIR+'/include_tmp')
+    make_all_includes_from_filenames(binder_include_name, [CMAKE_CURRENT_SOURCE_DIR+'/src/PyTrilinos2_Binder_Input.hpp'])

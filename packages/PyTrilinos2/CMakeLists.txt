@@ -69,43 +69,9 @@ ELSE()
   MESSAGE("  -- User has set: PYTHON_EXECUTABLE = ${PYTHON_EXECUTABLE}")
 ENDIF()
 
-set(PyTrilinos2_all_include_dirs)
-foreach(depPkg IN LISTS PyTrilinos2_LIB_ENABLED_DEPENDENCIES)
-    get_property(depend_libs TARGET ${depPkg}::all_libs PROPERTY INTERFACE_LINK_LIBRARIES)
-    foreach(depend_lib IN LISTS depend_libs)
-        get_property(current_includes TARGET ${depend_lib} PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
-        MESSAGE("current_includes=${current_includes}")
-        list(LENGTH current_includes len)
-        message(STATUS "len = ${len}")
-        foreach(include IN LISTS current_includes)
-            MESSAGE("include=${include}")
-            STRING(REPLACE "$<BUILD_INTERFACE:" "" new_tmp_include ${include})
-            STRING(REPLACE ">" "" new_include ${new_tmp_include})
-            MESSAGE("after include=${new_include}")
-            list(APPEND PyTrilinos2_all_include_dirs "${new_include}")
-        endforeach()
-    endforeach()    
-endforeach()
-list(REMOVE_DUPLICATES PyTrilinos2_all_include_dirs)
-MESSAGE("PyTrilinos2_all_include_dirs = ${PyTrilinos2_all_include_dirs}")
-
-set(PyTrilinos2_all_include_files_with_dir)
-foreach(include_dir IN LISTS PyTrilinos2_all_include_dirs)
-  file(GLOB include_files
-      "${include_dir}/*.hpp"
-      "${include_dir}/*.h"
-  )
-  MESSAGE("include_files=${include_files}")
-  list(APPEND PyTrilinos2_all_include_files_with_dir "${include_files}")
-endforeach()
-
-MESSAGE("PyTrilinos2_all_include_files_with_dir = ${PyTrilinos2_all_include_files_with_dir}")
-
-SET(CONTENTS "")
-FOREACH(line IN LISTS PyTrilinos2_all_include_files_with_dir)
-   SET(CONTENTS "${CONTENTS}${line}\n")
-ENDFOREACH(line)
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/list.txt" ${CONTENTS})
+#function(get_all_include_dirs  LIBRARY_NAME all_include_dirs)
+#  get_property(depend_libs TARGET ${depPkg}::all_libs PROPERTY INTERFACE_LINK_LIBRARIES)
+#endfunction()
 
 IF (PYTRILINOS2_GENERATE_SRC)
   MESSAGE("-- PyTrilinos2_BINDER_EXECUTABLE:")
@@ -122,13 +88,52 @@ IF (PYTRILINOS2_GENERATE_SRC)
 
   set(binder_include_name "${CMAKE_CURRENT_BINARY_DIR}/trilinos_includes.hpp")
   set(all_header_list "${CMAKE_CURRENT_BINARY_DIR}/list.txt")
-  MESSAGE("Trilinos_INCLUDE_DIRS = ${Trilinos_INCLUDE_DIRS}")
+
+  set(PyTrilinos2_all_include_dirs)
+  foreach(depPkg IN LISTS PyTrilinos2_LIB_ENABLED_DEPENDENCIES)
+      get_property(depend_libs TARGET ${depPkg}::all_libs PROPERTY INTERFACE_LINK_LIBRARIES)
+      foreach(depend_lib IN LISTS depend_libs)
+          get_property(current_includes TARGET ${depend_lib} PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+          MESSAGE("current_includes=${current_includes}")
+          list(LENGTH current_includes len)
+          message(STATUS "len = ${len}")
+          foreach(include IN LISTS current_includes)
+              MESSAGE("include=${include}")
+              STRING(REPLACE "$<BUILD_INTERFACE:" "" new_tmp_include ${include})
+              STRING(REPLACE ">" "" new_include ${new_tmp_include})
+              MESSAGE("after include=${new_include}")
+              list(APPEND PyTrilinos2_all_include_dirs "${new_include}")
+          endforeach()
+      endforeach()    
+  endforeach()
+  list(REMOVE_DUPLICATES PyTrilinos2_all_include_dirs)
+  MESSAGE("PyTrilinos2_all_include_dirs = ${PyTrilinos2_all_include_dirs}")
+
+  set(PyTrilinos2_all_include_files_with_dir)
+  foreach(include_dir IN LISTS PyTrilinos2_all_include_dirs)
+    file(GLOB include_files
+        "${include_dir}/*.hpp"
+        "${include_dir}/*.h"
+    )
+    MESSAGE("include_files=${include_files}")
+    list(APPEND PyTrilinos2_all_include_files_with_dir "${include_files}")
+  endforeach()
+
+  MESSAGE("PyTrilinos2_all_include_files_with_dir = ${PyTrilinos2_all_include_files_with_dir}")
+
+  SET(CONTENTS "")
+  FOREACH(line IN LISTS PyTrilinos2_all_include_files_with_dir)
+    SET(CONTENTS "${CONTENTS}${line}\n")
+  ENDFOREACH(line)
+  file(WRITE ${all_header_list} ${CONTENTS})
+
   EXECUTE_PROCESS(COMMAND
   ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/gather_includes.py ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${all_header_list} ${binder_include_name}
   )
   EXECUTE_PROCESS(COMMAND
-  ${PyTrilinos2_BINDER_EXECUTABLE} --root-module PyTrilinos2 --prefix ${CMAKE_CURRENT_BINARY_DIR}/binder -max-file-size=1000000 --bind Teuchos --bind Tpetra --config ${CMAKE_CURRENT_SOURCE_DIR}/scripts/PyTrilinos2_config.cfg ${binder_include_name} -- -std=c++17 -I${CMAKE_CURRENT_BINARY_DIR}/include_tmp -I${CMAKE_CURRENT_BINARY_DIR}/include_tmp/impl --gcc-toolchain=${PyTrilinos2_BINDER_GCC_TOOLCHAIN} -DNDEBUG
+  ${PyTrilinos2_BINDER_EXECUTABLE} --root-module PyTrilinos2 --prefix ${CMAKE_CURRENT_BINARY_DIR}/binder -max-file-size=1000000 --bind Teuchos --bind Tpetra --config ${CMAKE_CURRENT_SOURCE_DIR}/scripts/PyTrilinos2_config.cfg ${binder_include_name} -- -std=c++17 -I${CMAKE_CURRENT_BINARY_DIR}/include_tmp -I${CMAKE_CURRENT_SOURCE_DIR}/src --gcc-toolchain=${PyTrilinos2_BINDER_GCC_TOOLCHAIN} -DNDEBUG
   )
+  message( FATAL_ERROR "You can not do this at all, CMake will exit." )
 ELSE()
   # Copy binder files to ${CMAKE_CURRENT_BINARY_DIR}
   FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/binder DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
