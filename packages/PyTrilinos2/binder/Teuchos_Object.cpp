@@ -1,8 +1,8 @@
+#include <PyTrilinos2_Teuchos_Custom.hpp>
 #include <Teuchos_BLAS.hpp>
 #include <Teuchos_BLAS_types.hpp>
 #include <Teuchos_CompObject.hpp>
 #include <Teuchos_Flops.hpp>
-#include <PyTrilinos2_Teuchos_Custom.hpp>
 #include <Teuchos_Object.hpp>
 #include <complex>
 #include <cwchar>

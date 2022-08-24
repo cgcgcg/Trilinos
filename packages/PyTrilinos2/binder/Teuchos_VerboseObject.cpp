@@ -1,6 +1,6 @@
+#include <PyTrilinos2_Teuchos_Custom.hpp>
 #include <Teuchos_ENull.hpp>
 #include <Teuchos_FancyOStream.hpp>
-#include <PyTrilinos2_Teuchos_Custom.hpp>
 #include <Teuchos_PtrDecl.hpp>
 #include <Teuchos_RCPDecl.hpp>
 #include <Teuchos_RCPNode.hpp>

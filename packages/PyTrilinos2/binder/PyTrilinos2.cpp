@@ -46,7 +46,7 @@ void bind_Teuchos_ParameterListAcceptor(std::function< pybind11::module &(std::s
 void bind_Tpetra_Details_DistributorPlan(std::function< pybind11::module &(std::string const &namespace_) > &M);
 void bind_Tpetra_Import_decl(std::function< pybind11::module &(std::string const &namespace_) > &M);
 void bind_Tpetra_RowMatrix_decl(std::function< pybind11::module &(std::string const &namespace_) > &M);
-void bind_Tpetra_Include(std::function< pybind11::module &(std::string const &namespace_) > &M);
+void bind_PyTrilinos2_Tpetra_ETI(std::function< pybind11::module &(std::string const &namespace_) > &M);
 void bind_Teuchos_SerializationTraits(std::function< pybind11::module &(std::string const &namespace_) > &M);
 void bind_Tpetra_MultiVector_decl_1(std::function< pybind11::module &(std::string const &namespace_) > &M);
 
@@ -125,7 +125,7 @@ PYBIND11_MODULE(PyTrilinos2, root_module) {
 	bind_Tpetra_Details_DistributorPlan(M);
 	bind_Tpetra_Import_decl(M);
 	bind_Tpetra_RowMatrix_decl(M);
-	bind_Tpetra_Include(M);
+	bind_PyTrilinos2_Tpetra_ETI(M);
 	bind_Teuchos_SerializationTraits(M);
 	bind_Tpetra_MultiVector_decl_1(M);
 

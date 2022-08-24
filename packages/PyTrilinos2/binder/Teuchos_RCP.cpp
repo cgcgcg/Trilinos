@@ -11,6 +11,7 @@
 #include <Kokkos_Serial.hpp>
 #include <Kokkos_StaticCrsGraph.hpp>
 #include <Kokkos_View.hpp>
+#include <PyTrilinos2_Teuchos_Custom.hpp>
 #include <Teuchos_Array.hpp>
 #include <Teuchos_ArrayRCPDecl.hpp>
 #include <Teuchos_ArrayView.hpp>
@@ -22,7 +23,6 @@
 #include <Teuchos_ENull.hpp>
 #include <Teuchos_FancyOStream.hpp>
 #include <Teuchos_FilteredIterator.hpp>
-#include <PyTrilinos2_Teuchos_Custom.hpp>
 #include <Teuchos_ParameterEntry.hpp>
 #include <Teuchos_ParameterEntryValidator.hpp>
 #include <Teuchos_ParameterList.hpp>

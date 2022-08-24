@@ -196,7 +196,7 @@ struct PyCallBack_Tpetra_MultiVector_int_int_long_long_Kokkos_Compat_KokkosDevic
 	}
 };
 
-// Tpetra::Vector file: line:33
+// Tpetra::Vector file: line:36
 struct PyCallBack_Tpetra_Vector_double_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t : public Tpetra::Vector<double,int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>> {
 	using Tpetra::Vector<double,int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>::Vector;
 
@@ -574,7 +574,7 @@ void bind_Tpetra_MultiVector_decl_1(std::function< pybind11::module &(std::strin
 		cl.def("describe", (void (Tpetra::DistObject<int,int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>::*)(class Teuchos::basic_FancyOStream<char, struct std::char_traits<char> > &, const enum Teuchos::EVerbosityLevel) const) &Tpetra::DistObject<int, int, long long, Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace> >::describe, "C++: Tpetra::DistObject<int, int, long long, Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace> >::describe(class Teuchos::basic_FancyOStream<char, struct std::char_traits<char> > &, const enum Teuchos::EVerbosityLevel) const --> void", pybind11::arg("out"), pybind11::arg("verbLevel"));
 		cl.def("removeEmptyProcessesInPlace", (void (Tpetra::DistObject<int,int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>::*)(const class Teuchos::RCP<const class Tpetra::Map<int, long long> > &)) &Tpetra::DistObject<int, int, long long, Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace> >::removeEmptyProcessesInPlace, "C++: Tpetra::DistObject<int, int, long long, Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace> >::removeEmptyProcessesInPlace(const class Teuchos::RCP<const class Tpetra::Map<int, long long> > &) --> void", pybind11::arg("newMap"));
 	}
-	{ // Tpetra::Vector file: line:33
+	{ // Tpetra::Vector file: line:36
 		pybind11::class_<Tpetra::Vector<double,int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>, Teuchos::RCP<Tpetra::Vector<double,int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>>, PyCallBack_Tpetra_Vector_double_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t, Tpetra::MultiVector<double,int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>> cl(M("Tpetra"), "Vector_double_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t", "");
 		cl.def( pybind11::init( [](){ return new Tpetra::Vector<double,int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>(); }, [](){ return new PyCallBack_Tpetra_Vector_double_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t(); } ) );
 		cl.def( pybind11::init( [](const class Teuchos::RCP<const class Tpetra::Map<int, long long> > & a0){ return new Tpetra::Vector<double,int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>(a0); }, [](const class Teuchos::RCP<const class Tpetra::Map<int, long long> > & a0){ return new PyCallBack_Tpetra_Vector_double_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t(a0); } ), "doc");

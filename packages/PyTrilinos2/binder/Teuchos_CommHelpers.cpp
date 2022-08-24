@@ -1,10 +1,10 @@
+#include <PyTrilinos2_Teuchos_Custom.hpp>
 #include <Teuchos_ArrayRCPDecl.hpp>
 #include <Teuchos_ArrayViewDecl.hpp>
 #include <Teuchos_Comm.hpp>
 #include <Teuchos_CommHelpers.hpp>
 #include <Teuchos_ENull.hpp>
 #include <Teuchos_EReductionType.hpp>
-#include <PyTrilinos2_Teuchos_Custom.hpp>
 #include <Teuchos_PtrDecl.hpp>
 #include <Teuchos_RCPDecl.hpp>
 #include <Teuchos_RCPNode.hpp>

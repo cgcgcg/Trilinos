@@ -1,10 +1,10 @@
+#include <PyTrilinos2_Teuchos_Custom.hpp>
 #include <Teuchos_Array.hpp>
 #include <Teuchos_ArrayViewDecl.hpp>
 #include <Teuchos_Comm.hpp>
 #include <Teuchos_Describable.hpp>
 #include <Teuchos_ENull.hpp>
 #include <Teuchos_FancyOStream.hpp>
-#include <PyTrilinos2_Teuchos_Custom.hpp>
 #include <Teuchos_LabeledObject.hpp>
 #include <Teuchos_PerformanceMonitorBase.hpp>
 #include <Teuchos_PtrDecl.hpp>

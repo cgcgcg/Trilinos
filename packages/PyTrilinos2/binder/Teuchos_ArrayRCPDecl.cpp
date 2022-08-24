@@ -5,6 +5,7 @@
 #include <Kokkos_ScratchSpace.hpp>
 #include <Kokkos_Serial.hpp>
 #include <Kokkos_View.hpp>
+#include <PyTrilinos2_Teuchos_Custom.hpp>
 #include <Teuchos_ArrayRCP.hpp>
 #include <Teuchos_ArrayRCPDecl.hpp>
 #include <Teuchos_ArrayView.hpp>
@@ -12,7 +13,6 @@
 #include <Teuchos_Comm.hpp>
 #include <Teuchos_ENull.hpp>
 #include <Teuchos_GlobalMPISession.hpp>
-#include <PyTrilinos2_Teuchos_Custom.hpp>
 #include <Teuchos_RCPDecl.hpp>
 #include <Teuchos_RCPNode.hpp>
 #include <Teuchos_any.hpp>

@@ -1,6 +1,6 @@
+#include <PyTrilinos2_Teuchos_Custom.hpp>
 #include <Teuchos_ENull.hpp>
 #include <Teuchos_FilteredIterator.hpp>
-#include <PyTrilinos2_Teuchos_Custom.hpp>
 #include <Teuchos_ParameterEntry.hpp>
 #include <Teuchos_ParameterList.hpp>
 #include <Teuchos_ParameterListAcceptor.hpp>

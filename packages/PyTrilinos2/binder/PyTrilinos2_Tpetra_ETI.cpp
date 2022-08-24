@@ -11,6 +11,8 @@
 #include <Kokkos_Serial.hpp>
 #include <Kokkos_StaticCrsGraph.hpp>
 #include <Kokkos_View.hpp>
+#include <PyTrilinos2_Tpetra_Custom.hpp>
+#include <PyTrilinos2_Tpetra_ETI.hpp>
 #include <Teuchos_Array.hpp>
 #include <Teuchos_ArrayRCPDecl.hpp>
 #include <Teuchos_ArrayView.hpp>
@@ -45,8 +47,6 @@
 #include <Tpetra_DistObject_decl.hpp>
 #include <Tpetra_Export_decl.hpp>
 #include <Tpetra_Import_decl.hpp>
-#include <PyTrilinos2_Tpetra_ETI.hpp>
-#include <PyTrilinos2_Tpetra_Custom.hpp>
 #include <Tpetra_LocalCrsMatrixOperator_decl.hpp>
 #include <Tpetra_Map_decl.hpp>
 #include <Tpetra_MultiVector_decl.hpp>
@@ -81,7 +81,7 @@
 	PYBIND11_MAKE_OPAQUE(std::shared_ptr<void>)
 #endif
 
-// Tpetra::Map file: line:30
+// Tpetra::Map file: line:33
 struct PyCallBack_Tpetra_Map_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t : public Tpetra::Map<int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>> {
 	using Tpetra::Map<int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>::Map;
 
@@ -139,7 +139,7 @@ struct PyCallBack_Tpetra_Map_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode
 	}
 };
 
-// Tpetra::MultiVector file: line:36
+// Tpetra::MultiVector file: line:39
 struct PyCallBack_Tpetra_MultiVector_double_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t : public Tpetra::MultiVector<double,int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>> {
 	using Tpetra::MultiVector<double,int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>::MultiVector;
 
@@ -276,7 +276,7 @@ struct PyCallBack_Tpetra_MultiVector_double_int_long_long_Kokkos_Compat_KokkosDe
 	}
 };
 
-// Tpetra::CrsGraph file: line:40
+// Tpetra::CrsGraph file: line:43
 struct PyCallBack_Tpetra_CrsGraph_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t : public Tpetra::CrsGraph<int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>> {
 	using Tpetra::CrsGraph<int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>::CrsGraph;
 
@@ -796,7 +796,7 @@ struct PyCallBack_Tpetra_CrsGraph_int_long_long_Kokkos_Compat_KokkosDeviceWrappe
 	}
 };
 
-// Tpetra::CrsMatrix file: line:43
+// Tpetra::CrsMatrix file: line:46
 struct PyCallBack_Tpetra_CrsMatrix_double_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t : public Tpetra::CrsMatrix<double,int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>> {
 	using Tpetra::CrsMatrix<double,int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>::CrsMatrix;
 
@@ -1329,24 +1329,24 @@ struct PyCallBack_Tpetra_CrsMatrix_double_int_long_long_Kokkos_Compat_KokkosDevi
 	}
 };
 
-void bind_Tpetra_Include(std::function< pybind11::module &(std::string const &namespace_) > &M)
+void bind_PyTrilinos2_Tpetra_ETI(std::function< pybind11::module &(std::string const &namespace_) > &M)
 {
-	// Tpetra::initiate(class Tpetra::Map<int, long long>) file:PyTrilinos2_Tpetra_ETI.hpp line:49
+	// Tpetra::initiate(class Tpetra::Map<int, long long>) file:PyTrilinos2_Tpetra_ETI.hpp line:52
 	M("Tpetra").def("initiate", (void (*)(class Tpetra::Map<int, long long>)) &Tpetra::initiate<Tpetra::Map<int, long long>>, "C++: Tpetra::initiate(class Tpetra::Map<int, long long>) --> void", pybind11::arg(""));
 
-	// Tpetra::initiate(class Tpetra::Vector<double, int, long long>) file:PyTrilinos2_Tpetra_ETI.hpp line:49
+	// Tpetra::initiate(class Tpetra::Vector<double, int, long long>) file:PyTrilinos2_Tpetra_ETI.hpp line:52
 	M("Tpetra").def("initiate", (void (*)(class Tpetra::Vector<double, int, long long>)) &Tpetra::initiate<Tpetra::Vector<double, int, long long>>, "C++: Tpetra::initiate(class Tpetra::Vector<double, int, long long>) --> void", pybind11::arg(""));
 
-	// Tpetra::initiate(class Tpetra::MultiVector<double, int, long long>) file:PyTrilinos2_Tpetra_ETI.hpp line:49
+	// Tpetra::initiate(class Tpetra::MultiVector<double, int, long long>) file:PyTrilinos2_Tpetra_ETI.hpp line:52
 	M("Tpetra").def("initiate", (void (*)(class Tpetra::MultiVector<double, int, long long>)) &Tpetra::initiate<Tpetra::MultiVector<double, int, long long>>, "C++: Tpetra::initiate(class Tpetra::MultiVector<double, int, long long>) --> void", pybind11::arg(""));
 
-	// Tpetra::initiate(class Tpetra::CrsGraph<int, long long>) file:PyTrilinos2_Tpetra_ETI.hpp line:49
+	// Tpetra::initiate(class Tpetra::CrsGraph<int, long long>) file:PyTrilinos2_Tpetra_ETI.hpp line:52
 	M("Tpetra").def("initiate", (void (*)(class Tpetra::CrsGraph<int, long long>)) &Tpetra::initiate<Tpetra::CrsGraph<int, long long>>, "C++: Tpetra::initiate(class Tpetra::CrsGraph<int, long long>) --> void", pybind11::arg(""));
 
-	// Tpetra::initiate(class Tpetra::CrsMatrix<double, int, long long>) file:PyTrilinos2_Tpetra_ETI.hpp line:49
+	// Tpetra::initiate(class Tpetra::CrsMatrix<double, int, long long>) file:PyTrilinos2_Tpetra_ETI.hpp line:52
 	M("Tpetra").def("initiate", (void (*)(class Tpetra::CrsMatrix<double, int, long long>)) &Tpetra::initiate<Tpetra::CrsMatrix<double, int, long long>>, "C++: Tpetra::initiate(class Tpetra::CrsMatrix<double, int, long long>) --> void", pybind11::arg(""));
 
-	{ // Tpetra::Map file: line:30
+	{ // Tpetra::Map file: line:33
 		pybind11::class_<Tpetra::Map<int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>, Teuchos::RCP<Tpetra::Map<int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>>, PyCallBack_Tpetra_Map_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t> cl(M("Tpetra"), "Map_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t", "");
 		cl.def( pybind11::init( [](const unsigned long & a0, const long long & a1, const class Teuchos::RCP<const class Teuchos::Comm<int> > & a2){ return new Tpetra::Map<int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>(a0, a1, a2); }, [](const unsigned long & a0, const long long & a1, const class Teuchos::RCP<const class Teuchos::Comm<int> > & a2){ return new PyCallBack_Tpetra_Map_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t(a0, a1, a2); } ), "doc");
 		cl.def( pybind11::init<const unsigned long, const long long, const class Teuchos::RCP<const class Teuchos::Comm<int> > &, const enum Tpetra::LocalGlobal>(), pybind11::arg("numGlobalElements"), pybind11::arg("indexBase"), pybind11::arg("comm"), pybind11::arg("lOrG") );
@@ -1390,7 +1390,7 @@ void bind_Tpetra_Include(std::function< pybind11::module &(std::string const &na
 		cl.def("removeEmptyProcesses", (class Teuchos::RCP<const class Tpetra::Map<int, long long> > (Tpetra::Map<int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>::*)() const) &Tpetra::Map<int, long long, Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace> >::removeEmptyProcesses, "Create a shallow copy of this Map, with a different Node type.\n \n\n Return a new Map with processes with zero elements removed.\n\n \n This method is only for expert users.  Understanding\n   how to use this method correctly requires some familiarity\n   with semantics of MPI communicators.\n\n \n We make no promises of backwards compatibility for\n   this method.  It may go away or change at any time.\n\n This method first computes a new communicator, which contains\n only those processes in this Map's communicator (the \"original\n communicator\") that have a nonzero number of elements in this\n Map (the \"original Map\").  It then returns a new Map\n distributed over the new communicator.  The new Map represents\n the same distribution as the original Map, except that\n processes containing zero elements are not included in the new\n Map or its communicator.  On processes not included in the new\n Map or communicator, this method returns\n Teuchos::null.\n\n The returned Map always has a distinct communicator from this\n Map's original communicator.  The new communicator contains a\n subset of processes from the original communicator.  Even if\n the number of processes in the new communicator equals the\n number of processes in the original communicator, the new\n communicator is distinct.  (In an MPI implementation, the new\n communicator is created using MPI_Comm_split.)  Furthermore, a\n process may have a different rank in the new communicator, so\n be wary of classes that like to store the rank rather than\n asking the communicator for it each time.\n\n This method must be called collectively on the original\n communicator.  It leaves the original Map and communicator\n unchanged.\n\n This method was intended for applications such as algebraic\n multigrid or other multilevel preconditioners.  Construction\n of each level of the multilevel preconditioner typically\n requires constructing sparse matrices, which in turn requires\n all-reduces over all participating processes at that level.\n Matrix sizes at successively coarser levels shrink\n geometrically.  At the coarsest levels, some processes might\n be left with zero rows of the matrix, or the multigrid\n implementation might \"rebalance\" (redistribute the matrix) and\n intentionally leave some processes with zero rows.  Removing\n processes with zero rows makes the all-reduces and other\n communication operations cheaper.\n\nC++: Tpetra::Map<int, long long, Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace> >::removeEmptyProcesses() const --> class Teuchos::RCP<const class Tpetra::Map<int, long long> >");
 		cl.def("replaceCommWithSubset", (class Teuchos::RCP<const class Tpetra::Map<int, long long> > (Tpetra::Map<int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>::*)(const class Teuchos::RCP<const class Teuchos::Comm<int> > &) const) &Tpetra::Map<int, long long, Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace> >::replaceCommWithSubset, "Replace this Map's communicator with a subset communicator.\n\n \n This method is only for expert users.  Understanding\n   how to use this method correctly requires some familiarity\n   with semantics of MPI communicators.\n\n \n We make no promises of backwards compatibility for\n   this method.  It may go away or change at any time.\n\n \n The input communicator's processes are a subset of this\n   Map's current communicator's processes.\n \n\n On processes which are not included in the input\n   communicator, the input communicator is null.\n\n This method must be called collectively on the original\n communicator.  It leaves the original Map and communicator\n unchanged.\n\n \n This method differs from removeEmptyProcesses(), in that\n   it does not assume that excluded processes have zero\n   entries.  For example, one might wish to remove empty\n   processes from the row Map of a CrsGraph using\n   removeEmptyProcesses(), and then apply the resulting subset\n   communicator to the column, domain, and range Maps of the\n   same graph.  For the latter three Maps, one would in general\n   use this method instead of removeEmptyProcesses(), giving\n   the new row Map's communicator to this method.\n\nC++: Tpetra::Map<int, long long, Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace> >::replaceCommWithSubset(const class Teuchos::RCP<const class Teuchos::Comm<int> > &) const --> class Teuchos::RCP<const class Tpetra::Map<int, long long> >", pybind11::arg("newComm"));
 	}
-	{ // Tpetra::MultiVector file: line:36
+	{ // Tpetra::MultiVector file: line:39
 		pybind11::class_<Tpetra::MultiVector<double,int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>, Teuchos::RCP<Tpetra::MultiVector<double,int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>>, PyCallBack_Tpetra_MultiVector_double_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t, Tpetra::DistObject<double,int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>> cl(M("Tpetra"), "MultiVector_double_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t", "");
 		cl.def( pybind11::init( [](){ return new Tpetra::MultiVector<double,int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>(); }, [](){ return new PyCallBack_Tpetra_MultiVector_double_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t(); } ) );
 		cl.def( pybind11::init( [](const class Teuchos::RCP<const class Tpetra::Map<int, long long> > & a0, const unsigned long & a1){ return new Tpetra::MultiVector<double,int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>(a0, a1); }, [](const class Teuchos::RCP<const class Tpetra::Map<int, long long> > & a0, const unsigned long & a1){ return new PyCallBack_Tpetra_MultiVector_double_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t(a0, a1); } ), "doc");
@@ -1505,7 +1505,7 @@ void bind_Tpetra_Include(std::function< pybind11::module &(std::string const &na
 		cl.def("describe", (void (Tpetra::DistObject<double,int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>::*)(class Teuchos::basic_FancyOStream<char, struct std::char_traits<char> > &, const enum Teuchos::EVerbosityLevel) const) &Tpetra::DistObject<double, int, long long, Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace> >::describe, "C++: Tpetra::DistObject<double, int, long long, Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace> >::describe(class Teuchos::basic_FancyOStream<char, struct std::char_traits<char> > &, const enum Teuchos::EVerbosityLevel) const --> void", pybind11::arg("out"), pybind11::arg("verbLevel"));
 		cl.def("removeEmptyProcessesInPlace", (void (Tpetra::DistObject<double,int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>::*)(const class Teuchos::RCP<const class Tpetra::Map<int, long long> > &)) &Tpetra::DistObject<double, int, long long, Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace> >::removeEmptyProcessesInPlace, "C++: Tpetra::DistObject<double, int, long long, Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace> >::removeEmptyProcessesInPlace(const class Teuchos::RCP<const class Tpetra::Map<int, long long> > &) --> void", pybind11::arg("newMap"));
 	}
-	{ // Tpetra::CrsGraph file: line:40
+	{ // Tpetra::CrsGraph file: line:43
 		pybind11::class_<Tpetra::CrsGraph<int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>, Teuchos::RCP<Tpetra::CrsGraph<int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>>, PyCallBack_Tpetra_CrsGraph_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t, Tpetra::RowGraph<int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>, Tpetra::DistObject<long long,int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>, Teuchos::ParameterListAcceptorDefaultBase> cl(M("Tpetra"), "CrsGraph_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t", "");
 		cl.def( pybind11::init( [](const class Teuchos::RCP<const class Tpetra::Map<int, long long> > & a0, const unsigned long & a1){ return new Tpetra::CrsGraph<int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>(a0, a1); }, [](const class Teuchos::RCP<const class Tpetra::Map<int, long long> > & a0, const unsigned long & a1){ return new PyCallBack_Tpetra_CrsGraph_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t(a0, a1); } ), "doc");
 		cl.def( pybind11::init<const class Teuchos::RCP<const class Tpetra::Map<int, long long> > &, const unsigned long, const class Teuchos::RCP<class Teuchos::ParameterList> &>(), pybind11::arg("rowMap"), pybind11::arg("maxNumEntriesPerRow"), pybind11::arg("params") );
@@ -1691,7 +1691,7 @@ void bind_Tpetra_Include(std::function< pybind11::module &(std::string const &na
 		}
 
 	}
-	{ // Tpetra::CrsMatrix file: line:43
+	{ // Tpetra::CrsMatrix file: line:46
 		pybind11::class_<Tpetra::CrsMatrix<double,int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>, Teuchos::RCP<Tpetra::CrsMatrix<double,int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>>, PyCallBack_Tpetra_CrsMatrix_double_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t, Tpetra::RowMatrix<double,int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>, Tpetra::DistObject<char,int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>> cl(M("Tpetra"), "CrsMatrix_double_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t", "");
 		cl.def( pybind11::init( [](PyCallBack_Tpetra_CrsMatrix_double_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t const &o){ return new PyCallBack_Tpetra_CrsMatrix_double_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t(o); } ) );
 		cl.def( pybind11::init( [](Tpetra::CrsMatrix<double,int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>> const &o){ return new Tpetra::CrsMatrix<double,int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>(o); } ) );

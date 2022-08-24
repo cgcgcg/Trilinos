@@ -1,9 +1,9 @@
+#include <PyTrilinos2_Teuchos_Custom.hpp>
 #include <Teuchos_ArrayViewDecl.hpp>
 #include <Teuchos_Comm.hpp>
 #include <Teuchos_CommandLineProcessor.hpp>
 #include <Teuchos_CompileTimeAssert.hpp>
 #include <Teuchos_ENull.hpp>
-#include <PyTrilinos2_Teuchos_Custom.hpp>
 #include <Teuchos_OpaqueWrapper.hpp>
 #include <Teuchos_ParameterList.hpp>
 #include <Teuchos_PerformanceMonitorBase.hpp>
