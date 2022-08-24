@@ -176,6 +176,30 @@ ELSE()
   FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/binder DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 ENDIF()
 
+IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  SET(PyTrilinos2_DEFAULT_INSTALL_PREFIX ${PYTHON_PREFIX})
+ELSE()
+  SET(PyTrilinos2_DEFAULT_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
+ENDIF()
+
+# Set the PyTrilinos2 install prefix
+SET(PyTrilinos2_INSTALL_PREFIX ${PyTrilinos2_DEFAULT_INSTALL_PREFIX}
+  CACHE PATH "The path prefix for where PyTrilinos2 will be installed, e.g. /usr/local")
+
+# Get the python version
+EXECUTE_PROCESS(COMMAND ${PYTHON_EXECUTABLE} -c
+                        "import sys; print(sys.version[:3])"
+  OUTPUT_VARIABLE PYTHON_VERSION
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+# Determine the install directory
+SET(PyTrilinos2_INSTALL_DIR
+  ${PyTrilinos2_INSTALL_PREFIX}/lib/python${PYTHON_VERSION}/site-packages/PyTrilinos2
+  CACHE PATH "The path where PyTrilinos2 will be installed"
+  )
+MESSAGE(STATUS "PyTrilinos2 installation path: ${PyTrilinos2_INSTALL_DIR}")
+
 include(FetchContent)
 FetchContent_Declare(
 	pybind11

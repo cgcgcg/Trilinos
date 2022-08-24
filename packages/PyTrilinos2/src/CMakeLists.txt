@@ -16,3 +16,6 @@ foreach(depPkg IN LISTS PyTrilinos2_LIB_ENABLED_DEPENDENCIES)
     target_link_libraries(PyTrilinos2 PUBLIC ${depPkg}::all_libs)
 endforeach()
 set_target_properties(PyTrilinos2 PROPERTIES SUFFIX ".so")
+
+INSTALL(TARGETS PyTrilinos2
+  DESTINATION ${PyTrilinos2_INSTALL_DIR})
