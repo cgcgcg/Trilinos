@@ -99,7 +99,9 @@ IF (PYTRILINOS2_GENERATE_SRC)
   file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/binder)
 
   set(binder_include_name "${CMAKE_CURRENT_BINARY_DIR}/trilinos_includes.hpp")
-  set(all_header_list "${CMAKE_CURRENT_BINARY_DIR}/list.txt")
+  set(all_header_with_dir_list "${CMAKE_CURRENT_BINARY_DIR}/list_with_dir.txt")
+  set(all_header_without_dir_list "${CMAKE_CURRENT_BINARY_DIR}/list_without_dir.txt")
+  set(all_include_list "${CMAKE_CURRENT_BINARY_DIR}/list_include.txt")
 
   set(all_include_dirs "")
   foreach(depPkg IN LISTS PyTrilinos2_LIB_ENABLED_DEPENDENCIES)
@@ -108,31 +110,55 @@ IF (PYTRILINOS2_GENERATE_SRC)
   
   list(REMOVE_DUPLICATES all_include_dirs)
   list(REMOVE_ITEM all_include_dirs "")
-  MESSAGE("all_include_dirs = ${all_include_dirs}")
+  #MESSAGE("all_include_dirs = ${all_include_dirs}")
 
-  set(PyTrilinos2_all_include_files_with_dir)
+  set(PyTrilinos2_all_include_files_with_dir "")
+  set(PyTrilinos2_all_include_files_without_dir "")
   foreach(include_dir IN LISTS all_include_dirs)
     file(GLOB include_files
         "${include_dir}/*.hpp"
         "${include_dir}/*.h"
+        "${include_dir}/*/*.hpp"
+        "${include_dir}/*/*.h"
+        "${include_dir}/*/*/*.hpp"
+        "${include_dir}/*/*/*.h"
     )
-    MESSAGE("include_files=${include_files}")
-    list(APPEND PyTrilinos2_all_include_files_with_dir "${include_files}")
+    foreach(include_file IN LISTS include_files)
+      list(APPEND PyTrilinos2_all_include_files_with_dir "${include_file}")
+      string(REPLACE "${include_dir}/" "" include_file_without_dir "${include_file}")
+      list(APPEND PyTrilinos2_all_include_files_without_dir "${include_file_without_dir}")
+    endforeach()
   endforeach()
 
-  list(REMOVE_DUPLICATES PyTrilinos2_all_include_files_with_dir)
-  list(REMOVE_ITEM PyTrilinos2_all_include_files_with_dir "")
 
-  MESSAGE("PyTrilinos2_all_include_files_with_dir = ${PyTrilinos2_all_include_files_with_dir}")
+  #list(REMOVE_DUPLICATES PyTrilinos2_all_include_files_without_dir)
+  #list(REMOVE_ITEM PyTrilinos2_all_include_files_without_dir "")
+
+  #list(REMOVE_DUPLICATES PyTrilinos2_all_include_files_with_dir)
+  #list(REMOVE_ITEM PyTrilinos2_all_include_files_with_dir "")
+
+  #MESSAGE("PyTrilinos2_all_include_files_with_dir = ${PyTrilinos2_all_include_files_with_dir}")
+
+  SET(CONTENTS "")
+  FOREACH(line IN LISTS all_include_dirs)
+    SET(CONTENTS "${CONTENTS}${line}\n")
+  ENDFOREACH(line)
+  file(WRITE ${all_include_list} ${CONTENTS})
 
   SET(CONTENTS "")
   FOREACH(line IN LISTS PyTrilinos2_all_include_files_with_dir)
     SET(CONTENTS "${CONTENTS}${line}\n")
   ENDFOREACH(line)
-  file(WRITE ${all_header_list} ${CONTENTS})
+  file(WRITE ${all_header_with_dir_list} ${CONTENTS})
+
+  SET(CONTENTS "")
+  FOREACH(line IN LISTS PyTrilinos2_all_include_files_without_dir)
+    SET(CONTENTS "${CONTENTS}${line}\n")
+  ENDFOREACH(line)
+  file(WRITE ${all_header_without_dir_list} ${CONTENTS})
 
   EXECUTE_PROCESS(COMMAND
-  ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/gather_includes.py ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${all_header_list} ${binder_include_name}
+  ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/gather_includes.py ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${all_header_with_dir_list} ${all_header_without_dir_list} ${binder_include_name}
   )
   EXECUTE_PROCESS(COMMAND
   ${PyTrilinos2_BINDER_EXECUTABLE} --root-module PyTrilinos2 --prefix ${CMAKE_CURRENT_BINARY_DIR}/binder -max-file-size=1000000 --bind Teuchos --bind Tpetra --config ${CMAKE_CURRENT_SOURCE_DIR}/scripts/PyTrilinos2_config.cfg ${binder_include_name} -- -std=c++17 -I${CMAKE_CURRENT_BINARY_DIR}/include_tmp -I${CMAKE_CURRENT_SOURCE_DIR}/src --gcc-toolchain=${PyTrilinos2_BINDER_GCC_TOOLCHAIN} -DNDEBUG

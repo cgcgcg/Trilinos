@@ -67,32 +67,33 @@ def make_all_includes_from_filenames(all_include_filename, filenames):
 
 # https://github.com/RosettaCommons/binder/issues/212
 
-def copy_and_angular_includes(filenames, to_dir):
-    output_filenames = []
+def copy_and_angular_includes(filenames, filenames_witout_dir, to_dir):
     # loops over the files, replace include " " by include < > and write them in the to_dir:
-    for filename in filenames:
-        file_name, file_extension = os.path.splitext(os.path.basename(filename))
-        if file_extension == '.cpp':
-            write_extension = '_cpp.hpp'
-        else:
-            write_extension = file_extension
-        output_filenames.append(file_name+write_extension)
+    for i in range(len(filenames)):
+        filename = filenames[i]
+        filename_witout_dir = filenames_witout_dir[i]
+        path=os.path.dirname(filename_witout_dir)
+        if not os.path.exists(to_dir+'/'+path):
+            os.makedirs(to_dir+'/'+path)
         with open(filename, 'r') as from_f:
-            with open(to_dir+'/'+file_name+write_extension, 'w') as to_f:
+            with open(to_dir+'/'+filename_witout_dir, 'w') as to_f:
                 for line in from_f:
                     if line.startswith('#include'):
-                        line = get_angular_include(line, True)
+                        line = get_angular_include(line, False)
                     to_f.write(f'{line}')
-    return output_filenames
 
 if __name__ == '__main__':
     CMAKE_CURRENT_SOURCE_DIR = sys.argv[1]
     CMAKE_CURRENT_BINARY_DIR = sys.argv[2]
-    all_header_list = sys.argv[3]
-    binder_include_name = sys.argv[4]
+    all_header_list_with_dir = sys.argv[3]
+    all_header_list_without_dir = sys.argv[4]
+    binder_include_name = sys.argv[5]
 
-    with open(all_header_list, 'r') as fh:
-        all_include_filenames = fh.read().splitlines()
+    with open(all_header_list_with_dir, 'r') as fh:
+        all_include_filenames_with_dir = fh.read().splitlines()
 
-    copy_and_angular_includes(all_include_filenames, CMAKE_CURRENT_BINARY_DIR+'/include_tmp')
+    with open(all_header_list_without_dir, 'r') as fh:
+        all_include_filenames_without_dir = fh.read().splitlines()
+
+    copy_and_angular_includes(all_include_filenames_with_dir, all_include_filenames_without_dir, CMAKE_CURRENT_BINARY_DIR+'/include_tmp')
     make_all_includes_from_filenames(binder_include_name, [CMAKE_CURRENT_SOURCE_DIR+'/src/PyTrilinos2_Binder_Input.hpp'])
