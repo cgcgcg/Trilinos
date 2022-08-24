@@ -200,15 +200,7 @@ SET(PyTrilinos2_INSTALL_DIR
   )
 MESSAGE(STATUS "PyTrilinos2 installation path: ${PyTrilinos2_INSTALL_DIR}")
 
-include(FetchContent)
-FetchContent_Declare(
-	pybind11
-	GIT_REPOSITORY https://github.com/pybind/pybind11.git
-	GIT_TAG        v2.6.2
-	GIT_SHALLOW    TRUE
-)
-
-FetchContent_MakeAvailable(pybind11)
+find_package(pybind11 REQUIRED)
 
 EXECUTE_PROCESS(COMMAND
   ${PYTHON_EXECUTABLE} -c "import mpi4py; print(mpi4py.get_include())"
