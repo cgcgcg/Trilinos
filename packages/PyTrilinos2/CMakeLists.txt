@@ -112,7 +112,7 @@ IF (PYTRILINOS2_GENERATE_SRC)
   foreach(depPkg IN LISTS PyTrilinos2_LIB_ENABLED_DEPENDENCIES)
     get_all_include_dirs(${depPkg}::all_libs "${all_include_dirs}")
   endforeach()
-  
+
   list(REMOVE_DUPLICATES all_include_dirs)
   list(REMOVE_ITEM all_include_dirs "")
   #MESSAGE("all_include_dirs = ${all_include_dirs}")
@@ -192,6 +192,7 @@ EXECUTE_PROCESS(COMMAND ${PYTHON_EXECUTABLE} -c
   OUTPUT_VARIABLE PYTHON_VERSION
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
+SET(PYBIND11_PYTHON_VERSION ${PYTHON_VERSION})
 
 # Determine the install directory
 SET(PyTrilinos2_INSTALL_DIR
@@ -199,6 +200,15 @@ SET(PyTrilinos2_INSTALL_DIR
   CACHE PATH "The path where PyTrilinos2 will be installed"
   )
 MESSAGE(STATUS "PyTrilinos2 installation path: ${PyTrilinos2_INSTALL_DIR}")
+
+# Find the pybind11 CMake module
+EXECUTE_PROCESS(COMMAND
+  ${PYTHON_EXECUTABLE} -c "import pybind11; print(pybind11.get_cmake_dir())"
+  OUTPUT_VARIABLE pybind11_DIR
+  ERROR_VARIABLE  pybind11_CMAKE_ERROR
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+MESSAGE(STATUS "pybind11 CMake path: ${pybind11_DIR}")
 
 find_package(pybind11 REQUIRED)
 

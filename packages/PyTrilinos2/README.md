@@ -1,5 +1,13 @@
 # PyTrilinos2
 
+PyTrilinos2 requires Pybind11 which can be installed via
+python -m pip install pybind11
+
+If Trilinos is configured with default options, the provided header
+files will work out-of-the-box. Otherwise, Binder needs to be
+available as well. Instructions on how to install Binder can be found
+below.
+
 ## Binder installation:
 
 To build Binder execute the following command sequence in shell with `$HOMEBINDER` the location where you want to build Binder:
