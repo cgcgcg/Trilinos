@@ -75,12 +75,18 @@ def copy_and_angular_includes(filenames, filenames_witout_dir, to_dir):
         path=os.path.dirname(filename_witout_dir)
         if not os.path.exists(to_dir+'/'+path):
             os.makedirs(to_dir+'/'+path)
-        with open(filename, 'r') as from_f:
-            with open(to_dir+'/'+filename_witout_dir, 'w') as to_f:
-                for line in from_f:
-                    if line.startswith('#include'):
-                        line = get_angular_include(line, False)
-                    to_f.write(f'{line}')
+        try:
+            with open(filename, 'r') as from_f:
+                lines = from_f.readlines()
+        except UnicodeDecodeError:
+            with open(filename, 'r', encoding='iso-8859-1') as from_f:
+                lines = from_f.readlines()
+
+        with open(to_dir+'/'+filename_witout_dir, 'w') as to_f:
+            for line in lines:
+                if line.startswith('#include'):
+                    line = get_angular_include(line, False)
+                to_f.write(f'{line}')
 
 if __name__ == '__main__':
     CMAKE_CURRENT_SOURCE_DIR = sys.argv[1]
