@@ -11,6 +11,7 @@
 #include <Teuchos_StringIndexedOrderedValueObjectContainer.hpp>
 #include <Teuchos_any.hpp>
 #include <deque>
+#include <iterator>
 #include <memory>
 #include <ostream>
 #include <sstream> // __str__

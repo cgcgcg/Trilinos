@@ -9,6 +9,7 @@
 #include <Teuchos_RCPDecl.hpp>
 #include <Teuchos_RCPNode.hpp>
 #include <Teuchos_any.hpp>
+#include <iterator>
 #include <memory>
 #include <sstream> // __str__
 #include <string>

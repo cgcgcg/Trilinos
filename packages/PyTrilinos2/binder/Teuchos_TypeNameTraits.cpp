@@ -43,6 +43,7 @@
 #include <Teuchos_VerbosityLevel.hpp>
 #include <Teuchos_any.hpp>
 #include <Teuchos_iostream_helpers.hpp>
+#include <Teuchos_stacktrace.hpp>
 #include <Tpetra_Access.hpp>
 #include <Tpetra_CombineMode.hpp>
 #include <Tpetra_ConfigDefs.hpp>
@@ -665,6 +666,22 @@ void bind_Teuchos_TypeNameTraits(std::function< pybind11::module &(std::string c
 
 	// Teuchos::typeName(const class Teuchos::RCPNodeTmpl<struct std::pair<long long, long long>, class Teuchos::DeallocArrayDelete<struct std::pair<long long, long long> > > &) file:Teuchos_TypeNameTraits.hpp line:115
 	M("Teuchos").def("typeName", (std::string (*)(const class Teuchos::RCPNodeTmpl<struct std::pair<long long, long long>, class Teuchos::DeallocArrayDelete<struct std::pair<long long, long long> > > &)) &Teuchos::typeName<Teuchos::RCPNodeTmpl<std::pair<long long, long long>, Teuchos::DeallocArrayDelete<std::pair<long long, long long> > >>, "C++: Teuchos::typeName(const class Teuchos::RCPNodeTmpl<struct std::pair<long long, long long>, class Teuchos::DeallocArrayDelete<struct std::pair<long long, long long> > > &) --> std::string", pybind11::arg("t"));
+
+	// Teuchos::store_stacktrace() file:Teuchos_stacktrace.hpp line:55
+	M("Teuchos").def("store_stacktrace", (void (*)()) &Teuchos::store_stacktrace, "Stores the current stacktrace into an internal global variable.\n\n \n\n \n\nC++: Teuchos::store_stacktrace() --> void");
+
+	// Teuchos::get_stored_stacktrace() file:Teuchos_stacktrace.hpp line:61
+	M("Teuchos").def("get_stored_stacktrace", (std::string (*)()) &Teuchos::get_stored_stacktrace, "Returns the last stored stacktrace as a string.\n\n \n\n \n\nC++: Teuchos::get_stored_stacktrace() --> std::string");
+
+	// Teuchos::get_stacktrace(int) file:Teuchos_stacktrace.hpp line:71
+	M("Teuchos").def("get_stacktrace", []() -> std::string { return Teuchos::get_stacktrace(); }, "");
+	M("Teuchos").def("get_stacktrace", (std::string (*)(int)) &Teuchos::get_stacktrace, "Returns the current stacktrace as a string.\n\n \n [in] The stacktrace depth to remove from the\n stacktrace printout to avoid showing users implementation functions in the\n stacktrace.\n\n \n\n \n\nC++: Teuchos::get_stacktrace(int) --> std::string", pybind11::arg("impl_stacktrace_depth"));
+
+	// Teuchos::show_stacktrace() file:Teuchos_stacktrace.hpp line:77
+	M("Teuchos").def("show_stacktrace", (void (*)()) &Teuchos::show_stacktrace, "Prints the current stacktrace to stdout.\n\n \n\n \n\nC++: Teuchos::show_stacktrace() --> void");
+
+	// Teuchos::print_stack_on_segfault() file:Teuchos_stacktrace.hpp line:83
+	M("Teuchos").def("print_stack_on_segfault", (void (*)()) &Teuchos::print_stack_on_segfault, "Prints the current stacktrace to stdout on segfault.\n\n \n\n \n\nC++: Teuchos::print_stack_on_segfault() --> void");
 
 	// Teuchos::TestForException_incrThrowNumber() file:Teuchos_TestForException.hpp line:61
 	M("Teuchos").def("TestForException_incrThrowNumber", (void (*)()) &Teuchos::TestForException_incrThrowNumber, "Increment the throw number.  \n\nC++: Teuchos::TestForException_incrThrowNumber() --> void");

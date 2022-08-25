@@ -11,6 +11,7 @@
 #include <Teuchos_RCPNode.hpp>
 #include <Teuchos_ReductionOp.hpp>
 #include <Teuchos_any.hpp>
+#include <iterator>
 #include <memory>
 #include <string>
 #include <vector>
