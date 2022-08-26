@@ -1,4 +1,6 @@
-#include <Tpetra_Access.hpp>
+#include <Tpetra_Access.hpp> // Tpetra::Access::OverwriteAllStruct
+#include <Tpetra_Access.hpp> // Tpetra::Access::ReadOnlyStruct
+#include <Tpetra_Access.hpp> // Tpetra::Access::ReadWriteStruct
 #include <sstream> // __str__
 
 #include <functional>

@@ -1,4 +1,5 @@
-#include <Tpetra_CrsGraph_decl.hpp>
+#include <Tpetra_CrsGraph_decl.hpp> // Tpetra::ELocalGlobal
+#include <Tpetra_CrsGraph_decl.hpp> // Tpetra::RowInfo
 #include <sstream> // __str__
 
 #include <functional>

@@ -1,7 +1,9 @@
-#include <Tpetra_Util.hpp>
-#include <iterator>
-#include <memory>
-#include <vector>
+#include <Tpetra_Util.hpp> // Tpetra::merge2
+#include <Tpetra_Util.hpp> // Tpetra::sort2
+#include <Tpetra_Util.hpp> // Tpetra::sort3
+#include <iterator> // __gnu_cxx::__normal_iterator
+#include <memory> // std::allocator
+#include <vector> // std::vector
 
 #include <functional>
 #include <pybind11/pybind11.h>

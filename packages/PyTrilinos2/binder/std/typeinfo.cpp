@@ -1,7 +1,12 @@
-#include <exception>
-#include <new>
+#include <exception> // std::nested_exception
+#include <new> // std::align_val_t
+#include <new> // std::bad_alloc
+#include <new> // std::bad_array_new_length
+#include <new> // std::nothrow_t
 #include <sstream> // __str__
-#include <typeinfo>
+#include <typeinfo> // std::bad_cast
+#include <typeinfo> // std::bad_typeid
+#include <typeinfo> // std::type_info
 
 #include <functional>
 #include <pybind11/pybind11.h>

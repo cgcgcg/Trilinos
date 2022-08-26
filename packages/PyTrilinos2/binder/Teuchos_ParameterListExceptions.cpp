@@ -1,9 +1,14 @@
-#include <Teuchos_ParameterListExceptions.hpp>
-#include <iterator>
-#include <memory>
+#include <Teuchos_ParameterListExceptions.hpp> // Teuchos::Exceptions::InvalidArgument
+#include <Teuchos_ParameterListExceptions.hpp> // Teuchos::Exceptions::InvalidParameter
+#include <Teuchos_ParameterListExceptions.hpp> // Teuchos::Exceptions::InvalidParameterName
+#include <Teuchos_ParameterListExceptions.hpp> // Teuchos::Exceptions::InvalidParameterType
+#include <Teuchos_ParameterListExceptions.hpp> // Teuchos::Exceptions::InvalidParameterValue
+#include <iterator> // __gnu_cxx::__normal_iterator
+#include <memory> // std::allocator
 #include <sstream> // __str__
-#include <stdexcept>
-#include <string>
+#include <stdexcept> // std::logic_error
+#include <string> // std::basic_string
+#include <string> // std::char_traits
 
 #include <functional>
 #include <pybind11/pybind11.h>

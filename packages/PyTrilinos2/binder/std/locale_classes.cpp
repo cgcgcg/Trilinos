@@ -1,82 +1,209 @@
-#include <KokkosCompat_ClassicNodeAPI_Wrapper.hpp>
-#include <KokkosSparse_CrsMatrix.hpp>
-#include <Kokkos_Concepts.hpp>
-#include <Kokkos_DualView.hpp>
-#include <Kokkos_HostSpace.hpp>
-#include <Kokkos_Layout.hpp>
-#include <Kokkos_MemoryTraits.hpp>
-#include <Kokkos_Serial.hpp>
-#include <Kokkos_StaticCrsGraph.hpp>
-#include <Kokkos_Tuners.hpp>
-#include <Kokkos_View.hpp>
-#include <Teuchos_Array.hpp>
-#include <Teuchos_ArrayRCPDecl.hpp>
-#include <Teuchos_ArrayViewDecl.hpp>
-#include <Teuchos_BLAS_types.hpp>
-#include <Teuchos_Comm.hpp>
-#include <Teuchos_DataAccess.hpp>
-#include <Teuchos_DefaultSerialComm.hpp>
-#include <Teuchos_ENull.hpp>
-#include <Teuchos_EReductionType.hpp>
-#include <Teuchos_FancyOStream.hpp>
-#include <Teuchos_FilteredIterator.hpp>
-#include <Teuchos_ParameterEntry.hpp>
-#include <Teuchos_ParameterEntryValidator.hpp>
-#include <Teuchos_ParameterList.hpp>
-#include <Teuchos_ParameterListModifier.hpp>
-#include <Teuchos_PtrDecl.hpp>
-#include <Teuchos_RCPDecl.hpp>
-#include <Teuchos_RCPNode.hpp>
-#include <Teuchos_Range1D.hpp>
-#include <Teuchos_ReductionOp.hpp>
-#include <Teuchos_SerializationTraits.hpp>
-#include <Teuchos_StringIndexedOrderedValueObjectContainer.hpp>
-#include <Teuchos_Time.hpp>
-#include <Teuchos_TimeMonitor.hpp>
-#include <Teuchos_VerbosityLevel.hpp>
-#include <Teuchos_any.hpp>
-#include <Tpetra_Access.hpp>
-#include <Tpetra_CombineMode.hpp>
-#include <Tpetra_ConfigDefs.hpp>
-#include <Tpetra_CrsGraph_decl.hpp>
-#include <Tpetra_CrsMatrix_decl.hpp>
-#include <Tpetra_Details_CrsPadding.hpp>
-#include <Tpetra_Details_LocalMap.hpp>
-#include <Tpetra_Details_WrappedDualView.hpp>
-#include <Tpetra_Directory_decl.hpp>
-#include <Tpetra_Export_decl.hpp>
-#include <Tpetra_Import_decl.hpp>
-#include <Tpetra_LocalCrsMatrixOperator_decl.hpp>
-#include <Tpetra_Map_decl.hpp>
-#include <Tpetra_MultiVector_decl.hpp>
-#include <Tpetra_RowGraph_decl.hpp>
-#include <Tpetra_RowMatrix_decl.hpp>
-#include <Tpetra_SrcDistObject.hpp>
-#include <Tpetra_Vector_decl.hpp>
-#include <chrono>
-#include <cwchar>
-#include <deque>
-#include <functional>
-#include <iomanip>
-#include <ios>
-#include <iterator>
-#include <locale>
-#include <map>
-#include <memory>
-#include <ostream>
-#include <ratio>
-#include <set>
-#include <sstream>
+#include <KokkosCompat_ClassicNodeAPI_Wrapper.hpp> // Kokkos::Compat::KokkosDeviceWrapperNode
+#include <KokkosSparse_CrsMatrix.hpp> // KokkosSparse::CrsMatrix
+#include <Kokkos_Concepts.hpp> // Kokkos::Device
+#include <Kokkos_DualView.hpp> // Kokkos::DualView
+#include <Kokkos_HostSpace.hpp> // Kokkos::HostSpace
+#include <Kokkos_Layout.hpp> // Kokkos::LayoutLeft
+#include <Kokkos_MemoryTraits.hpp> // Kokkos::MemoryTraits
+#include <Kokkos_Serial.hpp> // Kokkos::Serial
+#include <Kokkos_StaticCrsGraph.hpp> // Kokkos::StaticCrsGraph
+#include <Kokkos_Tuners.hpp> // Kokkos::Tools::Experimental::Impl::ValueHierarchyNode
+#include <Kokkos_View.hpp> // Kokkos::View
+#include <MueLu_Aggregates_decl.hpp> // MueLu::Aggregates
+#include <MueLu_FacadeClassFactory_decl.hpp> // MueLu::FacadeClassFactory
+#include <MueLu_FactoryBase.hpp> // MueLu::FactoryBase
+#include <MueLu_FactoryFactory_fwd.hpp> // MueLu::FactoryFactory
+#include <MueLu_FactoryManagerBase.hpp> // MueLu::FactoryManagerBase
+#include <MueLu_FactoryManager_decl.hpp> // MueLu::FactoryManager
+#include <MueLu_Hierarchy_decl.hpp> // MueLu::Hierarchy
+#include <MueLu_Level.hpp> // 
+#include <MueLu_Level.hpp> // MueLu::Level
+#include <MueLu_MLParameterListInterpreter_decl.hpp> // MueLu::MLParameterListInterpreter
+#include <MueLu_NoFactory.hpp> // MueLu::NoFactory
+#include <MueLu_ParameterListInterpreter_decl.hpp> // MueLu::ParameterListInterpreter
+#include <MueLu_TpetraOperator_decl.hpp> // MueLu::TpetraOperator
+#include <MueLu_Types.hpp> // MueLu::CycleType
+#include <MueLu_VariableContainer.hpp> // MueLu::VariableContainer
+#include <Teuchos_Array.hpp> // Teuchos::Array
+#include <Teuchos_ArrayRCPDecl.hpp> // Teuchos::ArrayRCP
+#include <Teuchos_ArrayViewDecl.hpp> // Teuchos::ArrayView
+#include <Teuchos_BLAS_types.hpp> // Teuchos::ETransp
+#include <Teuchos_Comm.hpp> // Teuchos::Comm
+#include <Teuchos_Comm.hpp> // Teuchos::CommRequest
+#include <Teuchos_Comm.hpp> // Teuchos::CommStatus
+#include <Teuchos_DataAccess.hpp> // Teuchos::DataAccess
+#include <Teuchos_DefaultSerialComm.hpp> // Teuchos::SerialComm
+#include <Teuchos_DefaultSerialComm.hpp> // Teuchos::SerialCommStatus
+#include <Teuchos_Dependency.hpp> // Teuchos::Dependency
+#include <Teuchos_ENull.hpp> // Teuchos::ENull
+#include <Teuchos_EReductionType.hpp> // Teuchos::EReductionType
+#include <Teuchos_FancyOStream.hpp> // Teuchos::basic_FancyOStream
+#include <Teuchos_FancyOStream.hpp> // Teuchos::basic_OSTab
+#include <Teuchos_FilteredIterator.hpp> // Teuchos::FilteredIterator
+#include <Teuchos_ParameterEntry.hpp> // Teuchos::ParameterEntry
+#include <Teuchos_ParameterEntryValidator.hpp> // Teuchos::ParameterEntryValidator
+#include <Teuchos_ParameterList.hpp> // Teuchos::EValidateDefaults
+#include <Teuchos_ParameterList.hpp> // Teuchos::EValidateUsed
+#include <Teuchos_ParameterList.hpp> // Teuchos::ParameterList
+#include <Teuchos_ParameterListModifier.hpp> // Teuchos::ParameterListModifier
+#include <Teuchos_PtrDecl.hpp> // Teuchos::Ptr
+#include <Teuchos_RCPDecl.hpp> // Teuchos::ERCPUndefinedWeakNoDealloc
+#include <Teuchos_RCPDecl.hpp> // Teuchos::ERCPWeakNoDealloc
+#include <Teuchos_RCPDecl.hpp> // Teuchos::RCP
+#include <Teuchos_RCPDecl.hpp> // Teuchos::RCPComp
+#include <Teuchos_RCPNode.hpp> // Teuchos::EPrePostDestruction
+#include <Teuchos_RCPNode.hpp> // Teuchos::ERCPNodeLookup
+#include <Teuchos_RCPNode.hpp> // Teuchos::ERCPStrength
+#include <Teuchos_RCPNode.hpp> // Teuchos::RCPNode
+#include <Teuchos_RCPNode.hpp> // Teuchos::RCPNodeHandle
+#include <Teuchos_Range1D.hpp> // Teuchos::Range1D
+#include <Teuchos_ReductionOp.hpp> // Teuchos::ValueTypeReductionOp
+#include <Teuchos_SerializationTraits.hpp> // Teuchos::SerializationTraits
+#include <Teuchos_StackedTimer.hpp> // Teuchos::StackedTimer
+#include <Teuchos_StandardParameterEntryValidators.hpp> // 
+#include <Teuchos_StringIndexedOrderedValueObjectContainer.hpp> // Teuchos::StringIndexedOrderedValueObjectContainerBase
+#include <Teuchos_Time.hpp> // Teuchos::Time
+#include <Teuchos_TimeMonitor.hpp> // Teuchos::TimeMonitorSurrogateImpl
+#include <Teuchos_TwoDArray.hpp> // Teuchos::TwoDArray
+#include <Teuchos_VerbosityLevel.hpp> // Teuchos::EVerbosityLevel
+#include <Teuchos_any.hpp> // Teuchos::any
+#include <Tpetra_Access.hpp> // Tpetra::Access::OverwriteAllStruct
+#include <Tpetra_Access.hpp> // Tpetra::Access::ReadOnlyStruct
+#include <Tpetra_Access.hpp> // Tpetra::Access::ReadWriteStruct
+#include <Tpetra_BlockCrsMatrix_decl.hpp> // Tpetra::BlockCrsMatrix
+#include <Tpetra_CombineMode.hpp> // Tpetra::CombineMode
+#include <Tpetra_ConfigDefs.hpp> // Tpetra::LocalGlobal
+#include <Tpetra_ConfigDefs.hpp> // Tpetra::LookupStatus
+#include <Tpetra_CrsGraph_decl.hpp> // Tpetra::CrsGraph
+#include <Tpetra_CrsMatrix_decl.hpp> // Tpetra::CrsMatrix
+#include <Tpetra_Details_CrsPadding.hpp> // Tpetra::Details::CrsPadding
+#include <Tpetra_Details_LocalMap.hpp> // Tpetra::Details::LocalMap
+#include <Tpetra_Details_WrappedDualView.hpp> // Tpetra::Details::WrappedDualView
+#include <Tpetra_Directory_decl.hpp> // Tpetra::Directory
+#include <Tpetra_Export_decl.hpp> // Tpetra::Export
+#include <Tpetra_Import_decl.hpp> // Tpetra::Import
+#include <Tpetra_LocalCrsMatrixOperator_decl.hpp> // Tpetra::LocalCrsMatrixOperator
+#include <Tpetra_Map_decl.hpp> // Tpetra::Map
+#include <Tpetra_MultiVector_decl.hpp> // Tpetra::MultiVector
+#include <Tpetra_RowGraph_decl.hpp> // Tpetra::RowGraph
+#include <Tpetra_RowMatrix_decl.hpp> // Tpetra::RowMatrix
+#include <Tpetra_SrcDistObject.hpp> // Tpetra::SrcDistObject
+#include <Tpetra_Vector_decl.hpp> // Tpetra::Vector
+#include <Xpetra_Access.hpp> // Xpetra::Access::OverwriteAllStruct
+#include <Xpetra_Access.hpp> // Xpetra::Access::ReadOnlyStruct
+#include <Xpetra_Access.hpp> // Xpetra::Access::ReadWriteStruct
+#include <Xpetra_ConfigDefs.hpp> // Xpetra::CombineMode
+#include <Xpetra_ConfigDefs.hpp> // Xpetra::LookupStatus
+#include <Xpetra_CrsGraph.hpp> // Xpetra::CrsGraph
+#include <Xpetra_CrsMatrix.hpp> // Xpetra::CrsMatrix
+#include <Xpetra_CrsMatrixWrap_decl.hpp> // Xpetra::CrsMatrixWrap
+#include <Xpetra_DistObject.hpp> // Xpetra::DistObject
+#include <Xpetra_Export.hpp> // Xpetra::Export
+#include <Xpetra_Import.hpp> // Xpetra::Import
+#include <Xpetra_Map_decl.hpp> // Xpetra::Map
+#include <Xpetra_Map_decl.hpp> // Xpetra::UnderlyingLib
+#include <Xpetra_Matrix.hpp> // Xpetra::Matrix
+#include <Xpetra_MatrixView.hpp> // Xpetra::MatrixView
+#include <Xpetra_MultiVector_decl.hpp> // Xpetra::MultiVector
+#include <Xpetra_MultiVector_fwd.hpp> // Xpetra::MultiVector
+#include <Xpetra_Operator.hpp> // Xpetra::Operator
+#include <Xpetra_TpetraBlockCrsMatrix_decl.hpp> // Xpetra::TpetraBlockCrsMatrix
+#include <Xpetra_TpetraCrsMatrix_decl.hpp> // Xpetra::TpetraCrsMatrix
+#include <Xpetra_TpetraMultiVector_decl.hpp> // Xpetra::TpetraMultiVector
+#include <chrono> // std::chrono::duration
+#include <cwchar> // (anonymous)
+#include <deque> // std::_Deque_iterator
+#include <fstream> // std::basic_filebuf
+#include <fstream> // std::basic_ofstream
+#include <functional> // std::less
+#include <iomanip> // std::_Setbase
+#include <iomanip> // std::_Setprecision
+#include <iomanip> // std::_Setw
+#include <ios> // std::_Ios_Fmtflags
+#include <ios> // std::_Ios_Iostate
+#include <ios> // std::_Ios_Openmode
+#include <ios> // std::_Ios_Seekdir
+#include <ios> // std::boolalpha
+#include <ios> // std::dec
+#include <ios> // std::defaultfloat
+#include <ios> // std::fixed
+#include <ios> // std::fpos
+#include <ios> // std::hex
+#include <ios> // std::hexfloat
+#include <ios> // std::internal
+#include <ios> // std::io_errc
+#include <ios> // std::ios_base
+#include <ios> // std::ios_base::Init
+#include <ios> // std::ios_base::failure
+#include <ios> // std::is_error_code_enum
+#include <ios> // std::left
+#include <ios> // std::make_error_code
+#include <ios> // std::make_error_condition
+#include <ios> // std::noboolalpha
+#include <ios> // std::noshowbase
+#include <ios> // std::noshowpoint
+#include <ios> // std::noshowpos
+#include <ios> // std::noskipws
+#include <ios> // std::nounitbuf
+#include <ios> // std::nouppercase
+#include <ios> // std::oct
+#include <ios> // std::right
+#include <ios> // std::scientific
+#include <ios> // std::showbase
+#include <ios> // std::showpoint
+#include <ios> // std::showpos
+#include <ios> // std::skipws
+#include <ios> // std::unitbuf
+#include <ios> // std::uppercase
+#include <iterator> // __gnu_cxx::__normal_iterator
+#include <iterator> // std::move_iterator
+#include <locale> // std::collate
+#include <locale> // std::collate_byname
+#include <locale> // std::locale
+#include <map> // std::_Rb_tree_const_iterator
+#include <map> // std::_Rb_tree_iterator
+#include <map> // std::map
+#include <memory> // std::allocator
+#include <memory> // std::default_delete
+#include <memory> // std::shared_ptr
+#include <memory> // std::unique_ptr
+#include <ostream> // std::basic_ostream
+#include <random> // std::bernoulli_distribution
+#include <ratio> // std::ratio
+#include <set> // std::set
 #include <sstream> // __str__
-#include <stdexcept>
-#include <streambuf>
-#include <string>
-#include <system_error>
-#include <thread>
-#include <typeinfo>
-#include <unordered_map>
-#include <utility>
-#include <vector>
+#include <sstream> // std::basic_ostringstream
+#include <sstream> // std::basic_stringbuf
+#include <stdexcept> // std::domain_error
+#include <stdexcept> // std::invalid_argument
+#include <stdexcept> // std::length_error
+#include <stdexcept> // std::logic_error
+#include <stdexcept> // std::out_of_range
+#include <stdexcept> // std::overflow_error
+#include <stdexcept> // std::range_error
+#include <stdexcept> // std::runtime_error
+#include <stdexcept> // std::underflow_error
+#include <streambuf> // std::basic_streambuf
+#include <string> // std::basic_string
+#include <string> // std::char_traits
+#include <system_error> // std::_V2::error_category
+#include <system_error> // std::errc
+#include <system_error> // std::error_code
+#include <system_error> // std::error_condition
+#include <system_error> // std::hash
+#include <system_error> // std::is_error_code_enum
+#include <system_error> // std::is_error_condition_enum
+#include <system_error> // std::make_error_code
+#include <system_error> // std::make_error_condition
+#include <system_error> // std::system_error
+#include <thread> // std::thread
+#include <typeinfo> // std::type_info
+#include <unordered_map> // std::__detail::_Node_const_iterator
+#include <unordered_map> // std::__detail::_Node_iterator
+#include <utility> // std::pair
+#include <vector> // std::_Bit_iterator
+#include <vector> // std::_Bit_iterator_base
+#include <vector> // std::vector
 
 #include <functional>
 #include <pybind11/pybind11.h>

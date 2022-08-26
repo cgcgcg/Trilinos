@@ -1,5 +1,5 @@
 #include <PyTrilinos2_Teuchos_Custom.hpp>
-#include <Teuchos_SerializationTraits.hpp>
+#include <Teuchos_SerializationTraits.hpp> // Teuchos::SerializationTraits
 #include <sstream> // __str__
 
 #include <functional>

@@ -1,19 +1,43 @@
+#include <KokkosCompat_ClassicNodeAPI_Wrapper.hpp> // Kokkos::Compat::KokkosDeviceWrapperNode
+#include <Kokkos_HostSpace.hpp> // Kokkos::HostSpace
+#include <Kokkos_Serial.hpp> // Kokkos::Serial
 #include <PyTrilinos2_Teuchos_Custom.hpp>
-#include <Teuchos_BLAS.hpp>
-#include <Teuchos_BLAS_types.hpp>
-#include <Teuchos_CompObject.hpp>
-#include <Teuchos_Flops.hpp>
-#include <Teuchos_Object.hpp>
-#include <complex>
-#include <cwchar>
-#include <ios>
-#include <iterator>
-#include <locale>
-#include <memory>
-#include <ostream>
+#include <Teuchos_Array.hpp> // Teuchos::Array
+#include <Teuchos_ArrayViewDecl.hpp> // Teuchos::ArrayView
+#include <Teuchos_BLAS.hpp> // Teuchos::BLAS
+#include <Teuchos_BLAS_types.hpp> // Teuchos::EDiag
+#include <Teuchos_BLAS_types.hpp> // Teuchos::ESide
+#include <Teuchos_BLAS_types.hpp> // Teuchos::ETransp
+#include <Teuchos_BLAS_types.hpp> // Teuchos::EUplo
+#include <Teuchos_CompObject.hpp> // Teuchos::CompObject
+#include <Teuchos_ENull.hpp> // Teuchos::ENull
+#include <Teuchos_Flops.hpp> // Teuchos::Flops
+#include <Teuchos_HashUtils.hpp> // Teuchos::HashUtils
+#include <Teuchos_HashUtils.hpp> // Teuchos::hashCode
+#include <Teuchos_Hashtable.hpp> // Teuchos::HashPair
+#include <Teuchos_Hashtable.hpp> // Teuchos::Hashtable
+#include <Teuchos_Object.hpp> // Teuchos::Object
+#include <Teuchos_Object.hpp> // Teuchos::operator<<
+#include <Teuchos_RCPDecl.hpp> // Teuchos::ERCPUndefinedWeakNoDealloc
+#include <Teuchos_RCPDecl.hpp> // Teuchos::ERCPWeakNoDealloc
+#include <Teuchos_RCPDecl.hpp> // Teuchos::RCP
+#include <Teuchos_RCPNode.hpp> // Teuchos::ERCPStrength
+#include <Teuchos_RCPNode.hpp> // Teuchos::RCPNodeHandle
+#include <Xpetra_MatrixView.hpp> // Xpetra::MatrixView
+#include <complex> // std::complex
+#include <cwchar> // (anonymous)
+#include <ios> // std::_Ios_Openmode
+#include <ios> // std::_Ios_Seekdir
+#include <ios> // std::fpos
+#include <iterator> // __gnu_cxx::__normal_iterator
+#include <locale> // std::locale
+#include <memory> // std::allocator
+#include <ostream> // std::basic_ostream
 #include <sstream> // __str__
-#include <streambuf>
-#include <string>
+#include <streambuf> // std::basic_streambuf
+#include <string> // std::basic_string
+#include <string> // std::char_traits
+#include <vector> // std::vector
 
 #include <functional>
 #include <pybind11/pybind11.h>
@@ -124,4 +148,31 @@ void bind_Teuchos_Object(std::function< pybind11::module &(std::string const &na
 		cl.def("updateFlops", (void (Teuchos::CompObject::*)(float) const) &Teuchos::CompObject::updateFlops, "Increment Flop count for  object\n\nC++: Teuchos::CompObject::updateFlops(float) const --> void", pybind11::arg("addflops"));
 		cl.def("assign", (class Teuchos::CompObject & (Teuchos::CompObject::*)(const class Teuchos::CompObject &)) &Teuchos::CompObject::operator=, "C++: Teuchos::CompObject::operator=(const class Teuchos::CompObject &) --> class Teuchos::CompObject &", pybind11::return_value_policy::automatic, pybind11::arg(""));
 	}
+	{ // Teuchos::HashUtils file:Teuchos_HashUtils.hpp line:66
+		pybind11::class_<Teuchos::HashUtils, Teuchos::RCP<Teuchos::HashUtils>> cl(M("Teuchos"), "HashUtils", "Utilities for generating hashcodes.\n This is not a true hash ! For all ints and types less than ints\n it returns the i/p typecasted as an int. For every type more than the\n size of int it is only slightly more smarter where it adds the bits\n into int size chunks and calls that an hash. Used with a capacity\n limited array this will lead to one of the simplest hashes.\n Ideally this should be deprecated and not used at all.");
+		cl.def( pybind11::init( [](){ return new Teuchos::HashUtils(); } ) );
+		cl.def_static("nextPrime", (int (*)(int)) &Teuchos::HashUtils::nextPrime, "C++: Teuchos::HashUtils::nextPrime(int) --> int", pybind11::arg("newCapacity"));
+		cl.def_static("getHashCode", (int (*)(const unsigned char *, unsigned long)) &Teuchos::HashUtils::getHashCode, "C++: Teuchos::HashUtils::getHashCode(const unsigned char *, unsigned long) --> int", pybind11::arg("a"), pybind11::arg("len"));
+	}
+	// Teuchos::hashCode(const int &) file:Teuchos_HashUtils.hpp line:95
+	M("Teuchos").def("hashCode", (int (*)(const int &)) &Teuchos::hashCode<int>, "Get the hash code of an int\n\nC++: Teuchos::hashCode(const int &) --> int", pybind11::arg("x"));
+
+	// Teuchos::hashCode(const unsigned int &) file:Teuchos_HashUtils.hpp line:103
+	M("Teuchos").def("hashCode", (int (*)(const unsigned int &)) &Teuchos::hashCode<unsigned int>, "Get the hash code of an unsigned\n\nC++: Teuchos::hashCode(const unsigned int &) --> int", pybind11::arg("x"));
+
+	// Teuchos::hashCode(const double &) file:Teuchos_HashUtils.hpp line:112
+	M("Teuchos").def("hashCode", (int (*)(const double &)) &Teuchos::hashCode<double>, "Get the hash code of a double\n\nC++: Teuchos::hashCode(const double &) --> int", pybind11::arg("x"));
+
+	// Teuchos::hashCode(const bool &) file:Teuchos_HashUtils.hpp line:121
+	M("Teuchos").def("hashCode", (int (*)(const bool &)) &Teuchos::hashCode<bool>, "Get the hash code of a bool\n\nC++: Teuchos::hashCode(const bool &) --> int", pybind11::arg("x"));
+
+	// Teuchos::hashCode(const long long &) file:Teuchos_HashUtils.hpp line:129
+	M("Teuchos").def("hashCode", (int (*)(const long long &)) &Teuchos::hashCode<long long>, "Get the hash code of a long long\n\nC++: Teuchos::hashCode(const long long &) --> int", pybind11::arg("x"));
+
+	// Teuchos::hashCode(const long &) file:Teuchos_HashUtils.hpp line:138
+	M("Teuchos").def("hashCode", (int (*)(const long &)) &Teuchos::hashCode<long>, "Get the hash code of a long\n\nC++: Teuchos::hashCode(const long &) --> int", pybind11::arg("x"));
+
+	// Teuchos::hashCode(const std::string &) file:Teuchos_HashUtils.hpp line:147
+	M("Teuchos").def("hashCode", (int (*)(const std::string &)) &Teuchos::hashCode<std::string>, "Get the hash code of a std::string\n\nC++: Teuchos::hashCode(const std::string &) --> int", pybind11::arg("x"));
+
 }

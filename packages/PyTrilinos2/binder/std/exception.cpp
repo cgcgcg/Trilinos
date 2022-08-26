@@ -1,4 +1,9 @@
-#include <exception>
+#include <exception> // std::bad_exception
+#include <exception> // std::exception
+#include <exception> // std::terminate
+#include <exception> // std::uncaught_exception
+#include <exception> // std::uncaught_exceptions
+#include <exception> // std::unexpected
 #include <sstream> // __str__
 
 #include <functional>

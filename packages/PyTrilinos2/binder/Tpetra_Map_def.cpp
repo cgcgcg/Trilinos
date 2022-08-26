@@ -1,24 +1,33 @@
-#include <KokkosCompat_ClassicNodeAPI_Wrapper.hpp>
-#include <Kokkos_Concepts.hpp>
-#include <Kokkos_HostSpace.hpp>
-#include <Kokkos_Serial.hpp>
-#include <Kokkos_View.hpp>
-#include <Teuchos_ArrayViewDecl.hpp>
-#include <Teuchos_Comm.hpp>
-#include <Teuchos_ENull.hpp>
-#include <Teuchos_FancyOStream.hpp>
-#include <Teuchos_RCPDecl.hpp>
-#include <Teuchos_RCPNode.hpp>
-#include <Teuchos_VerbosityLevel.hpp>
-#include <Teuchos_any.hpp>
-#include <Tpetra_ConfigDefs.hpp>
-#include <Tpetra_Details_LocalMap.hpp>
-#include <Tpetra_Map_decl.hpp>
-#include <Tpetra_Map_def.hpp>
-#include <iterator>
-#include <memory>
-#include <ostream>
-#include <string>
+#include <KokkosCompat_ClassicNodeAPI_Wrapper.hpp> // Kokkos::Compat::KokkosDeviceWrapperNode
+#include <Kokkos_Concepts.hpp> // Kokkos::Device
+#include <Kokkos_HostSpace.hpp> // 
+#include <Kokkos_HostSpace.hpp> // Kokkos::HostSpace
+#include <Kokkos_Serial.hpp> // Kokkos::Impl::SerialInternal
+#include <Kokkos_Serial.hpp> // Kokkos::Serial
+#include <Kokkos_View.hpp> // Kokkos::View
+#include <Teuchos_ArrayViewDecl.hpp> // Teuchos::ArrayView
+#include <Teuchos_Comm.hpp> // Teuchos::Comm
+#include <Teuchos_ENull.hpp> // Teuchos::ENull
+#include <Teuchos_FancyOStream.hpp> // Teuchos::basic_FancyOStream
+#include <Teuchos_RCPDecl.hpp> // Teuchos::ERCPUndefinedWeakNoDealloc
+#include <Teuchos_RCPDecl.hpp> // Teuchos::ERCPWeakNoDealloc
+#include <Teuchos_RCPDecl.hpp> // Teuchos::RCP
+#include <Teuchos_RCPNode.hpp> // Teuchos::EPrePostDestruction
+#include <Teuchos_RCPNode.hpp> // Teuchos::ERCPStrength
+#include <Teuchos_RCPNode.hpp> // Teuchos::RCPNode
+#include <Teuchos_RCPNode.hpp> // Teuchos::RCPNodeHandle
+#include <Teuchos_VerbosityLevel.hpp> // Teuchos::EVerbosityLevel
+#include <Teuchos_any.hpp> // Teuchos::any
+#include <Tpetra_ConfigDefs.hpp> // Tpetra::LocalGlobal
+#include <Tpetra_ConfigDefs.hpp> // Tpetra::LookupStatus
+#include <Tpetra_Details_LocalMap.hpp> // Tpetra::Details::LocalMap
+#include <Tpetra_Map_decl.hpp> // Tpetra::Map
+#include <Tpetra_Map_def.hpp> // Tpetra::createOneToOne
+#include <iterator> // __gnu_cxx::__normal_iterator
+#include <memory> // std::allocator
+#include <ostream> // std::basic_ostream
+#include <string> // std::basic_string
+#include <string> // std::char_traits
 
 #include <functional>
 #include <pybind11/pybind11.h>

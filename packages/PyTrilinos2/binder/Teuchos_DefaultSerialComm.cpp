@@ -1,23 +1,34 @@
 #include <PyTrilinos2_Teuchos_Custom.hpp>
-#include <Teuchos_ArrayViewDecl.hpp>
-#include <Teuchos_Comm.hpp>
-#include <Teuchos_DefaultSerialComm.hpp>
-#include <Teuchos_Describable.hpp>
-#include <Teuchos_ENull.hpp>
-#include <Teuchos_EReductionType.hpp>
-#include <Teuchos_FancyOStream.hpp>
-#include <Teuchos_LabeledObject.hpp>
-#include <Teuchos_PtrDecl.hpp>
-#include <Teuchos_RCPDecl.hpp>
-#include <Teuchos_RCPNode.hpp>
-#include <Teuchos_VerbosityLevel.hpp>
-#include <Teuchos_any.hpp>
-#include <iterator>
-#include <memory>
-#include <ostream>
+#include <Teuchos_ArrayViewDecl.hpp> // Teuchos::ArrayView
+#include <Teuchos_Comm.hpp> // Teuchos::Comm
+#include <Teuchos_Comm.hpp> // Teuchos::CommRequest
+#include <Teuchos_Comm.hpp> // Teuchos::CommStatus
+#include <Teuchos_DefaultSerialComm.hpp> // Teuchos::SerialComm
+#include <Teuchos_DefaultSerialComm.hpp> // Teuchos::SerialCommStatus
+#include <Teuchos_Describable.hpp> // Teuchos::Describable
+#include <Teuchos_ENull.hpp> // Teuchos::ENull
+#include <Teuchos_EReductionType.hpp> // Teuchos::EReductionType
+#include <Teuchos_EReductionType.hpp> // Teuchos::toString
+#include <Teuchos_FancyOStream.hpp> // Teuchos::basic_FancyOStream
+#include <Teuchos_LabeledObject.hpp> // Teuchos::LabeledObject
+#include <Teuchos_PtrDecl.hpp> // Teuchos::Ptr
+#include <Teuchos_RCPDecl.hpp> // Teuchos::ERCPUndefinedWeakNoDealloc
+#include <Teuchos_RCPDecl.hpp> // Teuchos::ERCPWeakNoDealloc
+#include <Teuchos_RCPDecl.hpp> // Teuchos::RCP
+#include <Teuchos_RCPNode.hpp> // Teuchos::EPrePostDestruction
+#include <Teuchos_RCPNode.hpp> // Teuchos::ERCPNodeLookup
+#include <Teuchos_RCPNode.hpp> // Teuchos::ERCPStrength
+#include <Teuchos_RCPNode.hpp> // Teuchos::RCPNode
+#include <Teuchos_RCPNode.hpp> // Teuchos::RCPNodeHandle
+#include <Teuchos_VerbosityLevel.hpp> // Teuchos::EVerbosityLevel
+#include <Teuchos_any.hpp> // Teuchos::any
+#include <iterator> // __gnu_cxx::__normal_iterator
+#include <memory> // std::allocator
+#include <ostream> // std::basic_ostream
 #include <sstream> // __str__
-#include <string>
-#include <vector>
+#include <string> // std::basic_string
+#include <string> // std::char_traits
+#include <vector> // std::vector
 
 #include <functional>
 #include <pybind11/pybind11.h>

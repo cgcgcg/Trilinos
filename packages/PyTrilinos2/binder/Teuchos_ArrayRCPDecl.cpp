@@ -1,42 +1,68 @@
-#include <KokkosCompat_View.hpp>
-#include <Kokkos_AnonymousSpace.hpp>
-#include <Kokkos_HostSpace.hpp>
-#include <Kokkos_Layout.hpp>
-#include <Kokkos_ScratchSpace.hpp>
-#include <Kokkos_Serial.hpp>
-#include <Kokkos_View.hpp>
+#include <KokkosCompat_View.hpp> // Kokkos::Compat::Deallocator
+#include <Kokkos_AnonymousSpace.hpp> // Kokkos::AnonymousSpace
+#include <Kokkos_HostSpace.hpp> // Kokkos::HostSpace
+#include <Kokkos_Layout.hpp> // Kokkos::LayoutLeft
+#include <Kokkos_Layout.hpp> // Kokkos::LayoutRight
+#include <Kokkos_ScratchSpace.hpp> // Kokkos::ScratchMemorySpace
+#include <Kokkos_Serial.hpp> // Kokkos::Serial
+#include <Kokkos_View.hpp> // Kokkos::View
+#include <Kokkos_View.hpp> // Kokkos::ViewTraits
 #include <PyTrilinos2_Teuchos_Custom.hpp>
-#include <Teuchos_ArrayRCP.hpp>
-#include <Teuchos_ArrayRCPDecl.hpp>
-#include <Teuchos_ArrayView.hpp>
-#include <Teuchos_ArrayViewDecl.hpp>
-#include <Teuchos_Comm.hpp>
-#include <Teuchos_ENull.hpp>
-#include <Teuchos_GlobalMPISession.hpp>
-#include <Teuchos_RCPDecl.hpp>
-#include <Teuchos_RCPNode.hpp>
-#include <Teuchos_any.hpp>
-#include <Teuchos_as.hpp>
-#include <Teuchos_basic_oblackholestream.hpp>
-#include <cwchar>
-#include <functional>
-#include <impl/Kokkos_SharedAlloc.hpp>
-#include <impl/Kokkos_ViewCtor.hpp>
-#include <impl/Kokkos_ViewMapping.hpp>
-#include <ios>
-#include <iterator>
-#include <locale>
-#include <map>
-#include <memory>
-#include <mpi.h>
-#include <ostream>
-#include <set>
+#include <RTOpPack_RTOpT_decl.hpp> // RTOpPack::ReductTarget
+#include <Teuchos_ArrayRCP.hpp> // Teuchos::ArrayRCP_createNewDeallocRCPNodeRawPtr
+#include <Teuchos_ArrayRCP.hpp> // Teuchos::ArrayRCP_createNewRCPNodeRawPtr
+#include <Teuchos_ArrayRCP.hpp> // Teuchos::arcp
+#include <Teuchos_ArrayRCP.hpp> // Teuchos::arcp_reinterpret_cast
+#include <Teuchos_ArrayRCP.hpp> // Teuchos::operator<<
+#include <Teuchos_ArrayRCPDecl.hpp> // Teuchos::ArrayRCP
+#include <Teuchos_ArrayRCPDecl.hpp> // Teuchos::arcp
+#include <Teuchos_ArrayView.hpp> // Teuchos::ArrayView
+#include <Teuchos_ArrayView.hpp> // Teuchos::arrayView
+#include <Teuchos_ArrayView.hpp> // Teuchos::av_reinterpret_cast
+#include <Teuchos_ArrayView.hpp> // Teuchos::operator<<
+#include <Teuchos_ArrayViewDecl.hpp> // Teuchos::ArrayView
+#include <Teuchos_ArrayViewDecl.hpp> // Teuchos::arrayView
+#include <Teuchos_Comm.hpp> // Teuchos::CommRequest
+#include <Teuchos_Comm.hpp> // Teuchos::CommStatus
+#include <Teuchos_ENull.hpp> // Teuchos::ENull
+#include <Teuchos_GlobalMPISession.hpp> // Teuchos::GlobalMPISession
+#include <Teuchos_PtrDecl.hpp> // Teuchos::Ptr
+#include <Teuchos_RCPDecl.hpp> // Teuchos::ERCPUndefinedWeakNoDealloc
+#include <Teuchos_RCPDecl.hpp> // Teuchos::ERCPWeakNoDealloc
+#include <Teuchos_RCPDecl.hpp> // Teuchos::RCP
+#include <Teuchos_RCPNode.hpp> // Teuchos::EPrePostDestruction
+#include <Teuchos_RCPNode.hpp> // Teuchos::ERCPNodeLookup
+#include <Teuchos_RCPNode.hpp> // Teuchos::ERCPStrength
+#include <Teuchos_RCPNode.hpp> // Teuchos::RCPNode
+#include <Teuchos_RCPNode.hpp> // Teuchos::RCPNodeHandle
+#include <Teuchos_any.hpp> // Teuchos::any
+#include <Teuchos_as.hpp> // Teuchos::ValueTypeConversionTraits
+#include <Teuchos_as.hpp> // Teuchos::as
+#include <Teuchos_as.hpp> // Teuchos::asSafe
+#include <Teuchos_basic_oblackholestream.hpp> // Teuchos::basic_oblackholestream
+#include <cwchar> // (anonymous)
+#include <functional> // std::less
+#include <impl/Kokkos_SharedAlloc.hpp> // Kokkos::Impl::SharedAllocationRecord
+#include <impl/Kokkos_SharedAlloc.hpp> // Kokkos::Impl::SharedAllocationTracker
+#include <impl/Kokkos_ViewCtor.hpp> // Kokkos::Impl::ViewCtorProp
+#include <impl/Kokkos_ViewMapping.hpp> // Kokkos::Impl::ViewMapping
+#include <ios> // std::_Ios_Openmode
+#include <ios> // std::_Ios_Seekdir
+#include <ios> // std::fpos
+#include <iterator> // __gnu_cxx::__normal_iterator
+#include <locale> // std::locale
+#include <map> // std::_Rb_tree_const_iterator
+#include <memory> // std::allocator
+#include <mpi.h> // ompi_status_public_t
+#include <ostream> // std::basic_ostream
+#include <set> // std::set
 #include <sstream> // __str__
-#include <streambuf>
-#include <string>
-#include <typeinfo>
-#include <utility>
-#include <vector>
+#include <streambuf> // std::basic_streambuf
+#include <string> // std::basic_string
+#include <string> // std::char_traits
+#include <typeinfo> // std::type_info
+#include <utility> // std::pair
+#include <vector> // std::vector
 
 #include <functional>
 #include <pybind11/pybind11.h>
@@ -246,7 +272,7 @@ void bind_Teuchos_ArrayRCPDecl(std::function< pybind11::module &(std::string con
 	{ // Teuchos::ArrayRCP file:Teuchos_ArrayRCPDecl.hpp line:838
 		pybind11::class_<Teuchos::ArrayRCP<const long long>, Teuchos::RCP<Teuchos::ArrayRCP<const long long>>> cl(M("Teuchos"), "ArrayRCP_const_long_long_t", "");
 		cl.def( pybind11::init( [](){ return new Teuchos::ArrayRCP<const long long>(); } ), "doc" );
-		cl.def( pybind11::init<enum Teuchos::ENull>(), pybind11::arg("null_arg") );
+		cl.def( pybind11::init<enum Teuchos::ENull>(), pybind11::arg("") );
 
 		cl.def( pybind11::init( [](const long long * a0, long const & a1, long const & a2, bool const & a3){ return new Teuchos::ArrayRCP<const long long>(a0, a1, a2, a3); } ), "doc" , pybind11::arg("p"), pybind11::arg("lowerOffset"), pybind11::arg("size"), pybind11::arg("has_ownership"));
 		cl.def( pybind11::init<const long long *, long, long, bool, const enum Teuchos::ERCPNodeLookup>(), pybind11::arg("p"), pybind11::arg("lowerOffset"), pybind11::arg("size"), pybind11::arg("has_ownership"), pybind11::arg("rcpNodeLookup") );
@@ -255,7 +281,7 @@ void bind_Teuchos_ArrayRCPDecl(std::function< pybind11::module &(std::string con
 		cl.def( pybind11::init<long, const long long &>(), pybind11::arg("size"), pybind11::arg("val") );
 
 		cl.def( pybind11::init( [](Teuchos::ArrayRCP<const long long> const &o){ return new Teuchos::ArrayRCP<const long long>(o); } ) );
-		cl.def( pybind11::init<const long long *, long, long, const class Teuchos::RCPNodeHandle &>(), pybind11::arg("p"), pybind11::arg("lowerOffset"), pybind11::arg("size"), pybind11::arg("node") );
+		cl.def( pybind11::init<const long long *, long, long, const class Teuchos::RCPNodeHandle &>(), pybind11::arg("p"), pybind11::arg("lowerOffset_in"), pybind11::arg("size_in"), pybind11::arg("node") );
 
 		cl.def("assign", (class Teuchos::ArrayRCP<const long long> & (Teuchos::ArrayRCP<const long long>::*)(const class Teuchos::ArrayRCP<const long long> &)) &Teuchos::ArrayRCP<const long long>::operator=, "C++: Teuchos::ArrayRCP<const long long>::operator=(const class Teuchos::ArrayRCP<const long long> &) --> class Teuchos::ArrayRCP<const long long> &", pybind11::return_value_policy::automatic, pybind11::arg("r_ptr"));
 		cl.def("is_null", (bool (Teuchos::ArrayRCP<const long long>::*)() const) &Teuchos::ArrayRCP<const long long>::is_null, "C++: Teuchos::ArrayRCP<const long long>::is_null() const --> bool");
@@ -303,6 +329,130 @@ void bind_Teuchos_ArrayRCPDecl(std::function< pybind11::module &(std::string con
 		cl.def("access_private_node", (const class Teuchos::RCPNodeHandle & (Teuchos::ArrayRCP<const long long>::*)() const) &Teuchos::ArrayRCP<const long long>::access_private_node, "C++: Teuchos::ArrayRCP<const long long>::access_private_node() const --> const class Teuchos::RCPNodeHandle &", pybind11::return_value_policy::automatic);
 
 		cl.def("__str__", [](Teuchos::ArrayRCP<const long long> const &o) -> std::string { std::ostringstream s; s << o; return s.str(); } );
+	}
+	{ // Teuchos::ArrayRCP file:Teuchos_ArrayRCPDecl.hpp line:127
+		pybind11::class_<Teuchos::ArrayRCP<long>, Teuchos::RCP<Teuchos::ArrayRCP<long>>> cl(M("Teuchos"), "ArrayRCP_long_t", "");
+		cl.def( pybind11::init( [](){ return new Teuchos::ArrayRCP<long>(); } ), "doc" );
+		cl.def( pybind11::init<enum Teuchos::ENull>(), pybind11::arg("") );
+
+		cl.def( pybind11::init( [](long * a0, long const & a1, long const & a2, bool const & a3){ return new Teuchos::ArrayRCP<long>(a0, a1, a2, a3); } ), "doc" , pybind11::arg("p"), pybind11::arg("lowerOffset_in"), pybind11::arg("size_in"), pybind11::arg("has_ownership_in"));
+		cl.def( pybind11::init<long *, long, long, bool, const enum Teuchos::ERCPNodeLookup>(), pybind11::arg("p"), pybind11::arg("lowerOffset_in"), pybind11::arg("size_in"), pybind11::arg("has_ownership_in"), pybind11::arg("rcpNodeLookup") );
+
+		cl.def( pybind11::init( [](long const & a0){ return new Teuchos::ArrayRCP<long>(a0); } ), "doc" , pybind11::arg("n"));
+		cl.def( pybind11::init<long, const long &>(), pybind11::arg("n"), pybind11::arg("val") );
+
+		cl.def( pybind11::init( [](Teuchos::ArrayRCP<long> const &o){ return new Teuchos::ArrayRCP<long>(o); } ) );
+		cl.def( pybind11::init<long *, long, long, const class Teuchos::RCPNodeHandle &>(), pybind11::arg("p"), pybind11::arg("lowerOffset"), pybind11::arg("size"), pybind11::arg("node") );
+
+		cl.def("assign", (class Teuchos::ArrayRCP<long> & (Teuchos::ArrayRCP<long>::*)(const class Teuchos::ArrayRCP<long> &)) &Teuchos::ArrayRCP<long>::operator=, "C++: Teuchos::ArrayRCP<long>::operator=(const class Teuchos::ArrayRCP<long> &) --> class Teuchos::ArrayRCP<long> &", pybind11::return_value_policy::automatic, pybind11::arg("r_ptr"));
+		cl.def("is_null", (bool (Teuchos::ArrayRCP<long>::*)() const) &Teuchos::ArrayRCP<long>::is_null, "C++: Teuchos::ArrayRCP<long>::is_null() const --> bool");
+		cl.def("arrow", (long * (Teuchos::ArrayRCP<long>::*)() const) &Teuchos::ArrayRCP<long>::operator->, "C++: Teuchos::ArrayRCP<long>::operator->() const --> long *", pybind11::return_value_policy::automatic);
+		cl.def("__mul__", (long & (Teuchos::ArrayRCP<long>::*)() const) &Teuchos::ArrayRCP<long>::operator*, "C++: Teuchos::ArrayRCP<long>::operator*() const --> long &", pybind11::return_value_policy::automatic);
+		cl.def("get", (long * (Teuchos::ArrayRCP<long>::*)() const) &Teuchos::ArrayRCP<long>::get, "C++: Teuchos::ArrayRCP<long>::get() const --> long *", pybind11::return_value_policy::automatic);
+		cl.def("getRawPtr", (long * (Teuchos::ArrayRCP<long>::*)() const) &Teuchos::ArrayRCP<long>::getRawPtr, "C++: Teuchos::ArrayRCP<long>::getRawPtr() const --> long *", pybind11::return_value_policy::automatic);
+		cl.def("__getitem__", (long & (Teuchos::ArrayRCP<long>::*)(long) const) &Teuchos::ArrayRCP<long>::operator[], "C++: Teuchos::ArrayRCP<long>::operator[](long) const --> long &", pybind11::return_value_policy::automatic, pybind11::arg("offset"));
+		cl.def("plus_plus", (class Teuchos::ArrayRCP<long> & (Teuchos::ArrayRCP<long>::*)()) &Teuchos::ArrayRCP<long>::operator++, "C++: Teuchos::ArrayRCP<long>::operator++() --> class Teuchos::ArrayRCP<long> &", pybind11::return_value_policy::automatic);
+		cl.def("plus_plus", (class Teuchos::ArrayRCP<long> (Teuchos::ArrayRCP<long>::*)(int)) &Teuchos::ArrayRCP<long>::operator++, "C++: Teuchos::ArrayRCP<long>::operator++(int) --> class Teuchos::ArrayRCP<long>", pybind11::arg(""));
+		cl.def("minus_minus", (class Teuchos::ArrayRCP<long> & (Teuchos::ArrayRCP<long>::*)()) &Teuchos::ArrayRCP<long>::operator--, "C++: Teuchos::ArrayRCP<long>::operator--() --> class Teuchos::ArrayRCP<long> &", pybind11::return_value_policy::automatic);
+		cl.def("minus_minus", (class Teuchos::ArrayRCP<long> (Teuchos::ArrayRCP<long>::*)(int)) &Teuchos::ArrayRCP<long>::operator--, "C++: Teuchos::ArrayRCP<long>::operator--(int) --> class Teuchos::ArrayRCP<long>", pybind11::arg(""));
+		cl.def("__iadd__", (class Teuchos::ArrayRCP<long> & (Teuchos::ArrayRCP<long>::*)(long)) &Teuchos::ArrayRCP<long>::operator+=, "C++: Teuchos::ArrayRCP<long>::operator+=(long) --> class Teuchos::ArrayRCP<long> &", pybind11::return_value_policy::automatic, pybind11::arg("offset"));
+		cl.def("__isub__", (class Teuchos::ArrayRCP<long> & (Teuchos::ArrayRCP<long>::*)(long)) &Teuchos::ArrayRCP<long>::operator-=, "C++: Teuchos::ArrayRCP<long>::operator-=(long) --> class Teuchos::ArrayRCP<long> &", pybind11::return_value_policy::automatic, pybind11::arg("offset"));
+		cl.def("__add__", (class Teuchos::ArrayRCP<long> (Teuchos::ArrayRCP<long>::*)(long) const) &Teuchos::ArrayRCP<long>::operator+, "C++: Teuchos::ArrayRCP<long>::operator+(long) const --> class Teuchos::ArrayRCP<long>", pybind11::arg("offset"));
+		cl.def("__sub__", (class Teuchos::ArrayRCP<long> (Teuchos::ArrayRCP<long>::*)(long) const) &Teuchos::ArrayRCP<long>::operator-, "C++: Teuchos::ArrayRCP<long>::operator-(long) const --> class Teuchos::ArrayRCP<long>", pybind11::arg("offset"));
+		cl.def("begin", (long * (Teuchos::ArrayRCP<long>::*)() const) &Teuchos::ArrayRCP<long>::begin, "C++: Teuchos::ArrayRCP<long>::begin() const --> long *", pybind11::return_value_policy::automatic);
+		cl.def("end", (long * (Teuchos::ArrayRCP<long>::*)() const) &Teuchos::ArrayRCP<long>::end, "C++: Teuchos::ArrayRCP<long>::end() const --> long *", pybind11::return_value_policy::automatic);
+		cl.def("getConst", (class Teuchos::ArrayRCP<const long> (Teuchos::ArrayRCP<long>::*)() const) &Teuchos::ArrayRCP<long>::getConst, "C++: Teuchos::ArrayRCP<long>::getConst() const --> class Teuchos::ArrayRCP<const long>");
+		cl.def("persistingView", (class Teuchos::ArrayRCP<long> (Teuchos::ArrayRCP<long>::*)(long, long) const) &Teuchos::ArrayRCP<long>::persistingView, "C++: Teuchos::ArrayRCP<long>::persistingView(long, long) const --> class Teuchos::ArrayRCP<long>", pybind11::arg("lowerOffset"), pybind11::arg("size"));
+		cl.def("lowerOffset", (long (Teuchos::ArrayRCP<long>::*)() const) &Teuchos::ArrayRCP<long>::lowerOffset, "C++: Teuchos::ArrayRCP<long>::lowerOffset() const --> long");
+		cl.def("upperOffset", (long (Teuchos::ArrayRCP<long>::*)() const) &Teuchos::ArrayRCP<long>::upperOffset, "C++: Teuchos::ArrayRCP<long>::upperOffset() const --> long");
+		cl.def("size", (long (Teuchos::ArrayRCP<long>::*)() const) &Teuchos::ArrayRCP<long>::size, "C++: Teuchos::ArrayRCP<long>::size() const --> long");
+		cl.def("view", (class Teuchos::ArrayView<long> (Teuchos::ArrayRCP<long>::*)(long, long) const) &Teuchos::ArrayRCP<long>::view, "C++: Teuchos::ArrayRCP<long>::view(long, long) const --> class Teuchos::ArrayView<long>", pybind11::arg("lowerOffset_in"), pybind11::arg("size_in"));
+		cl.def("__call__", (class Teuchos::ArrayView<long> (Teuchos::ArrayRCP<long>::*)(long, long) const) &Teuchos::ArrayRCP<long>::operator(), "C++: Teuchos::ArrayRCP<long>::operator()(long, long) const --> class Teuchos::ArrayView<long>", pybind11::arg("lowerOffset"), pybind11::arg("size"));
+		cl.def("__call__", (class Teuchos::ArrayView<long> (Teuchos::ArrayRCP<long>::*)() const) &Teuchos::ArrayRCP<long>::operator(), "C++: Teuchos::ArrayRCP<long>::operator()() const --> class Teuchos::ArrayView<long>");
+		cl.def("assign", (void (Teuchos::ArrayRCP<long>::*)(long, const long &)) &Teuchos::ArrayRCP<long>::assign, "C++: Teuchos::ArrayRCP<long>::assign(long, const long &) --> void", pybind11::arg("n"), pybind11::arg("val"));
+		cl.def("deepCopy", (void (Teuchos::ArrayRCP<long>::*)(const class Teuchos::ArrayView<const long> &)) &Teuchos::ArrayRCP<long>::deepCopy, "C++: Teuchos::ArrayRCP<long>::deepCopy(const class Teuchos::ArrayView<const long> &) --> void", pybind11::arg("av"));
+		cl.def("resize", [](Teuchos::ArrayRCP<long> &o, const long & a0) -> void { return o.resize(a0); }, "", pybind11::arg("n"));
+		cl.def("resize", (void (Teuchos::ArrayRCP<long>::*)(const long, const long &)) &Teuchos::ArrayRCP<long>::resize, "C++: Teuchos::ArrayRCP<long>::resize(const long, const long &) --> void", pybind11::arg("n"), pybind11::arg("val"));
+		cl.def("clear", (void (Teuchos::ArrayRCP<long>::*)()) &Teuchos::ArrayRCP<long>::clear, "C++: Teuchos::ArrayRCP<long>::clear() --> void");
+		cl.def("strength", (enum Teuchos::ERCPStrength (Teuchos::ArrayRCP<long>::*)() const) &Teuchos::ArrayRCP<long>::strength, "C++: Teuchos::ArrayRCP<long>::strength() const --> enum Teuchos::ERCPStrength");
+		cl.def("is_valid_ptr", (bool (Teuchos::ArrayRCP<long>::*)() const) &Teuchos::ArrayRCP<long>::is_valid_ptr, "C++: Teuchos::ArrayRCP<long>::is_valid_ptr() const --> bool");
+		cl.def("strong_count", (int (Teuchos::ArrayRCP<long>::*)() const) &Teuchos::ArrayRCP<long>::strong_count, "C++: Teuchos::ArrayRCP<long>::strong_count() const --> int");
+		cl.def("weak_count", (int (Teuchos::ArrayRCP<long>::*)() const) &Teuchos::ArrayRCP<long>::weak_count, "C++: Teuchos::ArrayRCP<long>::weak_count() const --> int");
+		cl.def("total_count", (int (Teuchos::ArrayRCP<long>::*)() const) &Teuchos::ArrayRCP<long>::total_count, "C++: Teuchos::ArrayRCP<long>::total_count() const --> int");
+		cl.def("set_has_ownership", (void (Teuchos::ArrayRCP<long>::*)()) &Teuchos::ArrayRCP<long>::set_has_ownership, "C++: Teuchos::ArrayRCP<long>::set_has_ownership() --> void");
+		cl.def("has_ownership", (bool (Teuchos::ArrayRCP<long>::*)() const) &Teuchos::ArrayRCP<long>::has_ownership, "C++: Teuchos::ArrayRCP<long>::has_ownership() const --> bool");
+		cl.def("release", (long * (Teuchos::ArrayRCP<long>::*)()) &Teuchos::ArrayRCP<long>::release, "C++: Teuchos::ArrayRCP<long>::release() --> long *", pybind11::return_value_policy::automatic);
+		cl.def("create_weak", (class Teuchos::ArrayRCP<long> (Teuchos::ArrayRCP<long>::*)() const) &Teuchos::ArrayRCP<long>::create_weak, "C++: Teuchos::ArrayRCP<long>::create_weak() const --> class Teuchos::ArrayRCP<long>");
+		cl.def("create_strong", (class Teuchos::ArrayRCP<long> (Teuchos::ArrayRCP<long>::*)() const) &Teuchos::ArrayRCP<long>::create_strong, "C++: Teuchos::ArrayRCP<long>::create_strong() const --> class Teuchos::ArrayRCP<long>");
+		cl.def("assert_not_null", (const class Teuchos::ArrayRCP<long> & (Teuchos::ArrayRCP<long>::*)() const) &Teuchos::ArrayRCP<long>::assert_not_null, "C++: Teuchos::ArrayRCP<long>::assert_not_null() const --> const class Teuchos::ArrayRCP<long> &", pybind11::return_value_policy::automatic);
+		cl.def("assert_in_range", (const class Teuchos::ArrayRCP<long> & (Teuchos::ArrayRCP<long>::*)(long, long) const) &Teuchos::ArrayRCP<long>::assert_in_range, "C++: Teuchos::ArrayRCP<long>::assert_in_range(long, long) const --> const class Teuchos::ArrayRCP<long> &", pybind11::return_value_policy::automatic, pybind11::arg("lowerOffset"), pybind11::arg("size"));
+		cl.def("assert_valid_ptr", (const class Teuchos::ArrayRCP<long> & (Teuchos::ArrayRCP<long>::*)() const) &Teuchos::ArrayRCP<long>::assert_valid_ptr, "C++: Teuchos::ArrayRCP<long>::assert_valid_ptr() const --> const class Teuchos::ArrayRCP<long> &", pybind11::return_value_policy::automatic);
+		cl.def("access_private_ptr", (long * (Teuchos::ArrayRCP<long>::*)() const) &Teuchos::ArrayRCP<long>::access_private_ptr, "C++: Teuchos::ArrayRCP<long>::access_private_ptr() const --> long *", pybind11::return_value_policy::automatic);
+		cl.def("nonconst_access_private_node", (class Teuchos::RCPNodeHandle & (Teuchos::ArrayRCP<long>::*)()) &Teuchos::ArrayRCP<long>::nonconst_access_private_node, "C++: Teuchos::ArrayRCP<long>::nonconst_access_private_node() --> class Teuchos::RCPNodeHandle &", pybind11::return_value_policy::automatic);
+		cl.def("access_private_node", (const class Teuchos::RCPNodeHandle & (Teuchos::ArrayRCP<long>::*)() const) &Teuchos::ArrayRCP<long>::access_private_node, "C++: Teuchos::ArrayRCP<long>::access_private_node() const --> const class Teuchos::RCPNodeHandle &", pybind11::return_value_policy::automatic);
+
+		cl.def("__str__", [](Teuchos::ArrayRCP<long> const &o) -> std::string { std::ostringstream s; s << o; return s.str(); } );
+	}
+	{ // Teuchos::ArrayRCP file:Teuchos_ArrayRCPDecl.hpp line:838
+		pybind11::class_<Teuchos::ArrayRCP<const long>, Teuchos::RCP<Teuchos::ArrayRCP<const long>>> cl(M("Teuchos"), "ArrayRCP_const_long_t", "");
+		cl.def( pybind11::init( [](){ return new Teuchos::ArrayRCP<const long>(); } ), "doc" );
+		cl.def( pybind11::init<enum Teuchos::ENull>(), pybind11::arg("") );
+
+		cl.def( pybind11::init( [](const long * a0, long const & a1, long const & a2, bool const & a3){ return new Teuchos::ArrayRCP<const long>(a0, a1, a2, a3); } ), "doc" , pybind11::arg("p"), pybind11::arg("lowerOffset"), pybind11::arg("size"), pybind11::arg("has_ownership"));
+		cl.def( pybind11::init<const long *, long, long, bool, const enum Teuchos::ERCPNodeLookup>(), pybind11::arg("p"), pybind11::arg("lowerOffset"), pybind11::arg("size"), pybind11::arg("has_ownership"), pybind11::arg("rcpNodeLookup") );
+
+		cl.def( pybind11::init( [](long const & a0){ return new Teuchos::ArrayRCP<const long>(a0); } ), "doc" , pybind11::arg("size"));
+		cl.def( pybind11::init<long, const long &>(), pybind11::arg("size"), pybind11::arg("val") );
+
+		cl.def( pybind11::init( [](Teuchos::ArrayRCP<const long> const &o){ return new Teuchos::ArrayRCP<const long>(o); } ) );
+		cl.def( pybind11::init<const long *, long, long, const class Teuchos::RCPNodeHandle &>(), pybind11::arg("p"), pybind11::arg("lowerOffset_in"), pybind11::arg("size_in"), pybind11::arg("node") );
+
+		cl.def("assign", (class Teuchos::ArrayRCP<const long> & (Teuchos::ArrayRCP<const long>::*)(const class Teuchos::ArrayRCP<const long> &)) &Teuchos::ArrayRCP<const long>::operator=, "C++: Teuchos::ArrayRCP<const long>::operator=(const class Teuchos::ArrayRCP<const long> &) --> class Teuchos::ArrayRCP<const long> &", pybind11::return_value_policy::automatic, pybind11::arg("r_ptr"));
+		cl.def("is_null", (bool (Teuchos::ArrayRCP<const long>::*)() const) &Teuchos::ArrayRCP<const long>::is_null, "C++: Teuchos::ArrayRCP<const long>::is_null() const --> bool");
+		cl.def("arrow", (const long * (Teuchos::ArrayRCP<const long>::*)() const) &Teuchos::ArrayRCP<const long>::operator->, "C++: Teuchos::ArrayRCP<const long>::operator->() const --> const long *", pybind11::return_value_policy::automatic);
+		cl.def("__mul__", (const long & (Teuchos::ArrayRCP<const long>::*)() const) &Teuchos::ArrayRCP<const long>::operator*, "C++: Teuchos::ArrayRCP<const long>::operator*() const --> const long &", pybind11::return_value_policy::automatic);
+		cl.def("get", (const long * (Teuchos::ArrayRCP<const long>::*)() const) &Teuchos::ArrayRCP<const long>::get, "C++: Teuchos::ArrayRCP<const long>::get() const --> const long *", pybind11::return_value_policy::automatic);
+		cl.def("getRawPtr", (const long * (Teuchos::ArrayRCP<const long>::*)() const) &Teuchos::ArrayRCP<const long>::getRawPtr, "C++: Teuchos::ArrayRCP<const long>::getRawPtr() const --> const long *", pybind11::return_value_policy::automatic);
+		cl.def("__getitem__", (const long & (Teuchos::ArrayRCP<const long>::*)(long) const) &Teuchos::ArrayRCP<const long>::operator[], "C++: Teuchos::ArrayRCP<const long>::operator[](long) const --> const long &", pybind11::return_value_policy::automatic, pybind11::arg("offset"));
+		cl.def("plus_plus", (class Teuchos::ArrayRCP<const long> & (Teuchos::ArrayRCP<const long>::*)()) &Teuchos::ArrayRCP<const long>::operator++, "C++: Teuchos::ArrayRCP<const long>::operator++() --> class Teuchos::ArrayRCP<const long> &", pybind11::return_value_policy::automatic);
+		cl.def("plus_plus", (class Teuchos::ArrayRCP<const long> (Teuchos::ArrayRCP<const long>::*)(int)) &Teuchos::ArrayRCP<const long>::operator++, "C++: Teuchos::ArrayRCP<const long>::operator++(int) --> class Teuchos::ArrayRCP<const long>", pybind11::arg(""));
+		cl.def("minus_minus", (class Teuchos::ArrayRCP<const long> & (Teuchos::ArrayRCP<const long>::*)()) &Teuchos::ArrayRCP<const long>::operator--, "C++: Teuchos::ArrayRCP<const long>::operator--() --> class Teuchos::ArrayRCP<const long> &", pybind11::return_value_policy::automatic);
+		cl.def("minus_minus", (class Teuchos::ArrayRCP<const long> (Teuchos::ArrayRCP<const long>::*)(int)) &Teuchos::ArrayRCP<const long>::operator--, "C++: Teuchos::ArrayRCP<const long>::operator--(int) --> class Teuchos::ArrayRCP<const long>", pybind11::arg(""));
+		cl.def("__iadd__", (class Teuchos::ArrayRCP<const long> & (Teuchos::ArrayRCP<const long>::*)(long)) &Teuchos::ArrayRCP<const long>::operator+=, "C++: Teuchos::ArrayRCP<const long>::operator+=(long) --> class Teuchos::ArrayRCP<const long> &", pybind11::return_value_policy::automatic, pybind11::arg("offset"));
+		cl.def("__isub__", (class Teuchos::ArrayRCP<const long> & (Teuchos::ArrayRCP<const long>::*)(long)) &Teuchos::ArrayRCP<const long>::operator-=, "C++: Teuchos::ArrayRCP<const long>::operator-=(long) --> class Teuchos::ArrayRCP<const long> &", pybind11::return_value_policy::automatic, pybind11::arg("offset"));
+		cl.def("__add__", (class Teuchos::ArrayRCP<const long> (Teuchos::ArrayRCP<const long>::*)(long) const) &Teuchos::ArrayRCP<const long>::operator+, "C++: Teuchos::ArrayRCP<const long>::operator+(long) const --> class Teuchos::ArrayRCP<const long>", pybind11::arg("offset"));
+		cl.def("__sub__", (class Teuchos::ArrayRCP<const long> (Teuchos::ArrayRCP<const long>::*)(long) const) &Teuchos::ArrayRCP<const long>::operator-, "C++: Teuchos::ArrayRCP<const long>::operator-(long) const --> class Teuchos::ArrayRCP<const long>", pybind11::arg("offset"));
+		cl.def("begin", (const long * (Teuchos::ArrayRCP<const long>::*)() const) &Teuchos::ArrayRCP<const long>::begin, "C++: Teuchos::ArrayRCP<const long>::begin() const --> const long *", pybind11::return_value_policy::automatic);
+		cl.def("end", (const long * (Teuchos::ArrayRCP<const long>::*)() const) &Teuchos::ArrayRCP<const long>::end, "C++: Teuchos::ArrayRCP<const long>::end() const --> const long *", pybind11::return_value_policy::automatic);
+		cl.def("getConst", (class Teuchos::ArrayRCP<const long> (Teuchos::ArrayRCP<const long>::*)() const) &Teuchos::ArrayRCP<const long>::getConst, "C++: Teuchos::ArrayRCP<const long>::getConst() const --> class Teuchos::ArrayRCP<const long>");
+		cl.def("persistingView", (class Teuchos::ArrayRCP<const long> (Teuchos::ArrayRCP<const long>::*)(long, long) const) &Teuchos::ArrayRCP<const long>::persistingView, "C++: Teuchos::ArrayRCP<const long>::persistingView(long, long) const --> class Teuchos::ArrayRCP<const long>", pybind11::arg("lowerOffset"), pybind11::arg("size"));
+		cl.def("lowerOffset", (long (Teuchos::ArrayRCP<const long>::*)() const) &Teuchos::ArrayRCP<const long>::lowerOffset, "C++: Teuchos::ArrayRCP<const long>::lowerOffset() const --> long");
+		cl.def("upperOffset", (long (Teuchos::ArrayRCP<const long>::*)() const) &Teuchos::ArrayRCP<const long>::upperOffset, "C++: Teuchos::ArrayRCP<const long>::upperOffset() const --> long");
+		cl.def("size", (long (Teuchos::ArrayRCP<const long>::*)() const) &Teuchos::ArrayRCP<const long>::size, "C++: Teuchos::ArrayRCP<const long>::size() const --> long");
+		cl.def("view", (class Teuchos::ArrayView<const long> (Teuchos::ArrayRCP<const long>::*)(long, long) const) &Teuchos::ArrayRCP<const long>::view, "C++: Teuchos::ArrayRCP<const long>::view(long, long) const --> class Teuchos::ArrayView<const long>", pybind11::arg("lowerOffset"), pybind11::arg("size"));
+		cl.def("__call__", (class Teuchos::ArrayView<const long> (Teuchos::ArrayRCP<const long>::*)(long, long) const) &Teuchos::ArrayRCP<const long>::operator(), "C++: Teuchos::ArrayRCP<const long>::operator()(long, long) const --> class Teuchos::ArrayView<const long>", pybind11::arg("lowerOffset"), pybind11::arg("size"));
+		cl.def("__call__", (class Teuchos::ArrayView<const long> (Teuchos::ArrayRCP<const long>::*)() const) &Teuchos::ArrayRCP<const long>::operator(), "C++: Teuchos::ArrayRCP<const long>::operator()() const --> class Teuchos::ArrayView<const long>");
+		cl.def("resize", [](Teuchos::ArrayRCP<const long> &o, const long & a0) -> void { return o.resize(a0); }, "", pybind11::arg("n"));
+		cl.def("resize", (void (Teuchos::ArrayRCP<const long>::*)(const long, const long &)) &Teuchos::ArrayRCP<const long>::resize, "C++: Teuchos::ArrayRCP<const long>::resize(const long, const long &) --> void", pybind11::arg("n"), pybind11::arg("val"));
+		cl.def("clear", (void (Teuchos::ArrayRCP<const long>::*)()) &Teuchos::ArrayRCP<const long>::clear, "C++: Teuchos::ArrayRCP<const long>::clear() --> void");
+		cl.def("strength", (enum Teuchos::ERCPStrength (Teuchos::ArrayRCP<const long>::*)() const) &Teuchos::ArrayRCP<const long>::strength, "C++: Teuchos::ArrayRCP<const long>::strength() const --> enum Teuchos::ERCPStrength");
+		cl.def("is_valid_ptr", (bool (Teuchos::ArrayRCP<const long>::*)() const) &Teuchos::ArrayRCP<const long>::is_valid_ptr, "C++: Teuchos::ArrayRCP<const long>::is_valid_ptr() const --> bool");
+		cl.def("strong_count", (int (Teuchos::ArrayRCP<const long>::*)() const) &Teuchos::ArrayRCP<const long>::strong_count, "C++: Teuchos::ArrayRCP<const long>::strong_count() const --> int");
+		cl.def("weak_count", (int (Teuchos::ArrayRCP<const long>::*)() const) &Teuchos::ArrayRCP<const long>::weak_count, "C++: Teuchos::ArrayRCP<const long>::weak_count() const --> int");
+		cl.def("total_count", (int (Teuchos::ArrayRCP<const long>::*)() const) &Teuchos::ArrayRCP<const long>::total_count, "C++: Teuchos::ArrayRCP<const long>::total_count() const --> int");
+		cl.def("set_has_ownership", (void (Teuchos::ArrayRCP<const long>::*)()) &Teuchos::ArrayRCP<const long>::set_has_ownership, "C++: Teuchos::ArrayRCP<const long>::set_has_ownership() --> void");
+		cl.def("has_ownership", (bool (Teuchos::ArrayRCP<const long>::*)() const) &Teuchos::ArrayRCP<const long>::has_ownership, "C++: Teuchos::ArrayRCP<const long>::has_ownership() const --> bool");
+		cl.def("release", (const long * (Teuchos::ArrayRCP<const long>::*)()) &Teuchos::ArrayRCP<const long>::release, "C++: Teuchos::ArrayRCP<const long>::release() --> const long *", pybind11::return_value_policy::automatic);
+		cl.def("create_weak", (class Teuchos::ArrayRCP<const long> (Teuchos::ArrayRCP<const long>::*)() const) &Teuchos::ArrayRCP<const long>::create_weak, "C++: Teuchos::ArrayRCP<const long>::create_weak() const --> class Teuchos::ArrayRCP<const long>");
+		cl.def("create_strong", (class Teuchos::ArrayRCP<const long> (Teuchos::ArrayRCP<const long>::*)() const) &Teuchos::ArrayRCP<const long>::create_strong, "C++: Teuchos::ArrayRCP<const long>::create_strong() const --> class Teuchos::ArrayRCP<const long>");
+		cl.def("assert_not_null", (const class Teuchos::ArrayRCP<const long> & (Teuchos::ArrayRCP<const long>::*)() const) &Teuchos::ArrayRCP<const long>::assert_not_null, "C++: Teuchos::ArrayRCP<const long>::assert_not_null() const --> const class Teuchos::ArrayRCP<const long> &", pybind11::return_value_policy::automatic);
+		cl.def("assert_in_range", (const class Teuchos::ArrayRCP<const long> & (Teuchos::ArrayRCP<const long>::*)(long, long) const) &Teuchos::ArrayRCP<const long>::assert_in_range, "C++: Teuchos::ArrayRCP<const long>::assert_in_range(long, long) const --> const class Teuchos::ArrayRCP<const long> &", pybind11::return_value_policy::automatic, pybind11::arg("lowerOffset"), pybind11::arg("size"));
+		cl.def("assert_valid_ptr", (const class Teuchos::ArrayRCP<const long> & (Teuchos::ArrayRCP<const long>::*)() const) &Teuchos::ArrayRCP<const long>::assert_valid_ptr, "C++: Teuchos::ArrayRCP<const long>::assert_valid_ptr() const --> const class Teuchos::ArrayRCP<const long> &", pybind11::return_value_policy::automatic);
+		cl.def("access_private_ptr", (const long * (Teuchos::ArrayRCP<const long>::*)() const) &Teuchos::ArrayRCP<const long>::access_private_ptr, "C++: Teuchos::ArrayRCP<const long>::access_private_ptr() const --> const long *", pybind11::return_value_policy::automatic);
+		cl.def("nonconst_access_private_node", (class Teuchos::RCPNodeHandle & (Teuchos::ArrayRCP<const long>::*)()) &Teuchos::ArrayRCP<const long>::nonconst_access_private_node, "C++: Teuchos::ArrayRCP<const long>::nonconst_access_private_node() --> class Teuchos::RCPNodeHandle &", pybind11::return_value_policy::automatic);
+		cl.def("access_private_node", (const class Teuchos::RCPNodeHandle & (Teuchos::ArrayRCP<const long>::*)() const) &Teuchos::ArrayRCP<const long>::access_private_node, "C++: Teuchos::ArrayRCP<const long>::access_private_node() const --> const class Teuchos::RCPNodeHandle &", pybind11::return_value_policy::automatic);
+
+		cl.def("__str__", [](Teuchos::ArrayRCP<const long> const &o) -> std::string { std::ostringstream s; s << o; return s.str(); } );
 	}
 	{ // Teuchos::ArrayRCP file:Teuchos_ArrayRCPDecl.hpp line:127
 		pybind11::class_<Teuchos::ArrayRCP<unsigned long>, Teuchos::RCP<Teuchos::ArrayRCP<unsigned long>>> cl(M("Teuchos"), "ArrayRCP_unsigned_long_t", "");
@@ -370,7 +520,7 @@ void bind_Teuchos_ArrayRCPDecl(std::function< pybind11::module &(std::string con
 	{ // Teuchos::ArrayRCP file:Teuchos_ArrayRCPDecl.hpp line:838
 		pybind11::class_<Teuchos::ArrayRCP<const unsigned long>, Teuchos::RCP<Teuchos::ArrayRCP<const unsigned long>>> cl(M("Teuchos"), "ArrayRCP_const_unsigned_long_t", "");
 		cl.def( pybind11::init( [](){ return new Teuchos::ArrayRCP<const unsigned long>(); } ), "doc" );
-		cl.def( pybind11::init<enum Teuchos::ENull>(), pybind11::arg("null_arg") );
+		cl.def( pybind11::init<enum Teuchos::ENull>(), pybind11::arg("") );
 
 		cl.def( pybind11::init( [](const unsigned long * a0, long const & a1, long const & a2, bool const & a3){ return new Teuchos::ArrayRCP<const unsigned long>(a0, a1, a2, a3); } ), "doc" , pybind11::arg("p"), pybind11::arg("lowerOffset"), pybind11::arg("size"), pybind11::arg("has_ownership"));
 		cl.def( pybind11::init<const unsigned long *, long, long, bool, const enum Teuchos::ERCPNodeLookup>(), pybind11::arg("p"), pybind11::arg("lowerOffset"), pybind11::arg("size"), pybind11::arg("has_ownership"), pybind11::arg("rcpNodeLookup") );
@@ -379,7 +529,7 @@ void bind_Teuchos_ArrayRCPDecl(std::function< pybind11::module &(std::string con
 		cl.def( pybind11::init<long, const unsigned long &>(), pybind11::arg("size"), pybind11::arg("val") );
 
 		cl.def( pybind11::init( [](Teuchos::ArrayRCP<const unsigned long> const &o){ return new Teuchos::ArrayRCP<const unsigned long>(o); } ) );
-		cl.def( pybind11::init<const unsigned long *, long, long, const class Teuchos::RCPNodeHandle &>(), pybind11::arg("p"), pybind11::arg("lowerOffset"), pybind11::arg("size"), pybind11::arg("node") );
+		cl.def( pybind11::init<const unsigned long *, long, long, const class Teuchos::RCPNodeHandle &>(), pybind11::arg("p"), pybind11::arg("lowerOffset_in"), pybind11::arg("size_in"), pybind11::arg("node") );
 
 		cl.def("assign", (class Teuchos::ArrayRCP<const unsigned long> & (Teuchos::ArrayRCP<const unsigned long>::*)(const class Teuchos::ArrayRCP<const unsigned long> &)) &Teuchos::ArrayRCP<const unsigned long>::operator=, "C++: Teuchos::ArrayRCP<const unsigned long>::operator=(const class Teuchos::ArrayRCP<const unsigned long> &) --> class Teuchos::ArrayRCP<const unsigned long> &", pybind11::return_value_policy::automatic, pybind11::arg("r_ptr"));
 		cl.def("is_null", (bool (Teuchos::ArrayRCP<const unsigned long>::*)() const) &Teuchos::ArrayRCP<const unsigned long>::is_null, "C++: Teuchos::ArrayRCP<const unsigned long>::is_null() const --> bool");
@@ -648,6 +798,7 @@ void bind_Teuchos_ArrayRCPDecl(std::function< pybind11::module &(std::string con
 		cl.def("upperOffset", (long (Teuchos::ArrayRCP<Teuchos::ArrayRCP<double>>::*)() const) &Teuchos::ArrayRCP<Teuchos::ArrayRCP<double> >::upperOffset, "C++: Teuchos::ArrayRCP<Teuchos::ArrayRCP<double> >::upperOffset() const --> long");
 		cl.def("size", (long (Teuchos::ArrayRCP<Teuchos::ArrayRCP<double>>::*)() const) &Teuchos::ArrayRCP<Teuchos::ArrayRCP<double> >::size, "C++: Teuchos::ArrayRCP<Teuchos::ArrayRCP<double> >::size() const --> long");
 		cl.def("assign", (void (Teuchos::ArrayRCP<Teuchos::ArrayRCP<double>>::*)(long, const class Teuchos::ArrayRCP<double> &)) &Teuchos::ArrayRCP<Teuchos::ArrayRCP<double> >::assign, "C++: Teuchos::ArrayRCP<Teuchos::ArrayRCP<double> >::assign(long, const class Teuchos::ArrayRCP<double> &) --> void", pybind11::arg("n"), pybind11::arg("val"));
+		cl.def("deepCopy", (void (Teuchos::ArrayRCP<Teuchos::ArrayRCP<double>>::*)(const class Teuchos::ArrayView<const class Teuchos::ArrayRCP<double> > &)) &Teuchos::ArrayRCP<Teuchos::ArrayRCP<double> >::deepCopy, "C++: Teuchos::ArrayRCP<Teuchos::ArrayRCP<double> >::deepCopy(const class Teuchos::ArrayView<const class Teuchos::ArrayRCP<double> > &) --> void", pybind11::arg("av"));
 		cl.def("resize", [](Teuchos::ArrayRCP<Teuchos::ArrayRCP<double>> &o, const long & a0) -> void { return o.resize(a0); }, "", pybind11::arg("n"));
 		cl.def("resize", (void (Teuchos::ArrayRCP<Teuchos::ArrayRCP<double>>::*)(const long, const class Teuchos::ArrayRCP<double> &)) &Teuchos::ArrayRCP<Teuchos::ArrayRCP<double> >::resize, "C++: Teuchos::ArrayRCP<Teuchos::ArrayRCP<double> >::resize(const long, const class Teuchos::ArrayRCP<double> &) --> void", pybind11::arg("n"), pybind11::arg("val"));
 		cl.def("clear", (void (Teuchos::ArrayRCP<Teuchos::ArrayRCP<double>>::*)()) &Teuchos::ArrayRCP<Teuchos::ArrayRCP<double> >::clear, "C++: Teuchos::ArrayRCP<Teuchos::ArrayRCP<double> >::clear() --> void");
@@ -764,6 +915,9 @@ void bind_Teuchos_ArrayRCPDecl(std::function< pybind11::module &(std::string con
 		cl.def("lowerOffset", (long (Teuchos::ArrayRCP<const Teuchos::ArrayRCP<double>>::*)() const) &Teuchos::ArrayRCP<const Teuchos::ArrayRCP<double> >::lowerOffset, "C++: Teuchos::ArrayRCP<const Teuchos::ArrayRCP<double> >::lowerOffset() const --> long");
 		cl.def("upperOffset", (long (Teuchos::ArrayRCP<const Teuchos::ArrayRCP<double>>::*)() const) &Teuchos::ArrayRCP<const Teuchos::ArrayRCP<double> >::upperOffset, "C++: Teuchos::ArrayRCP<const Teuchos::ArrayRCP<double> >::upperOffset() const --> long");
 		cl.def("size", (long (Teuchos::ArrayRCP<const Teuchos::ArrayRCP<double>>::*)() const) &Teuchos::ArrayRCP<const Teuchos::ArrayRCP<double> >::size, "C++: Teuchos::ArrayRCP<const Teuchos::ArrayRCP<double> >::size() const --> long");
+		cl.def("view", (class Teuchos::ArrayView<const class Teuchos::ArrayRCP<double> > (Teuchos::ArrayRCP<const Teuchos::ArrayRCP<double>>::*)(long, long) const) &Teuchos::ArrayRCP<const Teuchos::ArrayRCP<double> >::view, "C++: Teuchos::ArrayRCP<const Teuchos::ArrayRCP<double> >::view(long, long) const --> class Teuchos::ArrayView<const class Teuchos::ArrayRCP<double> >", pybind11::arg("lowerOffset"), pybind11::arg("size"));
+		cl.def("__call__", (class Teuchos::ArrayView<const class Teuchos::ArrayRCP<double> > (Teuchos::ArrayRCP<const Teuchos::ArrayRCP<double>>::*)(long, long) const) &Teuchos::ArrayRCP<const Teuchos::ArrayRCP<double> >::operator(), "C++: Teuchos::ArrayRCP<const Teuchos::ArrayRCP<double> >::operator()(long, long) const --> class Teuchos::ArrayView<const class Teuchos::ArrayRCP<double> >", pybind11::arg("lowerOffset"), pybind11::arg("size"));
+		cl.def("__call__", (class Teuchos::ArrayView<const class Teuchos::ArrayRCP<double> > (Teuchos::ArrayRCP<const Teuchos::ArrayRCP<double>>::*)() const) &Teuchos::ArrayRCP<const Teuchos::ArrayRCP<double> >::operator(), "C++: Teuchos::ArrayRCP<const Teuchos::ArrayRCP<double> >::operator()() const --> class Teuchos::ArrayView<const class Teuchos::ArrayRCP<double> >");
 		cl.def("resize", [](Teuchos::ArrayRCP<const Teuchos::ArrayRCP<double>> &o, const long & a0) -> void { return o.resize(a0); }, "", pybind11::arg("n"));
 		cl.def("resize", (void (Teuchos::ArrayRCP<const Teuchos::ArrayRCP<double>>::*)(const long, const class Teuchos::ArrayRCP<double> &)) &Teuchos::ArrayRCP<const Teuchos::ArrayRCP<double> >::resize, "C++: Teuchos::ArrayRCP<const Teuchos::ArrayRCP<double> >::resize(const long, const class Teuchos::ArrayRCP<double> &) --> void", pybind11::arg("n"), pybind11::arg("val"));
 		cl.def("clear", (void (Teuchos::ArrayRCP<const Teuchos::ArrayRCP<double>>::*)()) &Teuchos::ArrayRCP<const Teuchos::ArrayRCP<double> >::clear, "C++: Teuchos::ArrayRCP<const Teuchos::ArrayRCP<double> >::clear() --> void");
@@ -1003,6 +1157,67 @@ void bind_Teuchos_ArrayRCPDecl(std::function< pybind11::module &(std::string con
 		cl.def("__str__", [](Teuchos::ArrayView<int> const &o) -> std::string { std::ostringstream s; s << o; return s.str(); } );
 	}
 	{ // Teuchos::ArrayView file:Teuchos_ArrayViewDecl.hpp line:433
+		pybind11::class_<Teuchos::ArrayView<const std::string>, Teuchos::RCP<Teuchos::ArrayView<const std::string>>> cl(M("Teuchos"), "ArrayView_const_std_string_t", "");
+		cl.def( pybind11::init( [](){ return new Teuchos::ArrayView<const std::string>(); } ), "doc" );
+		cl.def( pybind11::init<enum Teuchos::ENull>(), pybind11::arg("null_arg") );
+
+		cl.def( pybind11::init( [](const std::string * a0, long const & a1){ return new Teuchos::ArrayView<const std::string>(a0, a1); } ), "doc" , pybind11::arg("p"), pybind11::arg("size"));
+		cl.def( pybind11::init<const std::string *, long, const enum Teuchos::ERCPNodeLookup>(), pybind11::arg("p"), pybind11::arg("size"), pybind11::arg("rcpNodeLookup") );
+
+		cl.def( pybind11::init( [](Teuchos::ArrayView<const std::string> const &o){ return new Teuchos::ArrayView<const std::string>(o); } ) );
+		cl.def("assign", (class Teuchos::ArrayView<const std::string > & (Teuchos::ArrayView<const std::string>::*)(const class Teuchos::ArrayView<const std::string > &)) &Teuchos::ArrayView<const std::string >::operator=, "C++: Teuchos::ArrayView<const std::string >::operator=(const class Teuchos::ArrayView<const std::string > &) --> class Teuchos::ArrayView<const std::string > &", pybind11::return_value_policy::automatic, pybind11::arg("array"));
+		cl.def("is_null", (bool (Teuchos::ArrayView<const std::string>::*)() const) &Teuchos::ArrayView<const std::string >::is_null, "C++: Teuchos::ArrayView<const std::string >::is_null() const --> bool");
+		cl.def("size", (long (Teuchos::ArrayView<const std::string>::*)() const) &Teuchos::ArrayView<const std::string >::size, "C++: Teuchos::ArrayView<const std::string >::size() const --> long");
+		cl.def("toString", (std::string (Teuchos::ArrayView<const std::string>::*)() const) &Teuchos::ArrayView<const std::string >::toString, "C++: Teuchos::ArrayView<const std::string >::toString() const --> std::string");
+		cl.def("getRawPtr", (const std::string * (Teuchos::ArrayView<const std::string>::*)() const) &Teuchos::ArrayView<const std::string >::getRawPtr, "C++: Teuchos::ArrayView<const std::string >::getRawPtr() const --> const std::string *", pybind11::return_value_policy::automatic);
+		cl.def("data", (const std::string * (Teuchos::ArrayView<const std::string>::*)() const) &Teuchos::ArrayView<const std::string >::data, "C++: Teuchos::ArrayView<const std::string >::data() const --> const std::string *", pybind11::return_value_policy::automatic);
+		cl.def("__getitem__", (const std::string & (Teuchos::ArrayView<const std::string>::*)(long) const) &Teuchos::ArrayView<const std::string >::operator[], "C++: Teuchos::ArrayView<const std::string >::operator[](long) const --> const std::string &", pybind11::return_value_policy::automatic, pybind11::arg("i"));
+		cl.def("front", (const std::string & (Teuchos::ArrayView<const std::string>::*)() const) &Teuchos::ArrayView<const std::string >::front, "C++: Teuchos::ArrayView<const std::string >::front() const --> const std::string &", pybind11::return_value_policy::automatic);
+		cl.def("back", (const std::string & (Teuchos::ArrayView<const std::string>::*)() const) &Teuchos::ArrayView<const std::string >::back, "C++: Teuchos::ArrayView<const std::string >::back() const --> const std::string &", pybind11::return_value_policy::automatic);
+		cl.def("view", (class Teuchos::ArrayView<const std::string > (Teuchos::ArrayView<const std::string>::*)(long, long) const) &Teuchos::ArrayView<const std::string >::view, "C++: Teuchos::ArrayView<const std::string >::view(long, long) const --> class Teuchos::ArrayView<const std::string >", pybind11::arg("offset"), pybind11::arg("size"));
+		cl.def("__call__", (class Teuchos::ArrayView<const std::string > (Teuchos::ArrayView<const std::string>::*)(long, long) const) &Teuchos::ArrayView<const std::string >::operator(), "C++: Teuchos::ArrayView<const std::string >::operator()(long, long) const --> class Teuchos::ArrayView<const std::string >", pybind11::arg("offset"), pybind11::arg("size"));
+		cl.def("__call__", (const class Teuchos::ArrayView<const std::string > & (Teuchos::ArrayView<const std::string>::*)() const) &Teuchos::ArrayView<const std::string >::operator(), "C++: Teuchos::ArrayView<const std::string >::operator()() const --> const class Teuchos::ArrayView<const std::string > &", pybind11::return_value_policy::automatic);
+		cl.def("getConst", (class Teuchos::ArrayView<const std::string > (Teuchos::ArrayView<const std::string>::*)() const) &Teuchos::ArrayView<const std::string >::getConst, "C++: Teuchos::ArrayView<const std::string >::getConst() const --> class Teuchos::ArrayView<const std::string >");
+		cl.def("begin", (const std::string * (Teuchos::ArrayView<const std::string>::*)() const) &Teuchos::ArrayView<const std::string >::begin, "C++: Teuchos::ArrayView<const std::string >::begin() const --> const std::string *", pybind11::return_value_policy::automatic);
+		cl.def("end", (const std::string * (Teuchos::ArrayView<const std::string>::*)() const) &Teuchos::ArrayView<const std::string >::end, "C++: Teuchos::ArrayView<const std::string >::end() const --> const std::string *", pybind11::return_value_policy::automatic);
+		cl.def("assert_not_null", (const class Teuchos::ArrayView<const std::string > & (Teuchos::ArrayView<const std::string>::*)() const) &Teuchos::ArrayView<const std::string >::assert_not_null, "C++: Teuchos::ArrayView<const std::string >::assert_not_null() const --> const class Teuchos::ArrayView<const std::string > &", pybind11::return_value_policy::automatic);
+		cl.def("assert_in_range", (const class Teuchos::ArrayView<const std::string > & (Teuchos::ArrayView<const std::string>::*)(long, long) const) &Teuchos::ArrayView<const std::string >::assert_in_range, "C++: Teuchos::ArrayView<const std::string >::assert_in_range(long, long) const --> const class Teuchos::ArrayView<const std::string > &", pybind11::return_value_policy::automatic, pybind11::arg("offset"), pybind11::arg("size"));
+		cl.def("access_private_ptr", (const std::string * (Teuchos::ArrayView<const std::string>::*)() const) &Teuchos::ArrayView<const std::string >::access_private_ptr, "C++: Teuchos::ArrayView<const std::string >::access_private_ptr() const --> const std::string *", pybind11::return_value_policy::automatic);
+
+		cl.def("__str__", [](Teuchos::ArrayView<const std::string> const &o) -> std::string { std::ostringstream s; s << o; return s.str(); } );
+	}
+	{ // Teuchos::ArrayView file:Teuchos_ArrayViewDecl.hpp line:123
+		pybind11::class_<Teuchos::ArrayView<std::string>, Teuchos::RCP<Teuchos::ArrayView<std::string>>> cl(M("Teuchos"), "ArrayView_std_string_t", "");
+		cl.def( pybind11::init( [](){ return new Teuchos::ArrayView<std::string>(); } ), "doc" );
+		cl.def( pybind11::init<enum Teuchos::ENull>(), pybind11::arg("null_arg") );
+
+		cl.def( pybind11::init( [](std::string * a0, long const & a1){ return new Teuchos::ArrayView<std::string>(a0, a1); } ), "doc" , pybind11::arg("p"), pybind11::arg("size"));
+		cl.def( pybind11::init<std::string *, long, const enum Teuchos::ERCPNodeLookup>(), pybind11::arg("p"), pybind11::arg("size"), pybind11::arg("rcpNodeLookup") );
+
+		cl.def( pybind11::init( [](Teuchos::ArrayView<std::string> const &o){ return new Teuchos::ArrayView<std::string>(o); } ) );
+		cl.def("assign", (class Teuchos::ArrayView<std::string > & (Teuchos::ArrayView<std::string>::*)(const class Teuchos::ArrayView<std::string > &)) &Teuchos::ArrayView<std::string >::operator=, "C++: Teuchos::ArrayView<std::string >::operator=(const class Teuchos::ArrayView<std::string > &) --> class Teuchos::ArrayView<std::string > &", pybind11::return_value_policy::automatic, pybind11::arg("array"));
+		cl.def("is_null", (bool (Teuchos::ArrayView<std::string>::*)() const) &Teuchos::ArrayView<std::string >::is_null, "C++: Teuchos::ArrayView<std::string >::is_null() const --> bool");
+		cl.def("size", (long (Teuchos::ArrayView<std::string>::*)() const) &Teuchos::ArrayView<std::string >::size, "C++: Teuchos::ArrayView<std::string >::size() const --> long");
+		cl.def("toString", (std::string (Teuchos::ArrayView<std::string>::*)() const) &Teuchos::ArrayView<std::string >::toString, "C++: Teuchos::ArrayView<std::string >::toString() const --> std::string");
+		cl.def("getRawPtr", (std::string * (Teuchos::ArrayView<std::string>::*)() const) &Teuchos::ArrayView<std::string >::getRawPtr, "C++: Teuchos::ArrayView<std::string >::getRawPtr() const --> std::string *", pybind11::return_value_policy::automatic);
+		cl.def("data", (std::string * (Teuchos::ArrayView<std::string>::*)() const) &Teuchos::ArrayView<std::string >::data, "C++: Teuchos::ArrayView<std::string >::data() const --> std::string *", pybind11::return_value_policy::automatic);
+		cl.def("__getitem__", (std::string & (Teuchos::ArrayView<std::string>::*)(long) const) &Teuchos::ArrayView<std::string >::operator[], "C++: Teuchos::ArrayView<std::string >::operator[](long) const --> std::string &", pybind11::return_value_policy::automatic, pybind11::arg("i"));
+		cl.def("front", (std::string & (Teuchos::ArrayView<std::string>::*)() const) &Teuchos::ArrayView<std::string >::front, "C++: Teuchos::ArrayView<std::string >::front() const --> std::string &", pybind11::return_value_policy::automatic);
+		cl.def("back", (std::string & (Teuchos::ArrayView<std::string>::*)() const) &Teuchos::ArrayView<std::string >::back, "C++: Teuchos::ArrayView<std::string >::back() const --> std::string &", pybind11::return_value_policy::automatic);
+		cl.def("view", (class Teuchos::ArrayView<std::string > (Teuchos::ArrayView<std::string>::*)(long, long) const) &Teuchos::ArrayView<std::string >::view, "C++: Teuchos::ArrayView<std::string >::view(long, long) const --> class Teuchos::ArrayView<std::string >", pybind11::arg("offset"), pybind11::arg("size"));
+		cl.def("__call__", (class Teuchos::ArrayView<std::string > (Teuchos::ArrayView<std::string>::*)(long, long) const) &Teuchos::ArrayView<std::string >::operator(), "C++: Teuchos::ArrayView<std::string >::operator()(long, long) const --> class Teuchos::ArrayView<std::string >", pybind11::arg("offset"), pybind11::arg("size"));
+		cl.def("__call__", (const class Teuchos::ArrayView<std::string > & (Teuchos::ArrayView<std::string>::*)() const) &Teuchos::ArrayView<std::string >::operator(), "C++: Teuchos::ArrayView<std::string >::operator()() const --> const class Teuchos::ArrayView<std::string > &", pybind11::return_value_policy::automatic);
+		cl.def("getConst", (class Teuchos::ArrayView<const std::string > (Teuchos::ArrayView<std::string>::*)() const) &Teuchos::ArrayView<std::string >::getConst, "C++: Teuchos::ArrayView<std::string >::getConst() const --> class Teuchos::ArrayView<const std::string >");
+		cl.def("assign", (void (Teuchos::ArrayView<std::string>::*)(const class Teuchos::ArrayView<const std::string > &) const) &Teuchos::ArrayView<std::string >::assign, "C++: Teuchos::ArrayView<std::string >::assign(const class Teuchos::ArrayView<const std::string > &) const --> void", pybind11::arg("array"));
+		cl.def("begin", (std::string * (Teuchos::ArrayView<std::string>::*)() const) &Teuchos::ArrayView<std::string >::begin, "C++: Teuchos::ArrayView<std::string >::begin() const --> std::string *", pybind11::return_value_policy::automatic);
+		cl.def("end", (std::string * (Teuchos::ArrayView<std::string>::*)() const) &Teuchos::ArrayView<std::string >::end, "C++: Teuchos::ArrayView<std::string >::end() const --> std::string *", pybind11::return_value_policy::automatic);
+		cl.def("assert_not_null", (const class Teuchos::ArrayView<std::string > & (Teuchos::ArrayView<std::string>::*)() const) &Teuchos::ArrayView<std::string >::assert_not_null, "C++: Teuchos::ArrayView<std::string >::assert_not_null() const --> const class Teuchos::ArrayView<std::string > &", pybind11::return_value_policy::automatic);
+		cl.def("assert_in_range", (const class Teuchos::ArrayView<std::string > & (Teuchos::ArrayView<std::string>::*)(long, long) const) &Teuchos::ArrayView<std::string >::assert_in_range, "C++: Teuchos::ArrayView<std::string >::assert_in_range(long, long) const --> const class Teuchos::ArrayView<std::string > &", pybind11::return_value_policy::automatic, pybind11::arg("offset"), pybind11::arg("size"));
+		cl.def("access_private_ptr", (std::string * (Teuchos::ArrayView<std::string>::*)() const) &Teuchos::ArrayView<std::string >::access_private_ptr, "C++: Teuchos::ArrayView<std::string >::access_private_ptr() const --> std::string *", pybind11::return_value_policy::automatic);
+
+		cl.def("__str__", [](Teuchos::ArrayView<std::string> const &o) -> std::string { std::ostringstream s; s << o; return s.str(); } );
+	}
+	{ // Teuchos::ArrayView file:Teuchos_ArrayViewDecl.hpp line:433
 		pybind11::class_<Teuchos::ArrayView<const char>, Teuchos::RCP<Teuchos::ArrayView<const char>>> cl(M("Teuchos"), "ArrayView_const_char_t", "");
 		cl.def( pybind11::init( [](){ return new Teuchos::ArrayView<const char>(); } ), "doc" );
 		cl.def( pybind11::init<enum Teuchos::ENull>(), pybind11::arg("") );
@@ -1093,36 +1308,6 @@ void bind_Teuchos_ArrayRCPDecl(std::function< pybind11::module &(std::string con
 
 		cl.def("__str__", [](Teuchos::ArrayView<const int> const &o) -> std::string { std::ostringstream s; s << o; return s.str(); } );
 	}
-	{ // Teuchos::ArrayView file:Teuchos_ArrayViewDecl.hpp line:433
-		pybind11::class_<Teuchos::ArrayView<const unsigned long>, Teuchos::RCP<Teuchos::ArrayView<const unsigned long>>> cl(M("Teuchos"), "ArrayView_const_unsigned_long_t", "");
-		cl.def( pybind11::init( [](){ return new Teuchos::ArrayView<const unsigned long>(); } ), "doc" );
-		cl.def( pybind11::init<enum Teuchos::ENull>(), pybind11::arg("") );
-
-		cl.def( pybind11::init( [](const unsigned long * a0, long const & a1){ return new Teuchos::ArrayView<const unsigned long>(a0, a1); } ), "doc" , pybind11::arg("p"), pybind11::arg("size_in"));
-		cl.def( pybind11::init<const unsigned long *, long, const enum Teuchos::ERCPNodeLookup>(), pybind11::arg("p"), pybind11::arg("size_in"), pybind11::arg("rcpNodeLookup") );
-
-		cl.def( pybind11::init( [](Teuchos::ArrayView<const unsigned long> const &o){ return new Teuchos::ArrayView<const unsigned long>(o); } ) );
-		cl.def("assign", (class Teuchos::ArrayView<const unsigned long> & (Teuchos::ArrayView<const unsigned long>::*)(const class Teuchos::ArrayView<const unsigned long> &)) &Teuchos::ArrayView<const unsigned long>::operator=, "C++: Teuchos::ArrayView<const unsigned long>::operator=(const class Teuchos::ArrayView<const unsigned long> &) --> class Teuchos::ArrayView<const unsigned long> &", pybind11::return_value_policy::automatic, pybind11::arg("array"));
-		cl.def("is_null", (bool (Teuchos::ArrayView<const unsigned long>::*)() const) &Teuchos::ArrayView<const unsigned long>::is_null, "C++: Teuchos::ArrayView<const unsigned long>::is_null() const --> bool");
-		cl.def("size", (long (Teuchos::ArrayView<const unsigned long>::*)() const) &Teuchos::ArrayView<const unsigned long>::size, "C++: Teuchos::ArrayView<const unsigned long>::size() const --> long");
-		cl.def("toString", (std::string (Teuchos::ArrayView<const unsigned long>::*)() const) &Teuchos::ArrayView<const unsigned long>::toString, "C++: Teuchos::ArrayView<const unsigned long>::toString() const --> std::string");
-		cl.def("getRawPtr", (const unsigned long * (Teuchos::ArrayView<const unsigned long>::*)() const) &Teuchos::ArrayView<const unsigned long>::getRawPtr, "C++: Teuchos::ArrayView<const unsigned long>::getRawPtr() const --> const unsigned long *", pybind11::return_value_policy::automatic);
-		cl.def("data", (const unsigned long * (Teuchos::ArrayView<const unsigned long>::*)() const) &Teuchos::ArrayView<const unsigned long>::data, "C++: Teuchos::ArrayView<const unsigned long>::data() const --> const unsigned long *", pybind11::return_value_policy::automatic);
-		cl.def("__getitem__", (const unsigned long & (Teuchos::ArrayView<const unsigned long>::*)(long) const) &Teuchos::ArrayView<const unsigned long>::operator[], "C++: Teuchos::ArrayView<const unsigned long>::operator[](long) const --> const unsigned long &", pybind11::return_value_policy::automatic, pybind11::arg("i"));
-		cl.def("front", (const unsigned long & (Teuchos::ArrayView<const unsigned long>::*)() const) &Teuchos::ArrayView<const unsigned long>::front, "C++: Teuchos::ArrayView<const unsigned long>::front() const --> const unsigned long &", pybind11::return_value_policy::automatic);
-		cl.def("back", (const unsigned long & (Teuchos::ArrayView<const unsigned long>::*)() const) &Teuchos::ArrayView<const unsigned long>::back, "C++: Teuchos::ArrayView<const unsigned long>::back() const --> const unsigned long &", pybind11::return_value_policy::automatic);
-		cl.def("view", (class Teuchos::ArrayView<const unsigned long> (Teuchos::ArrayView<const unsigned long>::*)(long, long) const) &Teuchos::ArrayView<const unsigned long>::view, "C++: Teuchos::ArrayView<const unsigned long>::view(long, long) const --> class Teuchos::ArrayView<const unsigned long>", pybind11::arg("offset"), pybind11::arg("size"));
-		cl.def("__call__", (class Teuchos::ArrayView<const unsigned long> (Teuchos::ArrayView<const unsigned long>::*)(long, long) const) &Teuchos::ArrayView<const unsigned long>::operator(), "C++: Teuchos::ArrayView<const unsigned long>::operator()(long, long) const --> class Teuchos::ArrayView<const unsigned long>", pybind11::arg("offset"), pybind11::arg("size"));
-		cl.def("__call__", (const class Teuchos::ArrayView<const unsigned long> & (Teuchos::ArrayView<const unsigned long>::*)() const) &Teuchos::ArrayView<const unsigned long>::operator(), "C++: Teuchos::ArrayView<const unsigned long>::operator()() const --> const class Teuchos::ArrayView<const unsigned long> &", pybind11::return_value_policy::automatic);
-		cl.def("getConst", (class Teuchos::ArrayView<const unsigned long> (Teuchos::ArrayView<const unsigned long>::*)() const) &Teuchos::ArrayView<const unsigned long>::getConst, "C++: Teuchos::ArrayView<const unsigned long>::getConst() const --> class Teuchos::ArrayView<const unsigned long>");
-		cl.def("begin", (const unsigned long * (Teuchos::ArrayView<const unsigned long>::*)() const) &Teuchos::ArrayView<const unsigned long>::begin, "C++: Teuchos::ArrayView<const unsigned long>::begin() const --> const unsigned long *", pybind11::return_value_policy::automatic);
-		cl.def("end", (const unsigned long * (Teuchos::ArrayView<const unsigned long>::*)() const) &Teuchos::ArrayView<const unsigned long>::end, "C++: Teuchos::ArrayView<const unsigned long>::end() const --> const unsigned long *", pybind11::return_value_policy::automatic);
-		cl.def("assert_not_null", (const class Teuchos::ArrayView<const unsigned long> & (Teuchos::ArrayView<const unsigned long>::*)() const) &Teuchos::ArrayView<const unsigned long>::assert_not_null, "C++: Teuchos::ArrayView<const unsigned long>::assert_not_null() const --> const class Teuchos::ArrayView<const unsigned long> &", pybind11::return_value_policy::automatic);
-		cl.def("assert_in_range", (const class Teuchos::ArrayView<const unsigned long> & (Teuchos::ArrayView<const unsigned long>::*)(long, long) const) &Teuchos::ArrayView<const unsigned long>::assert_in_range, "C++: Teuchos::ArrayView<const unsigned long>::assert_in_range(long, long) const --> const class Teuchos::ArrayView<const unsigned long> &", pybind11::return_value_policy::automatic, pybind11::arg("offset"), pybind11::arg("size"));
-		cl.def("access_private_ptr", (const unsigned long * (Teuchos::ArrayView<const unsigned long>::*)() const) &Teuchos::ArrayView<const unsigned long>::access_private_ptr, "C++: Teuchos::ArrayView<const unsigned long>::access_private_ptr() const --> const unsigned long *", pybind11::return_value_policy::automatic);
-
-		cl.def("__str__", [](Teuchos::ArrayView<const unsigned long> const &o) -> std::string { std::ostringstream s; s << o; return s.str(); } );
-	}
 	{ // Teuchos::ArrayView file:Teuchos_ArrayViewDecl.hpp line:123
 		pybind11::class_<Teuchos::ArrayView<unsigned long>, Teuchos::RCP<Teuchos::ArrayView<unsigned long>>> cl(M("Teuchos"), "ArrayView_unsigned_long_t", "");
 		cl.def( pybind11::init( [](){ return new Teuchos::ArrayView<unsigned long>(); } ), "doc" );
@@ -1155,6 +1340,36 @@ void bind_Teuchos_ArrayRCPDecl(std::function< pybind11::module &(std::string con
 		cl.def("__str__", [](Teuchos::ArrayView<unsigned long> const &o) -> std::string { std::ostringstream s; s << o; return s.str(); } );
 	}
 	{ // Teuchos::ArrayView file:Teuchos_ArrayViewDecl.hpp line:433
+		pybind11::class_<Teuchos::ArrayView<const unsigned long>, Teuchos::RCP<Teuchos::ArrayView<const unsigned long>>> cl(M("Teuchos"), "ArrayView_const_unsigned_long_t", "");
+		cl.def( pybind11::init( [](){ return new Teuchos::ArrayView<const unsigned long>(); } ), "doc" );
+		cl.def( pybind11::init<enum Teuchos::ENull>(), pybind11::arg("") );
+
+		cl.def( pybind11::init( [](const unsigned long * a0, long const & a1){ return new Teuchos::ArrayView<const unsigned long>(a0, a1); } ), "doc" , pybind11::arg("p"), pybind11::arg("size_in"));
+		cl.def( pybind11::init<const unsigned long *, long, const enum Teuchos::ERCPNodeLookup>(), pybind11::arg("p"), pybind11::arg("size_in"), pybind11::arg("rcpNodeLookup") );
+
+		cl.def( pybind11::init( [](Teuchos::ArrayView<const unsigned long> const &o){ return new Teuchos::ArrayView<const unsigned long>(o); } ) );
+		cl.def("assign", (class Teuchos::ArrayView<const unsigned long> & (Teuchos::ArrayView<const unsigned long>::*)(const class Teuchos::ArrayView<const unsigned long> &)) &Teuchos::ArrayView<const unsigned long>::operator=, "C++: Teuchos::ArrayView<const unsigned long>::operator=(const class Teuchos::ArrayView<const unsigned long> &) --> class Teuchos::ArrayView<const unsigned long> &", pybind11::return_value_policy::automatic, pybind11::arg("array"));
+		cl.def("is_null", (bool (Teuchos::ArrayView<const unsigned long>::*)() const) &Teuchos::ArrayView<const unsigned long>::is_null, "C++: Teuchos::ArrayView<const unsigned long>::is_null() const --> bool");
+		cl.def("size", (long (Teuchos::ArrayView<const unsigned long>::*)() const) &Teuchos::ArrayView<const unsigned long>::size, "C++: Teuchos::ArrayView<const unsigned long>::size() const --> long");
+		cl.def("toString", (std::string (Teuchos::ArrayView<const unsigned long>::*)() const) &Teuchos::ArrayView<const unsigned long>::toString, "C++: Teuchos::ArrayView<const unsigned long>::toString() const --> std::string");
+		cl.def("getRawPtr", (const unsigned long * (Teuchos::ArrayView<const unsigned long>::*)() const) &Teuchos::ArrayView<const unsigned long>::getRawPtr, "C++: Teuchos::ArrayView<const unsigned long>::getRawPtr() const --> const unsigned long *", pybind11::return_value_policy::automatic);
+		cl.def("data", (const unsigned long * (Teuchos::ArrayView<const unsigned long>::*)() const) &Teuchos::ArrayView<const unsigned long>::data, "C++: Teuchos::ArrayView<const unsigned long>::data() const --> const unsigned long *", pybind11::return_value_policy::automatic);
+		cl.def("__getitem__", (const unsigned long & (Teuchos::ArrayView<const unsigned long>::*)(long) const) &Teuchos::ArrayView<const unsigned long>::operator[], "C++: Teuchos::ArrayView<const unsigned long>::operator[](long) const --> const unsigned long &", pybind11::return_value_policy::automatic, pybind11::arg("i"));
+		cl.def("front", (const unsigned long & (Teuchos::ArrayView<const unsigned long>::*)() const) &Teuchos::ArrayView<const unsigned long>::front, "C++: Teuchos::ArrayView<const unsigned long>::front() const --> const unsigned long &", pybind11::return_value_policy::automatic);
+		cl.def("back", (const unsigned long & (Teuchos::ArrayView<const unsigned long>::*)() const) &Teuchos::ArrayView<const unsigned long>::back, "C++: Teuchos::ArrayView<const unsigned long>::back() const --> const unsigned long &", pybind11::return_value_policy::automatic);
+		cl.def("view", (class Teuchos::ArrayView<const unsigned long> (Teuchos::ArrayView<const unsigned long>::*)(long, long) const) &Teuchos::ArrayView<const unsigned long>::view, "C++: Teuchos::ArrayView<const unsigned long>::view(long, long) const --> class Teuchos::ArrayView<const unsigned long>", pybind11::arg("offset"), pybind11::arg("size"));
+		cl.def("__call__", (class Teuchos::ArrayView<const unsigned long> (Teuchos::ArrayView<const unsigned long>::*)(long, long) const) &Teuchos::ArrayView<const unsigned long>::operator(), "C++: Teuchos::ArrayView<const unsigned long>::operator()(long, long) const --> class Teuchos::ArrayView<const unsigned long>", pybind11::arg("offset"), pybind11::arg("size"));
+		cl.def("__call__", (const class Teuchos::ArrayView<const unsigned long> & (Teuchos::ArrayView<const unsigned long>::*)() const) &Teuchos::ArrayView<const unsigned long>::operator(), "C++: Teuchos::ArrayView<const unsigned long>::operator()() const --> const class Teuchos::ArrayView<const unsigned long> &", pybind11::return_value_policy::automatic);
+		cl.def("getConst", (class Teuchos::ArrayView<const unsigned long> (Teuchos::ArrayView<const unsigned long>::*)() const) &Teuchos::ArrayView<const unsigned long>::getConst, "C++: Teuchos::ArrayView<const unsigned long>::getConst() const --> class Teuchos::ArrayView<const unsigned long>");
+		cl.def("begin", (const unsigned long * (Teuchos::ArrayView<const unsigned long>::*)() const) &Teuchos::ArrayView<const unsigned long>::begin, "C++: Teuchos::ArrayView<const unsigned long>::begin() const --> const unsigned long *", pybind11::return_value_policy::automatic);
+		cl.def("end", (const unsigned long * (Teuchos::ArrayView<const unsigned long>::*)() const) &Teuchos::ArrayView<const unsigned long>::end, "C++: Teuchos::ArrayView<const unsigned long>::end() const --> const unsigned long *", pybind11::return_value_policy::automatic);
+		cl.def("assert_not_null", (const class Teuchos::ArrayView<const unsigned long> & (Teuchos::ArrayView<const unsigned long>::*)() const) &Teuchos::ArrayView<const unsigned long>::assert_not_null, "C++: Teuchos::ArrayView<const unsigned long>::assert_not_null() const --> const class Teuchos::ArrayView<const unsigned long> &", pybind11::return_value_policy::automatic);
+		cl.def("assert_in_range", (const class Teuchos::ArrayView<const unsigned long> & (Teuchos::ArrayView<const unsigned long>::*)(long, long) const) &Teuchos::ArrayView<const unsigned long>::assert_in_range, "C++: Teuchos::ArrayView<const unsigned long>::assert_in_range(long, long) const --> const class Teuchos::ArrayView<const unsigned long> &", pybind11::return_value_policy::automatic, pybind11::arg("offset"), pybind11::arg("size"));
+		cl.def("access_private_ptr", (const unsigned long * (Teuchos::ArrayView<const unsigned long>::*)() const) &Teuchos::ArrayView<const unsigned long>::access_private_ptr, "C++: Teuchos::ArrayView<const unsigned long>::access_private_ptr() const --> const unsigned long *", pybind11::return_value_policy::automatic);
+
+		cl.def("__str__", [](Teuchos::ArrayView<const unsigned long> const &o) -> std::string { std::ostringstream s; s << o; return s.str(); } );
+	}
+	{ // Teuchos::ArrayView file:Teuchos_ArrayViewDecl.hpp line:433
 		pybind11::class_<Teuchos::ArrayView<const long long>, Teuchos::RCP<Teuchos::ArrayView<const long long>>> cl(M("Teuchos"), "ArrayView_const_long_long_t", "");
 		cl.def( pybind11::init( [](){ return new Teuchos::ArrayView<const long long>(); } ), "doc" );
 		cl.def( pybind11::init<enum Teuchos::ENull>(), pybind11::arg("") );
@@ -1185,35 +1400,65 @@ void bind_Teuchos_ArrayRCPDecl(std::function< pybind11::module &(std::string con
 		cl.def("__str__", [](Teuchos::ArrayView<const long long> const &o) -> std::string { std::ostringstream s; s << o; return s.str(); } );
 	}
 	{ // Teuchos::ArrayView file:Teuchos_ArrayViewDecl.hpp line:123
-		pybind11::class_<Teuchos::ArrayView<long long>, Teuchos::RCP<Teuchos::ArrayView<long long>>> cl(M("Teuchos"), "ArrayView_long_long_t", "");
-		cl.def( pybind11::init( [](){ return new Teuchos::ArrayView<long long>(); } ), "doc" );
+		pybind11::class_<Teuchos::ArrayView<long>, Teuchos::RCP<Teuchos::ArrayView<long>>> cl(M("Teuchos"), "ArrayView_long_t", "");
+		cl.def( pybind11::init( [](){ return new Teuchos::ArrayView<long>(); } ), "doc" );
 		cl.def( pybind11::init<enum Teuchos::ENull>(), pybind11::arg("") );
 
-		cl.def( pybind11::init( [](long long * a0, long const & a1){ return new Teuchos::ArrayView<long long>(a0, a1); } ), "doc" , pybind11::arg("p"), pybind11::arg("size_in"));
-		cl.def( pybind11::init<long long *, long, const enum Teuchos::ERCPNodeLookup>(), pybind11::arg("p"), pybind11::arg("size_in"), pybind11::arg("rcpNodeLookup") );
+		cl.def( pybind11::init( [](long * a0, long const & a1){ return new Teuchos::ArrayView<long>(a0, a1); } ), "doc" , pybind11::arg("p"), pybind11::arg("size_in"));
+		cl.def( pybind11::init<long *, long, const enum Teuchos::ERCPNodeLookup>(), pybind11::arg("p"), pybind11::arg("size_in"), pybind11::arg("rcpNodeLookup") );
 
-		cl.def( pybind11::init( [](Teuchos::ArrayView<long long> const &o){ return new Teuchos::ArrayView<long long>(o); } ) );
-		cl.def("assign", (class Teuchos::ArrayView<long long> & (Teuchos::ArrayView<long long>::*)(const class Teuchos::ArrayView<long long> &)) &Teuchos::ArrayView<long long>::operator=, "C++: Teuchos::ArrayView<long long>::operator=(const class Teuchos::ArrayView<long long> &) --> class Teuchos::ArrayView<long long> &", pybind11::return_value_policy::automatic, pybind11::arg("array"));
-		cl.def("is_null", (bool (Teuchos::ArrayView<long long>::*)() const) &Teuchos::ArrayView<long long>::is_null, "C++: Teuchos::ArrayView<long long>::is_null() const --> bool");
-		cl.def("size", (long (Teuchos::ArrayView<long long>::*)() const) &Teuchos::ArrayView<long long>::size, "C++: Teuchos::ArrayView<long long>::size() const --> long");
-		cl.def("toString", (std::string (Teuchos::ArrayView<long long>::*)() const) &Teuchos::ArrayView<long long>::toString, "C++: Teuchos::ArrayView<long long>::toString() const --> std::string");
-		cl.def("getRawPtr", (long long * (Teuchos::ArrayView<long long>::*)() const) &Teuchos::ArrayView<long long>::getRawPtr, "C++: Teuchos::ArrayView<long long>::getRawPtr() const --> long long *", pybind11::return_value_policy::automatic);
-		cl.def("data", (long long * (Teuchos::ArrayView<long long>::*)() const) &Teuchos::ArrayView<long long>::data, "C++: Teuchos::ArrayView<long long>::data() const --> long long *", pybind11::return_value_policy::automatic);
-		cl.def("__getitem__", (long long & (Teuchos::ArrayView<long long>::*)(long) const) &Teuchos::ArrayView<long long>::operator[], "C++: Teuchos::ArrayView<long long>::operator[](long) const --> long long &", pybind11::return_value_policy::automatic, pybind11::arg("i"));
-		cl.def("front", (long long & (Teuchos::ArrayView<long long>::*)() const) &Teuchos::ArrayView<long long>::front, "C++: Teuchos::ArrayView<long long>::front() const --> long long &", pybind11::return_value_policy::automatic);
-		cl.def("back", (long long & (Teuchos::ArrayView<long long>::*)() const) &Teuchos::ArrayView<long long>::back, "C++: Teuchos::ArrayView<long long>::back() const --> long long &", pybind11::return_value_policy::automatic);
-		cl.def("view", (class Teuchos::ArrayView<long long> (Teuchos::ArrayView<long long>::*)(long, long) const) &Teuchos::ArrayView<long long>::view, "C++: Teuchos::ArrayView<long long>::view(long, long) const --> class Teuchos::ArrayView<long long>", pybind11::arg("offset"), pybind11::arg("size"));
-		cl.def("__call__", (class Teuchos::ArrayView<long long> (Teuchos::ArrayView<long long>::*)(long, long) const) &Teuchos::ArrayView<long long>::operator(), "C++: Teuchos::ArrayView<long long>::operator()(long, long) const --> class Teuchos::ArrayView<long long>", pybind11::arg("offset"), pybind11::arg("size"));
-		cl.def("__call__", (const class Teuchos::ArrayView<long long> & (Teuchos::ArrayView<long long>::*)() const) &Teuchos::ArrayView<long long>::operator(), "C++: Teuchos::ArrayView<long long>::operator()() const --> const class Teuchos::ArrayView<long long> &", pybind11::return_value_policy::automatic);
-		cl.def("getConst", (class Teuchos::ArrayView<const long long> (Teuchos::ArrayView<long long>::*)() const) &Teuchos::ArrayView<long long>::getConst, "C++: Teuchos::ArrayView<long long>::getConst() const --> class Teuchos::ArrayView<const long long>");
-		cl.def("assign", (void (Teuchos::ArrayView<long long>::*)(const class Teuchos::ArrayView<const long long> &) const) &Teuchos::ArrayView<long long>::assign, "C++: Teuchos::ArrayView<long long>::assign(const class Teuchos::ArrayView<const long long> &) const --> void", pybind11::arg("array"));
-		cl.def("begin", (long long * (Teuchos::ArrayView<long long>::*)() const) &Teuchos::ArrayView<long long>::begin, "C++: Teuchos::ArrayView<long long>::begin() const --> long long *", pybind11::return_value_policy::automatic);
-		cl.def("end", (long long * (Teuchos::ArrayView<long long>::*)() const) &Teuchos::ArrayView<long long>::end, "C++: Teuchos::ArrayView<long long>::end() const --> long long *", pybind11::return_value_policy::automatic);
-		cl.def("assert_not_null", (const class Teuchos::ArrayView<long long> & (Teuchos::ArrayView<long long>::*)() const) &Teuchos::ArrayView<long long>::assert_not_null, "C++: Teuchos::ArrayView<long long>::assert_not_null() const --> const class Teuchos::ArrayView<long long> &", pybind11::return_value_policy::automatic);
-		cl.def("assert_in_range", (const class Teuchos::ArrayView<long long> & (Teuchos::ArrayView<long long>::*)(long, long) const) &Teuchos::ArrayView<long long>::assert_in_range, "C++: Teuchos::ArrayView<long long>::assert_in_range(long, long) const --> const class Teuchos::ArrayView<long long> &", pybind11::return_value_policy::automatic, pybind11::arg("offset"), pybind11::arg("size"));
-		cl.def("access_private_ptr", (long long * (Teuchos::ArrayView<long long>::*)() const) &Teuchos::ArrayView<long long>::access_private_ptr, "C++: Teuchos::ArrayView<long long>::access_private_ptr() const --> long long *", pybind11::return_value_policy::automatic);
+		cl.def( pybind11::init( [](Teuchos::ArrayView<long> const &o){ return new Teuchos::ArrayView<long>(o); } ) );
+		cl.def("assign", (class Teuchos::ArrayView<long> & (Teuchos::ArrayView<long>::*)(const class Teuchos::ArrayView<long> &)) &Teuchos::ArrayView<long>::operator=, "C++: Teuchos::ArrayView<long>::operator=(const class Teuchos::ArrayView<long> &) --> class Teuchos::ArrayView<long> &", pybind11::return_value_policy::automatic, pybind11::arg("array"));
+		cl.def("is_null", (bool (Teuchos::ArrayView<long>::*)() const) &Teuchos::ArrayView<long>::is_null, "C++: Teuchos::ArrayView<long>::is_null() const --> bool");
+		cl.def("size", (long (Teuchos::ArrayView<long>::*)() const) &Teuchos::ArrayView<long>::size, "C++: Teuchos::ArrayView<long>::size() const --> long");
+		cl.def("toString", (std::string (Teuchos::ArrayView<long>::*)() const) &Teuchos::ArrayView<long>::toString, "C++: Teuchos::ArrayView<long>::toString() const --> std::string");
+		cl.def("getRawPtr", (long * (Teuchos::ArrayView<long>::*)() const) &Teuchos::ArrayView<long>::getRawPtr, "C++: Teuchos::ArrayView<long>::getRawPtr() const --> long *", pybind11::return_value_policy::automatic);
+		cl.def("data", (long * (Teuchos::ArrayView<long>::*)() const) &Teuchos::ArrayView<long>::data, "C++: Teuchos::ArrayView<long>::data() const --> long *", pybind11::return_value_policy::automatic);
+		cl.def("__getitem__", (long & (Teuchos::ArrayView<long>::*)(long) const) &Teuchos::ArrayView<long>::operator[], "C++: Teuchos::ArrayView<long>::operator[](long) const --> long &", pybind11::return_value_policy::automatic, pybind11::arg("i"));
+		cl.def("front", (long & (Teuchos::ArrayView<long>::*)() const) &Teuchos::ArrayView<long>::front, "C++: Teuchos::ArrayView<long>::front() const --> long &", pybind11::return_value_policy::automatic);
+		cl.def("back", (long & (Teuchos::ArrayView<long>::*)() const) &Teuchos::ArrayView<long>::back, "C++: Teuchos::ArrayView<long>::back() const --> long &", pybind11::return_value_policy::automatic);
+		cl.def("view", (class Teuchos::ArrayView<long> (Teuchos::ArrayView<long>::*)(long, long) const) &Teuchos::ArrayView<long>::view, "C++: Teuchos::ArrayView<long>::view(long, long) const --> class Teuchos::ArrayView<long>", pybind11::arg("offset"), pybind11::arg("size"));
+		cl.def("__call__", (class Teuchos::ArrayView<long> (Teuchos::ArrayView<long>::*)(long, long) const) &Teuchos::ArrayView<long>::operator(), "C++: Teuchos::ArrayView<long>::operator()(long, long) const --> class Teuchos::ArrayView<long>", pybind11::arg("offset"), pybind11::arg("size"));
+		cl.def("__call__", (const class Teuchos::ArrayView<long> & (Teuchos::ArrayView<long>::*)() const) &Teuchos::ArrayView<long>::operator(), "C++: Teuchos::ArrayView<long>::operator()() const --> const class Teuchos::ArrayView<long> &", pybind11::return_value_policy::automatic);
+		cl.def("getConst", (class Teuchos::ArrayView<const long> (Teuchos::ArrayView<long>::*)() const) &Teuchos::ArrayView<long>::getConst, "C++: Teuchos::ArrayView<long>::getConst() const --> class Teuchos::ArrayView<const long>");
+		cl.def("assign", (void (Teuchos::ArrayView<long>::*)(const class Teuchos::ArrayView<const long> &) const) &Teuchos::ArrayView<long>::assign, "C++: Teuchos::ArrayView<long>::assign(const class Teuchos::ArrayView<const long> &) const --> void", pybind11::arg("array"));
+		cl.def("begin", (long * (Teuchos::ArrayView<long>::*)() const) &Teuchos::ArrayView<long>::begin, "C++: Teuchos::ArrayView<long>::begin() const --> long *", pybind11::return_value_policy::automatic);
+		cl.def("end", (long * (Teuchos::ArrayView<long>::*)() const) &Teuchos::ArrayView<long>::end, "C++: Teuchos::ArrayView<long>::end() const --> long *", pybind11::return_value_policy::automatic);
+		cl.def("assert_not_null", (const class Teuchos::ArrayView<long> & (Teuchos::ArrayView<long>::*)() const) &Teuchos::ArrayView<long>::assert_not_null, "C++: Teuchos::ArrayView<long>::assert_not_null() const --> const class Teuchos::ArrayView<long> &", pybind11::return_value_policy::automatic);
+		cl.def("assert_in_range", (const class Teuchos::ArrayView<long> & (Teuchos::ArrayView<long>::*)(long, long) const) &Teuchos::ArrayView<long>::assert_in_range, "C++: Teuchos::ArrayView<long>::assert_in_range(long, long) const --> const class Teuchos::ArrayView<long> &", pybind11::return_value_policy::automatic, pybind11::arg("offset"), pybind11::arg("size"));
+		cl.def("access_private_ptr", (long * (Teuchos::ArrayView<long>::*)() const) &Teuchos::ArrayView<long>::access_private_ptr, "C++: Teuchos::ArrayView<long>::access_private_ptr() const --> long *", pybind11::return_value_policy::automatic);
 
-		cl.def("__str__", [](Teuchos::ArrayView<long long> const &o) -> std::string { std::ostringstream s; s << o; return s.str(); } );
+		cl.def("__str__", [](Teuchos::ArrayView<long> const &o) -> std::string { std::ostringstream s; s << o; return s.str(); } );
+	}
+	{ // Teuchos::ArrayView file:Teuchos_ArrayViewDecl.hpp line:433
+		pybind11::class_<Teuchos::ArrayView<const long>, Teuchos::RCP<Teuchos::ArrayView<const long>>> cl(M("Teuchos"), "ArrayView_const_long_t", "");
+		cl.def( pybind11::init( [](){ return new Teuchos::ArrayView<const long>(); } ), "doc" );
+		cl.def( pybind11::init<enum Teuchos::ENull>(), pybind11::arg("null_arg") );
+
+		cl.def( pybind11::init( [](const long * a0, long const & a1){ return new Teuchos::ArrayView<const long>(a0, a1); } ), "doc" , pybind11::arg("p"), pybind11::arg("size_in"));
+		cl.def( pybind11::init<const long *, long, const enum Teuchos::ERCPNodeLookup>(), pybind11::arg("p"), pybind11::arg("size_in"), pybind11::arg("rcpNodeLookup") );
+
+		cl.def( pybind11::init( [](Teuchos::ArrayView<const long> const &o){ return new Teuchos::ArrayView<const long>(o); } ) );
+		cl.def("assign", (class Teuchos::ArrayView<const long> & (Teuchos::ArrayView<const long>::*)(const class Teuchos::ArrayView<const long> &)) &Teuchos::ArrayView<const long>::operator=, "C++: Teuchos::ArrayView<const long>::operator=(const class Teuchos::ArrayView<const long> &) --> class Teuchos::ArrayView<const long> &", pybind11::return_value_policy::automatic, pybind11::arg("array"));
+		cl.def("is_null", (bool (Teuchos::ArrayView<const long>::*)() const) &Teuchos::ArrayView<const long>::is_null, "C++: Teuchos::ArrayView<const long>::is_null() const --> bool");
+		cl.def("size", (long (Teuchos::ArrayView<const long>::*)() const) &Teuchos::ArrayView<const long>::size, "C++: Teuchos::ArrayView<const long>::size() const --> long");
+		cl.def("toString", (std::string (Teuchos::ArrayView<const long>::*)() const) &Teuchos::ArrayView<const long>::toString, "C++: Teuchos::ArrayView<const long>::toString() const --> std::string");
+		cl.def("getRawPtr", (const long * (Teuchos::ArrayView<const long>::*)() const) &Teuchos::ArrayView<const long>::getRawPtr, "C++: Teuchos::ArrayView<const long>::getRawPtr() const --> const long *", pybind11::return_value_policy::automatic);
+		cl.def("data", (const long * (Teuchos::ArrayView<const long>::*)() const) &Teuchos::ArrayView<const long>::data, "C++: Teuchos::ArrayView<const long>::data() const --> const long *", pybind11::return_value_policy::automatic);
+		cl.def("__getitem__", (const long & (Teuchos::ArrayView<const long>::*)(long) const) &Teuchos::ArrayView<const long>::operator[], "C++: Teuchos::ArrayView<const long>::operator[](long) const --> const long &", pybind11::return_value_policy::automatic, pybind11::arg("i"));
+		cl.def("front", (const long & (Teuchos::ArrayView<const long>::*)() const) &Teuchos::ArrayView<const long>::front, "C++: Teuchos::ArrayView<const long>::front() const --> const long &", pybind11::return_value_policy::automatic);
+		cl.def("back", (const long & (Teuchos::ArrayView<const long>::*)() const) &Teuchos::ArrayView<const long>::back, "C++: Teuchos::ArrayView<const long>::back() const --> const long &", pybind11::return_value_policy::automatic);
+		cl.def("view", (class Teuchos::ArrayView<const long> (Teuchos::ArrayView<const long>::*)(long, long) const) &Teuchos::ArrayView<const long>::view, "C++: Teuchos::ArrayView<const long>::view(long, long) const --> class Teuchos::ArrayView<const long>", pybind11::arg("offset"), pybind11::arg("size"));
+		cl.def("__call__", (class Teuchos::ArrayView<const long> (Teuchos::ArrayView<const long>::*)(long, long) const) &Teuchos::ArrayView<const long>::operator(), "C++: Teuchos::ArrayView<const long>::operator()(long, long) const --> class Teuchos::ArrayView<const long>", pybind11::arg("offset"), pybind11::arg("size"));
+		cl.def("__call__", (const class Teuchos::ArrayView<const long> & (Teuchos::ArrayView<const long>::*)() const) &Teuchos::ArrayView<const long>::operator(), "C++: Teuchos::ArrayView<const long>::operator()() const --> const class Teuchos::ArrayView<const long> &", pybind11::return_value_policy::automatic);
+		cl.def("getConst", (class Teuchos::ArrayView<const long> (Teuchos::ArrayView<const long>::*)() const) &Teuchos::ArrayView<const long>::getConst, "C++: Teuchos::ArrayView<const long>::getConst() const --> class Teuchos::ArrayView<const long>");
+		cl.def("begin", (const long * (Teuchos::ArrayView<const long>::*)() const) &Teuchos::ArrayView<const long>::begin, "C++: Teuchos::ArrayView<const long>::begin() const --> const long *", pybind11::return_value_policy::automatic);
+		cl.def("end", (const long * (Teuchos::ArrayView<const long>::*)() const) &Teuchos::ArrayView<const long>::end, "C++: Teuchos::ArrayView<const long>::end() const --> const long *", pybind11::return_value_policy::automatic);
+		cl.def("assert_not_null", (const class Teuchos::ArrayView<const long> & (Teuchos::ArrayView<const long>::*)() const) &Teuchos::ArrayView<const long>::assert_not_null, "C++: Teuchos::ArrayView<const long>::assert_not_null() const --> const class Teuchos::ArrayView<const long> &", pybind11::return_value_policy::automatic);
+		cl.def("assert_in_range", (const class Teuchos::ArrayView<const long> & (Teuchos::ArrayView<const long>::*)(long, long) const) &Teuchos::ArrayView<const long>::assert_in_range, "C++: Teuchos::ArrayView<const long>::assert_in_range(long, long) const --> const class Teuchos::ArrayView<const long> &", pybind11::return_value_policy::automatic, pybind11::arg("offset"), pybind11::arg("size"));
+		cl.def("access_private_ptr", (const long * (Teuchos::ArrayView<const long>::*)() const) &Teuchos::ArrayView<const long>::access_private_ptr, "C++: Teuchos::ArrayView<const long>::access_private_ptr() const --> const long *", pybind11::return_value_policy::automatic);
+
+		cl.def("__str__", [](Teuchos::ArrayView<const long> const &o) -> std::string { std::ostringstream s; s << o; return s.str(); } );
 	}
 	{ // Teuchos::ArrayView file:Teuchos_ArrayViewDecl.hpp line:433
 		pybind11::class_<Teuchos::ArrayView<const Teuchos::ArrayView<const double>>, Teuchos::RCP<Teuchos::ArrayView<const Teuchos::ArrayView<const double>>>> cl(M("Teuchos"), "ArrayView_const_Teuchos_ArrayView_const_double_t", "");
@@ -1275,6 +1520,67 @@ void bind_Teuchos_ArrayRCPDecl(std::function< pybind11::module &(std::string con
 
 		cl.def("__str__", [](Teuchos::ArrayView<const Teuchos::ArrayView<double>> const &o) -> std::string { std::ostringstream s; s << o; return s.str(); } );
 	}
+	{ // Teuchos::ArrayView file:Teuchos_ArrayViewDecl.hpp line:123
+		pybind11::class_<Teuchos::ArrayView<long long>, Teuchos::RCP<Teuchos::ArrayView<long long>>> cl(M("Teuchos"), "ArrayView_long_long_t", "");
+		cl.def( pybind11::init( [](){ return new Teuchos::ArrayView<long long>(); } ), "doc" );
+		cl.def( pybind11::init<enum Teuchos::ENull>(), pybind11::arg("") );
+
+		cl.def( pybind11::init( [](long long * a0, long const & a1){ return new Teuchos::ArrayView<long long>(a0, a1); } ), "doc" , pybind11::arg("p"), pybind11::arg("size_in"));
+		cl.def( pybind11::init<long long *, long, const enum Teuchos::ERCPNodeLookup>(), pybind11::arg("p"), pybind11::arg("size_in"), pybind11::arg("rcpNodeLookup") );
+
+		cl.def( pybind11::init( [](Teuchos::ArrayView<long long> const &o){ return new Teuchos::ArrayView<long long>(o); } ) );
+		cl.def("assign", (class Teuchos::ArrayView<long long> & (Teuchos::ArrayView<long long>::*)(const class Teuchos::ArrayView<long long> &)) &Teuchos::ArrayView<long long>::operator=, "C++: Teuchos::ArrayView<long long>::operator=(const class Teuchos::ArrayView<long long> &) --> class Teuchos::ArrayView<long long> &", pybind11::return_value_policy::automatic, pybind11::arg("array"));
+		cl.def("is_null", (bool (Teuchos::ArrayView<long long>::*)() const) &Teuchos::ArrayView<long long>::is_null, "C++: Teuchos::ArrayView<long long>::is_null() const --> bool");
+		cl.def("size", (long (Teuchos::ArrayView<long long>::*)() const) &Teuchos::ArrayView<long long>::size, "C++: Teuchos::ArrayView<long long>::size() const --> long");
+		cl.def("toString", (std::string (Teuchos::ArrayView<long long>::*)() const) &Teuchos::ArrayView<long long>::toString, "C++: Teuchos::ArrayView<long long>::toString() const --> std::string");
+		cl.def("getRawPtr", (long long * (Teuchos::ArrayView<long long>::*)() const) &Teuchos::ArrayView<long long>::getRawPtr, "C++: Teuchos::ArrayView<long long>::getRawPtr() const --> long long *", pybind11::return_value_policy::automatic);
+		cl.def("data", (long long * (Teuchos::ArrayView<long long>::*)() const) &Teuchos::ArrayView<long long>::data, "C++: Teuchos::ArrayView<long long>::data() const --> long long *", pybind11::return_value_policy::automatic);
+		cl.def("__getitem__", (long long & (Teuchos::ArrayView<long long>::*)(long) const) &Teuchos::ArrayView<long long>::operator[], "C++: Teuchos::ArrayView<long long>::operator[](long) const --> long long &", pybind11::return_value_policy::automatic, pybind11::arg("i"));
+		cl.def("front", (long long & (Teuchos::ArrayView<long long>::*)() const) &Teuchos::ArrayView<long long>::front, "C++: Teuchos::ArrayView<long long>::front() const --> long long &", pybind11::return_value_policy::automatic);
+		cl.def("back", (long long & (Teuchos::ArrayView<long long>::*)() const) &Teuchos::ArrayView<long long>::back, "C++: Teuchos::ArrayView<long long>::back() const --> long long &", pybind11::return_value_policy::automatic);
+		cl.def("view", (class Teuchos::ArrayView<long long> (Teuchos::ArrayView<long long>::*)(long, long) const) &Teuchos::ArrayView<long long>::view, "C++: Teuchos::ArrayView<long long>::view(long, long) const --> class Teuchos::ArrayView<long long>", pybind11::arg("offset"), pybind11::arg("size"));
+		cl.def("__call__", (class Teuchos::ArrayView<long long> (Teuchos::ArrayView<long long>::*)(long, long) const) &Teuchos::ArrayView<long long>::operator(), "C++: Teuchos::ArrayView<long long>::operator()(long, long) const --> class Teuchos::ArrayView<long long>", pybind11::arg("offset"), pybind11::arg("size"));
+		cl.def("__call__", (const class Teuchos::ArrayView<long long> & (Teuchos::ArrayView<long long>::*)() const) &Teuchos::ArrayView<long long>::operator(), "C++: Teuchos::ArrayView<long long>::operator()() const --> const class Teuchos::ArrayView<long long> &", pybind11::return_value_policy::automatic);
+		cl.def("getConst", (class Teuchos::ArrayView<const long long> (Teuchos::ArrayView<long long>::*)() const) &Teuchos::ArrayView<long long>::getConst, "C++: Teuchos::ArrayView<long long>::getConst() const --> class Teuchos::ArrayView<const long long>");
+		cl.def("assign", (void (Teuchos::ArrayView<long long>::*)(const class Teuchos::ArrayView<const long long> &) const) &Teuchos::ArrayView<long long>::assign, "C++: Teuchos::ArrayView<long long>::assign(const class Teuchos::ArrayView<const long long> &) const --> void", pybind11::arg("array"));
+		cl.def("begin", (long long * (Teuchos::ArrayView<long long>::*)() const) &Teuchos::ArrayView<long long>::begin, "C++: Teuchos::ArrayView<long long>::begin() const --> long long *", pybind11::return_value_policy::automatic);
+		cl.def("end", (long long * (Teuchos::ArrayView<long long>::*)() const) &Teuchos::ArrayView<long long>::end, "C++: Teuchos::ArrayView<long long>::end() const --> long long *", pybind11::return_value_policy::automatic);
+		cl.def("assert_not_null", (const class Teuchos::ArrayView<long long> & (Teuchos::ArrayView<long long>::*)() const) &Teuchos::ArrayView<long long>::assert_not_null, "C++: Teuchos::ArrayView<long long>::assert_not_null() const --> const class Teuchos::ArrayView<long long> &", pybind11::return_value_policy::automatic);
+		cl.def("assert_in_range", (const class Teuchos::ArrayView<long long> & (Teuchos::ArrayView<long long>::*)(long, long) const) &Teuchos::ArrayView<long long>::assert_in_range, "C++: Teuchos::ArrayView<long long>::assert_in_range(long, long) const --> const class Teuchos::ArrayView<long long> &", pybind11::return_value_policy::automatic, pybind11::arg("offset"), pybind11::arg("size"));
+		cl.def("access_private_ptr", (long long * (Teuchos::ArrayView<long long>::*)() const) &Teuchos::ArrayView<long long>::access_private_ptr, "C++: Teuchos::ArrayView<long long>::access_private_ptr() const --> long long *", pybind11::return_value_policy::automatic);
+
+		cl.def("__str__", [](Teuchos::ArrayView<long long> const &o) -> std::string { std::ostringstream s; s << o; return s.str(); } );
+	}
+	{ // Teuchos::ArrayView file:Teuchos_ArrayViewDecl.hpp line:433
+		pybind11::class_<Teuchos::ArrayView<const Teuchos::ArrayRCP<double>>, Teuchos::RCP<Teuchos::ArrayView<const Teuchos::ArrayRCP<double>>>> cl(M("Teuchos"), "ArrayView_const_Teuchos_ArrayRCP_double_t", "");
+		cl.def( pybind11::init( [](){ return new Teuchos::ArrayView<const Teuchos::ArrayRCP<double>>(); } ), "doc" );
+		cl.def( pybind11::init<enum Teuchos::ENull>(), pybind11::arg("null_arg") );
+
+		cl.def( pybind11::init( [](const class Teuchos::ArrayRCP<double> * a0, long const & a1){ return new Teuchos::ArrayView<const Teuchos::ArrayRCP<double>>(a0, a1); } ), "doc" , pybind11::arg("p"), pybind11::arg("size"));
+		cl.def( pybind11::init<const class Teuchos::ArrayRCP<double> *, long, const enum Teuchos::ERCPNodeLookup>(), pybind11::arg("p"), pybind11::arg("size"), pybind11::arg("rcpNodeLookup") );
+
+		cl.def( pybind11::init( [](Teuchos::ArrayView<const Teuchos::ArrayRCP<double>> const &o){ return new Teuchos::ArrayView<const Teuchos::ArrayRCP<double>>(o); } ) );
+		cl.def("assign", (class Teuchos::ArrayView<const class Teuchos::ArrayRCP<double> > & (Teuchos::ArrayView<const Teuchos::ArrayRCP<double>>::*)(const class Teuchos::ArrayView<const class Teuchos::ArrayRCP<double> > &)) &Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::operator=, "C++: Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::operator=(const class Teuchos::ArrayView<const class Teuchos::ArrayRCP<double> > &) --> class Teuchos::ArrayView<const class Teuchos::ArrayRCP<double> > &", pybind11::return_value_policy::automatic, pybind11::arg("array"));
+		cl.def("is_null", (bool (Teuchos::ArrayView<const Teuchos::ArrayRCP<double>>::*)() const) &Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::is_null, "C++: Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::is_null() const --> bool");
+		cl.def("size", (long (Teuchos::ArrayView<const Teuchos::ArrayRCP<double>>::*)() const) &Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::size, "C++: Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::size() const --> long");
+		cl.def("toString", (std::string (Teuchos::ArrayView<const Teuchos::ArrayRCP<double>>::*)() const) &Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::toString, "C++: Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::toString() const --> std::string");
+		cl.def("getRawPtr", (const class Teuchos::ArrayRCP<double> * (Teuchos::ArrayView<const Teuchos::ArrayRCP<double>>::*)() const) &Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::getRawPtr, "C++: Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::getRawPtr() const --> const class Teuchos::ArrayRCP<double> *", pybind11::return_value_policy::automatic);
+		cl.def("data", (const class Teuchos::ArrayRCP<double> * (Teuchos::ArrayView<const Teuchos::ArrayRCP<double>>::*)() const) &Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::data, "C++: Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::data() const --> const class Teuchos::ArrayRCP<double> *", pybind11::return_value_policy::automatic);
+		cl.def("__getitem__", (const class Teuchos::ArrayRCP<double> & (Teuchos::ArrayView<const Teuchos::ArrayRCP<double>>::*)(long) const) &Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::operator[], "C++: Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::operator[](long) const --> const class Teuchos::ArrayRCP<double> &", pybind11::return_value_policy::automatic, pybind11::arg("i"));
+		cl.def("front", (const class Teuchos::ArrayRCP<double> & (Teuchos::ArrayView<const Teuchos::ArrayRCP<double>>::*)() const) &Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::front, "C++: Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::front() const --> const class Teuchos::ArrayRCP<double> &", pybind11::return_value_policy::automatic);
+		cl.def("back", (const class Teuchos::ArrayRCP<double> & (Teuchos::ArrayView<const Teuchos::ArrayRCP<double>>::*)() const) &Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::back, "C++: Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::back() const --> const class Teuchos::ArrayRCP<double> &", pybind11::return_value_policy::automatic);
+		cl.def("view", (class Teuchos::ArrayView<const class Teuchos::ArrayRCP<double> > (Teuchos::ArrayView<const Teuchos::ArrayRCP<double>>::*)(long, long) const) &Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::view, "C++: Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::view(long, long) const --> class Teuchos::ArrayView<const class Teuchos::ArrayRCP<double> >", pybind11::arg("offset"), pybind11::arg("size"));
+		cl.def("__call__", (class Teuchos::ArrayView<const class Teuchos::ArrayRCP<double> > (Teuchos::ArrayView<const Teuchos::ArrayRCP<double>>::*)(long, long) const) &Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::operator(), "C++: Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::operator()(long, long) const --> class Teuchos::ArrayView<const class Teuchos::ArrayRCP<double> >", pybind11::arg("offset"), pybind11::arg("size"));
+		cl.def("__call__", (const class Teuchos::ArrayView<const class Teuchos::ArrayRCP<double> > & (Teuchos::ArrayView<const Teuchos::ArrayRCP<double>>::*)() const) &Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::operator(), "C++: Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::operator()() const --> const class Teuchos::ArrayView<const class Teuchos::ArrayRCP<double> > &", pybind11::return_value_policy::automatic);
+		cl.def("getConst", (class Teuchos::ArrayView<const class Teuchos::ArrayRCP<double> > (Teuchos::ArrayView<const Teuchos::ArrayRCP<double>>::*)() const) &Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::getConst, "C++: Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::getConst() const --> class Teuchos::ArrayView<const class Teuchos::ArrayRCP<double> >");
+		cl.def("begin", (const class Teuchos::ArrayRCP<double> * (Teuchos::ArrayView<const Teuchos::ArrayRCP<double>>::*)() const) &Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::begin, "C++: Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::begin() const --> const class Teuchos::ArrayRCP<double> *", pybind11::return_value_policy::automatic);
+		cl.def("end", (const class Teuchos::ArrayRCP<double> * (Teuchos::ArrayView<const Teuchos::ArrayRCP<double>>::*)() const) &Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::end, "C++: Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::end() const --> const class Teuchos::ArrayRCP<double> *", pybind11::return_value_policy::automatic);
+		cl.def("assert_not_null", (const class Teuchos::ArrayView<const class Teuchos::ArrayRCP<double> > & (Teuchos::ArrayView<const Teuchos::ArrayRCP<double>>::*)() const) &Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::assert_not_null, "C++: Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::assert_not_null() const --> const class Teuchos::ArrayView<const class Teuchos::ArrayRCP<double> > &", pybind11::return_value_policy::automatic);
+		cl.def("assert_in_range", (const class Teuchos::ArrayView<const class Teuchos::ArrayRCP<double> > & (Teuchos::ArrayView<const Teuchos::ArrayRCP<double>>::*)(long, long) const) &Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::assert_in_range, "C++: Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::assert_in_range(long, long) const --> const class Teuchos::ArrayView<const class Teuchos::ArrayRCP<double> > &", pybind11::return_value_policy::automatic, pybind11::arg("offset"), pybind11::arg("size"));
+		cl.def("access_private_ptr", (const class Teuchos::ArrayRCP<double> * (Teuchos::ArrayView<const Teuchos::ArrayRCP<double>>::*)() const) &Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::access_private_ptr, "C++: Teuchos::ArrayView<const Teuchos::ArrayRCP<double> >::access_private_ptr() const --> const class Teuchos::ArrayRCP<double> *", pybind11::return_value_policy::automatic);
+
+		cl.def("__str__", [](Teuchos::ArrayView<const Teuchos::ArrayRCP<double>> const &o) -> std::string { std::ostringstream s; s << o; return s.str(); } );
+	}
 	{ // Teuchos::ArrayView file:Teuchos_ArrayViewDecl.hpp line:433
 		pybind11::class_<Teuchos::ArrayView<const Teuchos::ArrayView<const int>>, Teuchos::RCP<Teuchos::ArrayView<const Teuchos::ArrayView<const int>>>> cl(M("Teuchos"), "ArrayView_const_Teuchos_ArrayView_const_int_t", "");
 		cl.def( pybind11::init( [](){ return new Teuchos::ArrayView<const Teuchos::ArrayView<const int>>(); } ), "doc" );
@@ -1310,6 +1616,9 @@ void bind_Teuchos_ArrayRCPDecl(std::function< pybind11::module &(std::string con
 
 	// Teuchos::arrayView(const int *, long) file:Teuchos_ArrayView.hpp line:671
 	M("Teuchos").def("arrayView", (class Teuchos::ArrayView<const int> (*)(const int *, long)) &Teuchos::arrayView<const int>, "C++: Teuchos::arrayView(const int *, long) --> class Teuchos::ArrayView<const int>", pybind11::arg("p"), pybind11::arg("size"));
+
+	// Teuchos::arrayView(long *, long) file:Teuchos_ArrayViewDecl.hpp line:562
+	M("Teuchos").def("arrayView", (class Teuchos::ArrayView<long> (*)(long *, long)) &Teuchos::arrayView<long>, "C++: Teuchos::arrayView(long *, long) --> class Teuchos::ArrayView<long>", pybind11::arg("p"), pybind11::arg("size"));
 
 	// Teuchos::arrayView(const unsigned long *, long) file:Teuchos_ArrayView.hpp line:671
 	M("Teuchos").def("arrayView", (class Teuchos::ArrayView<const unsigned long> (*)(const unsigned long *, long)) &Teuchos::arrayView<const unsigned long>, "C++: Teuchos::arrayView(const unsigned long *, long) --> class Teuchos::ArrayView<const unsigned long>", pybind11::arg("p"), pybind11::arg("size"));
@@ -1347,6 +1656,15 @@ void bind_Teuchos_ArrayRCPDecl(std::function< pybind11::module &(std::string con
 	M("Teuchos").def("arcp", (class Teuchos::ArrayRCP<double> (*)(double *, long, long, bool)) &Teuchos::arcp<double>, "C++: Teuchos::arcp(double *, long, long, bool) --> class Teuchos::ArrayRCP<double>", pybind11::arg("p"), pybind11::arg("lowerOffset"), pybind11::arg("size_in"), pybind11::arg("owns_mem"));
 
 	// Teuchos::arcp(long) file:Teuchos_ArrayRCPDecl.hpp line:1081
+	M("Teuchos").def("arcp", (class Teuchos::ArrayRCP<long> (*)(long)) &Teuchos::arcp<long>, "C++: Teuchos::arcp(long) --> class Teuchos::ArrayRCP<long>", pybind11::arg("size"));
+
+	// Teuchos::arcp(long) file:Teuchos_ArrayRCP.hpp line:1313
+	M("Teuchos").def("arcp", (class Teuchos::ArrayRCP<long long> (*)(long)) &Teuchos::arcp<long long>, "C++: Teuchos::arcp(long) --> class Teuchos::ArrayRCP<long long>", pybind11::arg("size"));
+
+	// Teuchos::arcp(long) file:Teuchos_ArrayRCP.hpp line:1313
+	M("Teuchos").def("arcp", (class Teuchos::ArrayRCP<double> (*)(long)) &Teuchos::arcp<double>, "C++: Teuchos::arcp(long) --> class Teuchos::ArrayRCP<double>", pybind11::arg("size"));
+
+	// Teuchos::arcp(long) file:Teuchos_ArrayRCPDecl.hpp line:1081
 	M("Teuchos").def("arcp", (class Teuchos::ArrayRCP<class Teuchos::ArrayRCP<const double> > (*)(long)) &Teuchos::arcp<Teuchos::ArrayRCP<const double>>, "C++: Teuchos::arcp(long) --> class Teuchos::ArrayRCP<class Teuchos::ArrayRCP<const double> >", pybind11::arg("size"));
 
 	// Teuchos::arcp(long) file:Teuchos_ArrayRCPDecl.hpp line:1081
@@ -1356,13 +1674,7 @@ void bind_Teuchos_ArrayRCPDecl(std::function< pybind11::module &(std::string con
 	M("Teuchos").def("arcp", (class Teuchos::ArrayRCP<unsigned long> (*)(long)) &Teuchos::arcp<unsigned long>, "C++: Teuchos::arcp(long) --> class Teuchos::ArrayRCP<unsigned long>", pybind11::arg("size"));
 
 	// Teuchos::arcp(long) file:Teuchos_ArrayRCPDecl.hpp line:1081
-	M("Teuchos").def("arcp", (class Teuchos::ArrayRCP<long long> (*)(long)) &Teuchos::arcp<long long>, "C++: Teuchos::arcp(long) --> class Teuchos::ArrayRCP<long long>", pybind11::arg("size"));
-
-	// Teuchos::arcp(long) file:Teuchos_ArrayRCPDecl.hpp line:1081
 	M("Teuchos").def("arcp", (class Teuchos::ArrayRCP<int> (*)(long)) &Teuchos::arcp<int>, "C++: Teuchos::arcp(long) --> class Teuchos::ArrayRCP<int>", pybind11::arg("size"));
-
-	// Teuchos::arcp(long) file:Teuchos_ArrayRCPDecl.hpp line:1081
-	M("Teuchos").def("arcp", (class Teuchos::ArrayRCP<double> (*)(long)) &Teuchos::arcp<double>, "C++: Teuchos::arcp(long) --> class Teuchos::ArrayRCP<double>", pybind11::arg("size"));
 
 	// Teuchos::arcp_reinterpret_cast(const class Teuchos::ArrayRCP<const double> &) file:Teuchos_ArrayRCP.hpp line:1543
 	M("Teuchos").def("arcp_reinterpret_cast", (class Teuchos::ArrayRCP<const double> (*)(const class Teuchos::ArrayRCP<const double> &)) &Teuchos::arcp_reinterpret_cast<const double,const double>, "C++: Teuchos::arcp_reinterpret_cast(const class Teuchos::ArrayRCP<const double> &) --> class Teuchos::ArrayRCP<const double>", pybind11::arg("p1"));
@@ -1394,14 +1706,20 @@ void bind_Teuchos_ArrayRCPDecl(std::function< pybind11::module &(std::string con
 	// Teuchos::as(const unsigned long &) file:Teuchos_as.hpp line:2840
 	M("Teuchos").def("as", (int (*)(const unsigned long &)) &Teuchos::as<int,unsigned long>, "C++: Teuchos::as(const unsigned long &) --> int", pybind11::arg("t"));
 
+	// Teuchos::as(const int &) file:Teuchos_as.hpp line:2840
+	M("Teuchos").def("as", (unsigned long (*)(const int &)) &Teuchos::as<unsigned long,int>, "C++: Teuchos::as(const int &) --> unsigned long", pybind11::arg("t"));
+
+	// Teuchos::as(const int &) file:Teuchos_as.hpp line:2840
+	M("Teuchos").def("as", (double (*)(const int &)) &Teuchos::as<double,int>, "C++: Teuchos::as(const int &) --> double", pybind11::arg("t"));
+
+	// Teuchos::as(const double &) file:Teuchos_as.hpp line:2840
+	M("Teuchos").def("as", (int (*)(const double &)) &Teuchos::as<int,double>, "C++: Teuchos::as(const double &) --> int", pybind11::arg("t"));
+
 	// Teuchos::as(const unsigned long &) file:Teuchos_as.hpp line:2840
 	M("Teuchos").def("as", (long long (*)(const unsigned long &)) &Teuchos::as<long long,unsigned long>, "C++: Teuchos::as(const unsigned long &) --> long long", pybind11::arg("t"));
 
 	// Teuchos::as(const unsigned long &) file:Teuchos_as.hpp line:2840
 	M("Teuchos").def("as", (unsigned long (*)(const unsigned long &)) &Teuchos::as<unsigned long,unsigned long>, "C++: Teuchos::as(const unsigned long &) --> unsigned long", pybind11::arg("t"));
-
-	// Teuchos::as(const int &) file:Teuchos_as.hpp line:2840
-	M("Teuchos").def("as", (unsigned long (*)(const int &)) &Teuchos::as<unsigned long,int>, "C++: Teuchos::as(const int &) --> unsigned long", pybind11::arg("t"));
 
 	// Teuchos::as(const unsigned long &) file:Teuchos_as.hpp line:2840
 	M("Teuchos").def("as", (long (*)(const unsigned long &)) &Teuchos::as<long,unsigned long>, "C++: Teuchos::as(const unsigned long &) --> long", pybind11::arg("t"));
@@ -1418,6 +1736,15 @@ void bind_Teuchos_ArrayRCPDecl(std::function< pybind11::module &(std::string con
 	// Teuchos::asSafe(const unsigned long &) file:Teuchos_as.hpp line:356
 	M("Teuchos").def("asSafe", (unsigned short (*)(const unsigned long &)) &Teuchos::asSafe<unsigned short,unsigned long>, "C++: Teuchos::asSafe(const unsigned long &) --> unsigned short", pybind11::arg("t"));
 
+	// Teuchos::ArrayRCP_createNewRCPNodeRawPtr(long *, bool) file:Teuchos_ArrayRCP.hpp line:60
+	M("Teuchos").def("ArrayRCP_createNewRCPNodeRawPtr", (class Teuchos::RCPNode * (*)(long *, bool)) &Teuchos::ArrayRCP_createNewRCPNodeRawPtr<long>, "C++: Teuchos::ArrayRCP_createNewRCPNodeRawPtr(long *, bool) --> class Teuchos::RCPNode *", pybind11::return_value_policy::automatic, pybind11::arg("p"), pybind11::arg("has_ownership_in"));
+
+	// Teuchos::ArrayRCP_createNewRCPNodeRawPtr(long long *, bool) file:Teuchos_ArrayRCP.hpp line:60
+	M("Teuchos").def("ArrayRCP_createNewRCPNodeRawPtr", (class Teuchos::RCPNode * (*)(long long *, bool)) &Teuchos::ArrayRCP_createNewRCPNodeRawPtr<long long>, "C++: Teuchos::ArrayRCP_createNewRCPNodeRawPtr(long long *, bool) --> class Teuchos::RCPNode *", pybind11::return_value_policy::automatic, pybind11::arg("p"), pybind11::arg("has_ownership_in"));
+
+	// Teuchos::ArrayRCP_createNewRCPNodeRawPtr(double *, bool) file:Teuchos_ArrayRCP.hpp line:60
+	M("Teuchos").def("ArrayRCP_createNewRCPNodeRawPtr", (class Teuchos::RCPNode * (*)(double *, bool)) &Teuchos::ArrayRCP_createNewRCPNodeRawPtr<double>, "C++: Teuchos::ArrayRCP_createNewRCPNodeRawPtr(double *, bool) --> class Teuchos::RCPNode *", pybind11::return_value_policy::automatic, pybind11::arg("p"), pybind11::arg("has_ownership_in"));
+
 	// Teuchos::ArrayRCP_createNewRCPNodeRawPtr(class Teuchos::ArrayRCP<const double> *, bool) file:Teuchos_ArrayRCP.hpp line:60
 	M("Teuchos").def("ArrayRCP_createNewRCPNodeRawPtr", (class Teuchos::RCPNode * (*)(class Teuchos::ArrayRCP<const double> *, bool)) &Teuchos::ArrayRCP_createNewRCPNodeRawPtr<Teuchos::ArrayRCP<const double>>, "C++: Teuchos::ArrayRCP_createNewRCPNodeRawPtr(class Teuchos::ArrayRCP<const double> *, bool) --> class Teuchos::RCPNode *", pybind11::return_value_policy::automatic, pybind11::arg("p"), pybind11::arg("has_ownership_in"));
 
@@ -1427,14 +1754,8 @@ void bind_Teuchos_ArrayRCPDecl(std::function< pybind11::module &(std::string con
 	// Teuchos::ArrayRCP_createNewRCPNodeRawPtr(unsigned long *, bool) file:Teuchos_ArrayRCP.hpp line:60
 	M("Teuchos").def("ArrayRCP_createNewRCPNodeRawPtr", (class Teuchos::RCPNode * (*)(unsigned long *, bool)) &Teuchos::ArrayRCP_createNewRCPNodeRawPtr<unsigned long>, "C++: Teuchos::ArrayRCP_createNewRCPNodeRawPtr(unsigned long *, bool) --> class Teuchos::RCPNode *", pybind11::return_value_policy::automatic, pybind11::arg("p"), pybind11::arg("has_ownership_in"));
 
-	// Teuchos::ArrayRCP_createNewRCPNodeRawPtr(long long *, bool) file:Teuchos_ArrayRCP.hpp line:60
-	M("Teuchos").def("ArrayRCP_createNewRCPNodeRawPtr", (class Teuchos::RCPNode * (*)(long long *, bool)) &Teuchos::ArrayRCP_createNewRCPNodeRawPtr<long long>, "C++: Teuchos::ArrayRCP_createNewRCPNodeRawPtr(long long *, bool) --> class Teuchos::RCPNode *", pybind11::return_value_policy::automatic, pybind11::arg("p"), pybind11::arg("has_ownership_in"));
-
 	// Teuchos::ArrayRCP_createNewRCPNodeRawPtr(int *, bool) file:Teuchos_ArrayRCP.hpp line:60
 	M("Teuchos").def("ArrayRCP_createNewRCPNodeRawPtr", (class Teuchos::RCPNode * (*)(int *, bool)) &Teuchos::ArrayRCP_createNewRCPNodeRawPtr<int>, "C++: Teuchos::ArrayRCP_createNewRCPNodeRawPtr(int *, bool) --> class Teuchos::RCPNode *", pybind11::return_value_policy::automatic, pybind11::arg("p"), pybind11::arg("has_ownership_in"));
-
-	// Teuchos::ArrayRCP_createNewRCPNodeRawPtr(double *, bool) file:Teuchos_ArrayRCP.hpp line:60
-	M("Teuchos").def("ArrayRCP_createNewRCPNodeRawPtr", (class Teuchos::RCPNode * (*)(double *, bool)) &Teuchos::ArrayRCP_createNewRCPNodeRawPtr<double>, "C++: Teuchos::ArrayRCP_createNewRCPNodeRawPtr(double *, bool) --> class Teuchos::RCPNode *", pybind11::return_value_policy::automatic, pybind11::arg("p"), pybind11::arg("has_ownership_in"));
 
 	{ // Teuchos::GlobalMPISession file:Teuchos_GlobalMPISession.hpp line:113
 		pybind11::class_<Teuchos::GlobalMPISession, Teuchos::RCP<Teuchos::GlobalMPISession>> cl(M("Teuchos"), "GlobalMPISession", "you would write:\n \n\n\n\n\n\n\n\n\n\n\n This saves you from needing to remember to call MPI_Init() or\n MPI_Finalize().  Also, having the GlobalMPISession object's constructor\n call MPI_Finalize() allows destructors from other objects to call MPI\n functions.  That wold never be possible if you were to directly call\n MPI_Finalize() at the end of main().\n\n This class even works if you have not built Teuchos with MPI support.  In\n that case, it behaves as if MPI_COMM_WORLD had one process, which is\n always the calling process.  Thus, you can use this class to insulate your\n code from needing to know about MPI.  You don't even have to include\n mpi.h, as long as your code doesn't directly use MPI routines or types.\n Teuchos implements wrappers for MPI communicators (see the Teuchos::Comm\n class and its subclasses in the TeuchosComm subpackage) which allow you to\n use a very very small subset of MPI functionality without needing to\n include mpi.h or depend on MPI in any way.\n\n This class also contains the most minimal of other static member functions\n that are needed for only the most simplistic of tasks needed by other\n TeuchosCore software.  For example, you can do a barrier or sum an int\n across processes.  These are needed by the most basic operations involving\n output or determining success or failure across processes for unit tests.\n\n GlobalMPISession's static functions cleverly checks whether MPI has been\n initialized already before calling any MPI functions.  Therefore, you can\n use it in your libraries without requiring that a GlobalMPISession object\n was created in main().");

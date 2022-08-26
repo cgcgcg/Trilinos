@@ -1,13 +1,19 @@
-#include <complex>
-#include <cwchar>
-#include <ios>
-#include <iterator>
-#include <locale>
-#include <memory>
-#include <sstream>
+#include <complex> // std::complex
+#include <cwchar> // (anonymous)
+#include <ios> // std::_Ios_Openmode
+#include <ios> // std::_Ios_Seekdir
+#include <ios> // std::fpos
+#include <iterator> // __gnu_cxx::__normal_iterator
+#include <locale> // std::locale
+#include <memory> // std::allocator
 #include <sstream> // __str__
-#include <streambuf>
-#include <string>
+#include <sstream> // std::basic_istringstream
+#include <sstream> // std::basic_ostringstream
+#include <sstream> // std::basic_stringbuf
+#include <sstream> // std::basic_stringstream
+#include <streambuf> // std::basic_streambuf
+#include <string> // std::basic_string
+#include <string> // std::char_traits
 
 #include <functional>
 #include <pybind11/pybind11.h>

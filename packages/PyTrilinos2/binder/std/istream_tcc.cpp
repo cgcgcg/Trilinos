@@ -1,10 +1,19 @@
-#include <cwchar>
-#include <ios>
-#include <istream>
-#include <locale>
+#include <cwchar> // (anonymous)
+#include <ios> // std::_Ios_Openmode
+#include <ios> // std::_Ios_Seekdir
+#include <ios> // std::basic_iostream
+#include <ios> // std::fpos
+#include <istream> // std::basic_istream
+#include <istream> // std::basic_istream<char, std::char_traits<char> >::sentry
+#include <istream> // std::basic_istream<wchar_t, std::char_traits<wchar_t> >::sentry
+#include <locale> // std::locale
+#include <locale> // std::messages_base
+#include <locale> // std::money_base
+#include <locale> // std::money_base::pattern
+#include <locale> // std::time_base
 #include <sstream> // __str__
-#include <streambuf>
-#include <string>
+#include <streambuf> // std::basic_streambuf
+#include <string> // std::char_traits
 
 #include <functional>
 #include <pybind11/pybind11.h>

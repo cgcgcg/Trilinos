@@ -1,19 +1,37 @@
 #include <PyTrilinos2_Teuchos_Custom.hpp>
-#include <Teuchos_ArrayRCPDecl.hpp>
-#include <Teuchos_ArrayViewDecl.hpp>
-#include <Teuchos_Comm.hpp>
-#include <Teuchos_CommHelpers.hpp>
-#include <Teuchos_ENull.hpp>
-#include <Teuchos_EReductionType.hpp>
-#include <Teuchos_PtrDecl.hpp>
-#include <Teuchos_RCPDecl.hpp>
-#include <Teuchos_RCPNode.hpp>
-#include <Teuchos_any.hpp>
-#include <iterator>
-#include <memory>
+#include <Teuchos_ArrayRCPDecl.hpp> // Teuchos::ArrayRCP
+#include <Teuchos_ArrayViewDecl.hpp> // Teuchos::ArrayView
+#include <Teuchos_Comm.hpp> // Teuchos::Comm
+#include <Teuchos_Comm.hpp> // Teuchos::CommRequest
+#include <Teuchos_Comm.hpp> // Teuchos::CommStatus
+#include <Teuchos_CommHelpers.hpp> // Teuchos::ANDValueReductionOp
+#include <Teuchos_CommHelpers.hpp> // Teuchos::MaxValueReductionOp
+#include <Teuchos_CommHelpers.hpp> // Teuchos::MinValueReductionOp
+#include <Teuchos_CommHelpers.hpp> // Teuchos::SumValueReductionOp
+#include <Teuchos_CommHelpers.hpp> // Teuchos::broadcast
+#include <Teuchos_CommHelpers.hpp> // Teuchos::ireceive
+#include <Teuchos_CommHelpers.hpp> // Teuchos::isend
+#include <Teuchos_CommHelpers.hpp> // Teuchos::reduceAll
+#include <Teuchos_CommHelpers.hpp> // Teuchos::scan
+#include <Teuchos_CommHelpers.hpp> // Teuchos::wait
+#include <Teuchos_ENull.hpp> // Teuchos::ENull
+#include <Teuchos_EReductionType.hpp> // Teuchos::EReductionType
+#include <Teuchos_PtrDecl.hpp> // Teuchos::Ptr
+#include <Teuchos_RCPDecl.hpp> // Teuchos::ERCPUndefinedWeakNoDealloc
+#include <Teuchos_RCPDecl.hpp> // Teuchos::ERCPWeakNoDealloc
+#include <Teuchos_RCPDecl.hpp> // Teuchos::RCP
+#include <Teuchos_RCPNode.hpp> // Teuchos::EPrePostDestruction
+#include <Teuchos_RCPNode.hpp> // Teuchos::ERCPNodeLookup
+#include <Teuchos_RCPNode.hpp> // Teuchos::ERCPStrength
+#include <Teuchos_RCPNode.hpp> // Teuchos::RCPNode
+#include <Teuchos_RCPNode.hpp> // Teuchos::RCPNodeHandle
+#include <Teuchos_any.hpp> // Teuchos::any
+#include <iterator> // __gnu_cxx::__normal_iterator
+#include <memory> // std::allocator
 #include <sstream> // __str__
-#include <string>
-#include <vector>
+#include <string> // std::basic_string
+#include <string> // std::char_traits
+#include <vector> // std::vector
 
 #include <functional>
 #include <pybind11/pybind11.h>
@@ -33,6 +51,9 @@
 
 void bind_Teuchos_CommHelpers(std::function< pybind11::module &(std::string const &namespace_) > &M)
 {
+	// Teuchos::broadcast(const class Teuchos::Comm<int> &, const int, int *) file:Teuchos_CommHelpers.hpp line:1225
+	M("Teuchos").def("broadcast", (void (*)(const class Teuchos::Comm<int> &, const int, int *)) &Teuchos::broadcast<int,int>, "C++: Teuchos::broadcast(const class Teuchos::Comm<int> &, const int, int *) --> void", pybind11::arg("comm"), pybind11::arg("rootRank"), pybind11::arg("object"));
+
 	// Teuchos::broadcast(const class Teuchos::Comm<int> &, const int, const class Teuchos::Ptr<unsigned long> &) file:Teuchos_CommHelpers.hpp line:1235
 	M("Teuchos").def("broadcast", (void (*)(const class Teuchos::Comm<int> &, const int, const class Teuchos::Ptr<unsigned long> &)) &Teuchos::broadcast<int,unsigned long>, "C++: Teuchos::broadcast(const class Teuchos::Comm<int> &, const int, const class Teuchos::Ptr<unsigned long> &) --> void", pybind11::arg("comm"), pybind11::arg("rootRank"), pybind11::arg("object"));
 

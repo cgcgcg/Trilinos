@@ -1,9 +1,10 @@
-#include <Kokkos_Concepts.hpp>
-#include <Kokkos_HostSpace.hpp>
-#include <Kokkos_Layout.hpp>
-#include <Kokkos_MemoryTraits.hpp>
-#include <Kokkos_Serial.hpp>
-#include <Kokkos_StaticCrsGraph.hpp>
+#include <Kokkos_Concepts.hpp> // Kokkos::Device
+#include <Kokkos_HostSpace.hpp> // 
+#include <Kokkos_HostSpace.hpp> // Kokkos::HostSpace
+#include <Kokkos_Layout.hpp> // Kokkos::LayoutLeft
+#include <Kokkos_MemoryTraits.hpp> // Kokkos::MemoryTraits
+#include <Kokkos_Serial.hpp> // Kokkos::Serial
+#include <Kokkos_StaticCrsGraph.hpp> // Kokkos::StaticCrsGraph
 #include <sstream> // __str__
 
 #include <functional>
@@ -24,19 +25,6 @@
 
 void bind_Kokkos_StaticCrsGraph(std::function< pybind11::module &(std::string const &namespace_) > &M)
 {
-	{ // Kokkos::StaticCrsGraph file:Kokkos_StaticCrsGraph.hpp line:285
-		pybind11::class_<Kokkos::StaticCrsGraph<int,Kokkos::LayoutLeft,Kokkos::Device<Kokkos::Serial, Kokkos::HostSpace>,void,unsigned long>, Teuchos::RCP<Kokkos::StaticCrsGraph<int,Kokkos::LayoutLeft,Kokkos::Device<Kokkos::Serial, Kokkos::HostSpace>,void,unsigned long>>> cl(M("Kokkos"), "StaticCrsGraph_int_Kokkos_LayoutLeft_Kokkos_Device_Kokkos_Serial_Kokkos_HostSpace_void_unsigned_long_t", "");
-		cl.def( pybind11::init( [](){ return new Kokkos::StaticCrsGraph<int,Kokkos::LayoutLeft,Kokkos::Device<Kokkos::Serial, Kokkos::HostSpace>,void,unsigned long>(); } ) );
-		cl.def( pybind11::init( [](Kokkos::StaticCrsGraph<int,Kokkos::LayoutLeft,Kokkos::Device<Kokkos::Serial, Kokkos::HostSpace>,void,unsigned long> const &o){ return new Kokkos::StaticCrsGraph<int,Kokkos::LayoutLeft,Kokkos::Device<Kokkos::Serial, Kokkos::HostSpace>,void,unsigned long>(o); } ) );
-		cl.def_readwrite("entries", &Kokkos::StaticCrsGraph<int,Kokkos::LayoutLeft,Kokkos::Device<Kokkos::Serial, Kokkos::HostSpace>,void,unsigned long>::entries);
-		cl.def_readwrite("row_map", &Kokkos::StaticCrsGraph<int,Kokkos::LayoutLeft,Kokkos::Device<Kokkos::Serial, Kokkos::HostSpace>,void,unsigned long>::row_map);
-		cl.def_readwrite("row_block_offsets", &Kokkos::StaticCrsGraph<int,Kokkos::LayoutLeft,Kokkos::Device<Kokkos::Serial, Kokkos::HostSpace>,void,unsigned long>::row_block_offsets);
-		cl.def("assign", (class Kokkos::StaticCrsGraph<int, struct Kokkos::LayoutLeft, struct Kokkos::Device<class Kokkos::Serial, class Kokkos::HostSpace>, void, unsigned long> & (Kokkos::StaticCrsGraph<int,Kokkos::LayoutLeft,Kokkos::Device<Kokkos::Serial, Kokkos::HostSpace>,void,unsigned long>::*)(const class Kokkos::StaticCrsGraph<int, struct Kokkos::LayoutLeft, struct Kokkos::Device<class Kokkos::Serial, class Kokkos::HostSpace>, void, unsigned long> &)) &Kokkos::StaticCrsGraph<int, Kokkos::LayoutLeft, Kokkos::Device<Kokkos::Serial, Kokkos::HostSpace>, void, unsigned long>::operator=, "C++: Kokkos::StaticCrsGraph<int, Kokkos::LayoutLeft, Kokkos::Device<Kokkos::Serial, Kokkos::HostSpace>, void, unsigned long>::operator=(const class Kokkos::StaticCrsGraph<int, struct Kokkos::LayoutLeft, struct Kokkos::Device<class Kokkos::Serial, class Kokkos::HostSpace>, void, unsigned long> &) --> class Kokkos::StaticCrsGraph<int, struct Kokkos::LayoutLeft, struct Kokkos::Device<class Kokkos::Serial, class Kokkos::HostSpace>, void, unsigned long> &", pybind11::return_value_policy::automatic, pybind11::arg("rhs"));
-		cl.def("numRows", (unsigned long (Kokkos::StaticCrsGraph<int,Kokkos::LayoutLeft,Kokkos::Device<Kokkos::Serial, Kokkos::HostSpace>,void,unsigned long>::*)() const) &Kokkos::StaticCrsGraph<int, Kokkos::LayoutLeft, Kokkos::Device<Kokkos::Serial, Kokkos::HostSpace>, void, unsigned long>::numRows, "C++: Kokkos::StaticCrsGraph<int, Kokkos::LayoutLeft, Kokkos::Device<Kokkos::Serial, Kokkos::HostSpace>, void, unsigned long>::numRows() const --> unsigned long");
-		cl.def("is_allocated", (bool (Kokkos::StaticCrsGraph<int,Kokkos::LayoutLeft,Kokkos::Device<Kokkos::Serial, Kokkos::HostSpace>,void,unsigned long>::*)() const) &Kokkos::StaticCrsGraph<int, Kokkos::LayoutLeft, Kokkos::Device<Kokkos::Serial, Kokkos::HostSpace>, void, unsigned long>::is_allocated, "C++: Kokkos::StaticCrsGraph<int, Kokkos::LayoutLeft, Kokkos::Device<Kokkos::Serial, Kokkos::HostSpace>, void, unsigned long>::is_allocated() const --> bool");
-		cl.def("create_block_partitioning", [](Kokkos::StaticCrsGraph<int,Kokkos::LayoutLeft,Kokkos::Device<Kokkos::Serial, Kokkos::HostSpace>,void,unsigned long> &o, unsigned long const & a0) -> void { return o.create_block_partitioning(a0); }, "", pybind11::arg("num_blocks"));
-		cl.def("create_block_partitioning", (void (Kokkos::StaticCrsGraph<int,Kokkos::LayoutLeft,Kokkos::Device<Kokkos::Serial, Kokkos::HostSpace>,void,unsigned long>::*)(unsigned long, unsigned long)) &Kokkos::StaticCrsGraph<int, Kokkos::LayoutLeft, Kokkos::Device<Kokkos::Serial, Kokkos::HostSpace>, void, unsigned long>::create_block_partitioning, "C++: Kokkos::StaticCrsGraph<int, Kokkos::LayoutLeft, Kokkos::Device<Kokkos::Serial, Kokkos::HostSpace>, void, unsigned long>::create_block_partitioning(unsigned long, unsigned long) --> void", pybind11::arg("num_blocks"), pybind11::arg("fix_cost_per_row"));
-	}
 	{ // Kokkos::StaticCrsGraph file:Kokkos_StaticCrsGraph.hpp line:285
 		pybind11::class_<Kokkos::StaticCrsGraph<int,Kokkos::LayoutLeft,Kokkos::HostSpace,Kokkos::MemoryTraits<0>,unsigned long>, Teuchos::RCP<Kokkos::StaticCrsGraph<int,Kokkos::LayoutLeft,Kokkos::HostSpace,Kokkos::MemoryTraits<0>,unsigned long>>> cl(M("Kokkos"), "StaticCrsGraph_int_Kokkos_LayoutLeft_Kokkos_HostSpace_Kokkos_MemoryTraits_0_unsigned_long_t", "");
 		cl.def( pybind11::init( [](){ return new Kokkos::StaticCrsGraph<int,Kokkos::LayoutLeft,Kokkos::HostSpace,Kokkos::MemoryTraits<0>,unsigned long>(); } ) );

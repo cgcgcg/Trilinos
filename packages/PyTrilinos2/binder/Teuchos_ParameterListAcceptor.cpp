@@ -1,21 +1,38 @@
+#include <KokkosCompat_ClassicNodeAPI_Wrapper.hpp> // Kokkos::Compat::KokkosDeviceWrapperNode
+#include <Kokkos_HostSpace.hpp> // Kokkos::HostSpace
+#include <Kokkos_Serial.hpp> // Kokkos::Serial
 #include <PyTrilinos2_Teuchos_Custom.hpp>
-#include <Teuchos_ENull.hpp>
-#include <Teuchos_FilteredIterator.hpp>
-#include <Teuchos_ParameterEntry.hpp>
-#include <Teuchos_ParameterList.hpp>
-#include <Teuchos_ParameterListAcceptor.hpp>
-#include <Teuchos_ParameterListAcceptorDefaultBase.hpp>
-#include <Teuchos_ParameterListModifier.hpp>
-#include <Teuchos_RCPDecl.hpp>
-#include <Teuchos_RCPNode.hpp>
-#include <Teuchos_StringIndexedOrderedValueObjectContainer.hpp>
-#include <Teuchos_any.hpp>
-#include <deque>
-#include <iterator>
-#include <memory>
-#include <ostream>
+#include <Teuchos_Array.hpp> // Teuchos::Array
+#include <Teuchos_Dependency.hpp> // Teuchos::Dependency
+#include <Teuchos_DependencySheet.hpp> // Teuchos::DependencySheet
+#include <Teuchos_ENull.hpp> // Teuchos::ENull
+#include <Teuchos_FilteredIterator.hpp> // Teuchos::FilteredIterator
+#include <Teuchos_ParameterEntry.hpp> // Teuchos::ParameterEntry
+#include <Teuchos_ParameterEntryValidator.hpp> // Teuchos::ParameterEntryValidator
+#include <Teuchos_ParameterList.hpp> // Teuchos::EValidateDefaults
+#include <Teuchos_ParameterList.hpp> // Teuchos::EValidateUsed
+#include <Teuchos_ParameterList.hpp> // Teuchos::ParameterList
+#include <Teuchos_ParameterListAcceptor.hpp> // Teuchos::ParameterListAcceptor
+#include <Teuchos_ParameterListAcceptorDefaultBase.hpp> // Teuchos::ParameterListAcceptorDefaultBase
+#include <Teuchos_ParameterListModifier.hpp> // Teuchos::ParameterListModifier
+#include <Teuchos_PtrDecl.hpp> // Teuchos::Ptr
+#include <Teuchos_RCPDecl.hpp> // Teuchos::ERCPUndefinedWeakNoDealloc
+#include <Teuchos_RCPDecl.hpp> // Teuchos::ERCPWeakNoDealloc
+#include <Teuchos_RCPDecl.hpp> // Teuchos::RCP
+#include <Teuchos_RCPNode.hpp> // Teuchos::EPrePostDestruction
+#include <Teuchos_RCPNode.hpp> // Teuchos::ERCPStrength
+#include <Teuchos_RCPNode.hpp> // Teuchos::RCPNode
+#include <Teuchos_RCPNode.hpp> // Teuchos::RCPNodeHandle
+#include <Teuchos_StringIndexedOrderedValueObjectContainer.hpp> // Teuchos::StringIndexedOrderedValueObjectContainerBase
+#include <Teuchos_TwoDArray.hpp> // Teuchos::TwoDArray
+#include <Teuchos_any.hpp> // Teuchos::any
+#include <deque> // std::_Deque_iterator
+#include <iterator> // __gnu_cxx::__normal_iterator
+#include <memory> // std::allocator
+#include <ostream> // std::basic_ostream
 #include <sstream> // __str__
-#include <string>
+#include <string> // std::basic_string
+#include <string> // std::char_traits
 
 #include <functional>
 #include <pybind11/pybind11.h>
@@ -102,6 +119,19 @@ struct PyCallBack_Teuchos_ParameterListAcceptor : public Teuchos::ParameterListA
 		}
 		return ParameterListAcceptor::getValidParameters();
 	}
+	class Teuchos::RCP<const class Teuchos::DependencySheet> getDependencies() const override {
+		pybind11::gil_scoped_acquire gil;
+		pybind11::function overload = pybind11::get_overload(static_cast<const Teuchos::ParameterListAcceptor *>(this), "getDependencies");
+		if (overload) {
+			auto o = overload.operator()<pybind11::return_value_policy::reference>();
+			if (pybind11::detail::cast_is_temporary_value_reference<class Teuchos::RCP<const class Teuchos::DependencySheet>>::value) {
+				static pybind11::detail::override_caster_t<class Teuchos::RCP<const class Teuchos::DependencySheet>> caster;
+				return pybind11::detail::cast_ref<class Teuchos::RCP<const class Teuchos::DependencySheet>>(std::move(o), caster);
+			}
+			else return pybind11::detail::cast_safe<class Teuchos::RCP<const class Teuchos::DependencySheet>>(std::move(o));
+		}
+		return ParameterListAcceptor::getDependencies();
+	}
 };
 
 // Teuchos::ParameterListAcceptorDefaultBase file:Teuchos_ParameterListAcceptorDefaultBase.hpp line:61
@@ -173,6 +203,19 @@ struct PyCallBack_Teuchos_ParameterListAcceptorDefaultBase : public Teuchos::Par
 		}
 		return ParameterListAcceptor::getValidParameters();
 	}
+	class Teuchos::RCP<const class Teuchos::DependencySheet> getDependencies() const override {
+		pybind11::gil_scoped_acquire gil;
+		pybind11::function overload = pybind11::get_overload(static_cast<const Teuchos::ParameterListAcceptorDefaultBase *>(this), "getDependencies");
+		if (overload) {
+			auto o = overload.operator()<pybind11::return_value_policy::reference>();
+			if (pybind11::detail::cast_is_temporary_value_reference<class Teuchos::RCP<const class Teuchos::DependencySheet>>::value) {
+				static pybind11::detail::override_caster_t<class Teuchos::RCP<const class Teuchos::DependencySheet>> caster;
+				return pybind11::detail::cast_ref<class Teuchos::RCP<const class Teuchos::DependencySheet>>(std::move(o), caster);
+			}
+			else return pybind11::detail::cast_safe<class Teuchos::RCP<const class Teuchos::DependencySheet>>(std::move(o));
+		}
+		return ParameterListAcceptor::getDependencies();
+	}
 };
 
 void bind_Teuchos_ParameterListAcceptor(std::function< pybind11::module &(std::string const &namespace_) > &M)
@@ -186,6 +229,7 @@ void bind_Teuchos_ParameterListAcceptor(std::function< pybind11::module &(std::s
 		cl.def("unsetParameterList", (class Teuchos::RCP<class Teuchos::ParameterList> (Teuchos::ParameterListAcceptor::*)()) &Teuchos::ParameterListAcceptor::unsetParameterList, "Unset the parameter list that was set using setParameterList().\n\n This does not undo the effect of setting the parameters\n via a call to setParameterList().  It merely \"forgets\" the RCP,\n so that getParameterList() and getNonconstParameterList() both\n return null.\n\n \n  this->getParameter().is_null () \n \n\n  this->getNonconstParameter().is_null () \n\nC++: Teuchos::ParameterListAcceptor::unsetParameterList() --> class Teuchos::RCP<class Teuchos::ParameterList>");
 		cl.def("getParameterList", (class Teuchos::RCP<const class Teuchos::ParameterList> (Teuchos::ParameterListAcceptor::*)() const) &Teuchos::ParameterListAcceptor::getParameterList, "Get const version of the parameter list that was set\n    using setParameterList().\n\n The default implementation returns:\n   \n\n\n\n   \n\nC++: Teuchos::ParameterListAcceptor::getParameterList() const --> class Teuchos::RCP<const class Teuchos::ParameterList>");
 		cl.def("getValidParameters", (class Teuchos::RCP<const class Teuchos::ParameterList> (Teuchos::ParameterListAcceptor::*)() const) &Teuchos::ParameterListAcceptor::getValidParameters, "Return a ParameterList containing all of the valid\n   parameters that this->setParameterList(...) will\n   accept, along with any validators.\n\n Implementations of setParameterList() may use the list returned\n by getValidParameters() to validate the input ParameterList.\n\n The default implementation returns null.\n\nC++: Teuchos::ParameterListAcceptor::getValidParameters() const --> class Teuchos::RCP<const class Teuchos::ParameterList>");
+		cl.def("getDependencies", (class Teuchos::RCP<const class Teuchos::DependencySheet> (Teuchos::ParameterListAcceptor::*)() const) &Teuchos::ParameterListAcceptor::getDependencies, "Rreturn a const DependencySheet of all the dependencies\n   that should be applied to the ParameterList returned by\n   this->getValidParameters().\n\n The default implementation returns Teuchos::null.\n\nC++: Teuchos::ParameterListAcceptor::getDependencies() const --> class Teuchos::RCP<const class Teuchos::DependencySheet>");
 		cl.def("assign", (class Teuchos::ParameterListAcceptor & (Teuchos::ParameterListAcceptor::*)(const class Teuchos::ParameterListAcceptor &)) &Teuchos::ParameterListAcceptor::operator=, "C++: Teuchos::ParameterListAcceptor::operator=(const class Teuchos::ParameterListAcceptor &) --> class Teuchos::ParameterListAcceptor &", pybind11::return_value_policy::automatic, pybind11::arg(""));
 	}
 	{ // Teuchos::ParameterListAcceptorDefaultBase file:Teuchos_ParameterListAcceptorDefaultBase.hpp line:61

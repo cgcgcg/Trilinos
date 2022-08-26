@@ -1,34 +1,61 @@
 #include <PyTrilinos2_Teuchos_Custom.hpp>
-#include <Teuchos_ArrayViewDecl.hpp>
-#include <Teuchos_Comm.hpp>
-#include <Teuchos_CommandLineProcessor.hpp>
-#include <Teuchos_CompileTimeAssert.hpp>
-#include <Teuchos_ENull.hpp>
-#include <Teuchos_OpaqueWrapper.hpp>
-#include <Teuchos_ParameterList.hpp>
-#include <Teuchos_PerformanceMonitorBase.hpp>
-#include <Teuchos_PtrDecl.hpp>
-#include <Teuchos_RCPDecl.hpp>
-#include <Teuchos_RCPNode.hpp>
-#include <Teuchos_ReductionOp.hpp>
-#include <Teuchos_ReductionOpHelpers.hpp>
-#include <Teuchos_SerializationTraits.hpp>
-#include <Teuchos_SerializationTraitsHelpers.hpp>
-#include <Teuchos_Serializer.hpp>
-#include <Teuchos_Time.hpp>
-#include <Teuchos_TimeMonitor.hpp>
-#include <Teuchos_Workspace.hpp>
-#include <cwchar>
-#include <ios>
-#include <iterator>
-#include <locale>
-#include <memory>
-#include <mpi.h>
-#include <ostream>
+#include <Teuchos_ArrayViewDecl.hpp> // Teuchos::ArrayView
+#include <Teuchos_Comm.hpp> // Teuchos::Comm
+#include <Teuchos_CommandLineProcessor.hpp> // Teuchos::CommandLineProcessor
+#include <Teuchos_CommandLineProcessor.hpp> // Teuchos::CommandLineProcessor::HelpPrinted
+#include <Teuchos_CommandLineProcessor.hpp> // Teuchos::CommandLineProcessor::ParseError
+#include <Teuchos_CommandLineProcessor.hpp> // Teuchos::CommandLineProcessor::TimeMonitorSurrogate
+#include <Teuchos_CommandLineProcessor.hpp> // Teuchos::CommandLineProcessor::UnrecognizedOption
+#include <Teuchos_CompileTimeAssert.hpp> // Teuchos::CompileTimeAssert
+#include <Teuchos_ENull.hpp> // Teuchos::ENull
+#include <Teuchos_OpaqueWrapper.hpp> // Teuchos::OpaqueWrapper
+#include <Teuchos_ParameterList.hpp> // Teuchos::ParameterList
+#include <Teuchos_PerformanceMonitorBase.hpp> // Teuchos::ECounterSetOp
+#include <Teuchos_PtrDecl.hpp> // Teuchos::Ptr
+#include <Teuchos_RCPDecl.hpp> // Teuchos::ERCPUndefinedWeakNoDealloc
+#include <Teuchos_RCPDecl.hpp> // Teuchos::ERCPWeakNoDealloc
+#include <Teuchos_RCPDecl.hpp> // Teuchos::RCP
+#include <Teuchos_RCPNode.hpp> // Teuchos::ERCPNodeLookup
+#include <Teuchos_RCPNode.hpp> // Teuchos::ERCPStrength
+#include <Teuchos_RCPNode.hpp> // Teuchos::RCPNodeHandle
+#include <Teuchos_ReductionOp.hpp> // Teuchos::ValueTypeReductionOp
+#include <Teuchos_ReductionOpHelpers.hpp> // Teuchos::CharToValueTypeReductionOp
+#include <Teuchos_ReductionOpHelpers.hpp> // Teuchos::CharToValueTypeReductionOpImp
+#include <Teuchos_SerializationTraits.hpp> // Teuchos::SerializationTraits
+#include <Teuchos_SerializationTraitsHelpers.hpp> // Teuchos::ConstValueTypeDeserializationBuffer
+#include <Teuchos_SerializationTraitsHelpers.hpp> // Teuchos::ConstValueTypeDeserializationBufferImp
+#include <Teuchos_SerializationTraitsHelpers.hpp> // Teuchos::ConstValueTypeSerializationBuffer
+#include <Teuchos_SerializationTraitsHelpers.hpp> // Teuchos::ConstValueTypeSerializationBufferImp
+#include <Teuchos_SerializationTraitsHelpers.hpp> // Teuchos::DefaultSerializer
+#include <Teuchos_SerializationTraitsHelpers.hpp> // Teuchos::ValueTypeDeserializationBuffer
+#include <Teuchos_SerializationTraitsHelpers.hpp> // Teuchos::ValueTypeDeserializationBufferImp
+#include <Teuchos_SerializationTraitsHelpers.hpp> // Teuchos::ValueTypeSerializationBuffer
+#include <Teuchos_SerializationTraitsHelpers.hpp> // Teuchos::ValueTypeSerializationBufferImp
+#include <Teuchos_Serializer.hpp> // Teuchos::Serializer
+#include <Teuchos_Time.hpp> // Teuchos::Time
+#include <Teuchos_TimeMonitor.hpp> // Teuchos::SyncTimeMonitor
+#include <Teuchos_TimeMonitor.hpp> // Teuchos::TimeMonitor
+#include <Teuchos_TimeMonitor.hpp> // Teuchos::TimeMonitorSurrogateImpl
+#include <Teuchos_TimeMonitor.hpp> // Teuchos::TimeMonitorSurrogateImplInserter
+#include <Teuchos_Workspace.hpp> // Teuchos::RawWorkspace
+#include <Teuchos_Workspace.hpp> // Teuchos::WorkspaceStore
+#include <Teuchos_Workspace.hpp> // Teuchos::WorkspaceStoreInitializeable
+#include <Teuchos_Workspace.hpp> // Teuchos::print_memory_usage_stats
+#include <cwchar> // (anonymous)
+#include <ios> // std::_Ios_Openmode
+#include <ios> // std::_Ios_Seekdir
+#include <ios> // std::fpos
+#include <iterator> // __gnu_cxx::__normal_iterator
+#include <locale> // std::locale
+#include <memory> // std::allocator
+#include <mpi.h> // ompi_communicator_t
+#include <mpi.h> // ompi_errhandler_t
+#include <ostream> // std::basic_ostream
 #include <sstream> // __str__
-#include <streambuf>
-#include <string>
-#include <vector>
+#include <streambuf> // std::basic_streambuf
+#include <string> // std::basic_string
+#include <string> // std::char_traits
+#include <vector> // std::vector
 
 #include <functional>
 #include <pybind11/pybind11.h>

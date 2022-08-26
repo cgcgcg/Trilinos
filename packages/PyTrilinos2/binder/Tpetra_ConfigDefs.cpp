@@ -1,41 +1,49 @@
-#include <KokkosCompat_ClassicNodeAPI_Wrapper.hpp>
-#include <Kokkos_Concepts.hpp>
-#include <Kokkos_HostSpace.hpp>
-#include <Kokkos_Serial.hpp>
-#include <Kokkos_View.hpp>
-#include <Teuchos_ArrayViewDecl.hpp>
-#include <Teuchos_Comm.hpp>
-#include <Teuchos_Describable.hpp>
-#include <Teuchos_ENull.hpp>
-#include <Teuchos_FancyOStream.hpp>
-#include <Teuchos_FilteredIterator.hpp>
-#include <Teuchos_LabeledObject.hpp>
-#include <Teuchos_ParameterEntry.hpp>
-#include <Teuchos_ParameterEntryValidator.hpp>
-#include <Teuchos_ParameterList.hpp>
-#include <Teuchos_ParameterListModifier.hpp>
-#include <Teuchos_PtrDecl.hpp>
-#include <Teuchos_RCPDecl.hpp>
-#include <Teuchos_RCPNode.hpp>
-#include <Teuchos_StringIndexedOrderedValueObjectContainer.hpp>
-#include <Teuchos_VerbosityLevel.hpp>
-#include <Teuchos_any.hpp>
-#include <Tpetra_CombineMode.hpp>
-#include <Tpetra_ConfigDefs.hpp>
-#include <Tpetra_Core.hpp>
-#include <Tpetra_Details_LocalMap.hpp>
-#include <Tpetra_Directory_decl.hpp>
-#include <Tpetra_Map_decl.hpp>
-#include <cwchar>
-#include <deque>
-#include <ios>
-#include <iterator>
-#include <memory>
-#include <ostream>
+#include <KokkosCompat_ClassicNodeAPI_Wrapper.hpp> // Kokkos::Compat::KokkosDeviceWrapperNode
+#include <Kokkos_HostSpace.hpp> // Kokkos::HostSpace
+#include <Kokkos_Serial.hpp> // Kokkos::Serial
+#include <Teuchos_Array.hpp> // Teuchos::Array
+#include <Teuchos_ArrayViewDecl.hpp> // Teuchos::ArrayView
+#include <Teuchos_ENull.hpp> // Teuchos::ENull
+#include <Teuchos_FilteredIterator.hpp> // Teuchos::FilteredIterator
+#include <Teuchos_ParameterEntry.hpp> // Teuchos::ParameterEntry
+#include <Teuchos_ParameterEntryValidator.hpp> // Teuchos::ParameterEntryValidator
+#include <Teuchos_ParameterList.hpp> // Teuchos::EValidateDefaults
+#include <Teuchos_ParameterList.hpp> // Teuchos::EValidateUsed
+#include <Teuchos_ParameterList.hpp> // Teuchos::ParameterList
+#include <Teuchos_ParameterListModifier.hpp> // Teuchos::ParameterListModifier
+#include <Teuchos_PtrDecl.hpp> // Teuchos::Ptr
+#include <Teuchos_RCPDecl.hpp> // Teuchos::ERCPUndefinedWeakNoDealloc
+#include <Teuchos_RCPDecl.hpp> // Teuchos::ERCPWeakNoDealloc
+#include <Teuchos_RCPDecl.hpp> // Teuchos::RCP
+#include <Teuchos_RCPNode.hpp> // Teuchos::ERCPNodeLookup
+#include <Teuchos_RCPNode.hpp> // Teuchos::ERCPStrength
+#include <Teuchos_RCPNode.hpp> // Teuchos::RCPNodeHandle
+#include <Teuchos_StringIndexedOrderedValueObjectContainer.hpp> // Teuchos::StringIndexedOrderedValueObjectContainerBase
+#include <Teuchos_TwoDArray.hpp> // Teuchos::TwoDArray
+#include <Teuchos_any.hpp> // Teuchos::any
+#include <Tpetra_CombineMode.hpp> // Tpetra::CombineMode
+#include <Tpetra_CombineMode.hpp> // Tpetra::combineModeToString
+#include <Tpetra_CombineMode.hpp> // Tpetra::setCombineModeParameter
+#include <Tpetra_ConfigDefs.hpp> // Tpetra::EPrivateComputeViewConstructor
+#include <Tpetra_ConfigDefs.hpp> // Tpetra::EPrivateHostViewConstructor
+#include <Tpetra_ConfigDefs.hpp> // Tpetra::ESweepDirection
+#include <Tpetra_ConfigDefs.hpp> // Tpetra::LocalGlobal
+#include <Tpetra_ConfigDefs.hpp> // Tpetra::LookupStatus
+#include <Tpetra_ConfigDefs.hpp> // Tpetra::OptimizeOption
+#include <Tpetra_Packable.hpp> // Tpetra::Packable
+#include <Tpetra_SrcDistObject.hpp> // Tpetra::SrcDistObject
+#include <cwchar> // (anonymous)
+#include <deque> // std::_Deque_iterator
+#include <ios> // std::_Ios_Seekdir
+#include <ios> // std::fpos
+#include <iterator> // __gnu_cxx::__normal_iterator
+#include <memory> // std::allocator
+#include <ostream> // std::basic_ostream
 #include <sstream> // __str__
-#include <streambuf>
-#include <string>
-#include <vector>
+#include <streambuf> // std::basic_streambuf
+#include <string> // std::basic_string
+#include <string> // std::char_traits
+#include <vector> // std::vector
 
 #include <functional>
 #include <pybind11/pybind11.h>
@@ -53,61 +61,41 @@
 	PYBIND11_MAKE_OPAQUE(std::shared_ptr<void>)
 #endif
 
-// Tpetra::Directory file:Tpetra_Directory_decl.hpp line:126
-struct PyCallBack_Tpetra_Directory_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t : public Tpetra::Directory<int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>> {
-	using Tpetra::Directory<int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>::Directory;
+// Tpetra::Packable file:Tpetra_Packable.hpp line:96
+struct PyCallBack_Tpetra_Packable_char_int_t : public Tpetra::Packable<char,int> {
+	using Tpetra::Packable<char,int>::Packable;
 
-	std::string description() const override {
+	void pack(const class Teuchos::ArrayView<const int> & a0, class Teuchos::Array<char> & a1, const class Teuchos::ArrayView<unsigned long> & a2, unsigned long & a3) const override {
 		pybind11::gil_scoped_acquire gil;
-		pybind11::function overload = pybind11::get_overload(static_cast<const Tpetra::Directory<int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>> *>(this), "description");
+		pybind11::function overload = pybind11::get_overload(static_cast<const Tpetra::Packable<char,int> *>(this), "pack");
 		if (overload) {
-			auto o = overload.operator()<pybind11::return_value_policy::reference>();
-			if (pybind11::detail::cast_is_temporary_value_reference<std::string>::value) {
-				static pybind11::detail::override_caster_t<std::string> caster;
-				return pybind11::detail::cast_ref<std::string>(std::move(o), caster);
-			}
-			else return pybind11::detail::cast_safe<std::string>(std::move(o));
-		}
-		return Directory::description();
-	}
-	void describe(class Teuchos::basic_FancyOStream<char, struct std::char_traits<char> > & a0, const enum Teuchos::EVerbosityLevel a1) const override {
-		pybind11::gil_scoped_acquire gil;
-		pybind11::function overload = pybind11::get_overload(static_cast<const Tpetra::Directory<int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>> *>(this), "describe");
-		if (overload) {
-			auto o = overload.operator()<pybind11::return_value_policy::reference>(a0, a1);
+			auto o = overload.operator()<pybind11::return_value_policy::reference>(a0, a1, a2, a3);
 			if (pybind11::detail::cast_is_temporary_value_reference<void>::value) {
 				static pybind11::detail::override_caster_t<void> caster;
 				return pybind11::detail::cast_ref<void>(std::move(o), caster);
 			}
 			else return pybind11::detail::cast_safe<void>(std::move(o));
 		}
-		return Describable::describe(a0, a1);
+		pybind11::pybind11_fail("Tried to call pure virtual function \"Packable::pack\"");
 	}
-	void setObjectLabel(const std::string & a0) override {
+};
+
+// Tpetra::Packable file:Tpetra_Packable.hpp line:96
+struct PyCallBack_Tpetra_Packable_long_long_int_t : public Tpetra::Packable<long long,int> {
+	using Tpetra::Packable<long long,int>::Packable;
+
+	void pack(const class Teuchos::ArrayView<const int> & a0, class Teuchos::Array<long long> & a1, const class Teuchos::ArrayView<unsigned long> & a2, unsigned long & a3) const override {
 		pybind11::gil_scoped_acquire gil;
-		pybind11::function overload = pybind11::get_overload(static_cast<const Tpetra::Directory<int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>> *>(this), "setObjectLabel");
+		pybind11::function overload = pybind11::get_overload(static_cast<const Tpetra::Packable<long long,int> *>(this), "pack");
 		if (overload) {
-			auto o = overload.operator()<pybind11::return_value_policy::reference>(a0);
+			auto o = overload.operator()<pybind11::return_value_policy::reference>(a0, a1, a2, a3);
 			if (pybind11::detail::cast_is_temporary_value_reference<void>::value) {
 				static pybind11::detail::override_caster_t<void> caster;
 				return pybind11::detail::cast_ref<void>(std::move(o), caster);
 			}
 			else return pybind11::detail::cast_safe<void>(std::move(o));
 		}
-		return LabeledObject::setObjectLabel(a0);
-	}
-	std::string getObjectLabel() const override {
-		pybind11::gil_scoped_acquire gil;
-		pybind11::function overload = pybind11::get_overload(static_cast<const Tpetra::Directory<int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>> *>(this), "getObjectLabel");
-		if (overload) {
-			auto o = overload.operator()<pybind11::return_value_policy::reference>();
-			if (pybind11::detail::cast_is_temporary_value_reference<std::string>::value) {
-				static pybind11::detail::override_caster_t<std::string> caster;
-				return pybind11::detail::cast_ref<std::string>(std::move(o), caster);
-			}
-			else return pybind11::detail::cast_safe<std::string>(std::move(o));
-		}
-		return LabeledObject::getObjectLabel();
+		pybind11::pybind11_fail("Tried to call pure virtual function \"Packable::pack\"");
 	}
 };
 
@@ -178,26 +166,23 @@ void bind_Tpetra_ConfigDefs(std::function< pybind11::module &(std::string const 
 
 ;
 
-	// Tpetra::getDefaultComm() file:Tpetra_Core.hpp line:69
-	M("Tpetra").def("getDefaultComm", (class Teuchos::RCP<const class Teuchos::Comm<int> > (*)()) &Tpetra::getDefaultComm, "Get Tpetra's default communicator.\n\n \n One of the Tpetra::initialize() functions has been called.\n\n \n If one of the versions of initialize() was called that\n   takes a default communicator, this function returns that\n   communicator.  Otherwise, this function returns MPI_COMM_WORLD\n   (wrapped in a Teuchos wrapper) if Trilinos was built with MPI\n   enabled, or a Teuchos::SerialComm instance otherwise.\n\nC++: Tpetra::getDefaultComm() --> class Teuchos::RCP<const class Teuchos::Comm<int> >");
-
-	// Tpetra::isInitialized() file:Tpetra_Core.hpp line:77
-	M("Tpetra").def("isInitialized", (bool (*)()) &Tpetra::isInitialized, "Whether Tpetra is in an initialized state.\n\n Initialize Tpetra by calling one of the versions of\n initialize().  After initialize() returns, Tpetra is\n initialized.  Once finalize() returns, Tpetra is no longer\n initialized.\n\nC++: Tpetra::isInitialized() --> bool");
-
-	// Tpetra::finalize() file:Tpetra_Core.hpp line:178
-	M("Tpetra").def("finalize", (void (*)()) &Tpetra::finalize, "Finalize Tpetra.\n\n If Tpetra::initialize initialized Kokkos, finalize Kokkos.  If\n Tpetra::initialize initialized MPI, finalize MPI.  Don't call\n this unless you first call Tpetra::initialize.\n\n If you (the user) initialized Kokkos resp. MPI before\n Tpetra::initialize was called, then this function does NOT\n finalize Kokkos resp. MPI.  In that case, you (the user) are\n responsible for finalizing Kokkos resp. MPI.\n\nC++: Tpetra::finalize() --> void");
-
-	{ // Tpetra::ScopeGuard file:Tpetra_Core.hpp line:219
-		pybind11::class_<Tpetra::ScopeGuard, Teuchos::RCP<Tpetra::ScopeGuard>> cl(M("Tpetra"), "ScopeGuard", "Scope guard whose destructor automatically calls\n   Tpetra::finalize for you.\n\n This class' constructor does the same thing as\n Tpetra::initialize (see above).  Its destructor automatically\n calls Tpetra::finalize.  This ensures correct Tpetra\n finalization even if intervening code throws an exception.\n\n Compare to Kokkos::ScopeGuard and Teuchos::GlobalMPISession.\n\n Always give the ScopeGuard instance a name.  Otherwise, you'll\n create a temporary object whose destructor will be called right\n away.  That's not what you want.\n\n Here is an example of how to use this class:\n \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+	{ // Tpetra::Packable file:Tpetra_Packable.hpp line:96
+		pybind11::class_<Tpetra::Packable<char,int>, Teuchos::RCP<Tpetra::Packable<char,int>>, PyCallBack_Tpetra_Packable_char_int_t> cl(M("Tpetra"), "Packable_char_int_t", "");
+		cl.def(pybind11::init<PyCallBack_Tpetra_Packable_char_int_t const &>());
+		cl.def( pybind11::init( [](){ return new PyCallBack_Tpetra_Packable_char_int_t(); } ) );
+		cl.def("pack", (void (Tpetra::Packable<char,int>::*)(const class Teuchos::ArrayView<const int> &, class Teuchos::Array<char> &, const class Teuchos::ArrayView<unsigned long> &, unsigned long &) const) &Tpetra::Packable<char, int>::pack, "C++: Tpetra::Packable<char, int>::pack(const class Teuchos::ArrayView<const int> &, class Teuchos::Array<char> &, const class Teuchos::ArrayView<unsigned long> &, unsigned long &) const --> void", pybind11::arg("exportLIDs"), pybind11::arg("exports"), pybind11::arg("numPacketsPerLID"), pybind11::arg("constantNumPackets"));
+		cl.def("assign", (class Tpetra::Packable<char, int> & (Tpetra::Packable<char,int>::*)(const class Tpetra::Packable<char, int> &)) &Tpetra::Packable<char, int>::operator=, "C++: Tpetra::Packable<char, int>::operator=(const class Tpetra::Packable<char, int> &) --> class Tpetra::Packable<char, int> &", pybind11::return_value_policy::automatic, pybind11::arg(""));
 	}
-	{ // Tpetra::Directory file:Tpetra_Directory_decl.hpp line:126
-		pybind11::class_<Tpetra::Directory<int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>, Teuchos::RCP<Tpetra::Directory<int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>>, PyCallBack_Tpetra_Directory_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t> cl(M("Tpetra"), "Directory_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t", "");
-		cl.def( pybind11::init( [](){ return new Tpetra::Directory<int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>(); }, [](){ return new PyCallBack_Tpetra_Directory_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t(); } ) );
-		cl.def("initialize", (void (Tpetra::Directory<int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>::*)(const class Tpetra::Map<int, long long> &)) &Tpetra::Directory<int, long long, Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace> >::initialize, "C++: Tpetra::Directory<int, long long, Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace> >::initialize(const class Tpetra::Map<int, long long> &) --> void", pybind11::arg("map"));
-		cl.def("initialized", (bool (Tpetra::Directory<int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>::*)() const) &Tpetra::Directory<int, long long, Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace> >::initialized, "C++: Tpetra::Directory<int, long long, Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace> >::initialized() const --> bool");
-		cl.def("description", (std::string (Tpetra::Directory<int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>::*)() const) &Tpetra::Directory<int, long long, Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace> >::description, "C++: Tpetra::Directory<int, long long, Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace> >::description() const --> std::string");
-		cl.def("getDirectoryEntries", (enum Tpetra::LookupStatus (Tpetra::Directory<int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>::*)(const class Tpetra::Map<int, long long> &, const class Teuchos::ArrayView<const long long> &, const class Teuchos::ArrayView<int> &) const) &Tpetra::Directory<int, long long, Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace> >::getDirectoryEntries, "C++: Tpetra::Directory<int, long long, Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace> >::getDirectoryEntries(const class Tpetra::Map<int, long long> &, const class Teuchos::ArrayView<const long long> &, const class Teuchos::ArrayView<int> &) const --> enum Tpetra::LookupStatus", pybind11::arg("map"), pybind11::arg("globalIDs"), pybind11::arg("nodeIDs"));
-		cl.def("getDirectoryEntries", (enum Tpetra::LookupStatus (Tpetra::Directory<int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>::*)(const class Tpetra::Map<int, long long> &, const class Teuchos::ArrayView<const long long> &, const class Teuchos::ArrayView<int> &, const class Teuchos::ArrayView<int> &) const) &Tpetra::Directory<int, long long, Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace> >::getDirectoryEntries, "C++: Tpetra::Directory<int, long long, Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace> >::getDirectoryEntries(const class Tpetra::Map<int, long long> &, const class Teuchos::ArrayView<const long long> &, const class Teuchos::ArrayView<int> &, const class Teuchos::ArrayView<int> &) const --> enum Tpetra::LookupStatus", pybind11::arg("map"), pybind11::arg("globalIDs"), pybind11::arg("nodeIDs"), pybind11::arg("localIDs"));
-		cl.def("isOneToOne", (bool (Tpetra::Directory<int,long long,Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace>>::*)(const class Tpetra::Map<int, long long> &) const) &Tpetra::Directory<int, long long, Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace> >::isOneToOne, "C++: Tpetra::Directory<int, long long, Kokkos::Compat::KokkosDeviceWrapperNode<Kokkos::Serial, Kokkos::HostSpace> >::isOneToOne(const class Tpetra::Map<int, long long> &) const --> bool", pybind11::arg("map"));
+	{ // Tpetra::Packable file:Tpetra_Packable.hpp line:96
+		pybind11::class_<Tpetra::Packable<long long,int>, Teuchos::RCP<Tpetra::Packable<long long,int>>, PyCallBack_Tpetra_Packable_long_long_int_t> cl(M("Tpetra"), "Packable_long_long_int_t", "");
+		cl.def(pybind11::init<PyCallBack_Tpetra_Packable_long_long_int_t const &>());
+		cl.def( pybind11::init( [](){ return new PyCallBack_Tpetra_Packable_long_long_int_t(); } ) );
+		cl.def("pack", (void (Tpetra::Packable<long long,int>::*)(const class Teuchos::ArrayView<const int> &, class Teuchos::Array<long long> &, const class Teuchos::ArrayView<unsigned long> &, unsigned long &) const) &Tpetra::Packable<long long, int>::pack, "C++: Tpetra::Packable<long long, int>::pack(const class Teuchos::ArrayView<const int> &, class Teuchos::Array<long long> &, const class Teuchos::ArrayView<unsigned long> &, unsigned long &) const --> void", pybind11::arg("exportLIDs"), pybind11::arg("exports"), pybind11::arg("numPacketsPerLID"), pybind11::arg("constantNumPackets"));
+		cl.def("assign", (class Tpetra::Packable<long long, int> & (Tpetra::Packable<long long,int>::*)(const class Tpetra::Packable<long long, int> &)) &Tpetra::Packable<long long, int>::operator=, "C++: Tpetra::Packable<long long, int>::operator=(const class Tpetra::Packable<long long, int> &) --> class Tpetra::Packable<long long, int> &", pybind11::return_value_policy::automatic, pybind11::arg(""));
+	}
+	{ // Tpetra::SrcDistObject file:Tpetra_SrcDistObject.hpp line:89
+		pybind11::class_<Tpetra::SrcDistObject, Teuchos::RCP<Tpetra::SrcDistObject>> cl(M("Tpetra"), "SrcDistObject", "Abstract base class for objects that can be the source of\n   an Import or Export operation.\n\n Any object that may be the source of an Import or Export data\n redistribution operation must inherit from this class.  This\n class implements no methods, other than a trivial virtual\n destructor.  If a subclass X inherits from this class, that\n indicates that the subclass can be the source of an Import or\n Export, for some set of subclasses of DistObject.  A\n subclass Y of DistObject which is the target of the Import or\n Export operation will attempt to cast the input source\n SrcDistObject to a subclass which it knows how to treat as a\n source object.  The target subclass Y is responsible for knowing\n what source classes to expect, and how to interpret the\n resulting source object.\n\n DistObject inherits from this class, since a DistObject subclass\n may be either the source or the target of an Import or Export.\n A SrcDistObject subclass which does not inherit from DistObject\n need only be a valid source of an Import or Export; it need not\n be a valid target.\n\n This object compares to the Epetra class Epetra_SrcDistObject.\n Unlike in Epetra, this class in Tpetra does not include\n a getMap() method.  This is for two reasons.  First, consider\n the following inheritance hierarchy: DistObject and RowGraph\n inherit from SrcDistObject, and CrsGraph inherits from\n DistObject and RowGraph.  If SrcDistObject had a virtual getMap\n method, that would make resolution of the method ambiguous.\n Second, it is not necessary for SrcDistObject to have a getMap\n method, because a SrcDistObject alone does not suffice as the\n source of an Import or Export.  Any DistObject subclass must\n cast the SrcDistObject to a subclass which it knows how to treat\n as the source of an Import or Export.  Thus, it's not necessary\n for SrcDistObject to have a getMap method, since it needs to be\n cast anyway before use.  In general, I prefer to keep interfaces\n as simple as possible.");
+		cl.def( pybind11::init( [](Tpetra::SrcDistObject const &o){ return new Tpetra::SrcDistObject(o); } ) );
+		cl.def( pybind11::init( [](){ return new Tpetra::SrcDistObject(); } ) );
 	}
 }

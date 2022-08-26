@@ -1,14 +1,51 @@
 #include <PyTrilinos2_Teuchos_Custom.hpp>
-#include <Teuchos_BLAS_types.hpp>
-#include <Teuchos_DataAccess.hpp>
-#include <Teuchos_Range1D.hpp>
-#include <cwchar>
-#include <ios>
-#include <locale>
-#include <ostream>
+#include <Teuchos_Array.hpp> // Teuchos::Array
+#include <Teuchos_ArrayViewDecl.hpp> // Teuchos::ArrayView
+#include <Teuchos_BLAS_types.hpp> // Teuchos::EDiag
+#include <Teuchos_BLAS_types.hpp> // Teuchos::ESide
+#include <Teuchos_BLAS_types.hpp> // Teuchos::ETransp
+#include <Teuchos_BLAS_types.hpp> // Teuchos::EType
+#include <Teuchos_BLAS_types.hpp> // Teuchos::EUplo
+#include <Teuchos_Comm.hpp> // Teuchos::Comm
+#include <Teuchos_Comm.hpp> // Teuchos::CommRequest
+#include <Teuchos_Comm.hpp> // Teuchos::CommStatus
+#include <Teuchos_ENull.hpp> // Teuchos::ENull
+#include <Teuchos_OrdinalTraits.hpp> // Teuchos::OrdinalTraits
+#include <Teuchos_PerformanceMonitorBase.hpp> // Teuchos::ECounterSetOp
+#include <Teuchos_PerformanceMonitorBase.hpp> // Teuchos::PerformanceMonitorBase
+#include <Teuchos_PerformanceMonitorBase.hpp> // Teuchos::mergeCounterNames
+#include <Teuchos_PerformanceMonitorBase.hpp> // Teuchos::unsortedMergePair
+#include <Teuchos_PtrDecl.hpp> // Teuchos::Ptr
+#include <Teuchos_RCPDecl.hpp> // Teuchos::ERCPUndefinedWeakNoDealloc
+#include <Teuchos_RCPDecl.hpp> // Teuchos::ERCPWeakNoDealloc
+#include <Teuchos_RCPDecl.hpp> // Teuchos::RCP
+#include <Teuchos_RCPNode.hpp> // Teuchos::ERCPNodeLookup
+#include <Teuchos_RCPNode.hpp> // Teuchos::ERCPStrength
+#include <Teuchos_RCPNode.hpp> // Teuchos::RCPNodeHandle
+#include <Teuchos_ScalarTraits.hpp> // Teuchos::ScalarTraits
+#include <Teuchos_ScalarTraits.hpp> // Teuchos::generic_real_isnaninf
+#include <Teuchos_ScalarTraits.hpp> // Teuchos::throwScalarTraitsNanInfError
+#include <Teuchos_SerializationTraits.hpp> // Teuchos::DirectSerializationTraits
+#include <Teuchos_TableColumn.hpp> // Teuchos::TableColumn
+#include <Teuchos_TableEntry.hpp> // Teuchos::CompoundEntryWithParentheses
+#include <Teuchos_TableEntry.hpp> // Teuchos::DoubleEntry
+#include <Teuchos_TableEntry.hpp> // Teuchos::IntEntry
+#include <Teuchos_TableEntry.hpp> // Teuchos::StringEntry
+#include <Teuchos_TableEntry.hpp> // Teuchos::TableEntry
+#include <Teuchos_TableFormat.hpp> // Teuchos::TableFormat
+#include <Teuchos_Time.hpp> // Teuchos::Time
+#include <cwchar> // (anonymous)
+#include <ios> // std::_Ios_Fmtflags
+#include <ios> // std::_Ios_Seekdir
+#include <ios> // std::fpos
+#include <iterator> // __gnu_cxx::__normal_iterator
+#include <memory> // std::allocator
+#include <ostream> // std::basic_ostream
 #include <sstream> // __str__
-#include <streambuf>
-#include <string>
+#include <streambuf> // std::basic_streambuf
+#include <string> // std::basic_string
+#include <string> // std::char_traits
+#include <vector> // std::vector
 
 #include <functional>
 #include <pybind11/pybind11.h>
@@ -25,6 +62,166 @@
 	PYBIND11_DECLARE_HOLDER_TYPE(T, T*)
 	PYBIND11_MAKE_OPAQUE(std::shared_ptr<void>)
 #endif
+
+// Teuchos::TableEntry file:Teuchos_TableEntry.hpp line:69
+struct PyCallBack_Teuchos_TableEntry : public Teuchos::TableEntry {
+	using Teuchos::TableEntry::TableEntry;
+
+	std::string toString() const override {
+		pybind11::gil_scoped_acquire gil;
+		pybind11::function overload = pybind11::get_overload(static_cast<const Teuchos::TableEntry *>(this), "toString");
+		if (overload) {
+			auto o = overload.operator()<pybind11::return_value_policy::reference>();
+			if (pybind11::detail::cast_is_temporary_value_reference<std::string>::value) {
+				static pybind11::detail::override_caster_t<std::string> caster;
+				return pybind11::detail::cast_ref<std::string>(std::move(o), caster);
+			}
+			else return pybind11::detail::cast_safe<std::string>(std::move(o));
+		}
+		pybind11::pybind11_fail("Tried to call pure virtual function \"TableEntry::toString\"");
+	}
+	std::string toChoppedString(int a0) const override {
+		pybind11::gil_scoped_acquire gil;
+		pybind11::function overload = pybind11::get_overload(static_cast<const Teuchos::TableEntry *>(this), "toChoppedString");
+		if (overload) {
+			auto o = overload.operator()<pybind11::return_value_policy::reference>(a0);
+			if (pybind11::detail::cast_is_temporary_value_reference<std::string>::value) {
+				static pybind11::detail::override_caster_t<std::string> caster;
+				return pybind11::detail::cast_ref<std::string>(std::move(o), caster);
+			}
+			else return pybind11::detail::cast_safe<std::string>(std::move(o));
+		}
+		return TableEntry::toChoppedString(a0);
+	}
+};
+
+// Teuchos::DoubleEntry file:Teuchos_TableEntry.hpp line:97
+struct PyCallBack_Teuchos_DoubleEntry : public Teuchos::DoubleEntry {
+	using Teuchos::DoubleEntry::DoubleEntry;
+
+	std::string toString() const override {
+		pybind11::gil_scoped_acquire gil;
+		pybind11::function overload = pybind11::get_overload(static_cast<const Teuchos::DoubleEntry *>(this), "toString");
+		if (overload) {
+			auto o = overload.operator()<pybind11::return_value_policy::reference>();
+			if (pybind11::detail::cast_is_temporary_value_reference<std::string>::value) {
+				static pybind11::detail::override_caster_t<std::string> caster;
+				return pybind11::detail::cast_ref<std::string>(std::move(o), caster);
+			}
+			else return pybind11::detail::cast_safe<std::string>(std::move(o));
+		}
+		return DoubleEntry::toString();
+	}
+	std::string toChoppedString(int a0) const override {
+		pybind11::gil_scoped_acquire gil;
+		pybind11::function overload = pybind11::get_overload(static_cast<const Teuchos::DoubleEntry *>(this), "toChoppedString");
+		if (overload) {
+			auto o = overload.operator()<pybind11::return_value_policy::reference>(a0);
+			if (pybind11::detail::cast_is_temporary_value_reference<std::string>::value) {
+				static pybind11::detail::override_caster_t<std::string> caster;
+				return pybind11::detail::cast_ref<std::string>(std::move(o), caster);
+			}
+			else return pybind11::detail::cast_safe<std::string>(std::move(o));
+		}
+		return TableEntry::toChoppedString(a0);
+	}
+};
+
+// Teuchos::IntEntry file:Teuchos_TableEntry.hpp line:117
+struct PyCallBack_Teuchos_IntEntry : public Teuchos::IntEntry {
+	using Teuchos::IntEntry::IntEntry;
+
+	std::string toString() const override {
+		pybind11::gil_scoped_acquire gil;
+		pybind11::function overload = pybind11::get_overload(static_cast<const Teuchos::IntEntry *>(this), "toString");
+		if (overload) {
+			auto o = overload.operator()<pybind11::return_value_policy::reference>();
+			if (pybind11::detail::cast_is_temporary_value_reference<std::string>::value) {
+				static pybind11::detail::override_caster_t<std::string> caster;
+				return pybind11::detail::cast_ref<std::string>(std::move(o), caster);
+			}
+			else return pybind11::detail::cast_safe<std::string>(std::move(o));
+		}
+		return IntEntry::toString();
+	}
+	std::string toChoppedString(int a0) const override {
+		pybind11::gil_scoped_acquire gil;
+		pybind11::function overload = pybind11::get_overload(static_cast<const Teuchos::IntEntry *>(this), "toChoppedString");
+		if (overload) {
+			auto o = overload.operator()<pybind11::return_value_policy::reference>(a0);
+			if (pybind11::detail::cast_is_temporary_value_reference<std::string>::value) {
+				static pybind11::detail::override_caster_t<std::string> caster;
+				return pybind11::detail::cast_ref<std::string>(std::move(o), caster);
+			}
+			else return pybind11::detail::cast_safe<std::string>(std::move(o));
+		}
+		return TableEntry::toChoppedString(a0);
+	}
+};
+
+// Teuchos::StringEntry file:Teuchos_TableEntry.hpp line:135
+struct PyCallBack_Teuchos_StringEntry : public Teuchos::StringEntry {
+	using Teuchos::StringEntry::StringEntry;
+
+	std::string toString() const override {
+		pybind11::gil_scoped_acquire gil;
+		pybind11::function overload = pybind11::get_overload(static_cast<const Teuchos::StringEntry *>(this), "toString");
+		if (overload) {
+			auto o = overload.operator()<pybind11::return_value_policy::reference>();
+			if (pybind11::detail::cast_is_temporary_value_reference<std::string>::value) {
+				static pybind11::detail::override_caster_t<std::string> caster;
+				return pybind11::detail::cast_ref<std::string>(std::move(o), caster);
+			}
+			else return pybind11::detail::cast_safe<std::string>(std::move(o));
+		}
+		return StringEntry::toString();
+	}
+	std::string toChoppedString(int a0) const override {
+		pybind11::gil_scoped_acquire gil;
+		pybind11::function overload = pybind11::get_overload(static_cast<const Teuchos::StringEntry *>(this), "toChoppedString");
+		if (overload) {
+			auto o = overload.operator()<pybind11::return_value_policy::reference>(a0);
+			if (pybind11::detail::cast_is_temporary_value_reference<std::string>::value) {
+				static pybind11::detail::override_caster_t<std::string> caster;
+				return pybind11::detail::cast_ref<std::string>(std::move(o), caster);
+			}
+			else return pybind11::detail::cast_safe<std::string>(std::move(o));
+		}
+		return TableEntry::toChoppedString(a0);
+	}
+};
+
+// Teuchos::CompoundEntryWithParentheses file:Teuchos_TableEntry.hpp line:157
+struct PyCallBack_Teuchos_CompoundEntryWithParentheses : public Teuchos::CompoundEntryWithParentheses {
+	using Teuchos::CompoundEntryWithParentheses::CompoundEntryWithParentheses;
+
+	std::string toString() const override {
+		pybind11::gil_scoped_acquire gil;
+		pybind11::function overload = pybind11::get_overload(static_cast<const Teuchos::CompoundEntryWithParentheses *>(this), "toString");
+		if (overload) {
+			auto o = overload.operator()<pybind11::return_value_policy::reference>();
+			if (pybind11::detail::cast_is_temporary_value_reference<std::string>::value) {
+				static pybind11::detail::override_caster_t<std::string> caster;
+				return pybind11::detail::cast_ref<std::string>(std::move(o), caster);
+			}
+			else return pybind11::detail::cast_safe<std::string>(std::move(o));
+		}
+		return CompoundEntryWithParentheses::toString();
+	}
+	std::string toChoppedString(int a0) const override {
+		pybind11::gil_scoped_acquire gil;
+		pybind11::function overload = pybind11::get_overload(static_cast<const Teuchos::CompoundEntryWithParentheses *>(this), "toChoppedString");
+		if (overload) {
+			auto o = overload.operator()<pybind11::return_value_policy::reference>(a0);
+			if (pybind11::detail::cast_is_temporary_value_reference<std::string>::value) {
+				static pybind11::detail::override_caster_t<std::string> caster;
+				return pybind11::detail::cast_ref<std::string>(std::move(o), caster);
+			}
+			else return pybind11::detail::cast_safe<std::string>(std::move(o));
+		}
+		return TableEntry::toChoppedString(a0);
+	}
+};
 
 void bind_Teuchos_BLAS_types(std::function< pybind11::module &(std::string const &namespace_) > &M)
 {
@@ -75,38 +272,149 @@ void bind_Teuchos_BLAS_types(std::function< pybind11::module &(std::string const
 
 ;
 
-	// Teuchos::DataAccess file:Teuchos_DataAccess.hpp line:60
-	pybind11::enum_<Teuchos::DataAccess>(M("Teuchos"), "DataAccess", pybind11::arithmetic(), "If set to Copy, user data will be copied at construction.\n      If set to View, user data will be encapsulated and used throughout\n      the life of the object.")
-		.value("Copy", Teuchos::Copy)
-		.value("View", Teuchos::View)
+	// Teuchos::throwScalarTraitsNanInfError(const std::string &) file:Teuchos_ScalarTraits.hpp line:123
+	M("Teuchos").def("throwScalarTraitsNanInfError", (void (*)(const std::string &)) &Teuchos::throwScalarTraitsNanInfError, "C++: Teuchos::throwScalarTraitsNanInfError(const std::string &) --> void", pybind11::arg("errMsg"));
+
+	// Teuchos::generic_real_isnaninf(const float &) file:Teuchos_ScalarTraits.hpp line:127
+	M("Teuchos").def("generic_real_isnaninf", (bool (*)(const float &)) &Teuchos::generic_real_isnaninf<float>, "C++: Teuchos::generic_real_isnaninf(const float &) --> bool", pybind11::arg("x"));
+
+	// Teuchos::generic_real_isnaninf(const double &) file:Teuchos_ScalarTraits.hpp line:127
+	M("Teuchos").def("generic_real_isnaninf", (bool (*)(const double &)) &Teuchos::generic_real_isnaninf<double>, "C++: Teuchos::generic_real_isnaninf(const double &) --> bool", pybind11::arg("x"));
+
+	{ // Teuchos::DirectSerializationTraits file:Teuchos_SerializationTraits.hpp line:311
+		pybind11::class_<Teuchos::DirectSerializationTraits<int,unsigned long>, Teuchos::RCP<Teuchos::DirectSerializationTraits<int,unsigned long>>> cl(M("Teuchos"), "DirectSerializationTraits_int_unsigned_long_t", "");
+		cl.def( pybind11::init( [](){ return new Teuchos::DirectSerializationTraits<int,unsigned long>(); } ) );
+		cl.def( pybind11::init( [](Teuchos::DirectSerializationTraits<int,unsigned long> const &o){ return new Teuchos::DirectSerializationTraits<int,unsigned long>(o); } ) );
+		cl.def_static("fromCountToDirectBytes", (int (*)(const int)) &Teuchos::DirectSerializationTraits<int, unsigned long>::fromCountToDirectBytes, "C++: Teuchos::DirectSerializationTraits<int, unsigned long>::fromCountToDirectBytes(const int) --> int", pybind11::arg("count"));
+		cl.def_static("convertToCharPtr", (char * (*)(unsigned long *)) &Teuchos::DirectSerializationTraits<int, unsigned long>::convertToCharPtr, "C++: Teuchos::DirectSerializationTraits<int, unsigned long>::convertToCharPtr(unsigned long *) --> char *", pybind11::return_value_policy::automatic, pybind11::arg("ptr"));
+		cl.def_static("convertToCharPtr", (const char * (*)(const unsigned long *)) &Teuchos::DirectSerializationTraits<int, unsigned long>::convertToCharPtr, "C++: Teuchos::DirectSerializationTraits<int, unsigned long>::convertToCharPtr(const unsigned long *) --> const char *", pybind11::return_value_policy::automatic, pybind11::arg("ptr"));
+		cl.def_static("fromDirectBytesToCount", (int (*)(const int)) &Teuchos::DirectSerializationTraits<int, unsigned long>::fromDirectBytesToCount, "C++: Teuchos::DirectSerializationTraits<int, unsigned long>::fromDirectBytesToCount(const int) --> int", pybind11::arg("count"));
+		cl.def_static("convertFromCharPtr", (unsigned long * (*)(char *)) &Teuchos::DirectSerializationTraits<int, unsigned long>::convertFromCharPtr, "C++: Teuchos::DirectSerializationTraits<int, unsigned long>::convertFromCharPtr(char *) --> unsigned long *", pybind11::return_value_policy::automatic, pybind11::arg("ptr"));
+		cl.def_static("convertFromCharPtr", (const unsigned long * (*)(const char *)) &Teuchos::DirectSerializationTraits<int, unsigned long>::convertFromCharPtr, "C++: Teuchos::DirectSerializationTraits<int, unsigned long>::convertFromCharPtr(const char *) --> const unsigned long *", pybind11::return_value_policy::automatic, pybind11::arg("ptr"));
+	}
+	{ // Teuchos::DirectSerializationTraits file:Teuchos_SerializationTraits.hpp line:311
+		pybind11::class_<Teuchos::DirectSerializationTraits<int,long long>, Teuchos::RCP<Teuchos::DirectSerializationTraits<int,long long>>> cl(M("Teuchos"), "DirectSerializationTraits_int_long_long_t", "");
+		cl.def( pybind11::init( [](){ return new Teuchos::DirectSerializationTraits<int,long long>(); } ) );
+		cl.def( pybind11::init( [](Teuchos::DirectSerializationTraits<int,long long> const &o){ return new Teuchos::DirectSerializationTraits<int,long long>(o); } ) );
+		cl.def_static("fromCountToDirectBytes", (int (*)(const int)) &Teuchos::DirectSerializationTraits<int, long long>::fromCountToDirectBytes, "C++: Teuchos::DirectSerializationTraits<int, long long>::fromCountToDirectBytes(const int) --> int", pybind11::arg("count"));
+		cl.def_static("convertToCharPtr", (char * (*)(long long *)) &Teuchos::DirectSerializationTraits<int, long long>::convertToCharPtr, "C++: Teuchos::DirectSerializationTraits<int, long long>::convertToCharPtr(long long *) --> char *", pybind11::return_value_policy::automatic, pybind11::arg("ptr"));
+		cl.def_static("convertToCharPtr", (const char * (*)(const long long *)) &Teuchos::DirectSerializationTraits<int, long long>::convertToCharPtr, "C++: Teuchos::DirectSerializationTraits<int, long long>::convertToCharPtr(const long long *) --> const char *", pybind11::return_value_policy::automatic, pybind11::arg("ptr"));
+		cl.def_static("fromDirectBytesToCount", (int (*)(const int)) &Teuchos::DirectSerializationTraits<int, long long>::fromDirectBytesToCount, "C++: Teuchos::DirectSerializationTraits<int, long long>::fromDirectBytesToCount(const int) --> int", pybind11::arg("count"));
+		cl.def_static("convertFromCharPtr", (long long * (*)(char *)) &Teuchos::DirectSerializationTraits<int, long long>::convertFromCharPtr, "C++: Teuchos::DirectSerializationTraits<int, long long>::convertFromCharPtr(char *) --> long long *", pybind11::return_value_policy::automatic, pybind11::arg("ptr"));
+		cl.def_static("convertFromCharPtr", (const long long * (*)(const char *)) &Teuchos::DirectSerializationTraits<int, long long>::convertFromCharPtr, "C++: Teuchos::DirectSerializationTraits<int, long long>::convertFromCharPtr(const char *) --> const long long *", pybind11::return_value_policy::automatic, pybind11::arg("ptr"));
+	}
+	{ // Teuchos::DirectSerializationTraits file:Teuchos_SerializationTraits.hpp line:311
+		pybind11::class_<Teuchos::DirectSerializationTraits<int,char>, Teuchos::RCP<Teuchos::DirectSerializationTraits<int,char>>> cl(M("Teuchos"), "DirectSerializationTraits_int_char_t", "");
+		cl.def( pybind11::init( [](){ return new Teuchos::DirectSerializationTraits<int,char>(); } ) );
+		cl.def( pybind11::init( [](Teuchos::DirectSerializationTraits<int,char> const &o){ return new Teuchos::DirectSerializationTraits<int,char>(o); } ) );
+		cl.def_static("fromCountToDirectBytes", (int (*)(const int)) &Teuchos::DirectSerializationTraits<int, char>::fromCountToDirectBytes, "C++: Teuchos::DirectSerializationTraits<int, char>::fromCountToDirectBytes(const int) --> int", pybind11::arg("count"));
+		cl.def_static("convertToCharPtr", (char * (*)(char *)) &Teuchos::DirectSerializationTraits<int, char>::convertToCharPtr, "C++: Teuchos::DirectSerializationTraits<int, char>::convertToCharPtr(char *) --> char *", pybind11::return_value_policy::automatic, pybind11::arg("ptr"));
+		cl.def_static("convertToCharPtr", (const char * (*)(const char *)) &Teuchos::DirectSerializationTraits<int, char>::convertToCharPtr, "C++: Teuchos::DirectSerializationTraits<int, char>::convertToCharPtr(const char *) --> const char *", pybind11::return_value_policy::automatic, pybind11::arg("ptr"));
+		cl.def_static("fromDirectBytesToCount", (int (*)(const int)) &Teuchos::DirectSerializationTraits<int, char>::fromDirectBytesToCount, "C++: Teuchos::DirectSerializationTraits<int, char>::fromDirectBytesToCount(const int) --> int", pybind11::arg("count"));
+		cl.def_static("convertFromCharPtr", (char * (*)(char *)) &Teuchos::DirectSerializationTraits<int, char>::convertFromCharPtr, "C++: Teuchos::DirectSerializationTraits<int, char>::convertFromCharPtr(char *) --> char *", pybind11::return_value_policy::automatic, pybind11::arg("ptr"));
+		cl.def_static("convertFromCharPtr", (const char * (*)(const char *)) &Teuchos::DirectSerializationTraits<int, char>::convertFromCharPtr, "C++: Teuchos::DirectSerializationTraits<int, char>::convertFromCharPtr(const char *) --> const char *", pybind11::return_value_policy::automatic, pybind11::arg("ptr"));
+	}
+	{ // Teuchos::TableEntry file:Teuchos_TableEntry.hpp line:69
+		pybind11::class_<Teuchos::TableEntry, Teuchos::RCP<Teuchos::TableEntry>, PyCallBack_Teuchos_TableEntry> cl(M("Teuchos"), "TableEntry", "An entry, perhaps compound, to be written into a table.\n\n KL 30 Apr 2006 -- initial design. Can you say overengineering??\n The complexity is to support a nice interface for pair entries\n such as time/numCalls.");
+		cl.def( pybind11::init( [](){ return new PyCallBack_Teuchos_TableEntry(); } ) );
+		cl.def(pybind11::init<PyCallBack_Teuchos_TableEntry const &>());
+		cl.def("toString", (std::string (Teuchos::TableEntry::*)() const) &Teuchos::TableEntry::toString, "Return a std::string representation of this entry \n\nC++: Teuchos::TableEntry::toString() const --> std::string");
+		cl.def("toChoppedString", (std::string (Teuchos::TableEntry::*)(int) const) &Teuchos::TableEntry::toChoppedString, "Return a std::string representation of this entry,\n truncated if necessary to fit within the given column width.\n\n \n [in] the maximum width of the std::string form. Larger\n strings must be truncated in a subclass-dependent way.\n \n\n the std::string, truncated if necessary\n\nC++: Teuchos::TableEntry::toChoppedString(int) const --> std::string", pybind11::arg("maxWidth"));
+		cl.def("assign", (class Teuchos::TableEntry & (Teuchos::TableEntry::*)(const class Teuchos::TableEntry &)) &Teuchos::TableEntry::operator=, "C++: Teuchos::TableEntry::operator=(const class Teuchos::TableEntry &) --> class Teuchos::TableEntry &", pybind11::return_value_policy::automatic, pybind11::arg(""));
+	}
+	{ // Teuchos::DoubleEntry file:Teuchos_TableEntry.hpp line:97
+		pybind11::class_<Teuchos::DoubleEntry, Teuchos::RCP<Teuchos::DoubleEntry>, PyCallBack_Teuchos_DoubleEntry, Teuchos::TableEntry> cl(M("Teuchos"), "DoubleEntry", "A table entry that is a simple double-precision number");
+		cl.def( pybind11::init<const double &, int, const enum std::_Ios_Fmtflags &>(), pybind11::arg("value"), pybind11::arg("precision"), pybind11::arg("flags") );
+
+		cl.def( pybind11::init( [](PyCallBack_Teuchos_DoubleEntry const &o){ return new PyCallBack_Teuchos_DoubleEntry(o); } ) );
+		cl.def( pybind11::init( [](Teuchos::DoubleEntry const &o){ return new Teuchos::DoubleEntry(o); } ) );
+		cl.def("toString", (std::string (Teuchos::DoubleEntry::*)() const) &Teuchos::DoubleEntry::toString, "Write the specified entry to a std::string \n\nC++: Teuchos::DoubleEntry::toString() const --> std::string");
+		cl.def("assign", (class Teuchos::DoubleEntry & (Teuchos::DoubleEntry::*)(const class Teuchos::DoubleEntry &)) &Teuchos::DoubleEntry::operator=, "C++: Teuchos::DoubleEntry::operator=(const class Teuchos::DoubleEntry &) --> class Teuchos::DoubleEntry &", pybind11::return_value_policy::automatic, pybind11::arg(""));
+	}
+	{ // Teuchos::IntEntry file:Teuchos_TableEntry.hpp line:117
+		pybind11::class_<Teuchos::IntEntry, Teuchos::RCP<Teuchos::IntEntry>, PyCallBack_Teuchos_IntEntry, Teuchos::TableEntry> cl(M("Teuchos"), "IntEntry", "A table entry that is a simple integer");
+		cl.def( pybind11::init<int, const enum std::_Ios_Fmtflags &>(), pybind11::arg("value"), pybind11::arg("flags") );
+
+		cl.def( pybind11::init( [](PyCallBack_Teuchos_IntEntry const &o){ return new PyCallBack_Teuchos_IntEntry(o); } ) );
+		cl.def( pybind11::init( [](Teuchos::IntEntry const &o){ return new Teuchos::IntEntry(o); } ) );
+		cl.def("toString", (std::string (Teuchos::IntEntry::*)() const) &Teuchos::IntEntry::toString, "Write the specified entry to a std::string \n\nC++: Teuchos::IntEntry::toString() const --> std::string");
+		cl.def("assign", (class Teuchos::IntEntry & (Teuchos::IntEntry::*)(const class Teuchos::IntEntry &)) &Teuchos::IntEntry::operator=, "C++: Teuchos::IntEntry::operator=(const class Teuchos::IntEntry &) --> class Teuchos::IntEntry &", pybind11::return_value_policy::automatic, pybind11::arg(""));
+	}
+	{ // Teuchos::StringEntry file:Teuchos_TableEntry.hpp line:135
+		pybind11::class_<Teuchos::StringEntry, Teuchos::RCP<Teuchos::StringEntry>, PyCallBack_Teuchos_StringEntry, Teuchos::TableEntry> cl(M("Teuchos"), "StringEntry", "A table entry that is a simple std::string");
+		cl.def( pybind11::init<std::string>(), pybind11::arg("value") );
+
+		cl.def( pybind11::init( [](PyCallBack_Teuchos_StringEntry const &o){ return new PyCallBack_Teuchos_StringEntry(o); } ) );
+		cl.def( pybind11::init( [](Teuchos::StringEntry const &o){ return new Teuchos::StringEntry(o); } ) );
+		cl.def("toString", (std::string (Teuchos::StringEntry::*)() const) &Teuchos::StringEntry::toString, "Write the specified entry to a std::string \n\nC++: Teuchos::StringEntry::toString() const --> std::string");
+		cl.def("assign", (class Teuchos::StringEntry & (Teuchos::StringEntry::*)(const class Teuchos::StringEntry &)) &Teuchos::StringEntry::operator=, "C++: Teuchos::StringEntry::operator=(const class Teuchos::StringEntry &) --> class Teuchos::StringEntry &", pybind11::return_value_policy::automatic, pybind11::arg(""));
+	}
+	{ // Teuchos::CompoundEntryWithParentheses file:Teuchos_TableEntry.hpp line:157
+		pybind11::class_<Teuchos::CompoundEntryWithParentheses, Teuchos::RCP<Teuchos::CompoundEntryWithParentheses>, PyCallBack_Teuchos_CompoundEntryWithParentheses, Teuchos::TableEntry> cl(M("Teuchos"), "CompoundEntryWithParentheses", "An entry containing two subentries, with the second\n to be written in parentheses after the first. For example,\n \n\n\n\n The two subentries can be any type of data, each represented\n with a TableEntry derived type.");
+		cl.def( pybind11::init( [](const class Teuchos::RCP<class Teuchos::TableEntry> & a0, const class Teuchos::RCP<class Teuchos::TableEntry> & a1){ return new Teuchos::CompoundEntryWithParentheses(a0, a1); }, [](const class Teuchos::RCP<class Teuchos::TableEntry> & a0, const class Teuchos::RCP<class Teuchos::TableEntry> & a1){ return new PyCallBack_Teuchos_CompoundEntryWithParentheses(a0, a1); } ), "doc");
+		cl.def( pybind11::init<const class Teuchos::RCP<class Teuchos::TableEntry> &, const class Teuchos::RCP<class Teuchos::TableEntry> &, bool>(), pybind11::arg("first"), pybind11::arg("second"), pybind11::arg("spaceBeforeParens") );
+
+		cl.def( pybind11::init( [](PyCallBack_Teuchos_CompoundEntryWithParentheses const &o){ return new PyCallBack_Teuchos_CompoundEntryWithParentheses(o); } ) );
+		cl.def( pybind11::init( [](Teuchos::CompoundEntryWithParentheses const &o){ return new Teuchos::CompoundEntryWithParentheses(o); } ) );
+		cl.def("toString", (std::string (Teuchos::CompoundEntryWithParentheses::*)() const) &Teuchos::CompoundEntryWithParentheses::toString, "Write the specified entry to a std::string \n\nC++: Teuchos::CompoundEntryWithParentheses::toString() const --> std::string");
+		cl.def("assign", (class Teuchos::CompoundEntryWithParentheses & (Teuchos::CompoundEntryWithParentheses::*)(const class Teuchos::CompoundEntryWithParentheses &)) &Teuchos::CompoundEntryWithParentheses::operator=, "C++: Teuchos::CompoundEntryWithParentheses::operator=(const class Teuchos::CompoundEntryWithParentheses &) --> class Teuchos::CompoundEntryWithParentheses &", pybind11::return_value_policy::automatic, pybind11::arg(""));
+	}
+	{ // Teuchos::TableColumn file:Teuchos_TableColumn.hpp line:61
+		pybind11::class_<Teuchos::TableColumn, Teuchos::RCP<Teuchos::TableColumn>> cl(M("Teuchos"), "TableColumn", "KL 30 Apr 2006 -- initial design.");
+		cl.def( pybind11::init( [](){ return new Teuchos::TableColumn(); } ) );
+		cl.def( pybind11::init<const class Teuchos::Array<std::string > &>(), pybind11::arg("vals") );
+
+		cl.def( pybind11::init<const class Teuchos::Array<double> &, int, const enum std::_Ios_Fmtflags &>(), pybind11::arg("vals"), pybind11::arg("precision"), pybind11::arg("flags") );
+
+		cl.def( pybind11::init<const class Teuchos::Array<double> &, const class Teuchos::Array<double> &, int, const enum std::_Ios_Fmtflags &, bool>(), pybind11::arg("first"), pybind11::arg("second"), pybind11::arg("precision"), pybind11::arg("flags"), pybind11::arg("spaceBeforeParentheses") );
+
+		cl.def( pybind11::init( [](Teuchos::TableColumn const &o){ return new Teuchos::TableColumn(o); } ) );
+		cl.def("numRows", (int (Teuchos::TableColumn::*)() const) &Teuchos::TableColumn::numRows, "C++: Teuchos::TableColumn::numRows() const --> int");
+		cl.def("addEntry", (void (Teuchos::TableColumn::*)(const class Teuchos::RCP<class Teuchos::TableEntry> &)) &Teuchos::TableColumn::addEntry, "C++: Teuchos::TableColumn::addEntry(const class Teuchos::RCP<class Teuchos::TableEntry> &) --> void", pybind11::arg("entry"));
+		cl.def("entry", (const class Teuchos::RCP<class Teuchos::TableEntry> & (Teuchos::TableColumn::*)(int) const) &Teuchos::TableColumn::entry, "C++: Teuchos::TableColumn::entry(int) const --> const class Teuchos::RCP<class Teuchos::TableEntry> &", pybind11::return_value_policy::automatic, pybind11::arg("i"));
+	}
+	{ // Teuchos::TableFormat file:Teuchos_TableFormat.hpp line:65
+		pybind11::class_<Teuchos::TableFormat, Teuchos::RCP<Teuchos::TableFormat>> cl(M("Teuchos"), "TableFormat", "Encapsulation of formatting specifications for writing data\n in a clean tabular form.\n\n Note: it is left to the programmer to avoid invalid settings such as\n negative column spaces, zero page widths, and other such potentially\n bad things.\n\n KL 30 Apr 2006 -- initial design.");
+		cl.def( pybind11::init( [](){ return new Teuchos::TableFormat(); } ) );
+		cl.def( pybind11::init( [](Teuchos::TableFormat const &o){ return new Teuchos::TableFormat(o); } ) );
+		cl.def("pageWidth", (int (Teuchos::TableFormat::*)() const) &Teuchos::TableFormat::pageWidth, "Get the maximum number of characters per line.\n Default is 80. \n\nC++: Teuchos::TableFormat::pageWidth() const --> int");
+		cl.def("precision", (int (Teuchos::TableFormat::*)() const) &Teuchos::TableFormat::precision, "Get the precision for writing doubles.\n Default is 4. \n\nC++: Teuchos::TableFormat::precision() const --> int");
+		cl.def("columnSpacing", (int (Teuchos::TableFormat::*)() const) &Teuchos::TableFormat::columnSpacing, "Get the number of characters to be left as blank\n spaces in each column. Default is 4. \n\nC++: Teuchos::TableFormat::columnSpacing() const --> int");
+		cl.def("setPageWidth", (void (Teuchos::TableFormat::*)(int) const) &Teuchos::TableFormat::setPageWidth, "Set the number of characters on a line.\n This quantity can be updated within the const\n method writeWholeTables() \n\nC++: Teuchos::TableFormat::setPageWidth(int) const --> void", pybind11::arg("pw"));
+		cl.def("setPrecision", (void (Teuchos::TableFormat::*)(int)) &Teuchos::TableFormat::setPrecision, "Set the precision for writing doubles \n\nC++: Teuchos::TableFormat::setPrecision(int) --> void", pybind11::arg("p"));
+		cl.def("setColumnSpacing", (void (Teuchos::TableFormat::*)(int)) &Teuchos::TableFormat::setColumnSpacing, "Set the number of characters to be left as blank spaces in each column \n\nC++: Teuchos::TableFormat::setColumnSpacing(int) --> void", pybind11::arg("columnSpacing_in"));
+		cl.def("setRowsBetweenLines", (void (Teuchos::TableFormat::*)(int)) &Teuchos::TableFormat::setRowsBetweenLines, "Set the interval at which a horizontal line will be written between\n rows.\n\n  lineInterval [in] the number of rows between each horizontal line\n\nC++: Teuchos::TableFormat::setRowsBetweenLines(int) --> void", pybind11::arg("lineInterval"));
+		cl.def("thinline", (std::string (Teuchos::TableFormat::*)() const) &Teuchos::TableFormat::thinline, "Return a horizontal line in dashes \"----\"\n the width of the page.\n\n Originally called hbar, but changed to avoid\n possible confusion for physicists expecting hbar() to return\n \n\n :-).  \n\nC++: Teuchos::TableFormat::thinline() const --> std::string");
+		cl.def("thickline", (std::string (Teuchos::TableFormat::*)() const) &Teuchos::TableFormat::thickline, "Return a thick horizontal line in equal signs \"====\" the\n width of the page \n\nC++: Teuchos::TableFormat::thickline() const --> std::string");
+		cl.def("blanks", (std::string (Teuchos::TableFormat::*)(int) const) &Teuchos::TableFormat::blanks, "Return a std::string full of blanks up to the requested size \n\nC++: Teuchos::TableFormat::blanks(int) const --> std::string", pybind11::arg("size"));
+		cl.def("computeRequiredColumnWidth", (int (Teuchos::TableFormat::*)(const std::string &, const class Teuchos::TableColumn &) const) &Teuchos::TableFormat::computeRequiredColumnWidth, "Computes the column width required to write all values\n to the required precision.\n\n \n [in] the title of the column\n \n\n [in] the column data\n\n Postcondition: colString.size()==values.size()\n\nC++: Teuchos::TableFormat::computeRequiredColumnWidth(const std::string &, const class Teuchos::TableColumn &) const --> int", pybind11::arg("name"), pybind11::arg("column"));
+		cl.def("setColumnWidths", (void (Teuchos::TableFormat::*)(const class Teuchos::Array<int> &)) &Teuchos::TableFormat::setColumnWidths, "Set the column widths to be used for subsequent rows \n\nC++: Teuchos::TableFormat::setColumnWidths(const class Teuchos::Array<int> &) --> void", pybind11::arg("colWidths"));
+		cl.def("assign", (class Teuchos::TableFormat & (Teuchos::TableFormat::*)(const class Teuchos::TableFormat &)) &Teuchos::TableFormat::operator=, "C++: Teuchos::TableFormat::operator=(const class Teuchos::TableFormat &) --> class Teuchos::TableFormat &", pybind11::return_value_policy::automatic, pybind11::arg(""));
+	}
+	// Teuchos::ECounterSetOp file:Teuchos_PerformanceMonitorBase.hpp line:63
+	pybind11::enum_<Teuchos::ECounterSetOp>(M("Teuchos"), "ECounterSetOp", pybind11::arithmetic(), "Set operation type for  to perform.\n\n The  function merges sets of counter names\n over all MPI processes in a communicator.  Different MPI\n processes may have created different sets of counters.  This\n enum allows the caller to specify how mergeCounterNames() picks\n the global set of timers.")
+		.value("Intersection", Teuchos::Intersection)
+		.value("Union", Teuchos::Union)
 		.export_values();
 
 ;
 
-	{ // Teuchos::Range1D file:Teuchos_Range1D.hpp line:88
-		pybind11::class_<Teuchos::Range1D, Teuchos::RCP<Teuchos::Range1D>> cl(M("Teuchos"), "Range1D", "Subregion Index Range Class.\n\n The class %Range1D encapsulates a 1-D, zero-based, range of\n non-negative indexes.  It is used to index into vectors and matrices and\n return subregions of them respectively.\n\n Constructing using Range1D() yields a range that represents the\n entire dimension of an object [0, max_ubound] (an entire\n std::vector, all the rows in a matrix, or all the columns in a matrix\n etc.).\n\n Constructing using \n\n an invalid range [0,-2] with size() == -1.  Once\n constructed with Range1D(INVALID), a %Range1D object can\n pass through many other operations that may change %lbound() and\n %ubound() but will never change size()==-1.\n\n Constructing using \n\n yields a finite-dimensional zero-based range.  The validity of constructed\n range will only be checked if TEUCHOS_DEBUG is defined.\n\n There are many \n\n used with %Range1D objects.\n\n The default copy constructor and assignment operator functions are allowed\n since they have the correct semantics.");
-		cl.def( pybind11::init( [](){ return new Teuchos::Range1D(); } ) );
-		cl.def( pybind11::init<enum Teuchos::Range1D::EInvalidRange>(), pybind11::arg("") );
+	// Teuchos::mergeCounterNames(const class Teuchos::Comm<int> &, const class Teuchos::Array<std::string > &, class Teuchos::Array<std::string > &, const enum Teuchos::ECounterSetOp) file:Teuchos_PerformanceMonitorBase.hpp line:90
+	M("Teuchos").def("mergeCounterNames", (void (*)(const class Teuchos::Comm<int> &, const class Teuchos::Array<std::string > &, class Teuchos::Array<std::string > &, const enum Teuchos::ECounterSetOp)) &Teuchos::mergeCounterNames, "Merge counter names over all processors.\n\n Different MPI processes may have created different sets of\n counters.  Use this function to reconcile the sets among\n processes, either by computing their intersection or their\n union.  This is done using a reduction to MPI Rank 0 (relative\n to the given communicator) and a broadcast to all processes\n participating in the communicator.  We use a\n reduce-and-broadcast rather than just a reduction, so that all\n participating processes can use the resulting list of global\n names as lookup keys for computing global statistics.\n\n \n [in] Communicator over which to merge.\n\n \n [in] The calling MPI process' list of (local)\n   counter names.\n\n \n [out] On output, on each MPI process: the\n   results of merging the counter names.\n\n \n [in] If Intersection, globalNames on output\n   contains the intersection of all sets of counter names.  If\n   Union, globalNames on output contains the union of all sets of\n   counter names.\n\nC++: Teuchos::mergeCounterNames(const class Teuchos::Comm<int> &, const class Teuchos::Array<std::string > &, class Teuchos::Array<std::string > &, const enum Teuchos::ECounterSetOp) --> void", pybind11::arg("comm"), pybind11::arg("localNames"), pybind11::arg("globalNames"), pybind11::arg("setOp"));
 
-		cl.def( pybind11::init<long, long>(), pybind11::arg("lbound"), pybind11::arg("ubound") );
+	// Teuchos::unsortedMergePair(const class Teuchos::Array<std::string > &, class Teuchos::Array<std::string > &, const enum Teuchos::ECounterSetOp) file:Teuchos_PerformanceMonitorBase.hpp line:106
+	M("Teuchos").def("unsortedMergePair", (void (*)(const class Teuchos::Array<std::string > &, class Teuchos::Array<std::string > &, const enum Teuchos::ECounterSetOp)) &Teuchos::unsortedMergePair, "merge for unsorted lists.  New entries are at the bottom of the list\n \n\n - The calling MPI process' list of (local)\n counter names.\n \n\n - Global list of names\n \n\n If Intersection, globalNames on output\n   contains the intersection of all sets of counter names.  If\n   Union, globalNames on output contains the union of all sets of\n   counter names.\n\nC++: Teuchos::unsortedMergePair(const class Teuchos::Array<std::string > &, class Teuchos::Array<std::string > &, const enum Teuchos::ECounterSetOp) --> void", pybind11::arg("localNames"), pybind11::arg("globalNames"), pybind11::arg("setOp"));
 
-		cl.def( pybind11::init( [](Teuchos::Range1D const &o){ return new Teuchos::Range1D(o); } ) );
+	{ // Teuchos::PerformanceMonitorBase file:Teuchos_PerformanceMonitorBase.hpp line:154
+		pybind11::class_<Teuchos::PerformanceMonitorBase<Teuchos::Time>, Teuchos::RCP<Teuchos::PerformanceMonitorBase<Teuchos::Time>>> cl(M("Teuchos"), "PerformanceMonitorBase_Teuchos_Time_t", "");
+		cl.def( pybind11::init( [](class Teuchos::Time & a0){ return new Teuchos::PerformanceMonitorBase<Teuchos::Time>(a0); } ), "doc" , pybind11::arg("counter_in"));
+		cl.def( pybind11::init<class Teuchos::Time &, bool>(), pybind11::arg("counter_in"), pybind11::arg("reset") );
 
-		pybind11::enum_<Teuchos::Range1D::EInvalidRange>(cl, "EInvalidRange", pybind11::arithmetic(), ". ")
-			.value("INVALID", Teuchos::Range1D::INVALID)
-			.export_values();
-
-		cl.def("full_range", (bool (Teuchos::Range1D::*)() const) &Teuchos::Range1D::full_range, "Returns  if the range represents the entire region. \n\nC++: Teuchos::Range1D::full_range() const --> bool");
-		cl.def("lbound", (long (Teuchos::Range1D::*)() const) &Teuchos::Range1D::lbound, "Return lower bound of the range \n\nC++: Teuchos::Range1D::lbound() const --> long");
-		cl.def("ubound", (long (Teuchos::Range1D::*)() const) &Teuchos::Range1D::ubound, "Return upper bound of the range \n\nC++: Teuchos::Range1D::ubound() const --> long");
-		cl.def("size", (long (Teuchos::Range1D::*)() const) &Teuchos::Range1D::size, "Return the size of the range (ubound() - lbound() + 1) \n\nC++: Teuchos::Range1D::size() const --> long");
-		cl.def("in_range", (bool (Teuchos::Range1D::*)(long) const) &Teuchos::Range1D::in_range, "Return true if the index is in range \n\nC++: Teuchos::Range1D::in_range(long) const --> bool", pybind11::arg("i"));
-		cl.def("__iadd__", (class Teuchos::Range1D & (Teuchos::Range1D::*)(long)) &Teuchos::Range1D::operator+=, "Increment the range by a constant\n\n  this->lbound() + incr >= 0 (throws \n   \n\nC++: Teuchos::Range1D::operator+=(long) --> class Teuchos::Range1D &", pybind11::return_value_policy::automatic, pybind11::arg("incr"));
-		cl.def("__isub__", (class Teuchos::Range1D & (Teuchos::Range1D::*)(long)) &Teuchos::Range1D::operator-=, "Deincrement the range by a constant.\n\n  this->lbound() - incr >= 0 (throws \n   \n\nC++: Teuchos::Range1D::operator-=(long) --> class Teuchos::Range1D &", pybind11::return_value_policy::automatic, pybind11::arg("incr"));
-
-		cl.def("__str__", [](Teuchos::Range1D const &o) -> std::string { std::ostringstream s; s << o; return s.str(); } );
+		cl.def( pybind11::init( [](Teuchos::PerformanceMonitorBase<Teuchos::Time> const &o){ return new Teuchos::PerformanceMonitorBase<Teuchos::Time>(o); } ) );
+		cl.def_static("getNewCounter", (class Teuchos::RCP<class Teuchos::Time> (*)(const std::string &)) &Teuchos::PerformanceMonitorBase<Teuchos::Time>::getNewCounter, "C++: Teuchos::PerformanceMonitorBase<Teuchos::Time>::getNewCounter(const std::string &) --> class Teuchos::RCP<class Teuchos::Time>", pybind11::arg("name"));
+		cl.def_static("format", (class Teuchos::TableFormat & (*)()) &Teuchos::PerformanceMonitorBase<Teuchos::Time>::format, "C++: Teuchos::PerformanceMonitorBase<Teuchos::Time>::format() --> class Teuchos::TableFormat &", pybind11::return_value_policy::automatic);
+		cl.def_static("lookupCounter", (class Teuchos::RCP<class Teuchos::Time> (*)(const std::string &)) &Teuchos::PerformanceMonitorBase<Teuchos::Time>::lookupCounter, "C++: Teuchos::PerformanceMonitorBase<Teuchos::Time>::lookupCounter(const std::string &) --> class Teuchos::RCP<class Teuchos::Time>", pybind11::arg("name"));
+		cl.def_static("clearCounters", (void (*)()) &Teuchos::PerformanceMonitorBase<Teuchos::Time>::clearCounters, "C++: Teuchos::PerformanceMonitorBase<Teuchos::Time>::clearCounters() --> void");
+		cl.def_static("clearCounter", (void (*)(const std::string &)) &Teuchos::PerformanceMonitorBase<Teuchos::Time>::clearCounter, "C++: Teuchos::PerformanceMonitorBase<Teuchos::Time>::clearCounter(const std::string &) --> void", pybind11::arg("name"));
 	}
-	// Teuchos::full_range(const class Teuchos::Range1D &, long, long) file:Teuchos_Range1D.hpp line:272
-	M("Teuchos").def("full_range", (class Teuchos::Range1D (*)(const class Teuchos::Range1D &, long, long)) &Teuchos::full_range, "Return a bounded index range from a potentially unbounded index\n range.\n\n Return a index range of lbound to ubound if rng.full_range() == true\n , otherwise just return a copy of rng.\n\n Postconditions: \n	 [rng.full_range() == true] return.lbound() == lbound\n	 [rng.full_range() == true] return.ubound() == ubound\n	 [rng.full_range() == false] return.lbound() == rng.lbound()\n	 [rng.full_range() == false] return.ubound() == rng.ubound()\n	\n\n \n\n  \n\nC++: Teuchos::full_range(const class Teuchos::Range1D &, long, long) --> class Teuchos::Range1D", pybind11::arg("rng"), pybind11::arg("lbound"), pybind11::arg("ubound"));
-
 }

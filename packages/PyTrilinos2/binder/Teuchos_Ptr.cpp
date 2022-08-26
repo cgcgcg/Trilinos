@@ -1,7 +1,8 @@
-#include <Teuchos_Ptr.hpp>
-#include <iterator>
-#include <memory>
-#include <string>
+#include <Teuchos_Ptr.hpp> // Teuchos::PtrPrivateUtilityPack::throw_null
+#include <iterator> // __gnu_cxx::__normal_iterator
+#include <memory> // std::allocator
+#include <string> // std::basic_string
+#include <string> // std::char_traits
 
 #include <functional>
 #include <pybind11/pybind11.h>

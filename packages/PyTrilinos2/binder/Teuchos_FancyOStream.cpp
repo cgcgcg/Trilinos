@@ -1,48 +1,132 @@
+#include <KokkosCompat_ClassicNodeAPI_Wrapper.hpp> // Kokkos::Compat::KokkosDeviceWrapperNode
+#include <Kokkos_Concepts.hpp> // Kokkos::Device
+#include <Kokkos_DualView.hpp> // Kokkos::DualView
+#include <Kokkos_HostSpace.hpp> // Kokkos::HostSpace
+#include <Kokkos_Layout.hpp> // Kokkos::LayoutLeft
+#include <Kokkos_Serial.hpp> // Kokkos::Serial
+#include <Kokkos_View.hpp> // Kokkos::View
+#include <MueLu_FactoryBase.hpp> // MueLu::FactoryBase
+#include <MueLu_FactoryManagerBase.hpp> // MueLu::FactoryManagerBase
+#include <MueLu_Level.hpp> // MueLu::Level
 #include <PyTrilinos2_Teuchos_Custom.hpp>
-#include <PyTrilinos2_Teuchos_ETI.hpp>
-#include <Teuchos_Array.hpp>
-#include <Teuchos_ArrayRCPDecl.hpp>
-#include <Teuchos_ArrayView.hpp>
-#include <Teuchos_ArrayViewDecl.hpp>
-#include <Teuchos_Comm.hpp>
-#include <Teuchos_Describable.hpp>
-#include <Teuchos_ENull.hpp>
-#include <Teuchos_FancyOStream.hpp>
-#include <Teuchos_FilteredIterator.hpp>
-#include <Teuchos_LabeledObject.hpp>
-#include <Teuchos_ParameterEntry.hpp>
-#include <Teuchos_ParameterEntryValidator.hpp>
-#include <Teuchos_ParameterList.hpp>
-#include <Teuchos_ParameterListModifier.hpp>
-#include <Teuchos_PtrDecl.hpp>
-#include <Teuchos_RCPDecl.hpp>
-#include <Teuchos_RCPNode.hpp>
-#include <Teuchos_StringIndexedOrderedValueObjectContainer.hpp>
-#include <Teuchos_TableEntry.hpp>
-#include <Teuchos_Utils.hpp>
-#include <Teuchos_VerbosityLevel.hpp>
-#include <Teuchos_XMLObject.hpp>
-#include <Teuchos_XMLObjectImplem.hpp>
-#include <Teuchos_any.hpp>
-#include <cwchar>
-#include <deque>
-#include <functional>
-#include <ios>
-#include <iterator>
-#include <locale>
-#include <map>
-#include <memory>
-#include <mpi.h>
-#include <ostream>
-#include <set>
-#include <sstream>
+#include <RTOpPack_RTOpT_decl.hpp> // RTOpPack::ReductTarget
+#include <Teuchos_Array.hpp> // Teuchos::Array
+#include <Teuchos_Array.hpp> // Teuchos::InvalidArrayStringRepresentation
+#include <Teuchos_Array.hpp> // Teuchos::extractDataFromISS
+#include <Teuchos_Array.hpp> // Teuchos::getArrayTypeNameTraitsFormat
+#include <Teuchos_Array.hpp> // Teuchos::operator<<
+#include <Teuchos_Array.hpp> // Teuchos::toString
+#include <Teuchos_ArrayRCPDecl.hpp> // Teuchos::ArrayRCP
+#include <Teuchos_ArrayView.hpp> // Teuchos::ArrayView
+#include <Teuchos_ArrayViewDecl.hpp> // Teuchos::ArrayView
+#include <Teuchos_BLAS_types.hpp> // Teuchos::ETransp
+#include <Teuchos_Comm.hpp> // Teuchos::CommRequest
+#include <Teuchos_DataAccess.hpp> // Teuchos::DataAccess
+#include <Teuchos_Describable.hpp> // Teuchos::Describable
+#include <Teuchos_Describable.hpp> // Teuchos::DescribableStreamManipulatorState
+#include <Teuchos_Describable.hpp> // Teuchos::describe
+#include <Teuchos_Describable.hpp> // Teuchos::operator<<
+#include <Teuchos_ENull.hpp> // Teuchos::ENull
+#include <Teuchos_FancyOStream.hpp> // Teuchos::basic_FancyOStream
+#include <Teuchos_FancyOStream.hpp> // Teuchos::basic_OSTab
+#include <Teuchos_FancyOStream.hpp> // Teuchos::fancyOStream
+#include <Teuchos_FancyOStream.hpp> // Teuchos::getFancyOStream
+#include <Teuchos_FilteredIterator.hpp> // Teuchos::FilteredIterator
+#include <Teuchos_FilteredIterator.hpp> // Teuchos::operator<<
+#include <Teuchos_Hashtable.hpp> // Teuchos::HashPair
+#include <Teuchos_InvalidDependencyException.hpp> // Teuchos::InvalidDependencyException
+#include <Teuchos_LabeledObject.hpp> // Teuchos::LabeledObject
+#include <Teuchos_ParameterEntry.hpp> // Teuchos::ParameterEntry
+#include <Teuchos_ParameterEntry.hpp> // Teuchos::getValue
+#include <Teuchos_ParameterEntry.hpp> // Teuchos::operator<<
+#include <Teuchos_ParameterEntryValidator.hpp> // Teuchos::ParameterEntryValidator
+#include <Teuchos_ParameterList.hpp> // Teuchos::EValidateDefaults
+#include <Teuchos_ParameterList.hpp> // Teuchos::EValidateUsed
+#include <Teuchos_ParameterList.hpp> // Teuchos::ParameterList
+#include <Teuchos_ParameterList.hpp> // Teuchos::ParameterList::PrintOptions
+#include <Teuchos_ParameterList.hpp> // Teuchos::TypeNameTraits
+#include <Teuchos_ParameterList.hpp> // Teuchos::createParameterList
+#include <Teuchos_ParameterList.hpp> // Teuchos::getParameter
+#include <Teuchos_ParameterList.hpp> // Teuchos::getParameterPtr
+#include <Teuchos_ParameterList.hpp> // Teuchos::haveSameModifiers
+#include <Teuchos_ParameterList.hpp> // Teuchos::haveSameValues
+#include <Teuchos_ParameterList.hpp> // Teuchos::haveSameValuesSorted
+#include <Teuchos_ParameterList.hpp> // Teuchos::operator<<
+#include <Teuchos_ParameterList.hpp> // Teuchos::parameterList
+#include <Teuchos_ParameterList.hpp> // Teuchos::sublist
+#include <Teuchos_ParameterListModifier.hpp> // Teuchos::ParameterListModifier
+#include <Teuchos_PtrDecl.hpp> // Teuchos::Ptr
+#include <Teuchos_RCPDecl.hpp> // Teuchos::ERCPUndefinedWeakNoDealloc
+#include <Teuchos_RCPDecl.hpp> // Teuchos::ERCPWeakNoDealloc
+#include <Teuchos_RCPDecl.hpp> // Teuchos::RCP
+#include <Teuchos_RCPNode.hpp> // Teuchos::EPrePostDestruction
+#include <Teuchos_RCPNode.hpp> // Teuchos::ERCPNodeLookup
+#include <Teuchos_RCPNode.hpp> // Teuchos::ERCPStrength
+#include <Teuchos_RCPNode.hpp> // Teuchos::RCPNode
+#include <Teuchos_RCPNode.hpp> // Teuchos::RCPNodeHandle
+#include <Teuchos_Range1D.hpp> // Teuchos::Range1D
+#include <Teuchos_StringIndexedOrderedValueObjectContainer.hpp> // Teuchos::StringIndexedOrderedValueObjectContainer
+#include <Teuchos_StringIndexedOrderedValueObjectContainer.hpp> // Teuchos::StringIndexedOrderedValueObjectContainerBase
+#include <Teuchos_StringIndexedOrderedValueObjectContainer.hpp> // Teuchos::StringIndexedOrderedValueObjectContainerBase::InvalidKeyError
+#include <Teuchos_StringIndexedOrderedValueObjectContainer.hpp> // Teuchos::StringIndexedOrderedValueObjectContainerBase::InvalidOrdinalIndexError
+#include <Teuchos_StringIndexedOrderedValueObjectContainer.hpp> // Teuchos::StringIndexedOrderedValueObjectContainerBase::KeyObjectPair
+#include <Teuchos_StringIndexedOrderedValueObjectContainer.hpp> // Teuchos::StringIndexedOrderedValueObjectContainerBase::OrdinalIndex
+#include <Teuchos_StringIndexedOrderedValueObjectContainer.hpp> // Teuchos::StringIndexedOrderedValueObjectContainerBase::SelectActive
+#include <Teuchos_TableEntry.hpp> // Teuchos::TableEntry
+#include <Teuchos_Tuple.hpp> // Teuchos::Tuple
+#include <Teuchos_Tuple.hpp> // Teuchos::tuple
+#include <Teuchos_TwoDArray.hpp> // Teuchos::TwoDArray
+#include <Teuchos_Utils.hpp> // Teuchos::Utils
+#include <Teuchos_VerbosityLevel.hpp> // Teuchos::EVerbosityLevel
+#include <Teuchos_XMLObject.hpp> // Teuchos::EmptyXMLError
+#include <Teuchos_XMLObject.hpp> // Teuchos::XMLObject
+#include <Teuchos_XMLObject.hpp> // Teuchos::operator<<
+#include <Teuchos_XMLObject.hpp> // Teuchos::toString
+#include <Teuchos_XMLObjectImplem.hpp> // Teuchos::XMLObjectImplem
+#include <Teuchos_any.hpp> // Teuchos::any
+#include <Tpetra_Access.hpp> // Tpetra::Access::OverwriteAllStruct
+#include <Tpetra_Access.hpp> // Tpetra::Access::ReadOnlyStruct
+#include <Tpetra_Access.hpp> // Tpetra::Access::ReadWriteStruct
+#include <Tpetra_Details_WrappedDualView.hpp> // Tpetra::Details::WrappedDualView
+#include <Tpetra_Export_decl.hpp> // Teuchos::Array
+#include <Tpetra_MultiVector_decl.hpp> // Tpetra::MultiVector
+#include <Xpetra_Access.hpp> // Xpetra::Access::OverwriteAllStruct
+#include <Xpetra_Access.hpp> // Xpetra::Access::ReadOnlyStruct
+#include <Xpetra_Access.hpp> // Xpetra::Access::ReadWriteStruct
+#include <Xpetra_Map_decl.hpp> // Xpetra::Map
+#include <Xpetra_MatrixView.hpp> // Xpetra::MatrixView
+#include <Xpetra_MultiVector_decl.hpp> // Xpetra::MultiVector
+#include <Xpetra_MultiVector_fwd.hpp> // Xpetra::MultiVector
+#include <cwchar> // (anonymous)
+#include <deque> // std::_Deque_iterator
+#include <functional> // std::less
+#include <ios> // std::_Ios_Openmode
+#include <ios> // std::_Ios_Seekdir
+#include <ios> // std::fpos
+#include <iterator> // __gnu_cxx::__normal_iterator
+#include <iterator> // std::reverse_iterator
+#include <locale> // std::locale
+#include <map> // std::_Rb_tree_const_iterator
+#include <map> // std::_Rb_tree_iterator
+#include <map> // std::map
+#include <memory> // std::allocator
+#include <mpi.h> // ompi_request_t
+#include <mpi.h> // ompi_status_public_t
+#include <ostream> // std::basic_ostream
+#include <set> // std::set
 #include <sstream> // __str__
-#include <stdexcept>
-#include <streambuf>
-#include <string>
-#include <typeinfo>
-#include <utility>
-#include <vector>
+#include <sstream> // std::basic_istringstream
+#include <sstream> // std::basic_stringbuf
+#include <stdexcept> // std::logic_error
+#include <stdexcept> // std::runtime_error
+#include <streambuf> // std::basic_streambuf
+#include <string> // std::basic_string
+#include <string> // std::char_traits
+#include <typeinfo> // std::type_info
+#include <utility> // std::pair
+#include <vector> // std::_Bit_const_iterator
+#include <vector> // std::_Bit_iterator
+#include <vector> // std::vector
 
 #include <functional>
 #include <pybind11/pybind11.h>
@@ -252,6 +336,25 @@ struct PyCallBack_Teuchos_StringIndexedOrderedValueObjectContainerBase_InvalidKe
 	}
 };
 
+// Teuchos::InvalidDependencyException file:Teuchos_InvalidDependencyException.hpp line:53
+struct PyCallBack_Teuchos_InvalidDependencyException : public Teuchos::InvalidDependencyException {
+	using Teuchos::InvalidDependencyException::InvalidDependencyException;
+
+	const char * what() const noexcept override {
+		pybind11::gil_scoped_acquire gil;
+		pybind11::function overload = pybind11::get_overload(static_cast<const Teuchos::InvalidDependencyException *>(this), "what");
+		if (overload) {
+			auto o = overload.operator()<pybind11::return_value_policy::reference>();
+			if (pybind11::detail::cast_is_temporary_value_reference<const char *>::value) {
+				static pybind11::detail::override_caster_t<const char *> caster;
+				return pybind11::detail::cast_ref<const char *>(std::move(o), caster);
+			}
+			else return pybind11::detail::cast_safe<const char *>(std::move(o));
+		}
+		return logic_error::what();
+	}
+};
+
 void bind_Teuchos_FancyOStream(std::function< pybind11::module &(std::string const &namespace_) > &M)
 {
 	{ // Teuchos::basic_FancyOStream file:Teuchos_FancyOStream.hpp line:381
@@ -310,6 +413,34 @@ void bind_Teuchos_FancyOStream(std::function< pybind11::module &(std::string con
 
 		cl.def("__str__", [](Teuchos::DescribableStreamManipulatorState const &o) -> std::string { std::ostringstream s; s << o; return s.str(); } );
 	}
+	{ // Teuchos::Tuple file:Teuchos_Tuple.hpp line:67
+		pybind11::class_<Teuchos::Tuple<std::string,1>, Teuchos::RCP<Teuchos::Tuple<std::string,1>>, Teuchos::ArrayView<std::string>> cl(M("Teuchos"), "Tuple_std_string_1_t", "");
+		cl.def( pybind11::init( [](){ return new Teuchos::Tuple<std::string,1>(); } ) );
+		cl.def( pybind11::init( [](Teuchos::Tuple<std::string,1> const &o){ return new Teuchos::Tuple<std::string,1>(o); } ) );
+		cl.def("assign", (class Teuchos::Tuple<std::string, 1> & (Teuchos::Tuple<std::string,1>::*)(const class Teuchos::Tuple<std::string, 1> &)) &Teuchos::Tuple<std::string, 1>::operator=, "C++: Teuchos::Tuple<std::string, 1>::operator=(const class Teuchos::Tuple<std::string, 1> &) --> class Teuchos::Tuple<std::string, 1> &", pybind11::return_value_policy::automatic, pybind11::arg("t"));
+		cl.def("assign", (class Teuchos::ArrayView<std::string > & (Teuchos::ArrayView<std::string>::*)(const class Teuchos::ArrayView<std::string > &)) &Teuchos::ArrayView<std::string >::operator=, "C++: Teuchos::ArrayView<std::string >::operator=(const class Teuchos::ArrayView<std::string > &) --> class Teuchos::ArrayView<std::string > &", pybind11::return_value_policy::automatic, pybind11::arg("array"));
+		cl.def("is_null", (bool (Teuchos::ArrayView<std::string>::*)() const) &Teuchos::ArrayView<std::string >::is_null, "C++: Teuchos::ArrayView<std::string >::is_null() const --> bool");
+		cl.def("size", (long (Teuchos::ArrayView<std::string>::*)() const) &Teuchos::ArrayView<std::string >::size, "C++: Teuchos::ArrayView<std::string >::size() const --> long");
+		cl.def("toString", (std::string (Teuchos::ArrayView<std::string>::*)() const) &Teuchos::ArrayView<std::string >::toString, "C++: Teuchos::ArrayView<std::string >::toString() const --> std::string");
+		cl.def("getRawPtr", (std::string * (Teuchos::ArrayView<std::string>::*)() const) &Teuchos::ArrayView<std::string >::getRawPtr, "C++: Teuchos::ArrayView<std::string >::getRawPtr() const --> std::string *", pybind11::return_value_policy::automatic);
+		cl.def("data", (std::string * (Teuchos::ArrayView<std::string>::*)() const) &Teuchos::ArrayView<std::string >::data, "C++: Teuchos::ArrayView<std::string >::data() const --> std::string *", pybind11::return_value_policy::automatic);
+		cl.def("__getitem__", (std::string & (Teuchos::ArrayView<std::string>::*)(long) const) &Teuchos::ArrayView<std::string >::operator[], "C++: Teuchos::ArrayView<std::string >::operator[](long) const --> std::string &", pybind11::return_value_policy::automatic, pybind11::arg("i"));
+		cl.def("front", (std::string & (Teuchos::ArrayView<std::string>::*)() const) &Teuchos::ArrayView<std::string >::front, "C++: Teuchos::ArrayView<std::string >::front() const --> std::string &", pybind11::return_value_policy::automatic);
+		cl.def("back", (std::string & (Teuchos::ArrayView<std::string>::*)() const) &Teuchos::ArrayView<std::string >::back, "C++: Teuchos::ArrayView<std::string >::back() const --> std::string &", pybind11::return_value_policy::automatic);
+		cl.def("view", (class Teuchos::ArrayView<std::string > (Teuchos::ArrayView<std::string>::*)(long, long) const) &Teuchos::ArrayView<std::string >::view, "C++: Teuchos::ArrayView<std::string >::view(long, long) const --> class Teuchos::ArrayView<std::string >", pybind11::arg("offset"), pybind11::arg("size"));
+		cl.def("__call__", (class Teuchos::ArrayView<std::string > (Teuchos::ArrayView<std::string>::*)(long, long) const) &Teuchos::ArrayView<std::string >::operator(), "C++: Teuchos::ArrayView<std::string >::operator()(long, long) const --> class Teuchos::ArrayView<std::string >", pybind11::arg("offset"), pybind11::arg("size"));
+		cl.def("__call__", (const class Teuchos::ArrayView<std::string > & (Teuchos::ArrayView<std::string>::*)() const) &Teuchos::ArrayView<std::string >::operator(), "C++: Teuchos::ArrayView<std::string >::operator()() const --> const class Teuchos::ArrayView<std::string > &", pybind11::return_value_policy::automatic);
+		cl.def("getConst", (class Teuchos::ArrayView<const std::string > (Teuchos::ArrayView<std::string>::*)() const) &Teuchos::ArrayView<std::string >::getConst, "C++: Teuchos::ArrayView<std::string >::getConst() const --> class Teuchos::ArrayView<const std::string >");
+		cl.def("assign", (void (Teuchos::ArrayView<std::string>::*)(const class Teuchos::ArrayView<const std::string > &) const) &Teuchos::ArrayView<std::string >::assign, "C++: Teuchos::ArrayView<std::string >::assign(const class Teuchos::ArrayView<const std::string > &) const --> void", pybind11::arg("array"));
+		cl.def("begin", (std::string * (Teuchos::ArrayView<std::string>::*)() const) &Teuchos::ArrayView<std::string >::begin, "C++: Teuchos::ArrayView<std::string >::begin() const --> std::string *", pybind11::return_value_policy::automatic);
+		cl.def("end", (std::string * (Teuchos::ArrayView<std::string>::*)() const) &Teuchos::ArrayView<std::string >::end, "C++: Teuchos::ArrayView<std::string >::end() const --> std::string *", pybind11::return_value_policy::automatic);
+		cl.def("assert_not_null", (const class Teuchos::ArrayView<std::string > & (Teuchos::ArrayView<std::string>::*)() const) &Teuchos::ArrayView<std::string >::assert_not_null, "C++: Teuchos::ArrayView<std::string >::assert_not_null() const --> const class Teuchos::ArrayView<std::string > &", pybind11::return_value_policy::automatic);
+		cl.def("assert_in_range", (const class Teuchos::ArrayView<std::string > & (Teuchos::ArrayView<std::string>::*)(long, long) const) &Teuchos::ArrayView<std::string >::assert_in_range, "C++: Teuchos::ArrayView<std::string >::assert_in_range(long, long) const --> const class Teuchos::ArrayView<std::string > &", pybind11::return_value_policy::automatic, pybind11::arg("offset"), pybind11::arg("size"));
+		cl.def("access_private_ptr", (std::string * (Teuchos::ArrayView<std::string>::*)() const) &Teuchos::ArrayView<std::string >::access_private_ptr, "C++: Teuchos::ArrayView<std::string >::access_private_ptr() const --> std::string *", pybind11::return_value_policy::automatic);
+	}
+	// Teuchos::tuple(const std::string &) file:Teuchos_Tuple.hpp line:269
+	M("Teuchos").def("tuple", (class Teuchos::Tuple<std::string, 1> (*)(const std::string &)) &Teuchos::tuple<std::string>, "C++: Teuchos::tuple(const std::string &) --> class Teuchos::Tuple<std::string, 1>", pybind11::arg("a"));
+
 	{ // Teuchos::Utils file:Teuchos_Utils.hpp line:59
 		pybind11::class_<Teuchos::Utils, Teuchos::RCP<Teuchos::Utils>> cl(M("Teuchos"), "Utils", "");
 		cl.def( pybind11::init( [](){ return new Teuchos::Utils(); } ) );
@@ -342,6 +473,8 @@ void bind_Teuchos_FancyOStream(std::function< pybind11::module &(std::string con
 		cl.def( pybind11::init<long, const std::string &>(), pybind11::arg("n"), pybind11::arg("value") );
 
 		cl.def( pybind11::init( [](Teuchos::Array<std::string> const &o){ return new Teuchos::Array<std::string>(o); } ) );
+		cl.def( pybind11::init<const class Teuchos::ArrayView<const std::string > &>(), pybind11::arg("a") );
+
 		cl.def("assign", (class Teuchos::Array<std::string > & (Teuchos::Array<std::string>::*)(const class Teuchos::Array<std::string > &)) &Teuchos::Array<std::string >::operator=, "C++: Teuchos::Array<std::string >::operator=(const class Teuchos::Array<std::string > &) --> class Teuchos::Array<std::string > &", pybind11::return_value_policy::automatic, pybind11::arg("a"));
 		cl.def("assign", (void (Teuchos::Array<std::string>::*)(long, const std::string &)) &Teuchos::Array<std::string >::assign, "C++: Teuchos::Array<std::string >::assign(long, const std::string &) --> void", pybind11::arg("n"), pybind11::arg("val"));
 		cl.def("size", (long (Teuchos::Array<std::string>::*)() const) &Teuchos::Array<std::string >::size, "C++: Teuchos::Array<std::string >::size() const --> long");
@@ -366,6 +499,9 @@ void bind_Teuchos_FancyOStream(std::function< pybind11::module &(std::string con
 		cl.def_static("hasBoundsChecking", (bool (*)()) &Teuchos::Array<std::string >::hasBoundsChecking, "C++: Teuchos::Array<std::string >::hasBoundsChecking() --> bool");
 		cl.def("getRawPtr", (std::string * (Teuchos::Array<std::string>::*)()) &Teuchos::Array<std::string >::getRawPtr, "C++: Teuchos::Array<std::string >::getRawPtr() --> std::string *", pybind11::return_value_policy::automatic);
 		cl.def("data", (std::string * (Teuchos::Array<std::string>::*)()) &Teuchos::Array<std::string >::data, "C++: Teuchos::Array<std::string >::data() --> std::string *", pybind11::return_value_policy::automatic);
+		cl.def("view", (class Teuchos::ArrayView<std::string > (Teuchos::Array<std::string>::*)(long, long)) &Teuchos::Array<std::string >::view, "C++: Teuchos::Array<std::string >::view(long, long) --> class Teuchos::ArrayView<std::string >", pybind11::arg("offset"), pybind11::arg("size"));
+		cl.def("__call__", (class Teuchos::ArrayView<std::string > (Teuchos::Array<std::string>::*)(long, long)) &Teuchos::Array<std::string >::operator(), "C++: Teuchos::Array<std::string >::operator()(long, long) --> class Teuchos::ArrayView<std::string >", pybind11::arg("offset"), pybind11::arg("size"));
+		cl.def("__call__", (class Teuchos::ArrayView<std::string > (Teuchos::Array<std::string>::*)()) &Teuchos::Array<std::string >::operator(), "C++: Teuchos::Array<std::string >::operator()() --> class Teuchos::ArrayView<std::string >");
 
 		cl.def("__str__", [](Teuchos::Array<std::string> const &o) -> std::string { std::ostringstream s; s << o; return s.str(); } );
 	}
@@ -616,6 +752,7 @@ void bind_Teuchos_FancyOStream(std::function< pybind11::module &(std::string con
 	{ // Teuchos::ParameterEntryValidator file:Teuchos_ParameterEntryValidator.hpp line:64
 		pybind11::class_<Teuchos::ParameterEntryValidator, Teuchos::RCP<Teuchos::ParameterEntryValidator>> cl(M("Teuchos"), "ParameterEntryValidator", "Abstract interface for an object that can validate a\n  ParameterEntry's value.\n\n Not only can a validator validate and entry but it can also help to set\n and/or adjust the default value.");
 		cl.def("getXMLTypeName", (const std::string (Teuchos::ParameterEntryValidator::*)() const) &Teuchos::ParameterEntryValidator::getXMLTypeName, "Get a string that should be used as a value of the type attribute\n when serializing it to XML.\n\n \n a string that should be used as a tag for this validator\n when serializing it to XML.\n\nC++: Teuchos::ParameterEntryValidator::getXMLTypeName() const --> const std::string");
+		cl.def("validStringValues", (class Teuchos::RCP<const class Teuchos::Array<std::string > > (Teuchos::ParameterEntryValidator::*)() const) &Teuchos::ParameterEntryValidator::validStringValues, "Return an array of strings of valid values if applicable.\n\n If there is no such array of std::string values that makes since, just return\n return.get()==NULL.\n\n The returned strings must not contain any newlines (i.e. no ''\n characters) and must be short enough to fit on one line and be readable.\n\nC++: Teuchos::ParameterEntryValidator::validStringValues() const --> class Teuchos::RCP<const class Teuchos::Array<std::string > >");
 		cl.def("validate", (void (Teuchos::ParameterEntryValidator::*)(const class Teuchos::ParameterEntry &, const std::string &, const std::string &) const) &Teuchos::ParameterEntryValidator::validate, "Validate a parameter entry value and throw std::exception (with a\n great error message) if validation fails.\n\n \n\n            [in] The ParameterEntry who's type and value is being validated\n \n\n\n            [in] The name of the ParameterEntry that is used to build error messages.\n \n\n\n            [in] The name of the ParameterList that paramName exists in\n            that is used to build error messages.\n\nC++: Teuchos::ParameterEntryValidator::validate(const class Teuchos::ParameterEntry &, const std::string &, const std::string &) const --> void", pybind11::arg("entry"), pybind11::arg("paramName"), pybind11::arg("sublistName"));
 		cl.def("validateAndModify", (void (Teuchos::ParameterEntryValidator::*)(const std::string &, const std::string &, class Teuchos::ParameterEntry *) const) &Teuchos::ParameterEntryValidator::validateAndModify, "Validate and perhaps modify a parameter entry's value.\n\n \n [in] The name of the ParameterEntry that is used to\n build error messages.\n\n \n [in] The name of the ParameterList that\n paramName exists in that is used to build error messages.\n\n \n [in/out] The ParameterEntry who's type and value is being\n validated and perhaps even changed as a result of calling this function.\n\n The default implementation simply calls this->validate().\n\nC++: Teuchos::ParameterEntryValidator::validateAndModify(const std::string &, const std::string &, class Teuchos::ParameterEntry *) const --> void", pybind11::arg("paramName"), pybind11::arg("sublistName"), pybind11::arg("entry"));
 		cl.def("convertStringToDouble", (double (Teuchos::ParameterEntryValidator::*)(std::string) const) &Teuchos::ParameterEntryValidator::convertStringToDouble, "C++: Teuchos::ParameterEntryValidator::convertStringToDouble(std::string) const --> double", pybind11::arg("str"));
@@ -650,11 +787,19 @@ void bind_Teuchos_FancyOStream(std::function< pybind11::module &(std::string con
 		pybind11::class_<Teuchos::ParameterEntry, Teuchos::RCP<Teuchos::ParameterEntry>> cl(M("Teuchos"), "ParameterEntry", "This object is held as the \"value\" in the Teuchos::ParameterList std::map.\n\n    This structure holds a  value and information on the status of this\n    parameter (isUsed, isDefault, etc.).  The type of parameter is chosen through the\n    templated Set/Get methods.");
 		cl.def( pybind11::init( [](){ return new Teuchos::ParameterEntry(); } ) );
 		cl.def( pybind11::init( [](Teuchos::ParameterEntry const &o){ return new Teuchos::ParameterEntry(o); } ) );
+		cl.def("setValue", [](Teuchos::ParameterEntry &o, std::string const & a0) -> void { return o.setValue(a0); }, "", pybind11::arg("value_in"));
+		cl.def("setValue", [](Teuchos::ParameterEntry &o, std::string const & a0, bool const & a1) -> void { return o.setValue(a0, a1); }, "", pybind11::arg("value_in"), pybind11::arg("isDefault_in"));
+		cl.def("setValue", [](Teuchos::ParameterEntry &o, std::string const & a0, bool const & a1, const std::string & a2) -> void { return o.setValue(a0, a1, a2); }, "", pybind11::arg("value_in"), pybind11::arg("isDefault_in"), pybind11::arg("docString_in"));
+		cl.def("setValue", (void (Teuchos::ParameterEntry::*)(std::string, bool, const std::string &, const class Teuchos::RCP<const class Teuchos::ParameterEntryValidator> &)) &Teuchos::ParameterEntry::setValue<std::string>, "C++: Teuchos::ParameterEntry::setValue(std::string, bool, const std::string &, const class Teuchos::RCP<const class Teuchos::ParameterEntryValidator> &) --> void", pybind11::arg("value_in"), pybind11::arg("isDefault_in"), pybind11::arg("docString_in"), pybind11::arg("validator_in"));
 		cl.def("getValue", (int & (Teuchos::ParameterEntry::*)(int *) const) &Teuchos::ParameterEntry::getValue<int>, "C++: Teuchos::ParameterEntry::getValue(int *) const --> int &", pybind11::return_value_policy::automatic, pybind11::arg(""));
-		cl.def("getValue", (double & (Teuchos::ParameterEntry::*)(double *) const) &Teuchos::ParameterEntry::getValue<double>, "C++: Teuchos::ParameterEntry::getValue(double *) const --> double &", pybind11::return_value_policy::automatic, pybind11::arg(""));
-		cl.def("getValue", (std::string & (Teuchos::ParameterEntry::*)(std::string *) const) &Teuchos::ParameterEntry::getValue<std::string>, "C++: Teuchos::ParameterEntry::getValue(std::string *) const --> std::string &", pybind11::return_value_policy::automatic, pybind11::arg(""));
-		cl.def("getValue", (class Teuchos::ParameterList & (Teuchos::ParameterEntry::*)(class Teuchos::ParameterList *) const) &Teuchos::ParameterEntry::getValue<Teuchos::ParameterList>, "C++: Teuchos::ParameterEntry::getValue(class Teuchos::ParameterList *) const --> class Teuchos::ParameterList &", pybind11::return_value_policy::automatic, pybind11::arg(""));
 		cl.def("getValue", (bool & (Teuchos::ParameterEntry::*)(bool *) const) &Teuchos::ParameterEntry::getValue<bool>, "C++: Teuchos::ParameterEntry::getValue(bool *) const --> bool &", pybind11::return_value_policy::automatic, pybind11::arg(""));
+		cl.def("getValue", (std::string & (Teuchos::ParameterEntry::*)(std::string *) const) &Teuchos::ParameterEntry::getValue<std::string>, "C++: Teuchos::ParameterEntry::getValue(std::string *) const --> std::string &", pybind11::return_value_policy::automatic, pybind11::arg(""));
+		cl.def("getValue", (unsigned long & (Teuchos::ParameterEntry::*)(unsigned long *) const) &Teuchos::ParameterEntry::getValue<unsigned long>, "C++: Teuchos::ParameterEntry::getValue(unsigned long *) const --> unsigned long &", pybind11::return_value_policy::automatic, pybind11::arg(""));
+		cl.def("getValue", (class Teuchos::RCP<class Tpetra::MultiVector<double, int, long long> > & (Teuchos::ParameterEntry::*)(class Teuchos::RCP<class Tpetra::MultiVector<double, int, long long> > *) const) &Teuchos::ParameterEntry::getValue<Teuchos::RCP<Tpetra::MultiVector<double, int, long long> >>, "C++: Teuchos::ParameterEntry::getValue(class Teuchos::RCP<class Tpetra::MultiVector<double, int, long long> > *) const --> class Teuchos::RCP<class Tpetra::MultiVector<double, int, long long> > &", pybind11::return_value_policy::automatic, pybind11::arg(""));
+		cl.def("getValue", (double & (Teuchos::ParameterEntry::*)(double *) const) &Teuchos::ParameterEntry::getValue<double>, "C++: Teuchos::ParameterEntry::getValue(double *) const --> double &", pybind11::return_value_policy::automatic, pybind11::arg(""));
+		cl.def("getValue", (class Teuchos::ParameterList & (Teuchos::ParameterEntry::*)(class Teuchos::ParameterList *) const) &Teuchos::ParameterEntry::getValue<Teuchos::ParameterList>, "C++: Teuchos::ParameterEntry::getValue(class Teuchos::ParameterList *) const --> class Teuchos::ParameterList &", pybind11::return_value_policy::automatic, pybind11::arg(""));
+		cl.def("getValue", (class Teuchos::TwoDArray<std::string > & (Teuchos::ParameterEntry::*)(class Teuchos::TwoDArray<std::string > *) const) &Teuchos::ParameterEntry::getValue<Teuchos::TwoDArray<std::string >>, "C++: Teuchos::ParameterEntry::getValue(class Teuchos::TwoDArray<std::string > *) const --> class Teuchos::TwoDArray<std::string > &", pybind11::return_value_policy::automatic, pybind11::arg(""));
+		cl.def("getValue", (class Teuchos::Array<std::string > & (Teuchos::ParameterEntry::*)(class Teuchos::Array<std::string > *) const) &Teuchos::ParameterEntry::getValue<Teuchos::Array<std::string >>, "C++: Teuchos::ParameterEntry::getValue(class Teuchos::Array<std::string > *) const --> class Teuchos::Array<std::string > &", pybind11::return_value_policy::automatic, pybind11::arg(""));
 		cl.def("assign", (class Teuchos::ParameterEntry & (Teuchos::ParameterEntry::*)(const class Teuchos::ParameterEntry &)) &Teuchos::ParameterEntry::operator=, "Replace the current parameter entry with \n\nC++: Teuchos::ParameterEntry::operator=(const class Teuchos::ParameterEntry &) --> class Teuchos::ParameterEntry &", pybind11::return_value_policy::automatic, pybind11::arg("source"));
 		cl.def("setAnyValue", [](Teuchos::ParameterEntry &o, const class Teuchos::any & a0) -> void { return o.setAnyValue(a0); }, "", pybind11::arg("value"));
 		cl.def("setAnyValue", (void (Teuchos::ParameterEntry::*)(const class Teuchos::any &, bool)) &Teuchos::ParameterEntry::setAnyValue, "Set the value as an any object.\n\n This wipes all other data including documentation strings.\n\n Warning! Do not use function ths to set a sublist!\n\nC++: Teuchos::ParameterEntry::setAnyValue(const class Teuchos::any &, bool) --> void", pybind11::arg("value"), pybind11::arg("isDefault"));
@@ -689,7 +834,16 @@ void bind_Teuchos_FancyOStream(std::function< pybind11::module &(std::string con
 	M("Teuchos").def("getValue", (class Teuchos::ParameterList & (*)(const class Teuchos::ParameterEntry &)) &Teuchos::getValue<Teuchos::ParameterList>, "C++: Teuchos::getValue(const class Teuchos::ParameterEntry &) --> class Teuchos::ParameterList &", pybind11::return_value_policy::automatic, pybind11::arg("entry"));
 
 	// Teuchos::getValue(const class Teuchos::ParameterEntry &) file:Teuchos_ParameterEntry.hpp line:263
+	M("Teuchos").def("getValue", (class Teuchos::RCP<class Tpetra::MultiVector<double, int, long long> > & (*)(const class Teuchos::ParameterEntry &)) &Teuchos::getValue<Teuchos::RCP<Tpetra::MultiVector<double, int, long long> >>, "C++: Teuchos::getValue(const class Teuchos::ParameterEntry &) --> class Teuchos::RCP<class Tpetra::MultiVector<double, int, long long> > &", pybind11::return_value_policy::automatic, pybind11::arg("entry"));
+
+	// Teuchos::getValue(const class Teuchos::ParameterEntry &) file:Teuchos_ParameterEntry.hpp line:263
 	M("Teuchos").def("getValue", (bool & (*)(const class Teuchos::ParameterEntry &)) &Teuchos::getValue<bool>, "C++: Teuchos::getValue(const class Teuchos::ParameterEntry &) --> bool &", pybind11::return_value_policy::automatic, pybind11::arg("entry"));
+
+	// Teuchos::getValue(const class Teuchos::ParameterEntry &) file:Teuchos_ParameterEntry.hpp line:263
+	M("Teuchos").def("getValue", (class Teuchos::TwoDArray<std::string > & (*)(const class Teuchos::ParameterEntry &)) &Teuchos::getValue<Teuchos::TwoDArray<std::string >>, "C++: Teuchos::getValue(const class Teuchos::ParameterEntry &) --> class Teuchos::TwoDArray<std::string > &", pybind11::return_value_policy::automatic, pybind11::arg("entry"));
+
+	// Teuchos::getValue(const class Teuchos::ParameterEntry &) file:Teuchos_ParameterEntry.hpp line:263
+	M("Teuchos").def("getValue", (class Teuchos::Array<std::string > & (*)(const class Teuchos::ParameterEntry &)) &Teuchos::getValue<Teuchos::Array<std::string >>, "C++: Teuchos::getValue(const class Teuchos::ParameterEntry &) --> class Teuchos::Array<std::string > &", pybind11::return_value_policy::automatic, pybind11::arg("entry"));
 
 	{ // Teuchos::FilteredIterator file:Teuchos_FilteredIterator.hpp line:60
 		pybind11::class_<Teuchos::FilteredIterator<std::_Deque_iterator<Teuchos::StringIndexedOrderedValueObjectContainerBase::KeyObjectPair<Teuchos::ParameterEntry>, const Teuchos::StringIndexedOrderedValueObjectContainerBase::KeyObjectPair<Teuchos::ParameterEntry> &, const Teuchos::StringIndexedOrderedValueObjectContainerBase::KeyObjectPair<Teuchos::ParameterEntry> *>,Teuchos::StringIndexedOrderedValueObjectContainerBase::SelectActive<Teuchos::ParameterEntry>>, Teuchos::RCP<Teuchos::FilteredIterator<std::_Deque_iterator<Teuchos::StringIndexedOrderedValueObjectContainerBase::KeyObjectPair<Teuchos::ParameterEntry>, const Teuchos::StringIndexedOrderedValueObjectContainerBase::KeyObjectPair<Teuchos::ParameterEntry> &, const Teuchos::StringIndexedOrderedValueObjectContainerBase::KeyObjectPair<Teuchos::ParameterEntry> *>,Teuchos::StringIndexedOrderedValueObjectContainerBase::SelectActive<Teuchos::ParameterEntry>>>> cl(M("Teuchos"), "FilteredIterator_std__Deque_iterator_Teuchos_StringIndexedOrderedValueObjectContainerBase_KeyObjectPair_Teuchos_ParameterEntry_const_Teuchos_StringIndexedOrderedValueObjectContainerBase_KeyObjectPair_Teuchos_ParameterEntry_&_const_Teuchos_StringIndexedOrderedValueObjectContainerBase_KeyObjectPair_Teuchos_ParameterEntry_*_Teuchos_StringIndexedOrderedValueObjectContainerBase_SelectActive_Teuchos_ParameterEntry_t", "");
@@ -793,6 +947,8 @@ void bind_Teuchos_FancyOStream(std::function< pybind11::module &(std::string con
 		cl.def( pybind11::init<const std::string &, const class Teuchos::RCP<const class Teuchos::ParameterListModifier> &>(), pybind11::arg("name"), pybind11::arg("modifier") );
 
 		cl.def( pybind11::init( [](Teuchos::ParameterList const &o){ return new Teuchos::ParameterList(o); } ) );
+		cl.def("isType", (bool (Teuchos::ParameterList::*)(const std::string &) const) &Teuchos::ParameterList::isType<int>, "C++: Teuchos::ParameterList::isType(const std::string &) const --> bool", pybind11::arg("name_in"));
+		cl.def("isType", (bool (Teuchos::ParameterList::*)(const std::string &) const) &Teuchos::ParameterList::isType<bool>, "C++: Teuchos::ParameterList::isType(const std::string &) const --> bool", pybind11::arg("name_in"));
 		cl.def("setName", (class Teuchos::ParameterList & (Teuchos::ParameterList::*)(const std::string &)) &Teuchos::ParameterList::setName, "Set the name of *this list.\n\nC++: Teuchos::ParameterList::setName(const std::string &) --> class Teuchos::ParameterList &", pybind11::return_value_policy::automatic, pybind11::arg("name"));
 		cl.def("assign", (class Teuchos::ParameterList & (Teuchos::ParameterList::*)(const class Teuchos::ParameterList &)) &Teuchos::ParameterList::operator=, "Replace the current parameter list with \n\n \n This also replaces the name returned by this->name()\n\nC++: Teuchos::ParameterList::operator=(const class Teuchos::ParameterList &) --> class Teuchos::ParameterList &", pybind11::return_value_policy::automatic, pybind11::arg("source"));
 		cl.def("setModifier", (void (Teuchos::ParameterList::*)(const class Teuchos::RCP<const class Teuchos::ParameterListModifier> &)) &Teuchos::ParameterList::setModifier, "C++: Teuchos::ParameterList::setModifier(const class Teuchos::RCP<const class Teuchos::ParameterListModifier> &) --> void", pybind11::arg("modifier"));
@@ -894,7 +1050,12 @@ void bind_Teuchos_FancyOStream(std::function< pybind11::module &(std::string con
 	// Teuchos::sublist(const class Teuchos::RCP<const class Teuchos::ParameterList> &, const std::string &) file:Teuchos_ParameterList.hpp line:1588
 	M("Teuchos").def("sublist", (class Teuchos::RCP<const class Teuchos::ParameterList> (*)(const class Teuchos::RCP<const class Teuchos::ParameterList> &, const std::string &)) &Teuchos::sublist, "Return a RCP to a sublist in another RCP-ed parameter list.\n\nC++: Teuchos::sublist(const class Teuchos::RCP<const class Teuchos::ParameterList> &, const std::string &) --> class Teuchos::RCP<const class Teuchos::ParameterList>", pybind11::arg("paramList"), pybind11::arg("name"));
 
-	// Teuchos::initiate(class Teuchos::ParameterList) file:PyTrilinos2_Teuchos_ETI.hpp line:7
-	M("Teuchos").def("initiate", (void (*)(class Teuchos::ParameterList)) &Teuchos::initiate, "C++: Teuchos::initiate(class Teuchos::ParameterList) --> void", pybind11::arg("p"));
+	{ // Teuchos::InvalidDependencyException file:Teuchos_InvalidDependencyException.hpp line:53
+		pybind11::class_<Teuchos::InvalidDependencyException, Teuchos::RCP<Teuchos::InvalidDependencyException>, PyCallBack_Teuchos_InvalidDependencyException, std::logic_error> cl(M("Teuchos"), "InvalidDependencyException", "Thrown when some aspect of a Dependency has been determined to be invalid.");
+		cl.def( pybind11::init<const std::string &>(), pybind11::arg("what_arg") );
 
+		cl.def( pybind11::init( [](PyCallBack_Teuchos_InvalidDependencyException const &o){ return new PyCallBack_Teuchos_InvalidDependencyException(o); } ) );
+		cl.def( pybind11::init( [](Teuchos::InvalidDependencyException const &o){ return new Teuchos::InvalidDependencyException(o); } ) );
+		cl.def("assign", (class Teuchos::InvalidDependencyException & (Teuchos::InvalidDependencyException::*)(const class Teuchos::InvalidDependencyException &)) &Teuchos::InvalidDependencyException::operator=, "C++: Teuchos::InvalidDependencyException::operator=(const class Teuchos::InvalidDependencyException &) --> class Teuchos::InvalidDependencyException &", pybind11::return_value_policy::automatic, pybind11::arg(""));
+	}
 }

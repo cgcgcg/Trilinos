@@ -19,6 +19,8 @@
 #include <Tpetra_CrsMatrix_decl.hpp>
 #include <Tpetra_CrsMatrix_def.hpp>
 
+#include <Tpetra_Operator.hpp>
+
 #define BINDER_TPETRA_MAP_INSTANT(LO,GO) \
     template class Map<LO, GO>; \
     inline void initiate_map(const Map<LO, GO>& p) {};
