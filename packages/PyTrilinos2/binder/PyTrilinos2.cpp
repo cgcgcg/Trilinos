@@ -23,7 +23,6 @@ void bind_Teuchos_Ptr(std::function< pybind11::module &(std::string const &names
 void bind_Teuchos_RCP(std::function< pybind11::module &(std::string const &namespace_) > &M);
 void bind_Teuchos_ArrayRCPDecl(std::function< pybind11::module &(std::string const &namespace_) > &M);
 void bind_Teuchos_FancyOStream(std::function< pybind11::module &(std::string const &namespace_) > &M);
-void bind_std_stl_set(std::function< pybind11::module &(std::string const &namespace_) > &M);
 void bind_Teuchos_Dependency(std::function< pybind11::module &(std::string const &namespace_) > &M);
 void bind_Tpetra_Operator(std::function< pybind11::module &(std::string const &namespace_) > &M);
 void bind_Teuchos_BLAS_types(std::function< pybind11::module &(std::string const &namespace_) > &M);
@@ -116,7 +115,6 @@ PYBIND11_MODULE(PyTrilinos2, root_module) {
 	bind_Teuchos_RCP(M);
 	bind_Teuchos_ArrayRCPDecl(M);
 	bind_Teuchos_FancyOStream(M);
-	bind_std_stl_set(M);
 	bind_Teuchos_Dependency(M);
 	bind_Tpetra_Operator(M);
 	bind_Teuchos_BLAS_types(M);

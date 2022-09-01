@@ -2,6 +2,7 @@ import unittest
 from mpi4py import MPI
 from PyTrilinos2 import Teuchos
 from PyTrilinos2 import Tpetra
+from PyTrilinos2 import MueLu
 
 def CG(A, x, b, max_iter=20, tol=1e-8):
     r = type(b)(b, Teuchos.DataAccess.Copy)
@@ -92,5 +93,27 @@ class TestCG(unittest.TestCase):
 
         self.assertAlmostEqual(2*x.norm2(), b.norm2(), delta=1e-5)
 
+        # op = Tpetra.Operator_double_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t()
+        # op.assign(A)
+
+        print('issub', isinstance(A, Tpetra.Operator_double_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t))
+
+        p = Teuchos.ParameterList()
+        print(isinstance(p, Teuchos.ParameterList))
+
+        P = MueLu.CreateTpetraPreconditioner2(A, p)
+        print('CreateTpetraPreconditioner2', P)
+
+        P = MueLu.CreateTpetraPreconditioner3(A, p)
+        print('CreateTpetraPreconditioner3', P)
+
+        P = MueLu.CreateTpetraPreconditioner4(A, p)
+        print('CreateTpetraPreconditioner4', P)
+
+        P = MueLu.CreateTpetraPreconditioner5(A, p)
+        print('CreateTpetraPreconditioner5', P)
+
+        P = MueLu.CreateTpetraPreconditioner(A, p)
+        print(P)
 if __name__ == '__main__':
     unittest.main()

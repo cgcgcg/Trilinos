@@ -13,7 +13,6 @@ Teuchos_Ptr.cpp
 Teuchos_RCP.cpp
 Teuchos_ArrayRCPDecl.cpp
 Teuchos_FancyOStream.cpp
-std/stl_set.cpp
 Teuchos_Dependency.cpp
 Tpetra_Operator.cpp
 Teuchos_BLAS_types.cpp
