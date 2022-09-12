@@ -3,31 +3,48 @@ from mpi4py import MPI
 from PyTrilinos2 import Teuchos
 from PyTrilinos2 import Tpetra
 from PyTrilinos2 import MueLu
+from math import sqrt
 
-def CG(A, x, b, max_iter=20, tol=1e-8):
+
+def CG(A, x, b, max_iter=20, tol=1e-8, prec=None):
     r = type(b)(b, Teuchos.DataAccess.Copy)
     A.apply(x,r,Teuchos.ETransp.NO_TRANS,alpha=-1,beta=1)
 
     p = type(r)(r, Teuchos.DataAccess.Copy)
     q = type(r)(r, Teuchos.DataAccess.Copy)
 
-    gamma = r.norm2()
-    print('gamma_init = ' +str(gamma))
+    if prec is None:
+        gamma = r.norm2()
+    else:
+        Br = type(r)(r, Teuchos.DataAccess.Copy)
+        prec.apply(r, p)
+        gamma = sqrt(r.dot(p))
+
     if gamma < tol:
-        return
-    for j in range(0, max_iter):
-        A.apply(p,q)
+        return 0
+    for j in range(max_iter):
+        A.apply(p, q)
         c = q.dot(p)
         alpha = gamma**2 / c
         x.update(alpha, p, 1)
         r.update(-alpha, q, 1)
-        gamma_next = r.norm2()
-        print('gamma_'+str(j)+' = ' +str(gamma_next))
-        beta = gamma_next**2/gamma**2
-        gamma = gamma_next
-        if gamma < tol:
-            return
-        p.update(1, r, beta)
+        if prec is None:
+            gamma_next = r.norm2()
+            beta = gamma_next**2/gamma**2
+            gamma = gamma_next
+            if gamma < tol:
+                return j+1
+            p.update(1, r, beta)
+        else:
+            prec.apply(r, Br)
+            gamma_next = sqrt(Br.dot(r))
+            beta = gamma_next**2/gamma**2
+            gamma = gamma_next
+            if gamma < tol:
+                return j+1
+            p.update(1, Br, beta)
+    return max_iter
+
 
 class TestCG(unittest.TestCase):
     def test_all(self):
@@ -39,7 +56,9 @@ class TestCG(unittest.TestCase):
         vectorType = Tpetra.Vector_double_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t
         multivectorType = Tpetra.MultiVector_double_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t
 
-        mapT=mapType(14,0,comm)
+        n = 3000
+
+        mapT=mapType(n, 0, comm)
         print(mapT)
         print('mapT.getMinLocalIndex() = '+str(mapT.getMinLocalIndex()))
         print('mapT.getMaxLocalIndex() = '+str(mapT.getMaxLocalIndex()))
@@ -57,17 +76,30 @@ class TestCG(unittest.TestCase):
         print(v0.norm2())
         print(v0.dot(v1))
 
-        graph = graphType(mapT,3)
+        graph = graphType(mapT, 3)
         for i in range(mapT.getMinLocalIndex(), mapT.getMaxLocalIndex()+1):
             global_i = mapT.getGlobalElement(i)
-            graph.insertGlobalIndices(global_i, [global_i])
+            indices = [global_i]
+            if global_i > 0:
+                indices.append(global_i-1)
+            if global_i < mapT.getMaxAllGlobalIndex():
+                indices.append(global_i+1)
+            graph.insertGlobalIndices(global_i, indices)
         graph.fillComplete()
 
         A = matrixType(graph)
 
         for i in range(mapT.getMinLocalIndex(), mapT.getMaxLocalIndex()+1):
             global_i = mapT.getGlobalElement(i)
-            A.replaceGlobalValues(global_i, [global_i], [2.])
+            indices = [global_i]
+            vals = [2.]
+            if global_i > 0:
+                indices.append(global_i-1)
+                vals.append(-1.)
+            if global_i < mapT.getMaxAllGlobalIndex():
+                indices.append(global_i+1)
+                vals.append(-1.)
+            A.replaceGlobalValues(global_i, indices, vals)
 
         A.fillComplete()
 
@@ -81,39 +113,37 @@ class TestCG(unittest.TestCase):
         print(v1.norm2())
 
 
-        x=vectorType(mapT, True)
-        b=vectorType(mapT, False)
+        x = vectorType(mapT, True)
+        b = vectorType(mapT, False)
+        residual = vectorType(mapT, False)
 
         b.randomize(0,-2)
 
-        print('Norm of x before CG = '+str(x.norm2()))
+        print('Norm of x before CG = {}'.format(x.norm2()))
         print('Norm of b = '+str(b.norm2()))
-        CG(A, x, b, max_iter=5)
-        print('Norm of x after CG = '+str(x.norm2()))
+        its = CG(A, x, b, max_iter=n)
+        print('Norm of x after {} iterations of CG = {} '.format(its, x.norm2()))
 
-        self.assertAlmostEqual(2*x.norm2(), b.norm2(), delta=1e-5)
+        A.apply(x, residual)
+        residual.update(1, b, -1)
+        resNorm = residual.norm2()
+        print('Norm of residual after {} iterations of CG = {} '.format(its, resNorm))
 
-        # op = Tpetra.Operator_double_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t()
-        # op.assign(A)
-
-        print('issub', isinstance(A, Tpetra.Operator_double_int_long_long_Kokkos_Compat_KokkosDeviceWrapperNode_Kokkos_Serial_Kokkos_HostSpace_t))
+        self.assertAlmostEqual(resNorm, 0., delta=1e-5)
 
         p = Teuchos.ParameterList()
-        print(isinstance(p, Teuchos.ParameterList))
-
-        P = MueLu.CreateTpetraPreconditioner2(A, p)
-        print('CreateTpetraPreconditioner2', P)
-
-        P = MueLu.CreateTpetraPreconditioner3(A, p)
-        print('CreateTpetraPreconditioner3', P)
-
-        P = MueLu.CreateTpetraPreconditioner4(A, p)
-        print('CreateTpetraPreconditioner4', P)
-
-        P = MueLu.CreateTpetraPreconditioner5(A, p)
-        print('CreateTpetraPreconditioner5', P)
-
         P = MueLu.CreateTpetraPreconditioner(A, p)
-        print(P)
+
+        x.putScalar(0.)
+        print('Norm of x before CG = {}'.format(x.norm2()))
+        its = CG(A, x, b, max_iter=30, prec=P)
+        print('Norm of x after {} iterations of CG = {} '.format(its, x.norm2()))
+
+        A.apply(x, residual)
+        residual.update(1, b, -1)
+        resNorm = residual.norm2()
+        print('Norm of residual after {} iterations of CG = {} '.format(its, resNorm))
+
+        self.assertAlmostEqual(resNorm, 0., delta=1e-5)
 if __name__ == '__main__':
     unittest.main()
