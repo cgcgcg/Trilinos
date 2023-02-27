@@ -15,9 +15,7 @@
 #include "Xpetra_CrsMatrixWrap.hpp"
 #include "Xpetra_IO.hpp"
 #include "Xpetra_MatrixSplitting.hpp"
-#ifdef HAVE_XPETRA_TPETRA
 #include "Xpetra_TpetraCrsMatrix.hpp"
-#endif
 #ifdef HAVE_XPETRA_EPETRA
 #include "Xpetra_EpetraCrsMatrix.hpp"
 #endif

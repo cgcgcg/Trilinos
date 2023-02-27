@@ -47,7 +47,6 @@
 #define MUELU_MATRIXFREETENTATIVEPFACTORY_KOKKOS_FWD_HPP
 
 #include "MueLu_ConfigDefs.hpp"
-#if defined(HAVE_MUELU_KOKKOS_REFACTOR)
 
 namespace MueLu {
   template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
@@ -56,8 +55,6 @@ namespace MueLu {
 
 #ifndef MUELU_MATRIXFREETENTATIVEPFACTORY_KOKKOS_SHORT
 #define MUELU_MATRIXFREETENTATIVEPFACTORY_KOKKOS_SHORT
-#endif
-
 #endif
 
 #endif // MUELU_MATRIXFREETENTATIVEPFACTORY_KOKKOS_FWD_HPP

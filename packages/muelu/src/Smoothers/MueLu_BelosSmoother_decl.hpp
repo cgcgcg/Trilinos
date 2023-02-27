@@ -57,11 +57,9 @@
 
 #include "MueLu_BelosSmoother_fwd.hpp"
 
-#ifdef HAVE_XPETRA_TPETRA
 #include "BelosTpetraAdapter.hpp"
 #include <Tpetra_Operator.hpp>
 #include <Tpetra_MultiVector.hpp>
-#endif
 
 #include "MueLu_FactoryBase_fwd.hpp"
 #include "MueLu_FactoryManagerBase_fwd.hpp"

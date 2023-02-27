@@ -53,9 +53,7 @@
 #include <Xpetra_Matrix_fwd.hpp>
 #include <Xpetra_Matrix.hpp>
 #include <Xpetra_MultiVectorFactory_fwd.hpp>
-#ifdef HAVE_XPETRA_TPETRA // needed for clone()
 #include <Xpetra_TpetraCrsMatrix.hpp>
-#endif
 
 #include "MueLu_ConfigDefs.hpp"
 #include "MueLu_Ifpack2Smoother_fwd.hpp"

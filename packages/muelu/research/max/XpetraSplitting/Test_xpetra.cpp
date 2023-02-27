@@ -17,9 +17,7 @@
 #include "Xpetra_MatrixSplitting.hpp"
 #include "Xpetra_RegionAMG_def.hpp"
 #include "Xpetra_RegionHandler_def.hpp"
-#ifdef HAVE_XPETRA_TPETRA
 #include "Xpetra_TpetraCrsMatrix.hpp"
-#endif
 #ifdef HAVE_XPETRA_EPETRA
 #include "Xpetra_EpetraCrsMatrix.hpp"
 #endif
