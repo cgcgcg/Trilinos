@@ -138,20 +138,20 @@ namespace MueLu {
 
     if (parameterList_.get("print initial parameters",MasterList::getDefault<bool>("print initial parameters")))
       GetOStream(static_cast<MsgType>(Runtime1), 0) << parameterList_ << std::endl;
-    disable_addon_             = list.get("refmaxwell: disable addon",         MasterList::getDefault<bool>("refmaxwell: disable addon"));
-    mode_                      = list.get("refmaxwell: mode",                  MasterList::getDefault<std::string>("refmaxwell: mode"));
-    use_as_preconditioner_     = list.get("refmaxwell: use as preconditioner", MasterList::getDefault<bool>("refmaxwell: use as preconditioner"));
-    dump_matrices_             = list.get("refmaxwell: dump matrices",         MasterList::getDefault<bool>("refmaxwell: dump matrices"));
-    enable_reuse_              = list.get("refmaxwell: enable reuse",          MasterList::getDefault<bool>("refmaxwell: enable reuse"));
-    implicitTranspose_         = list.get("transpose: use implicit",           MasterList::getDefault<bool>("transpose: use implicit"));
-    fuseProlongationAndUpdate_ = list.get("fuse prolongation and update",      MasterList::getDefault<bool>("fuse prolongation and update"));
+    disable_addon_             = list.get("refmaxwell: disable addon",          MasterList::getDefault<bool>("refmaxwell: disable addon"));
+    mode_                      = list.get("refmaxwell: mode",                   MasterList::getDefault<std::string>("refmaxwell: mode"));
+    use_as_preconditioner_     = list.get("refmaxwell: use as preconditioner",  MasterList::getDefault<bool>("refmaxwell: use as preconditioner"));
+    dump_matrices_             = list.get("refmaxwell: dump matrices",          MasterList::getDefault<bool>("refmaxwell: dump matrices"));
+    enable_reuse_              = list.get("refmaxwell: enable reuse",           MasterList::getDefault<bool>("refmaxwell: enable reuse"));
+    implicitTranspose_         = list.get("transpose: use implicit",            MasterList::getDefault<bool>("transpose: use implicit"));
+    fuseProlongationAndUpdate_ = list.get("fuse prolongation and update",       MasterList::getDefault<bool>("fuse prolongation and update"));
     skipFirstLevel_            = list.get("refmaxwell: skip first (1,1) level", MasterList::getDefault<bool>("refmaxwell: skip first (1,1) level"));
-    syncTimers_                = list.get("sync timers",                       false);
-    numItersH_                 = list.get("refmaxwell: num iters H",           1);
-    numIters22_                = list.get("refmaxwell: num iters 22",          1);
-    applyBCsToAnodal_          = list.get("refmaxwell: apply BCs to Anodal",   false);
-    applyBCsToH_               = list.get("refmaxwell: apply BCs to H",        true);
-    applyBCsTo22_              = list.get("refmaxwell: apply BCs to 22",       true);
+    syncTimers_                = list.get("sync timers",                        false);
+    numItersCoarse11_          = list.get("refmaxwell: num iters coarse 11",    1);
+    numIters22_                = list.get("refmaxwell: num iters 22",           1);
+    applyBCsToAnodal_          = list.get("refmaxwell: apply BCs to Anodal",    false);
+    applyBCsToCoarse11_        = list.get("refmaxwell: apply BCs to coarse 11", true);
+    applyBCsTo22_              = list.get("refmaxwell: apply BCs to 22",        true);
 
     if(list.isSublist("refmaxwell: 11list"))
       precList11_     =  list.sublist("refmaxwell: 11list");
@@ -218,8 +218,16 @@ namespace MueLu {
       useKokkos_ = true;
 # endif    
     useKokkos_ = list.get("use kokkos refactor",useKokkos_);
-  }
 
+    // This should be taken out again as soon as
+    // CoalesceDropFactory_kokkos supports BlockSize > 1 and
+    // drop tol != 0.0
+    if (useKokkos_ && precList11_.isParameter("aggregation: drop tol") && precList11_.get<double>("aggregation: drop tol") != 0.0) {
+      GetOStream(Warnings0) << "RefMaxwell::compute(): Setting \"aggregation: drop tol\". to 0.0, since CoalesceDropFactory_kokkos does not "
+                            << "support BlockSize > 1 and drop tol != 0.0" << std::endl;
+      precList11_.set("aggregation: drop tol", 0.0);
+    }
+  }
 
 
   template<class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
@@ -252,372 +260,95 @@ namespace MueLu {
     if (!reuse) {
       magnitudeType rowSumTol = parameterList_.get("refmaxwell: row sum drop tol (1,1)",-1.0);
       Maxwell_Utils<SC,LO,GO,NO>::detectBoundaryConditionsSM(SM_Matrix_,D0_Matrix_,rowSumTol,
-                                                             BCrows_,BCcols_,BCdomain_,
-                                                             BCedges_,BCnodes_,
-                                                             allEdgesBoundary_,allNodesBoundary_);
+                                                             BCrows11_,BCcols22_,BCdomain22_,
+                                                             globalNumberBoundaryUnknowns11_,
+                                                             globalNumberBoundaryUnknowns22_,
+                                                             onlyBoundary11_,onlyBoundary22_);
       if (IsPrint(Statistics2)) {
-        GetOStream(Statistics2) << "MueLu::RefMaxwell::compute(): Detected " << BCedges_ << " BC rows and " << BCnodes_ << " BC columns." << std::endl;
+        GetOStream(Statistics2) << "MueLu::RefMaxwell::compute(): Detected " << globalNumberBoundaryUnknowns11_ << " BC rows and " << globalNumberBoundaryUnknowns22_ << " BC columns." << std::endl;
       }
     }
 
-    if (allEdgesBoundary_) {
-      // All edges have been detected as boundary edges.
+    if (onlyBoundary11_) {
+      // All unknowns of the (1,1) block have been detected as boundary unknowns.
       // Do not attempt to construct sub-hierarchies, but just set up a single level preconditioner.
-      GetOStream(Warnings0) << "All edges are detected as boundary edges!" << std::endl;
+      GetOStream(Warnings0) << "All unknowns of the (1,1) block have been detected as boundary unknowns!" << std::endl;
       mode_ = "none";
       setFineLevelSmoother();
       return;
     }
 
     ////////////////////////////////////////////////////////////////////////////////
-    // build nullspace if necessary
-
-    if(Nullspace_ != null) {
-      // no need to do anything - nullspace is built
-      TEUCHOS_ASSERT(Nullspace_->getMap()->isCompatible(*(SM_Matrix_->getRowMap())));
-    }
-    else if(Nullspace_ == null && Coords_ != null) {
-      RCP<MultiVector> CoordsSC;
-      CoordsSC = Utilities::RealValuedToScalarMultiVector(Coords_);
-      Nullspace_ = MultiVectorFactory::Build(SM_Matrix_->getRowMap(),Coords_->getNumVectors());
-      D0_Matrix_->apply(*CoordsSC,*Nullspace_);
-
-      bool normalize = parameterList_.get<bool>("refmaxwell: normalize nullspace", MasterList::getDefault<bool>("refmaxwell: normalize nullspace"));
-      
-      coordinateType minLen, maxLen, meanLen;
-      if (IsPrint(Statistics2) || normalize){
-        // compute edge lengths
-        ArrayRCP<ArrayRCP<const Scalar> > localNullspace(Nullspace_->getNumVectors());
-        for (size_t i = 0; i < Nullspace_->getNumVectors(); i++)
-          localNullspace[i] = Nullspace_->getData(i);
-        coordinateType localMinLen = Teuchos::ScalarTraits<coordinateType>::rmax();
-        coordinateType localMeanLen = Teuchos::ScalarTraits<coordinateType>::zero();
-        coordinateType localMaxLen = Teuchos::ScalarTraits<coordinateType>::zero();
-        for (size_t j=0; j < Nullspace_->getMap()->getLocalNumElements(); j++) {
-          Scalar lenSC = Teuchos::ScalarTraits<Scalar>::zero();
-          for (size_t i=0; i < Nullspace_->getNumVectors(); i++)
-           lenSC += localNullspace[i][j]*localNullspace[i][j];
-          coordinateType len = Teuchos::as<coordinateType>(Teuchos::ScalarTraits<Scalar>::real(Teuchos::ScalarTraits<Scalar>::squareroot(lenSC)));
-          localMinLen = std::min(localMinLen, len);
-          localMaxLen = std::max(localMaxLen, len);
-          localMeanLen += len;
-        }
-        
-        RCP<const Teuchos::Comm<int> > comm = Nullspace_->getMap()->getComm();
-        MueLu_minAll(comm, localMinLen,  minLen);
-        MueLu_sumAll(comm, localMeanLen, meanLen);
-        MueLu_maxAll(comm, localMaxLen,  maxLen);
-        meanLen /= Nullspace_->getMap()->getGlobalNumElements();
-      }
-      
-      if (IsPrint(Statistics2)) {
-        GetOStream(Statistics0) << "Edge length (min/mean/max): " << minLen << " / " << meanLen << " / " << maxLen << std::endl;
-      }
-      
-      if (normalize) {
-        // normalize the nullspace
-        GetOStream(Runtime0) << "RefMaxwell::compute(): normalizing nullspace" << std::endl;
-
-        const Scalar one = Teuchos::ScalarTraits<Scalar>::one();
-
-        Array<Scalar> normsSC(Coords_->getNumVectors(), one / Teuchos::as<Scalar>(meanLen));
-        Nullspace_->scale(normsSC());
-      }
-    }
-    else {
-      GetOStream(Errors) << "MueLu::RefMaxwell::compute(): either the nullspace or the nodal coordinates must be provided." << std::endl;
-    }
-
-    if (!reuse && skipFirstLevel_) {
-      // Nuke the BC edges in nullspace
-      Utilities::ZeroDirichletRows(Nullspace_,BCrows_);
-      dump(*Nullspace_, "nullspace.m");
-    }
+    // build nullspace (if necessary)
+    if (!reuse)
+      buildNullspace();
 
     ////////////////////////////////////////////////////////////////////////////////
     // build special prolongator for (1,1)-block
-
-    if(P11_.is_null()) {
+    if (!reuse) {
+      RCP<Matrix> A_nodal_Matrix;
       if (skipFirstLevel_) {
-        // Form A_nodal = D0* Ms D0  (aka TMT_agg)
-        std::string label("D0*Ms*D0");
-        A_nodal_Matrix_ = Maxwell_Utils<SC,LO,GO,NO>::PtAPWrapper(Ms_Matrix_,D0_Matrix_,parameterList_,label);
+        // Form A_nodal = D0^T Ms D0  (aka TMT_agg)
+        std::string label("D0^T*Ms*D0");
+        A_nodal_Matrix = Maxwell_Utils<SC,LO,GO,NO>::PtAPWrapper(Ms_Matrix_,D0_Matrix_,parameterList_,label);
 
         if (applyBCsToAnodal_) {
           // Apply boundary conditions to A_nodal
-          Utilities::ApplyOAZToMatrixRows(A_nodal_Matrix_,BCdomain_);
+          Utilities::ApplyOAZToMatrixRows(A_nodal_Matrix,BCdomain22_);
         }
-        dump(*A_nodal_Matrix_, "A_nodal.m");
+        dump(*A_nodal_Matrix, "A_nodal.m");
       }
 
       // build special prolongator
       GetOStream(Runtime0) << "RefMaxwell::compute(): building special prolongator" << std::endl;
-      buildProlongator();
+      buildEdgeProlongator(A_nodal_Matrix);
+      TEUCHOS_ASSERT(NullspaceCoarse11_.is_null() == !skipFirstLevel_);
     }
 
-#ifdef HAVE_MPI
-    bool doRebalancing = false;
-    doRebalancing = parameterList_.get<bool>("refmaxwell: subsolves on subcommunicators", MasterList::getDefault<bool>("refmaxwell: subsolves on subcommunicators"));
-    int rebalanceStriding = parameterList_.get<int>("refmaxwell: subsolves striding", -1);
-    int numProcsAH, numProcsA22;
-    int numProcs = SM_Matrix_->getDomainMap()->getComm()->getSize();
-    if (numProcs == 1)
+    ////////////////////////////////////////////////////////////////////////////////
+    // build coarse grid operator for (1,1)-block
+    buildCoarse11Matrix();
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // determine the communicator sizes for (1,1)- and (2,2)-blocks
+    bool doRebalancing;
+    int rebalanceStriding, numProcsCoarseA11, numProcsA22;
+    if (!reuse)
+      this->determineSubHierarchyCommSizes(doRebalancing, rebalanceStriding, numProcsCoarseA11, numProcsA22);
+    else
       doRebalancing = false;
-#endif
-    {
-      // build coarse grid operator for (1,1)-block
-      formCoarseMatrix();
 
+    // rebalance the coarse A11 matrix, as well as P11, CoordsCoarse11 and Addon_Matrix
+    if (!reuse && doRebalancing)
+      rebalanceCoarse11Matrix(rebalanceStriding, numProcsCoarseA11);
+    if (!coarseA11_.is_null()) {
+      dump(*coarseA11_, "coarseA11.m");
       if (!reuse) {
-#ifdef HAVE_MPI
-        if (doRebalancing) {
-
-          {
-            // decide on number of ranks for coarse (1, 1) problem
-
-            Level level;
-            level.SetFactoryManager(null);
-            level.SetLevelID(0);
-            level.Set("A",AH_);
-
-            auto repartheurFactory = rcp(new RepartitionHeuristicFactory());
-            ParameterList repartheurParams;
-            repartheurParams.set("repartition: start level",            0);
-            // Setting min == target on purpose.
-            int defaultTargetRows = 10000;
-            repartheurParams.set("repartition: min rows per proc",      precList11_.get<int>("repartition: target rows per proc", defaultTargetRows));
-            repartheurParams.set("repartition: target rows per proc",   precList11_.get<int>("repartition: target rows per proc", defaultTargetRows));
-            repartheurParams.set("repartition: min rows per thread",    precList11_.get<int>("repartition: target rows per thread", defaultTargetRows));
-            repartheurParams.set("repartition: target rows per thread", precList11_.get<int>("repartition: target rows per thread", defaultTargetRows));
-            repartheurParams.set("repartition: max imbalance",          precList11_.get<double>("repartition: max imbalance", 1.1));
-            repartheurFactory->SetParameterList(repartheurParams);
-
-            level.Request("number of partitions", repartheurFactory.get());
-            repartheurFactory->Build(level);
-            numProcsAH = level.Get<int>("number of partitions", repartheurFactory.get());
-            numProcsAH = std::min(numProcsAH,numProcs);
-          }
-
-          {
-            // decide on number of ranks for (2, 2) problem
-
-            Level level;
-            level.SetFactoryManager(null);
-            level.SetLevelID(0);
-
-            level.Set("Map",D0_Matrix_->getDomainMap());
-
-            auto repartheurFactory = rcp(new RepartitionHeuristicFactory());
-            ParameterList repartheurParams;
-            repartheurParams.set("repartition: start level",            0);
-            repartheurParams.set("repartition: use map",                true);
-            // Setting min == target on purpose.
-            int defaultTargetRows = 10000;
-            repartheurParams.set("repartition: min rows per proc",      precList22_.get<int>("repartition: target rows per proc", defaultTargetRows));
-            repartheurParams.set("repartition: target rows per proc",   precList22_.get<int>("repartition: target rows per proc", defaultTargetRows));
-            repartheurParams.set("repartition: min rows per thread",    precList22_.get<int>("repartition: target rows per thread", defaultTargetRows));
-            repartheurParams.set("repartition: target rows per thread", precList22_.get<int>("repartition: target rows per thread", defaultTargetRows));
-            // repartheurParams.set("repartition: max imbalance",        precList22_.get<double>("repartition: max imbalance", 1.1));
-            repartheurFactory->SetParameterList(repartheurParams);
-
-            level.Request("number of partitions", repartheurFactory.get());
-            repartheurFactory->Build(level);
-            numProcsA22 = level.Get<int>("number of partitions", repartheurFactory.get());
-            numProcsA22 = std::min(numProcsA22,numProcs);
-          }
-
-          if (rebalanceStriding >= 1) {
-            TEUCHOS_ASSERT(rebalanceStriding*numProcsAH<=numProcs);
-            TEUCHOS_ASSERT(rebalanceStriding*numProcsA22<=numProcs);
-            if (rebalanceStriding*(numProcsAH+numProcsA22)>numProcs) {
-              GetOStream(Warnings0) << "RefMaxwell::compute(): Disabling striding = " << rebalanceStriding << ", since AH needs " << numProcsAH
-                                    << " procs and A22 needs " << numProcsA22 << " procs."<< std::endl;
-              rebalanceStriding = -1;
-            }
-          }
-
-          // }
-
-          if ((numProcsAH < 0) || (numProcsA22 < 0) || (numProcsAH + numProcsA22 > numProcs)) {
-            GetOStream(Warnings0) << "RefMaxwell::compute(): Disabling rebalancing of subsolves, since partition heuristic resulted "
-                                  << "in undesirable number of partitions: " << numProcsAH << ", " << numProcsA22 << std::endl;
-            doRebalancing = false;
-          }
-
-          // check again, as we could have changed the value above
-          if (doRebalancing) {
-            // rebalance AH
-            RCP<Teuchos::TimeMonitor> tm = getTimer("MueLu RefMaxwell: Rebalance AH");
-
-            Level fineLevel, coarseLevel;
-            fineLevel.SetFactoryManager(null);
-            coarseLevel.SetFactoryManager(null);
-            coarseLevel.SetPreviousLevel(rcpFromRef(fineLevel));
-            fineLevel.SetLevelID(0);
-            coarseLevel.SetLevelID(1);
-            coarseLevel.Set("A",AH_);
-            coarseLevel.Set("P",P11_);
-            coarseLevel.Set("Coordinates",CoordsH_);
-            if (!NullspaceH_.is_null())
-              coarseLevel.Set("Nullspace",NullspaceH_);
-            coarseLevel.Set("number of partitions", numProcsAH);
-            coarseLevel.Set("repartition: heuristic target rows per process", 1000);
-
-            coarseLevel.setlib(AH_->getDomainMap()->lib());
-            fineLevel.setlib(AH_->getDomainMap()->lib());
-            coarseLevel.setObjectLabel("RefMaxwell coarse (1,1)");
-            fineLevel.setObjectLabel("RefMaxwell coarse (1,1)");
-
-            std::string partName = precList11_.get<std::string>("repartition: partitioner", "zoltan2");
-            RCP<Factory> partitioner;
-            if (partName == "zoltan") {
-#ifdef HAVE_MUELU_ZOLTAN
-              partitioner = rcp(new ZoltanInterface());
-              // NOTE: ZoltanInteface ("zoltan") does not support external parameters through ParameterList
-              // partitioner->SetFactory("number of partitions", repartheurFactory);
-#else
-              throw Exceptions::RuntimeError("Zoltan interface is not available");
-#endif
-            } else if (partName == "zoltan2") {
-#ifdef HAVE_MUELU_ZOLTAN2
-              partitioner = rcp(new Zoltan2Interface());
-              ParameterList partParams;
-              RCP<const ParameterList> partpartParams = rcp(new ParameterList(precList11_.sublist("repartition: params", false)));
-              partParams.set("ParameterList", partpartParams);
-              partitioner->SetParameterList(partParams);
-              // partitioner->SetFactory("number of partitions", repartheurFactory);
-#else
-              throw Exceptions::RuntimeError("Zoltan2 interface is not available");
-#endif
-            }
-
-            auto repartFactory = rcp(new RepartitionFactory());
-            ParameterList repartParams;
-            repartParams.set("repartition: print partition distribution", precList11_.get<bool>("repartition: print partition distribution", false));
-            repartParams.set("repartition: remap parts", precList11_.get<bool>("repartition: remap parts", true));
-            if (rebalanceStriding >= 1) {
-              bool acceptPart = (SM_Matrix_->getDomainMap()->getComm()->getRank() % rebalanceStriding) == 0;
-              if (SM_Matrix_->getDomainMap()->getComm()->getRank() >= numProcsAH*rebalanceStriding)
-                acceptPart = false;
-              repartParams.set("repartition: remap accept partition", acceptPart);
-            }
-            repartFactory->SetParameterList(repartParams);
-            // repartFactory->SetFactory("number of partitions", repartheurFactory);
-            repartFactory->SetFactory("Partition", partitioner);
-
-            auto newP = rcp(new RebalanceTransferFactory());
-            ParameterList newPparams;
-            newPparams.set("type", "Interpolation");
-            newPparams.set("repartition: rebalance P and R", precList11_.get<bool>("repartition: rebalance P and R", false));
-            newPparams.set("repartition: use subcommunicators", true);
-            newPparams.set("repartition: rebalance Nullspace", !NullspaceH_.is_null());
-            newP->SetFactory("Coordinates", NoFactory::getRCP());
-            if (!NullspaceH_.is_null())
-              newP->SetFactory("Nullspace", NoFactory::getRCP());
-            newP->SetParameterList(newPparams);
-            newP->SetFactory("Importer", repartFactory);
-
-            auto newA = rcp(new RebalanceAcFactory());
-            ParameterList rebAcParams;
-            rebAcParams.set("repartition: use subcommunicators", true);
-            newA->SetParameterList(rebAcParams);
-            newA->SetFactory("Importer", repartFactory);
-
-            coarseLevel.Request("P", newP.get());
-            coarseLevel.Request("Importer", repartFactory.get());
-            coarseLevel.Request("A", newA.get());
-            coarseLevel.Request("Coordinates", newP.get());
-            if (!NullspaceH_.is_null())
-              coarseLevel.Request("Nullspace", newP.get());
-            repartFactory->Build(coarseLevel);
-
-            if (!precList11_.get<bool>("repartition: rebalance P and R", false))
-              ImporterH_ = coarseLevel.Get< RCP<const Import> >("Importer", repartFactory.get());
-            P11_ = coarseLevel.Get< RCP<Matrix> >("P", newP.get());
-            AH_ = coarseLevel.Get< RCP<Matrix> >("A", newA.get());
-            CoordsH_ = coarseLevel.Get< RCP<RealValuedMultiVector> >("Coordinates", newP.get());
-            if (!NullspaceH_.is_null())
-              NullspaceH_ = coarseLevel.Get< RCP<MultiVector> >("Nullspace", newP.get());
-
-            AH_AP_reuse_data_ = Teuchos::null;
-            AH_RAP_reuse_data_ = Teuchos::null;
-
-            if (!disable_addon_ && enable_reuse_) {
-              // Rebalance the addon for next setup
-              RCP<const Import> ImporterH = coarseLevel.Get< RCP<const Import> >("Importer", repartFactory.get());
-              RCP<const Map> targetMap = ImporterH->getTargetMap();
-              ParameterList XpetraList;
-              XpetraList.set("Restrict Communicator",true);
-              Addon_Matrix_ = MatrixFactory::Build(Addon_Matrix_, *ImporterH, *ImporterH, targetMap, targetMap, rcp(&XpetraList,false));
-            }
-          }
-        }
-#endif // HAVE_MPI
-
-        // This should be taken out again as soon as
-        // CoalesceDropFactory_kokkos supports BlockSize > 1 and
-        // drop tol != 0.0
-        if (useKokkos_ && precList11_.isParameter("aggregation: drop tol") && precList11_.get<double>("aggregation: drop tol") != 0.0) {
-          GetOStream(Warnings0) << "RefMaxwell::compute(): Setting \"aggregation: drop tol\". to 0.0, since CoalesceDropFactory_kokkos does not "
-                                << "support BlockSize > 1 and drop tol != 0.0" << std::endl;
-          precList11_.set("aggregation: drop tol", 0.0);
-        }
-        dump(*P11_, "P11.m");
-
-        if (!implicitTranspose_) {
-          R11_ = Utilities::Transpose(*P11_);
-          dump(*R11_, "R11.m");
-        }
+        dumpCoords(*CoordsCoarse11_, "CoordsCoarse11.m");
+        if (!NullspaceCoarse11_.is_null())
+          dump(*NullspaceCoarse11_, "NullspaceCoarse11.m");
       }
-
-      VerbLevel verbosityLevel = VerboseObject::GetDefaultVerbLevel();
-      if (!AH_.is_null()) {
-        // set fixed block size for vector nodal matrix
-        size_t dim = Nullspace_->getNumVectors();
-        AH_->SetFixedBlockSize(dim);
-        AH_->setObjectLabel("RefMaxwell coarse (1,1)");
-        dump(*AH_, "AH.m");
-        int oldRank = SetProcRankVerbose(AH_->getDomainMap()->getComm()->getRank());
-        if (IsPrint(Statistics2)) {
-          RCP<ParameterList> params = rcp(new ParameterList());;
-          params->set("printLoadBalancingInfo", true);
-          params->set("printCommInfo",          true);
-          GetOStream(Statistics2) << PerfUtils::PrintMatrixInfo(*AH_, "AH", params);
-        }
-#if defined(HAVE_MUELU_STRATIMIKOS) && defined(HAVE_MUELU_THYRA)
-        if (precList11_.isType<std::string>("Preconditioner Type")) {
-          // build a Stratimikos preconditioner
-          if (precList11_.get<std::string>("Preconditioner Type") == "MueLu") {
-            ParameterList& userParamList = precList11_.sublist("Preconditioner Types").sublist("MueLu").sublist("user data");
-            userParamList.set<RCP<RealValuedMultiVector> >("Coordinates", CoordsH_);
-          }
-          thyraPrecOpH_ = rcp(new XpetraThyraLinearOp<Scalar,LocalOrdinal,GlobalOrdinal,Node>(AH_, rcp(&precList11_, false)));
-        } else
-#endif
-          {
-          // build a MueLu hierarchy
-
-          if (!reuse) {
-            dumpCoords(*CoordsH_, "coordsH.m");
-            if (!NullspaceH_.is_null())
-              dump(*NullspaceH_, "NullspaceH.m");
-            ParameterList& userParamList = precList11_.sublist("user data");
-            userParamList.set<RCP<RealValuedMultiVector> >("Coordinates", CoordsH_);
-            if (!NullspaceH_.is_null())
-              userParamList.set<RCP<MultiVector> >("Nullspace", NullspaceH_);
-            HierarchyH_ = MueLu::CreateXpetraPreconditioner(AH_, precList11_);
-          } else {
-            RCP<MueLu::Level> level0 = HierarchyH_->GetLevel(0);
-            level0->Set("A", AH_);
-            HierarchyH_->SetupRe();
-          }
-        }
-        SetProcRankVerbose(oldRank);
-      }
-      VerboseObject::SetDefaultVerbLevel(verbosityLevel);
-
     }
 
+    if (!reuse) {
+      dump(*P11_, "P11.m");
+      if (!implicitTranspose_) {
+        R11_ = Utilities::Transpose(*P11_);
+        dump(*R11_, "R11.m");
+      }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // build multigrid for coarse (1,1)-block
+    if (!coarseA11_.is_null()) {
+      VerbLevel verbosityLevel = VerboseObject::GetDefaultVerbLevel();
+      std::string label("coarseA11");
+      setupSubSolve(HierarchyCoarse11_, thyraPrecOpH_, coarseA11_, NullspaceCoarse11_, CoordsCoarse11_, precList11_, label, reuse);
+      VerboseObject::SetDefaultVerbLevel(verbosityLevel);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // Apply BCs to columns of D0
     if(!reuse && applyBCsTo22_) {
       GetOStream(Runtime0) << "RefMaxwell::compute(): nuking BC nodes of D0" << std::endl;
 
@@ -627,239 +358,32 @@ namespace MueLu {
         replaceWith= Teuchos::ScalarTraits<SC>::eps();
       else
         replaceWith = Teuchos::ScalarTraits<SC>::zero();
-      Utilities::ZeroDirichletCols(D0_Matrix_,BCcols_,replaceWith);
+      Utilities::ZeroDirichletCols(D0_Matrix_,BCcols22_,replaceWith);
       D0_Matrix_->fillComplete(D0_Matrix_->getDomainMap(),D0_Matrix_->getRangeMap());
     }
 
     ////////////////////////////////////////////////////////////////////////////////
-    // Build A22 = D0* SM D0 and hierarchy for A22
-    if (!allNodesBoundary_) {
+    // Build A22 = D0^T SM D0 and hierarchy for A22
+    if (!onlyBoundary22_) {
       GetOStream(Runtime0) << "RefMaxwell::compute(): building MG for (2,2)-block" << std::endl;
 
-      if (!reuse) { // build fine grid operator for (2,2)-block, D0* SM D0  (aka TMT)
-        RCP<Teuchos::TimeMonitor> tm = getTimer("MueLu RefMaxwell: Build A22");
+      // Build A22 = D0^T SM D0 and rebalance it, as well as D0 and Coords_
+      build22Matrix(reuse, doRebalancing, rebalanceStriding, numProcsA22);
 
-        Level fineLevel, coarseLevel;
-        fineLevel.SetFactoryManager(null);
-        coarseLevel.SetFactoryManager(null);
-        coarseLevel.SetPreviousLevel(rcpFromRef(fineLevel));
-        fineLevel.SetLevelID(0);
-        coarseLevel.SetLevelID(1);
-        fineLevel.Set("A",SM_Matrix_);
-        coarseLevel.Set("P",D0_Matrix_);
-        coarseLevel.Set("Coordinates",Coords_);
-
-        coarseLevel.setlib(SM_Matrix_->getDomainMap()->lib());
-        fineLevel.setlib(SM_Matrix_->getDomainMap()->lib());
-        coarseLevel.setObjectLabel("RefMaxwell (2,2)");
-        fineLevel.setObjectLabel("RefMaxwell (2,2)");
-
-        RCP<RAPFactory> rapFact = rcp(new RAPFactory());
-        ParameterList rapList = *(rapFact->GetValidParameterList());
-        rapList.set("transpose: use implicit", true);
-        rapList.set("rap: fix zero diagonals", parameterList_.get<bool>("rap: fix zero diagonals", true));
-        rapList.set("rap: fix zero diagonals threshold", parameterList_.get<double>("rap: fix zero diagonals threshold", Teuchos::ScalarTraits<double>::eps()));
-        rapList.set("rap: triple product", parameterList_.get<bool>("rap: triple product", false));
-        rapFact->SetParameterList(rapList);
-
-        if (!A22_AP_reuse_data_.is_null()) {
-          coarseLevel.AddKeepFlag("AP reuse data", rapFact.get());
-          coarseLevel.Set<Teuchos::RCP<Teuchos::ParameterList> >("AP reuse data", A22_AP_reuse_data_, rapFact.get());
-        }
-        if (!A22_RAP_reuse_data_.is_null()) {
-          coarseLevel.AddKeepFlag("RAP reuse data", rapFact.get());
-          coarseLevel.Set<Teuchos::RCP<Teuchos::ParameterList> >("RAP reuse data", A22_RAP_reuse_data_, rapFact.get());
-        }
-
-#ifdef HAVE_MPI
-        if (doRebalancing) {
-
-          coarseLevel.Set("number of partitions", numProcsA22);
-          coarseLevel.Set("repartition: heuristic target rows per process", 1000);
-
-          std::string partName = precList22_.get<std::string>("repartition: partitioner", "zoltan2");
-          RCP<Factory> partitioner;
-          if (partName == "zoltan") {
-#ifdef HAVE_MUELU_ZOLTAN
-            partitioner = rcp(new ZoltanInterface());
-            partitioner->SetFactory("A", rapFact);
-            // partitioner->SetFactory("number of partitions", repartheurFactory);
-            // NOTE: ZoltanInteface ("zoltan") does not support external parameters through ParameterList
-#else
-            throw Exceptions::RuntimeError("Zoltan interface is not available");
-#endif
-          } else if (partName == "zoltan2") {
-#ifdef HAVE_MUELU_ZOLTAN2
-            partitioner = rcp(new Zoltan2Interface());
-            ParameterList partParams;
-            RCP<const ParameterList> partpartParams = rcp(new ParameterList(precList22_.sublist("repartition: params", false)));
-            partParams.set("ParameterList", partpartParams);
-            partitioner->SetParameterList(partParams);
-            partitioner->SetFactory("A", rapFact);
-            // partitioner->SetFactory("number of partitions", repartheurFactory);
-#else
-            throw Exceptions::RuntimeError("Zoltan2 interface is not available");
-#endif
-          }
-
-          auto repartFactory = rcp(new RepartitionFactory());
-          ParameterList repartParams;
-          repartParams.set("repartition: print partition distribution", precList22_.get<bool>("repartition: print partition distribution", false));
-          repartParams.set("repartition: remap parts", precList22_.get<bool>("repartition: remap parts", true));
-          if (rebalanceStriding >= 1) {
-            bool acceptPart = ((SM_Matrix_->getDomainMap()->getComm()->getSize()-1-SM_Matrix_->getDomainMap()->getComm()->getRank()) % rebalanceStriding) == 0;
-            if (SM_Matrix_->getDomainMap()->getComm()->getSize()-1-SM_Matrix_->getDomainMap()->getComm()->getRank() >= numProcsA22*rebalanceStriding)
-              acceptPart = false;
-            if (acceptPart)
-              TEUCHOS_ASSERT(AH_.is_null());
-            repartParams.set("repartition: remap accept partition", acceptPart);
-          } else
-            repartParams.set("repartition: remap accept partition", AH_.is_null());
-          repartFactory->SetParameterList(repartParams);
-          repartFactory->SetFactory("A", rapFact);
-          // repartFactory->SetFactory("number of partitions", repartheurFactory);
-          repartFactory->SetFactory("Partition", partitioner);
-
-          auto newP = rcp(new RebalanceTransferFactory());
-          ParameterList newPparams;
-          newPparams.set("type", "Interpolation");
-          newPparams.set("repartition: rebalance P and R", precList22_.get<bool>("repartition: rebalance P and R", false));
-          newPparams.set("repartition: use subcommunicators", true);
-          newPparams.set("repartition: rebalance Nullspace", false);
-          newP->SetFactory("Coordinates", NoFactory::getRCP());
-          newP->SetParameterList(newPparams);
-          newP->SetFactory("Importer", repartFactory);
-
-          auto newA = rcp(new RebalanceAcFactory());
-          ParameterList rebAcParams;
-          rebAcParams.set("repartition: use subcommunicators", true);
-          newA->SetParameterList(rebAcParams);
-          newA->SetFactory("A", rapFact);
-          newA->SetFactory("Importer", repartFactory);
-
-          coarseLevel.Request("P", newP.get());
-          coarseLevel.Request("Importer", repartFactory.get());
-          coarseLevel.Request("A", newA.get());
-          coarseLevel.Request("Coordinates", newP.get());
-          rapFact->Build(fineLevel,coarseLevel);
-          repartFactory->Build(coarseLevel);
-
-          if (!precList22_.get<bool>("repartition: rebalance P and R", false))
-            Importer22_ = coarseLevel.Get< RCP<const Import> >("Importer", repartFactory.get());
-          D0_Matrix_ = coarseLevel.Get< RCP<Matrix> >("P", newP.get());
-          A22_ = coarseLevel.Get< RCP<Matrix> >("A", newA.get());
-          Coords_ = coarseLevel.Get< RCP<RealValuedMultiVector> >("Coordinates", newP.get());
-
-        } else
-#endif // HAVE_MPI
-        {
-          coarseLevel.Request("A", rapFact.get());
-          if (enable_reuse_) {
-            coarseLevel.Request("AP reuse data", rapFact.get());
-            coarseLevel.Request("RAP reuse data", rapFact.get());
-          }
-
-          A22_ = coarseLevel.Get< RCP<Matrix> >("A", rapFact.get());
-
-          if (enable_reuse_) {
-            if (coarseLevel.IsAvailable("AP reuse data", rapFact.get()))
-              A22_AP_reuse_data_ = coarseLevel.Get< RCP<ParameterList> >("AP reuse data", rapFact.get());
-            if (coarseLevel.IsAvailable("RAP reuse data", rapFact.get()))
-              A22_RAP_reuse_data_ = coarseLevel.Get< RCP<ParameterList> >("RAP reuse data", rapFact.get());
-          }
-        }
-      } else {
-        RCP<Teuchos::TimeMonitor> tm = getTimer("MueLu RefMaxwell: Build A22");
-        if (Importer22_.is_null()) {
-          RCP<Matrix> temp;
-          temp = Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Multiply(*SM_Matrix_,false,*D0_Matrix_,false,temp,GetOStream(Runtime0),true,true);
-          if (!implicitTranspose_)
-            A22_ = Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Multiply(*D0_T_Matrix_,false,*temp,false,A22_,GetOStream(Runtime0),true,true);
-          else
-            A22_ = Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Multiply(*D0_Matrix_,true,*temp,false,A22_,GetOStream(Runtime0),true,true);
-        } else {
-          // we replaced domain map and importer on D0, reverse that
-          RCP<const Import> D0importer = rcp_dynamic_cast<CrsMatrixWrap>(D0_Matrix_)->getCrsMatrix()->getCrsGraph()->getImporter();
-          rcp_dynamic_cast<CrsMatrixWrap>(D0_Matrix_)->getCrsMatrix()->replaceDomainMapAndImporter(D0origDomainMap_, D0origImporter_);
-
-          RCP<Matrix> temp, temp2;
-          temp = Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Multiply(*SM_Matrix_,false,*D0_Matrix_,false,temp,GetOStream(Runtime0),true,true);
-          if (!implicitTranspose_)
-            temp2 = Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Multiply(*D0_T_Matrix_,false,*temp,false,temp2,GetOStream(Runtime0),true,true);
-          else
-            temp2 = Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Multiply(*D0_Matrix_,true,*temp,false,temp2,GetOStream(Runtime0),true,true);
-
-          // and back again
-          rcp_dynamic_cast<CrsMatrixWrap>(D0_Matrix_)->getCrsMatrix()->replaceDomainMapAndImporter(Importer22_->getTargetMap(), D0importer);
-
-          ParameterList XpetraList;
-          XpetraList.set("Restrict Communicator",true);
-          XpetraList.set("Timer Label","MueLu::RebalanceA22");
-          RCP<const Map> targetMap = Importer22_->getTargetMap();
-          A22_ = MatrixFactory::Build(temp2, *Importer22_, *Importer22_, targetMap, targetMap, rcp(&XpetraList,false));
-        }
-      }
-
-      if (!implicitTranspose_ && !reuse) {
+      if (!reuse && !implicitTranspose_)
         D0_T_Matrix_ = Utilities::Transpose(*D0_Matrix_);
-      }
 
-      VerbLevel verbosityLevel = VerboseObject::GetDefaultVerbLevel();
       if (!A22_.is_null()) {
-        dump(*A22_, "A22.m");
-        A22_->setObjectLabel("RefMaxwell (2,2)");
-        int oldRank = SetProcRankVerbose(A22_->getDomainMap()->getComm()->getRank());
-        if (IsPrint(Statistics2)) {
-          RCP<ParameterList> params = rcp(new ParameterList());;
-          params->set("printLoadBalancingInfo", true);
-          params->set("printCommInfo",          true);
-          GetOStream(Statistics2) << PerfUtils::PrintMatrixInfo(*A22_, "A22", params);
-        }
-#if defined(HAVE_MUELU_STRATIMIKOS) && defined(HAVE_MUELU_THYRA)
-        if (precList22_.isType<std::string>("Preconditioner Type")) {
-          // build a Stratimikos preconditioner
-          if (precList22_.get<std::string>("Preconditioner Type") == "MueLu") {
-            ParameterList& userParamList = precList22_.sublist("Preconditioner Types").sublist("MueLu").sublist("user data");
-            userParamList.set<RCP<RealValuedMultiVector> >("Coordinates", Coords_);
-          }
-          thyraPrecOp22_ = rcp(new XpetraThyraLinearOp<Scalar,LocalOrdinal,GlobalOrdinal,Node>(A22_, rcp(&precList22_, false)));
-        } else
-#endif
-          {
-          // build a MueLu hierarchy
-          if (!reuse) {
-            ParameterList& userParamList = precList22_.sublist("user data");
-            userParamList.set<RCP<RealValuedMultiVector> >("Coordinates", Coords_);
-            // If we detected no boundary conditions, the (2,2) problem is singular.
-            // Therefore, if we want to use a direct coarse solver, we need to fix up the nullspace.
-            std::string coarseType = "";
-            if (precList22_.isParameter("coarse: type")) {
-              coarseType = precList22_.get<std::string>("coarse: type");
-              // Transform string to "Abcde" notation
-              std::transform(coarseType.begin(),   coarseType.end(),   coarseType.begin(), ::tolower);
-              std::transform(coarseType.begin(), ++coarseType.begin(), coarseType.begin(), ::toupper);
-            }
-            if (BCedges_ == 0 &&
-                (coarseType == "" ||
-                 coarseType == "Klu" ||
-                 coarseType == "Klu2") &&
-                (!precList22_.isSublist("coarse: params") ||
-                 !precList22_.sublist("coarse: params").isParameter("fix nullspace")))
-              precList22_.sublist("coarse: params").set("fix nullspace",true);
-            Hierarchy22_ = MueLu::CreateXpetraPreconditioner(A22_, precList22_);
-          } else {
-            RCP<MueLu::Level> level0 = Hierarchy22_->GetLevel(0);
-            level0->Set("A", A22_);
-            Hierarchy22_->SetupRe();
-          }
-        }
-        SetProcRankVerbose(oldRank);
+        VerbLevel verbosityLevel = VerboseObject::GetDefaultVerbLevel();
+        std::string label("A22");
+        setupSubSolve(Hierarchy22_, thyraPrecOp22_, A22_, Teuchos::null, Coords_, precList22_, label, reuse, /*isSingular=*/globalNumberBoundaryUnknowns11_ == 0);
+        VerboseObject::SetDefaultVerbLevel(verbosityLevel);
       }
-      VerboseObject::SetDefaultVerbLevel(verbosityLevel);
-
     }
 
-    if(!reuse && !allNodesBoundary_ && applyBCsTo22_) {
+    ////////////////////////////////////////////////////////////////////////////////
+    // Apply BCs to rows of D0
+    if(!reuse && !onlyBoundary22_ && applyBCsTo22_) {
       GetOStream(Runtime0) << "RefMaxwell::compute(): nuking BC edges of D0" << std::endl;
 
       D0_Matrix_->resumeFill();
@@ -868,17 +392,19 @@ namespace MueLu {
         replaceWith= Teuchos::ScalarTraits<SC>::eps();
       else
         replaceWith = Teuchos::ScalarTraits<SC>::zero();
-      Utilities::ZeroDirichletRows(D0_Matrix_,BCrows_,replaceWith);
+      Utilities::ZeroDirichletRows(D0_Matrix_,BCrows11_,replaceWith);
       D0_Matrix_->fillComplete(D0_Matrix_->getDomainMap(),D0_Matrix_->getRangeMap());
       dump(*D0_Matrix_, "D0_nuked.m");
     }
 
+    ////////////////////////////////////////////////////////////////////////////////
+    // Set up the smoother on the finest level
     setFineLevelSmoother();
 
     if (!reuse) {
-      if (!ImporterH_.is_null()) {
-        RCP<const Import> ImporterP11 = ImportFactory::Build(ImporterH_->getTargetMap(),P11_->getColMap());
-        rcp_dynamic_cast<CrsMatrixWrap>(P11_)->getCrsMatrix()->replaceDomainMapAndImporter(ImporterH_->getTargetMap(), ImporterP11);
+      if (!ImporterCoarse11_.is_null()) {
+        RCP<const Import> ImporterP11 = ImportFactory::Build(ImporterCoarse11_->getTargetMap(),P11_->getColMap());
+        rcp_dynamic_cast<CrsMatrixWrap>(P11_)->getCrsMatrix()->replaceDomainMapAndImporter(ImporterCoarse11_->getTargetMap(), ImporterP11);
       }
 
       if (!Importer22_.is_null()) {
@@ -904,9 +430,10 @@ namespace MueLu {
       if (D0_T_R11_colMapsMatch_)
         GetOStream(Runtime0) << "RefMaxwell::compute(): D0_T and R11 have matching colMaps" << std::endl;
 
-      // Allocate temporary MultiVectors for solve
+      // Allocate MultiVectors for solve
       allocateMemory(1);
 
+      // apply matvec params
       if (parameterList_.isSublist("matvec params"))
         {
           RCP<ParameterList> matvecParams = rcpFromRef(parameterList_.sublist("matvec params"));
@@ -915,12 +442,12 @@ namespace MueLu {
           Maxwell_Utils<SC,LO,GO,NO>::setMatvecParams(*P11_, matvecParams);
           if (!D0_T_Matrix_.is_null()) Maxwell_Utils<SC,LO,GO,NO>::setMatvecParams(*D0_T_Matrix_, matvecParams);
           if (!R11_.is_null())         Maxwell_Utils<SC,LO,GO,NO>::setMatvecParams(*R11_, matvecParams);
-          if (!ImporterH_.is_null())   ImporterH_->setDistributorParameters(matvecParams);
+          if (!ImporterCoarse11_.is_null())   ImporterCoarse11_->setDistributorParameters(matvecParams);
           if (!Importer22_.is_null())  Importer22_->setDistributorParameters(matvecParams);
         }
-      if (!ImporterH_.is_null() && parameterList_.isSublist("refmaxwell: ImporterH params")){
-        RCP<ParameterList> importerParams = rcpFromRef(parameterList_.sublist("refmaxwell: ImporterH params"));
-        ImporterH_->setDistributorParameters(importerParams);
+      if (!ImporterCoarse11_.is_null() && parameterList_.isSublist("refmaxwell: ImporterCoarse11 params")){
+        RCP<ParameterList> importerParams = rcpFromRef(parameterList_.sublist("refmaxwell: ImporterCoarse11 params"));
+        ImporterCoarse11_->setDistributorParameters(importerParams);
       }
       if (!Importer22_.is_null() && parameterList_.isSublist("refmaxwell: Importer22 params")){
         RCP<ParameterList> importerParams = rcpFromRef(parameterList_.sublist("refmaxwell: Importer22 params"));
@@ -933,6 +460,591 @@ namespace MueLu {
 #ifdef HAVE_MUELU_CUDA
     if (parameterList_.get<bool>("refmaxwell: cuda profile setup", false)) cudaProfilerStop();
 #endif
+  }
+
+
+  template<class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+  void RefMaxwell<Scalar,LocalOrdinal,GlobalOrdinal,Node>::
+  buildNullspace() {
+    if(Nullspace_ != null) {
+      // no need to do anything - nullspace is built
+      TEUCHOS_ASSERT(Nullspace_->getMap()->isCompatible(*(SM_Matrix_->getRowMap())));
+    }
+    else if(Nullspace_ == null && Coords_ != null) {
+      RCP<MultiVector> CoordsSC;
+      CoordsSC = Utilities::RealValuedToScalarMultiVector(Coords_);
+      Nullspace_ = MultiVectorFactory::Build(SM_Matrix_->getRowMap(),Coords_->getNumVectors());
+      D0_Matrix_->apply(*CoordsSC,*Nullspace_);
+
+      bool normalize = parameterList_.get<bool>("refmaxwell: normalize nullspace", MasterList::getDefault<bool>("refmaxwell: normalize nullspace"));
+
+      coordinateType minLen, maxLen, meanLen;
+      if (IsPrint(Statistics2) || normalize){
+        // compute edge lengths
+        ArrayRCP<ArrayRCP<const Scalar> > localNullspace(Nullspace_->getNumVectors());
+        for (size_t i = 0; i < Nullspace_->getNumVectors(); i++)
+          localNullspace[i] = Nullspace_->getData(i);
+        coordinateType localMinLen = Teuchos::ScalarTraits<coordinateType>::rmax();
+        coordinateType localMeanLen = Teuchos::ScalarTraits<coordinateType>::zero();
+        coordinateType localMaxLen = Teuchos::ScalarTraits<coordinateType>::zero();
+        for (size_t j=0; j < Nullspace_->getMap()->getLocalNumElements(); j++) {
+          Scalar lenSC = Teuchos::ScalarTraits<Scalar>::zero();
+          for (size_t i=0; i < Nullspace_->getNumVectors(); i++)
+            lenSC += localNullspace[i][j]*localNullspace[i][j];
+          coordinateType len = Teuchos::as<coordinateType>(Teuchos::ScalarTraits<Scalar>::real(Teuchos::ScalarTraits<Scalar>::squareroot(lenSC)));
+          localMinLen = std::min(localMinLen, len);
+          localMaxLen = std::max(localMaxLen, len);
+          localMeanLen += len;
+        }
+
+        RCP<const Teuchos::Comm<int> > comm = Nullspace_->getMap()->getComm();
+        MueLu_minAll(comm, localMinLen,  minLen);
+        MueLu_sumAll(comm, localMeanLen, meanLen);
+        MueLu_maxAll(comm, localMaxLen,  maxLen);
+        meanLen /= Nullspace_->getMap()->getGlobalNumElements();
+      }
+
+      if (IsPrint(Statistics2)) {
+        GetOStream(Statistics0) << "Edge length (min/mean/max): " << minLen << " / " << meanLen << " / " << maxLen << std::endl;
+      }
+
+      if (normalize) {
+        // normalize the nullspace
+        GetOStream(Runtime0) << "RefMaxwell::compute(): normalizing nullspace" << std::endl;
+
+        const Scalar one = Teuchos::ScalarTraits<Scalar>::one();
+
+        Array<Scalar> normsSC(Coords_->getNumVectors(), one / Teuchos::as<Scalar>(meanLen));
+        Nullspace_->scale(normsSC());
+      }
+    }
+    else {
+      GetOStream(Errors) << "MueLu::RefMaxwell::compute(): either the nullspace or the nodal coordinates must be provided." << std::endl;
+    }
+
+    if (skipFirstLevel_) {
+      // Nuke the BC edges in nullspace
+      Utilities::ZeroDirichletRows(Nullspace_,BCrows11_);
+      dump(*Nullspace_, "nullspace.m");
+    }
+  }
+
+
+  template<class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+  void RefMaxwell<Scalar,LocalOrdinal,GlobalOrdinal,Node>::
+  determineSubHierarchyCommSizes(bool &doRebalancing, int &rebalanceStriding, int &numProcsCoarseA11, int &numProcsA22) {
+
+    doRebalancing = parameterList_.get<bool>("refmaxwell: subsolves on subcommunicators", MasterList::getDefault<bool>("refmaxwell: subsolves on subcommunicators"));
+    rebalanceStriding = parameterList_.get<int>("refmaxwell: subsolves striding", -1);
+    int numProcs = SM_Matrix_->getDomainMap()->getComm()->getSize();
+    if (numProcs == 1) {
+      doRebalancing = false;
+      return;
+    }
+
+#ifdef HAVE_MPI
+    if (doRebalancing) {
+
+      {
+        // decide on number of ranks for coarse (1, 1) problem
+
+        Level level;
+        level.SetFactoryManager(null);
+        level.SetLevelID(0);
+        level.Set("A",coarseA11_);
+
+        auto repartheurFactory = rcp(new RepartitionHeuristicFactory());
+        ParameterList repartheurParams;
+        repartheurParams.set("repartition: start level",            0);
+        // Setting min == target on purpose.
+        int defaultTargetRows = 10000;
+        repartheurParams.set("repartition: min rows per proc",      precList11_.get<int>("repartition: target rows per proc", defaultTargetRows));
+        repartheurParams.set("repartition: target rows per proc",   precList11_.get<int>("repartition: target rows per proc", defaultTargetRows));
+        repartheurParams.set("repartition: min rows per thread",    precList11_.get<int>("repartition: target rows per thread", defaultTargetRows));
+        repartheurParams.set("repartition: target rows per thread", precList11_.get<int>("repartition: target rows per thread", defaultTargetRows));
+        repartheurParams.set("repartition: max imbalance",          precList11_.get<double>("repartition: max imbalance", 1.1));
+        repartheurFactory->SetParameterList(repartheurParams);
+
+        level.Request("number of partitions", repartheurFactory.get());
+        repartheurFactory->Build(level);
+        numProcsCoarseA11 = level.Get<int>("number of partitions", repartheurFactory.get());
+        numProcsCoarseA11 = std::min(numProcsCoarseA11,numProcs);
+      }
+
+      {
+        // decide on number of ranks for (2, 2) problem
+
+        Level level;
+        level.SetFactoryManager(null);
+        level.SetLevelID(0);
+
+        level.Set("Map",D0_Matrix_->getDomainMap());
+
+        auto repartheurFactory = rcp(new RepartitionHeuristicFactory());
+        ParameterList repartheurParams;
+        repartheurParams.set("repartition: start level",            0);
+        repartheurParams.set("repartition: use map",                true);
+        // Setting min == target on purpose.
+        int defaultTargetRows = 10000;
+        repartheurParams.set("repartition: min rows per proc",      precList22_.get<int>("repartition: target rows per proc", defaultTargetRows));
+        repartheurParams.set("repartition: target rows per proc",   precList22_.get<int>("repartition: target rows per proc", defaultTargetRows));
+        repartheurParams.set("repartition: min rows per thread",    precList22_.get<int>("repartition: target rows per thread", defaultTargetRows));
+        repartheurParams.set("repartition: target rows per thread", precList22_.get<int>("repartition: target rows per thread", defaultTargetRows));
+        // repartheurParams.set("repartition: max imbalance",        precList22_.get<double>("repartition: max imbalance", 1.1));
+        repartheurFactory->SetParameterList(repartheurParams);
+
+        level.Request("number of partitions", repartheurFactory.get());
+        repartheurFactory->Build(level);
+        numProcsA22 = level.Get<int>("number of partitions", repartheurFactory.get());
+        numProcsA22 = std::min(numProcsA22,numProcs);
+      }
+
+      if (rebalanceStriding >= 1) {
+        TEUCHOS_ASSERT(rebalanceStriding*numProcsCoarseA11<=numProcs);
+        TEUCHOS_ASSERT(rebalanceStriding*numProcsA22<=numProcs);
+        if (rebalanceStriding*(numProcsCoarseA11+numProcsA22)>numProcs) {
+          GetOStream(Warnings0) << "RefMaxwell::compute(): Disabling striding = " << rebalanceStriding << ", since coareA11 needs " << numProcsCoarseA11
+                                << " procs and A22 needs " << numProcsA22 << " procs."<< std::endl;
+          rebalanceStriding = -1;
+        }
+      }
+
+      if ((numProcsCoarseA11 < 0) || (numProcsA22 < 0) || (numProcsCoarseA11 + numProcsA22 > numProcs)) {
+        GetOStream(Warnings0) << "RefMaxwell::compute(): Disabling rebalancing of subsolves, since partition heuristic resulted "
+                              << "in undesirable number of partitions: " << numProcsCoarseA11 << ", " << numProcsA22 << std::endl;
+        doRebalancing = false;
+      }
+    }
+#else
+    doRebalancing = false;
+#endif // HAVE_MPI
+  }
+
+
+  template<class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+  void RefMaxwell<Scalar,LocalOrdinal,GlobalOrdinal,Node>::buildCoarse11Matrix() {
+    RCP<Teuchos::TimeMonitor> tm = getTimer("MueLu RefMaxwell: Build coarse (1,1) matrix");
+
+    const Scalar one = Teuchos::ScalarTraits<Scalar>::one();
+
+    // coarse matrix for P11* (M1 + D1* M2 D1) P11
+    RCP<Matrix> temp;
+    temp = Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Multiply(*SM_Matrix_,false,*P11_,false,temp,GetOStream(Runtime0),true,true);
+    if (ImporterCoarse11_.is_null())
+      coarseA11_ = Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Multiply(*P11_,true,*temp,false,coarseA11_,GetOStream(Runtime0),true,true);
+    else {
+
+      RCP<Matrix> temp2;
+      temp2 = Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Multiply(*P11_,true,*temp,false,temp2,GetOStream(Runtime0),true,true);
+
+      RCP<const Map> map = ImporterCoarse11_->getTargetMap()->removeEmptyProcesses();
+      temp2->removeEmptyProcessesInPlace(map);
+      if (!temp2.is_null() && temp2->getRowMap().is_null())
+        temp2 = Teuchos::null;
+      coarseA11_ = temp2;
+    }
+
+    if (!disable_addon_) {
+
+      RCP<Matrix> addon;
+
+      if (!coarseA11_.is_null() && Addon_Matrix_.is_null()) {
+        // construct addon
+        RCP<Teuchos::TimeMonitor> tmAddon = getTimer("MueLu RefMaxwell: Build coarse addon matrix");
+        // catch a failure
+        TEUCHOS_TEST_FOR_EXCEPTION(M0inv_Matrix_==Teuchos::null,std::invalid_argument,
+                                   "MueLu::RefMaxwell::buildCoarse11Matrix(): Inverse of "
+                                   "lumped mass matrix required for add-on (i.e. M0inv_Matrix is null)");
+
+        // coarse matrix for add-on, i.e P11* (M1 D0 M0inv D0* M1) P11
+        RCP<Matrix> Zaux, Z;
+
+        // construct Zaux = M1 P11
+        Zaux = Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Multiply(*M1_Matrix_,false,*P11_,false,Zaux,GetOStream(Runtime0),true,true);
+        // construct Z = D0* M1 P11 = D0* Zaux
+        Z = Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Multiply(*D0_Matrix_,true,*Zaux,false,Z,GetOStream(Runtime0),true,true);
+
+        // construct Z* M0inv Z
+        if (M0inv_Matrix_->getGlobalMaxNumRowEntries()<=1) {
+          // We assume that if M0inv has at most one entry per row then
+          // these are all diagonal entries.
+          RCP<Vector> diag = VectorFactory::Build(M0inv_Matrix_->getRowMap());
+          M0inv_Matrix_->getLocalDiagCopy(*diag);
+	  {
+	    ArrayRCP<Scalar> diagVals = diag->getDataNonConst(0);
+	    for (size_t j=0; j < diag->getMap()->getLocalNumElements(); j++) {
+	      diagVals[j] = Teuchos::ScalarTraits<Scalar>::squareroot(diagVals[j]);
+	    }
+	  }
+          if (Z->getRowMap()->isSameAs(*(diag->getMap())))
+            Z->leftScale(*diag);
+          else {
+            RCP<Import> importer = ImportFactory::Build(diag->getMap(),Z->getRowMap());
+            RCP<Vector> diag2 = VectorFactory::Build(Z->getRowMap());
+            diag2->doImport(*diag,*importer,Xpetra::INSERT);
+            Z->leftScale(*diag2);
+          }
+          addon = Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Multiply(*Z,true,*Z,false,addon,GetOStream(Runtime0),true,true);
+        } else if (parameterList_.get<bool>("rap: triple product", false) == false) {
+          RCP<Matrix> C2;
+          // construct C2 = M0inv Z
+          C2 = Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Multiply(*M0inv_Matrix_,false,*Z,false,C2,GetOStream(Runtime0),true,true);
+          // construct Matrix2 = Z* M0inv Z = Z* C2
+          addon = Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Multiply(*Z,true,*C2,false,addon,GetOStream(Runtime0),true,true);
+        } else {
+          addon = MatrixFactory::Build(Z->getDomainMap());
+          // construct Matrix2 = Z* M0inv Z
+          Xpetra::TripleMatrixMultiply<Scalar,LocalOrdinal,GlobalOrdinal,Node>::
+            MultiplyRAP(*Z, true, *M0inv_Matrix_, false, *Z, false, *addon, true, true);
+        }
+        // Should we keep the addon for next setup?
+        if (enable_reuse_)
+          Addon_Matrix_ = addon;
+      } else
+        addon = Addon_Matrix_;
+
+      if (!coarseA11_.is_null()) {
+        // add matrices together
+        RCP<Matrix> newCoarseA11;
+        Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::TwoMatrixAdd(*coarseA11_,false,one,*addon,false,one,newCoarseA11,GetOStream(Runtime0));
+        newCoarseA11->fillComplete();
+        coarseA11_ = newCoarseA11;
+      }
+    }
+
+    if (!coarseA11_.is_null() && !skipFirstLevel_) {
+      ArrayRCP<bool> coarseA11BCrows;
+      coarseA11BCrows.resize(coarseA11_->getRowMap()->getLocalNumElements());
+      size_t dim = Nullspace_->getNumVectors();
+      for (size_t i = 0; i < BCdomain22_.size(); i++)
+        for (size_t k = 0; k < dim; k++)
+          coarseA11BCrows[i*dim+k] = BCdomain22_(i);
+      magnitudeType rowSumTol = parameterList_.get("refmaxwell: row sum drop tol (1,1)",-1.0);
+      if (rowSumTol > 0.)
+        Utilities::ApplyRowSumCriterion(*coarseA11_, rowSumTol, coarseA11BCrows);
+      if (applyBCsToCoarse11_)
+        Utilities::ApplyOAZToMatrixRows(coarseA11_, coarseA11BCrows);
+    }
+
+    if (!coarseA11_.is_null()) {
+      // If we already applied BCs to A_nodal, we likely do not need
+      // to fix up coarseA11.
+      // If we did not apply BCs to A_nodal, we now need to correct
+      // the zero diagonals of coarseA11, since we did nuke the nullspace.
+
+      bool fixZeroDiagonal = !applyBCsToAnodal_;
+      if (precList11_.isParameter("rap: fix zero diagonals"))
+        fixZeroDiagonal = precList11_.get<bool>("rap: fix zero diagonals");
+
+      if (fixZeroDiagonal) {
+        magnitudeType threshold = 1e-16;
+        Scalar replacement = 1.0;
+        if (precList11_.isType<magnitudeType>("rap: fix zero diagonals threshold"))
+          threshold = precList11_.get<magnitudeType>("rap: fix zero diagonals threshold");
+        else if (precList11_.isType<double>("rap: fix zero diagonals threshold"))
+          threshold = Teuchos::as<magnitudeType>(precList11_.get<double>("rap: fix zero diagonals threshold"));
+        if (precList11_.isType<double>("rap: fix zero diagonals replacement"))
+          replacement = Teuchos::as<Scalar>(precList11_.get<double>("rap: fix zero diagonals replacement"));
+        Xpetra::MatrixUtils<SC,LO,GO,NO>::CheckRepairMainDiagonal(coarseA11_, true, GetOStream(Warnings1), threshold, replacement);
+      }
+
+      // Set block size
+      size_t dim = Nullspace_->getNumVectors();
+      coarseA11_->SetFixedBlockSize(dim);
+      coarseA11_->setObjectLabel("RefMaxwell coarse (1,1)");
+    }
+  }
+
+
+  template<class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+  void RefMaxwell<Scalar,LocalOrdinal,GlobalOrdinal,Node>::
+  rebalanceCoarse11Matrix (const int rebalanceStriding, const int numProcsCoarseA11) {
+#ifdef HAVE_MPI
+    // rebalance coarseA11
+    RCP<Teuchos::TimeMonitor> tm = getTimer("MueLu RefMaxwell: Rebalance coarseA11");
+
+    Level fineLevel, coarseLevel;
+    fineLevel.SetFactoryManager(null);
+    coarseLevel.SetFactoryManager(null);
+    coarseLevel.SetPreviousLevel(rcpFromRef(fineLevel));
+    fineLevel.SetLevelID(0);
+    coarseLevel.SetLevelID(1);
+    coarseLevel.Set("A",coarseA11_);
+    coarseLevel.Set("P",P11_);
+    coarseLevel.Set("Coordinates",CoordsCoarse11_);
+    if (!NullspaceCoarse11_.is_null())
+      coarseLevel.Set("Nullspace",NullspaceCoarse11_);
+    coarseLevel.Set("number of partitions", numProcsCoarseA11);
+    coarseLevel.Set("repartition: heuristic target rows per process", 1000);
+
+    coarseLevel.setlib(coarseA11_->getDomainMap()->lib());
+    fineLevel.setlib(coarseA11_->getDomainMap()->lib());
+    coarseLevel.setObjectLabel("RefMaxwell coarse (1,1)");
+    fineLevel.setObjectLabel("RefMaxwell coarse (1,1)");
+
+    std::string partName = precList11_.get<std::string>("repartition: partitioner", "zoltan2");
+    RCP<Factory> partitioner;
+    if (partName == "zoltan") {
+#ifdef HAVE_MUELU_ZOLTAN
+      partitioner = rcp(new ZoltanInterface());
+      // NOTE: ZoltanInteface ("zoltan") does not support external parameters through ParameterList
+      // partitioner->SetFactory("number of partitions", repartheurFactory);
+#else
+      throw Exceptions::RuntimeError("Zoltan interface is not available");
+#endif
+    } else if (partName == "zoltan2") {
+#ifdef HAVE_MUELU_ZOLTAN2
+      partitioner = rcp(new Zoltan2Interface());
+      ParameterList partParams;
+      RCP<const ParameterList> partpartParams = rcp(new ParameterList(precList11_.sublist("repartition: params", false)));
+      partParams.set("ParameterList", partpartParams);
+      partitioner->SetParameterList(partParams);
+      // partitioner->SetFactory("number of partitions", repartheurFactory);
+#else
+      throw Exceptions::RuntimeError("Zoltan2 interface is not available");
+#endif
+    }
+
+    auto repartFactory = rcp(new RepartitionFactory());
+    ParameterList repartParams;
+    repartParams.set("repartition: print partition distribution", precList11_.get<bool>("repartition: print partition distribution", false));
+    repartParams.set("repartition: remap parts", precList11_.get<bool>("repartition: remap parts", true));
+    if (rebalanceStriding >= 1) {
+      bool acceptPart = (SM_Matrix_->getDomainMap()->getComm()->getRank() % rebalanceStriding) == 0;
+      if (SM_Matrix_->getDomainMap()->getComm()->getRank() >= numProcsCoarseA11*rebalanceStriding)
+        acceptPart = false;
+      repartParams.set("repartition: remap accept partition", acceptPart);
+    }
+    repartFactory->SetParameterList(repartParams);
+    // repartFactory->SetFactory("number of partitions", repartheurFactory);
+    repartFactory->SetFactory("Partition", partitioner);
+
+    auto newP = rcp(new RebalanceTransferFactory());
+    ParameterList newPparams;
+    newPparams.set("type", "Interpolation");
+    newPparams.set("repartition: rebalance P and R", precList11_.get<bool>("repartition: rebalance P and R", false));
+    newPparams.set("repartition: use subcommunicators", true);
+    newPparams.set("repartition: rebalance Nullspace", !NullspaceCoarse11_.is_null());
+    newP->SetFactory("Coordinates", NoFactory::getRCP());
+    if (!NullspaceCoarse11_.is_null())
+      newP->SetFactory("Nullspace", NoFactory::getRCP());
+    newP->SetParameterList(newPparams);
+    newP->SetFactory("Importer", repartFactory);
+
+    auto newA = rcp(new RebalanceAcFactory());
+    ParameterList rebAcParams;
+    rebAcParams.set("repartition: use subcommunicators", true);
+    newA->SetParameterList(rebAcParams);
+    newA->SetFactory("Importer", repartFactory);
+
+    coarseLevel.Request("P", newP.get());
+    coarseLevel.Request("Importer", repartFactory.get());
+    coarseLevel.Request("A", newA.get());
+    coarseLevel.Request("Coordinates", newP.get());
+    if (!NullspaceCoarse11_.is_null())
+      coarseLevel.Request("Nullspace", newP.get());
+    repartFactory->Build(coarseLevel);
+
+    if (!precList11_.get<bool>("repartition: rebalance P and R", false))
+      ImporterCoarse11_ = coarseLevel.Get< RCP<const Import> >("Importer", repartFactory.get());
+    P11_ = coarseLevel.Get< RCP<Matrix> >("P", newP.get());
+    coarseA11_ = coarseLevel.Get< RCP<Matrix> >("A", newA.get());
+    CoordsCoarse11_ = coarseLevel.Get< RCP<RealValuedMultiVector> >("Coordinates", newP.get());
+    if (!NullspaceCoarse11_.is_null())
+      NullspaceCoarse11_ = coarseLevel.Get< RCP<MultiVector> >("Nullspace", newP.get());
+
+    if (!coarseA11_.is_null()) {
+      // Set block size
+      size_t dim = Nullspace_->getNumVectors();
+      coarseA11_->SetFixedBlockSize(dim);
+      coarseA11_->setObjectLabel("RefMaxwell coarse (1,1)");
+    }
+
+    coarseA11_AP_reuse_data_ = Teuchos::null;
+    coarseA11_RAP_reuse_data_ = Teuchos::null;
+
+    if (!disable_addon_ && enable_reuse_) {
+      // Rebalance the addon for next setup
+      RCP<const Import> ImporterCoarse11 = coarseLevel.Get< RCP<const Import> >("Importer", repartFactory.get());
+      RCP<const Map> targetMap = ImporterCoarse11->getTargetMap();
+      ParameterList XpetraList;
+      XpetraList.set("Restrict Communicator",true);
+      Addon_Matrix_ = MatrixFactory::Build(Addon_Matrix_, *ImporterCoarse11, *ImporterCoarse11, targetMap, targetMap, rcp(&XpetraList,false));
+    }
+#endif
+  }
+
+  template<class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+  void RefMaxwell<Scalar,LocalOrdinal,GlobalOrdinal,Node>::build22Matrix (const bool reuse, const bool doRebalancing, const int rebalanceStriding, const int numProcsA22) {
+        
+    if (!reuse) { // build fine grid operator for (2,2)-block, D0* SM D0  (aka TMT)
+      RCP<Teuchos::TimeMonitor> tm = getTimer("MueLu RefMaxwell: Build A22");
+
+      Level fineLevel, coarseLevel;
+      fineLevel.SetFactoryManager(null);
+      coarseLevel.SetFactoryManager(null);
+      coarseLevel.SetPreviousLevel(rcpFromRef(fineLevel));
+      fineLevel.SetLevelID(0);
+      coarseLevel.SetLevelID(1);
+      fineLevel.Set("A",SM_Matrix_);
+      coarseLevel.Set("P",D0_Matrix_);
+      coarseLevel.Set("Coordinates",Coords_);
+
+      coarseLevel.setlib(SM_Matrix_->getDomainMap()->lib());
+      fineLevel.setlib(SM_Matrix_->getDomainMap()->lib());
+      coarseLevel.setObjectLabel("RefMaxwell (2,2)");
+      fineLevel.setObjectLabel("RefMaxwell (2,2)");
+
+      RCP<RAPFactory> rapFact = rcp(new RAPFactory());
+      ParameterList rapList = *(rapFact->GetValidParameterList());
+      rapList.set("transpose: use implicit", true);
+      rapList.set("rap: fix zero diagonals", parameterList_.get<bool>("rap: fix zero diagonals", true));
+      rapList.set("rap: fix zero diagonals threshold", parameterList_.get<double>("rap: fix zero diagonals threshold", Teuchos::ScalarTraits<double>::eps()));
+      rapList.set("rap: triple product", parameterList_.get<bool>("rap: triple product", false));
+      rapFact->SetParameterList(rapList);
+
+      if (!A22_AP_reuse_data_.is_null()) {
+        coarseLevel.AddKeepFlag("AP reuse data", rapFact.get());
+        coarseLevel.Set<Teuchos::RCP<Teuchos::ParameterList> >("AP reuse data", A22_AP_reuse_data_, rapFact.get());
+      }
+      if (!A22_RAP_reuse_data_.is_null()) {
+        coarseLevel.AddKeepFlag("RAP reuse data", rapFact.get());
+        coarseLevel.Set<Teuchos::RCP<Teuchos::ParameterList> >("RAP reuse data", A22_RAP_reuse_data_, rapFact.get());
+      }
+
+#ifdef HAVE_MPI
+      if (doRebalancing) {
+
+        coarseLevel.Set("number of partitions", numProcsA22);
+        coarseLevel.Set("repartition: heuristic target rows per process", 1000);
+
+        std::string partName = precList22_.get<std::string>("repartition: partitioner", "zoltan2");
+        RCP<Factory> partitioner;
+        if (partName == "zoltan") {
+#ifdef HAVE_MUELU_ZOLTAN
+          partitioner = rcp(new ZoltanInterface());
+          partitioner->SetFactory("A", rapFact);
+          // partitioner->SetFactory("number of partitions", repartheurFactory);
+          // NOTE: ZoltanInteface ("zoltan") does not support external parameters through ParameterList
+#else
+          throw Exceptions::RuntimeError("Zoltan interface is not available");
+#endif
+        } else if (partName == "zoltan2") {
+#ifdef HAVE_MUELU_ZOLTAN2
+          partitioner = rcp(new Zoltan2Interface());
+          ParameterList partParams;
+          RCP<const ParameterList> partpartParams = rcp(new ParameterList(precList22_.sublist("repartition: params", false)));
+          partParams.set("ParameterList", partpartParams);
+          partitioner->SetParameterList(partParams);
+          partitioner->SetFactory("A", rapFact);
+          // partitioner->SetFactory("number of partitions", repartheurFactory);
+#else
+          throw Exceptions::RuntimeError("Zoltan2 interface is not available");
+#endif
+        }
+
+        auto repartFactory = rcp(new RepartitionFactory());
+        ParameterList repartParams;
+        repartParams.set("repartition: print partition distribution", precList22_.get<bool>("repartition: print partition distribution", false));
+        repartParams.set("repartition: remap parts", precList22_.get<bool>("repartition: remap parts", true));
+        if (rebalanceStriding >= 1) {
+          bool acceptPart = ((SM_Matrix_->getDomainMap()->getComm()->getSize()-1-SM_Matrix_->getDomainMap()->getComm()->getRank()) % rebalanceStriding) == 0;
+          if (SM_Matrix_->getDomainMap()->getComm()->getSize()-1-SM_Matrix_->getDomainMap()->getComm()->getRank() >= numProcsA22*rebalanceStriding)
+            acceptPart = false;
+          if (acceptPart)
+            TEUCHOS_ASSERT(coarseA11_.is_null());
+          repartParams.set("repartition: remap accept partition", acceptPart);
+        } else
+          repartParams.set("repartition: remap accept partition", coarseA11_.is_null());
+        repartFactory->SetParameterList(repartParams);
+        repartFactory->SetFactory("A", rapFact);
+        // repartFactory->SetFactory("number of partitions", repartheurFactory);
+        repartFactory->SetFactory("Partition", partitioner);
+
+        auto newP = rcp(new RebalanceTransferFactory());
+        ParameterList newPparams;
+        newPparams.set("type", "Interpolation");
+        newPparams.set("repartition: rebalance P and R", precList22_.get<bool>("repartition: rebalance P and R", false));
+        newPparams.set("repartition: use subcommunicators", true);
+        newPparams.set("repartition: rebalance Nullspace", false);
+        newP->SetFactory("Coordinates", NoFactory::getRCP());
+        newP->SetParameterList(newPparams);
+        newP->SetFactory("Importer", repartFactory);
+
+        auto newA = rcp(new RebalanceAcFactory());
+        ParameterList rebAcParams;
+        rebAcParams.set("repartition: use subcommunicators", true);
+        newA->SetParameterList(rebAcParams);
+        newA->SetFactory("A", rapFact);
+        newA->SetFactory("Importer", repartFactory);
+
+        coarseLevel.Request("P", newP.get());
+        coarseLevel.Request("Importer", repartFactory.get());
+        coarseLevel.Request("A", newA.get());
+        coarseLevel.Request("Coordinates", newP.get());
+        rapFact->Build(fineLevel,coarseLevel);
+        repartFactory->Build(coarseLevel);
+
+        if (!precList22_.get<bool>("repartition: rebalance P and R", false))
+          Importer22_ = coarseLevel.Get< RCP<const Import> >("Importer", repartFactory.get());
+        D0_Matrix_ = coarseLevel.Get< RCP<Matrix> >("P", newP.get());
+        A22_ = coarseLevel.Get< RCP<Matrix> >("A", newA.get());
+        Coords_ = coarseLevel.Get< RCP<RealValuedMultiVector> >("Coordinates", newP.get());
+
+      } else
+#endif // HAVE_MPI
+        {
+          coarseLevel.Request("A", rapFact.get());
+          if (enable_reuse_) {
+            coarseLevel.Request("AP reuse data", rapFact.get());
+            coarseLevel.Request("RAP reuse data", rapFact.get());
+          }
+
+          A22_ = coarseLevel.Get< RCP<Matrix> >("A", rapFact.get());
+
+          if (enable_reuse_) {
+            if (coarseLevel.IsAvailable("AP reuse data", rapFact.get()))
+              A22_AP_reuse_data_ = coarseLevel.Get< RCP<ParameterList> >("AP reuse data", rapFact.get());
+            if (coarseLevel.IsAvailable("RAP reuse data", rapFact.get()))
+              A22_RAP_reuse_data_ = coarseLevel.Get< RCP<ParameterList> >("RAP reuse data", rapFact.get());
+          }
+        }
+    } else {
+      RCP<Teuchos::TimeMonitor> tm = getTimer("MueLu RefMaxwell: Build A22");
+      if (Importer22_.is_null()) {
+        RCP<Matrix> temp;
+        temp = Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Multiply(*SM_Matrix_,false,*D0_Matrix_,false,temp,GetOStream(Runtime0),true,true);
+        if (!implicitTranspose_)
+          A22_ = Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Multiply(*D0_T_Matrix_,false,*temp,false,A22_,GetOStream(Runtime0),true,true);
+        else
+          A22_ = Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Multiply(*D0_Matrix_,true,*temp,false,A22_,GetOStream(Runtime0),true,true);
+      } else {
+        // we replaced domain map and importer on D0, reverse that
+        RCP<const Import> D0importer = rcp_dynamic_cast<CrsMatrixWrap>(D0_Matrix_)->getCrsMatrix()->getCrsGraph()->getImporter();
+        rcp_dynamic_cast<CrsMatrixWrap>(D0_Matrix_)->getCrsMatrix()->replaceDomainMapAndImporter(D0origDomainMap_, D0origImporter_);
+
+        RCP<Matrix> temp, temp2;
+        temp = Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Multiply(*SM_Matrix_,false,*D0_Matrix_,false,temp,GetOStream(Runtime0),true,true);
+        if (!implicitTranspose_)
+          temp2 = Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Multiply(*D0_T_Matrix_,false,*temp,false,temp2,GetOStream(Runtime0),true,true);
+        else
+          temp2 = Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Multiply(*D0_Matrix_,true,*temp,false,temp2,GetOStream(Runtime0),true,true);
+
+        // and back again
+        rcp_dynamic_cast<CrsMatrixWrap>(D0_Matrix_)->getCrsMatrix()->replaceDomainMapAndImporter(Importer22_->getTargetMap(), D0importer);
+
+        ParameterList XpetraList;
+        XpetraList.set("Restrict Communicator",true);
+        XpetraList.set("Timer Label","MueLu::RebalanceA22");
+        RCP<const Map> targetMap = Importer22_->getTargetMap();
+        A22_ = MatrixFactory::Build(temp2, *Importer22_, *Importer22_, targetMap, targetMap, rcp(&XpetraList,false));
+      }
+    }
+
+    if (!A22_.is_null()) {
+      dump(*A22_, "A22.m");
+      A22_->setObjectLabel("RefMaxwell (2,2)");
+    }
   }
 
 
@@ -1022,10 +1134,10 @@ namespace MueLu {
       D0TR11Tmp_ = MultiVectorFactory::Build(R11_->getColMap(), numVectors);
       D0TR11Tmp_->setObjectLabel("D0TR11Tmp");
     }
-    if (!ImporterH_.is_null()) {
-      P11resTmp_ = MultiVectorFactory::Build(ImporterH_->getTargetMap(), numVectors);
+    if (!ImporterCoarse11_.is_null()) {
+      P11resTmp_ = MultiVectorFactory::Build(ImporterCoarse11_->getTargetMap(), numVectors);
       P11resTmp_->setObjectLabel("P11resTmp");
-      P11x_      = MultiVectorFactory::Build(ImporterH_->getTargetMap(), numVectors);
+      P11x_      = MultiVectorFactory::Build(ImporterCoarse11_->getTargetMap(), numVectors);
     } else
       P11x_      = MultiVectorFactory::Build(P11_->getDomainMap(), numVectors);
     P11x_->setObjectLabel("P11x");
@@ -1041,16 +1153,16 @@ namespace MueLu {
     } else
       D0x_      = MultiVectorFactory::Build(D0_Matrix_->getDomainMap(), numVectors);
     D0x_->setObjectLabel("D0x");
-    if (!AH_.is_null()) {
-      if (!ImporterH_.is_null() && !implicitTranspose_)
+    if (!coarseA11_.is_null()) {
+      if (!ImporterCoarse11_.is_null() && !implicitTranspose_)
         P11resSubComm_ = MultiVectorFactory::Build(P11resTmp_, Teuchos::View);
       else
         P11resSubComm_ = MultiVectorFactory::Build(P11res_, Teuchos::View);
-      P11resSubComm_->replaceMap(AH_->getRangeMap());
+      P11resSubComm_->replaceMap(coarseA11_->getRangeMap());
       P11resSubComm_->setObjectLabel("P11resSubComm");
 
       P11xSubComm_ = MultiVectorFactory::Build(P11x_, Teuchos::View);
-      P11xSubComm_->replaceMap(AH_->getDomainMap());
+      P11xSubComm_->replaceMap(coarseA11_->getDomainMap());
       P11xSubComm_->setObjectLabel("P11xSubComm");
     }
     if (!A22_.is_null()) {
@@ -1107,6 +1219,7 @@ namespace MueLu {
     }
   }
 
+
   template<class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
   void RefMaxwell<Scalar,LocalOrdinal,GlobalOrdinal,Node>::dump(const Kokkos::View<bool*, typename Node::device_type>& v, std::string name) const {
     if (dump_matrices_) {
@@ -1118,6 +1231,7 @@ namespace MueLu {
             out << vH[i] << "\n";
     }
   }
+
 
   template<class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
   Teuchos::RCP<Teuchos::TimeMonitor> RefMaxwell<Scalar,LocalOrdinal,GlobalOrdinal,Node>::getTimer(std::string name, RCP<const Teuchos::Comm<int> > comm) const {
@@ -1136,7 +1250,127 @@ namespace MueLu {
 
 
   template<class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-  void RefMaxwell<Scalar,LocalOrdinal,GlobalOrdinal,Node>::buildProlongator() {
+  void RefMaxwell<Scalar,LocalOrdinal,GlobalOrdinal,Node>::buildNodalProlongator(const Teuchos::RCP<Matrix> &A_nodal_Matrix,
+                                                                                 Teuchos::RCP<Matrix> &P_nodal,
+                                                                                 Teuchos::RCP<MultiVector> &Nullspace_nodal) {
+    // build prolongator: algorithm 1 in the reference paper
+    // First, build nodal unsmoothed prolongator using the matrix A_nodal
+
+    const SC SC_ONE = Teuchos::ScalarTraits<SC>::one();
+
+    bool read_P_from_file = parameterList_.get("refmaxwell: read_P_from_file",false);
+    if (read_P_from_file) {
+      // This permits to read in an ML prolongator, so that we get the same hierarchy.
+      // (ML and MueLu typically produce different aggregates.)
+      std::string P_filename = parameterList_.get("refmaxwell: P_filename",std::string("P.m"));
+      std::string domainmap_filename = parameterList_.get("refmaxwell: P_domainmap_filename",std::string("domainmap_P.m"));
+      std::string colmap_filename = parameterList_.get("refmaxwell: P_colmap_filename",std::string("colmap_P.m"));
+      std::string coords_filename = parameterList_.get("refmaxwell: CoordsCoarse11",std::string("CoordsCoarse11.m"));
+      RCP<const Map> colmap = Xpetra::IO<SC, LO, GO, NO>::ReadMap(colmap_filename, A_nodal_Matrix->getDomainMap()->lib(),A_nodal_Matrix->getDomainMap()->getComm());
+      RCP<const Map> domainmap = Xpetra::IO<SC, LO, GO, NO>::ReadMap(domainmap_filename, A_nodal_Matrix->getDomainMap()->lib(),A_nodal_Matrix->getDomainMap()->getComm());
+      P_nodal = Xpetra::IO<SC, LO, GO, NO>::Read(P_filename, A_nodal_Matrix->getDomainMap(), colmap, domainmap, A_nodal_Matrix->getDomainMap());
+      CoordsCoarse11_ = Xpetra::IO<typename RealValuedMultiVector::scalar_type, LO, GO, NO>::ReadMultiVector(coords_filename, domainmap);
+    } else {
+      Level fineLevel, coarseLevel;
+      fineLevel.SetFactoryManager(null);
+      coarseLevel.SetFactoryManager(null);
+      coarseLevel.SetPreviousLevel(rcpFromRef(fineLevel));
+      fineLevel.SetLevelID(0);
+      coarseLevel.SetLevelID(1);
+      fineLevel.Set("A",A_nodal_Matrix);
+      fineLevel.Set("Coordinates",Coords_);
+      fineLevel.Set("DofsPerNode",1);
+      coarseLevel.setlib(A_nodal_Matrix->getDomainMap()->lib());
+      fineLevel.setlib(A_nodal_Matrix->getDomainMap()->lib());
+      coarseLevel.setObjectLabel("RefMaxwell (1,1) A_nodal");
+      fineLevel.setObjectLabel("RefMaxwell (1,1) A_nodal");
+
+      LocalOrdinal NSdim = 1;
+      RCP<MultiVector> nullSpace = MultiVectorFactory::Build(A_nodal_Matrix->getRowMap(),NSdim);
+      nullSpace->putScalar(SC_ONE);
+      fineLevel.Set("Nullspace",nullSpace);
+
+      RCP<Factory> amalgFact, dropFact, UncoupledAggFact, coarseMapFact, TentativePFact, Tfact, SaPFact;
+      amalgFact = rcp(new AmalgamationFactory());
+      coarseMapFact = rcp(new CoarseMapFactory());
+      Tfact = rcp(new CoordinatesTransferFactory());
+      if (useKokkos_) {
+        dropFact = rcp(new CoalesceDropFactory_kokkos());
+        UncoupledAggFact = rcp(new UncoupledAggregationFactory_kokkos());
+        TentativePFact = rcp(new TentativePFactory_kokkos());
+        if (parameterList_.get("multigrid algorithm","unsmoothed") == "sa")
+          SaPFact = rcp(new SaPFactory_kokkos());
+      } else {
+        dropFact = rcp(new CoalesceDropFactory());
+        UncoupledAggFact = rcp(new UncoupledAggregationFactory());
+        TentativePFact = rcp(new TentativePFactory());
+        if (parameterList_.get("multigrid algorithm","unsmoothed") == "sa")
+          SaPFact = rcp(new SaPFactory());
+      }
+      dropFact->SetFactory("UnAmalgamationInfo", amalgFact);
+      double dropTol = parameterList_.get("aggregation: drop tol",0.0);
+      std::string dropScheme = parameterList_.get("aggregation: drop scheme","classical");
+      std::string distLaplAlgo = parameterList_.get("aggregation: distance laplacian algo","default");
+      dropFact->SetParameter("aggregation: drop tol",Teuchos::ParameterEntry(dropTol));
+      dropFact->SetParameter("aggregation: drop scheme",Teuchos::ParameterEntry(dropScheme));
+      if (!useKokkos_)
+        dropFact->SetParameter("aggregation: distance laplacian algo",Teuchos::ParameterEntry(distLaplAlgo));
+
+      UncoupledAggFact->SetFactory("Graph", dropFact);
+      int minAggSize = parameterList_.get("aggregation: min agg size",2);
+      UncoupledAggFact->SetParameter("aggregation: min agg size",Teuchos::ParameterEntry(minAggSize));
+      int maxAggSize = parameterList_.get("aggregation: max agg size",-1);
+      UncoupledAggFact->SetParameter("aggregation: max agg size",Teuchos::ParameterEntry(maxAggSize));
+
+      coarseMapFact->SetFactory("Aggregates", UncoupledAggFact);
+
+      TentativePFact->SetFactory("Aggregates", UncoupledAggFact);
+      TentativePFact->SetFactory("UnAmalgamationInfo", amalgFact);
+      TentativePFact->SetFactory("CoarseMap", coarseMapFact);
+
+      Tfact->SetFactory("Aggregates", UncoupledAggFact);
+      Tfact->SetFactory("CoarseMap", coarseMapFact);
+
+      if (parameterList_.get("multigrid algorithm","unsmoothed") == "sa") {
+        SaPFact->SetFactory("P", TentativePFact);
+        coarseLevel.Request("P", SaPFact.get());
+      } else
+        coarseLevel.Request("P",TentativePFact.get());
+      coarseLevel.Request("Nullspace",TentativePFact.get());
+      coarseLevel.Request("Coordinates",Tfact.get());
+
+      RCP<AggregationExportFactory> aggExport;
+      if (parameterList_.get("aggregation: export visualization data",false)) {
+        aggExport = rcp(new AggregationExportFactory());
+        ParameterList aggExportParams;
+        aggExportParams.set("aggregation: output filename", "aggs.vtk");
+        aggExportParams.set("aggregation: output file: agg style", "Jacks");
+        aggExport->SetParameterList(aggExportParams);
+
+        aggExport->SetFactory("Aggregates", UncoupledAggFact);
+        aggExport->SetFactory("UnAmalgamationInfo", amalgFact);
+        fineLevel.Request("Aggregates",UncoupledAggFact.get());
+        fineLevel.Request("UnAmalgamationInfo",amalgFact.get());
+      }
+
+      if (parameterList_.get("multigrid algorithm","unsmoothed") == "sa")
+        coarseLevel.Get("P",P_nodal,SaPFact.get());
+      else
+        coarseLevel.Get("P",P_nodal,TentativePFact.get());
+      coarseLevel.Get("Nullspace",Nullspace_nodal,TentativePFact.get());
+      coarseLevel.Get("Coordinates",CoordsCoarse11_,Tfact.get());
+
+
+      if (parameterList_.get("aggregation: export visualization data",false))
+        aggExport->Build(fineLevel, coarseLevel);
+    }
+    dump(*P_nodal, "P_nodal.m");
+    dump(*Nullspace_nodal, "Nullspace_nodal.m");
+
+  }
+
+  template<class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+  void RefMaxwell<Scalar,LocalOrdinal,GlobalOrdinal,Node>::buildEdgeProlongator(const Teuchos::RCP<Matrix> &A_nodal_Matrix) {
     // The P11 matrix maps node based aggregrates { A_j } to edges { e_i }.
     //
     // The old implementation used
@@ -1158,121 +1392,8 @@ namespace MueLu {
     RCP<CrsMatrix> P_nodal_imported;
     RCP<MultiVector> Nullspace_nodal;
     if (skipFirstLevel_) {
-      // build prolongator: algorithm 1 in the reference paper
-      // First, build nodal unsmoothed prolongator using the matrix A_nodal
-      bool read_P_from_file = parameterList_.get("refmaxwell: read_P_from_file",false);
-      if (read_P_from_file) {
-        // This permits to read in an ML prolongator, so that we get the same hierarchy.
-        // (ML and MueLu typically produce different aggregates.)
-        std::string P_filename = parameterList_.get("refmaxwell: P_filename",std::string("P.m"));
-        std::string domainmap_filename = parameterList_.get("refmaxwell: P_domainmap_filename",std::string("domainmap_P.m"));
-        std::string colmap_filename = parameterList_.get("refmaxwell: P_colmap_filename",std::string("colmap_P.m"));
-        std::string coords_filename = parameterList_.get("refmaxwell: CoordsH",std::string("coordsH.m"));
-        RCP<const Map> colmap = Xpetra::IO<SC, LO, GO, NO>::ReadMap(colmap_filename, A_nodal_Matrix_->getDomainMap()->lib(),A_nodal_Matrix_->getDomainMap()->getComm());
-        RCP<const Map> domainmap = Xpetra::IO<SC, LO, GO, NO>::ReadMap(domainmap_filename, A_nodal_Matrix_->getDomainMap()->lib(),A_nodal_Matrix_->getDomainMap()->getComm());
-        P_nodal = Xpetra::IO<SC, LO, GO, NO>::Read(P_filename, A_nodal_Matrix_->getDomainMap(), colmap, domainmap, A_nodal_Matrix_->getDomainMap());
-        CoordsH_ = Xpetra::IO<typename RealValuedMultiVector::scalar_type, LO, GO, NO>::ReadMultiVector(coords_filename, domainmap);
-      } else {
-        Level fineLevel, coarseLevel;
-        fineLevel.SetFactoryManager(null);
-        coarseLevel.SetFactoryManager(null);
-        coarseLevel.SetPreviousLevel(rcpFromRef(fineLevel));
-        fineLevel.SetLevelID(0);
-        coarseLevel.SetLevelID(1);
-        fineLevel.Set("A",A_nodal_Matrix_);
-        fineLevel.Set("Coordinates",Coords_);
-        fineLevel.Set("DofsPerNode",1);
-        coarseLevel.setlib(A_nodal_Matrix_->getDomainMap()->lib());
-        fineLevel.setlib(A_nodal_Matrix_->getDomainMap()->lib());
-        coarseLevel.setObjectLabel("RefMaxwell (1,1) A_nodal");
-        fineLevel.setObjectLabel("RefMaxwell (1,1) A_nodal");
 
-        LocalOrdinal NSdim = 1;
-        RCP<MultiVector> nullSpace = MultiVectorFactory::Build(A_nodal_Matrix_->getRowMap(),NSdim);
-        nullSpace->putScalar(SC_ONE);
-        fineLevel.Set("Nullspace",nullSpace);
-
-        RCP<Factory> amalgFact, dropFact, UncoupledAggFact, coarseMapFact, TentativePFact, Tfact, SaPFact;
-        if (useKokkos_) {
-          amalgFact = rcp(new AmalgamationFactory());
-          dropFact = rcp(new CoalesceDropFactory_kokkos());
-          UncoupledAggFact = rcp(new UncoupledAggregationFactory_kokkos());
-          coarseMapFact = rcp(new CoarseMapFactory());
-          TentativePFact = rcp(new TentativePFactory_kokkos());
-          if (parameterList_.get("multigrid algorithm","unsmoothed") == "sa")
-            SaPFact = rcp(new SaPFactory_kokkos());
-          Tfact = rcp(new CoordinatesTransferFactory());
-        } else
-          {
-            amalgFact = rcp(new AmalgamationFactory());
-            dropFact = rcp(new CoalesceDropFactory());
-            UncoupledAggFact = rcp(new UncoupledAggregationFactory());
-            coarseMapFact = rcp(new CoarseMapFactory());
-            TentativePFact = rcp(new TentativePFactory());
-            if (parameterList_.get("multigrid algorithm","unsmoothed") == "sa")
-              SaPFact = rcp(new SaPFactory());
-            Tfact = rcp(new CoordinatesTransferFactory());
-          }
-        dropFact->SetFactory("UnAmalgamationInfo", amalgFact);
-        double dropTol = parameterList_.get("aggregation: drop tol",0.0);
-        std::string dropScheme = parameterList_.get("aggregation: drop scheme","classical");
-        std::string distLaplAlgo = parameterList_.get("aggregation: distance laplacian algo","default");
-        dropFact->SetParameter("aggregation: drop tol",Teuchos::ParameterEntry(dropTol));
-        dropFact->SetParameter("aggregation: drop scheme",Teuchos::ParameterEntry(dropScheme));
-        if (!useKokkos_)
-          dropFact->SetParameter("aggregation: distance laplacian algo",Teuchos::ParameterEntry(distLaplAlgo));
-
-        UncoupledAggFact->SetFactory("Graph", dropFact);
-        int minAggSize = parameterList_.get("aggregation: min agg size",2);
-        UncoupledAggFact->SetParameter("aggregation: min agg size",Teuchos::ParameterEntry(minAggSize));
-        int maxAggSize = parameterList_.get("aggregation: max agg size",-1);
-        UncoupledAggFact->SetParameter("aggregation: max agg size",Teuchos::ParameterEntry(maxAggSize));
-
-        coarseMapFact->SetFactory("Aggregates", UncoupledAggFact);
-
-        TentativePFact->SetFactory("Aggregates", UncoupledAggFact);
-        TentativePFact->SetFactory("UnAmalgamationInfo", amalgFact);
-        TentativePFact->SetFactory("CoarseMap", coarseMapFact);
-
-        Tfact->SetFactory("Aggregates", UncoupledAggFact);
-        Tfact->SetFactory("CoarseMap", coarseMapFact);
-
-        if (parameterList_.get("multigrid algorithm","unsmoothed") == "sa") {
-          SaPFact->SetFactory("P", TentativePFact);
-          coarseLevel.Request("P", SaPFact.get());
-        } else
-          coarseLevel.Request("P",TentativePFact.get());
-        coarseLevel.Request("Nullspace",TentativePFact.get());
-        coarseLevel.Request("Coordinates",Tfact.get());
-
-        RCP<AggregationExportFactory> aggExport;
-        if (parameterList_.get("aggregation: export visualization data",false)) {
-          aggExport = rcp(new AggregationExportFactory());
-          ParameterList aggExportParams;
-          aggExportParams.set("aggregation: output filename", "aggs.vtk");
-          aggExportParams.set("aggregation: output file: agg style", "Jacks");
-          aggExport->SetParameterList(aggExportParams);
-
-          aggExport->SetFactory("Aggregates", UncoupledAggFact);
-          aggExport->SetFactory("UnAmalgamationInfo", amalgFact);
-          fineLevel.Request("Aggregates",UncoupledAggFact.get());
-          fineLevel.Request("UnAmalgamationInfo",amalgFact.get());
-        }
-
-        if (parameterList_.get("multigrid algorithm","unsmoothed") == "sa")
-          coarseLevel.Get("P",P_nodal,SaPFact.get());
-        else
-          coarseLevel.Get("P",P_nodal,TentativePFact.get());
-        coarseLevel.Get("Nullspace",Nullspace_nodal,TentativePFact.get());
-        coarseLevel.Get("Coordinates",CoordsH_,Tfact.get());
-
-
-        if (parameterList_.get("aggregation: export visualization data",false))
-          aggExport->Build(fineLevel, coarseLevel);
-      }
-      dump(*P_nodal, "P_nodal.m");
-      dump(*Nullspace_nodal, "Nullspace_nodal.m");
-
+      buildNodalProlongator(A_nodal_Matrix, P_nodal, Nullspace_nodal);
 
       RCP<CrsMatrix> D0Crs = rcp_dynamic_cast<CrsMatrixWrap>(D0_Matrix_)->getCrsMatrix();
 
@@ -1341,13 +1462,13 @@ namespace MueLu {
           scalar_view_t P11vals("P11_vals",nnzEstimate);
 
           // adjust rowpointer
-          Kokkos::parallel_for("MueLu:RefMaxwell::buildProlongator_adjustRowptr", range_type(0,numLocalRows+1),
+          Kokkos::parallel_for("MueLu:RefMaxwell::buildEdgeProlongator_adjustRowptr", range_type(0,numLocalRows+1),
                                KOKKOS_LAMBDA(const size_t i) {
                                  P11rowptr(i) = dim*localD0P.graph.row_map(i);
                                });
 
           // adjust column indices
-          Kokkos::parallel_for("MueLu:RefMaxwell::buildProlongator_adjustColind", range_type(0,localD0P.graph.entries.size()),
+          Kokkos::parallel_for("MueLu:RefMaxwell::buildEdgeProlongator_adjustColind", range_type(0,localD0P.graph.entries.size()),
                                KOKKOS_LAMBDA(const size_t jj) {
                                  for (size_t k = 0; k < dim; k++) {
                                    P11colind(dim*jj+k) = dim*localD0P.graph.entries(jj)+k;
@@ -1362,13 +1483,13 @@ namespace MueLu {
             // The matrix D0 has too many entries per row.
             // Therefore we need to check whether its entries are actually non-zero.
             // This is the case for the matrices built by MiniEM.
-            GetOStream(Warnings0) << "RefMaxwell::buildProlongator(): D0 matrix has more than 2 entries per row. Taking inefficient code path." << std::endl;
+            GetOStream(Warnings0) << "RefMaxwell::buildEdgeProlongator(): D0 matrix has more than 2 entries per row. Taking inefficient code path." << std::endl;
 
             magnitudeType tol = Teuchos::ScalarTraits<magnitudeType>::eps();
 
 	    auto localD0 = D0_Matrix_->getLocalMatrixDevice();
 	    auto localP = P_nodal_imported->getLocalMatrixDevice();
-            Kokkos::parallel_for("MueLu:RefMaxwell::buildProlongator_enterValues_D0wZeros", range_type(0,numLocalRows),
+            Kokkos::parallel_for("MueLu:RefMaxwell::buildEdgeProlongator_enterValues_D0wZeros", range_type(0,numLocalRows),
                                  KOKKOS_LAMBDA(const size_t i) {
                                    for (size_t ll = localD0.graph.row_map(i); ll < localD0.graph.row_map(i+1); ll++) {
                                      LO l = localD0.graph.entries(ll);
@@ -1397,7 +1518,7 @@ namespace MueLu {
           } else {
 	    auto localD0 = D0_Matrix_->getLocalMatrixDevice();
 	    auto localP = P_nodal_imported->getLocalMatrixDevice();
-            Kokkos::parallel_for("MueLu:RefMaxwell::buildProlongator_enterValues", range_type(0,numLocalRows),
+            Kokkos::parallel_for("MueLu:RefMaxwell::buildEdgeProlongator_enterValues", range_type(0,numLocalRows),
                                  KOKKOS_LAMBDA(const size_t i) {
                                    for (size_t ll = localD0.graph.row_map(i); ll < localD0.graph.row_map(i+1); ll++) {
                                      LO l = localD0.graph.entries(ll);
@@ -1429,22 +1550,22 @@ namespace MueLu {
         } else
           TEUCHOS_TEST_FOR_EXCEPTION(false,std::invalid_argument,algo << " is not a valid option for \"refmaxwell: prolongator compute algorithm\"");
 
-        NullspaceH_ = MultiVectorFactory::Build(P11_->getDomainMap(), dim);
+        NullspaceCoarse11_ = MultiVectorFactory::Build(P11_->getDomainMap(), dim);
 
         auto localNullspace_nodal = Nullspace_nodal->getDeviceLocalView(Xpetra::Access::ReadOnly);
-        auto localNullspaceH = NullspaceH_->getDeviceLocalView(Xpetra::Access::ReadWrite);
-        Kokkos::parallel_for("MueLu:RefMaxwell::buildProlongator_nullspace", range_type(0,Nullspace_nodal->getLocalLength()),
+        auto localNullspaceCoarse11 = NullspaceCoarse11_->getDeviceLocalView(Xpetra::Access::ReadWrite);
+        Kokkos::parallel_for("MueLu:RefMaxwell::buildEdgeProlongator_nullspace", range_type(0,Nullspace_nodal->getLocalLength()),
                              KOKKOS_LAMBDA(const size_t i) {
                                impl_Scalar val = localNullspace_nodal(i,0);
                                for (size_t j = 0; j < dim; j++)
-                                 localNullspaceH(dim*i+j, j) = val;
+                                 localNullspaceCoarse11(dim*i+j, j) = val;
                              });
 
       } else { // !skipFirstLevel_
 	// Get data out of P_nodal_imported and D0.
 	auto localD0 = D0_Matrix_->getLocalMatrixDevice();
 
-        CoordsH_ = Coords_;
+        CoordsCoarse11_ = Coords_;
 
         if (algo == "mat-mat") {
 
@@ -1458,13 +1579,13 @@ namespace MueLu {
           scalar_view_t P11vals("P11_vals",nnzEstimate);
 
           // adjust rowpointer
-          Kokkos::parallel_for("MueLu:RefMaxwell::buildProlongator_adjustRowptr", range_type(0,numLocalRows+1),
+          Kokkos::parallel_for("MueLu:RefMaxwell::buildEdgeProlongator_adjustRowptr", range_type(0,numLocalRows+1),
                                KOKKOS_LAMBDA(const size_t i) {
                                  P11rowptr(i) = dim*localD0.graph.row_map(i);
                                });
 
           // adjust column indices
-          Kokkos::parallel_for("MueLu:RefMaxwell::buildProlongator_adjustColind", range_type(0,localD0.graph.entries.size()),
+          Kokkos::parallel_for("MueLu:RefMaxwell::buildEdgeProlongator_adjustColind", range_type(0,localD0.graph.entries.size()),
                                KOKKOS_LAMBDA(const size_t jj) {
                                  for (size_t k = 0; k < dim; k++) {
                                    P11colind(dim*jj+k) = dim*localD0.graph.entries(jj)+k;
@@ -1479,11 +1600,11 @@ namespace MueLu {
             // The matrix D0 has too many entries per row.
             // Therefore we need to check whether its entries are actually non-zero.
             // This is the case for the matrices built by MiniEM.
-            GetOStream(Warnings0) << "RefMaxwell::buildProlongator(): D0 matrix has more than 2 entries per row. Taking inefficient code path." << std::endl;
+            GetOStream(Warnings0) << "RefMaxwell::buildEdgeProlongator(): D0 matrix has more than 2 entries per row. Taking inefficient code path." << std::endl;
 
             magnitudeType tol = Teuchos::ScalarTraits<magnitudeType>::eps();
 
-            Kokkos::parallel_for("MueLu:RefMaxwell::buildProlongator_enterValues_D0wZeros", range_type(0,numLocalRows),
+            Kokkos::parallel_for("MueLu:RefMaxwell::buildEdgeProlongator_enterValues_D0wZeros", range_type(0,numLocalRows),
                                  KOKKOS_LAMBDA(const size_t i) {
                                    for (size_t jj = localD0.graph.row_map(i); jj < localD0.graph.row_map(i+1); jj++) {
                                      LO j = localD0.graph.entries(jj);
@@ -1506,7 +1627,7 @@ namespace MueLu {
                                  });
 
           } else {
-            Kokkos::parallel_for("MueLu:RefMaxwell::buildProlongator_enterValues", range_type(0,numLocalRows),
+            Kokkos::parallel_for("MueLu:RefMaxwell::buildEdgeProlongator_enterValues", range_type(0,numLocalRows),
                                  KOKKOS_LAMBDA(const size_t i) {
                                    for (size_t jj = localD0.graph.row_map(i); jj < localD0.graph.row_map(i+1); jj++) {
                                      LO j = localD0.graph.entries(jj);
@@ -1632,7 +1753,7 @@ namespace MueLu {
               // The matrix D0 has too many entries per row.
               // Therefore we need to check whether its entries are actually non-zero.
               // This is the case for the matrices built by MiniEM.
-              GetOStream(Warnings0) << "RefMaxwell::buildProlongator(): D0 matrix has more than 2 entries per row. Taking inefficient code path." << std::endl;
+              GetOStream(Warnings0) << "RefMaxwell::buildEdgeProlongator(): D0 matrix has more than 2 entries per row. Taking inefficient code path." << std::endl;
 
               magnitudeType tol = Teuchos::ScalarTraits<magnitudeType>::eps();
               for (size_t i = 0; i < numLocalRows; i++) {
@@ -1734,7 +1855,7 @@ namespace MueLu {
               // The matrix D0 has too many entries per row.
               // Therefore we need to check whether its entries are actually non-zero.
               // This is the case for the matrices built by MiniEM.
-              GetOStream(Warnings0) << "RefMaxwell::buildProlongator(): D0 matrix has more than 2 entries per row. Taking inefficient code path." << std::endl;
+              GetOStream(Warnings0) << "RefMaxwell::buildEdgeProlongator(): D0 matrix has more than 2 entries per row. Taking inefficient code path." << std::endl;
 
               magnitudeType tol = Teuchos::ScalarTraits<magnitudeType>::eps();
               nnz = 0;
@@ -1818,14 +1939,14 @@ namespace MueLu {
           } else
             TEUCHOS_TEST_FOR_EXCEPTION(false,std::invalid_argument,algo << " is not a valid option for \"refmaxwell: prolongator compute algorithm\"");
 
-          NullspaceH_ = MultiVectorFactory::Build(P11_->getDomainMap(), dim);
+          NullspaceCoarse11_ = MultiVectorFactory::Build(P11_->getDomainMap(), dim);
 
           ArrayRCP<const Scalar> ns_rcp = Nullspace_nodal->getData(0);
           ArrayView<const Scalar> ns_view = ns_rcp();
           for (size_t i = 0; i < Nullspace_nodal->getLocalLength(); i++) {
             Scalar val = ns_view[i];
             for (size_t j = 0; j < dim; j++)
-              NullspaceH_->replaceLocalValue(dim*i+j, j, val);
+              NullspaceCoarse11_->replaceLocalValue(dim*i+j, j, val);
           }
 
 
@@ -1842,7 +1963,7 @@ namespace MueLu {
 	  ArrayView<const SC>         D0vals;
 	  D0rowptr = D0rowptr_RCP();  D0colind = D0colind_RCP();  D0vals = D0vals_RCP();
 
-          CoordsH_ = Coords_;
+          CoordsCoarse11_ = Coords_;
           if (algo == "mat-mat") {
 
             // Create the matrix object
@@ -1874,7 +1995,7 @@ namespace MueLu {
               // The matrix D0 has too many entries per row.
               // Therefore we need to check whether its entries are actually non-zero.
               // This is the case for the matrices built by MiniEM.
-              GetOStream(Warnings0) << "RefMaxwell::buildProlongator(): D0 matrix has more than 2 entries per row. Taking inefficient code path." << std::endl;
+              GetOStream(Warnings0) << "RefMaxwell::buildEdgeProlongator(): D0 matrix has more than 2 entries per row. Taking inefficient code path." << std::endl;
 
               magnitudeType tol = Teuchos::ScalarTraits<magnitudeType>::eps();
               for (size_t i = 0; i < numLocalRows; i++) {
@@ -1928,137 +2049,71 @@ namespace MueLu {
       }
   }
 
+
   template<class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-  void RefMaxwell<Scalar,LocalOrdinal,GlobalOrdinal,Node>::formCoarseMatrix() {
-    RCP<Teuchos::TimeMonitor> tm = getTimer("MueLu RefMaxwell: Build coarse (1,1) matrix");
-
-    const Scalar one = Teuchos::ScalarTraits<Scalar>::one();
-
-    // coarse matrix for P11* (M1 + D1* M2 D1) P11
-    RCP<Matrix> temp;
-    temp = Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Multiply(*SM_Matrix_,false,*P11_,false,temp,GetOStream(Runtime0),true,true);
-    if (ImporterH_.is_null())
-      AH_ = Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Multiply(*P11_,true,*temp,false,AH_,GetOStream(Runtime0),true,true);
-    else {
-
-      RCP<Matrix> temp2;
-      temp2 = Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Multiply(*P11_,true,*temp,false,temp2,GetOStream(Runtime0),true,true);
-
-      RCP<const Map> map = ImporterH_->getTargetMap()->removeEmptyProcesses();
-      temp2->removeEmptyProcessesInPlace(map);
-      if (!temp2.is_null() && temp2->getRowMap().is_null())
-        temp2 = Teuchos::null;
-      AH_ = temp2;
+  void
+  RefMaxwell<Scalar,LocalOrdinal,GlobalOrdinal,Node>::setupSubSolve(Teuchos::RCP<Hierarchy> &hierarchy,
+                                                                    Teuchos::RCP<Operator> &thyraPrecOp,
+                                                                    const Teuchos::RCP<Matrix> &A,
+                                                                    const Teuchos::RCP<MultiVector> &Nullspace,
+                                                                    const Teuchos::RCP<RealValuedMultiVector> &Coords,
+                                                                    Teuchos::ParameterList &params,
+                                                                    std::string &label,
+                                                                    const bool reuse,
+                                                                    const bool isSingular) {
+    int oldRank = SetProcRankVerbose(A->getDomainMap()->getComm()->getRank());
+    if (IsPrint(Statistics2)) {
+      RCP<ParameterList> pl = rcp(new ParameterList());;
+      pl->set("printLoadBalancingInfo", true);
+      pl->set("printCommInfo",          true);
+      GetOStream(Statistics2) << PerfUtils::PrintMatrixInfo(*A, label, pl);
     }
+#if defined(HAVE_MUELU_STRATIMIKOS) && defined(HAVE_MUELU_THYRA)
+    if (params.isType<std::string>("Preconditioner Type")) {
+      TEUCHOS_ASSERT(!reuse);
+      // build a Stratimikos preconditioner
+      if (params.get<std::string>("Preconditioner Type") == "MueLu") {
+        ParameterList& userParamList = params.sublist("Preconditioner Types").sublist("MueLu").sublist("user data");
+        if (!Nullspace.is_null())
+          userParamList.set<RCP<MultiVector> >("Nullspace", Nullspace);
+        userParamList.set<RCP<RealValuedMultiVector> >("Coordinates", Coords);
+      }
+      thyraPrecOp = rcp(new XpetraThyraLinearOp<Scalar,LocalOrdinal,GlobalOrdinal,Node>(coarseA11_, rcp(&params, false)));
+    } else
+#endif
+      {
+        // build a MueLu hierarchy
 
-    if (!disable_addon_) {
+        if (!reuse) {
+          ParameterList& userParamList = params.sublist("user data");
+          userParamList.set<RCP<RealValuedMultiVector> >("Coordinates", Coords);
+          if (!Nullspace.is_null())
+            userParamList.set<RCP<MultiVector> >("Nullspace", Nullspace);
 
-      RCP<Matrix> addon;
-
-      if (!AH_.is_null() && Addon_Matrix_.is_null()) {
-        // construct addon
-        RCP<Teuchos::TimeMonitor> tmAddon = getTimer("MueLu RefMaxwell: Build coarse addon matrix");
-        // catch a failure
-        TEUCHOS_TEST_FOR_EXCEPTION(M0inv_Matrix_==Teuchos::null,std::invalid_argument,
-                                   "MueLu::RefMaxwell::formCoarseMatrix(): Inverse of "
-                                   "lumped mass matrix required for add-on (i.e. M0inv_Matrix is null)");
-
-        // coarse matrix for add-on, i.e P11* (M1 D0 M0inv D0* M1) P11
-        RCP<Matrix> Zaux, Z;
-
-        // construct Zaux = M1 P11
-        Zaux = Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Multiply(*M1_Matrix_,false,*P11_,false,Zaux,GetOStream(Runtime0),true,true);
-        // construct Z = D0* M1 P11 = D0* Zaux
-        Z = Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Multiply(*D0_Matrix_,true,*Zaux,false,Z,GetOStream(Runtime0),true,true);
-
-        // construct Z* M0inv Z
-        if (M0inv_Matrix_->getGlobalMaxNumRowEntries()<=1) {
-          // We assume that if M0inv has at most one entry per row then
-          // these are all diagonal entries.
-          RCP<Vector> diag = VectorFactory::Build(M0inv_Matrix_->getRowMap());
-          M0inv_Matrix_->getLocalDiagCopy(*diag);
-	  {
-	    ArrayRCP<Scalar> diagVals = diag->getDataNonConst(0);
-	    for (size_t j=0; j < diag->getMap()->getLocalNumElements(); j++) {
-	      diagVals[j] = Teuchos::ScalarTraits<Scalar>::squareroot(diagVals[j]);
-	    }
-	  }
-          if (Z->getRowMap()->isSameAs(*(diag->getMap())))
-            Z->leftScale(*diag);
-          else {
-            RCP<Import> importer = ImportFactory::Build(diag->getMap(),Z->getRowMap());
-            RCP<Vector> diag2 = VectorFactory::Build(Z->getRowMap());
-            diag2->doImport(*diag,*importer,Xpetra::INSERT);
-            Z->leftScale(*diag2);
+          if (isSingular) {
+            std::string coarseType = "";
+            if (params.isParameter("coarse: type")) {
+              coarseType = params.get<std::string>("coarse: type");
+              // Transform string to "Abcde" notation
+              std::transform(coarseType.begin(),   coarseType.end(),   coarseType.begin(), ::tolower);
+              std::transform(coarseType.begin(), ++coarseType.begin(), coarseType.begin(), ::toupper);
+            }
+            if ((coarseType == "" ||
+                 coarseType == "Klu" ||
+                 coarseType == "Klu2") &&
+                (!params.isSublist("coarse: params") ||
+                 !params.sublist("coarse: params").isParameter("fix nullspace")))
+              params.sublist("coarse: params").set("fix nullspace",true);
           }
-          addon = Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Multiply(*Z,true,*Z,false,addon,GetOStream(Runtime0),true,true);
-        } else if (parameterList_.get<bool>("rap: triple product", false) == false) {
-          RCP<Matrix> C2;
-          // construct C2 = M0inv Z
-          C2 = Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Multiply(*M0inv_Matrix_,false,*Z,false,C2,GetOStream(Runtime0),true,true);
-          // construct Matrix2 = Z* M0inv Z = Z* C2
-          addon = Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Multiply(*Z,true,*C2,false,addon,GetOStream(Runtime0),true,true);
+
+          hierarchy = MueLu::CreateXpetraPreconditioner(A, params);
         } else {
-          addon = MatrixFactory::Build(Z->getDomainMap());
-          // construct Matrix2 = Z* M0inv Z
-          Xpetra::TripleMatrixMultiply<Scalar,LocalOrdinal,GlobalOrdinal,Node>::
-            MultiplyRAP(*Z, true, *M0inv_Matrix_, false, *Z, false, *addon, true, true);
+          RCP<MueLu::Level> level0 = hierarchy->GetLevel(0);
+          level0->Set("A", A);
+          hierarchy->SetupRe();
         }
-        // Should we keep the addon for next setup?
-        if (enable_reuse_)
-          Addon_Matrix_ = addon;
-      } else
-        addon = Addon_Matrix_;
-
-      if (!AH_.is_null()) {
-        // add matrices together
-        RCP<Matrix> newAH;
-        Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::TwoMatrixAdd(*AH_,false,one,*addon,false,one,newAH,GetOStream(Runtime0));
-        newAH->fillComplete();
-        AH_ = newAH;
       }
-    }
-
-    if (!AH_.is_null() && !skipFirstLevel_) {
-      ArrayRCP<bool> AHBCrows;
-      AHBCrows.resize(AH_->getRowMap()->getLocalNumElements());
-      size_t dim = Nullspace_->getNumVectors();
-      for (size_t i = 0; i < BCdomain_.size(); i++)
-        for (size_t k = 0; k < dim; k++)
-          AHBCrows[i*dim+k] = BCdomain_(i);
-      magnitudeType rowSumTol = parameterList_.get("refmaxwell: row sum drop tol (1,1)",-1.0);
-      if (rowSumTol > 0.)
-        Utilities::ApplyRowSumCriterion(*AH_, rowSumTol, AHBCrows);
-      if (applyBCsToH_)
-        Utilities::ApplyOAZToMatrixRows(AH_, AHBCrows);
-    }
-
-    if (!AH_.is_null()) {
-      // If we already applied BCs to A_nodal, we likely do not need
-      // to fix up AH.
-      // If we did not apply BCs to A_nodal, we now need to correct
-      // the zero diagonals of AH, since we did nuke the nullspace.
-
-      bool fixZeroDiagonal = !applyBCsToAnodal_;
-      if (precList11_.isParameter("rap: fix zero diagonals"))
-        fixZeroDiagonal = precList11_.get<bool>("rap: fix zero diagonals");
-
-      if (fixZeroDiagonal) {
-        magnitudeType threshold = 1e-16;
-        Scalar replacement = 1.0;
-        if (precList11_.isType<magnitudeType>("rap: fix zero diagonals threshold"))
-          threshold = precList11_.get<magnitudeType>("rap: fix zero diagonals threshold");
-        else if (precList11_.isType<double>("rap: fix zero diagonals threshold"))
-          threshold = Teuchos::as<magnitudeType>(precList11_.get<double>("rap: fix zero diagonals threshold"));
-        if (precList11_.isType<double>("rap: fix zero diagonals replacement"))
-          replacement = Teuchos::as<Scalar>(precList11_.get<double>("rap: fix zero diagonals replacement"));
-        Xpetra::MatrixUtils<SC,LO,GO,NO>::CheckRepairMainDiagonal(AH_, true, GetOStream(Warnings1), threshold, replacement);
-      }
-
-      // Set block size
-      size_t dim = Nullspace_->getNumVectors();
-      AH_->SetFixedBlockSize(dim);
-    }
+    SetProcRankVerbose(oldRank);
   }
 
 
@@ -2090,7 +2145,7 @@ namespace MueLu {
           RCP<Teuchos::TimeMonitor> tmRes = getTimer("MueLu RefMaxwell: restriction coarse (1,1) (implicit)");
           P11_->apply(*residual_,*P11res_,Teuchos::TRANS);
         }
-        if (!allNodesBoundary_) {
+        if (!onlyBoundary22_) {
           RCP<Teuchos::TimeMonitor> tmD0 = getTimer("MueLu RefMaxwell: restriction (2,2) (implicit)");
           D0_Matrix_->apply(*residual_,*D0res_,Teuchos::TRANS);
         }
@@ -2102,7 +2157,7 @@ namespace MueLu {
             RCP<Teuchos::TimeMonitor> tmD0 = getTimer("MueLu RefMaxwell: restrictions import");
             D0TR11Tmp_->doImport(*residual_, *rcp_dynamic_cast<CrsMatrixWrap>(R11_)->getCrsMatrix()->getCrsGraph()->getImporter(), Xpetra::INSERT);
           }
-          if (!allNodesBoundary_) {
+          if (!onlyBoundary22_) {
             RCP<Teuchos::TimeMonitor> tmD0 = getTimer("MueLu RefMaxwell: restriction (2,2) (explicit)");
             rcp_dynamic_cast<TpetraCrsMatrix>(rcp_dynamic_cast<CrsMatrixWrap>(D0_T_Matrix_)->getCrsMatrix())->getTpetra_CrsMatrix()->localApply(toTpetra(*D0TR11Tmp_),toTpetra(*D0res_),Teuchos::NO_TRANS);
           }
@@ -2117,7 +2172,7 @@ namespace MueLu {
             RCP<Teuchos::TimeMonitor> tmP11 = getTimer("MueLu RefMaxwell: restriction coarse (1,1) (explicit)");
             R11_->apply(*residual_,*P11res_,Teuchos::NO_TRANS);
           }
-          if (!allNodesBoundary_) {
+          if (!onlyBoundary22_) {
             RCP<Teuchos::TimeMonitor> tmD0 = getTimer("MueLu RefMaxwell: restriction (2,2) (explicit)");
             D0_T_Matrix_->apply(*residual_,*D0res_,Teuchos::NO_TRANS);
           }
@@ -2130,21 +2185,21 @@ namespace MueLu {
 
       // block diagonal preconditioner on 2x2 (V-cycle for diagonal blocks)
 
-      if (!ImporterH_.is_null() && !implicitTranspose_) {
+      if (!ImporterCoarse11_.is_null() && !implicitTranspose_) {
         RCP<Teuchos::TimeMonitor> tmH = getTimer("MueLu RefMaxwell: import coarse (1,1)");
-        P11resTmp_->beginImport(*P11res_, *ImporterH_, Xpetra::INSERT);
+        P11resTmp_->beginImport(*P11res_, *ImporterCoarse11_, Xpetra::INSERT);
       }
-      if (!allNodesBoundary_ && !Importer22_.is_null() && !implicitTranspose_) {
+      if (!onlyBoundary22_ && !Importer22_.is_null() && !implicitTranspose_) {
         RCP<Teuchos::TimeMonitor> tm22 = getTimer("MueLu RefMaxwell: import (2,2)");
         D0resTmp_->beginImport(*D0res_, *Importer22_, Xpetra::INSERT);
       }
 
       // iterate on coarse (1, 1) block
-      if (!AH_.is_null()) {
-        if (!ImporterH_.is_null() && !implicitTranspose_)
-          P11resTmp_->endImport(*P11res_, *ImporterH_, Xpetra::INSERT);
+      if (!coarseA11_.is_null()) {
+        if (!ImporterCoarse11_.is_null() && !implicitTranspose_)
+          P11resTmp_->endImport(*P11res_, *ImporterCoarse11_, Xpetra::INSERT);
 
-        RCP<Teuchos::TimeMonitor> tmH = getTimer("MueLu RefMaxwell: solve coarse (1,1)", AH_->getRowMap()->getComm());
+        RCP<Teuchos::TimeMonitor> tmH = getTimer("MueLu RefMaxwell: solve coarse (1,1)", coarseA11_->getRowMap()->getComm());
 
 #if defined(HAVE_MUELU_STRATIMIKOS) && defined(HAVE_MUELU_THYRA)
         if (!thyraPrecOpH_.is_null()) {
@@ -2153,12 +2208,12 @@ namespace MueLu {
         }
         else
 #endif
-           HierarchyH_->Iterate(*P11resSubComm_, *P11xSubComm_, numItersH_, true);
+           HierarchyCoarse11_->Iterate(*P11resSubComm_, *P11xSubComm_, numItersCoarse11_, true);
       }
 
       // iterate on (2, 2) block
       if (!A22_.is_null()) {
-        if (!allNodesBoundary_ && !Importer22_.is_null() && !implicitTranspose_)
+        if (!onlyBoundary22_ && !Importer22_.is_null() && !implicitTranspose_)
           D0resTmp_->endImport(*D0res_, *Importer22_, Xpetra::INSERT);
 
         RCP<Teuchos::TimeMonitor> tm22 = getTimer("MueLu RefMaxwell: solve (2,2)", A22_->getRowMap()->getComm());
@@ -2173,9 +2228,9 @@ namespace MueLu {
           Hierarchy22_->Iterate(*D0resSubComm_, *D0xSubComm_, numIters22_, true);
       }
 
-      if (AH_.is_null() && !ImporterH_.is_null() && !implicitTranspose_)
-        P11resTmp_->endImport(*P11res_, *ImporterH_, Xpetra::INSERT);
-      if (A22_.is_null() && !allNodesBoundary_ && !Importer22_.is_null() && !implicitTranspose_)
+      if (coarseA11_.is_null() && !ImporterCoarse11_.is_null() && !implicitTranspose_)
+        P11resTmp_->endImport(*P11res_, *ImporterCoarse11_, Xpetra::INSERT);
+      if (A22_.is_null() && !onlyBoundary22_ && !Importer22_.is_null() && !implicitTranspose_)
         D0resTmp_->endImport(*D0res_, *Importer22_, Xpetra::INSERT);
     }
 
@@ -2185,7 +2240,7 @@ namespace MueLu {
         P11_->apply(*P11x_,X,Teuchos::NO_TRANS,one,one);
       }
 
-      if (!allNodesBoundary_) { // prolongate (2,2) block
+      if (!onlyBoundary22_) { // prolongate (2,2) block
         RCP<Teuchos::TimeMonitor> tmD0 = getTimer("MueLu RefMaxwell: prolongation (2,2) (fused)");
         D0_Matrix_->apply(*D0x_,X,Teuchos::NO_TRANS,one,one);
       }
@@ -2195,7 +2250,7 @@ namespace MueLu {
         P11_->apply(*P11x_,*residual_,Teuchos::NO_TRANS);
       }
 
-      if (!allNodesBoundary_) { // prolongate (2,2) block
+      if (!onlyBoundary22_) { // prolongate (2,2) block
         RCP<Teuchos::TimeMonitor> tmD0 = getTimer("MueLu RefMaxwell: prolongation (2,2) (unfused)");
         D0_Matrix_->apply(*D0x_,*residual_,Teuchos::NO_TRANS,one,one);
       }
@@ -2224,13 +2279,13 @@ namespace MueLu {
     }
 
     { // solve coarse (1,1) block
-      if (!ImporterH_.is_null() && !implicitTranspose_) {
+      if (!ImporterCoarse11_.is_null() && !implicitTranspose_) {
         RCP<Teuchos::TimeMonitor> tmH = getTimer("MueLu RefMaxwell: import coarse (1,1)");
-        P11resTmp_->doImport(*P11res_, *ImporterH_, Xpetra::INSERT);
+        P11resTmp_->doImport(*P11res_, *ImporterCoarse11_, Xpetra::INSERT);
       }
-      if (!AH_.is_null()) {
-        RCP<Teuchos::TimeMonitor> tmH = getTimer("MueLu RefMaxwell: solve coarse (1,1)", AH_->getRowMap()->getComm());
-        HierarchyH_->Iterate(*P11resSubComm_, *P11xSubComm_, numItersH_, true);
+      if (!coarseA11_.is_null()) {
+        RCP<Teuchos::TimeMonitor> tmH = getTimer("MueLu RefMaxwell: solve coarse (1,1)", coarseA11_->getRowMap()->getComm());
+        HierarchyCoarse11_->Iterate(*P11resSubComm_, *P11xSubComm_, numItersCoarse11_, true);
       }
     }
 
@@ -2246,7 +2301,7 @@ namespace MueLu {
   template<class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
   void RefMaxwell<Scalar,LocalOrdinal,GlobalOrdinal,Node>::solve22(const MultiVector& RHS, MultiVector& X) const {
 
-    if (allNodesBoundary_)
+    if (onlyBoundary22_)
       return;
 
     Scalar one = Teuchos::ScalarTraits<Scalar>::one();
@@ -2289,7 +2344,7 @@ namespace MueLu {
     RCP<Teuchos::TimeMonitor> tm = getTimer("MueLu RefMaxwell: solve");
 
     // make sure that we have enough temporary memory
-    if (!allEdgesBoundary_ && X.getNumVectors() != P11res_->getNumVectors())
+    if (!onlyBoundary11_ && X.getNumVectors() != P11res_->getNumVectors())
       allocateMemory(X.getNumVectors());
 
     { // apply pre-smoothing
@@ -2385,7 +2440,7 @@ namespace MueLu {
     }
 #endif
 
-    HierarchyH_    = Teuchos::null;
+    HierarchyCoarse11_    = Teuchos::null;
     Hierarchy22_   = Teuchos::null;
     PreSmoother_   = Teuchos::null;
     PostSmoother_  = Teuchos::null;
@@ -2452,7 +2507,7 @@ namespace MueLu {
 
 #ifdef HAVE_MPI
     int root;
-    if (!AH_.is_null())
+    if (!coarseA11_.is_null())
       root = comm->getRank();
     else
       root = -1;
@@ -2521,8 +2576,8 @@ namespace MueLu {
 
     out << outstr;
 
-    if (!HierarchyH_.is_null())
-      HierarchyH_->describe(out, GetVerbLevel());
+    if (!HierarchyCoarse11_.is_null())
+      HierarchyCoarse11_->describe(out, GetVerbLevel());
 
     if (!Hierarchy22_.is_null())
       Hierarchy22_->describe(out, GetVerbLevel());
@@ -2542,7 +2597,7 @@ namespace MueLu {
 #endif
 
       char status = 0;
-      if (!AH_.is_null())
+      if (!coarseA11_.is_null())
         status += 1;
       if (!A22_.is_null())
         status += 2;

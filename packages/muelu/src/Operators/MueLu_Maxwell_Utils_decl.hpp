@@ -96,6 +96,7 @@ namespace MueLu {
                                            bool & allEdgesBoundary,
                                            bool & allNodesBoundary);
 
+    //! Detect Dirichlet boundary conditions
     static void detectBoundaryConditionsSM(RCP<Matrix> & SM_Matrix,
                                            RCP<Matrix> & D0_Matrix,
                                            magnitudeType rowSumTol,

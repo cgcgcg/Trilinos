@@ -134,7 +134,7 @@ namespace MueLu {
 
     //! Constructor
     RefMaxwell() :
-      HierarchyH_(Teuchos::null),
+      HierarchyCoarse11_(Teuchos::null),
       Hierarchy22_(Teuchos::null),
       disable_addon_(MasterList::getDefault<bool>("refmaxwell: disable addon")),
       mode_(MasterList::getDefault<std::string>("refmaxwell: mode"))
@@ -143,7 +143,7 @@ namespace MueLu {
 
     //! Constructor with Hierarchies
     RefMaxwell(Teuchos::RCP<Hierarchy> HH, Teuchos::RCP<Hierarchy> H22) :
-      HierarchyH_(HH),
+      HierarchyCoarse11_(HH),
       Hierarchy22_(H22),
       disable_addon_(MasterList::getDefault<bool>("refmaxwell: disable addon")),
       mode_(MasterList::getDefault<std::string>("refmaxwell: mode"))
@@ -306,12 +306,6 @@ namespace MueLu {
     //! Setup the preconditioner
     void compute(bool reuse=false);
 
-    //! Setup the prolongator for the (1,1)-block
-    void buildProlongator();
-
-    //! Compute P11^{T}*A*P11 efficiently
-    void formCoarseMatrix();
-
     //! Reset system matrix
     void resetMatrix(Teuchos::RCP<Matrix> SM_Matrix_new, bool ComputePrec=true);
 
@@ -358,6 +352,40 @@ namespace MueLu {
                     const Teuchos::RCP<RealValuedMultiVector> & Coords,
                     Teuchos::ParameterList& List);
 
+    //! Builds nullspace for SM_Matrix
+    void buildNullspace();
+
+    //! Determine how large the sub-communicators for the two hierarchies should be
+    void determineSubHierarchyCommSizes(bool &doRebalancing, int &rebalanceStriding, int &numProcsCoarseA11, int &numProcsA22);
+
+    //! Compute coarseA11 = P11^{T}*SM*P11 + addon efficiently
+    void buildCoarse11Matrix();
+
+    //! rebalance the coarse A11 matrix, as well as P11, CoordsCoarse11 and Addon_Matrix
+    void rebalanceCoarse11Matrix(const int rebalanceStriding, const int numProcsCoarseA11);
+
+    //! Setup A22 = D0^T SM D0 and rebalance it, as well as D0 and Coords_
+    void build22Matrix(const bool reuse, const bool doRebalancing, const int rebalanceStriding, const int numProcsA22);
+
+    //! Setup the auxiliary nodal prolongator
+    void buildNodalProlongator(const Teuchos::RCP<Matrix> &A_nodal_Matrix,
+                               Teuchos::RCP<Matrix> &P_nodal,
+                               Teuchos::RCP<MultiVector> &Nullspace_nodal);
+
+    //! Setup the prolongator for the (1,1)-block
+    void buildEdgeProlongator(const Teuchos::RCP<Matrix> &A_nodal_Matrix);
+
+    //! Setup a subsolve
+    void setupSubSolve(Teuchos::RCP<Hierarchy> &hierarchy,
+                       Teuchos::RCP<Operator> &thyraPrecOp,
+                       const Teuchos::RCP<Matrix> &A,
+                       const Teuchos::RCP<MultiVector> &Nullspace,
+                       const Teuchos::RCP<RealValuedMultiVector> &Coords,
+                       Teuchos::ParameterList &params,
+                       std::string &label,
+                       const bool reuse,
+                       const bool isSingular=false);
+
     //! Set the fine level smoother
     void setFineLevelSmoother();
 
@@ -393,36 +421,36 @@ namespace MueLu {
 
 
     //! Two hierarchies: one for the coarse (1,1)-block, another for the (2,2)-block
-    Teuchos::RCP<Hierarchy> HierarchyH_, Hierarchy22_;
+    Teuchos::RCP<Hierarchy> HierarchyCoarse11_, Hierarchy22_;
     Teuchos::RCP<SmootherBase> PreSmoother_, PostSmoother_;
     Teuchos::RCP<SmootherPrototype> PreSmootherData_, PostSmootherData_;
     RCP<Operator> thyraPrecOpH_, thyraPrecOp22_;
     //! Various matrices
     Teuchos::RCP<Matrix> SM_Matrix_, D0_Matrix_, D0_T_Matrix_, M0inv_Matrix_, M1_Matrix_, Ms_Matrix_;
-    Teuchos::RCP<Matrix> A_nodal_Matrix_, P11_, R11_, AH_, A22_, Addon_Matrix_;
+    Teuchos::RCP<Matrix> P11_, R11_, coarseA11_, A22_, Addon_Matrix_;
     Teuchos::RCP<const Map> D0origDomainMap_;
     Teuchos::RCP<const Import> D0origImporter_;
     //! Vectors for BCs
-    Kokkos::View<bool*, typename Node::device_type> BCrows_, BCcols_, BCdomain_;
-    int BCedges_, BCnodes_;
-    //! Nullspace
+    Kokkos::View<bool*, typename Node::device_type> BCrows11_, BCcols22_, BCdomain22_;
+    int globalNumberBoundaryUnknowns11_, globalNumberBoundaryUnknowns22_;
+    //! Nullspace for (1.1) block
     Teuchos::RCP<MultiVector> Nullspace_;
     //! Coordinates
-    Teuchos::RCP<RealValuedMultiVector> Coords_, CoordsH_;
-    //! Nullspace for (1,1) problem
-    Teuchos::RCP<MultiVector> NullspaceH_;
+    Teuchos::RCP<RealValuedMultiVector> Coords_, CoordsCoarse11_;
+    //! Nullspace for coarse (1,1) problem
+    Teuchos::RCP<MultiVector> NullspaceCoarse11_;
     //! Importer to coarse (1,1) hierarchy
-    Teuchos::RCP<const Import> ImporterH_, Importer22_;
+    Teuchos::RCP<const Import> ImporterCoarse11_, Importer22_;
     bool D0_T_R11_colMapsMatch_;
-    bool allEdgesBoundary_, allNodesBoundary_;
+    bool onlyBoundary11_, onlyBoundary22_;
     //! Parameter lists
     Teuchos::ParameterList parameterList_, precList11_, precList22_, smootherList_;
-    Teuchos::RCP<Teuchos::ParameterList> AH_AP_reuse_data_, AH_RAP_reuse_data_;
+    Teuchos::RCP<Teuchos::ParameterList> coarseA11_AP_reuse_data_, coarseA11_RAP_reuse_data_;
     Teuchos::RCP<Teuchos::ParameterList> A22_AP_reuse_data_, A22_RAP_reuse_data_;
     //! Some options
     bool disable_addon_, dump_matrices_, useKokkos_, use_as_preconditioner_, implicitTranspose_, fuseProlongationAndUpdate_, syncTimers_, enable_reuse_, skipFirstLevel_;
-    bool applyBCsToAnodal_, applyBCsToH_, applyBCsTo22_;
-    int numItersH_, numIters22_;
+    bool applyBCsToAnodal_, applyBCsToCoarse11_, applyBCsTo22_;
+    int numItersCoarse11_, numIters22_;
     std::string mode_;
     //! Temporary memory
     mutable Teuchos::RCP<MultiVector> P11res_, P11x_, P11resSubComm_, P11xSubComm_, D0res_, D0x_, D0resSubComm_, D0xSubComm_, residual_, P11resTmp_, D0resTmp_, D0TR11Tmp_;

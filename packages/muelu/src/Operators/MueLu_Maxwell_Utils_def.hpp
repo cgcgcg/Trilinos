@@ -152,26 +152,28 @@ namespace MueLu {
     // BCcols_[i] is true, iff i is a boundary column
     int BCedgesLocal = 0;
     int BCnodesLocal = 0;
-    BCrowsKokkos_ = Utilities::DetectDirichletRows_kokkos(*SM_Matrix_,Teuchos::ScalarTraits<magnitudeType>::eps(),/*count_twos_as_dirichlet=*/true);
+    {
+      BCrowsKokkos_ = Utilities_kokkos::DetectDirichletRows(*SM_Matrix_,Teuchos::ScalarTraits<magnitudeType>::eps(),/*count_twos_as_dirichlet=*/true);
 
-    if (rowSumTol > 0.)
-      Utilities::ApplyRowSumCriterion(*SM_Matrix_, rowSumTol, BCrowsKokkos_);
+      if (rowSumTol > 0.)
+        Utilities_kokkos::ApplyRowSumCriterion(*SM_Matrix_, rowSumTol, BCrowsKokkos_);
 
-    BCcolsKokkos_ = Kokkos::View<bool*,typename Node::device_type>(Kokkos::ViewAllocateWithoutInitializing("dirichletCols"), D0_Matrix_->getColMap()->getLocalNumElements());
-    BCdomainKokkos_ = Kokkos::View<bool*,typename Node::device_type>(Kokkos::ViewAllocateWithoutInitializing("dirichletDomains"), D0_Matrix_->getDomainMap()->getLocalNumElements());
-    Utilities::DetectDirichletColsAndDomains(*D0_Matrix_,BCrowsKokkos_,BCcolsKokkos_,BCdomainKokkos_);
+      BCcolsKokkos_ = Kokkos::View<bool*,typename Node::device_type>(Kokkos::ViewAllocateWithoutInitializing("dirichletCols"), D0_Matrix_->getColMap()->getLocalNumElements());
+      BCdomainKokkos_ = Kokkos::View<bool*,typename Node::device_type>(Kokkos::ViewAllocateWithoutInitializing("dirichletDomains"), D0_Matrix_->getDomainMap()->getLocalNumElements());
+      Utilities_kokkos::DetectDirichletColsAndDomains(*D0_Matrix_,BCrowsKokkos_,BCcolsKokkos_,BCdomainKokkos_);
 
-    auto BCrowsKokkos=BCrowsKokkos_;
-    Kokkos::parallel_reduce(BCrowsKokkos_.size(), KOKKOS_LAMBDA (int i, int & sum) {
+      auto BCrowsKokkos=BCrowsKokkos_;
+      Kokkos::parallel_reduce(BCrowsKokkos_.size(), KOKKOS_LAMBDA (int i, int & sum) {
         if (BCrowsKokkos(i))
 	  ++sum;
-      }, BCedgesLocal );
+	}, BCedgesLocal );
 
-    auto BCdomainKokkos = BCdomainKokkos_;
-    Kokkos::parallel_reduce(BCdomainKokkos_.size(), KOKKOS_LAMBDA (int i, int & sum) {
+      auto BCdomainKokkos = BCdomainKokkos_;
+      Kokkos::parallel_reduce(BCdomainKokkos_.size(), KOKKOS_LAMBDA (int i, int & sum) {
         if (BCdomainKokkos(i))
 	  ++sum;
-      }, BCnodesLocal);
+	}, BCnodesLocal);
+    }
 
     MueLu_sumAll(SM_Matrix_->getRowMap()->getComm(), BCedgesLocal, BCedges_);
     MueLu_sumAll(SM_Matrix_->getRowMap()->getComm(), BCnodesLocal, BCnodes_);
