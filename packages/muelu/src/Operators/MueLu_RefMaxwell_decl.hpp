@@ -94,7 +94,108 @@ namespace MueLu {
   /*!
     @brief Preconditioner (wrapped as a Xpetra::Operator) for Maxwell's equations in curl-curl form.
 
-    This uses a 2x2 block reformulation.
+    Let
+
+      M_k(gamma)
+
+    be the mass matrix on the k-th space in the deRham complex with a
+    weight coefficient gamma, and let
+
+      D_k
+
+    be the discretized derivative from the k-th to the (k+1)-th space.
+
+    For example, in 3D, D_0 = grad, D_1 = curl and D_2 = div.
+
+    We want to solve the system
+
+      S e_k = b
+
+    where
+
+      S = M_k(alpha) + D_k^T * M_{k+1}(beta) * D_k.
+
+    In 3D and for k=1, S corresponds to a discretizayion of
+
+      alpha * identity + beta * curl-curl.
+
+    In 3D and for k=2, S corresponds to
+
+      alpha * identity + beta * grad-div.
+
+    We precondition S by constructing a block diagonal preconditioner
+    for the equivalent 2x2 block system
+
+      e_k = a_k + D_{k-1}*p_{k-1}
+
+      ( A11                      M_k(alpha) * D_{k-1} ) ( a_k     )   ( b             )
+      (                                               } (         ) = (               )
+      ( D_{k-1}^T * M_k(alpha)   A22                  ) ( p_{k-1} )   ( D_{k-1}^T * b )
+
+    where
+
+      A11     = S                        + addon11
+      A22     = D_{k-1} ^T * S * D_{k-1} + addon22
+      addon11 = M_k(1)     * D_{k-1} * M_{k-1}(1/beta)^-1  * D_{k-1}^T * M_k(1)
+      addon22 = M_{k-1}(1) * D_{k-2} * M_{k-2}(1/alpha)^-1 * D_{k-2}^T * M_{k-1}(1)
+
+    In practice it seems that the addon terms are rarely strictly required.
+    For k=1 (Maxwell) the addon22 term is always zero.
+
+    In order to precondition the diagonal blocks, we first construct
+    the auxiliary operators
+
+      A11_nodal = D_{0}^T * M_1(beta)  * D_{0}
+      A22_nodal = D_{0}^T * M_1(alpha) * D_{0}
+
+    then constuct typical nodal HGrad prolongators, and then modify
+    them to allow use as a prolongator for A11/A22. When k=1 this only
+    needs to be done for the A11 block, as the A22 block is already
+    given wrt a nodal discretization.
+
+    The following input matrices are required:
+    - S
+    - D_{k-1}
+
+    If addon11 is used we need:
+    - M_{k-1}(1/beta)^-1   - typically, this is the inverse of the lumped M_{k-1}(1/beta), not the actual inverse
+    - M_k(1)
+
+    If addon22 is used we need:
+    - M_{k-2}(1/alpha)^-1  - typically, this is the inverse of the lumped M_{k-2}(1/alpha), not the actual inverse
+    - M_{k-1}(1)
+
+    To construct the special prolongators we need
+    - D_{0}
+    - M_1(beta)
+    - M_1(alpha)
+    If these mass matrices are not given, but M_1(1) is, then that matrix can be used instead.
+    Alternatively, A11_nodal and A22_nodal can be passed directly.
+
+
+    We use the following variable names:
+
+      | variable                         | matrix                | note
+      |----------------------------------|-----------------------|------
+      | <tt>SM               </tt>       | S                     |
+      | <tt>Dk_ 1            </tt>       | D_{k-1}               | same as D0 for k=1
+      | <tt>Dk_ 2            </tt>       | D_{k-2}               |
+      | <tt>D0               </tt>       | D_0                   | same as Dk_1 for k=1
+      | <tt>Mk_one           </tt>       | M_k(1)                |
+      | <tt>Mk_1_one         </tt>       | M_{k-1}(1)            |
+      | <tt>M1_beta          </tt>       | M_1(beta)             |
+      | <tt>M1_alpha         </tt>       | M_1(alpha)            |
+      | <tt>invMk_1_betaInv  </tt>       | M_{k-1}(1/beta)^{-1}  |
+      | <tt>invMk_2_alphaInv </tt>       | M_{k-2}(1/alpha)^{-1} |
+
+    For backwards compatibility the interfaces also allow
+
+      | variable          | matrix           | note
+      |-------------------|------------------|------
+      | <tt>Ms    </tt>   | M_1(beta)        | alias for M1_beta
+      | <tt>M1    </tt>   | M_1(1)           | alias for Mk_one when k=1
+      | <tt>M0inv </tt>   | M_0(1/beta)      | alias for Mk_1_betaInv when k=1
+
 
     Reference:
     P. Bochev, J. Hu, C. Siefert, and R. Tuminaro. "An algebraic multigrid approach based on
@@ -266,25 +367,7 @@ namespace MueLu {
      */
     RefMaxwell(const Teuchos::RCP<Matrix> & SM_Matrix,
                Teuchos::ParameterList& List,
-               bool ComputePrec = true)
-    {
-
-      RCP<MultiVector> Nullspace = List.get<RCP<MultiVector> >("Nullspace", Teuchos::null);
-      RCP<RealValuedMultiVector> Coords = List.get<RCP<RealValuedMultiVector> >("Coordinates", Teuchos::null);
-      RCP<Matrix> D0_Matrix = List.get<RCP<Matrix> >("D0");
-      RCP<Matrix> Ms_Matrix;
-      if (List.isType<RCP<Matrix> >("Ms"))
-        Ms_Matrix = List.get<RCP<Matrix> >("Ms");
-      else
-        Ms_Matrix = List.get<RCP<Matrix> >("M1");
-      RCP<Matrix> M1_Matrix = List.get<RCP<Matrix> >("M1");
-      RCP<Matrix> M0inv_Matrix = List.get<RCP<Matrix> >("M0inv", Teuchos::null);
-
-      initialize(D0_Matrix,Ms_Matrix,M0inv_Matrix,M1_Matrix,Nullspace,Coords,List);
-
-      if (SM_Matrix != Teuchos::null)
-        resetMatrix(SM_Matrix,ComputePrec);
-    }
+               bool ComputePrec = true);
 
     //! Destructor.
     virtual ~RefMaxwell() {}
@@ -336,6 +419,8 @@ namespace MueLu {
 
     /** Initialize with matrices except the Jacobian (don't compute the preconditioner)
      *
+     * Note: This uses old notation that only makes sense for curl-curl problems.
+     *
      * \param[in] D0_Matrix Discrete Gradient
      * \param[in] Ms_Matrix Edge mass matrix for nodal aggregates
      * \param[in] M0inv_Matrix Inverse of lumped nodal mass matrix (add on only)
@@ -348,6 +433,36 @@ namespace MueLu {
                     const Teuchos::RCP<Matrix> & Ms_Matrix,
                     const Teuchos::RCP<Matrix> & M0inv_Matrix,
                     const Teuchos::RCP<Matrix> & M1_Matrix,
+                    const Teuchos::RCP<MultiVector> & Nullspace,
+                    const Teuchos::RCP<RealValuedMultiVector> & Coords,
+                    Teuchos::ParameterList& List);
+
+    /** Initialize with matrices except the Jacobian (don't compute the preconditioner)
+     *
+     * \param[in] k number of the space in the deRham sequence of the problem to be solved
+     * \param[in] Dk_1 Discrete derivative from (k-1)-th to k-th space
+     * \param[in] Dk_2 Discrete derivative from (k-2)-th to (k-1)-th space
+     * \param[in] D0 Discrete Gradient
+     * \param[in] M1_beta Mass matrix on 1-st space with weight beta for nodal aggregates
+     * \param[in] M1_alpha Mass matrix on 1-st space with weight alpha for nodal aggregates
+     * \param[in] Mk_one Mass matrix on k-th space with unit weight for addon11
+     * \param[in] Mk_1_one Mass matrix on (k-1)-th space with unit weight for addon22
+     * \param[in] invMk_1_betaInv Approximate inverse of mass matrix on (k-1)-th space with weight 1/beta (addon11 only)
+     * \param[in] invMk_2_alphaInv Approximate inverse of mass matrix on (k-2)-th space with weight 1/alpha (addon22 only)
+     * \param[in] Nullspace Null space (needed for periodic)
+     * \param[in] Coords Nodal coordinates
+     * \param[in] List Parameter list
+     */
+    void initialize(const int k,
+                    const Teuchos::RCP<Matrix> & Dk_1,
+                    const Teuchos::RCP<Matrix> & Dk_2,
+                    const Teuchos::RCP<Matrix> & D0,
+                    const Teuchos::RCP<Matrix> & M1_beta,
+                    const Teuchos::RCP<Matrix> & M1_alpha,
+                    const Teuchos::RCP<Matrix> & Mk_one,
+                    const Teuchos::RCP<Matrix> & Mk_1_one,
+                    const Teuchos::RCP<Matrix> & invMk_1_invBeta,
+                    const Teuchos::RCP<Matrix> & invMk_2_invAlpha,
                     const Teuchos::RCP<MultiVector> & Nullspace,
                     const Teuchos::RCP<RealValuedMultiVector> & Coords,
                     Teuchos::ParameterList& List);
@@ -367,13 +482,22 @@ namespace MueLu {
     //! Setup A22 = D0^T SM D0 and rebalance it, as well as D0 and Coords_
     void build22Matrix(const bool reuse, const bool doRebalancing, const int rebalanceStriding, const int numProcsA22);
 
-    //! Setup the auxiliary nodal prolongator
-    void buildNodalProlongator(const Teuchos::RCP<Matrix> &A_nodal_Matrix,
+    /** Setup an auxiliary nodal prolongator
+     *
+     * \param[in]  A_nodal_Matrix
+     * \param[out] P_nodal
+     * \param[out] Nullspace_nodal
+     */
+    void buildNodalProlongator(const Teuchos::RCP<Matrix> &A_nodal,
                                Teuchos::RCP<Matrix> &P_nodal,
-                               Teuchos::RCP<MultiVector> &Nullspace_nodal);
+                               Teuchos::RCP<MultiVector> &Nullspace_nodal,
+                               Teuchos::RCP<RealValuedMultiVector> &Coords_nodal) const;
 
     //! Setup the prolongator for the (1,1)-block
-    void buildEdgeProlongator(const Teuchos::RCP<Matrix> &A_nodal_Matrix);
+    void buildEdgeProlongator(const Teuchos::RCP<Matrix> &A_nodal_Matrix,
+                              Teuchos::RCP<Matrix> &specialP,
+                              Teuchos::RCP<MultiVector> &specialNullspace,
+                              Teuchos::RCP<RealValuedMultiVector> &specialCoords) const;
 
     //! Setup a subsolve
     void setupSubSolve(Teuchos::RCP<Hierarchy> &hierarchy,
@@ -425,23 +549,44 @@ namespace MueLu {
     Teuchos::RCP<SmootherBase> PreSmoother_, PostSmoother_;
     Teuchos::RCP<SmootherPrototype> PreSmootherData_, PostSmootherData_;
     RCP<Operator> thyraPrecOpH_, thyraPrecOp22_;
-    //! Various matrices
-    Teuchos::RCP<Matrix> SM_Matrix_, D0_Matrix_, D0_T_Matrix_, M0inv_Matrix_, M1_Matrix_, Ms_Matrix_;
-    Teuchos::RCP<Matrix> P11_, R11_, coarseA11_, A22_, Addon_Matrix_;
-    Teuchos::RCP<const Map> D0origDomainMap_;
-    Teuchos::RCP<const Import> D0origImporter_;
+    //! The number of the space in the deRham complex
+    int spaceNumber_;
+    //! The system that is getting preconditioned
+    Teuchos::RCP<Matrix> SM_Matrix_;
+    //! D_{k-1} matrix and its transpose
+    Teuchos::RCP<Matrix> Dk_1_, Dk_1_T_;
+    //! D_{k-2} matrix
+    Teuchos::RCP<Matrix> Dk_2_;
+    //! D_0 matrix
+    Teuchos::RCP<Matrix> D0_;
+    //! inverse of mass matrices on (k-1)-th and (k-2)-th space with weights 1/beta and 1/alpha respectively
+    Teuchos::RCP<Matrix> invMk_1_invBeta_, invMk_2_invAlpha_;
+    //! mass matrices with unit weight on k-th and (k-1)-th spaces
+    Teuchos::RCP<Matrix> Mk_one_, Mk_1_one_;
+    //! mass matrices on first space with weights beta and alpha respectively
+    Teuchos::RCP<Matrix> M1_beta_, M1_alpha_;
+    //! special prolongator for 11 block and its transpose
+    Teuchos::RCP<Matrix> P11_, R11_;
+    Teuchos::RCP<Matrix> P22_;
+    //! 11 and 22 blocks
+    Teuchos::RCP<Matrix> coarseA11_, A22_;
+    Teuchos::RCP<Matrix> Addon_Matrix_;
+    Teuchos::RCP<const Map> DorigDomainMap_;
+    Teuchos::RCP<const Import> DorigImporter_;
     //! Vectors for BCs
     Kokkos::View<bool*, typename Node::device_type> BCrows11_, BCcols22_, BCdomain22_;
     int globalNumberBoundaryUnknowns11_, globalNumberBoundaryUnknowns22_;
     //! Nullspace for (1.1) block
     Teuchos::RCP<MultiVector> Nullspace_;
     //! Coordinates
-    Teuchos::RCP<RealValuedMultiVector> Coords_, CoordsCoarse11_;
+    Teuchos::RCP<RealValuedMultiVector> Coords_, CoordsCoarse11_, CoordsCoarse22_;
     //! Nullspace for coarse (1,1) problem
     Teuchos::RCP<MultiVector> NullspaceCoarse11_;
+    //! Nullspace for coarse (2,2) problem
+    Teuchos::RCP<MultiVector> CoarseNullspace22_;
     //! Importer to coarse (1,1) hierarchy
     Teuchos::RCP<const Import> ImporterCoarse11_, Importer22_;
-    bool D0_T_R11_colMapsMatch_;
+    bool Dk_1_T_R11_colMapsMatch_;
     bool onlyBoundary11_, onlyBoundary22_;
     //! Parameter lists
     Teuchos::ParameterList parameterList_, precList11_, precList22_, smootherList_;
@@ -452,8 +597,9 @@ namespace MueLu {
     bool applyBCsToAnodal_, applyBCsToCoarse11_, applyBCsTo22_;
     int numItersCoarse11_, numIters22_;
     std::string mode_;
+
     //! Temporary memory
-    mutable Teuchos::RCP<MultiVector> P11res_, P11x_, P11resSubComm_, P11xSubComm_, D0res_, D0x_, D0resSubComm_, D0xSubComm_, residual_, P11resTmp_, D0resTmp_, D0TR11Tmp_;
+    mutable Teuchos::RCP<MultiVector> P11res_, P11x_, P11resSubComm_, P11xSubComm_, Dres_, Dx_, DresSubComm_, DxSubComm_, residual_, P11resTmp_, DresTmp_, DTR11Tmp_;
   };
 
 
