@@ -185,8 +185,8 @@ namespace MueLu {
       | <tt>Mk_1_one         </tt>       | M_{k-1}(1)            |
       | <tt>M1_beta          </tt>       | M_1(beta)             |
       | <tt>M1_alpha         </tt>       | M_1(alpha)            |
-      | <tt>invMk_1_betaInv  </tt>       | M_{k-1}(1/beta)^{-1}  |
-      | <tt>invMk_2_alphaInv </tt>       | M_{k-2}(1/alpha)^{-1} |
+      | <tt>invMk_1_invBeta  </tt>       | M_{k-1}(1/beta)^{-1}  |
+      | <tt>invMk_2_invAlpha </tt>       | M_{k-2}(1/alpha)^{-1} |
 
     For backwards compatibility the interfaces also allow
 
@@ -194,7 +194,7 @@ namespace MueLu {
       |-------------------|------------------|------
       | <tt>Ms    </tt>   | M_1(beta)        | alias for M1_beta
       | <tt>M1    </tt>   | M_1(1)           | alias for Mk_one when k=1
-      | <tt>M0inv </tt>   | M_0(1/beta)      | alias for Mk_1_betaInv when k=1
+      | <tt>M0inv </tt>   | M_0(1/beta)      | alias for Mk_1_invBeta when k=1
 
 
     Reference:
@@ -417,6 +417,8 @@ namespace MueLu {
 
   private:
 
+    Teuchos::RCP<Teuchos::ParameterList> getValidParamterList();
+
     /** Initialize with matrices except the Jacobian (don't compute the preconditioner)
      *
      * Note: This uses old notation that only makes sense for curl-curl problems.
@@ -447,8 +449,8 @@ namespace MueLu {
      * \param[in] M1_alpha Mass matrix on 1-st space with weight alpha for nodal aggregates
      * \param[in] Mk_one Mass matrix on k-th space with unit weight for addon11
      * \param[in] Mk_1_one Mass matrix on (k-1)-th space with unit weight for addon22
-     * \param[in] invMk_1_betaInv Approximate inverse of mass matrix on (k-1)-th space with weight 1/beta (addon11 only)
-     * \param[in] invMk_2_alphaInv Approximate inverse of mass matrix on (k-2)-th space with weight 1/alpha (addon22 only)
+     * \param[in] invMk_1_invBeta Approximate inverse of mass matrix on (k-1)-th space with weight 1/beta (addon11 only)
+     * \param[in] invMk_2_invAlpha Approximate inverse of mass matrix on (k-2)-th space with weight 1/alpha (addon22 only)
      * \param[in] Nullspace Null space (needed for periodic)
      * \param[in] Coords Nodal coordinates
      * \param[in] List Parameter list

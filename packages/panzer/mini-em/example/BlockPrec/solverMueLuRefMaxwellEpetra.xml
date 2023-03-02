@@ -151,13 +151,11 @@
                 <Parameter name="refmaxwell: mode" type="string" value="additive"/>
                 <Parameter name="refmaxwell: disable addon" type="bool" value="false"/>
                 <Parameter name="refmaxwell: dump matrices" type="bool" value="false"/>
-                <Parameter name="refmaxwell: max coarse size" type="int" value="2500"/>
                 <Parameter name="refmaxwell: subsolves on subcommunicators" type="bool" value="true"/>
 
                 <!-- <Parameter name="rap: triple product" type="bool" value="true"/> -->
                 <!-- <Parameter name="transpose: use implicit" type="bool" value="true"/> -->
 
-                <Parameter name="aggregation: type" type="string" value="uncoupled"/>
                 <Parameter name="aggregation: drop tol" type="double" value="0.02"/>
 
                 <!-- <Parameter name="smoother: type" type="string" value="CHEBYSHEV"/> -->

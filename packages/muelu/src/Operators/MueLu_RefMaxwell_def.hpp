@@ -115,32 +115,107 @@ namespace MueLu {
   }
 
 
-  // template<class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-  // RefMaxwell<Scalar,LocalOrdinal,GlobalOrdinal,Node>::
-  // Teuchos::RCP<Teuchos::ParameterList> getValidParamterList() {
-  //   RCP<ParameterList> params = rcp(new ParameterList("RefMaxwell"));
-  //   params->set("verbosity", MasterList::getDefault<std::string>("verbosity"));
-  //   params->set("output filename", MasterList::getDefault<std::string>("output filename"));
-  //   params->set("refmaxwell: disable addon", MasterList::getDefault<bool>("refmaxwell: disable addon"));
-  //   params->set("refmaxwell: mode", MasterList::getDefault<std::string>("refmaxwell: mode"));
-  //   params->set("refmaxwell: use as preconditioner", MasterList::getDefault<bool>("refmaxwell: use as preconditioner"));
-  //   params->set("refmaxwell: dump matrices", MasterList::getDefault<bool>("refmaxwell: dump matrices"));
-  //   params->set("refmaxwell: enable reuse", MasterList::getDefault<bool>("refmaxwell: enable reuse"));
-  //   params->set("refmaxwell: skip first (1,1) level", MasterList::getDefault<bool>("refmaxwell: skip first (1,1) level"));
-  //   params->set("transpose: use implicit", MasterList::getDefault<bool>("transpose: use implicit"));
-  //   params->set("fuse prolongation and update", MasterList::getDefault<bool>("fuse prolongation and update"));
-  //   params->set("sync timers", false);
-  //   params->set("refmaxwell: num iters coarse 11", 1);
-  //   params->set("refmaxwell: num iters 22", 1);
-  //   params->set("refmaxwell: apply BCs to Anodal",    false);
-  //   params->set("refmaxwell: apply BCs to coarse 11", true);
-  //   params->set("refmaxwell: apply BCs to 22",        true);
+  template<class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+  Teuchos::RCP<Teuchos::ParameterList>
+  RefMaxwell<Scalar,LocalOrdinal,GlobalOrdinal,Node>::
+  getValidParamterList() {
 
-  //   ParameterList & precList11 = params->sublist("refmaxwell: 11list");
+    bool useKokkosDefault = false;
+#ifdef HAVE_MUELU_SERIAL
+    if (typeid(Node).name() == typeid(Tpetra::KokkosCompat::KokkosSerialWrapperNode).name())
+      useKokkosDefault = false;
+#endif
+#ifdef HAVE_MUELU_OPENMP
+    if (typeid(Node).name() == typeid(Tpetra::KokkosCompat::KokkosOpenMPWrapperNode).name())
+      useKokkosDefault = true;
+#endif
+#ifdef HAVE_MUELU_CUDA
+    if (typeid(Node).name() == typeid(Tpetra::KokkosCompat::KokkosCudaWrapperNode).name())
+      useKokkosDefault = true;
+#endif
+#ifdef HAVE_MUELU_HIP
+    if (typeid(Node).name() == typeid(Tpetra::KokkosCompat::KokkosHIPWrapperNode).name())
+      useKokkosDefault = true;
+#endif
+#ifdef HAVE_MUELU_SYCL
+    if (typeid(Node).name() == typeid(Tpetra::KokkosCompat::KokkosSYCLWrapperNode).name())
+      useKokkosDefault = true;
+#endif
 
-  //   ParameterList & precList22 = params->sublist("refmaxwell: 22list");
+    RCP<ParameterList> params = rcp(new ParameterList("RefMaxwell"));
 
-  // }
+    params->set<RCP<Matrix> >("Dk_1", Teuchos::null);
+    params->set<RCP<Matrix> >("Dk_2", Teuchos::null);
+    params->set<RCP<Matrix> >("D0", Teuchos::null);
+
+    params->set<RCP<Matrix> >("M1_beta", Teuchos::null);
+    params->set<RCP<Matrix> >("M1_alpha", Teuchos::null);
+    params->set<RCP<Matrix> >("Ms", Teuchos::null);
+
+    params->set<RCP<Matrix> >("Mk_one", Teuchos::null);
+    params->set<RCP<Matrix> >("Mk_1_one", Teuchos::null);
+    params->set<RCP<Matrix> >("M1", Teuchos::null);
+
+    params->set<RCP<Matrix> >("invMk_1_invBeta", Teuchos::null);
+    params->set<RCP<Matrix> >("invMk_2_invAlpha", Teuchos::null);
+    params->set<RCP<Matrix> >("M0inv", Teuchos::null);
+
+    params->set<RCP<MultiVector> >("Nullspace", Teuchos::null);
+    params->set<RCP<RealValuedMultiVector> >("Coordinates", Teuchos::null);
+
+    params->set("refmaxwell: space number", 1);
+    params->set("verbosity", MasterList::getDefault<std::string>("verbosity"));
+    params->set("use kokkos refactor", useKokkosDefault);
+    params->set("half precision", false);
+    params->set("parameterlist: syntax", MasterList::getDefault<std::string>("parameterlist: syntax"));
+    params->set("output filename", MasterList::getDefault<std::string>("output filename"));
+    params->set("print initial parameters", MasterList::getDefault<bool>("print initial parameters"));
+    params->set("refmaxwell: disable addon", MasterList::getDefault<bool>("refmaxwell: disable addon"));
+    params->set("refmaxwell: mode", MasterList::getDefault<std::string>("refmaxwell: mode"));
+    params->set("refmaxwell: use as preconditioner", MasterList::getDefault<bool>("refmaxwell: use as preconditioner"));
+    params->set("refmaxwell: dump matrices", MasterList::getDefault<bool>("refmaxwell: dump matrices"));
+    params->set("refmaxwell: enable reuse", MasterList::getDefault<bool>("refmaxwell: enable reuse"));
+    params->set("refmaxwell: skip first (1,1) level", MasterList::getDefault<bool>("refmaxwell: skip first (1,1) level"));
+    params->set("transpose: use implicit", MasterList::getDefault<bool>("transpose: use implicit"));
+    params->set("fuse prolongation and update", MasterList::getDefault<bool>("fuse prolongation and update"));
+    params->set("refmaxwell: subsolves on subcommunicators", MasterList::getDefault<bool>("refmaxwell: subsolves on subcommunicators"));
+    params->set("refmaxwell: subsolves striding", 1);
+    params->set("refmaxwell: row sum drop tol (1,1)", MasterList::getDefault<double>("aggregation: row sum drop tol"));
+    params->set("sync timers", false);
+    params->set("refmaxwell: num iters coarse 11", 1);
+    params->set("refmaxwell: num iters 22", 1);
+    params->set("refmaxwell: apply BCs to Anodal",    false);
+    params->set("refmaxwell: apply BCs to coarse 11", true);
+    params->set("refmaxwell: apply BCs to 22",        true);
+
+    ParameterList & precList11 = params->sublist("refmaxwell: 11list");
+    precList11.disableRecursiveValidation();
+    ParameterList & precList22 = params->sublist("refmaxwell: 22list");
+    precList22.disableRecursiveValidation();
+
+    params->set("smoother: type", "CHEBYSHEV");
+    ParameterList & smootherList = params->sublist("smoother: params");
+    smootherList.disableRecursiveValidation();
+    params->set("smoother: pre type", "NONE");
+    ParameterList & preSmootherList = params->sublist("smoother: pre params");
+    preSmootherList.disableRecursiveValidation();
+    params->set("smoother: post type", "NONE");
+    ParameterList & postSmootherList = params->sublist("smoother: post params");
+    postSmootherList.disableRecursiveValidation();
+
+    ParameterList & matvecParams = params->sublist("matvec params");
+    matvecParams.disableRecursiveValidation();
+
+    params->set("multigrid algorithm", "unsmoothed");
+    params->set("aggregation: drop tol", MasterList::getDefault<double>("aggregation: drop tol"));
+    params->set("aggregation: drop scheme", MasterList::getDefault<std::string>("aggregation: drop scheme"));
+    params->set("aggregation: distance laplacian algo", MasterList::getDefault<std::string>("aggregation: distance laplacian algo"));
+    params->set("aggregation: min agg size", MasterList::getDefault<int>("aggregation: min agg size"));
+    params->set("aggregation: max agg size", MasterList::getDefault<int>("aggregation: max agg size"));
+    params->set("aggregation: export visualization data", MasterList::getDefault<bool>("aggregation: export visualization data"));
+
+    return params;
+  }
 
 
   template<class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
@@ -156,33 +231,34 @@ namespace MueLu {
     }
 
     parameterList_             = list;
-    std::string verbosityLevel = parameterList_.get<std::string>("verbosity", MasterList::getDefault<std::string>("verbosity"));
+    parameterList_.validateParametersAndSetDefaults(*getValidParamterList());
+    std::string verbosityLevel = parameterList_.get<std::string>("verbosity");
     VerboseObject::SetDefaultVerbLevel(toVerbLevel(verbosityLevel));
-    std::string outputFilename = parameterList_.get<std::string>("output filename", MasterList::getDefault<std::string>("output filename"));
+    std::string outputFilename = parameterList_.get<std::string>("output filename");
     if (outputFilename != "")
       VerboseObject::SetMueLuOFileStream(outputFilename);
     if (parameterList_.isType<Teuchos::RCP<Teuchos::FancyOStream> >("output stream"))
       VerboseObject::SetMueLuOStream(parameterList_.get<Teuchos::RCP<Teuchos::FancyOStream> >("output stream"));
 
-    if (parameterList_.get("print initial parameters",MasterList::getDefault<bool>("print initial parameters")))
+    if (parameterList_.get<bool>("print initial parameters"))
       GetOStream(static_cast<MsgType>(Runtime1), 0) << parameterList_ << std::endl;
-    disable_addon_             = list.get("refmaxwell: disable addon",          MasterList::getDefault<bool>("refmaxwell: disable addon"));
-    mode_                      = list.get("refmaxwell: mode",                   MasterList::getDefault<std::string>("refmaxwell: mode"));
-    use_as_preconditioner_     = list.get("refmaxwell: use as preconditioner",  MasterList::getDefault<bool>("refmaxwell: use as preconditioner"));
-    dump_matrices_             = list.get("refmaxwell: dump matrices",          MasterList::getDefault<bool>("refmaxwell: dump matrices"));
-    enable_reuse_              = list.get("refmaxwell: enable reuse",           MasterList::getDefault<bool>("refmaxwell: enable reuse"));
-    implicitTranspose_         = list.get("transpose: use implicit",            MasterList::getDefault<bool>("transpose: use implicit"));
-    fuseProlongationAndUpdate_ = list.get("fuse prolongation and update",       MasterList::getDefault<bool>("fuse prolongation and update"));
-    skipFirstLevel_            = list.get("refmaxwell: skip first (1,1) level", MasterList::getDefault<bool>("refmaxwell: skip first (1,1) level"));
-    syncTimers_                = list.get("sync timers",                        false);
-    numItersCoarse11_          = list.get("refmaxwell: num iters coarse 11",    1);
-    numIters22_                = list.get("refmaxwell: num iters 22",           1);
-    applyBCsToAnodal_          = list.get("refmaxwell: apply BCs to Anodal",    false);
-    applyBCsToCoarse11_        = list.get("refmaxwell: apply BCs to coarse 11", true);
-    applyBCsTo22_              = list.get("refmaxwell: apply BCs to 22",        true);
+    disable_addon_             = parameterList_.get<bool>("refmaxwell: disable addon");
+    mode_                      = parameterList_.get<std::string>("refmaxwell: mode");
+    use_as_preconditioner_     = parameterList_.get<bool>("refmaxwell: use as preconditioner");
+    dump_matrices_             = parameterList_.get<bool>("refmaxwell: dump matrices");
+    enable_reuse_              = parameterList_.get<bool>("refmaxwell: enable reuse");
+    implicitTranspose_         = parameterList_.get<bool>("transpose: use implicit");
+    fuseProlongationAndUpdate_ = parameterList_.get<bool>("fuse prolongation and update");
+    skipFirstLevel_            = parameterList_.get<bool>("refmaxwell: skip first (1,1) level");
+    syncTimers_                = parameterList_.get<bool>("sync timers");
+    useKokkos_                 = parameterList_.get<bool>("use kokkos refactor");
+    numItersCoarse11_          = parameterList_.get<int>("refmaxwell: num iters coarse 11");
+    numIters22_                = parameterList_.get<int>("refmaxwell: num iters 22");
+    applyBCsToAnodal_          = parameterList_.get<bool>("refmaxwell: apply BCs to Anodal");
+    applyBCsToCoarse11_        = parameterList_.get<bool>("refmaxwell: apply BCs to coarse 11");
+    applyBCsTo22_              = parameterList_.get<bool>("refmaxwell: apply BCs to 22");
 
-    if(list.isSublist("refmaxwell: 11list"))
-      precList11_     =  list.sublist("refmaxwell: 11list");
+    precList11_     =  parameterList_.sublist("refmaxwell: 11list");
     if(!precList11_.isType<std::string>("Preconditioner Type") &&
        !precList11_.isType<std::string>("smoother: type") &&
        !precList11_.isType<std::string>("smoother: pre type") &&
@@ -193,8 +269,7 @@ namespace MueLu {
       precList11_.sublist("smoother: params").set("chebyshev: eigenvalue max iterations",30);
     }
 
-    if(list.isSublist("refmaxwell: 22list"))
-      precList22_     =  list.sublist("refmaxwell: 22list");
+    precList22_     =  parameterList_.sublist("refmaxwell: 22list");
     if(!precList22_.isType<std::string>("Preconditioner Type") &&
        !precList22_.isType<std::string>("smoother: type") &&
        !precList22_.isType<std::string>("smoother: pre type") &&
@@ -205,16 +280,14 @@ namespace MueLu {
       precList22_.sublist("smoother: params").set("chebyshev: eigenvalue max iterations",30);
     }
 
-    if(!list.isType<std::string>("smoother: type") && !list.isType<std::string>("smoother: pre type") && !list.isType<std::string>("smoother: post type")) {
+    if(!parameterList_.isType<std::string>("smoother: type") && !parameterList_.isType<std::string>("smoother: pre type") && !parameterList_.isType<std::string>("smoother: post type")) {
       list.set("smoother: type", "CHEBYSHEV");
       list.sublist("smoother: params").set("chebyshev: degree",2);
       list.sublist("smoother: params").set("chebyshev: ratio eigenvalue",20.0);
       list.sublist("smoother: params").set("chebyshev: eigenvalue max iterations",30);
     }
 
-    if(list.isSublist("smoother: params")) {
-      smootherList_ = list.sublist("smoother: params");
-    }
+    smootherList_ = parameterList_.sublist("smoother: params");
 
     if (enable_reuse_ &&
         !precList11_.isType<std::string>("Preconditioner Type") &&
@@ -224,28 +297,6 @@ namespace MueLu {
         !precList22_.isType<std::string>("Preconditioner Type") &&
         !precList22_.isParameter("reuse: type"))
       precList22_.set("reuse: type", "full");
-
-# ifdef HAVE_MUELU_SERIAL
-    if (typeid(Node).name() == typeid(Tpetra::KokkosCompat::KokkosSerialWrapperNode).name())
-      useKokkos_ = false;
-# endif
-# ifdef HAVE_MUELU_OPENMP
-    if (typeid(Node).name() == typeid(Tpetra::KokkosCompat::KokkosOpenMPWrapperNode).name())
-      useKokkos_ = true;
-# endif
-# ifdef HAVE_MUELU_CUDA
-    if (typeid(Node).name() == typeid(Tpetra::KokkosCompat::KokkosCudaWrapperNode).name())
-      useKokkos_ = true;
-# endif
-# ifdef HAVE_MUELU_HIP
-    if (typeid(Node).name() == typeid(Tpetra::KokkosCompat::KokkosHIPWrapperNode).name())
-      useKokkos_ = true;
-# endif
-# ifdef HAVE_MUELU_SYCL
-    if (typeid(Node).name() == typeid(Tpetra::KokkosCompat::KokkosSYCLWrapperNode).name())
-      useKokkos_ = true;
-# endif    
-    useKokkos_ = list.get("use kokkos refactor",useKokkos_);
 
     // This should be taken out again as soon as
     // CoalesceDropFactory_kokkos supports BlockSize > 1 and
@@ -286,7 +337,7 @@ namespace MueLu {
     ////////////////////////////////////////////////////////////////////////////////
     // Detect Dirichlet boundary conditions
     if (!reuse) {
-      magnitudeType rowSumTol = parameterList_.get("refmaxwell: row sum drop tol (1,1)",-1.0);
+      magnitudeType rowSumTol = parameterList_.get<double>("refmaxwell: row sum drop tol (1,1)");
       Maxwell_Utils<SC,LO,GO,NO>::detectBoundaryConditionsSM(SM_Matrix_,Dk_1_,rowSumTol,
                                                              BCrows11_,BCcols22_,BCdomain22_,
                                                              globalNumberBoundaryUnknowns11_,
@@ -575,7 +626,7 @@ namespace MueLu {
   void RefMaxwell<Scalar,LocalOrdinal,GlobalOrdinal,Node>::
   determineSubHierarchyCommSizes(bool &doRebalancing, int &rebalanceStriding, int &numProcsCoarseA11, int &numProcsA22) {
 
-    doRebalancing = parameterList_.get<bool>("refmaxwell: subsolves on subcommunicators", MasterList::getDefault<bool>("refmaxwell: subsolves on subcommunicators"));
+    doRebalancing = parameterList_.get<bool>("refmaxwell: subsolves on subcommunicators");
     rebalanceStriding = parameterList_.get<int>("refmaxwell: subsolves striding", -1);
     int numProcs = SM_Matrix_->getDomainMap()->getComm()->getSize();
     if (numProcs == 1) {
@@ -760,7 +811,7 @@ namespace MueLu {
       for (size_t i = 0; i < BCdomain22_.size(); i++)
         for (size_t k = 0; k < dim; k++)
           coarseA11BCrows[i*dim+k] = BCdomain22_(i);
-      magnitudeType rowSumTol = parameterList_.get("refmaxwell: row sum drop tol (1,1)",-1.0);
+      magnitudeType rowSumTol = parameterList_.get<double>("refmaxwell: row sum drop tol (1,1)");
       if (rowSumTol > 0.)
         Utilities::ApplyRowSumCriterion(*coarseA11_, rowSumTol, coarseA11BCrows);
       if (applyBCsToCoarse11_)
@@ -1103,7 +1154,7 @@ namespace MueLu {
     level.Set("NodeMatrix", A22_);
     level.Set("D0", Dk_1_);
 
-    if (parameterList_.isType<std::string>("smoother: pre type") && parameterList_.isType<std::string>("smoother: post type")) {
+    if ((parameterList_.get<std::string>("smoother: pre type") != "NONE") && (parameterList_.get<std::string>("smoother: post type") != "NONE")) {
       std::string preSmootherType = parameterList_.get<std::string>("smoother: pre type");
       std::string postSmootherType = parameterList_.get<std::string>("smoother: post type");
 
@@ -1138,7 +1189,7 @@ namespace MueLu {
         PostSmootherData_ = level.Get<RCP<SmootherPrototype> >("PostSmoother data",smootherFact.get());
       }
     } else {
-      std::string smootherType = parameterList_.get<std::string>("smoother: type", "CHEBYSHEV");
+      std::string smootherType = parameterList_.get<std::string>("smoother: type");
 
       RCP<SmootherPrototype> smootherPrototype = rcp(new TrilinosSmoother(smootherType, smootherList_));
       RCP<SmootherFactory> smootherFact = rcp(new SmootherFactory(smootherPrototype));
@@ -1320,9 +1371,7 @@ namespace MueLu {
       nullSpace->putScalar(SC_ONE);
       fineLevel.Set("Nullspace",nullSpace);
 
-      std::string algo("unsmoothed");
-      if (parameterList_.isType<std::string>("multigrid algorithm"))
-        algo = parameterList_.get<std::string>("multigrid algorithm");
+      std::string algo = parameterList_.get<std::string>("multigrid algorithm");
 
       RCP<Factory> amalgFact, dropFact, UncoupledAggFact, coarseMapFact, TentativePFact, Tfact, SaPFact;
       amalgFact = rcp(new AmalgamationFactory());
@@ -1343,27 +1392,18 @@ namespace MueLu {
       }
       dropFact->SetFactory("UnAmalgamationInfo", amalgFact);
 
-      double dropTol = 0.0;
-      if (parameterList_.isType<double>("aggregation: drop tol"))
-        dropTol = parameterList_.get<double>("aggregation: drop tol");
-      std::string dropScheme = "classical";
-      if (parameterList_.isType<std::string>("aggregation: drop scheme"))
-        dropScheme = parameterList_.get<std::string>("aggregation: drop scheme");
-      std::string distLaplAlgo = "default";
-      if (parameterList_.isType<std::string>("aggregation: distance laplacian algo"))
-        distLaplAlgo = parameterList_.get<std::string>("aggregation: distance laplacian algo");
+      double dropTol = parameterList_.get<double>("aggregation: drop tol");
+      std::string dropScheme = parameterList_.get<std::string>("aggregation: drop scheme");
+      std::string distLaplAlgo = parameterList_.get<std::string>("aggregation: distance laplacian algo");
       dropFact->SetParameter("aggregation: drop tol",Teuchos::ParameterEntry(dropTol));
       dropFact->SetParameter("aggregation: drop scheme",Teuchos::ParameterEntry(dropScheme));
       if (!useKokkos_)
         dropFact->SetParameter("aggregation: distance laplacian algo",Teuchos::ParameterEntry(distLaplAlgo));
 
       UncoupledAggFact->SetFactory("Graph", dropFact);
-      int minAggSize = 2, maxAggSize = -1;
-      if (parameterList_.isType<int>("aggregation: min agg size"))
-        minAggSize = parameterList_.get<int>("aggregation: min agg size");
+      int minAggSize = parameterList_.get<int>("aggregation: min agg size");
       UncoupledAggFact->SetParameter("aggregation: min agg size",Teuchos::ParameterEntry(minAggSize));
-      if (parameterList_.isType<double>("aggregation: max agg size"))
-        maxAggSize = parameterList_.get<double>("aggregation: max agg size");
+      int maxAggSize = parameterList_.get<int>("aggregation: max agg size");
       UncoupledAggFact->SetParameter("aggregation: max agg size",Teuchos::ParameterEntry(maxAggSize));
 
       coarseMapFact->SetFactory("Aggregates", UncoupledAggFact);
@@ -1384,9 +1424,7 @@ namespace MueLu {
       coarseLevel.Request("Coordinates",Tfact.get());
 
       RCP<AggregationExportFactory> aggExport;
-      bool exportVizData = false;
-      if (parameterList_.isType<bool>("aggregation: export visualization data"))
-        exportVizData = parameterList_.get<bool>("aggregation: export visualization data");
+      bool exportVizData = parameterList_.get<bool>("aggregation: export visualization data");
       if (exportVizData) {
         aggExport = rcp(new AggregationExportFactory());
         ParameterList aggExportParams;
@@ -2477,23 +2515,23 @@ namespace MueLu {
       RCP<Matrix> M1_beta = Teuchos::null;
       if (List.isType<RCP<Matrix> >("M1_beta"))
         M1_beta = List.get<RCP<Matrix> >("M1_beta");
-      else if (List.isType<RCP<Matrix> >("Ms"))
+      else if ((spaceNumber == 1) && List.isType<RCP<Matrix> >("Ms"))
         M1_beta = List.get<RCP<Matrix> >("Ms");
       RCP<Matrix> M1_alpha = List.get<RCP<Matrix> >("M1_alpha", Teuchos::null);
 
       RCP<Matrix> Mk_one = Teuchos::null;
       if (List.isType<RCP<Matrix> >("Mk_one"))
         Mk_one = List.get<RCP<Matrix> >("Mk_one");
-      else if (List.isType<RCP<Matrix> >("M1"))
+      else if ((spaceNumber == 1) && List.isType<RCP<Matrix> >("M1"))
         Mk_one = List.get<RCP<Matrix> >("M1");
       RCP<Matrix> Mk_1_one = List.get<RCP<Matrix> >("Mk_1_one", Teuchos::null);
 
-      RCP<Matrix> invMk_1_betaInv = Teuchos::null;
-      if (List.isType<RCP<Matrix> >("Mk_1_betaInv"))
-        invMk_1_betaInv = List.get<RCP<Matrix> >("invMk_1_betaInv", Teuchos::null);
-      else if (List.isType<RCP<Matrix> >("M0inv"))
-        invMk_1_betaInv = List.get<RCP<Matrix> >("M0inv", Teuchos::null);
-      RCP<Matrix> invMk_2_alphaInv = List.get<RCP<Matrix> >("invMk_2_alphaInv", Teuchos::null);
+      RCP<Matrix> invMk_1_invBeta = Teuchos::null;
+      if (List.isType<RCP<Matrix> >("Mk_1_invBeta"))
+        invMk_1_invBeta = List.get<RCP<Matrix> >("invMk_1_invBeta", Teuchos::null);
+      else if ((spaceNumber == 1) && List.isType<RCP<Matrix> >("M0inv"))
+        invMk_1_invBeta = List.get<RCP<Matrix> >("M0inv", Teuchos::null);
+      RCP<Matrix> invMk_2_invAlpha = List.get<RCP<Matrix> >("invMk_2_invAlpha", Teuchos::null);
 
       RCP<MultiVector> Nullspace = List.get<RCP<MultiVector> >("Nullspace", Teuchos::null);
       RCP<RealValuedMultiVector> Coords = List.get<RCP<RealValuedMultiVector> >("Coordinates", Teuchos::null);
@@ -2514,7 +2552,7 @@ namespace MueLu {
                  Dk_1, Dk_2, D0,
                  M1_beta, M1_alpha,
                  Mk_one, Mk_1_one,
-                 invMk_1_betaInv, invMk_2_alphaInv,
+                 invMk_1_invBeta, invMk_2_invAlpha,
                  Nullspace, Coords,
                  List);
 
