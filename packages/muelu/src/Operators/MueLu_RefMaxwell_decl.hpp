@@ -178,8 +178,8 @@ namespace MueLu {
       | variable                         | matrix                | note
       |----------------------------------|-----------------------|------
       | <tt>SM               </tt>       | S                     |
-      | <tt>Dk_ 1            </tt>       | D_{k-1}               | same as D0 for k=1
-      | <tt>Dk_ 2            </tt>       | D_{k-2}               |
+      | <tt>Dk_1             </tt>       | D_{k-1}               | same as D0 for k=1
+      | <tt>Dk_2             </tt>       | D_{k-2}               |
       | <tt>D0               </tt>       | D_0                   | same as Dk_1 for k=1
       | <tt>Mk_one           </tt>       | M_k(1)                |
       | <tt>Mk_1_one         </tt>       | M_{k-1}(1)            |
@@ -495,8 +495,16 @@ namespace MueLu {
                                Teuchos::RCP<MultiVector> &Nullspace_nodal,
                                Teuchos::RCP<RealValuedMultiVector> &Coords_nodal) const;
 
-    //! Setup the prolongator for the (1,1)-block
+  public: // due to Cuda build errors otherwise
+
+    //! Setup a special prolongator from nodal to edge discretization
     void buildEdgeProlongator(const Teuchos::RCP<Matrix> &A_nodal_Matrix,
+                              Teuchos::RCP<Matrix> &specialP,
+                              Teuchos::RCP<MultiVector> &specialNullspace,
+                              Teuchos::RCP<RealValuedMultiVector> &specialCoords) const;
+  private:
+    //! Setup a special prolongator from nodal to edge discretization
+    void buildFaceProlongator(const Teuchos::RCP<Matrix> &A_nodal_Matrix,
                               Teuchos::RCP<Matrix> &specialP,
                               Teuchos::RCP<MultiVector> &specialNullspace,
                               Teuchos::RCP<RealValuedMultiVector> &specialCoords) const;
@@ -595,7 +603,7 @@ namespace MueLu {
     Teuchos::RCP<Teuchos::ParameterList> coarseA11_AP_reuse_data_, coarseA11_RAP_reuse_data_;
     Teuchos::RCP<Teuchos::ParameterList> A22_AP_reuse_data_, A22_RAP_reuse_data_;
     //! Some options
-    bool disable_addon_, dump_matrices_, useKokkos_, use_as_preconditioner_, implicitTranspose_, fuseProlongationAndUpdate_, syncTimers_, enable_reuse_, skipFirstLevel_;
+    bool disable_addon_, disable_addon_22_, dump_matrices_, useKokkos_, use_as_preconditioner_, implicitTranspose_, fuseProlongationAndUpdate_, syncTimers_, enable_reuse_, skipFirstLevel_;
     bool applyBCsToAnodal_, applyBCsToCoarse11_, applyBCsTo22_;
     int numItersCoarse11_, numIters22_;
     std::string mode_;

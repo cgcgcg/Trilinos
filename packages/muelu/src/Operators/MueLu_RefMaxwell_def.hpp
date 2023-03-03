@@ -171,6 +171,7 @@ namespace MueLu {
     params->set("output filename", MasterList::getDefault<std::string>("output filename"));
     params->set("print initial parameters", MasterList::getDefault<bool>("print initial parameters"));
     params->set("refmaxwell: disable addon", MasterList::getDefault<bool>("refmaxwell: disable addon"));
+    params->set("refmaxwell: disable addon 22", true);
     params->set("refmaxwell: mode", MasterList::getDefault<std::string>("refmaxwell: mode"));
     params->set("refmaxwell: use as preconditioner", MasterList::getDefault<bool>("refmaxwell: use as preconditioner"));
     params->set("refmaxwell: dump matrices", MasterList::getDefault<bool>("refmaxwell: dump matrices"));
@@ -243,6 +244,7 @@ namespace MueLu {
     if (parameterList_.get<bool>("print initial parameters"))
       GetOStream(static_cast<MsgType>(Runtime1), 0) << parameterList_ << std::endl;
     disable_addon_             = parameterList_.get<bool>("refmaxwell: disable addon");
+    disable_addon_22_          = parameterList_.get<bool>("refmaxwell: disable addon 22");
     mode_                      = parameterList_.get<std::string>("refmaxwell: mode");
     use_as_preconditioner_     = parameterList_.get<bool>("refmaxwell: use as preconditioner");
     dump_matrices_             = parameterList_.get<bool>("refmaxwell: dump matrices");
@@ -385,6 +387,10 @@ namespace MueLu {
         GetOStream(Runtime0) << "RefMaxwell::compute(): building special prolongator" << std::endl;
         if (spaceNumber_ == 1)
           buildEdgeProlongator(A11_nodal, P11_, NullspaceCoarse11_, CoordsCoarse11_);
+        else if (spaceNumber_ == 2)
+          buildFaceProlongator(A11_nodal, P11_, NullspaceCoarse11_, CoordsCoarse11_);
+        else
+          throw;
         TEUCHOS_ASSERT(NullspaceCoarse11_.is_null() == !skipFirstLevel_);
       }
 
@@ -402,6 +408,8 @@ namespace MueLu {
 
         if (spaceNumber_ == 2)
           buildEdgeProlongator(A22_nodal, P22_, CoarseNullspace22_, CoordsCoarse22_);
+        else
+          throw;
       }
     }
 
@@ -2144,6 +2152,17 @@ namespace MueLu {
 
   template<class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
   void
+  RefMaxwell<Scalar,LocalOrdinal,GlobalOrdinal,Node>::
+  buildFaceProlongator(const Teuchos::RCP<Matrix> &A_nodal,
+                       Teuchos::RCP<Matrix> &specialP,
+                       Teuchos::RCP<MultiVector> &specialNullspace,
+                       Teuchos::RCP<RealValuedMultiVector> &specialCoords) const {
+    throw;
+  }
+
+
+  template<class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+  void
   RefMaxwell<Scalar,LocalOrdinal,GlobalOrdinal,Node>::setupSubSolve(Teuchos::RCP<Hierarchy> &hierarchy,
                                                                     Teuchos::RCP<Operator> &thyraPrecOp,
                                                                     const Teuchos::RCP<Matrix> &A,
@@ -2527,7 +2546,7 @@ namespace MueLu {
       RCP<Matrix> Mk_1_one = List.get<RCP<Matrix> >("Mk_1_one", Teuchos::null);
 
       RCP<Matrix> invMk_1_invBeta = Teuchos::null;
-      if (List.isType<RCP<Matrix> >("Mk_1_invBeta"))
+      if (List.isType<RCP<Matrix> >("invMk_1_invBeta"))
         invMk_1_invBeta = List.get<RCP<Matrix> >("invMk_1_invBeta", Teuchos::null);
       else if ((spaceNumber == 1) && List.isType<RCP<Matrix> >("M0inv"))
         invMk_1_invBeta = List.get<RCP<Matrix> >("M0inv", Teuchos::null);
@@ -2603,6 +2622,7 @@ namespace MueLu {
     PreSmoother_          = Teuchos::null;
     PostSmoother_         = Teuchos::null;
     disable_addon_        = false;
+    disable_addon_22_     = true;
     mode_                 = "additive";
 
     // set parameters
@@ -2625,13 +2645,13 @@ namespace MueLu {
       // Need Mk_one and invMk_1_invBeta for addon11
       TEUCHOS_ASSERT(Mk_one!=Teuchos::null);
       TEUCHOS_ASSERT(invMk_1_invBeta!=Teuchos::null);
+    }
 
-      if (k >= 2) {
-        // Need Dk_2, Mk_1_one and invMk_2_invAlpha for addon22
-        TEUCHOS_ASSERT(Dk_2!=Teuchos::null);
-        TEUCHOS_ASSERT(Mk_1_one!=Teuchos::null);
-        TEUCHOS_ASSERT(invMk_2_invAlpha!=Teuchos::null);
-      }
+    if ((k >= 2) && !disable_addon_22_) {
+      // Need Dk_2, Mk_1_one and invMk_2_invAlpha for addon22
+      TEUCHOS_ASSERT(Dk_2!=Teuchos::null);
+      TEUCHOS_ASSERT(Mk_1_one!=Teuchos::null);
+      TEUCHOS_ASSERT(invMk_2_invAlpha!=Teuchos::null);
     }
 
 #ifdef HAVE_MUELU_DEBUG
@@ -2671,30 +2691,30 @@ namespace MueLu {
 
       // invMk_1_invBeta is consistent with Dk_1
       TEUCHOS_ASSERT(Mk_one->getDomainMap()->isSameAs(*Dk_1->getDomainMap()));
+    }
 
-      if (k >= 2) {
-        // Mk_1_one is square
-        TEUCHOS_ASSERT(Mk_1_one->getDomainMap()->isSameAs(*Mk_1_one->getRangeMap()));
-        TEUCHOS_ASSERT(Mk_1_one->getDomainMap()->isSameAs(*Mk_1_one->getRowMap()));
+    if ((k >= 2) && !disable_addon_22_) {
+      // Mk_1_one is square
+      TEUCHOS_ASSERT(Mk_1_one->getDomainMap()->isSameAs(*Mk_1_one->getRangeMap()));
+      TEUCHOS_ASSERT(Mk_1_one->getDomainMap()->isSameAs(*Mk_1_one->getRowMap()));
 
-        // Mk_1_one is consistent with Dk_1
-        TEUCHOS_ASSERT(Mk_1_one->getDomainMap()->isSameAs(*Dk_1->getDomainMap()));
+      // Mk_1_one is consistent with Dk_1
+      TEUCHOS_ASSERT(Mk_1_one->getDomainMap()->isSameAs(*Dk_1->getDomainMap()));
 
-        // Mk_1_one is consistent with Dk_2
-        TEUCHOS_ASSERT(Mk_1_one->getDomainMap()->isSameAs(*Dk_2->getRangeMap()));
+      // Mk_1_one is consistent with Dk_2
+      TEUCHOS_ASSERT(Mk_1_one->getDomainMap()->isSameAs(*Dk_2->getRangeMap()));
 
-        // invMk_2_invAlpha is square
-        TEUCHOS_ASSERT(invMk_2_invAlpha->getDomainMap()->isSameAs(*invMk_2_invAlpha->getRangeMap()));
-        TEUCHOS_ASSERT(invMk_2_invAlpha->getDomainMap()->isSameAs(*invMk_2_invAlpha->getRowMap()));
+      // invMk_2_invAlpha is square
+      TEUCHOS_ASSERT(invMk_2_invAlpha->getDomainMap()->isSameAs(*invMk_2_invAlpha->getRangeMap()));
+      TEUCHOS_ASSERT(invMk_2_invAlpha->getDomainMap()->isSameAs(*invMk_2_invAlpha->getRowMap()));
 
-        // invMk_2_invAlpha is consistent with Dk_2
-        TEUCHOS_ASSERT(invMk_2_invAlpha->getDomainMap()->isSameAs(*Dk_2->getDomainMap()));
+      // invMk_2_invAlpha is consistent with Dk_2
+      TEUCHOS_ASSERT(invMk_2_invAlpha->getDomainMap()->isSameAs(*Dk_2->getDomainMap()));
 
-        if (k == 2) {
-          TEUCHOS_ASSERT(D0 == Dk_2);
-        }
-
+      if (k == 2) {
+        TEUCHOS_ASSERT(D0 == Dk_2);
       }
+
     }
 #endif
 
