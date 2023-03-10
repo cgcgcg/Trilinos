@@ -104,6 +104,13 @@
 namespace MueLu {
 
   template<class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+  Teuchos::RCP<Xpetra::CrsMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node> >
+  Matrix2CrsMatrix(Teuchos::RCP<Xpetra::CrsMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node> > &matrix) {
+    return Teuchos::rcp_dynamic_cast<Xpetra::CrsMatrixWrap<Scalar,LocalOrdinal,GlobalOrdinal,Node> >(matrix, true)->getCrsMatrix();
+  }
+
+
+  template<class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
   Teuchos::RCP<const Xpetra::Map<LocalOrdinal,GlobalOrdinal,Node> > RefMaxwell<Scalar,LocalOrdinal,GlobalOrdinal,Node>::getDomainMap() const {
     return SM_Matrix_->getDomainMap();
   }
@@ -402,7 +409,7 @@ namespace MueLu {
 
         if (applyBCsToAnodal_) {
           // Apply boundary conditions to A22_nodal
-          Utilities_kokkos::ApplyOAZToMatrixRows(A22_nodal,BCdomain22_);
+          Utilities::ApplyOAZToMatrixRows(A22_nodal,BCdomain22_);
         }
         dump(*A22_nodal, "A22_nodal.m");
 
@@ -1395,7 +1402,7 @@ namespace MueLu {
         dropFact = rcp(new CoalesceDropFactory());
         UncoupledAggFact = rcp(new UncoupledAggregationFactory());
         TentativePFact = rcp(new TentativePFactory());
-        if (parameterList_.get("multigrid algorithm","unsmoothed") == "sa")
+        if (algo == "sa")
           SaPFact = rcp(new SaPFactory());
       }
       dropFact->SetFactory("UnAmalgamationInfo", amalgFact);
@@ -1463,6 +1470,139 @@ namespace MueLu {
   }
 
   template<class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+  void RefMaxwell<Scalar,LocalOrdinal,GlobalOrdinal,Node>::buildFaceProlongator(const Teuchos::RCP<Matrix> &A_nodal,
+                                                                                Teuchos::RCP<Matrix> &specialP,
+                                                                                Teuchos::RCP<MultiVector> &specialNullspace,
+                                                                                Teuchos::RCP<RealValuedMultiVector> &specialCoords) const {
+
+    RCP<Matrix> P_nodal;
+    RCP<CrsMatrix> P_nodal_imported;
+    RCP<MultiVector> Nullspace_nodal;
+    buildNodalProlongator(A_nodal, P_nodal, Nullspace_nodal, specialCoords);
+
+    TEUCHOS_ASSERT(spaceNumber_ == 2);
+    RCP<const Map> faceMap = Dk_1_->getRowMap();
+    size_t numLocalRows = faceMap->getLocalNumEntries();
+
+    // Import off-rank rows of P_nodal into P_nodal_imported
+    int numProcs = P_nodal->getDomainMap()->getComm()->getSize();
+    if (numProcs > 1) {
+      RCP<CrsMatrixWrap> P_nodal_temp;
+      RCP<const Map> targetMap = D0Crs->getColMap();
+      P_nodal_temp = rcp(new CrsMatrixWrap(targetMap));
+      RCP<const Import> importer = D0Crs->getCrsGraph()->getImporter();
+      P_nodal_temp->doImport(*P_nodal, *importer, Xpetra::INSERT);
+      P_nodal_temp->fillComplete(rcp_dynamic_cast<CrsMatrixWrap>(P_nodal)->getCrsMatrix()->getDomainMap(),
+                                 rcp_dynamic_cast<CrsMatrixWrap>(P_nodal)->getCrsMatrix()->getRangeMap());
+      P_nodal_imported = P_nodal_temp->getCrsMatrix();
+      dump(*P_nodal_temp, "P_nodal_imported.m");
+    } else
+      P_nodal_imported = rcp_dynamic_cast<CrsMatrixWrap>(P_nodal)->getCrsMatrix();
+
+    using ATS        = Kokkos::ArithTraits<SC>;
+    using impl_Scalar = typename ATS::val_type;
+    using impl_ATS = Kokkos::ArithTraits<impl_Scalar>;
+    using range_type = Kokkos::RangePolicy<LO, typename NO::execution_space>;
+
+    typedef typename Matrix::local_matrix_type KCRS;
+    typedef typename KCRS::StaticCrsGraphType graph_t;
+    typedef typename graph_t::row_map_type::non_const_type lno_view_t;
+    typedef typename graph_t::entries_type::non_const_type lno_nnz_view_t;
+    typedef typename KCRS::values_type::non_const_type scalar_view_t;
+
+    const impl_Scalar impl_SC_ZERO = impl_ATS::zero();
+    const impl_Scalar impl_SC_ONE = impl_ATS::one();
+    const impl_Scalar impl_half = impl_SC_ONE / (impl_SC_ONE + impl_SC_ONE);
+
+
+    RCP<Matrix> absD0 = MatrixFactory::BuildCopy(D0_);
+    {
+      auto localAbsD0 = absD0->getLocalMatrixDevice();
+      Kokkos::deep_copy(localAbsD0.values, impl_SC_ONE);
+    }
+
+    RCP<Matrix> absD0_P_nodal = MatrixFactory::Build(D0->getRowMap());
+    Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Multiply(*absD0,false,*P_nodal,false,*absD0_P_nodal,true,true);
+    absD0 = Teuchos::null;
+
+    RCP<Matrix> absD1 = MatrixFactory::BuildCopy(Dk_1_);
+    {
+      auto localAbsD1 = absD1->getLocalMatrixDevice();
+      Kokkos::deep_copy(localAbsD1.values, impl_SC_ONE);
+    }
+
+    RCP<Matrix> absD1_absD0_P_nodal = MatrixFactory::Build(D1->getRowMap());
+    Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Multiply(*absD1,false,*absD0_P_nodal,false,*absD1_absD0_P_nodal,true,true);
+    absD0_P_nodal = Teuchos::null;
+    absD1 = Teuchos::null;
+
+    // Get data out of |D1|*|D0|*P_nodal.
+    auto local_absD1_absD0_P_nodal = absD1_absD0_P_nodal->getLocalMatrixDevice();
+
+    // Create the matrix object
+    RCP<Map> blockColMap    = Xpetra::MapFactory<LO,GO,NO>::Build(P_nodal_imported->getColMap(), dim);
+    RCP<Map> blockDomainMap = Xpetra::MapFactory<LO,GO,NO>::Build(P_nodal->getDomainMap(), dim);
+
+    size_t nnzEstimate = dim*localD0P.graph.entries.size();
+    lno_view_t specialProwptr("specialP_rowptr", numLocalRows+1);
+    lno_nnz_view_t specialPcolind("specialP_colind",nnzEstimate);
+    scalar_view_t specialPvals("specialP_vals",nnzEstimate);
+
+    // adjust rowpointer
+    Kokkos::parallel_for("MueLu:RefMaxwell::buildEdgeProlongator_adjustRowptr", range_type(0,numLocalRows+1),
+                         KOKKOS_LAMBDA(const size_t i) {
+                           specialProwptr(i) = dim*localD0P.graph.row_map(i);
+                         });
+
+    // adjust column indices
+    Kokkos::parallel_for("MueLu:RefMaxwell::buildEdgeProlongator_adjustColind", range_type(0,localD0P.graph.entries.size()),
+                         KOKKOS_LAMBDA(const size_t jj) {
+                           for (size_t k = 0; k < dim; k++) {
+                             specialPcolind(dim*jj+k) = dim*localD0P.graph.entries(jj)+k;
+                             specialPvals(dim*jj+k) = impl_SC_ZERO;
+                           }
+                         });
+
+    auto localNullspace = Nullspace_->getDeviceLocalView(Xpetra::Access::ReadOnly);
+
+    // enter values
+    {
+      auto localD0 = D0_->getLocalMatrixDevice();
+      auto localP = P_nodal_imported->getLocalMatrixDevice();
+      Kokkos::parallel_for("MueLu:RefMaxwell::buildEdgeProlongator_enterValues", range_type(0,numLocalRows),
+                           KOKKOS_LAMBDA(const size_t i) {
+                             for (size_t ll = localD0.graph.row_map(i); ll < localD0.graph.row_map(i+1); ll++) {
+                               LO l = localD0.graph.entries(ll);
+                               for (size_t jj = localP.graph.row_map(l); jj < localP.graph.row_map(l+1); jj++) {
+                                 LO j = localP.graph.entries(jj);
+                                 impl_Scalar v = localP.values(jj);
+                                 for (size_t k = 0; k < dim; k++) {
+                                   LO jNew = dim*j+k;
+                                   impl_Scalar n = localNullspace(i,k);
+                                   size_t m;
+                                   for (m = specialProwptr(i); m < specialProwptr(i+1); m++)
+                                     if (specialPcolind(m) == jNew)
+                                       break;
+#if defined(HAVE_MUELU_DEBUG) && !defined(HAVE_MUELU_CUDA) && !defined(HAVE_MUELU_HIP)
+                                   TEUCHOS_ASSERT_EQUALITY(specialPcolind(m),jNew);
+#endif
+                                   specialPvals(m) += impl_half * v * n;
+                                 }
+                               }
+                             }
+                           });
+    }
+
+    specialP = rcp(new CrsMatrixWrap(SM_Matrix_->getRowMap(), blockColMap, 0));
+    RCP<CrsMatrix> specialPCrs = rcp_dynamic_cast<CrsMatrixWrap>(specialP)->getCrsMatrix();
+    specialPCrs->setAllValues(specialProwptr, specialPcolind, specialPvals);
+    specialPCrs->expertStaticFillComplete(blockDomainMap, SM_Matrix_->getRangeMap());
+
+
+
+  }
+
+  template<class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
   void RefMaxwell<Scalar,LocalOrdinal,GlobalOrdinal,Node>::buildEdgeProlongator(const Teuchos::RCP<Matrix> &A_nodal,
                                                                                 Teuchos::RCP<Matrix> &specialP,
                                                                                 Teuchos::RCP<MultiVector> &specialNullspace,
@@ -1482,7 +1622,10 @@ namespace MueLu {
     const SC SC_ONE = Teuchos::ScalarTraits<SC>::one();
     const Scalar half = SC_ONE / (SC_ONE + SC_ONE);
     size_t dim = Nullspace_->getNumVectors();
-    size_t numLocalRows = SM_Matrix_->getLocalNumRows();
+    // RCP<const Map> edgeMap = SM_Matrix_->getRowMap();
+    // size_t numLocalRows = SM_Matrix_->getLocalNumRows();
+    RCP<const Map> edgeMap = D0_->getRowMap();
+    size_t numLocalRows = edgeMap->getLocalNumEntries();
 
     RCP<Matrix> P_nodal;
     RCP<CrsMatrix> P_nodal_imported;
@@ -1540,7 +1683,7 @@ namespace MueLu {
 	// Get data out of P_nodal_imported and D0.
 
         if (algo == "mat-mat") {
-          RCP<Matrix> D0_P_nodal = MatrixFactory::Build(SM_Matrix_->getRowMap());
+          RCP<Matrix> D0_P_nodal = MatrixFactory::Build(edgeMap);
           Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Multiply(*D0_,false,*P_nodal,false,*D0_P_nodal,true,true);
 
 #ifdef HAVE_MUELU_DEBUG
@@ -1640,10 +1783,10 @@ namespace MueLu {
                                  });
           }
 
-          specialP = rcp(new CrsMatrixWrap(SM_Matrix_->getRowMap(), blockColMap, 0));
+          specialP = rcp(new CrsMatrixWrap(edgeMap, blockColMap, 0));
           RCP<CrsMatrix> specialPCrs = rcp_dynamic_cast<CrsMatrixWrap>(specialP)->getCrsMatrix();
           specialPCrs->setAllValues(specialProwptr, specialPcolind, specialPvals);
-          specialPCrs->expertStaticFillComplete(blockDomainMap, SM_Matrix_->getRangeMap());
+          specialPCrs->expertStaticFillComplete(blockDomainMap, edgeMap);
 
         } else
           TEUCHOS_TEST_FOR_EXCEPTION(false,std::invalid_argument,algo << " is not a valid option for \"refmaxwell: prolongator compute algorithm\"");
@@ -1745,10 +1888,10 @@ namespace MueLu {
                                  });
           }
 
-          specialP = rcp(new CrsMatrixWrap(SM_Matrix_->getRowMap(), blockColMap, 0));
+          specialP = rcp(new CrsMatrixWrap(edgeMap, blockColMap, 0));
           RCP<CrsMatrix> specialPCrs = rcp_dynamic_cast<CrsMatrixWrap>(specialP)->getCrsMatrix();
           specialPCrs->setAllValues(specialProwptr, specialPcolind, specialPvals);
-          specialPCrs->expertStaticFillComplete(blockDomainMap, SM_Matrix_->getRangeMap());
+          specialPCrs->expertStaticFillComplete(blockDomainMap, edgeMap);
         } else
           TEUCHOS_TEST_FOR_EXCEPTION(false,std::invalid_argument,algo << " is not a valid option for \"refmaxwell: prolongator compute algorithm\"");
 
@@ -1783,7 +1926,7 @@ namespace MueLu {
         if (skipFirstLevel_) {
 
           if (algo == "mat-mat") {
-            RCP<Matrix> D0_P_nodal = MatrixFactory::Build(SM_Matrix_->getRowMap());
+            RCP<Matrix> D0_P_nodal = MatrixFactory::Build(edgeMap);
             Xpetra::MatrixMatrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Multiply(*D0_,false,*P_nodal,false,*D0_P_nodal,true,true);
 
 
@@ -1825,7 +1968,7 @@ namespace MueLu {
             // Create the matrix object
             RCP<Map> blockColMap    = Xpetra::MapFactory<LO,GO,NO>::Build(P_nodal_imported->getColMap(), dim);
             RCP<Map> blockDomainMap = Xpetra::MapFactory<LO,GO,NO>::Build(P_nodal->getDomainMap(), dim);
-            specialP = rcp(new CrsMatrixWrap(SM_Matrix_->getRowMap(), blockColMap, 0));
+            specialP = rcp(new CrsMatrixWrap(edgeMap, blockColMap, 0));
             RCP<CrsMatrix> specialPCrs = rcp_dynamic_cast<CrsMatrixWrap>(specialP)->getCrsMatrix();
             size_t nnzEstimate = dim*D0Prowptr[numLocalRows];
             specialPCrs->allocateAllValues(nnzEstimate, specialProwptr_RCP, specialPcolind_RCP, specialPvals_RCP);
@@ -1908,7 +2051,7 @@ namespace MueLu {
             }
 
             specialPCrs->setAllValues(specialProwptr_RCP, specialPcolind_RCP, specialPvals_RCP);
-            specialPCrs->expertStaticFillComplete(blockDomainMap, SM_Matrix_->getRangeMap());
+            specialPCrs->expertStaticFillComplete(blockDomainMap, edgeMap);
 
           } else if (algo == "gustavson") {
 	    ArrayRCP<const size_t>      D0rowptr_RCP;
@@ -1942,7 +2085,7 @@ namespace MueLu {
             // Create the matrix object
             RCP<Map> blockColMap    = Xpetra::MapFactory<LO,GO,NO>::Build(P_nodal_imported->getColMap(), dim);
             RCP<Map> blockDomainMap = Xpetra::MapFactory<LO,GO,NO>::Build(P_nodal->getDomainMap(), dim);
-            specialP = rcp(new CrsMatrixWrap(SM_Matrix_->getRowMap(), blockColMap, 0));
+            specialP = rcp(new CrsMatrixWrap(edgeMap, blockColMap, 0));
             RCP<CrsMatrix> specialPCrs = rcp_dynamic_cast<CrsMatrixWrap>(specialP)->getCrsMatrix();
             specialPCrs->allocateAllValues(nnz_alloc, specialProwptr_RCP, specialPcolind_RCP, specialPvals_RCP);
 
@@ -2035,7 +2178,7 @@ namespace MueLu {
             }
 
             specialPCrs->setAllValues(specialProwptr_RCP, specialPcolind_RCP, specialPvals_RCP);
-            specialPCrs->expertStaticFillComplete(blockDomainMap, SM_Matrix_->getRangeMap());
+            specialPCrs->expertStaticFillComplete(blockDomainMap, edgeMap);
           } else
             TEUCHOS_TEST_FOR_EXCEPTION(false,std::invalid_argument,algo << " is not a valid option for \"refmaxwell: prolongator compute algorithm\"");
 
@@ -2069,7 +2212,7 @@ namespace MueLu {
             // Create the matrix object
             RCP<Map> blockColMap    = Xpetra::MapFactory<LO,GO,NO>::Build(D0_->getColMap(), dim);
             RCP<Map> blockDomainMap = Xpetra::MapFactory<LO,GO,NO>::Build(D0_->getDomainMap(), dim);
-            specialP = rcp(new CrsMatrixWrap(SM_Matrix_->getRowMap(), blockColMap, 0));
+            specialP = rcp(new CrsMatrixWrap(edgeMap, blockColMap, 0));
             RCP<CrsMatrix> specialPCrs = rcp_dynamic_cast<CrsMatrixWrap>(specialP)->getCrsMatrix();
             size_t nnzEstimate = dim*D0rowptr[numLocalRows];
             specialPCrs->allocateAllValues(nnzEstimate, specialProwptr_RCP, specialPcolind_RCP, specialPvals_RCP);
@@ -2141,7 +2284,7 @@ namespace MueLu {
             }
 
             specialPCrs->setAllValues(specialProwptr_RCP, specialPcolind_RCP, specialPvals_RCP);
-            specialPCrs->expertStaticFillComplete(blockDomainMap, SM_Matrix_->getRangeMap());
+            specialPCrs->expertStaticFillComplete(blockDomainMap, edgeMap);
 
           } else
             TEUCHOS_TEST_FOR_EXCEPTION(false,std::invalid_argument,algo << " is not a valid option for \"refmaxwell: prolongator compute algorithm\"");
