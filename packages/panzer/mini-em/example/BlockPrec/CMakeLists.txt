@@ -23,6 +23,7 @@ TRIBITS_COPY_FILES_TO_BINARY_DIR(CopyBlockPrecFiles
   solverMueLuRefMaxwell.xml solverMueLuRefMaxwell2D.xml solverMueLuRefMaxwellEpetra.xml
   solverMueLuMaxwellHO.xml solverMueLuMaxwellHOCuda.xml
   solverMueLuRefMaxwellOpenMP.xml solverMueLuRefMaxwellCuda.xml
+  solverMueLuRefDarcy.xml
   solverAugmentationUseILU.xml
   solverMLRefMaxwell.xml
   SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}

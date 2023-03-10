@@ -104,10 +104,6 @@ namespace mini_em {
     using Teuchos::RCP;
     using Teuchos::rcp;
 
-    // Not yet implemented
-    if (solver == MUELU_DARCY)
-      throw;
-
     if ((solver == AUGMENTATION) ||
         (solver == ML_REFMAXWELL) ||
         (solver == MUELU_REFMAXWELL) ||
@@ -239,7 +235,7 @@ namespace mini_em {
       closure_models.sublist(modelID).sublist("1/dt").set<double>("Value",1.0/dt);
 
       // copy over entries to closure model for solver
-      std::vector<std::string> parameters = {"Inverse Diffusivity"};
+      std::vector<std::string> parameters = {"Diffusivity", "Inverse Diffusivity"};
       for (auto it = parameters.begin(); it != parameters.end(); ++it) {
         std::string paramLabel = physicsEqSet.get<std::string>(*it);
         closure_models.sublist(auxModelID).sublist(paramLabel) = closure_models.sublist(modelID).sublist(paramLabel);
@@ -453,16 +449,19 @@ namespace mini_em {
 
     } else if (solver == MUELU_DARCY) {
 
-      std::string auxEdgeField, auxFaceField, opPostfix;
+      std::string auxEdgeField, auxFaceField, auxNodalField, opPostfix;
       if (basis_order != 1) {
         auxEdgeField = "AUXILIARY_EDGE_" + std::to_string(1);
         auxFaceField = "AUXILIARY_FACE_" + std::to_string(1);
+        auxNodalField = "AUXILIARY_NODE_" + std::to_string(1);
         opPostfix = " "+std::to_string(1);
       } else {
         auxEdgeField = "AUXILIARY_EDGE";
         auxFaceField = "AUXILIARY_FACE";
+        auxNodalField = "AUXILIARY_NODE";
         opPostfix = "";
       }
+      auxFieldOrder += " "+auxNodalField;
 
       // Face mass matrix with unit weight
       auto massFacePL = Teuchos::ParameterList();
@@ -474,28 +473,71 @@ namespace mini_em {
       massFacePL.set("Integration Order", 2);
       auxPhysicsBlocksPL.sublist("Auxiliary Face Mass Physics"+opPostfix) = massFacePL;
 
-      // Face mass matrix with 1/mu weight
-      // auto massFaceWeightedPL = Teuchos::ParameterList();
-      // massFaceWeightedPL.set("Type", "Auxiliary Mass Matrix");
-      // massFaceWeightedPL.set("DOF Name", auxFaceField);
-      // massFaceWeightedPL.set("Basis Type", "HDiv");
-      // massFaceWeightedPL.set("Model ID", auxModelID);
-      // massFaceWeightedPL.set("Field Multipliers", "1/mu");
-      // massFaceWeightedPL.set("Basis Order", 1);
-      // massFaceWeightedPL.set("Integration Order", 2);
-      // massFaceWeightedPL.set("Operator Label", "weighted ");
-      // auxPhysicsBlocksPL.sublist("Auxiliary Face Mass Physics weighted"+opPostfix) = massFaceWeightedPL;
-
-      // Edge mass matrix
+      // Edge mass matrix with unit weight
       auto massEdgePL = Teuchos::ParameterList();
       massEdgePL.set("Type", "Auxiliary Mass Matrix");
       massEdgePL.set("DOF Name", auxEdgeField);
       massEdgePL.set("Basis Type", "HCurl");
       massEdgePL.set("Model ID", auxModelID);
-      massEdgePL.set("Field Multipliers", "1/dt");
       massEdgePL.set("Basis Order", 1);
       massEdgePL.set("Integration Order", 2);
       auxPhysicsBlocksPL.sublist("Auxiliary Edge Mass Physics"+opPostfix) = massEdgePL;
+
+      // Edge mass matrix with 1/kappa weight
+      auto massEdgeWeightedPL = Teuchos::ParameterList();
+      massEdgeWeightedPL.set("Type", "Auxiliary Mass Matrix");
+      massEdgeWeightedPL.set("DOF Name", auxEdgeField);
+      massEdgeWeightedPL.set("Basis Type", "HCurl");
+      massEdgeWeightedPL.set("Model ID", auxModelID);
+      massEdgeWeightedPL.set("Field Multipliers", "1/kappa");
+      massEdgeWeightedPL.set("Basis Order", 1);
+      massEdgeWeightedPL.set("Integration Order", 2);
+      massEdgeWeightedPL.set("Operator Label", "1/kappa weighted ");
+      auxPhysicsBlocksPL.sublist("Auxiliary Edge Mass Physics 1/kappa weighted"+opPostfix) = massEdgeWeightedPL;
+
+      // Edge mass matrix with 1/dt weight
+      auto massEdgeWeightedPL2 = Teuchos::ParameterList();
+      massEdgeWeightedPL2.set("Type", "Auxiliary Mass Matrix");
+      massEdgeWeightedPL2.set("DOF Name", auxEdgeField);
+      massEdgeWeightedPL2.set("Basis Type", "HCurl");
+      massEdgeWeightedPL2.set("Model ID", auxModelID);
+      massEdgeWeightedPL2.set("Field Multipliers", "1/dt");
+      massEdgeWeightedPL2.set("Basis Order", 1);
+      massEdgeWeightedPL2.set("Integration Order", 2);
+      massEdgeWeightedPL2.set("Operator Label", "1/dt weighted ");
+      auxPhysicsBlocksPL.sublist("Auxiliary Edge Mass Physics 1/dt weighted"+opPostfix) = massEdgeWeightedPL2;
+
+      // Edge mass matrix with kappa weight
+      auto massEdgeWeightedPL3 = Teuchos::ParameterList();
+      massEdgeWeightedPL3.set("Type", "Auxiliary Mass Matrix");
+      massEdgeWeightedPL3.set("DOF Name", auxEdgeField);
+      massEdgeWeightedPL3.set("Basis Type", "HCurl");
+      massEdgeWeightedPL3.set("Model ID", auxModelID);
+      massEdgeWeightedPL3.set("Field Multipliers", "kappa");
+      massEdgeWeightedPL3.set("Basis Order", 1);
+      massEdgeWeightedPL3.set("Integration Order", 2);
+      massEdgeWeightedPL3.set("Operator Label", "kappa weighted ");
+      auxPhysicsBlocksPL.sublist("Auxiliary Edge Mass Physics kappa weighted"+opPostfix) = massEdgeWeightedPL3;
+
+      // Nodal mass matrix with dt weight
+      auto massNodalPL = Teuchos::ParameterList();
+      massNodalPL.set("Type", "Auxiliary Mass Matrix");
+      massNodalPL.set("DOF Name", auxNodalField);
+      massNodalPL.set("Basis Type", "HGrad");
+      massNodalPL.set("Model ID", auxModelID);
+      massNodalPL.set("Field Multipliers", "dt");
+      massNodalPL.set("Basis Order", 1);
+      massNodalPL.set("Integration Order", 2);
+      massNodalPL.set("Operator Label", "dt weighted ");
+      auxPhysicsBlocksPL.sublist("Auxiliary Nodal Mass Physics dt weighted"+opPostfix) = massNodalPL;
+
+      // discrete gradient
+      auto gradPL = Teuchos::ParameterList();
+      gradPL.set("Source", auxNodalField);
+      gradPL.set("Target", auxEdgeField);
+      gradPL.set("Op", "grad");
+      gradPL.set("matrix-free", false);
+      aux_ops_pl.sublist("Discrete Gradient"+opPostfix) = gradPL;
 
     }
 
@@ -525,6 +567,8 @@ namespace mini_em {
       p = q;
       ++it;
     }
+
+    std::cout << "Aux Field order " << auxFieldOrder << std::endl;
   }
 
 
