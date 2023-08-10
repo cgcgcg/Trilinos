@@ -65,6 +65,7 @@
       <ParameterList name="Maxwell Physics">
         <Parameter name="Type"                 type="string" value="Darcy"/>
         <Parameter name="Model ID"             type="string" value="darcy"/>
+        <Parameter name="Diffusivity"          type="string" value="kappa"/>
         <Parameter name="Inverse Diffusivity"  type="string" value="1/kappa"/>
         <Parameter name="Forcing"              type="string" value="f"/>
       </ParameterList>
@@ -96,6 +97,9 @@
       <ParameterList name="NORM u exact">
         <Parameter name="Type" type="string" value="NORM"/>
         <Parameter name="Field" type="string" value="EXACT u"/>
+      </ParameterList>
+      <ParameterList name="kappa">
+        <Parameter name="Value" type="double" value="10."/>
       </ParameterList>
       <!-- Inverse Diffusivity -->
       <ParameterList name="1/kappa">

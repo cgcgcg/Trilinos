@@ -204,13 +204,7 @@ Teko::LinearOp FullDarcyPreconditionerFactory::buildPreconditionerOperator(Teko:
    {
      Teuchos::TimeMonitor tm1(*Teuchos::TimeMonitor::getNewTimer("DarcyPreconditioner: Solver S_sigma"));
 
-     if (S_sigma_prec_type_ == "MueLuRefDarcy") {// refDarcy
-
-       // edge mass matrix
-       Teko::LinearOp Q_rho = getRequestHandler()->request<Teko::LinearOp>(Teko::RequestMesg("Mass Matrix AUXILIARY_EDGE"));
-       describeMatrix("Q_rho",*Q_rho,debug);
-       if (dump)
-         writeOut("Q_rho.mm",*Q_rho);
+     if ((S_sigma_prec_type_ == "MueLuRefDarcy") || (S_sigma_prec_type_ == "MueLuRefMaxwell")) {// refDarcy
 
        // Teko::LinearOp T = getRequestHandler()->request<Teko::LinearOp>(Teko::RequestMesg("Discrete Gradient"));
        // Teko::LinearOp KT = Teko::explicitMultiply(K,T);
@@ -227,34 +221,54 @@ Teko::LinearOp FullDarcyPreconditionerFactory::buildPreconditionerOperator(Teko:
            RCP<Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node> > Coordinates = S_sigma_prec_pl.get<RCP<Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node> > >("Coordinates");
            S_sigma_prec_pl.sublist("Preconditioner Types").sublist(S_sigma_prec_type_).set("Coordinates",Coordinates);
          }
-#ifdef PANZER_HAVE_EPETRA_STACK
-         else {
-           RCP<Epetra_MultiVector> Coordinates = S_sigma_prec_pl.get<RCP<Epetra_MultiVector> >("Coordinates");
-           S_sigma_prec_pl.sublist("Preconditioner Types").sublist(S_sigma_prec_type_).set("Coordinates",Coordinates);
-         }
-#else
          else
            TEUCHOS_ASSERT(false);
-#endif
        }
 
-       RCP<const Thyra::DiagonalLinearOpBase<Scalar> > invDiagQ_rho;
-       {
-         Teuchos::TimeMonitor tm(*Teuchos::TimeMonitor::getNewTimer("MaxwellPreconditioner: Lumped diagonal Q_rho"));
+       // edge mass matrix
+       Teko::LinearOp Mk_1_invBeta = getRequestHandler()->request<Teko::LinearOp>(Teko::RequestMesg("Mass Matrix kappa weighted AUXILIARY_EDGE"));
+       describeMatrix("Mk_1_invBeta",*Mk_1_invBeta,debug);
+       if (dump)
+         writeOut("Mk_1_invBeta.mm",*Mk_1_invBeta);
 
-         // Get inverse of lumped Q_rho
-         RCP<Thyra::VectorBase<Scalar> > ones = Thyra::createMember(Q_rho->domain());
-         RCP<Thyra::VectorBase<Scalar> > diagonal = Thyra::createMember(Q_rho->range());
+       RCP<const Thyra::DiagonalLinearOpBase<Scalar> > invMk_1_invBeta;
+       {
+         Teuchos::TimeMonitor tm(*Teuchos::TimeMonitor::getNewTimer("MaxwellPreconditioner: Lumped diagonal Mk_1_invBeta"));
+
+         // Get inverse of lumped Mk_1_invBeta
+         RCP<Thyra::VectorBase<Scalar> > ones = Thyra::createMember(Mk_1_invBeta->domain());
+         RCP<Thyra::VectorBase<Scalar> > diagonal = Thyra::createMember(Mk_1_invBeta->range());
          Thyra::assign(ones.ptr(),1.0);
          // compute lumped diagonal
-         Thyra::apply(*Q_rho,Thyra::NOTRANS,*ones,diagonal.ptr());
+         Thyra::apply(*Mk_1_invBeta,Thyra::NOTRANS,*ones,diagonal.ptr());
          Thyra::reciprocal(*diagonal,diagonal.ptr());
-         invDiagQ_rho = rcp(new Thyra::DefaultDiagonalLinearOp<Scalar>(diagonal));
+         invMk_1_invBeta = rcp(new Thyra::DefaultDiagonalLinearOp<Scalar>(diagonal));
+       }
+
+       // nodal mass matrix
+       Teko::LinearOp Mk_2_invAlpha = getRequestHandler()->request<Teko::LinearOp>(Teko::RequestMesg("Mass Matrix dt weighted AUXILIARY_NODE"));
+       describeMatrix("Mk_2_invAlpha",*Mk_2_invAlpha,debug);
+       if (dump)
+         writeOut("Mk_2_invAlpha.mm",*Mk_2_invAlpha);
+
+       RCP<const Thyra::DiagonalLinearOpBase<Scalar> > invMk_2_invAlpha;
+       {
+         Teuchos::TimeMonitor tm(*Teuchos::TimeMonitor::getNewTimer("MaxwellPreconditioner: Lumped diagonal Mk_2_invAlpha"));
+
+         // Get inverse of lumped Mk_2_invAlpha
+         RCP<Thyra::VectorBase<Scalar> > ones = Thyra::createMember(Mk_2_invAlpha->domain());
+         RCP<Thyra::VectorBase<Scalar> > diagonal = Thyra::createMember(Mk_2_invAlpha->range());
+         Thyra::assign(ones.ptr(),1.0);
+         // compute lumped diagonal
+         Thyra::apply(*Mk_2_invAlpha,Thyra::NOTRANS,*ones,diagonal.ptr());
+         Thyra::reciprocal(*diagonal,diagonal.ptr());
+         invMk_2_invAlpha = rcp(new Thyra::DefaultDiagonalLinearOp<Scalar>(diagonal));
        }
 
        {
          Teko::InverseLibrary myInvLib = invLib;
-         S_sigma_prec_pl.sublist("Preconditioner Types").sublist(S_sigma_prec_type_).set("M1inv",invDiagQ_rho);
+         S_sigma_prec_pl.sublist("Preconditioner Types").sublist(S_sigma_prec_type_).set("invMk_1_invBeta",invMk_1_invBeta);
+         S_sigma_prec_pl.sublist("Preconditioner Types").sublist(S_sigma_prec_type_).set("invMk_2_invAlpha",invMk_2_invAlpha);
          S_sigma_prec_pl.sublist("Preconditioner Types").sublist(S_sigma_prec_type_).set("Type",S_sigma_prec_type_);
          myInvLib.addInverse("S_sigma Preconditioner",S_sigma_prec_pl.sublist("Preconditioner Types").sublist(S_sigma_prec_type_));
          S_sigma_prec_factory = myInvLib.getInverseFactory("S_sigma Preconditioner");
@@ -413,7 +427,7 @@ void FullDarcyPreconditionerFactory::initializeFromParameterList(const Teuchos::
 
    dt = params.get<double>("dt");
 
-   if (S_sigma_prec_type_ == "MueLuRefDarcy" || S_sigma_prec_type_ == "ML") { // RefDarcy based solve
+   if ((S_sigma_prec_type_ == "MueLuRefDarcy") || (S_sigma_prec_type_ == "MueLuRefMaxwell")) { // RefDarcy based solve
 
      // S_sigma solve
      Teuchos::ParameterList ml_pl = pl.sublist("S_sigma Solve");
@@ -423,29 +437,28 @@ void FullDarcyPreconditionerFactory::initializeFromParameterList(const Teuchos::
      Teuchos::ParameterList S_sigma_prec_pl = pl.sublist("S_sigma Preconditioner");
 
      // add discrete curl and face mass matrix
-     Teko::LinearOp Q_sigma_aux = getRequestHandler()->request<Teko::LinearOp>(Teko::RequestMesg("Mass Matrix AUXILIARY_FACE"));
-     Teko::LinearOp Q_sigma_aux_weighted = getRequestHandler()->request<Teko::LinearOp>(Teko::RequestMesg("Mass Matrix weighted AUXILIARY_FACE"));
+     Teko::LinearOp M1_beta = getRequestHandler()->request<Teko::LinearOp>(Teko::RequestMesg("Mass Matrix 1/kappa weighted AUXILIARY_EDGE"));
+     Teko::LinearOp M1_alpha = getRequestHandler()->request<Teko::LinearOp>(Teko::RequestMesg("Mass Matrix 1/dt weighted AUXILIARY_EDGE"));
+     Teko::LinearOp Mk_one = getRequestHandler()->request<Teko::LinearOp>(Teko::RequestMesg("Mass Matrix AUXILIARY_FACE"));
+     Teko::LinearOp Mk_1_one = getRequestHandler()->request<Teko::LinearOp>(Teko::RequestMesg("Mass Matrix AUXILIARY_EDGE"));
      Teko::LinearOp Curl = getRequestHandler()->request<Teko::LinearOp>(Teko::RequestMesg("Discrete Curl"));
-     if (S_sigma_prec_type_ == "ML") {
-#ifdef PANZER_HAVE_EPETRA_STACK
-       RCP<const Epetra_CrsMatrix> eCurl = get_Epetra_CrsMatrix(*Curl);
-       RCP<const Epetra_CrsMatrix> eQ_sigma_aux = get_Epetra_CrsMatrix(*Q_sigma_aux);
-       RCP<const Epetra_CrsMatrix> eQ_sigma_aux_weighted = get_Epetra_CrsMatrix(*Q_sigma_aux_weighted);
-       S_sigma_prec_pl.sublist("ML Settings").set("D1",eCurl);
-       S_sigma_prec_pl.sublist("ML Settings").set("M2",eQ_sigma_aux);
-       S_sigma_prec_pl.sublist("ML Settings").set("Ms",eQ_sigma_aux_weighted);
-#else
-       TEUCHOS_TEST_FOR_EXCEPTION(true,std::runtime_error,"ERROR: MiniEM_FullDarcyPreconditionerFactory: ML is not supported in this build! Requires Epetra support be enabled!");
-#endif
-     } else {
-       S_sigma_prec_pl.sublist("Preconditioner Types").sublist(S_sigma_prec_type_).set("D1",Curl);
-       S_sigma_prec_pl.sublist("Preconditioner Types").sublist(S_sigma_prec_type_).set("M2",Q_sigma_aux);
-       S_sigma_prec_pl.sublist("Preconditioner Types").sublist(S_sigma_prec_type_).set("Ms",Q_sigma_aux_weighted);
-     }
+     Teko::LinearOp Grad = getRequestHandler()->request<Teko::LinearOp>(Teko::RequestMesg("Discrete Gradient"));
+
+     S_sigma_prec_pl.sublist("Preconditioner Types").sublist(S_sigma_prec_type_).set("Dk_1",Curl);
+     S_sigma_prec_pl.sublist("Preconditioner Types").sublist(S_sigma_prec_type_).set("Dk_2",Grad);
+     S_sigma_prec_pl.sublist("Preconditioner Types").sublist(S_sigma_prec_type_).set("D0",Grad);
+
+     S_sigma_prec_pl.sublist("Preconditioner Types").sublist(S_sigma_prec_type_).set("M1_beta",M1_beta);
+     S_sigma_prec_pl.sublist("Preconditioner Types").sublist(S_sigma_prec_type_).set("M1_alpha",M1_alpha);
+
+     S_sigma_prec_pl.sublist("Preconditioner Types").sublist(S_sigma_prec_type_).set("Mk_one",Mk_one);
+     S_sigma_prec_pl.sublist("Preconditioner Types").sublist(S_sigma_prec_type_).set("Mk_1_one",Mk_1_one);
 
      if (dump) {
+       writeOut("DiscreteGreadient.mm",*Grad);
        writeOut("DiscreteCurl.mm",*Curl);
      }
+     describeMatrix("DiscreteGreadient",*Grad,debug);
      describeMatrix("DiscreteCurl",*Curl,debug);
 
      invLib.addInverse("S_sigma Preconditioner",S_sigma_prec_pl);
