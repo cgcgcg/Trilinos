@@ -505,6 +505,27 @@ public:
     std::string const& name, bool throwIfNotExists = true
     );
 
+  /*\brief Get and remove a parameter.
+   *
+   * \param name [in] The name of the parameter.
+   *
+   * If the given parameter is not in the list at all, this method
+   * throws Exceptions::InvalidParameter.  If the parameter is in the
+   * list but does not have type T, this method throws
+   * Exceptions::InvalidParameterType.  Both exceptions are
+   * subclasses of Exceptions::InvalidParameter.
+   */
+  template<typename T>
+  T pop(std::string const& name);
+
+  /*\brief Get and remove a parameter. Return the default value if the parameter is not there.
+   *
+   * \param name      [in] The name of the parameter.
+   * \param def_value [in] Default value of the Parameter.
+   */
+  template<typename T>
+  T pop(std::string const& name, T def_value);
+
   //@}
   
   //! @name Sublist Functions 
@@ -1292,6 +1313,23 @@ void ParameterList::validateEntryType(
     );
 }
 
+
+template<typename T>
+T ParameterList::pop(std::string const& name_in)
+{
+  T result = get<T>(name_in);
+  remove(name_in, true);
+  return result;
+}
+
+
+template<typename T>
+T ParameterList::pop(std::string const& name_in, T def_value)
+{
+  T result = get<T>(name_in, def_value);
+  remove(name_in, false);
+  return result;
+}
 
 // //////////////////////////////////////
 // Helper functions
