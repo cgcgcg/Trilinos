@@ -81,7 +81,7 @@ void writeToExodus(double time_stamp,
 using namespace mini_em;
 
 using mini_em::physicsType, mini_em::MAXWELL, mini_em::DARCY;
-using mini_em::solverType, mini_em::AUGMENTATION, mini_em::MUELU_REFMAXWELL, mini_em::MUELU_MAXWELL_HO, mini_em::ML, mini_em::CG, mini_em::GMRES, mini_em::MUELU_DARCY;
+using mini_em::solverType, mini_em::AUGMENTATION, mini_em::MUELU, mini_em::MUELU_MAXWELL_HO, mini_em::ML, mini_em::CG, mini_em::GMRES;
 using mini_em::linearAlgebraType, mini_em::linAlgTpetra, mini_em::linAlgEpetra;
 
 
@@ -115,9 +115,9 @@ int main_(Teuchos::CommandLineProcessor &clp, int argc,char * argv[])
     bool matrix_output = false;
     std::string input_file = "maxwell.xml";
     std::string xml = "";
-    solverType solverValues[7] = {AUGMENTATION, MUELU_REFMAXWELL, MUELU_MAXWELL_HO, ML, CG, GMRES, MUELU_DARCY};
-    const char * solverNames[7] = {"Augmentation", "MueLu-RefMaxwell", "MueLu-Maxwell-HO", "ML", "CG", "GMRES", "MueLu-Darcy"};
-    solverType solver = MUELU_REFMAXWELL;
+    solverType solverValues[6] = {AUGMENTATION, MUELU, MUELU_MAXWELL_HO, ML, CG, GMRES};
+    const char * solverNames[6] = {"Augmentation", "MueLu", "MueLu-Maxwell-HO", "ML", "CG", "GMRES"};
+    solverType solver = MUELU;
     int numTimeSteps = 1;
     double finalTime = -1.;
     bool resetSolver = false;
@@ -141,7 +141,7 @@ int main_(Teuchos::CommandLineProcessor &clp, int argc,char * argv[])
     clp.setOption("matrix-output","no-matrix-output",&matrix_output);
     clp.setOption("inputFile",&input_file,"XML file with the problem definitions");
     clp.setOption("solverFile",&xml,"XML file with the solver params");
-    clp.setOption<solverType>("solver",&solver,7,solverValues,solverNames,"Solver that is used");
+    clp.setOption<solverType>("solver",&solver,6,solverValues,solverNames,"Solver that is used");
     clp.setOption("numTimeSteps",&numTimeSteps);
     clp.setOption("finalTime",&finalTime);
     clp.setOption("matrixFree","no-matrixFree",&matrixFree,"matrix-free operators");
@@ -264,7 +264,7 @@ int main_(Teuchos::CommandLineProcessor &clp, int argc,char * argv[])
       if (finalTime <= 0.)
         finalTime = numTimeSteps*dt;
       else {
-        numTimeSteps = std::round(finalTime/dt);
+        numTimeSteps = std::max(Teuchos::as<int>(std::ceil(finalTime/dt)), 1);
         dt = finalTime/numTimeSteps;
       }
 
@@ -715,10 +715,10 @@ int main(int argc,char * argv[]){
   const char * linAlgebraNames[2] = {"Tpetra", "Epetra"};
   linearAlgebraType linAlgebra = linAlgTpetra;
   clp.setOption<linearAlgebraType>("linAlgebra",&linAlgebra,2,linAlgebraValues,linAlgebraNames);
-  solverType solverValues[7] = {AUGMENTATION, MUELU_REFMAXWELL, MUELU_MAXWELL_HO, ML, CG, GMRES, MUELU_DARCY};
-  const char * solverNames[7] = {"Augmentation", "MueLu-RefMaxwell", "MueLu-Maxwell-HO", "ML", "CG", "GMRES", "MueLu-Darcy"};
-  solverType solver = MUELU_REFMAXWELL;
-  clp.setOption<solverType>("solver",&solver,7,solverValues,solverNames,"Solver that is used");
+  solverType solverValues[6] = {AUGMENTATION, MUELU, MUELU_MAXWELL_HO, ML, CG, GMRES};
+  const char * solverNames[6] = {"Augmentation", "MueLu", "MueLu-Maxwell-HO", "ML", "CG", "GMRES"};
+  solverType solver = MUELU;
+  clp.setOption<solverType>("solver",&solver,6,solverValues,solverNames,"Solver that is used");
   // bool useComplex = false;
   // clp.setOption("complex","real",&useComplex);
   clp.recogniseAllOptions(false);

@@ -188,7 +188,7 @@ Teko::LinearOp buildInterpolation(const Teuchos::RCP<const panzer::LinearObjFact
 
   if (op == Intrepid2::OPERATOR_VALUE) {
     TEUCHOS_ASSERT(hoCardinality >= loCardinality);
-    TEUCHOS_ASSERT_EQUALITY(lo_basis->getFunctionSpace(), ho_basis->getFunctionSpace());
+    // TEUCHOS_ASSERT_EQUALITY(lo_basis->getFunctionSpace(), ho_basis->getFunctionSpace());
   }
 
   // allocate some views

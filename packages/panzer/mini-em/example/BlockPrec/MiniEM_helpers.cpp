@@ -105,11 +105,8 @@ namespace mini_em {
     using Teuchos::rcp;
 
     if ((solver == AUGMENTATION) ||
-        (solver == MUELU_REFMAXWELL) ||
         (solver == MUELU_MAXWELL_HO)) {
       TEUCHOS_ASSERT(physics == MAXWELL);
-    } else if (solver == MUELU_DARCY) {
-      TEUCHOS_ASSERT(physics == DARCY);
     }
 
     RCP<Teuchos::ParameterList> lin_solver_pl = Teuchos::rcp(new Teuchos::ParameterList("Linear Solver"));
@@ -138,17 +135,17 @@ namespace mini_em {
             throw;
         else if (solver == ML) {
           updateParams("solverML.xml", lin_solver_pl, comm, out);
-        } else if (solver == MUELU_REFMAXWELL || solver == MUELU_MAXWELL_HO) {
+        } else if (solver == MUELU || solver == MUELU_MAXWELL_HO) {
           if (linAlgebra == linAlgTpetra) {
-            updateParams("solverMueLuRefMaxwell.xml", lin_solver_pl, comm, out);
+            updateParams("solverMueLu.xml", lin_solver_pl, comm, out);
 
             if (dim == 2)
-              updateParams("solverMueLuRefMaxwell2D.xml", lin_solver_pl, comm, out);
+              updateParams("solverMueLu2D.xml", lin_solver_pl, comm, out);
 
 #ifdef KOKKOS_ENABLE_OPENMP
             if (typeid(panzer::TpetraNodeType).name() == typeid(Tpetra::KokkosCompat::KokkosOpenMPWrapperNode).name()) {
               if (linAlgebra == linAlgTpetra)
-                updateParams("solverMueLuRefMaxwellOpenMP.xml", lin_solver_pl, comm, out);
+                updateParams("solverMueLuOpenMP.xml", lin_solver_pl, comm, out);
               else {
                 std::cout << std::endl
                           << "WARNING" << std::endl
@@ -160,17 +157,21 @@ namespace mini_em {
 #endif
 #ifdef KOKKOS_ENABLE_CUDA
             if (typeid(panzer::TpetraNodeType).name() == typeid(Tpetra::KokkosCompat::KokkosCudaWrapperNode).name())
-              updateParams("solverMueLuRefMaxwellCuda.xml", lin_solver_pl, comm, out);
+              updateParams("solverMueLuCuda.xml", lin_solver_pl, comm, out);
+#endif
+#ifdef KOKKOS_ENABLE_HIP
+            if (typeid(panzer::TpetraNodeType).name() == typeid(Tpetra::KokkosCompat::KokkosHIPWrapperNode).name())
+              updateParams("solverMueLuCuda.xml", lin_solver_pl, comm, out);
 #endif
 #ifdef KOKKOS_ENABLE_HIP
             if (typeid(panzer::TpetraNodeType).name() == typeid(Tpetra::KokkosCompat::KokkosHIPWrapperNode).name())
               updateParams("solverMueLuRefMaxwellCuda.xml", lin_solver_pl, comm, out);
 #endif
           } else {
-            updateParams("solverMueLuRefMaxwellEpetra.xml", lin_solver_pl, comm, out);
+            updateParams("solverMueLuEpetra.xml", lin_solver_pl, comm, out);
 
             if (dim == 2)
-              updateParams("solverMueLuRefMaxwell2D.xml", lin_solver_pl, comm, out);
+              updateParams("solverMueLu2D.xml", lin_solver_pl, comm, out);
           }
           if (solver == MUELU_MAXWELL_HO) {
             RCP<Teuchos::ParameterList> lin_solver_pl_lo = lin_solver_pl;
@@ -190,8 +191,6 @@ namespace mini_em {
             if (mueluList.isParameter("coarse: type") && mueluList.get<std::string>("coarse: type") == "RefMaxwell")
               mueluList.set("coarse: params", lin_solver_pl_lo->sublist("Preconditioner Types").sublist("Teko").sublist("Inverse Factory Library").sublist("Maxwell").sublist("S_E Preconditioner").sublist("Preconditioner Types").sublist("MueLuRefMaxwell"));
           }
-        } else if (solver == MUELU_DARCY) {
-          updateParams("solverMueLuRefDarcy.xml", lin_solver_pl, comm, out);
         }
       } else
         updateParams(xml, lin_solver_pl, comm, out);
@@ -325,12 +324,12 @@ namespace mini_em {
           opPostfix = "";
         }
 
-        if (solver == MUELU_REFMAXWELL || solver == ML || solver == MUELU_MAXWELL_HO)
+        if (solver == MUELU || solver == ML || solver == MUELU_MAXWELL_HO)
           auxFieldOrder += " "+auxNodalField+" "+auxEdgeField;
         else
           auxFieldOrder += " "+auxEdgeField;
 
-        if (solver == MUELU_REFMAXWELL || solver == ML || solver == MUELU_MAXWELL_HO) {
+        if (solver == MUELU || solver == ML || solver == MUELU_MAXWELL_HO) {
           // discrete gradient
           auto gradPL = Teuchos::ParameterList();
           gradPL.set("Source", auxNodalField);
@@ -380,12 +379,12 @@ namespace mini_em {
           opPostfix = "";
         }
 
-        if ((solver == MUELU_DARCY) || (solver == ML))
+        if ((solver == MUELU) || (solver == ML))
           auxFieldOrder += " "+auxEdgeField + " "+auxFaceField;
         else
           auxFieldOrder += " "+auxFaceField;
 
-        if ((solver == MUELU_DARCY) || (solver == ML)) {
+        if ((solver == MUELU) || (solver == ML)) {
           // discrete curl
           auto curlPL = Teuchos::ParameterList();
           curlPL.set("Source", auxEdgeField);
@@ -411,7 +410,7 @@ namespace mini_em {
 
     // Set up additional mass matrices for RefMaxwell
     if ((physics == MAXWELL) &&
-        ((solver == MUELU_REFMAXWELL) || (solver == ML) || (solver == MUELU_MAXWELL_HO))) {
+        ((solver == MUELU) || (solver == ML) || (solver == MUELU_MAXWELL_HO))) {
       std::string auxNodalField, auxEdgeField, opPostfix;
       if (basis_order != 1) {
         auxNodalField = "AUXILIARY_NODE_" + std::to_string(1);
@@ -457,7 +456,7 @@ namespace mini_em {
       auxPhysicsBlocksPL.sublist("Auxiliary Node Mass Physics"+opPostfix) = massNodePL;
 
     } else if (physics == DARCY &&
-               (solver == MUELU_DARCY || solver == ML)) {
+               (solver == MUELU || solver == ML)) {
 
       std::string auxEdgeField, auxFaceField, auxNodalField, opPostfix;
       if (basis_order != 1) {

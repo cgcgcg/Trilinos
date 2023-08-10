@@ -34,12 +34,11 @@ namespace mini_em {
 
   enum solverType {
     AUGMENTATION,
-    MUELU_REFMAXWELL,
+    MUELU,
     MUELU_MAXWELL_HO,
     ML,
     CG,
-    GMRES,
-    MUELU_DARCY
+    GMRES
   };
 
   void getMesh(Teuchos::ParameterList &mesh_pl,

@@ -21,10 +21,9 @@ TRIBITS_COPY_FILES_TO_BINARY_DIR(CopyBlockPrecFiles
   maxwell-donut.xml
   darcy.xml
   solverCG.xml solverGMRES.xml
-  solverMueLuRefMaxwell.xml solverMueLuRefMaxwell2D.xml solverMueLuRefMaxwellEpetra.xml
+  solverMueLu.xml solverMueLu2D.xml solverMueLuEpetra.xml
+  solverMueLuOpenMP.xml solverMueLuCuda.xml
   solverMueLuMaxwellHO.xml solverMueLuMaxwellHOCuda.xml
-  solverMueLuRefMaxwellOpenMP.xml solverMueLuRefMaxwellCuda.xml
-  solverMueLuRefDarcy.xml
   solverAugmentationUseILU.xml
   solverML.xml
   SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
@@ -34,8 +33,8 @@ TRIBITS_COPY_FILES_TO_BINARY_DIR(CopyBlockPrecFiles
 TRIBITS_COPY_FILES_TO_BINARY_DIR(CopyBlockPrecPerfFiles
   SOURCE_FILES
   maxwell-large.xml
-  solverMueLuRefMaxwell.xml solverMueLuRefMaxwell2D.xml solverMueLuRefMaxwellEpetra.xml
-  solverMueLuRefMaxwellOpenMP.xml solverMueLuRefMaxwellCuda.xml
+  solverMueLu.xml solverMueLu2D.xml solverMueLuEpetra.xml
+  solverMueLuOpenMP.xml solverMueLuCuda.xml
   SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
   DEST_DIR ${CMAKE_CURRENT_BINARY_DIR}
   CATEGORIES PERFORMANCE
@@ -67,7 +66,7 @@ INSTALL(TARGETS "${PACKAGE_NAME}_BlockPrec"
 TRIBITS_ADD_TEST(
    BlockPrec
    NAME "MiniEM-BlockPrec_RefMaxwell"
-   ARGS "--solver=MueLu-RefMaxwell --numTimeSteps=1 --linAlgebra=Tpetra"
+   ARGS "--solver=MueLu --numTimeSteps=1 --linAlgebra=Tpetra"
    COMM serial mpi
    NUM_MPI_PROCS 1
    )
@@ -75,7 +74,7 @@ TRIBITS_ADD_TEST(
 TRIBITS_ADD_TEST(
    BlockPrec
    NAME "MiniEM-BlockPrec_RefMaxwell"
-   ARGS "--solver=MueLu-RefMaxwell --numTimeSteps=1 --linAlgebra=Tpetra"
+   ARGS "--solver=MueLu --numTimeSteps=1 --linAlgebra=Tpetra"
    COMM mpi
    NUM_MPI_PROCS 4
    )
@@ -83,7 +82,7 @@ TRIBITS_ADD_TEST(
  TRIBITS_ADD_TEST(
    BlockPrec
    NAME "MiniEM-BlockPrec_RefMaxwell_reuse"
-   ARGS "--solver=MueLu-RefMaxwell --numTimeSteps=3 --linAlgebra=Tpetra --resetSolver"
+   ARGS "--solver=MueLu --numTimeSteps=3 --linAlgebra=Tpetra --resetSolver"
    COMM serial mpi
    NUM_MPI_PROCS 1
    )
@@ -91,7 +90,7 @@ TRIBITS_ADD_TEST(
  TRIBITS_ADD_TEST(
    BlockPrec
    NAME "MiniEM-BlockPrec_RefMaxwell_reuse"
-   ARGS "--solver=MueLu-RefMaxwell --numTimeSteps=3 --linAlgebra=Tpetra --resetSolver"
+   ARGS "--solver=MueLu --numTimeSteps=3 --linAlgebra=Tpetra --resetSolver"
    COMM mpi
    NUM_MPI_PROCS 4
    )
@@ -100,7 +99,7 @@ TRIBITS_ADD_TEST(
 TRIBITS_ADD_TEST(
    BlockPrec
    NAME "MiniEM-BlockPrec_RefMaxwell_Performance_4"
-   ARGS "--stacked-timer --solver=MueLu-RefMaxwell --numTimeSteps=3 --linAlgebra=Tpetra --inputFile=maxwell-large.xml"
+   ARGS "--stacked-timer --solver=MueLu --numTimeSteps=3 --linAlgebra=Tpetra --inputFile=maxwell-large.xml"
    COMM mpi
    NUM_MPI_PROCS 4
    CATEGORIES PERFORMANCE
@@ -110,7 +109,7 @@ TRIBITS_ADD_TEST(
 TRIBITS_ADD_TEST(
    BlockPrec
    NAME "MiniEM-BlockPrec_RefMaxwell_Performance_16"
-   ARGS "--stacked-timer --solver=MueLu-RefMaxwell --numTimeSteps=3 --linAlgebra=Tpetra --inputFile=maxwell-large.xml"
+   ARGS "--stacked-timer --solver=MueLu --numTimeSteps=3 --linAlgebra=Tpetra --inputFile=maxwell-large.xml"
    COMM mpi
    NUM_MPI_PROCS 16
    CATEGORIES PERFORMANCE
@@ -120,7 +119,7 @@ TRIBITS_ADD_TEST(
  TRIBITS_ADD_TEST(
    BlockPrec
    NAME "MiniEM-BlockPrec_RefMaxwell_Performance_16_reuse"
-   ARGS "--stacked-timer --solver=MueLu-RefMaxwell --numTimeSteps=20 --linAlgebra=Tpetra --inputFile=maxwell-large.xml --resetSolver --test-name=\"MiniEM 3D RefMaxwell Reuse\""
+   ARGS "--stacked-timer --solver=MueLu --numTimeSteps=20 --linAlgebra=Tpetra --inputFile=maxwell-large.xml --resetSolver --test-name=\"MiniEM 3D RefMaxwell Reuse\""
    COMM mpi
    NUM_MPI_PROCS 16
    CATEGORIES PERFORMANCE
@@ -131,7 +130,7 @@ TRIBITS_ADD_TEST(
  TRIBITS_ADD_TEST(
    BlockPrec
    NAME "MiniEM-BlockPrec_RefMaxwell2D"
-   ARGS "--solver=MueLu-RefMaxwell --numTimeSteps=1 --linAlgebra=Tpetra --inputFile=maxwell2D.xml"
+   ARGS "--solver=MueLu --numTimeSteps=1 --linAlgebra=Tpetra --inputFile=maxwell2D.xml"
    COMM mpi
    NUM_MPI_PROCS 4
    )
@@ -142,7 +141,7 @@ IF(NOT Kokkos_ENABLE_CUDA AND NOT Kokkos_ENABLE_OPENMP AND MueLu_ENABLE_Epetra A
  TRIBITS_ADD_TEST(
    BlockPrec
    NAME "MiniEM-BlockPrec_RefMaxwell_Epetra"
-   ARGS "--solver=MueLu-RefMaxwell --numTimeSteps=1 --linAlgebra=Epetra"
+   ARGS "--solver=MueLu --numTimeSteps=1 --linAlgebra=Epetra"
    COMM serial mpi
    NUM_MPI_PROCS 1
    )
@@ -150,7 +149,7 @@ IF(NOT Kokkos_ENABLE_CUDA AND NOT Kokkos_ENABLE_OPENMP AND MueLu_ENABLE_Epetra A
  TRIBITS_ADD_TEST(
    BlockPrec
    NAME "MiniEM-BlockPrec_RefMaxwell_Epetra"
-   ARGS "--solver=MueLu-RefMaxwell --numTimeSteps=1 --linAlgebra=Epetra"
+   ARGS "--solver=MueLu --numTimeSteps=1 --linAlgebra=Epetra"
    COMM mpi
    NUM_MPI_PROCS 4
    )
@@ -158,7 +157,7 @@ IF(NOT Kokkos_ENABLE_CUDA AND NOT Kokkos_ENABLE_OPENMP AND MueLu_ENABLE_Epetra A
  TRIBITS_ADD_TEST(
    BlockPrec
    NAME "MiniEM-BlockPrec_RefMaxwell_Epetra_reuse"
-   ARGS "--solver=MueLu-RefMaxwell --numTimeSteps=3 --linAlgebra=Epetra --resetSolver"
+   ARGS "--solver=MueLu --numTimeSteps=3 --linAlgebra=Epetra --resetSolver"
    COMM serial mpi
    NUM_MPI_PROCS 1
    )
@@ -166,7 +165,7 @@ IF(NOT Kokkos_ENABLE_CUDA AND NOT Kokkos_ENABLE_OPENMP AND MueLu_ENABLE_Epetra A
  # TRIBITS_ADD_TEST(
  #   BlockPrec
  #   NAME "MiniEM-BlockPrec_RefMaxwell_Epetra_reuse"
- #   ARGS "--solver=MueLu-RefMaxwell --numTimeSteps=3 --linAlgebra=Epetra --resetSolver"
+ #   ARGS "--solver=MueLu --numTimeSteps=3 --linAlgebra=Epetra --resetSolver"
  #   COMM mpi
  #   NUM_MPI_PROCS 4
  #   )
@@ -235,6 +234,31 @@ TRIBITS_ADD_TEST(
 #################################################
 #################################################
 # DARCY
+
+
+#################################################
+# ML graddiv solver
+
+IF (NOT Kokkos_ENABLE_CUDA AND ${PACKAGE_NAME}_ENABLE_ML AND MueLu_ENABLE_Epetra)
+
+  TRIBITS_ADD_TEST(
+    BlockPrec
+    NAME "MiniEM-BlockPrec_Darcy_ML"
+    ARGS "--solver=ML --numTimeSteps=1 --linAlgebra=Epetra --inputFile=darcy.xml"
+    COMM serial mpi
+    NUM_MPI_PROCS 1
+    )
+
+  TRIBITS_ADD_TEST(
+    BlockPrec
+    NAME "MiniEM-BlockPrec_Darcy_ML"
+    ARGS "--solver=ML --numTimeSteps=1 --linAlgebra=Epetra --inputFile=darcy.xml"
+    COMM mpi
+    NUM_MPI_PROCS 4
+    )
+
+ENDIF()
+
 
 #################################################
 # CG
