@@ -20,6 +20,9 @@
 #include "EpetraExt_RowMatrixOut.h"
 #include "EpetraExt_MultiVectorOut.h"
 #include "EpetraExt_VectorOut.h"
+#include "EpetraExt_MatrixMatrix.h"
+#include "EpetraExt_RowMatrixOut.h"
+#include "EpetraExt_BlockMapOut.h"
 // ================================================ ====== ==== ==== == =
 inline void cross_product(const double *a,const double *b,double *c){
   c[0] = a[1]*b[2]-a[2]*b[1];
@@ -104,6 +107,7 @@ int ML_Epetra::FaceMatrixFreePreconditioner::ComputePreconditioner(const bool /*
   int SmootherSweeps = List_.get("smoother: sweeps", 0);
   MaxLevels = List_.get("max levels",10);
   print_hierarchy= List_.get("print hierarchy",false);
+  print_hierarchy = true;
   num_cycles  = List_.get("cycle applications",1);
 
   /* Sanity Checking*/
@@ -140,13 +144,26 @@ int ML_Epetra::FaceMatrixFreePreconditioner::ComputePreconditioner(const bool /*
     ML_CHK_ERR(BuildProlongator());
 
     /* DEBUG: Output matrices */
-    if(print_hierarchy) EpetraExt::RowMatrixToMatlabFile("prolongator.dat",*Prolongator_);
+    if(print_hierarchy) {
+      EpetraExt::RowMatrixToMatrixMarketFile("prolongatorFace.dat",*Prolongator_);
+      EpetraExt::BlockMapToMatrixMarketFile("rowmap_prolongatorFace.dat", Prolongator_->RowMap());
+      EpetraExt::BlockMapToMatrixMarketFile("colmap_prolongatorFace.dat", Prolongator_->ColMap());
+      EpetraExt::BlockMapToMatrixMarketFile("domainmap_prolongatorFace.dat", Prolongator_->DomainMap());
+      EpetraExt::BlockMapToMatrixMarketFile("rangemap_prolongatorFace.dat", Prolongator_->RangeMap());
+    }
 
     /* Form the coarse matrix */
     ML_CHK_ERR(FormCoarseMatrix());
 
     /* DEBUG: Output matrices */
-    if(print_hierarchy) EpetraExt::RowMatrixToMatlabFile("coarsemat.dat",*CoarseMatrix);
+    std::cout << "here:" << print_hierarchy << std::endl;
+    if(print_hierarchy) {
+      EpetraExt::RowMatrixToMatrixMarketFile("coarsematFace.dat",*CoarseMatrix);
+      EpetraExt::BlockMapToMatrixMarketFile("rowmap_coarsematFace.dat", CoarseMatrix->RowMap());
+      EpetraExt::BlockMapToMatrixMarketFile("colmap_coarsematFace.dat", CoarseMatrix->ColMap());
+      EpetraExt::BlockMapToMatrixMarketFile("domainmap_coarsematFace.dat", CoarseMatrix->DomainMap());
+      EpetraExt::BlockMapToMatrixMarketFile("rangemap_coarsematFace.dat", CoarseMatrix->RangeMap());
+    }
 
     /* Setup Preconditioner on Coarse Matrix */
     CoarsePC = new MultiLevelPreconditioner(*CoarseMatrix,ListCoarse);
@@ -269,6 +286,7 @@ int ML_Epetra::FaceMatrixFreePreconditioner::PBuildSparsity(ML_Operator *P, Epet
 
   /* Nuke the rows in Psparse */
   if(BCfaces_.size()>0) Apply_BCsToMatrixRows(BCfaces_.get(),BCfaces_.size(),*Psparse);
+  std::cout << "BCfaces.size " << BCfaces_.size() << std::endl;
 
   // Cleanup
   ML_Operator_Destroy(&AbsFN_ML);
@@ -282,6 +300,7 @@ int ML_Epetra::FaceMatrixFreePreconditioner::PBuildSparsity(ML_Operator *P, Epet
 int ML_Epetra::FaceMatrixFreePreconditioner::BuildProlongator()
 {
 
+  if(print_hierarchy) EpetraExt::RowMatrixToMatrixMarketFile("TMT_face.dat", *TMT_Matrix_);
   /* Wrap TMT_Matrix in a ML_Operator */
   ML_Operator* TMT_ML = ML_Operator_Create(ml_comm_);
   ML_Operator_WrapEpetraCrsMatrix(const_cast<Epetra_CrsMatrix*>(&*TMT_Matrix_),TMT_ML);
@@ -291,6 +310,7 @@ int ML_Epetra::FaceMatrixFreePreconditioner::BuildProlongator()
   ML_Operator *P=0;
   int NumAggregates;
   CoordPack coarse_grid_domain_map;
+  if(print_hierarchy) EpetraExt::RowMatrixToMatrixMarketFile("FaceNode2.dat", *FaceNode_Matrix_);
   int rv=ML_Epetra::RefMaxwell_Aggregate_Nodes(*TMT_Matrix_,List_,ml_comm_,std::string("FMFP (level 0) :"),MLAggr,P,NumAggregates,coarse_grid_domain_map);
   if(rv || !P) {if(!Comm_->MyPID()) printf("ERROR: Building nodal P\n");ML_CHK_ERR(-1);}
 
@@ -299,10 +319,17 @@ int ML_Epetra::FaceMatrixFreePreconditioner::BuildProlongator()
   PBuildSparsity(P,Psparse);
   if(!Psparse) {if(!Comm_->MyPID()) printf("ERROR: Building Psparse\n");ML_CHK_ERR(-2);}
 
+  Epetra_CrsMatrix * Pml;
+  Epetra_CrsMatrix_Wrap_ML_Operator(P,*Comm_, *NodeRangeMap_, &Pml,Copy,0);
+  if(print_hierarchy) EpetraExt::RowMatrixToMatrixMarketFile("pNodalFace.dat", *Pml);
+  if(print_hierarchy) EpetraExt::RowMatrixToMatrixMarketFile("pNodalFace2.dat", *Psparse);
+
   /* Build the "nullspace" */
   Epetra_MultiVector *nullspace;
   BuildNullspace(nullspace);
   if(!nullspace) {if(!Comm_->MyPID()) printf("ERROR: Building Nullspace\n");ML_CHK_ERR(-3);}
+
+  if(print_hierarchy) EpetraExt::MultiVectorToMatrixMarketFile("nullspaceFace.dat", *nullspace);
 
 
   /* Build the DomainMap of the new operator*/
@@ -322,6 +349,8 @@ int ML_Epetra::FaceMatrixFreePreconditioner::BuildProlongator()
     Psparse->ExtractMyRowView(i,ne1,vals1,idx1);
     nonzeros=0;
     for(int j=0;j<ne1;j++) nonzeros+=ABS(vals1[j])>0;
+
+    std::cout << "HERE face " << nonzeros << std::endl;
 
     for(int j=0;j<ne1;j++){
       for(int k=0;k<dim;k++) {

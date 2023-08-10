@@ -174,7 +174,7 @@ int ML_Epetra::GradDivPreconditioner::ComputePreconditioner(const bool /* CheckF
   BCfaces=FindLocalDiricheltRowsFromOnesAndZeros(*K2_Matrix_,numBCfaces);
   Epetra_IntVector* BCEdgeList=FindLocalDirichletColumnsFromRows(BCfaces,numBCfaces,*D1_Clean_Matrix_);
   ArrayRCP<int> BCfaces_(BCfaces,0,numBCfaces,true);
-  //  if(verbose_ && !Comm_->MyPID()) printf("GradDiv: %d dirichlet faces detected\n",numBCfaces);
+   if(verbose_ && !Comm_->MyPID()) printf("GradDiv: %d dirichlet faces detected\n",numBCfaces);
 
   /* Do the Nuking for D1_Matrix_ */
   D1_Matrix_ = rcp(new Epetra_CrsMatrix(*D1_Clean_Matrix_));
@@ -193,7 +193,7 @@ int ML_Epetra::GradDivPreconditioner::ComputePreconditioner(const bool /* CheckF
     if((*BCEdgeList)[i]==1) BCedges[edgeid++]=i;
   delete BCEdgeList;
   ArrayRCP<int> BCedges_(BCedges,0,numBCedges,true);
-  //  if(verbose_ && !Comm_->MyPID()) printf("GradDiv: %d dirichlet edges detected\n",numBCedges);
+   if(verbose_ && !Comm_->MyPID()) printf("GradDiv: %d dirichlet edges detected\n",numBCedges);
 
   /* Do the Nuking for the D0 Matrix */
   D0_Matrix_ = rcp(new Epetra_CrsMatrix(*D0_Clean_Matrix_));
@@ -376,22 +376,44 @@ int ML_Epetra::GradDivPreconditioner::ApplyInverse(const Epetra_MultiVector& B, 
   Epetra_MultiVector TempE2(*EdgeMap_,NumVectors,true);
   Epetra_MultiVector Resid(B.Map(),NumVectors);
 
+  double *normX=new double[NumVectors];
+  X.Norm2(normX);
+  double *normB=new double[NumVectors];
+  B.Norm2(normB);
+  std::cout << "before pre normX=" << *normX << " normB=" << *normB<< std::endl;
+
 #ifdef HAVE_ML_IFPACK
   /* Smooth if needed */
   if(IfSmoother) {ML_CHK_ERR(IfSmoother->ApplyInverse(B,X));}
 #endif
 
+  X.Norm2(normX);
+  std::cout << "after pre " << *normX << std::endl;
+
   /* Build Residual */
   ML_CHK_ERR(K2_Matrix_->Apply(X,TempF1));
   ML_CHK_ERR(Resid.Update(-1.0,TempF1,1.0,B,0.0));
 
+  Resid.Norm2(normX);
+  std::cout << "residual " << *normX << std::endl;
+
   /* Precondition face block (additive)*/
   ML_CHK_ERR(FacePC->ApplyInverse(Resid,TempF2));
 
+  TempF2.Norm2(normX);
+  std::cout << "Update face " << *normX << std::endl;
+
   /* Precondition (2,2) block (additive)*/
   D1_Matrix_->Multiply(true,Resid,TempE1);
+
+  TempE1.Norm2(normX);
+  std::cout << "RHS edge " << *normX << std::endl;
+
   ML_CHK_ERR(EdgePC->ApplyInverse(TempE1,TempE2));
   D1_Matrix_->Multiply(false,TempE2,TempF1);
+
+  TempF1.Norm2(normX);
+  std::cout << "Update edge " << *normX << std::endl;
 
   /* Update X */
   X.Update(1.0,TempF1,1.0,TempF2,1.0);

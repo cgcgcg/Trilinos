@@ -15,6 +15,9 @@
 #ifdef ML_MPI
 #include "Epetra_MpiComm.h"
 #endif
+#include "EpetraExt_MatrixMatrix.h"
+#include "EpetraExt_RowMatrixOut.h"
+#include "EpetraExt_BlockMapOut.h"
 
 #define ABS(x)((x)>0?(x):-(x))
 
@@ -165,14 +168,15 @@ int ML_Epetra::EdgeMatrixFreePreconditioner::ComputePreconditioner(const bool /*
     }
     
     /* DEBUG: Output matrices */
-    if(print_hierarchy)
-      EpetraExt::RowMatrixToMatlabFile("prolongator.dat",*Prolongator_);
+    if(print_hierarchy) {
+      EpetraExt::RowMatrixToMatrixMarketFile("prolongatorEdge.dat",*Prolongator_);
+    }
     
     /* Form the coarse matrix */
     ML_CHK_ERR(FormCoarseMatrix());
     
     /* DEBUG: Output matrices */
-    if(print_hierarchy) EpetraExt::RowMatrixToMatlabFile("coarsemat.dat",*CoarseMatrix);
+    if(print_hierarchy) EpetraExt::RowMatrixToMatlabFile("coarsematEdge.dat",*CoarseMatrix);
     
     /* Setup Preconditioner on Coarse Matrix */
     ListCoarse=List_.get("edge matrix free: coarse",dummy);
@@ -205,6 +209,9 @@ int ML_Epetra::EdgeMatrixFreePreconditioner::SetupSmoother()
 //! Build the edge-to-vector-node prolongator described in Bochev, Hu, Siefert and Tuminaro (2006).
 int ML_Epetra::EdgeMatrixFreePreconditioner::BuildProlongator(const Epetra_MultiVector & nullspace)
 {
+  print_hierarchy= List_.get("print hierarchy",false);
+  EpetraExt::RowMatrixToMatrixMarketFile("TMT_edge.dat", *TMT_Matrix_);
+
   /* Pull the (nodal) coordinates from Teuchos */
   double * xcoord=List_.get("x-coordinates",(double*)0);
   double * ycoord=List_.get("y-coordinates",(double*)0);
@@ -221,7 +228,6 @@ int ML_Epetra::EdgeMatrixFreePreconditioner::BuildProlongator(const Epetra_Multi
 					       MLAggr,P,NumAggregates,CoarseCoord_);
   if(rv!=0) ML_CHK_ERR(-2);
 
-  print_hierarchy= List_.get("print hierarchy",false);
   if (print_hierarchy) {
     /* Wrap P_n into Epetra-land */
     Epetra_CrsMatrix *P_epetra;
@@ -229,6 +235,15 @@ int ML_Epetra::EdgeMatrixFreePreconditioner::BuildProlongator(const Epetra_Multi
     EpetraExt::RowMatrixToMatlabFile("P.dat",*P_epetra);
     EpetraExt::RowMatrixToMatrixMarketFile("P2.dat",*P_epetra, "P", "P", true);
   }
+  Epetra_CrsMatrix *P_epetra;
+  Epetra_CrsMatrix_Wrap_ML_Operator(P,*Comm_,*NodeRangeMap_,&P_epetra,Copy,0);
+  EpetraExt::RowMatrixToMatrixMarketFile("pNodalEdge.dat", *P_epetra);
+  EpetraExt::BlockMapToMatrixMarketFile("rowmap_pNodalEdge.dat", P_epetra->RowMap());
+  EpetraExt::BlockMapToMatrixMarketFile("colmap_pNodalEdge.dat", P_epetra->ColMap());
+  EpetraExt::BlockMapToMatrixMarketFile("domainmap_pNodalEdge.dat", P_epetra->DomainMap());
+  EpetraExt::BlockMapToMatrixMarketFile("rangemap_pNodalEdge.dat", P_epetra->RangeMap());
+
+  EpetraExt::MultiVectorToMatrixMarketFile("nullspaceEdge.dat", nullspace);
 
 #if 0    
   /* Get aggregate information for nullspace */
@@ -291,6 +306,8 @@ int ML_Epetra::EdgeMatrixFreePreconditioner::BuildProlongator(const Epetra_Multi
     Psparse->ExtractMyRowView(i,ne1,vals1,idx1);
     nonzeros=0;
     for(int j=0;j<ne1;j++) nonzeros+=ABS(vals1[j])>0;
+
+    std::cout << "HERE edge " << nonzeros << std::endl;
 
     for(int j=0;j<ne1;j++){
       for(int k=0;k<dim;k++) {
@@ -451,8 +468,20 @@ void ML_Epetra::EdgeMatrixFreePreconditioner::Print(int /* whichHierarchy */)
 {
   /*ofstream ofs("Pmat.edge.m");
     if(Prolongator_) Prolongator_->Print(ofs);*/
-  if(Prolongator_) EpetraExt::RowMatrixToMatlabFile("prolongator.dat",*Prolongator_);
-  if(CoarseMatrix) EpetraExt::RowMatrixToMatlabFile("coarsemat.dat",*CoarseMatrix);
+  if(Prolongator_) {
+    EpetraExt::RowMatrixToMatrixMarketFile("prolongatorEdge.dat",*Prolongator_);
+    EpetraExt::BlockMapToMatrixMarketFile("rowmap_prolongatorEdge.dat", Prolongator_->RowMap());
+    EpetraExt::BlockMapToMatrixMarketFile("colmap_prolongatorEdge.dat", Prolongator_->ColMap());
+    EpetraExt::BlockMapToMatrixMarketFile("domainmap_prolongatorEdge.dat", Prolongator_->DomainMap());
+    EpetraExt::BlockMapToMatrixMarketFile("rangemap_prolongatorEdge.dat", Prolongator_->RangeMap());
+  }
+  if(CoarseMatrix) {
+    EpetraExt::RowMatrixToMatrixMarketFile("coarsematEdge.dat",*CoarseMatrix);
+    EpetraExt::BlockMapToMatrixMarketFile("rowmap_coarsematEdge.dat", CoarseMatrix->RowMap());
+    EpetraExt::BlockMapToMatrixMarketFile("colmap_coarsematEdge.dat", CoarseMatrix->ColMap());
+    EpetraExt::BlockMapToMatrixMarketFile("domainmap_coarsematEdge.dat", CoarseMatrix->DomainMap());
+    EpetraExt::BlockMapToMatrixMarketFile("rangemap_coarsematEdge.dat", CoarseMatrix->RangeMap());
+  }
 
 
   if(CoarsePC) CoarsePC->Print();
