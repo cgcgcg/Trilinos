@@ -105,7 +105,6 @@ namespace mini_em {
     using Teuchos::rcp;
 
     if ((solver == AUGMENTATION) ||
-        (solver == ML_REFMAXWELL) ||
         (solver == MUELU_REFMAXWELL) ||
         (solver == MUELU_MAXWELL_HO)) {
       TEUCHOS_ASSERT(physics == MAXWELL);
@@ -137,8 +136,8 @@ namespace mini_em {
             updateParams("solverGMRES.xml", lin_solver_pl, comm, out);
           else
             throw;
-        else if (solver == ML_REFMAXWELL) {
-          updateParams("solverMLRefMaxwell.xml", lin_solver_pl, comm, out);
+        else if (solver == ML) {
+          updateParams("solverML.xml", lin_solver_pl, comm, out);
         } else if (solver == MUELU_REFMAXWELL || solver == MUELU_MAXWELL_HO) {
           if (linAlgebra == linAlgTpetra) {
             updateParams("solverMueLuRefMaxwell.xml", lin_solver_pl, comm, out);
@@ -326,12 +325,12 @@ namespace mini_em {
           opPostfix = "";
         }
 
-        if (solver == MUELU_REFMAXWELL || solver == ML_REFMAXWELL || solver == MUELU_MAXWELL_HO)
+        if (solver == MUELU_REFMAXWELL || solver == ML || solver == MUELU_MAXWELL_HO)
           auxFieldOrder += " "+auxNodalField+" "+auxEdgeField;
         else
           auxFieldOrder += " "+auxEdgeField;
 
-        if (solver == MUELU_REFMAXWELL || solver == ML_REFMAXWELL || solver == MUELU_MAXWELL_HO) {
+        if (solver == MUELU_REFMAXWELL || solver == ML || solver == MUELU_MAXWELL_HO) {
           // discrete gradient
           auto gradPL = Teuchos::ParameterList();
           gradPL.set("Source", auxNodalField);
@@ -381,12 +380,12 @@ namespace mini_em {
           opPostfix = "";
         }
 
-        if (solver == MUELU_DARCY)
+        if ((solver == MUELU_DARCY) || (solver == ML))
           auxFieldOrder += " "+auxEdgeField + " "+auxFaceField;
         else
           auxFieldOrder += " "+auxFaceField;
 
-        if (solver == MUELU_DARCY) {
+        if ((solver == MUELU_DARCY) || (solver == ML)) {
           // discrete curl
           auto curlPL = Teuchos::ParameterList();
           curlPL.set("Source", auxEdgeField);
@@ -411,7 +410,8 @@ namespace mini_em {
     }
 
     // Set up additional mass matrices for RefMaxwell
-    if (solver == MUELU_REFMAXWELL || solver == ML_REFMAXWELL || solver == MUELU_MAXWELL_HO) {
+    if ((physics == MAXWELL) &&
+        ((solver == MUELU_REFMAXWELL) || (solver == ML) || (solver == MUELU_MAXWELL_HO))) {
       std::string auxNodalField, auxEdgeField, opPostfix;
       if (basis_order != 1) {
         auxNodalField = "AUXILIARY_NODE_" + std::to_string(1);
@@ -456,7 +456,8 @@ namespace mini_em {
       massNodePL.set("Integration Order", 2);
       auxPhysicsBlocksPL.sublist("Auxiliary Node Mass Physics"+opPostfix) = massNodePL;
 
-    } else if (solver == MUELU_DARCY) {
+    } else if (physics == DARCY &&
+               (solver == MUELU_DARCY || solver == ML)) {
 
       std::string auxEdgeField, auxFaceField, auxNodalField, opPostfix;
       if (basis_order != 1) {
@@ -548,6 +549,24 @@ namespace mini_em {
       gradPL.set("matrix-free", false);
       aux_ops_pl.sublist("Discrete Gradient"+opPostfix) = gradPL;
 
+
+      // Interpolate edges to faces
+      auto interpPL = Teuchos::ParameterList();
+      interpPL.set("Source", auxFaceField);
+      interpPL.set("Target", auxNodalField);
+      interpPL.set("Op", "value");
+      interpPL.set("matrix-free", false);
+      aux_ops_pl.sublist("Interpolation") = interpPL;
+
+
+      // Interpolate edges to faces
+      auto interpPL2 = Teuchos::ParameterList();
+      interpPL2.set("Source", auxNodalField);
+      interpPL2.set("Target", auxEdgeField);
+      interpPL2.set("Op", "value");
+      interpPL2.set("matrix-free", false);
+      aux_ops_pl.sublist("Interpolation2") = interpPL2;
+
     }
 
     // Set up interpolations between levels
@@ -577,7 +596,6 @@ namespace mini_em {
       ++it;
     }
 
-    std::cout << "Aux Field order " << auxFieldOrder << std::endl;
   }
 
 

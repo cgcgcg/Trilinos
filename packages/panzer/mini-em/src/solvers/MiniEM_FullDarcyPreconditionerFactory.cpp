@@ -17,8 +17,11 @@
 
 #include "Thyra_TpetraLinearOp.hpp"
 #include "Panzer_NodeType.hpp"
+#include "PanzerDiscFE_config.hpp"
 #ifdef PANZER_HAVE_EPETRA_STACK
 #include "Thyra_EpetraThyraWrappers.hpp"
+#include "ml_epetra_utils.h"
+#include "EpetraExt_MatrixMatrix.h"
 #endif
 #include "Panzer_LOCPair_GlobalEvaluationData.hpp"
 #include "Panzer_LinearObjContainer.hpp"
@@ -288,7 +291,124 @@ Teko::LinearOp FullDarcyPreconditionerFactory::buildPreconditionerOperator(Teko:
            invS_sigma = Teko::buildInverse(*invLib.getInverseFactory("S_sigma Solve"),S_sigma,S_sigma_prec_);
          }
        }
-     } else {
+     }
+#ifdef PANZER_HAVE_EPETRA_STACK
+     else if (S_sigma_prec_type_ == "ML") {
+       RCP<Teko::InverseFactory> S_sigma_prec_factory;
+       Teuchos::ParameterList S_sigma_prec_pl;
+       S_sigma_prec_factory = invLib.getInverseFactory("S_sigma Preconditioner");
+       S_sigma_prec_pl = *S_sigma_prec_factory->getParameterList();
+
+       double* x_coordinates = S_sigma_prec_pl.sublist("ML Settings").get<double*>("x-coordinates");
+       S_sigma_prec_pl.sublist("ML Settings").sublist("graddiv: 11list").set("x-coordinates",x_coordinates);
+       S_sigma_prec_pl.sublist("ML Settings").sublist("graddiv: 22list").set("x-coordinates",x_coordinates);
+       double* y_coordinates = S_sigma_prec_pl.sublist("ML Settings").get<double*>("y-coordinates");
+       S_sigma_prec_pl.sublist("ML Settings").sublist("graddiv: 11list").set("y-coordinates",y_coordinates);
+       S_sigma_prec_pl.sublist("ML Settings").sublist("graddiv: 22list").set("y-coordinates",y_coordinates);
+       double* z_coordinates = S_sigma_prec_pl.sublist("ML Settings").get<double*>("z-coordinates");
+       S_sigma_prec_pl.sublist("ML Settings").sublist("graddiv: 11list").set("z-coordinates",z_coordinates);
+       S_sigma_prec_pl.sublist("ML Settings").sublist("graddiv: 22list").set("z-coordinates",z_coordinates);
+
+       // add discrete curl and face mass matrix
+       Teko::LinearOp Curl = getRequestHandler()->request<Teko::LinearOp>(Teko::RequestMesg("Discrete Curl"));
+       Teko::LinearOp Grad = getRequestHandler()->request<Teko::LinearOp>(Teko::RequestMesg("Discrete Gradient"));
+
+       RCP<const Epetra_CrsMatrix> D1 = get_Epetra_CrsMatrix(*Curl);
+       RCP<const Epetra_CrsMatrix> D0 = get_Epetra_CrsMatrix(*Grad);
+
+       S_sigma_prec_pl.sublist("ML Settings").set("D1",D1);
+       S_sigma_prec_pl.sublist("ML Settings").set("D0",D0);
+
+       if (dump) {
+         writeOut("DiscreteGradient.mm",*Grad);
+         writeOut("DiscreteCurl.mm",*Curl);
+       }
+       describeMatrix("DiscreteGradient",*Grad,debug);
+       describeMatrix("DiscreteCurl",*Curl,debug);
+
+
+       // We might have zero entries in the matrices, so instead of
+       // setting all entries to one, we only modify the nonzero ones.
+       Epetra_CrsMatrix D0_one(*D0);
+       {
+         int *rowptr;
+         int *indices;
+         double *values;
+         D0_one.ExtractCrsDataPointers(rowptr, indices, values);
+         for (int jj = 0; jj<D0_one.NumMyNonzeros(); jj++ )
+           if (std::abs(values[jj])>1e-10)
+             values[jj] = 1.0;
+           else
+             values[jj] = 0.0;
+       }
+
+       Epetra_CrsMatrix D1_one(*D1);
+       {
+         int *rowptr;
+         int *indices;
+         double *values;
+         D1_one.ExtractCrsDataPointers(rowptr, indices, values);
+         for (int jj = 0; jj<D1_one.NumMyNonzeros(); jj++ )
+           if (std::abs(values[jj])>1e-10)
+             values[jj] = 1.0;
+           else
+             values[jj] = 0.0;
+       }
+
+       RCP<Epetra_CrsMatrix> FaceNode = Teuchos::rcp(new Epetra_CrsMatrix(Copy,D1->RowMap(),0));
+       EpetraExt::MatrixMatrix::Multiply(D1_one,false,D0_one,false, *FaceNode);
+       {
+         int *rowptr;
+         int *indices;
+         double *values;
+         FaceNode->ExtractCrsDataPointers(rowptr, indices, values);
+         for (int jj = 0; jj<FaceNode->NumMyNonzeros(); jj++ )
+           if (std::abs(values[jj])>1e-10)
+             values[jj] = 1.0;
+           else
+             values[jj] = 0.0;
+       }
+       std::cout << "FaceNode.nnz " << FaceNode->NumGlobalNonzeros() << std::endl;
+       RCP<const Epetra_CrsMatrix> FaceNodeConst = FaceNode;
+       S_sigma_prec_pl.sublist("ML Settings").set("FaceNode",FaceNodeConst);
+
+       if (dump)
+         EpetraExt::RowMatrixToMatrixMarketFile("FaceNode.dat", *FaceNodeConst);
+
+       Teko::LinearOp Mk_1_invBeta = getRequestHandler()->request<Teko::LinearOp>(Teko::RequestMesg("Mass Matrix kappa weighted AUXILIARY_EDGE"));
+       RCP<const Epetra_CrsMatrix> M1 = get_Epetra_CrsMatrix(*Mk_1_invBeta);
+       Epetra_CrsMatrix * TMT_Agg_Matrix;
+       ML_Epetra::ML_Epetra_PtAP(*M1, *D0, TMT_Agg_Matrix,false);
+       RCP<const Epetra_CrsMatrix> TMT_Agg_MatrixConst = Teuchos::rcp(TMT_Agg_Matrix);
+       S_sigma_prec_pl.sublist("ML Settings").set("K0",TMT_Agg_MatrixConst);
+
+       if (dump)
+         EpetraExt::RowMatrixToMatrixMarketFile("TMT.dat", *TMT_Agg_MatrixConst);
+
+       {
+         Teko::InverseLibrary myInvLib = invLib;
+         S_sigma_prec_pl.set("Type",S_sigma_prec_type_);
+         myInvLib.addInverse("S_sigma Preconditioner",S_sigma_prec_pl);
+         S_sigma_prec_factory = myInvLib.getInverseFactory("S_sigma Preconditioner");
+       }
+
+       // Are we building a solver or a preconditioner?
+       {
+         Teuchos::TimeMonitor tm(*Teuchos::TimeMonitor::getNewTimer("MaxwellPreconditioner: Build S_sigma preconditioner"));
+
+         if (useAsPreconditioner)
+           invS_sigma = Teko::buildInverse(*S_sigma_prec_factory,S_sigma);
+         else {
+           if (S_sigma_prec_.is_null())
+             S_sigma_prec_ = Teko::buildInverse(*S_sigma_prec_factory,S_sigma);
+           else
+             Teko::rebuildInverse(*S_sigma_prec_factory,S_sigma, S_sigma_prec_);
+           invS_sigma = Teko::buildInverse(*invLib.getInverseFactory("S_sigma Solve"),S_sigma,S_sigma_prec_);
+         }
+       }
+     }
+#endif
+     else {
        if (useAsPreconditioner)
          invS_sigma = Teko::buildInverse(*invLib.getInverseFactory("S_sigma Preconditioner"),S_sigma);
        else {
@@ -455,14 +575,27 @@ void FullDarcyPreconditionerFactory::initializeFromParameterList(const Teuchos::
      S_sigma_prec_pl.sublist("Preconditioner Types").sublist(S_sigma_prec_type_).set("Mk_1_one",Mk_1_one);
 
      if (dump) {
-       writeOut("DiscreteGreadient.mm",*Grad);
+       writeOut("DiscreteGradient.mm",*Grad);
        writeOut("DiscreteCurl.mm",*Curl);
      }
-     describeMatrix("DiscreteGreadient",*Grad,debug);
+     describeMatrix("DiscreteGradient",*Grad,debug);
      describeMatrix("DiscreteCurl",*Curl,debug);
 
      invLib.addInverse("S_sigma Preconditioner",S_sigma_prec_pl);
-   } else {
+   }
+#ifdef PANZER_HAVE_EPETRA_STACK
+   else if (S_sigma_prec_type_ == "ML") {
+     // S_sigma solve
+     Teuchos::ParameterList ml_pl = pl.sublist("S_sigma Solve");
+     invLib.addInverse("S_sigma Solve",ml_pl);
+
+     // S_sigma preconditioner
+     Teuchos::ParameterList S_sigma_prec_pl = pl.sublist("S_sigma Preconditioner");
+
+     invLib.addInverse("S_sigma Preconditioner",S_sigma_prec_pl);
+   }
+#endif
+   else {
      // S_sigma solve
      if (pl.isParameter("S_sigma Solve")) {
        Teuchos::ParameterList cg_pl = pl.sublist("S_sigma Solve");

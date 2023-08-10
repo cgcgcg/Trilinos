@@ -81,7 +81,7 @@ void writeToExodus(double time_stamp,
 using namespace mini_em;
 
 using mini_em::physicsType, mini_em::MAXWELL, mini_em::DARCY;
-using mini_em::solverType, mini_em::AUGMENTATION, mini_em::MUELU_REFMAXWELL, mini_em::MUELU_MAXWELL_HO, mini_em::ML_REFMAXWELL, mini_em::CG, mini_em::GMRES, mini_em::MUELU_DARCY;
+using mini_em::solverType, mini_em::AUGMENTATION, mini_em::MUELU_REFMAXWELL, mini_em::MUELU_MAXWELL_HO, mini_em::ML, mini_em::CG, mini_em::GMRES, mini_em::MUELU_DARCY;
 using mini_em::linearAlgebraType, mini_em::linAlgTpetra, mini_em::linAlgEpetra;
 
 
@@ -115,8 +115,8 @@ int main_(Teuchos::CommandLineProcessor &clp, int argc,char * argv[])
     bool matrix_output = false;
     std::string input_file = "maxwell.xml";
     std::string xml = "";
-    solverType solverValues[7] = {AUGMENTATION, MUELU_REFMAXWELL, MUELU_MAXWELL_HO, ML_REFMAXWELL, CG, GMRES, MUELU_DARCY};
-    const char * solverNames[7] = {"Augmentation", "MueLu-RefMaxwell", "MueLu-Maxwell-HO", "ML-RefMaxwell", "CG", "GMRES", "MueLu-Darcy"};
+    solverType solverValues[7] = {AUGMENTATION, MUELU_REFMAXWELL, MUELU_MAXWELL_HO, ML, CG, GMRES, MUELU_DARCY};
+    const char * solverNames[7] = {"Augmentation", "MueLu-RefMaxwell", "MueLu-Maxwell-HO", "ML", "CG", "GMRES", "MueLu-Darcy"};
     solverType solver = MUELU_REFMAXWELL;
     int numTimeSteps = 1;
     double finalTime = -1.;
@@ -448,7 +448,7 @@ int main_(Teuchos::CommandLineProcessor &clp, int argc,char * argv[])
       }
 
       // add request handlers for all interpolation type operators
-      // (discrete grad & curl, interpolations between spaces of different orders)
+      // (discrete grad, curl, div and interpolations between spaces of different orders)
       std::vector<std::pair<Teuchos::ParameterList,
                             Teuchos::RCP<panzer::LinearObjFactory<panzer::Traits> > > > opLists = {{ops_pl, linObjFactory},
                                                                                                    {aux_ops_pl, auxLinObjFactory}};
@@ -715,8 +715,8 @@ int main(int argc,char * argv[]){
   const char * linAlgebraNames[2] = {"Tpetra", "Epetra"};
   linearAlgebraType linAlgebra = linAlgTpetra;
   clp.setOption<linearAlgebraType>("linAlgebra",&linAlgebra,2,linAlgebraValues,linAlgebraNames);
-  solverType solverValues[7] = {AUGMENTATION, MUELU_REFMAXWELL, MUELU_MAXWELL_HO, ML_REFMAXWELL, CG, GMRES, MUELU_DARCY};
-  const char * solverNames[7] = {"Augmentation", "MueLu-RefMaxwell", "MueLu-Maxwell-HO", "ML-RefMaxwell", "CG", "GMRES", "MueLu-Darcy"};
+  solverType solverValues[7] = {AUGMENTATION, MUELU_REFMAXWELL, MUELU_MAXWELL_HO, ML, CG, GMRES, MUELU_DARCY};
+  const char * solverNames[7] = {"Augmentation", "MueLu-RefMaxwell", "MueLu-Maxwell-HO", "ML", "CG", "GMRES", "MueLu-Darcy"};
   solverType solver = MUELU_REFMAXWELL;
   clp.setOption<solverType>("solver",&solver,7,solverValues,solverNames,"Solver that is used");
   // bool useComplex = false;
@@ -729,7 +729,7 @@ int main(int argc,char * argv[]){
     case Teuchos::CommandLineProcessor::PARSE_HELP_PRINTED:         break;
   }
 
-  if (solver == ML_REFMAXWELL) {
+  if (solver == ML) {
     TEUCHOS_ASSERT(linAlgebra == linAlgEpetra);
     // TEUCHOS_ASSERT(!useComplex);
   }

@@ -36,10 +36,10 @@ namespace mini_em {
     AUGMENTATION,
     MUELU_REFMAXWELL,
     MUELU_MAXWELL_HO,
-    ML_REFMAXWELL,
+    ML,
     CG,
     GMRES,
-    MUELU_DARCY,
+    MUELU_DARCY
   };
 
   void getMesh(Teuchos::ParameterList &mesh_pl,

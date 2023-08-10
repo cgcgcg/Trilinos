@@ -26,7 +26,7 @@ TRIBITS_COPY_FILES_TO_BINARY_DIR(CopyBlockPrecFiles
   solverMueLuRefMaxwellOpenMP.xml solverMueLuRefMaxwellCuda.xml
   solverMueLuRefDarcy.xml
   solverAugmentationUseILU.xml
-  solverMLRefMaxwell.xml
+  solverML.xml
   SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
   DEST_DIR ${CMAKE_CURRENT_BINARY_DIR}
   )
@@ -200,7 +200,7 @@ IF (NOT Kokkos_ENABLE_CUDA AND ${PACKAGE_NAME}_ENABLE_ML AND MueLu_ENABLE_Epetra
   TRIBITS_ADD_TEST(
     BlockPrec
     NAME "MiniEM-BlockPrec_ML-RefMaxwell"
-    ARGS "--solver=ML-RefMaxwell --numTimeSteps=1 --linAlgebra=Epetra"
+    ARGS "--solver=ML --numTimeSteps=1 --linAlgebra=Epetra"
     COMM serial mpi
     NUM_MPI_PROCS 1
     )
@@ -208,7 +208,7 @@ IF (NOT Kokkos_ENABLE_CUDA AND ${PACKAGE_NAME}_ENABLE_ML AND MueLu_ENABLE_Epetra
   TRIBITS_ADD_TEST(
     BlockPrec
     NAME "MiniEM-BlockPrec_ML-RefMaxwell"
-    ARGS "--solver=ML-RefMaxwell --numTimeSteps=1 --linAlgebra=Epetra"
+    ARGS "--solver=ML --numTimeSteps=1 --linAlgebra=Epetra"
     COMM mpi
     NUM_MPI_PROCS 4
     )
