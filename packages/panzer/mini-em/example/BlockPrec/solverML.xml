@@ -218,9 +218,9 @@
 
           <ParameterList name="Q_u Solve">
             <Parameter name="Type" type="string" value="Belos"/>
-            <Parameter name="Solver Type" type="string" value="Block CG"/>
+            <Parameter name="Solver Type" type="string" value="Pseudo Block CG"/>
             <ParameterList name="Solver Types">
-              <ParameterList name="Block CG">
+              <ParameterList name="Pseudo Block CG">
                 <Parameter name="Convergence Tolerance" type="double" value="1.0e-9"/>
                 <Parameter name="Use Single Reduction" type="bool" value="true"/>
                 <Parameter name="Orthogonalization" type="string" value="ICGS"/>
@@ -228,7 +228,7 @@
                 <Parameter name="Timer Label" type="string" value="CG Q_u"/>
                 <Parameter name="Output Frequency" type="int" value="10"/>
                 <Parameter name="Output Style" type="int" value="1"/>
-                <Parameter name="Verbosity" type="int" value="1"/>
+                <Parameter name="Verbosity" type="int" value="33"/>
                 <Parameter name="Implicit Residual Scaling" type="string" value="None"/>
               </ParameterList>
             </ParameterList>
