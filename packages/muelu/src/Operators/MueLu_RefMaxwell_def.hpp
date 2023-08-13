@@ -523,12 +523,20 @@ namespace MueLu {
 
       // Build A22 = Dk_1^T * SM * Dk_1 and rebalance it, as well as Dk_1_ and P22_ and Coords22_
       build22Matrix(reuse, doRebalancing, rebalanceStriding, numProcsA22);
+      std::cout << "HERE1 " << P22_.is_null() << std::endl;
 
       if (!P22_.is_null()) {
+        std::cout << "HERE2\n";
+        Teuchos::RCP<Teuchos::FancyOStream> out = Teuchos::rcp(new Teuchos::FancyOStream(Teuchos::rcpFromRef(std::cout)));
+        dump(*A22_, "A.m");
+        dump(*P22_, "B.m");
+        A22_->describe(*out);
+        P22_->describe(*out);
         std::string label("P22^T*A22*P22");
         coarseA22_ = Maxwell_Utils<SC,LO,GO,NO>::PtAPWrapper(A22_,P22_,parameterList_,label);
         coarseA22_->SetFixedBlockSize(A22_->GetFixedBlockSize());
         coarseA22_->setObjectLabel(solverName_+" coarse (2, 2)");
+        std::cout << "HERE3\n";
         dump(*coarseA22_, "coarseA22.m");
       }
 
@@ -1102,8 +1110,10 @@ namespace MueLu {
         A22_ = coarseLevel.Get< RCP<Matrix> >("A", newA.get());
         Coords22_ = coarseLevel.Get< RCP<RealValuedMultiVector> >("Coordinates", newP.get());
 
-        if (!P22_.is_null()) {
-          // Todo
+        if (!P22_.is_null() && !Importer22_.is_null()) {
+          ParameterList XpetraList;
+          XpetraList.set("Restrict Communicator",true);
+          P22_ = MatrixFactory::Build(P22_, *Importer22_, Teuchos::null, Importer22_->getTargetMap(), rcp(&XpetraList,false));
         }
 
       } else
