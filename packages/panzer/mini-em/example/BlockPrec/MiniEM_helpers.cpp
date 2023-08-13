@@ -528,6 +528,18 @@ namespace mini_em {
       massEdgeWeightedPL3.set("Operator Label", "kappa weighted ");
       auxPhysicsBlocksPL.sublist("Auxiliary Edge Mass Physics kappa weighted"+opPostfix) = massEdgeWeightedPL3;
 
+      // Edge mass matrix with dt weight
+      auto massEdgeWeightedPL4 = Teuchos::ParameterList();
+      massEdgeWeightedPL4.set("Type", "Auxiliary Mass Matrix");
+      massEdgeWeightedPL4.set("DOF Name", auxEdgeField);
+      massEdgeWeightedPL4.set("Basis Type", "HCurl");
+      massEdgeWeightedPL4.set("Model ID", auxModelID);
+      massEdgeWeightedPL4.set("Field Multipliers", "dt");
+      massEdgeWeightedPL4.set("Basis Order", 1);
+      massEdgeWeightedPL4.set("Integration Order", 2);
+      massEdgeWeightedPL4.set("Operator Label", "dt weighted ");
+      auxPhysicsBlocksPL.sublist("Auxiliary Edge Mass Physics dt weighted"+opPostfix) = massEdgeWeightedPL4;
+
       // Nodal mass matrix with dt weight
       auto massNodalPL = Teuchos::ParameterList();
       massNodalPL.set("Type", "Auxiliary Mass Matrix");
@@ -539,6 +551,18 @@ namespace mini_em {
       massNodalPL.set("Integration Order", 2);
       massNodalPL.set("Operator Label", "dt weighted ");
       auxPhysicsBlocksPL.sublist("Auxiliary Nodal Mass Physics dt weighted"+opPostfix) = massNodalPL;
+
+      // Nodal mass matrix with dt weight
+      auto massNodalPL2 = Teuchos::ParameterList();
+      massNodalPL2.set("Type", "Auxiliary Mass Matrix");
+      massNodalPL2.set("DOF Name", auxNodalField);
+      massNodalPL2.set("Basis Type", "HGrad");
+      massNodalPL2.set("Model ID", auxModelID);
+      massNodalPL2.set("Field Multipliers", "1/dt");
+      massNodalPL2.set("Basis Order", 1);
+      massNodalPL2.set("Integration Order", 2);
+      massNodalPL2.set("Operator Label", "1/dt weighted ");
+      auxPhysicsBlocksPL.sublist("Auxiliary Nodal Mass Physics 1/dt weighted"+opPostfix) = massNodalPL2;
 
       // discrete gradient
       auto gradPL = Teuchos::ParameterList();

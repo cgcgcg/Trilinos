@@ -224,8 +224,10 @@ Teko::LinearOp FullDarcyPreconditionerFactory::buildPreconditionerOperator(Teko:
            RCP<Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node> > Coordinates = S_sigma_prec_pl.get<RCP<Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node> > >("Coordinates");
            S_sigma_prec_pl.sublist("Preconditioner Types").sublist(S_sigma_prec_type_).set("Coordinates",Coordinates);
          }
-         else
-           TEUCHOS_ASSERT(false);
+         else {
+           RCP<Epetra_MultiVector> Coordinates = S_sigma_prec_pl.get<RCP<Epetra_MultiVector> >("Coordinates");
+           S_sigma_prec_pl.sublist("Preconditioner Types").sublist(S_sigma_prec_type_).set("Coordinates",Coordinates);
+         }
        }
 
        // edge mass matrix
@@ -236,7 +238,7 @@ Teko::LinearOp FullDarcyPreconditionerFactory::buildPreconditionerOperator(Teko:
 
        RCP<const Thyra::DiagonalLinearOpBase<Scalar> > invMk_1_invBeta;
        {
-         Teuchos::TimeMonitor tm(*Teuchos::TimeMonitor::getNewTimer("MaxwellPreconditioner: Lumped diagonal Mk_1_invBeta"));
+         Teuchos::TimeMonitor tm(*Teuchos::TimeMonitor::getNewTimer("DarcyPreconditioner: Lumped diagonal Mk_1_invBeta"));
 
          // Get inverse of lumped Mk_1_invBeta
          RCP<Thyra::VectorBase<Scalar> > ones = Thyra::createMember(Mk_1_invBeta->domain());
@@ -249,14 +251,14 @@ Teko::LinearOp FullDarcyPreconditionerFactory::buildPreconditionerOperator(Teko:
        }
 
        // nodal mass matrix
-       Teko::LinearOp Mk_2_invAlpha = getRequestHandler()->request<Teko::LinearOp>(Teko::RequestMesg("Mass Matrix dt weighted AUXILIARY_NODE"));
+       Teko::LinearOp Mk_2_invAlpha = getRequestHandler()->request<Teko::LinearOp>(Teko::RequestMesg("Mass Matrix 1/dt weighted AUXILIARY_NODE"));
        describeMatrix("Mk_2_invAlpha",*Mk_2_invAlpha,debug);
        if (dump)
          writeOut("Mk_2_invAlpha.mm",*Mk_2_invAlpha);
 
        RCP<const Thyra::DiagonalLinearOpBase<Scalar> > invMk_2_invAlpha;
        {
-         Teuchos::TimeMonitor tm(*Teuchos::TimeMonitor::getNewTimer("MaxwellPreconditioner: Lumped diagonal Mk_2_invAlpha"));
+         Teuchos::TimeMonitor tm(*Teuchos::TimeMonitor::getNewTimer("DarcyPreconditioner: Lumped diagonal Mk_2_invAlpha"));
 
          // Get inverse of lumped Mk_2_invAlpha
          RCP<Thyra::VectorBase<Scalar> > ones = Thyra::createMember(Mk_2_invAlpha->domain());
@@ -279,7 +281,7 @@ Teko::LinearOp FullDarcyPreconditionerFactory::buildPreconditionerOperator(Teko:
 
        // Are we building a solver or a preconditioner?
        {
-         Teuchos::TimeMonitor tm(*Teuchos::TimeMonitor::getNewTimer("MaxwellPreconditioner: Build S_sigma preconditioner"));
+         Teuchos::TimeMonitor tm(*Teuchos::TimeMonitor::getNewTimer("DarcyPreconditioner: Build S_sigma preconditioner"));
 
          if (useAsPreconditioner)
            invS_sigma = Teko::buildInverse(*S_sigma_prec_factory,S_sigma);
@@ -372,8 +374,23 @@ Teko::LinearOp FullDarcyPreconditionerFactory::buildPreconditionerOperator(Teko:
        RCP<const Epetra_CrsMatrix> FaceNodeConst = FaceNode;
        S_sigma_prec_pl.sublist("ML Settings").set("FaceNode",FaceNodeConst);
 
-       if (dump)
+       if (dump) {
+         EpetraExt::RowMatrixToMatrixMarketFile("EdgeNode.dat", D0_one);
+         EpetraExt::BlockMapToMatrixMarketFile("rowmap_EdgeNode.dat", D0_one.RowMap());
+         EpetraExt::BlockMapToMatrixMarketFile("colmap_EdgeNode.dat", D0_one.ColMap());
+         EpetraExt::BlockMapToMatrixMarketFile("domainmap_EdgeNode.dat", D0_one.DomainMap());
+         EpetraExt::BlockMapToMatrixMarketFile("rangemap_EdgeNode.dat", D0_one.RangeMap());
+         EpetraExt::RowMatrixToMatrixMarketFile("FaceEdge.dat", D1_one);
+         EpetraExt::BlockMapToMatrixMarketFile("rowmap_FaceEdge.dat", D1_one.RowMap());
+         EpetraExt::BlockMapToMatrixMarketFile("colmap_FaceEdge.dat", D1_one.ColMap());
+         EpetraExt::BlockMapToMatrixMarketFile("domainmap_FaceEdge.dat", D1_one.DomainMap());
+         EpetraExt::BlockMapToMatrixMarketFile("rangemap_FaceEdge.dat", D1_one.RangeMap());
          EpetraExt::RowMatrixToMatrixMarketFile("FaceNode.dat", *FaceNodeConst);
+         EpetraExt::BlockMapToMatrixMarketFile("rowmap_FaceNode.dat", FaceNodeConst->RowMap());
+         EpetraExt::BlockMapToMatrixMarketFile("colmap_FaceNode.dat", FaceNodeConst->ColMap());
+         EpetraExt::BlockMapToMatrixMarketFile("domainmap_FaceNode.dat", FaceNodeConst->DomainMap());
+         EpetraExt::BlockMapToMatrixMarketFile("rangemap_FaceNode.dat", FaceNodeConst->RangeMap());
+       }
 
        Teko::LinearOp Mk_1_invBeta = getRequestHandler()->request<Teko::LinearOp>(Teko::RequestMesg("Mass Matrix kappa weighted AUXILIARY_EDGE"));
        RCP<const Epetra_CrsMatrix> M1 = get_Epetra_CrsMatrix(*Mk_1_invBeta);
@@ -382,8 +399,13 @@ Teko::LinearOp FullDarcyPreconditionerFactory::buildPreconditionerOperator(Teko:
        RCP<const Epetra_CrsMatrix> TMT_Agg_MatrixConst = Teuchos::rcp(TMT_Agg_Matrix);
        S_sigma_prec_pl.sublist("ML Settings").set("K0",TMT_Agg_MatrixConst);
 
-       if (dump)
+       if (dump) {
          EpetraExt::RowMatrixToMatrixMarketFile("TMT.dat", *TMT_Agg_MatrixConst);
+         EpetraExt::BlockMapToMatrixMarketFile("rowmap_TMT.dat", TMT_Agg_MatrixConst->RowMap());
+         EpetraExt::BlockMapToMatrixMarketFile("colmap_TMT.dat", TMT_Agg_MatrixConst->ColMap());
+         EpetraExt::BlockMapToMatrixMarketFile("domainmap_TMT.dat", TMT_Agg_MatrixConst->DomainMap());
+         EpetraExt::BlockMapToMatrixMarketFile("rangemap_TMT.dat", TMT_Agg_MatrixConst->RangeMap());
+       }
 
        {
          Teko::InverseLibrary myInvLib = invLib;
@@ -394,7 +416,7 @@ Teko::LinearOp FullDarcyPreconditionerFactory::buildPreconditionerOperator(Teko:
 
        // Are we building a solver or a preconditioner?
        {
-         Teuchos::TimeMonitor tm(*Teuchos::TimeMonitor::getNewTimer("MaxwellPreconditioner: Build S_sigma preconditioner"));
+         Teuchos::TimeMonitor tm(*Teuchos::TimeMonitor::getNewTimer("DarcyPreconditioner: Build S_sigma preconditioner"));
 
          if (useAsPreconditioner)
            invS_sigma = Teko::buildInverse(*S_sigma_prec_factory,S_sigma);
@@ -427,7 +449,7 @@ Teko::LinearOp FullDarcyPreconditionerFactory::buildPreconditionerOperator(Teko:
    /////////////////////////////////////////////////
 
    if (!use_discrete_div_) {
-     Teuchos::TimeMonitor tm(*Teuchos::TimeMonitor::getNewTimer("MaxwellPreconditioner: Block preconditioner"));
+     Teuchos::TimeMonitor tm(*Teuchos::TimeMonitor::getNewTimer("DarcyPreconditioner: Block preconditioner"));
 
      // Inverse blocks
      std::vector<Teko::LinearOp> diag(2);
@@ -458,7 +480,7 @@ Teko::LinearOp FullDarcyPreconditionerFactory::buildPreconditionerOperator(Teko:
      } else
        return invU;
    } else {
-     Teuchos::TimeMonitor tm(*Teuchos::TimeMonitor::getNewTimer("MaxwellPreconditioner: Block preconditioner"));
+     Teuchos::TimeMonitor tm(*Teuchos::TimeMonitor::getNewTimer("DarcyPreconditioner: Block preconditioner"));
 
      Teko::LinearOp id_u = Teko::identity(Teko::rangeSpace(Q_u));
 
@@ -557,8 +579,8 @@ void FullDarcyPreconditionerFactory::initializeFromParameterList(const Teuchos::
      Teuchos::ParameterList S_sigma_prec_pl = pl.sublist("S_sigma Preconditioner");
 
      // add discrete curl and face mass matrix
-     Teko::LinearOp M1_beta = getRequestHandler()->request<Teko::LinearOp>(Teko::RequestMesg("Mass Matrix 1/kappa weighted AUXILIARY_EDGE"));
-     Teko::LinearOp M1_alpha = getRequestHandler()->request<Teko::LinearOp>(Teko::RequestMesg("Mass Matrix 1/dt weighted AUXILIARY_EDGE"));
+     Teko::LinearOp M1_beta = getRequestHandler()->request<Teko::LinearOp>(Teko::RequestMesg("Mass Matrix kappa weighted AUXILIARY_EDGE"));
+     Teko::LinearOp M1_alpha = getRequestHandler()->request<Teko::LinearOp>(Teko::RequestMesg("Mass Matrix kappa weighted AUXILIARY_EDGE"));
      Teko::LinearOp Mk_one = getRequestHandler()->request<Teko::LinearOp>(Teko::RequestMesg("Mass Matrix AUXILIARY_FACE"));
      Teko::LinearOp Mk_1_one = getRequestHandler()->request<Teko::LinearOp>(Teko::RequestMesg("Mass Matrix AUXILIARY_EDGE"));
      Teko::LinearOp Curl = getRequestHandler()->request<Teko::LinearOp>(Teko::RequestMesg("Discrete Curl"));
