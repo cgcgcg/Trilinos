@@ -2118,6 +2118,8 @@ namespace MueLu {
       Utilities::Residual(*SM_Matrix_, X, RHS, *residual_);
     }
 
+    std::cout << "residual " << residual_->getVector(0)->norm2() << std::endl;
+
     { // restrict residual to sub-hierarchies
 
       if (implicitTranspose_) {
@@ -2221,10 +2223,13 @@ namespace MueLu {
         Dk_1_->apply(*Dx_,X,Teuchos::NO_TRANS,one,one);
       }
     } else {
+      Dk_1_->apply(*Dx_,*residual_,Teuchos::NO_TRANS);
+      std::cout << "Update edge " << residual_->getVector(0)->norm2() << std::endl;
       { // prolongate (1,1) block
         RCP<Teuchos::TimeMonitor> tmP11 = getTimer("prolongation coarse (1,1) (unfused)");
         P11_->apply(*P11x_,*residual_,Teuchos::NO_TRANS);
       }
+      std::cout << "Update face " << residual_->getVector(0)->norm2() << std::endl;
 
       if (!onlyBoundary22_) { // prolongate (2,2) block
         RCP<Teuchos::TimeMonitor> tmD = getTimer("prolongation (2,2) (unfused)");
@@ -2323,20 +2328,26 @@ namespace MueLu {
     if (!onlyBoundary11_ && X.getNumVectors() != P11res_->getNumVectors())
       allocateMemory(X.getNumVectors());
 
+    std::cout << "before pre normX=" << X.getVector(0)->norm2() << " normB=" << RHS.getVector(0)->norm2()<< std::endl;
     { // apply pre-smoothing
 
       RCP<Teuchos::TimeMonitor> tmSm = getTimer("smoothing");
 
       PreSmoother11_->Apply(X, RHS, use_as_preconditioner_);
     }
+    std::cout << "after pre " << X.getVector(0)->norm2() << std::endl;
 
     // do solve for the 2x2 block system
     if(mode_=="additive")
       applyInverseAdditive(RHS,X);
     else if(mode_=="121") {
+      // std::cout << "0 "<< Utilities::ResidualNorm(*SM_Matrix_, X, RHS, *residual_) << std::endl;
       solveH(RHS,X);
+      // std::cout << "1 "<< Utilities::ResidualNorm(*SM_Matrix_, X, RHS, *residual_) << std::endl;
       solve22(RHS,X);
+      // std::cout << "2 "<< Utilities::ResidualNorm(*SM_Matrix_, X, RHS, *residual_) << std::endl;
       solveH(RHS,X);
+      // std::cout << "3 "<< Utilities::ResidualNorm(*SM_Matrix_, X, RHS, *residual_) << std::endl;
     } else if(mode_=="212") {
       solve22(RHS,X);
       solveH(RHS,X);
