@@ -60,11 +60,10 @@ void writeToExodus(double time_stamp,
                    panzer_stk::STK_Interface & mesh);
 
 /********************************************************************************
- * Sets up an electromagetics problem driven by a simple Gaussian current pulse
- * on the domain [0,1]^3. First order Maxwell equations with edge-face
- * discretization for E,B. Backward Euler time-stepping with fixed CFL. Linear
- * systems solved with Belos GMRES using augmentation based block preconditioner
- * through Teko with multigrid subsolves from MueLu.
+ * This driver sets up either
+ * - first order Maxwell equations with edge-face discretization for E, B,
+ * - mixed form Darcy flow.
+ * We use backward Euler time-stepping with fixed CFL.
  *
  * This is meant to test the components of the Tpetra linear solver stack
  * required by EMPIRE-EM
@@ -127,6 +126,7 @@ int main_(Teuchos::CommandLineProcessor &clp, int argc,char * argv[])
     linearAlgebraType linAlgebraValues[2] = {linAlgTpetra, linAlgEpetra};
     const char * linAlgebraNames[2] = {"Tpetra", "Epetra"};
     linearAlgebraType linAlgebra = linAlgTpetra;
+    bool stacktrace = false;
     clp.setOption<linearAlgebraType>("linAlgebra",&linAlgebra,2,linAlgebraValues,linAlgebraNames);
     use_stacked_timer = true;
     clp.setOption("x-elements",&x_elements);
@@ -149,6 +149,9 @@ int main_(Teuchos::CommandLineProcessor &clp, int argc,char * argv[])
     clp.setOption("doSolveTimings","no-doSolveTimings",&doSolveTimings,"repeat the first solve \"numTimeSteps\" times");
     clp.setOption("stacked-timer","no-stacked-timer",&use_stacked_timer,"Run with or without stacked timer output");
     clp.setOption("test-name", &test_name, "Name of test (for Watchr output)");
+#ifdef HAVE_TEUCHOS_STACKTRACE
+    clp.setOption("stacktrace", "nostacktrace", &stacktrace, "display stacktrace");
+#endif
 
     // parse command-line argument
     clp.recogniseAllOptions(true);
@@ -160,6 +163,12 @@ int main_(Teuchos::CommandLineProcessor &clp, int argc,char * argv[])
     case Teuchos::CommandLineProcessor::PARSE_UNRECOGNIZED_OPTION: return EXIT_FAILURE;
     case Teuchos::CommandLineProcessor::PARSE_SUCCESSFUL:          break;
     }
+
+#ifdef HAVE_TEUCHOS_STACKTRACE
+    if (stacktrace)
+      Teuchos::print_stack_on_segfault();
+#endif
+
 
     if (use_stacked_timer) {
       stacked_timer = rcp(new Teuchos::StackedTimer("Mini-EM"));
