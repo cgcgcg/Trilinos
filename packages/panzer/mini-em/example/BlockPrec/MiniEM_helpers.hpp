@@ -35,7 +35,6 @@ namespace mini_em {
   enum solverType {
     AUGMENTATION,
     MUELU,
-    MUELU_MAXWELL_HO,
     ML,
     CG,
     GMRES
@@ -58,7 +57,8 @@ namespace mini_em {
                                                            int dim,
                                                            Teuchos::RCP<const Teuchos::MpiComm<int> > &comm,
                                                            Teuchos::RCP<Teuchos::FancyOStream> &out,
-                                                           std::string &xml);
+                                                           std::string &xml,
+                                                           int basis_order);
 
   void setClosureParameters(physicsType physics,
                             Teuchos::ParameterList &physicsEqSet,

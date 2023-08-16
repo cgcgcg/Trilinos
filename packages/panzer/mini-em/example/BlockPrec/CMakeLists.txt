@@ -23,7 +23,7 @@ TRIBITS_COPY_FILES_TO_BINARY_DIR(CopyBlockPrecFiles
   solverCG.xml solverGMRES.xml
   solverMueLu.xml solverMueLu2D.xml solverMueLuEpetra.xml
   solverMueLuOpenMP.xml solverMueLuCuda.xml
-  solverMueLuMaxwellHO.xml solverMueLuMaxwellHOCuda.xml
+  solverMueLuHO.xml solverMueLuHOCuda.xml
   solverAugmentationUseILU.xml
   solverML.xml
   SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
@@ -181,12 +181,12 @@ TRIBITS_ADD_TEST(
    BlockPrec
    NAME "MiniEM-BlockPrec_MueLu_highOrder"
    ARGS
-   # "--solver=MueLu-Maxwell-HO --linAlgebra=Tpetra --inputFile=maxwell-pthOrder.xml --basis-order=2"
-   "--solver=MueLu-Maxwell-HO --linAlgebra=Tpetra --inputFile=maxwell-pthOrder.xml --basis-order=3"
-   # "--solver=MueLu-Maxwell-HO --linAlgebra=Tpetra --inputFile=maxwell-pthOrder.xml --basis-order=3 --pCoarsenSchedule=\"2,1\""
-   # "--solver=MueLu-Maxwell-HO --linAlgebra=Tpetra --inputFile=maxwell-pthOrder.xml --basis-order=2 --matrixFree"
-   "--solver=MueLu-Maxwell-HO --linAlgebra=Tpetra --inputFile=maxwell-pthOrder.xml --basis-order=3 --matrixFree"
-   # "--solver=MueLu-Maxwell-HO --linAlgebra=Tpetra --inputFile=maxwell-pthOrder.xml --basis-order=3 --pCoarsenSchedule=\"2,1\" --matrixFree"
+   # "--solver=MueLu --linAlgebra=Tpetra --inputFile=maxwell-pthOrder.xml --basis-order=2 --pCoarsenSchedule=\"1\""
+   "--solver=MueLu --linAlgebra=Tpetra --inputFile=maxwell-pthOrder.xml --basis-order=3 --pCoarsenSchedule=\"1\""
+   # "--solver=MueLu --linAlgebra=Tpetra --inputFile=maxwell-pthOrder.xml --basis-order=3 --pCoarsenSchedule=\"2,1\""
+   # "--solver=MueLu --linAlgebra=Tpetra --inputFile=maxwell-pthOrder.xml --basis-order=2  --pCoarsenSchedule=\"1\" --matrixFree"
+   "--solver=MueLu --linAlgebra=Tpetra --inputFile=maxwell-pthOrder.xml --basis-order=3  --pCoarsenSchedule=\"1\" --matrixFree"
+   # "--solver=MueLu --linAlgebra=Tpetra --inputFile=maxwell-pthOrder.xml --basis-order=3 --pCoarsenSchedule=\"2,1\" --matrixFree"
    COMM serial mpi
    NUM_MPI_PROCS 4
    )
@@ -235,6 +235,57 @@ TRIBITS_ADD_TEST(
 #################################################
 # DARCY
 
+#################################################
+# MueLu graddiv solver
+
+TRIBITS_ADD_TEST(
+  BlockPrec
+  NAME "MiniEM-BlockPrec_Darcy_MueLu"
+  ARGS "--solver=MueLu --numTimeSteps=1 --linAlgebra=Tpetra --inputFile=darcy.xml"
+  COMM serial mpi
+  NUM_MPI_PROCS 1
+)
+
+TRIBITS_ADD_TEST(
+  BlockPrec
+  NAME "MiniEM-BlockPrec_Darcy_MueLu"
+  ARGS "--solver=MueLu --numTimeSteps=1 --linAlgebra=Tpetra --inputFile=darcy.xml"
+  COMM mpi
+  NUM_MPI_PROCS 4
+)
+
+TRIBITS_ADD_TEST(
+   BlockPrec
+   NAME "MiniEM-BlockPrec_Darcy_MueLu_highOrder"
+   ARGS
+   # "--solver=MueLu --linAlgebra=Tpetra --inputFile=darcy.xml --basis-order=2 --pCoarsenSchedule=\"1\""
+   "--solver=MueLu --linAlgebra=Tpetra --inputFile=darcy.xml --basis-order=3 --pCoarsenSchedule=\"1\""
+   # "--solver=MueLu --linAlgebra=Tpetra --inputFile=darcy.xml --basis-order=3 --pCoarsenSchedule=\"2,1\""
+   COMM serial mpi
+   NUM_MPI_PROCS 4
+   )
+
+
+IF(NOT Kokkos_ENABLE_CUDA AND NOT Kokkos_ENABLE_OPENMP AND MueLu_ENABLE_Epetra AND NOT HAVE_TPETRA_INST_INT_LONG_LONG AND HAVE_TPETRA_INST_INT_INT)
+ # We want GlobalOrdinal=int. Panzer picks long long, if it is available, and otherwise Tpetra's default.
+
+ TRIBITS_ADD_TEST(
+   BlockPrec
+   NAME "MiniEM-BlockPrec_Darcy_MueLu_Epetra"
+   ARGS "--solver=MueLu --numTimeSteps=1 --linAlgebra=Epetra --inputFile=darcy.xml"
+   COMM serial mpi
+   NUM_MPI_PROCS 1
+ )
+
+ TRIBITS_ADD_TEST(
+   BlockPrec
+   NAME "MiniEM-BlockPrec_Darcy_MueLu_Epetra"
+   ARGS "--solver=MueLu --numTimeSteps=1 --linAlgebra=Epetra --inputFile=darcy.xml"
+   COMM mpi
+   NUM_MPI_PROCS 4
+ )
+
+ENDIF()
 
 #################################################
 # ML graddiv solver
