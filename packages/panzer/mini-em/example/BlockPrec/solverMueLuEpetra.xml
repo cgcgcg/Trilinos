@@ -360,7 +360,7 @@
                 <Parameter name="refmaxwell: disable addon" type="bool" value="true"/>
                 <Parameter name="refmaxwell: disable addon 22" type="bool" value="true"/>
                 <Parameter name="refmaxwell: dump matrices" type="bool" value="false"/>
-                <Parameter name="refmaxwell: subsolves on subcommunicators" type="bool" value="true"/>
+                <Parameter name="refmaxwell: subsolves on subcommunicators" type="bool" value="false"/>
                 <Parameter name="refmaxwell: subsolves striding" type="int" value="1"/>
 
                 <!-- <Parameter name="rap: triple product" type="bool" value="true"/> -->
