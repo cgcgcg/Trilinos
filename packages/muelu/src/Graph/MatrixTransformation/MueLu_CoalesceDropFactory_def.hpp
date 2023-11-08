@@ -945,11 +945,11 @@ void CoalesceDropFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(
 
         // extract striding information
         LO blkSize = A->GetFixedBlockSize(); //< the full block size (number of
-                                             //dofs per node in strided map)
+                                             // dofs per node in strided map)
         LO blkId = -1; //< the block id within the strided map (or -1 if it is a
-                       //full block map)
+                       // full block map)
         LO blkPartSize = A->GetFixedBlockSize(); //< stores the size of the
-                                                 //block within the strided map
+                                                 // block within the strided map
         if (A->IsView("stridedMaps") == true) {
           Teuchos::RCP<const Map> myMap = A->getRowMap("stridedMaps");
           Teuchos::RCP<const StridedMap> strMap =
@@ -1092,11 +1092,11 @@ void CoalesceDropFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(
 
         // extract striding information
         LO blkSize = A->GetFixedBlockSize(); //< the full block size (number of
-                                             //dofs per node in strided map)
+                                             // dofs per node in strided map)
         LO blkId = -1; //< the block id within the strided map (or -1 if it is a
-                       //full block map)
+                       // full block map)
         LO blkPartSize = A->GetFixedBlockSize(); //< stores the size of the
-                                                 //block within the strided map
+                                                 // block within the strided map
         if (A->IsView("stridedMaps") == true) {
           Teuchos::RCP<const Map> myMap = A->getRowMap("stridedMaps");
           Teuchos::RCP<const StridedMap> strMap =
@@ -1952,7 +1952,7 @@ void CoalesceDropFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::MergeRows(
 
   // extract striding information
   LO blkSize = A.GetFixedBlockSize(); //< stores the size of the block within
-                                      //the strided map
+                                      // the strided map
   if (A.IsView("stridedMaps") == true) {
     Teuchos::RCP<const Map> myMap = A.getRowMap("stridedMaps");
     Teuchos::RCP<const StridedMap> strMap =
@@ -2020,7 +2020,7 @@ void CoalesceDropFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 
   // extract striding information
   LO blkSize = A.GetFixedBlockSize(); //< stores the size of the block within
-                                      //the strided map
+                                      // the strided map
   if (A.IsView("stridedMaps") == true) {
     Teuchos::RCP<const Map> myMap = A.getRowMap("stridedMaps");
     Teuchos::RCP<const StridedMap> strMap =

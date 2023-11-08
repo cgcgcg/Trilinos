@@ -117,7 +117,7 @@ void VariableDofLaplacianFactory<Scalar, LocalOrdinal, GlobalOrdinal,
       "Advanced Dirichlet: threshold")); // "ML advnaced Dirichlet: threshold"
   Scalar amalgDropTol = Teuchos::as<Scalar>(pL.get<double>(
       "Variable DOF amalgamation: threshold")); //"variable DOF amalgamation:
-                                                //threshold")
+                                                // threshold")
 
   bool bHasZeroDiagonal = false;
   Teuchos::ArrayRCP<const bool> dirOrNot =

@@ -67,7 +67,7 @@ class PFactory : public TwoLevelFactoryBase {
 
 protected:
   bool restrictionMode_; //< true, if PFactory is used for generating the
-                         //restriction operator
+                         // restriction operator
 
 public:
   //! @name Constructors/Destructors.

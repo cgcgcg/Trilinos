@@ -3334,10 +3334,10 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
        param != paramList.end(); ++param) {
     const std::string &paramName =
         paramList.name(param); //< paramName contains the user chosen factory
-                               //name (e.g., "smootherFact1")
+                               // name (e.g., "smootherFact1")
     const Teuchos::ParameterEntry &paramValue = paramList.entry(
         param); //< for factories, paramValue should be either a list or just a
-                //MueLu Factory (e.g., TrilinosSmoother)
+                // MueLu Factory (e.g., TrilinosSmoother)
 
     // TODO: do not allow name of existing MueLu classes (can be tested using
     // FactoryFactory)

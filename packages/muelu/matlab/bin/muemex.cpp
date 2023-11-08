@@ -1409,7 +1409,7 @@ RCP<ParameterList> build_teuchos_list(int nrhs, const mxArray *prhs[]) {
 } // namespace MueLu
 
 using namespace MueLu; //...but give mexFunction access to all MueLu members
-                       //defined above
+                       // defined above
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   // Lazily initialize Tpetra

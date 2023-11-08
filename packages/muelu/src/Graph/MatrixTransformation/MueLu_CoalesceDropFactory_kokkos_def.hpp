@@ -316,20 +316,20 @@ private:
   NnzType coldofnnz;   //< view containing start and stop indices for subviews
   blkSizeType blkSize; //< block size (or partial block size in strided maps)
   ColDofType coldofs;  //< view containing the local dof ids associated with
-                       //columns for the blkSize rows (not sorted)
+                       // columns for the blkSize rows (not sorted)
   Dof2NodeTranslationType dof2node; //< view containing the local node id
-                                    //associated with the local dof id
+                                    // associated with the local dof id
   NnzType
       colnodennz; //< view containing number of column nodes for each node row
   BdryNodeTypeConst
       dirichletdof; //< view containing with num dofs booleans. True if dof (not
-                    //necessarily entire node) is dirichlet boundardy dof.
+                    // necessarily entire node) is dirichlet boundardy dof.
   BdryNodeType bdrynode; //< view containing with numNodes booleans. True if
-                         //node is (full) dirichlet boundardy node.
+                         // node is (full) dirichlet boundardy node.
   boolType usegreedydirichlet; //< boolean for use of greedy Dirichlet (if any
-                               //dof is Dirichlet, entire node is dirichlet)
-                               //default false (need all dofs in node to be
-                               //Dirichlet for node to be Dirichlet)
+                               // dof is Dirichlet, entire node is dirichlet)
+                               // default false (need all dofs in node to be
+                               // Dirichlet for node to be Dirichlet)
 
 public:
   Stage1bcVectorFunctor(MatrixType kokkosMatrix_, NnzType coldofnnz_,
@@ -421,7 +421,7 @@ private:
   ColDofType
       coldofs; //< view containing mixed node and dof indices (only input)
   ColDofNnzType coldofnnz; //< view containing the start and stop indices for
-                           //subviews (dofs)
+                           // subviews (dofs)
   ColNodeType
       colnodes; //< view containing the local node ids associated with columns
   ColNodeNnzType
@@ -916,12 +916,12 @@ void CoalesceDropFactory_kokkos<Scalar, LocalOrdinal, GlobalOrdinal,
 
     // extract striding information
     blkSize = A->GetFixedBlockSize(); //< the full block size (number of dofs
-                                      //per node in strided map)
+                                      // per node in strided map)
     LocalOrdinal blkId = -1; //< the block id within a strided map or -1 if it
-                             //is a full block map
+                             // is a full block map
     LocalOrdinal blkPartSize =
         A->GetFixedBlockSize(); //< stores block size of part blkId (or the full
-                                //block size)
+                                // block size)
     if (A->IsView("stridedMaps") == true) {
       const RCP<const Map> myMap = A->getRowMap("stridedMaps");
       const RCP<const StridedMap> strMap =

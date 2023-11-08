@@ -171,9 +171,9 @@ private:
 
   mutable bool
       bTransferCoordinates_; //< boolean which is true if coordinate information
-                             //is available to be transferred to coarse
-                             //coordinate information
-};                           // class SemiCoarsenPFactory
+                             // is available to be transferred to coarse
+                             // coordinate information
+}; // class SemiCoarsenPFactory
 
 } // namespace MueLu
 

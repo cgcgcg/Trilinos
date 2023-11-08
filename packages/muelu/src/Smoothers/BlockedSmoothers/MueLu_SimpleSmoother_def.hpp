@@ -284,13 +284,15 @@ void SimpleSmoother<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Apply(
 
   // The boolean flags check whether we use Thyra or Xpetra style GIDs
   bool bRangeThyraMode =
-      rangeMapExtractor_->getThyraMode(); //  &&
-                                          //  (Teuchos::rcp_dynamic_cast<BlockedCrsMatrix>(F_)
-                                          //  == Teuchos::null);
+      rangeMapExtractor_
+          ->getThyraMode(); //  &&
+                            //  (Teuchos::rcp_dynamic_cast<BlockedCrsMatrix>(F_)
+                            //  == Teuchos::null);
   bool bDomainThyraMode =
-      domainMapExtractor_->getThyraMode(); // &&
-                                           // (Teuchos::rcp_dynamic_cast<BlockedCrsMatrix>(F_)
-                                           // == Teuchos::null);
+      domainMapExtractor_
+          ->getThyraMode(); // &&
+                            // (Teuchos::rcp_dynamic_cast<BlockedCrsMatrix>(F_)
+                            // == Teuchos::null);
 
   // RCP<Teuchos::FancyOStream> fancy =
   // Teuchos::fancyOStream(Teuchos::rcpFromRef(std::cout));

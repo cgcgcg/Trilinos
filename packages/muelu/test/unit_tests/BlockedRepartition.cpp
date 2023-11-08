@@ -397,7 +397,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(BlockedRepartition, BlockedRAPFactory, Scalar,
   RebAFact->AddFactoryManager(FC2);
 
   /////////////////////////////////////////// request rebalanced coarse level
-  ///matrix A
+  /// matrix A
   levelTwo->Request("A", RebAFact.get(), MueLu::NoFactory::get());
   TEST_EQUALITY(levelTwo->IsRequested("A", RebAFact.get()), true);
 
@@ -408,7 +408,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(BlockedRepartition, BlockedRAPFactory, Scalar,
   TEST_EQUALITY(levelTwo->IsRequested("Partition", Rep22Interface.get()), true);
 
   /////////////////////////////////////////// build rebalanced coarse level
-  ///matrix A
+  /// matrix A
   RCP<Matrix> rebA = levelTwo->Get<RCP<Matrix>>("A", RebAFact.get());
   TEST_EQUALITY(rebA != Teuchos::null, true);
   // get number of active processes used in rebalanced matrix
@@ -707,7 +707,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(BlockedRepartition,
   RebAFact->AddFactoryManager(FC2);
 
   /////////////////////////////////////////// request rebalanced coarse level
-  ///matrix A
+  /// matrix A
   levelTwo->Request("A", RebAFact.get(), MueLu::NoFactory::get());
   TEST_EQUALITY(levelTwo->IsRequested("A", RebAFact.get()), true);
 
@@ -718,7 +718,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(BlockedRepartition,
   TEST_EQUALITY(levelTwo->IsRequested("Partition", Rep22Interface.get()), true);
 
   /////////////////////////////////////////// build rebalanced coarse level
-  ///matrix A
+  /// matrix A
   RCP<Matrix> rebA = levelTwo->Get<RCP<Matrix>>("A", RebAFact.get());
 
   if (rebA != Teuchos::null) {

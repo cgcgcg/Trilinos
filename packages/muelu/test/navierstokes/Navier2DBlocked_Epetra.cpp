@@ -199,7 +199,7 @@ int main(int argc, char *argv[]) {
         StridedMapFactory::Build(xstridedfullmap, 1);
 
     /////////////////////////////////////// transform Xpetra::Map objects to
-    ///Epetra
+    /// Epetra
     // this is needed for AztecOO
     const RCP<const Epetra_Map> fullmap =
         rcpFromRef(Xpetra::toEpetra(*xstridedfullmap));
@@ -209,7 +209,7 @@ int main(int argc, char *argv[]) {
         rcpFromRef(Xpetra::toEpetra(*xstridedpremap));
 
     /////////////////////////////////////// import problem matrix and RHS from
-    ///files (-> Epetra)
+    /// files (-> Epetra)
 
     // read in problem
     Epetra_CrsMatrix *ptrA = 0;
@@ -335,7 +335,7 @@ int main(int argc, char *argv[]) {
     Finest->Set("Nullspace1", nullspace11);
 
     ///////////////////////////////////////// define CoalesceDropFactory and
-    ///Aggregation for A11
+    /// Aggregation for A11
     // set up amalgamation for A11. Note: we're using a default null space
     // factory (null)
     RCP<AmalgamationFactory> amalgFact11 = rcp(new AmalgamationFactory());

@@ -120,8 +120,9 @@ void UnsmooshFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(
     // dof status is the dirichlet information of unsmooshed/unamalgamated A
     // (fine level)
     dofStatus = Teuchos::Array<char>(
-        unamalgA->getRowMap()->getLocalNumElements() /*amalgP->getRowMap()->getLocalNumElements()
-                                                        * maxDofPerNode*/
+        unamalgA->getRowMap()
+            ->getLocalNumElements() /*amalgP->getRowMap()->getLocalNumElements()
+                                     * maxDofPerNode*/
         ,
         's');
 

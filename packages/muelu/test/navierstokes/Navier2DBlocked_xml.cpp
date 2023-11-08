@@ -196,7 +196,7 @@ int main(int argc, char *argv[]) {
         StridedMapFactory::Build(xstridedfullmap, 1);
 
     /////////////////////////////////////// transform Xpetra::Map objects to
-    ///Epetra
+    /// Epetra
     // this is needed for AztecOO
     const RCP<const Epetra_Map> fullmap =
         rcpFromRef(Xpetra::toEpetra(*xstridedfullmap));
@@ -206,7 +206,7 @@ int main(int argc, char *argv[]) {
         rcpFromRef(Xpetra::toEpetra(*xstridedpremap));
 
     /////////////////////////////////////// import problem matrix and RHS from
-    ///files (-> Epetra)
+    /// files (-> Epetra)
 
     // read in problem
     Epetra_CrsMatrix *ptrA = 0;

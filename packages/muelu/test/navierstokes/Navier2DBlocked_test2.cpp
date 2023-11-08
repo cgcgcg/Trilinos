@@ -218,7 +218,7 @@ int main(int argc, char *argv[]) {
         StridedMapFactory::Build(xstridedfullmap, 1);
 
     /////////////////////////////////////// transform Xpetra::Map objects to
-    ///Epetra
+    /// Epetra
     // this is needed for AztecOO
     const RCP<const Epetra_Map> fullmap =
         rcpFromRef(Xpetra::toEpetra(*xstridedfullmap));
@@ -228,7 +228,7 @@ int main(int argc, char *argv[]) {
         rcpFromRef(Xpetra::toEpetra(*xstridedpremap));
 
     /////////////////////////////////////// import problem matrix and RHS from
-    ///files (-> Epetra)
+    /// files (-> Epetra)
 
     // read in problem
     Epetra_CrsMatrix *ptrA = 0;
@@ -353,7 +353,7 @@ int main(int argc, char *argv[]) {
     Finest->Set("Nullspace2", nullspace22);
 
     /////////////////////////////////////////// define rebalanced block AC
-    ///factory
+    /// factory
     // This is the main factory for "A" and defines the input for
     //   - the SubBlockAFactory objects
     //   - the rebalanced block Ac factory
@@ -361,7 +361,7 @@ int main(int argc, char *argv[]) {
         rcp(new RebalanceBlockAcFactory());
 
     /////////////////////////////////////////// define non-rebalanced blocked
-    ///transfer ops
+    /// transfer ops
     RCP<BlockedPFactory> PFact =
         rcp(new BlockedPFactory()); // use row map index base from bOp
     RCP<GenericRFactory> RFact = rcp(new GenericRFactory());
@@ -501,7 +501,7 @@ int main(int argc, char *argv[]) {
         Teuchos::ParameterEntry(false)); /* do not remap! */
 
     ////////////////////////////////////////// build non-rebalanced matrix
-    ///blocks
+    /// blocks
     // build factories for transfer operator P(1,1) and R(1,1)
     RCP<AmalgamationFactory> amalgFact11 = rcp(new AmalgamationFactory());
     amalgFact11->SetFactory("A", A11Fact);
@@ -549,7 +549,7 @@ int main(int argc, char *argv[]) {
         true); // always use data from factories defined in factory manager
 
     ////////////////////////////////////////// build non-rebalanced matrix
-    ///blocks
+    /// blocks
     // build factories for transfer operator P(2,2) and R(2,2)
     RCP<AmalgamationFactory> amalgFact22 = rcp(new AmalgamationFactory());
     RCP<TentativePFactory> P22Fact = rcp(new TentativePFactory());
@@ -581,7 +581,7 @@ int main(int argc, char *argv[]) {
     M22->SetIgnoreUserData(true);
 
     /////////////////////////////////////////// define rebalanced blocked
-    ///transfer ops
+    /// transfer ops
     //////////////////////////////// define factory manager for (1,1) block
     RCP<FactoryManager> rebM11 = rcp(new FactoryManager());
     rebM11->SetFactory("A", AcFact); // important: must be a 2x2 block A Factory
@@ -617,7 +617,7 @@ int main(int argc, char *argv[]) {
     RebalancedBlockRFact->AddFactoryManager(rebM22);
 
     ///////////////////////////////////////// initialize non-rebalanced block
-    ///transfer operators
+    /// transfer operators
     // output are the non-rebalanced block transfer operators used as input in
     // AcFact to build the non-rebalanced coarse level block matrix Ac
     PFact->AddFactoryManager(M11); // use non-rebalanced information from sub
@@ -626,7 +626,7 @@ int main(int argc, char *argv[]) {
                                    // block factory manager M22
 
     ///////////////////////////////////////// initialize rebalanced coarse block
-    ///AC factory
+    /// AC factory
     RebalancedAcFact->SetFactory(
         "A", AcFact); // use non-rebalanced block operator as input
     RebalancedAcFact->SetParameter("repartition: use subcommunicators",

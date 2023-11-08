@@ -118,7 +118,7 @@ private:
   NspType coarseNS;
   aggRowsType aggRows;
   maxAggDofSizeType maxAggDofSize; //< maximum number of dofs in aggregate (max
-                                   //size of aggregate * numDofsPerNode)
+                                   // size of aggregate * numDofsPerNode)
   agg2RowMapLOType agg2RowMapLO;
   statusType statusAtomic;
   rowsType rows;

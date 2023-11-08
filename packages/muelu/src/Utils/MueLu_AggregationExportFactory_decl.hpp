@@ -200,7 +200,7 @@ private:
   mutable Teuchos::RCP<const Map> nodeMapCoarse_; // Map for Ac
   mutable int aggsOffset_; // in a global list of aggregates, the offset of
                            // local aggregate indices
-}; // class AggregationExportFactory
+};                         // class AggregationExportFactory
 } // namespace MueLu
 
 #define MUELU_AGGREGATIONEXPORTFACTORY_SHORT

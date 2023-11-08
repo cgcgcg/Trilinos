@@ -137,9 +137,9 @@ void AggregationExportFactory<Scalar, LocalOrdinal, GlobalOrdinal,
                                                   Level &coarseLevel) const {
   Input(fineLevel, "Aggregates");         //< factory which created aggregates
   Input(fineLevel, "DofsPerNode");        //< CoalesceAndDropFactory (needed for
-                                          //DofsPerNode variable)
+                                          // DofsPerNode variable)
   Input(fineLevel, "UnAmalgamationInfo"); //< AmalgamationFactory (needed for
-                                          //UnAmalgamationInfo variable)
+                                          // UnAmalgamationInfo variable)
 
   const ParameterList &pL = GetParameterList();
   // Only pull in coordinates if the user explicitly requests direct VTK output,

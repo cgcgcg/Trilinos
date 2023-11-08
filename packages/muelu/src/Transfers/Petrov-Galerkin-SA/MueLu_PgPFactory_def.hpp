@@ -160,7 +160,7 @@ void PgPFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(
   RCP<Matrix> Ptent = coarseLevel.Get<RCP<Matrix>>("P", initialPFact.get());
 
   /////////////////// switch from A to A^T in restriction mode (necessary as
-  ///long as implicit transpose not working for Epetra)
+  /// long as implicit transpose not working for Epetra)
   if (restrictionMode_) {
     SubFactoryMonitor m2(*this, "Transpose A", coarseLevel);
     A = Utilities::Transpose(*A, true); // build transpose of A explicitely

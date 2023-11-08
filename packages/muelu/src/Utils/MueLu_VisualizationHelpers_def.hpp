@@ -884,8 +884,8 @@ VisualizationHelpers<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
             const typename Teuchos::ScalarTraits<Scalar>::coordinateType>
             &zCoords) {
   //*tri is in the tris list, and is the triangle to process here. tris is a
-  //complete list of all triangles in the hull so far. pointsInFront is only a
-  //list of the nodes in front of tri. Need coords also. precondition: each
+  // complete list of all triangles in the hull so far. pointsInFront is only a
+  // list of the nodes in front of tri. Need coords also. precondition: each
   // triangle is already oriented so that getNorm_(v1, v2, v3) points outward
   // (away from interior of hull) First find the point furthest from triangle.
   using namespace std;

@@ -1180,7 +1180,7 @@ ArrayRCP<std::string> GetFileList(const std::string &dirPath,
 
 // TODO: add directly to Teuchos ?
 //#include "../xpetra/test/Xpetra_UnitTestHelpers.hpp" // declaration of
-//TEUCHOS_UNIT_TEST_TEMPLATE_5_DECL
+// TEUCHOS_UNIT_TEST_TEMPLATE_5_DECL
 
 //
 
