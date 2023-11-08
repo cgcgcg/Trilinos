@@ -50,8 +50,8 @@
 #if defined(HAVE_MUELU_AMGX)
 
 namespace MueLu {
-  template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-  class AMGXOperator;
+template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+class AMGXOperator;
 }
 
 #ifndef MUELU_AMGXOPERATOR_SHORT

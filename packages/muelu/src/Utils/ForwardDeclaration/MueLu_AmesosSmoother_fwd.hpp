@@ -46,20 +46,12 @@
 #ifndef MUELU_AMESOSSMOOTHER_FWD_HPP
 #define MUELU_AMESOSSMOOTHER_FWD_HPP
 
-
-
-
 namespace MueLu {
-  template <class Node>
-  class AmesosSmoother;
+template <class Node> class AmesosSmoother;
 }
-
-
 
 #ifndef MUELU_AMESOSSMOOTHER_SHORT
 #define MUELU_AMESOSSMOOTHER_SHORT
 #endif
-
-
 
 #endif // MUELU_AMESOSSMOOTHER_FWD_HPP

@@ -55,50 +55,53 @@ specific unit test suites.
 
 */
 
-#include <Teuchos_UnitTestRepository.hpp>
+#include <Kokkos_Core.hpp>
 #include <Teuchos_DefaultComm.hpp>
 #include <Teuchos_StandardCatchMacros.hpp>
-#include <Kokkos_Core.hpp>
+#include <Teuchos_UnitTestRepository.hpp>
 
 #include "MueLu_TestHelpers.hpp"
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char *argv[]) {
   Teuchos::GlobalMPISession mpiSession(&argc, &argv);
 
-  Kokkos::initialize(argc , argv);
+  Kokkos::initialize(argc, argv);
 
   bool success = false;
   bool verbose = true;
   int ierr = -1;
   try {
     // Note: the command line parameter --linAlgebra= is take into account.
-    // Xpetra parameters are added to the Teuchos::CommandLineProcessor of Teuchos::UnitTestRepository in MueLu_TestHelpers.cpp
+    // Xpetra parameters are added to the Teuchos::CommandLineProcessor of
+    // Teuchos::UnitTestRepository in MueLu_TestHelpers.cpp
 
 #ifdef ParallelDebug
-    RCP<const Teuchos::Comm<int> > comm = Teuchos::DefaultComm<int>::getComm();
+    RCP<const Teuchos::Comm<int>> comm = Teuchos::DefaultComm<int>::getComm();
 
     int mypid = comm->getRank();
 
-    if (mypid  == 0) std::cout << "Host and Process Ids for tasks" << std::endl;
-    for (int i = 0; i <comm->getSize(); i++) {
-      if (i == mypid ) {
+    if (mypid == 0)
+      std::cout << "Host and Process Ids for tasks" << std::endl;
+    for (int i = 0; i < comm->getSize(); i++) {
+      if (i == mypid) {
         char buf[80];
         char hostname[80];
         gethostname(hostname, sizeof(hostname));
         int pid = getpid();
-        sprintf(buf, "Host: %s\tMPI rank: %d,\tPID: %d\n\tattach %d\n\tcontinue\n",
-            hostname, mypid, pid, pid);
-        printf("%s\n",buf);
+        sprintf(buf,
+                "Host: %s\tMPI rank: %d,\tPID: %d\n\tattach %d\n\tcontinue\n",
+                hostname, mypid, pid, pid);
+        printf("%s\n", buf);
         fflush(stdout);
         sleep(1);
       }
     }
 
     if (mypid == 0) {
-      printf( "** Enter a character to continue > "); fflush(stdout);
+      printf("** Enter a character to continue > ");
+      fflush(stdout);
       char go = ' ';
-      scanf("%c",&go);
+      scanf("%c", &go);
     }
     comm->barrier();
 #endif

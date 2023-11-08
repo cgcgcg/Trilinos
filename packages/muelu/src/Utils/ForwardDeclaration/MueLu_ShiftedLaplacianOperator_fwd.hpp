@@ -50,8 +50,8 @@
 #if defined(HAVE_MUELU_BELOS) && defined(HAVE_MUELU_TPETRA_INST_INT_INT)
 
 namespace MueLu {
-  template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-  class ShiftedLaplacianOperator;
+template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+class ShiftedLaplacianOperator;
 }
 
 #ifndef MUELU_SHIFTEDLAPLACIANOPERATOR_SHORT

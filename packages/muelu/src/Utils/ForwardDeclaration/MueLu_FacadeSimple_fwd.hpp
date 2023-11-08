@@ -46,17 +46,12 @@
 #ifndef MUELU_FACADESIMPLE_FWD_HPP
 #define MUELU_FACADESIMPLE_FWD_HPP
 
-
-
-
 namespace MueLu {
-  class FacadeSimple;
+class FacadeSimple;
 }
 
 #ifndef MUELU_FACADESIMPLE_SHORT
 #define MUELU_FACADESIMPLE_SHORT
 #endif
-
-
 
 #endif // MUELU_FACADESIMPLE_FWD_HPP
