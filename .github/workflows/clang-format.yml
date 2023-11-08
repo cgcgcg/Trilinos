@@ -1,0 +1,30 @@
+name: Check MueLu clang-format
+
+on:
+  pull_request:
+    branches: ["develop"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Clang Format
+      uses: DoozyX/clang-format-lint-action@v0.16.2
+      with:
+        source: './packages/muelu'
+        exclude: './packages/muelu/src/MueCentral/MueLu_MasterList.cpp'
+        extensions: 'cpp,hpp'
+        clangFormatVersion: 14
+        style: file
+        inplace: true
+
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v5
+      with:
+        delete-branch: true
+        base: ${{ github.head_ref }}
