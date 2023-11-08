@@ -51,17 +51,17 @@
 #include "MueLu_ConfigDefs.hpp"
 
 // Teuchos
-#include <Teuchos_RCP.hpp>
-#include <Teuchos_ParameterList.hpp>
 #include <Teuchos_CommandLineProcessor.hpp>
-#include <Teuchos_GlobalMPISession.hpp>
 #include <Teuchos_DefaultComm.hpp>
+#include <Teuchos_GlobalMPISession.hpp>
+#include <Teuchos_ParameterList.hpp>
+#include <Teuchos_RCP.hpp>
 
 // Xpetra
-#include <Xpetra_Parameters.hpp>
-#include <Xpetra_MapFactory.hpp>
 #include <Xpetra_CrsMatrixWrap.hpp>
+#include <Xpetra_MapFactory.hpp>
 #include <Xpetra_MultiVectorFactory.hpp>
+#include <Xpetra_Parameters.hpp>
 #include <Xpetra_VectorFactory.hpp>
 
 // MueLu
