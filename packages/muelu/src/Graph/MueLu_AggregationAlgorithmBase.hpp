@@ -46,8 +46,8 @@
 #ifndef MUELU_AGGREGATIONALGORITHMBASE_HPP_
 #define MUELU_AGGREGATIONALGORITHMBASE_HPP_
 
-#include "MueLu_ConfigDefs.hpp"
 #include "MueLu_BaseClass.hpp"
+#include "MueLu_ConfigDefs.hpp"
 
 #include "MueLu_Aggregates_fwd.hpp"
 
@@ -57,40 +57,36 @@
 
 namespace MueLu {
 
-  /*!
-       @class AggregationAlgorithmBase
-       @brief Pure virtual base class for all MueLu aggregation algorithms
+/*!
+     @class AggregationAlgorithmBase
+     @brief Pure virtual base class for all MueLu aggregation algorithms
 
-       @ingroup MueLuBaseClasses
-   */
-  template<class LocalOrdinal = DefaultLocalOrdinal,
-           class GlobalOrdinal = DefaultGlobalOrdinal,
-           class Node = DefaultNode>
-  class AggregationAlgorithmBase : public BaseClass {
+     @ingroup MueLuBaseClasses
+ */
+template <class LocalOrdinal = DefaultLocalOrdinal,
+          class GlobalOrdinal = DefaultGlobalOrdinal, class Node = DefaultNode>
+class AggregationAlgorithmBase : public BaseClass {
 #undef MUELU_AGGREGATIONALGORITHMBASE_SHORT
 #include "MueLu_UseShortNamesOrdinal.hpp"
-    public:
+public:
+  //! @name Constructors/Destructors
+  //@{
 
-    //! @name Constructors/Destructors
-    //@{
+  //! Destructor.
+  virtual ~AggregationAlgorithmBase() {}
 
-    //! Destructor.
-    virtual ~AggregationAlgorithmBase() {}
+  //@}
 
-    //@}
+  //! @name Build routines
+  //@{
 
-    //! @name Build routines
-    //@{
-
-    //! BuildAggregates routine.
-    virtual void BuildAggregates(const Teuchos::ParameterList& params,
-                                 const GraphBase& graph,
-                                 Aggregates& aggregates,
-                                 std::vector<unsigned>& aggStat,
-                                 LO& numNonAggregatedNodes) const = 0;
-    //@}
-
-  };
+  //! BuildAggregates routine.
+  virtual void BuildAggregates(const Teuchos::ParameterList &params,
+                               const GraphBase &graph, Aggregates &aggregates,
+                               std::vector<unsigned> &aggStat,
+                               LO &numNonAggregatedNodes) const = 0;
+  //@}
+};
 
 } // namespace MueLu
 

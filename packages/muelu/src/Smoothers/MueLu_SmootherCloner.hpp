@@ -48,8 +48,8 @@
 
 #include <Xpetra_MultiVector_fwd.hpp>
 
-#include "MueLu_ConfigDefs.hpp"
 #include "MueLu_BaseClass.hpp"
+#include "MueLu_ConfigDefs.hpp"
 
 #include "MueLu_SmootherBase.hpp"
 #if defined(HAVE_MUELU_IFPACK2)
@@ -57,10 +57,7 @@
 #endif
 #include "MueLu_TrilinosSmoother.hpp"
 
-namespace MueLu {
-
-} //namespace MueLu
+namespace MueLu {} // namespace MueLu
 
 #define MUELU_SMOOTHERBASECLONER_SHORT
-#endif //ifndef MUELU_SMOOTHERBASECLONER_HPP
-
+#endif // ifndef MUELU_SMOOTHERBASECLONER_HPP

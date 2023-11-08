@@ -47,27 +47,26 @@
 #ifndef MUELU_USEDEFAULTTYPES_HPP
 #define MUELU_USEDEFAULTTYPES_HPP
 
-#include <Tpetra_KokkosCompat_DefaultNode.hpp>
 #include "MueLu_config.hpp"
+#include <Tpetra_KokkosCompat_DefaultNode.hpp>
 
 #include <Tpetra_Details_DefaultTypes.hpp>
 
-namespace MueLu
-{
+namespace MueLu {
 
-  typedef Tpetra::Details::DefaultTypes::scalar_type DefaultScalar;
+typedef Tpetra::Details::DefaultTypes::scalar_type DefaultScalar;
 
-  typedef int DefaultLocalOrdinal;
+typedef int DefaultLocalOrdinal;
 
-  #if defined HAVE_MUELU_DEFAULT_GO_LONG
-  typedef long DefaultGlobalOrdinal;
-  #elif defined HAVE_MUELU_DEFAULT_GO_LONGLONG
-  typedef long long DefaultGlobalOrdinal;
-  #else
-  typedef int DefaultGlobalOrdinal;
-  #endif
+#if defined HAVE_MUELU_DEFAULT_GO_LONG
+typedef long DefaultGlobalOrdinal;
+#elif defined HAVE_MUELU_DEFAULT_GO_LONGLONG
+typedef long long DefaultGlobalOrdinal;
+#else
+typedef int DefaultGlobalOrdinal;
+#endif
 
-  typedef Tpetra::KokkosClassic::DefaultNode::DefaultNodeType DefaultNode;
-}
+typedef Tpetra::KokkosClassic::DefaultNode::DefaultNodeType DefaultNode;
+} // namespace MueLu
 
 #endif

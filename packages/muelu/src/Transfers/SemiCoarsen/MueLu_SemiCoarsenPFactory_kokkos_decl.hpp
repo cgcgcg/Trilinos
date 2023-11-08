@@ -60,37 +60,58 @@ namespace MueLu {
   @ingroup MueLuTransferClasses
   @brief Prolongator factory performing semi-coarsening.
 
-  The semi-coarsening is performed along user-provided "vertical lines" (in z-direction).
-  The line detection algorithm can be found in the LineDetectionFactory.
-  Usually, the SemiCoarsenPFactory_kokkos is used together with the TogglePFactory and a
-  second TentativePFactory_kokkos which allows to dynamically switch from semi-coarsening to
-  aggregation-based coarsening (or any other compatible coarsening algorithm).
+  The semi-coarsening is performed along user-provided "vertical lines" (in
+  z-direction). The line detection algorithm can be found in the
+  LineDetectionFactory. Usually, the SemiCoarsenPFactory_kokkos is used together
+  with the TogglePFactory and a second TentativePFactory_kokkos which allows to
+  dynamically switch from semi-coarsening to aggregation-based coarsening (or
+  any other compatible coarsening algorithm).
 
   ## Input/output of SemiCoarsenPFactory_kokkos ##
 
   ### User parameters of SemiCoarsenPFactory_kokkos ###
   Parameter | type | default | master.xml | validated | requested | description
   ----------|------|---------|:----------:|:---------:|:---------:|------------
-  | A                         | Factory | null      | | * | * | Generating factory of the matrix A used during the prolongator smoothing process |
-  | Nullspace                 | Factory | null      | | * | * | Generating factory of the nullspace. The SemiCoarsenPFactory_kokkos provides a coarse version of the given Nullspace. |
-  | Coordinates               | Factory | NoFactory | | * | * | Generating factory for coorindates. The coordinates are expected to be provided on the finest level using the NoFactory mechanism. The coordinates are used to determine the number of z-layers if not otherwise provided by the user. |
-  | LineDetection_VertLineIds | Factory | null      | | * | * | Generating factory for LineDetection information. Usually provided by the LineDetectionFactory. Array with vertical line ids for all nodes on current processor. |
-  | LineDetection_Layers      | Factory | null      | | * | * | Generating factory for LineDetection information. Usually provided by the LineDetectionFactory. Array with layer id for all nodes on current processor. |
-  | CoarseNumZLayers          | Factory | null      | | * | * | Generating factory for LineDetection information. Usually provided by the LineDetectionFactory. Number of remaining z-layers after semi-coarsening. |
-  | semicoarsen: coarsen rate | int     | null      | | * | * | Coarsening rate along vertical lines (2 corresponds to classical semicoarsening. Values > 2 for more aggressive coarsening). |
+  | A                         | Factory | null      | | * | * | Generating
+  factory of the matrix A used during the prolongator smoothing process | |
+  Nullspace                 | Factory | null      | | * | * | Generating factory
+  of the nullspace. The SemiCoarsenPFactory_kokkos provides a coarse version of
+  the given Nullspace. | | Coordinates               | Factory | NoFactory | | *
+  | * | Generating factory for coorindates. The coordinates are expected to be
+  provided on the finest level using the NoFactory mechanism. The coordinates
+  are used to determine the number of z-layers if not otherwise provided by the
+  user. | | LineDetection_VertLineIds | Factory | null      | | * | * |
+  Generating factory for LineDetection information. Usually provided by the
+  LineDetectionFactory. Array with vertical line ids for all nodes on current
+  processor. | | LineDetection_Layers      | Factory | null      | | * | * |
+  Generating factory for LineDetection information. Usually provided by the
+  LineDetectionFactory. Array with layer id for all nodes on current processor.
+  | | CoarseNumZLayers          | Factory | null      | | * | * | Generating
+  factory for LineDetection information. Usually provided by the
+  LineDetectionFactory. Number of remaining z-layers after semi-coarsening. | |
+  semicoarsen: coarsen rate | int     | null      | | * | * | Coarsening rate
+  along vertical lines (2 corresponds to classical semicoarsening. Values > 2
+  for more aggressive coarsening). |
 
-  The * in the @c master.xml column denotes that the parameter is defined in the @c master.xml file.<br>
-  The * in the @c validated column means that the parameter is declared in the list of valid input parameters (see SemiCoarsenPFactory_kokkos::GetValidParameters).<br>
-  The * in the @c requested column states that the data is requested as input with all dependencies (see SemiCoarsenPFactory_kokkos::DeclareInput).
+  The * in the @c master.xml column denotes that the parameter is defined in the
+  @c master.xml file.<br> The * in the @c validated column means that the
+  parameter is declared in the list of valid input parameters (see
+  SemiCoarsenPFactory_kokkos::GetValidParameters).<br> The * in the @c requested
+  column states that the data is requested as input with all dependencies (see
+  SemiCoarsenPFactory_kokkos::DeclareInput).
 
   ### Variables provided by SemiCoarsenPFactory_kokkos ###
-  After SemiCoarsenPFactory_kokkos::Build the following data is available (if requested)
+  After SemiCoarsenPFactory_kokkos::Build the following data is available (if
+  requested)
 
   Parameter | generated by | description
   ----------|--------------|------------
   | P          | SemiCoarsenPFactory_kokkos | Prolongator
-  | Nullspace  | SemiCoarsenPFactory_kokkos | Coarse nullspace (the fine level nullspace information is coarsened using P to generate a coarse version of the nullspace. No scaling is applied.
-  | NumZLayers | NoFactory                  | Number of z layers after coarsening. Necessary input for LineDetectionFactory. Useful input for TogglePFactory.
+  | Nullspace  | SemiCoarsenPFactory_kokkos | Coarse nullspace (the fine level
+  nullspace information is coarsened using P to generate a coarse version of the
+  nullspace. No scaling is applied. | NumZLayers | NoFactory                  |
+  Number of z layers after coarsening. Necessary input for LineDetectionFactory.
+  Useful input for TogglePFactory.
 */
 
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
@@ -100,7 +121,8 @@ template <class Scalar, class LocalOrdinal, class GlobalOrdinal,
           class DeviceType>
 class SemiCoarsenPFactory_kokkos<
     Scalar, LocalOrdinal, GlobalOrdinal,
-    Tpetra::KokkosCompat::KokkosDeviceWrapperNode<DeviceType>> : public PFactory {
+    Tpetra::KokkosCompat::KokkosDeviceWrapperNode<DeviceType>>
+    : public PFactory {
 public:
   typedef LocalOrdinal local_ordinal_type;
   typedef GlobalOrdinal global_ordinal_type;

@@ -50,8 +50,8 @@
 #if defined(HAVE_MUELU_STRATIMIKOS) && defined(HAVE_MUELU_THYRA)
 
 namespace MueLu {
-  template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-  class StratimikosSmoother;
+template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+class StratimikosSmoother;
 }
 
 #ifndef MUELU_STRATIMIKOSSMOOTHER_SHORT
