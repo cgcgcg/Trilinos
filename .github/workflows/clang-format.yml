@@ -1,0 +1,43 @@
+name: Check MueLu clang-format
+
+on:
+  pull_request:
+    branches: ["develop"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Clang Format
+      uses: DoozyX/clang-format-lint-action@v0.16.2
+      with:
+        source: './packages/muelu'
+        exclude: './packages/muelu/src/MueCentral/MueLu_MasterList.cpp'
+        extensions: 'cpp,hpp'
+        clangFormatVersion: 14
+        style: file
+        inplace: true
+
+    - name: Create Pull Request
+      id: cpr
+      uses: peter-evans/create-pull-request@v5
+      with:
+        delete-branch: true
+        base: ${{ github.head_ref }}
+        commit-message: clang-format
+        branch: clang-format-fix
+        brach-suffix: timestamp
+        title: Automated clang format fixup of PR ${{ github.event.pull_request.number }}
+
+    - name: Comment
+      if: ${{ steps.cpr.outputs.pull-request-number }}
+      uses: peter-evans/create-or-update-comment@v3
+      with:
+        issue-number: ${{ github.event.pull_request.number }}
+        body: |
+          Clang format diffed! I opened a PR with the changes against your branch. Have a look at #${{ steps.cpr.outputs.pull-request-number }} and merge it to accept the changes.
