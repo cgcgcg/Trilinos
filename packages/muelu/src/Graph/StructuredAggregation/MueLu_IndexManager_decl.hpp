@@ -52,8 +52,8 @@
 
 #include <Xpetra_Map_fwd.hpp>
 
-#include "MueLu_ConfigDefs.hpp"
 #include "MueLu_BaseClass.hpp"
+#include "MueLu_ConfigDefs.hpp"
 #include "MueLu_IndexManager_fwd.hpp"
 
 /*****************************************************************************
@@ -75,178 +75,226 @@ namespace MueLu {
     and local lexicographic mesh orderings are supported.
 */
 
-  template <class LocalOrdinal, class GlobalOrdinal, class Node>
-  class IndexManager : public BaseClass {
+template <class LocalOrdinal, class GlobalOrdinal, class Node>
+class IndexManager : public BaseClass {
 #undef MUELU_INDEXMANAGER_SHORT
 #include "MueLu_UseShortNamesOrdinal.hpp"
 
-  private:
+private:
+protected:
+  const RCP<const Teuchos::Comm<int>>
+      comm_;           ///< Communicator used by uncoupled aggregation
+  const bool coupled_; ///< Flag for coupled vs uncoupled aggregation mode, if
+                       ///< true aggregation is coupled.
+  const bool singleCoarsePoint_; ///< Flag telling us if can reduce dimensions
+                                 ///< to a single layer.
+  const int numDimensions; ///< Number of spacial dimensions in the problem
+  const int interpolationOrder_; ///< Interpolation order used by grid transfer
+                                 ///< operators using these aggregates.
+
+  Array<int> coarseRate; ///< coarsening rate in each direction
+  Array<int> endRate;    ///< adapted coarsening rate at the edge of the mesh in
+                         ///< each direction.
+
+  GO gNumFineNodes;                 ///< global number of nodes.
+  GO gNumFineNodes10;               ///< global number of nodes per 0-1 slice.
+  const Array<GO> gFineNodesPerDir; ///< global number of nodes per direction.
+
+  LO lNumFineNodes;                 ///< local number of nodes.
+  LO lNumFineNodes10;               ///< local number of nodes per 0-1 slice.
+  const Array<LO> lFineNodesPerDir; ///< local number of nodes per direction.
 
-  protected:
+  GO gNumCoarseNodes;   ///< global number of nodes remaining after coarsening.
+  GO gNumCoarseNodes10; ///< global number of nodes per 0-1 slice remaining
+                        ///< after coarsening.
+  Array<GO> gCoarseNodesPerDir; ///< global number of nodes per direction
+                                ///< remaining after coarsening.
 
-    const RCP<const Teuchos::Comm<int> > comm_; ///< Communicator used by uncoupled aggregation
-    const bool coupled_;                ///< Flag for coupled vs uncoupled aggregation mode, if true aggregation is coupled.
-    const bool singleCoarsePoint_;      ///< Flag telling us if can reduce dimensions to a single layer.
-    const int numDimensions;            ///< Number of spacial dimensions in the problem
-    const int interpolationOrder_;      ///< Interpolation order used by grid transfer operators using these aggregates.
+  LO lNumCoarseNodes;   ///< local number of nodes remaining after coarsening.
+  LO lNumCoarseNodes10; ///< local number of nodes per 0-1 slice remaining after
+                        ///< coarsening.
+  Array<LO> lCoarseNodesPerDir; ///< local number of nodes per direction remaing
+                                ///< after coarsening.
 
-    Array<int> coarseRate;              ///< coarsening rate in each direction
-    Array<int> endRate;                 ///< adapted coarsening rate at the edge of the mesh in each direction.
+  LO numGhostNodes;     ///< local number of ghost nodes
+  LO numGhostedNodes;   ///< local number of ghosted nodes (i.e. ghost + coarse
+                        ///< nodes).
+  LO numGhostedNodes10; ///< local number of ghosted nodes (i.e. ghost + coarse
+                        ///< nodes) per 0-1 slice.
+  Array<LO> ghostedNodesPerDir; ///< local number of ghosted nodes (i.e. ghost +
+                                ///< coarse nodes) per direction
 
-    GO gNumFineNodes;                   ///< global number of nodes.
-    GO gNumFineNodes10;                 ///< global number of nodes per 0-1 slice.
-    const Array<GO> gFineNodesPerDir;   ///< global number of nodes per direction.
+  GO minGlobalIndex; ///< lowest GID of any node in the local process
+  Array<LO>
+      offsets; ///< distance between lowest (resp. highest) index to the lowest
+               ///< (resp. highest) ghostedNodeIndex in that direction.
+  Array<LO> coarseNodeOffsets; ///< distance between lowest (resp. highest)
+                               ///< index to the lowest (resp. highest)
+                               ///< coarseNodeIndex in that direction.
+  Array<GO> startIndices;      ///< lowest global tuple (i,j,k) of a node on the
+                               ///< local process
+  Array<GO> startGhostedCoarseNode; ///< lowest coarse global tuple (i,j,k) of a
+                                    ///< node remaing on the local process after
+                                    ///< coarsening.
 
-    LO lNumFineNodes;                   ///< local number of nodes.
-    LO lNumFineNodes10;                 ///< local number of nodes per 0-1 slice.
-    const Array<LO> lFineNodesPerDir;   ///< local number of nodes per direction.
+  bool meshEdge[6] = {false}; ///< flags indicating if we run into the edge of
+                              ///< the mesh in ilo, ihi, jlo, jhi, klo or khi.
+  bool ghostInterface[6] = {
+      false}; ///< flags indicating if ghost points are needed at ilo, ihi, jlo,
+              ///< jhi, klo and khi boundaries.
+  bool ghostedDir[6] = {
+      false}; ///< flags indicating if ghost points are needed at ilo, ihi, jlo,
+              ///< jhi, klo and khi boundaries.
 
-    GO gNumCoarseNodes;                 ///< global number of nodes remaining after coarsening.
-    GO gNumCoarseNodes10;               ///< global number of nodes per 0-1 slice remaining after coarsening.
-    Array<GO> gCoarseNodesPerDir;       ///< global number of nodes per direction remaining after coarsening.
+public:
+  IndexManager() = default;
 
-    LO lNumCoarseNodes;                 ///< local number of nodes remaining after coarsening.
-    LO lNumCoarseNodes10;               ///< local number of nodes per 0-1 slice remaining after coarsening.
-    Array<LO> lCoarseNodesPerDir;       ///< local number of nodes per direction remaing after coarsening.
+  IndexManager(const RCP<const Teuchos::Comm<int>> comm, const bool coupled,
+               const bool singleCoarsePoint, const int NumDimensions,
+               const int interpolationOrder, const Array<GO> GFineNodesPerDir,
+               const Array<LO> LFineNodesPerDir);
 
-    LO numGhostNodes;                   ///< local number of ghost nodes
-    LO numGhostedNodes;                 ///< local number of ghosted nodes (i.e. ghost + coarse nodes).
-    LO numGhostedNodes10;               ///< local number of ghosted nodes (i.e. ghost + coarse nodes) per 0-1 slice.
-    Array<LO> ghostedNodesPerDir;       ///< local number of ghosted nodes (i.e. ghost + coarse nodes) per direction
+  virtual ~IndexManager() {}
 
-    GO minGlobalIndex;                  ///< lowest GID of any node in the local process
-    Array<LO> offsets;                  ///< distance between lowest (resp. highest) index to the lowest (resp. highest) ghostedNodeIndex in that direction.
-    Array<LO> coarseNodeOffsets;        ///< distance between lowest (resp. highest) index to the lowest (resp. highest) coarseNodeIndex in that direction.
-    Array<GO> startIndices;             ///< lowest global tuple (i,j,k) of a node on the local process
-    Array<GO> startGhostedCoarseNode;   ///< lowest coarse global tuple (i,j,k) of a node remaing on the local process after coarsening.
+  //! Sets basic parameters used to compute indices on the mesh.
+  //! This method requires you to have set this->coarseRate and
+  //! this->startIndices.
+  void computeMeshParameters();
 
-    bool meshEdge[6] =       {false};   ///< flags indicating if we run into the edge of the mesh in ilo, ihi, jlo, jhi, klo or khi.
-    bool ghostInterface[6] = {false};   ///< flags indicating if ghost points are needed at ilo, ihi, jlo, jhi, klo and khi boundaries.
-    bool ghostedDir[6] =     {false};   ///< flags indicating if ghost points are needed at ilo, ihi, jlo, jhi, klo and khi boundaries.
+  virtual void computeGlobalCoarseParameters() = 0;
 
-  public:
+  virtual void getGhostedNodesData(const RCP<const Map> fineMap,
+                                   Array<LO> &ghostedNodeCoarseLIDs,
+                                   Array<int> &ghostedNodeCoarsePIDs,
+                                   Array<GO> &ghostedNodeCoarseGIDs) const = 0;
 
-    IndexManager() = default;
+  virtual void getCoarseNodesData(const RCP<const Map> fineCoordinatesMap,
+                                  Array<GO> &coarseNodeCoarseGIDs,
+                                  Array<GO> &coarseNodeFineGIDs) const = 0;
 
-    IndexManager(const RCP<const Teuchos::Comm<int> > comm, const bool coupled,
-                 const bool singleCoarsePoint, const int NumDimensions,
-                 const int interpolationOrder, const Array<GO> GFineNodesPerDir,
-                 const Array<LO> LFineNodesPerDir);
+  bool isAggregationCoupled() const { return coupled_; }
 
-    virtual ~IndexManager() {}
+  bool isSingleCoarsePoint() const { return singleCoarsePoint_; }
 
-    //! Sets basic parameters used to compute indices on the mesh.
-    //! This method requires you to have set this->coarseRate and this->startIndices.
-    void computeMeshParameters();
+  int getNumDimensions() const { return numDimensions; }
 
-    virtual void computeGlobalCoarseParameters() = 0;
+  int getInterpolationOrder() const { return interpolationOrder_; }
 
-    virtual void getGhostedNodesData(const RCP<const Map> fineMap,
-                                     Array<LO>&  ghostedNodeCoarseLIDs,
-                                     Array<int>& ghostedNodeCoarsePIDs,
-                                     Array<GO>&  ghostedNodeCoarseGIDs) const = 0;
+  GO getNumGlobalFineNodes() const { return gNumFineNodes; }
 
-    virtual void getCoarseNodesData(const RCP<const Map> fineCoordinatesMap,
-                                    Array<GO>& coarseNodeCoarseGIDs,
-                                    Array<GO>& coarseNodeFineGIDs) const = 0;
+  GO getNumGlobalCoarseNodes() const { return gNumCoarseNodes; }
 
-    bool isAggregationCoupled() const {return coupled_;}
+  LO getNumLocalFineNodes() const { return lNumFineNodes; }
 
-    bool isSingleCoarsePoint() const {return singleCoarsePoint_;}
+  LO getNumLocalCoarseNodes() const { return lNumCoarseNodes; }
 
-    int getNumDimensions() const {return numDimensions;}
+  LO getNumLocalGhostedNodes() const { return numGhostedNodes; }
 
-    int getInterpolationOrder() const {return interpolationOrder_;}
+  Array<int> getCoarseningRates() const { return coarseRate; }
 
-    GO getNumGlobalFineNodes() const {return gNumFineNodes;}
+  int getCoarseningRate(const int dim) const { return coarseRate[dim]; }
 
-    GO getNumGlobalCoarseNodes() const {return gNumCoarseNodes;}
+  Array<int> getCoarseningEndRates() const { return endRate; }
 
-    LO getNumLocalFineNodes() const {return lNumFineNodes;}
+  int getCoarseningEndRate(const int dim) const { return endRate[dim]; }
 
-    LO getNumLocalCoarseNodes() const {return lNumCoarseNodes;}
+  bool getMeshEdge(const int dir) const { return meshEdge[dir]; }
 
-    LO getNumLocalGhostedNodes() const {return numGhostedNodes;}
+  bool getGhostInterface(const int dir) const { return ghostInterface[dir]; }
 
-    Array<int> getCoarseningRates() const {return coarseRate;}
+  Array<LO> getOffsets() const { return offsets; }
 
-    int getCoarseningRate(const int dim) const {return coarseRate[dim];}
+  LO getOffset(int const dim) const { return offsets[dim]; }
 
-    Array<int> getCoarseningEndRates() const {return endRate;}
+  Array<LO> getCoarseNodeOffsets() const { return coarseNodeOffsets; }
 
-    int getCoarseningEndRate(const int dim) const {return endRate[dim];}
+  LO getCoarseNodeOffset(int const dim) const { return coarseNodeOffsets[dim]; }
 
-    bool getMeshEdge(const int dir) const {return meshEdge[dir];}
+  Array<GO> getStartIndices() const { return startIndices; }
 
-    bool getGhostInterface(const int dir) const {return ghostInterface[dir];}
+  GO getStartIndex(int const dim) const { return startIndices[dim]; }
 
-    Array<LO> getOffsets() const {return offsets;}
+  Array<GO> getStartGhostedCoarseNodes() const {
+    return startGhostedCoarseNode;
+  }
 
-    LO getOffset(int const dim) const {return offsets[dim];}
+  GO getStartGhostedCoarseNode(int const dim) const {
+    return startGhostedCoarseNode[dim];
+  }
 
-    Array<LO> getCoarseNodeOffsets() const {return coarseNodeOffsets;}
+  Array<LO> getLocalFineNodesPerDir() const { return lFineNodesPerDir; }
 
-    LO getCoarseNodeOffset(int const dim) const {return coarseNodeOffsets[dim];}
+  LO getLocalFineNodesInDir(const int dim) const {
+    return lFineNodesPerDir[dim];
+  }
 
-    Array<GO> getStartIndices() const {return startIndices;}
+  Array<GO> getGlobalFineNodesPerDir() const { return gFineNodesPerDir; }
 
-    GO getStartIndex(int const dim) const {return startIndices[dim];}
+  GO getGlobalFineNodesInDir(const int dim) const {
+    return gFineNodesPerDir[dim];
+  }
 
-    Array<GO> getStartGhostedCoarseNodes() const {return startGhostedCoarseNode;}
+  Array<LO> getLocalCoarseNodesPerDir() const { return lCoarseNodesPerDir; }
 
-    GO getStartGhostedCoarseNode(int const dim) const {return startGhostedCoarseNode[dim];}
+  LO getLocalCoarseNodesInDir(const int dim) const {
+    return lCoarseNodesPerDir[dim];
+  }
 
-    Array<LO> getLocalFineNodesPerDir() const {return lFineNodesPerDir;}
+  Array<GO> getGlobalCoarseNodesPerDir() const { return gCoarseNodesPerDir; }
 
-    LO getLocalFineNodesInDir(const int dim) const {return lFineNodesPerDir[dim];}
+  GO getGlobalCoarseNodesInDir(const int dim) const {
+    return gCoarseNodesPerDir[dim];
+  }
 
-    Array<GO> getGlobalFineNodesPerDir() const {return gFineNodesPerDir;}
+  Array<LO> getGhostedNodesPerDir() const { return ghostedNodesPerDir; }
 
-    GO getGlobalFineNodesInDir(const int dim) const {return gFineNodesPerDir[dim];}
+  LO getGhostedNodesInDir(const int dim) const {
+    return ghostedNodesPerDir[dim];
+  }
 
-    Array<LO> getLocalCoarseNodesPerDir() const {return lCoarseNodesPerDir;}
+  virtual std::vector<std::vector<GO>> getCoarseMeshData() const = 0;
 
-    LO getLocalCoarseNodesInDir(const int dim) const {return lCoarseNodesPerDir[dim];}
+  virtual void getFineNodeGlobalTuple(const GO myGID, GO &i, GO &j,
+                                      GO &k) const = 0;
 
-    Array<GO> getGlobalCoarseNodesPerDir() const {return gCoarseNodesPerDir;}
+  virtual void getFineNodeLocalTuple(const LO myLID, LO &i, LO &j,
+                                     LO &k) const = 0;
 
-    GO getGlobalCoarseNodesInDir(const int dim) const {return gCoarseNodesPerDir[dim];}
+  virtual void getFineNodeGhostedTuple(const LO myLID, LO &i, LO &j,
+                                       LO &k) const = 0;
 
-    Array<LO> getGhostedNodesPerDir() const {return ghostedNodesPerDir;}
+  virtual void getFineNodeGID(const GO i, const GO j, const GO k,
+                              GO &myGID) const = 0;
 
-    LO getGhostedNodesInDir(const int dim) const {return ghostedNodesPerDir[dim];}
+  virtual void getFineNodeLID(const LO i, const LO j, const LO k,
+                              LO &myLID) const = 0;
 
-    virtual std::vector<std::vector<GO> > getCoarseMeshData() const = 0;
+  virtual void getCoarseNodeGlobalTuple(const GO myGID, GO &i, GO &j,
+                                        GO &k) const = 0;
 
-    virtual void getFineNodeGlobalTuple(const GO myGID, GO& i, GO& j, GO& k) const = 0;
+  virtual void getCoarseNodeLocalTuple(const LO myLID, LO &i, LO &j,
+                                       LO &k) const = 0;
 
-    virtual void getFineNodeLocalTuple(const LO myLID, LO& i, LO& j, LO& k) const = 0;
+  virtual void getCoarseNodeGID(const GO i, const GO j, const GO k,
+                                GO &myGID) const = 0;
 
-    virtual void getFineNodeGhostedTuple(const LO myLID, LO& i, LO& j, LO& k) const = 0;
+  virtual void getCoarseNodeLID(const LO i, const LO j, const LO k,
+                                LO &myLID) const = 0;
 
-    virtual void getFineNodeGID(const GO i, const GO j, const GO k, GO& myGID) const = 0;
+  virtual void getCoarseNodeGhostedLID(const LO i, const LO j, const LO k,
+                                       LO &myLID) const = 0;
 
-    virtual void getFineNodeLID(const LO i, const LO j, const LO k, LO& myLID) const = 0;
+  virtual void getCoarseNodeFineLID(const LO i, const LO j, const LO k,
+                                    LO &myLID) const = 0;
 
-    virtual void getCoarseNodeGlobalTuple(const GO myGID, GO& i, GO& j, GO& k) const = 0;
+  virtual void getGhostedNodeFineLID(const LO i, const LO j, const LO k,
+                                     LO &myLID) const = 0;
 
-    virtual void getCoarseNodeLocalTuple(const LO myLID, LO& i, LO& j, LO& k) const = 0;
+  virtual void getGhostedNodeCoarseLID(const LO i, const LO j, const LO k,
+                                       LO &myLID) const = 0;
+};
 
-    virtual void getCoarseNodeGID(const GO i, const GO j, const GO k, GO& myGID) const = 0;
-
-    virtual void getCoarseNodeLID(const LO i, const LO j, const LO k, LO& myLID) const = 0;
-
-    virtual void getCoarseNodeGhostedLID(const LO i, const LO j, const LO k, LO& myLID) const = 0;
-
-    virtual void getCoarseNodeFineLID(const LO i, const LO j, const LO k, LO& myLID) const = 0;
-
-    virtual void getGhostedNodeFineLID(const LO i, const LO j, const LO k, LO& myLID) const = 0;
-
-    virtual void getGhostedNodeCoarseLID(const LO i, const LO j, const LO k, LO& myLID) const = 0;
-
-  };
-
-} //namespace MueLu
+} // namespace MueLu
 
 #define MUELU_INDEXMANAGER_SHORT
 #endif // MUELU_INDEXMANAGER_DECL_HPP

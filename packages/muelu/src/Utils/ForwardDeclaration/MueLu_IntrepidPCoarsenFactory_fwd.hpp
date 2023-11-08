@@ -50,8 +50,8 @@
 #ifdef HAVE_MUELU_INTREPID2
 
 namespace MueLu {
-  template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-  class IntrepidPCoarsenFactory;
+template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+class IntrepidPCoarsenFactory;
 }
 
 #ifndef MUELU_INTREPIDPCOARSENFACTORY_SHORT

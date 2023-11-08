@@ -193,8 +193,8 @@ void SemiCoarsenPFactory_kokkos<Scalar, LocalOrdinal, GlobalOrdinal,
   RCP<Matrix> P;
   RCP<MultiVector> coarseNullspace;
   BuildSemiCoarsenP(coarseLevel, Ndofs, Nnodes, BlkSize, FineNumZLayers,
-                    CoarseNumZLayers, TLayerId, TVertLineId, A, fineNullspace, P,
-                    coarseNullspace);
+                    CoarseNumZLayers, TLayerId, TVertLineId, A, fineNullspace,
+                    P, coarseNullspace);
 
   // Store number of coarse z-layers on the coarse level container
   // This information is used by the LineDetectionAlgorithm
@@ -357,14 +357,17 @@ void SemiCoarsenPFactory_kokkos<
     importer = ImportFactory::Build(Amat->getDomainMap(), Amat->getColMap());
   {
     // Fill local temp with layer ids and fill ghost nodes
-    const auto localTempHost = localTemp->getHostLocalView(Xpetra::Access::ReadWrite);
+    const auto localTempHost =
+        localTemp->getHostLocalView(Xpetra::Access::ReadWrite);
     for (int row = 0; row < NFRows; row++)
       localTempHost(row, 0) = LayerId[row / DofsPerNode];
-    const auto localTempView = localTemp->getDeviceLocalView(Xpetra::Access::ReadWrite);
+    const auto localTempView =
+        localTemp->getDeviceLocalView(Xpetra::Access::ReadWrite);
     Kokkos::deep_copy(localTempView, localTempHost);
     FCol2LayerVector->doImport(*localTemp, *(importer), Xpetra::INSERT);
   }
-  const auto FCol2LayerView = FCol2LayerVector->getDeviceLocalView(Xpetra::Access::ReadOnly);
+  const auto FCol2LayerView =
+      FCol2LayerVector->getDeviceLocalView(Xpetra::Access::ReadOnly);
   const auto FCol2Layer = Kokkos::subview(FCol2LayerView, Kokkos::ALL(), 0);
 
   // Construct a map from fine level column to local dof per node id (including
@@ -373,14 +376,17 @@ void SemiCoarsenPFactory_kokkos<
       Xpetra::VectorFactory<LO, LO, GO, NO>::Build(Amat->getColMap());
   {
     // Fill local temp with local dof per node ids and fill ghost nodes
-    const auto localTempHost = localTemp->getHostLocalView(Xpetra::Access::ReadWrite);
+    const auto localTempHost =
+        localTemp->getHostLocalView(Xpetra::Access::ReadWrite);
     for (int row = 0; row < NFRows; row++)
       localTempHost(row, 0) = row % DofsPerNode;
-    const auto localTempView = localTemp->getDeviceLocalView(Xpetra::Access::ReadWrite);
+    const auto localTempView =
+        localTemp->getDeviceLocalView(Xpetra::Access::ReadWrite);
     Kokkos::deep_copy(localTempView, localTempHost);
     FCol2DofVector->doImport(*localTemp, *(importer), Xpetra::INSERT);
   }
-  const auto FCol2DofView = FCol2DofVector->getDeviceLocalView(Xpetra::Access::ReadOnly);
+  const auto FCol2DofView =
+      FCol2DofVector->getDeviceLocalView(Xpetra::Access::ReadOnly);
   const auto FCol2Dof = Kokkos::subview(FCol2DofView, Kokkos::ALL(), 0);
 
   // Compute NVertLines
@@ -450,10 +456,10 @@ void SemiCoarsenPFactory_kokkos<
   // Here we store the full matrix to be compatible with kokkos kernels batch LU
   // and tringular solve.
   int Nmax = MaxStencilSize * DofsPerNode;
-  Kokkos::View<impl_SC ***, DeviceType> BandMat(
-      "BandMat", NVertLines, Nmax, Nmax);
-  Kokkos::View<impl_SC ***, DeviceType> BandSol(
-      "BandSol", NVertLines, Nmax, DofsPerNode);
+  Kokkos::View<impl_SC ***, DeviceType> BandMat("BandMat", NVertLines, Nmax,
+                                                Nmax);
+  Kokkos::View<impl_SC ***, DeviceType> BandSol("BandSol", NVertLines, Nmax,
+                                                DofsPerNode);
 
   // Precompute number of nonzeros in prolongation matrix and allocate P views
   // Note: Each coarse dof (NVertLines*NCLayers*DofsPerNode) contributes an
@@ -540,8 +546,7 @@ void SemiCoarsenPFactory_kokkos<
                 Kokkos::subview(BandMat, line, Kokkos::ALL(), Kokkos::ALL());
             for (int row = 0; row < Nmax; ++row)
               for (int col = 0; col < Nmax; ++col)
-                bandMat(row, col) =
-                    (row == col && row >= N) ? one : zero;
+                bandMat(row, col) = (row == col && row >= N) ? one : zero;
 
             // Loop over layers in stencil and fill banded matrix and rhs
             const int flayer = CLayer2FLayer(clayer);
@@ -669,8 +674,10 @@ void SemiCoarsenPFactory_kokkos<
   coarseNullspace =
       MultiVectorFactory::Build(coarseMap, fineNullspace->getNumVectors());
   const int numVectors = fineNullspace->getNumVectors();
-  const auto fineNullspaceView = fineNullspace->getDeviceLocalView(Xpetra::Access::ReadOnly);
-  const auto coarseNullspaceView = coarseNullspace->getDeviceLocalView(Xpetra::Access::ReadWrite);
+  const auto fineNullspaceView =
+      fineNullspace->getDeviceLocalView(Xpetra::Access::ReadOnly);
+  const auto coarseNullspaceView =
+      coarseNullspace->getDeviceLocalView(Xpetra::Access::ReadWrite);
   using range_policy = Kokkos::RangePolicy<execution_space>;
   Kokkos::parallel_for(
       "MueLu::SemiCoarsenPFactory_kokkos::BuildSemiCoarsenP Inject Nullspace",

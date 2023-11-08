@@ -50,8 +50,8 @@
 #ifdef HAVE_MPI
 
 namespace MueLu {
-  template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-  class RepartitionHeuristicFactory;
+template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+class RepartitionHeuristicFactory;
 }
 
 #ifndef MUELU_REPARTITIONHEURISTICFACTORY_SHORT

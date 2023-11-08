@@ -47,8 +47,8 @@
 #define MUELU_TWOLEVELMATLABFACTORY_FWD_HPP
 
 namespace MueLu {
-  template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-  class TwoLevelMatlabFactory;
+template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+class TwoLevelMatlabFactory;
 }
 
 #ifndef MUELU_TWOLEVELMATLABFACTORY_SHORT

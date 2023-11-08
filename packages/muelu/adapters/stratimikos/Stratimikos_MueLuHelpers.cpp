@@ -54,10 +54,10 @@
 #include "Thyra_MueLuTpetraQ2Q1PreconditionerFactory.hpp"
 #endif
 
-#include "Teuchos_RCP.hpp"
-#include "Teuchos_ParameterList.hpp"
-#include "Teuchos_TestForException.hpp"
 #include "Teuchos_AbstractFactoryStd.hpp"
+#include "Teuchos_ParameterList.hpp"
+#include "Teuchos_RCP.hpp"
+#include "Teuchos_TestForException.hpp"
 
 namespace Stratimikos {
 
