@@ -45,13 +45,9 @@
 //
 // @HEADER
 
-
-
 #include "MueLu_FacadeClassBase_def.hpp"
 
-#define MUELU_ETI_GROUP(SC,LO,GO,NO) \
-  template class MueLu::FacadeClassBase<SC,LO,GO,NO>;
+#define MUELU_ETI_GROUP(SC, LO, GO, NO) \
+  template class MueLu::FacadeClassBase<SC, LO, GO, NO>;
 
 #include "MueLu_ETI_4arg.hpp"
-
-
