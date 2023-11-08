@@ -1,0 +1,47 @@
+name: Check clang-format
+
+on:
+  pull_request:
+    branches: ["develop"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: clang-format
+      uses: DoozyX/clang-format-lint-action@v0.16.2
+      with:
+        source: './packages/muelu'
+        exclude: './packages/muelu/src/MueCentral/MueLu_MasterList.cpp'
+        extensions: 'cpp,hpp'
+        clangFormatVersion: 14
+        style: file
+        inplace: true
+
+    - name: Create Pull Request
+      id: cpr
+      uses: peter-evans/create-pull-request@v5
+      with:
+        # push-to-fork: cgcgcg/Trilinos
+        delete-branch: true
+        base: ${{ github.head_ref }}
+        commit-message: clang-format
+        branch: clang-format-fix
+        branch-suffix: timestamp
+        title: Automated clang-format fixup of PR ${{ github.event.pull_request.number }}
+        body: Automated clang-format fixup of PR #${{ github.event.pull_request.number }}
+
+    - name: Comment
+      if: ${{ steps.cpr.outputs.pull-request-number }}
+      uses: peter-evans/create-or-update-comment@v3
+      with:
+        issue-number: ${{ github.event.pull_request.number }}
+        body: |
+          clang-format diff'd!
+
+          I opened a PR against your branch that fixes the formatting. Have a look at #${{ steps.cpr.outputs.pull-request-number }} and merge if the changes look good.
