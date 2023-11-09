@@ -46,7 +46,8 @@ jobs:
         # push-to-fork: cgcgcg/Trilinos
         # token: ${{ secrets.MACHINE_USER_PAT }}
         delete-branch: true
-        base: ${{ github.head_ref }}
+        # base: ${{ github.head_ref }}
+        base: pull/${{ github.event.pull_request.number }}/head
         commit-message: clang-format
         branch: clang-format-fix
         branch-suffix: timestamp
