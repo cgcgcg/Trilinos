@@ -53,14 +53,14 @@ jobs:
 
     - name: Comment
       id: comment
-      uses: peter-evans/create-or-update-comment@v3
+      uses: peter-evans/create-or-update-comment@v2
       if: failure()
       with:
           issue-number: ${{ github.event.pull_request.number }}
           body-path: patch
 
     - name: Update comment to include id
-      uses: peter-evans/create-or-update-comment@v3
+      uses: peter-evans/create-or-update-comment@v2
       if: failure()
       with:
           comment-id: ${{ steps.comment.outputs.comment-id }}
