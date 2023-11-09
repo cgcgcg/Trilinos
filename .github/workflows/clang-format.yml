@@ -38,33 +38,23 @@ jobs:
         style: file
         inplace: true
 
-    # Open up a new PR from "push-to-fork" to the base of the PR
-    - name: Create Pull Request
-      id: cpr
-      uses: peter-evans/create-pull-request@v5
-      with:
-        # push-to-fork: cgcgcg/Trilinos
-        # token: ${{ secrets.MACHINE_USER_PAT }}
-        delete-branch: true
-        base: ${{ github.head_ref }}
-        commit-message: clang-format
-        branch: clang-format-fix
-        branch-suffix: timestamp
-        title: Automated clang-format fixup of PR ${{ github.event.pull_request.number }}
-        body: Automated clang-format fixup of PR #${{ github.event.pull_request.number }}
+    - name: Create patch
+      run: |
+        git diff > patch
+        if [[ -s patch ]]; then printf '```diff\n%s\n```' "$(cat patch)" > patch; exit 1; fi
 
-    # Comment on the PR with details of how to pull in the changes
     - name: Comment
-      if: ${{ steps.cpr.outputs.pull-request-number }}
+      id: comment
       uses: peter-evans/create-or-update-comment@v3
+      if: failure()
       with:
-        issue-number: ${{ github.event.pull_request.number }}
-        body: |
-          clang-format diff'd!
+          issue-number: ${{ github.event.pull_request.number }}
+          body-path: patch
 
-          I opened a PR against your branch that fixes the formatting. Have a look at #${{ steps.cpr.outputs.pull-request-number }} and merge it if the changes look good.
-
-    # Set the action status to fail if we had to open a PR
-    - name: Set action status
-      if: ${{ steps.cpr.outputs.pull-request-number }}
-      run: exit 1
+    - name: Update comment to include id
+      uses: peter-evans/create-or-update-comment@v3
+      if: failure()
+      with:
+          comment-id: ${{ steps.comment.outputs.comment-id }}
+          body: |
+            In order to apply this change to your PR, please run `packages/muelu/utils/applyClangFormat.py ${{ steps.comment.outputs.comment-id }}` in your source repo and with your branch checked out. Then push the changes.
