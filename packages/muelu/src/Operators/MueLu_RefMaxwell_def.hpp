@@ -906,8 +906,6 @@ void RefMaxwell<Scalar, LocalOrdinal, GlobalOrdinal, Node>::buildCoarse11Matrix(
   }
 }
 
-
-
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 void RefMaxwell<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     rebalanceCoarse11Matrix(const int rebalanceStriding, const int numProcsCoarseA11) {
