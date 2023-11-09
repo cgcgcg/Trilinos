@@ -57,4 +57,4 @@ jobs:
       with:
           comment-id: ${{ steps.comment.outputs.comment-id }}
           body: |
-            In order to apply this change to your PR, please run `packages/muelu/utils/applyClangFormat.py ${{ steps.comment.outputs.comment-id }}` in your source repo and with your branch checked out. Then push the changes.
+            In order to apply this change to your PR, please run `packages/muelu/utils/applyClangFormat.py ${{ steps.comment.outputs.comment-id }}` in your source repo and with your branch checked out. Then commit and push the changes.
