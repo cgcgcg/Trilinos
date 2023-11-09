@@ -1,8 +1,9 @@
 name: Check clang-format
 
 on:
-  pull_request:
+  pull_request_target:
     branches: ["develop"]
+    types: [assigned, opened, synchronize, reopened, edited]
   workflow_dispatch:
 
 env:
