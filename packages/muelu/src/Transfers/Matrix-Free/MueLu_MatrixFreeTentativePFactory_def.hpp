@@ -67,7 +67,7 @@ validParamList->set<RCP<const FactoryBase>>("Nullspace", Teuchos::null, "Generat
        validParamList->set<RCP<const FactoryBase>>("Scaled Nullspace", Teuchos::null, "Generating factory of the scaled nullspace");
  validParamList->set<RCP<const FactoryBase>>("UnAmalgamationInfo", Teuchos::null, "Generating factory of UnAmalgamationInfo");
 
-      validParamList->set<RCP<const FactoryBase>>("CoarseMap", Teuchos::null, "Generating factory of the coarse map");
+ validParamList->set<RCP<const FactoryBase>>("CoarseMap", Teuchos::null, "Generating factory of the coarse map");
    validParamList->set<RCP<const FactoryBase>>("Coordinates", Teuchos::null, "Generating factory of the coordinates");
 
   // Make sure we don't recursively validate options for the matrixmatrix kernels
