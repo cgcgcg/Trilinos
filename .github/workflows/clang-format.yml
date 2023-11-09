@@ -57,7 +57,7 @@ jobs:
       if: failure()
       with:
           issue-number: ${{ github.event.pull_request.number }}
-          body-path: patch
+          body-file: patch
 
     - name: Update comment to include id
       uses: peter-evans/create-or-update-comment@v2
