@@ -1,0 +1,69 @@
+name: Check clang-format
+
+on:
+  pull_request_target:
+    branches: ["develop"]
+    types: [assigned, opened, synchronize, reopened, edited]
+  workflow_dispatch:
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    # Check out the PR
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    # Run clang-format over it, modify in-place
+    - name: clang-format
+      uses: DoozyX/clang-format-lint-action@v0.16.2
+      with:
+        source: './packages/muelu'
+        exclude: './packages/muelu/src/MueCentral/MueLu_MasterList.cpp'
+        extensions: 'cpp,hpp'
+        clangFormatVersion: 14
+        style: file
+        inplace: true
+
+    # Re-run clang-format over it, modify in-place
+    # Clang-format is not idempotent?!?
+    - name: clang-format
+      uses: DoozyX/clang-format-lint-action@v0.16.2
+      with:
+        source: './packages/muelu'
+        exclude: './packages/muelu/src/MueCentral/MueLu_MasterList.cpp'
+        extensions: 'cpp,hpp'
+        clangFormatVersion: 14
+        style: file
+        inplace: true
+
+    - name: Create patch
+      run: |
+        git diff > patch
+        if [[ -s patch ]]; then printf '```diff\n%s\n```' "$(cat patch)" > patch; exit 1; fi
+
+    - name: Comment
+      id: comment
+      uses: peter-evans/create-or-update-comment@v2
+      if: failure()
+      with:
+          issue-number: ${{ github.event.pull_request_target.number }}
+          body-file: patch
+
+    - name: Update comment to include id
+      uses: peter-evans/create-or-update-comment@v2
+      if: failure()
+      with:
+          comment-id: ${{ steps.comment.outputs.comment-id }}
+          body: |
+            In order to apply this change to your PR, please run `packages/muelu/utils/applyClangFormat.py ${{ steps.comment.outputs.comment-id }}` in your source repo and with your branch checked out. Then commit and push the changes.
