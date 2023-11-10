@@ -339,6 +339,23 @@ namespace MueLu {
     }
     prec_->setParameters(amesos2_params);
 
+
+    {
+      using magnitudeType = typename Teuchos::ScalarTraits<Scalar>::magnitudeType;
+
+      auto lclFactorA = factorA->getLocalMatrixHost();
+      magnitudeType maxAbs = Teuchos::ScalarTraits<magnitudeType>::zero();
+      for (size_t i = 0; i<lclFactorA.values.extent(0); i++ )
+        maxAbs = std::max(maxAbs, Teuchos::ScalarTraits<Scalar>::magnitude(lclFactorA.values(i)));
+
+      if (maxAbs < Teuchos::ScalarTraits<magnitudeType>::eps()) {
+        Xpetra::IO<Scalar,LocalOrdinal,GlobalOrdinal,Node>::Write("coarseA.mat", *factorA);
+        TEUCHOS_TEST_FOR_EXCEPTION(true,
+                                   Exceptions::RuntimeError,
+                                   "The matrix provided to the coarse solver seems to be zero. Check file \"coarseA.mat\".");
+      }
+    }
+
     SmootherPrototype::IsSetup(true);
   }
 
