@@ -50,13 +50,13 @@
 
 #include <Teuchos_ArrayView.hpp>
 #include <Xpetra_Map.hpp>
-
+#include <Xpetra_CrsGraphFactory.hpp>
 #include "MueLu_LWGraph_kokkos_decl.hpp"
 
 namespace MueLu {
 
-  template<class LocalOrdinal, class GlobalOrdinal, class DeviceType>
-  void LWGraph_kokkos<LocalOrdinal,GlobalOrdinal,Tpetra::KokkosCompat::KokkosDeviceWrapperNode<DeviceType>>::
+  template<class LocalOrdinal, class GlobalOrdinal, class Node>
+  void LWGraph_kokkos<LocalOrdinal,GlobalOrdinal,Node>::
   print(Teuchos::FancyOStream &out, const VerbLevel verbLevel) const {
 
     if (verbLevel & Debug) {
@@ -85,6 +85,14 @@ namespace MueLu {
         out << ss.str() << std::endl;
       }
     }
+  }
+
+
+  template <class LocalOrdinal, class GlobalOrdinal, class Node>
+  RCP<Xpetra::CrsGraph<LocalOrdinal,GlobalOrdinal,Node> > LWGraph_kokkos<LocalOrdinal, GlobalOrdinal, Node>::GetCrsGraph() const {
+    auto graph = Xpetra::CrsGraphFactory<LocalOrdinal,GlobalOrdinal,Node>::Build(this->getLocalLWGraph().getGraph(), this->GetDomainMap(), this->GetImportMap());
+    graph->fillComplete();
+    return graph;
   }
 
 } //namespace MueLu

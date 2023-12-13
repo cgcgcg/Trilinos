@@ -52,7 +52,6 @@
 #include <Xpetra_VectorFactory.hpp>
 
 #include "MueLu_LWGraph_kokkos.hpp"
-#include "MueLu_Graph.hpp"
 #include "MueLu_GraphBase.hpp"
 #include "MueLu_Utilities_decl.hpp"
 #include "MueLu_Aggregates_decl.hpp"

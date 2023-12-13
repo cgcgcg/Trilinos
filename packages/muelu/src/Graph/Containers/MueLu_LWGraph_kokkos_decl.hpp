@@ -53,8 +53,10 @@
 
 #include <Xpetra_ConfigDefs.hpp>   // global_size_t
 #include <Xpetra_Map_fwd.hpp>
+#include <Xpetra_CrsGraph.hpp>
 
 #include "MueLu_VerbosityLevel.hpp"
+#include "MueLu_GraphBase.hpp"
 #include "MueLu_LWGraph_kokkos_fwd.hpp"
 #include <MueLu_LocalLWGraph_kokkos_decl.hpp>
 
@@ -69,19 +71,18 @@ namespace MueLu {
     This class is lightweight in the sense that it holds to local graph
     information. These were built without using fillComplete.
    */
-  template<class LocalOrdinal, class GlobalOrdinal, class Node>
-  class LWGraph_kokkos;
-
-  // Partial specialization for DeviceType
-  template<class LocalOrdinal, class GlobalOrdinal, class DeviceType>
-  class LWGraph_kokkos<LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosDeviceWrapperNode<DeviceType>> {
+  template<class LocalOrdinal = DefaultLocalOrdinal,
+           class GlobalOrdinal = DefaultGlobalOrdinal,
+           class Node = DefaultNode>
+  class LWGraph_kokkos : public MueLu::GraphBase<LocalOrdinal, GlobalOrdinal, Node> {
   public:
     using local_ordinal_type  = LocalOrdinal;
     using global_ordinal_type = GlobalOrdinal;
-    using execution_space     = typename DeviceType::execution_space;
-    using memory_space        = typename DeviceType::memory_space;
-    using device_type         = Kokkos::Device<execution_space, memory_space>;
-    using node_type           = Tpetra::KokkosCompat::KokkosDeviceWrapperNode<DeviceType>;
+    using device_type         = typename Node::device_type;
+    using execution_space     = typename device_type::execution_space;
+    using memory_space        = typename device_type::memory_space;
+    // using device_type         = Kokkos::Device<execution_space, memory_space>;
+    using node_type           = Node;
     using local_lw_graph_type = MueLu::LocalLWGraph_kokkos<LocalOrdinal, GlobalOrdinal, node_type>;
     using size_type           = size_t;
 
@@ -89,9 +90,11 @@ namespace MueLu {
     using local_graph_type    = typename local_lw_graph_type::local_graph_type;
     using boundary_nodes_type = typename local_lw_graph_type::boundary_nodes_type;
 
+    using neighbors_type      = Kokkos::GraphRowViewConst<local_graph_type>;
+
   private:
     // For compatibility
-    typedef node_type                                           Node;
+    // typedef node_type                                           Node;
 #undef MUELU_LWGRAPH_KOKKOS_SHORT
 #include "MueLu_UseShortNamesOrdinal.hpp"
 
@@ -111,6 +114,9 @@ namespace MueLu {
                    const RCP<const map_type>& importMap,
                    const std::string&         objectLabel = "")
       : lclLWGraph_(graph, domainMap), domainMap_(domainMap), importMap_(importMap), objectLabel_(objectLabel) { }
+
+    LWGraph_kokkos(const RCP<const Xpetra::CrsGraph<LocalOrdinal, GlobalOrdinal, Node> >& G, const std::string& objectLabel = "")
+      : lclLWGraph_(local_lw_graph_type(G->getLocalGraphDevice(), G->getRowMap())), domainMap_(G->getRowMap()), importMap_(G->getColMap()), objectLabel_(objectLabel){}
 
     ~LWGraph_kokkos() = default;
     //@}
@@ -135,10 +141,22 @@ namespace MueLu {
       return lclLWGraph_.GetNodeNumEdges();
     }
 
+    //! Set boolean array indicating which rows correspond to Dirichlet boundaries.
+    void SetBoundaryNodeMap(const boundary_nodes_type bndry)   { lclLWGraph_.SetBoundaryNodeMap(bndry); }
+
+    //! Return the list of vertices adjacent to the vertex 'v'.
+    neighbors_type getNeighborVertices(LO i) const { return lclLWGraph_.getNeighborVertices(i); }
+
+    //! Return true if vertex with local id 'v' is on current process.
+    bool isLocalNeighborVertex(LO i) const                       { return lclLWGraph_.isLocalNeighborVertex(i); }
+
     //! Returns the maximum number of entries across all rows/columns on this node
     KOKKOS_INLINE_FUNCTION size_type getLocalMaxNumRowEntries () const {
       return lclLWGraph_.getLocalMaxNumRowEntries();
     }
+
+    //! Returns map with global ids of boundary nodes.
+    const boundary_nodes_type GetBoundaryNodeMap() const        { return lclLWGraph_.GetBoundaryNodeMap(); }
 
     /// Return a simple one-line description of the Graph.
     std::string description() const {
@@ -147,6 +165,8 @@ namespace MueLu {
 
     //! Print the Graph with some verbosity level to an FancyOStream object.
     void print(Teuchos::FancyOStream &out, const VerbLevel verbLevel = Default) const;
+
+    RCP<CrsGraph> GetCrsGraph() const;
 
     local_lw_graph_type& getLocalLWGraph() const {
       return lclLWGraph_;

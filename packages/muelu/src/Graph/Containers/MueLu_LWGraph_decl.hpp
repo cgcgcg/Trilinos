@@ -54,9 +54,22 @@
 
 #include "MueLu_LWGraph_fwd.hpp"
 #include "MueLu_GraphBase.hpp"
+#include "MueLu_LWGraph_kokkos.hpp"
 #include "MueLu_Exceptions.hpp"
 
 namespace MueLu {
+
+
+  template<class LocalOrdinal = DefaultLocalOrdinal,
+           class GlobalOrdinal = DefaultGlobalOrdinal,
+           class Node = DefaultNode>
+  typename LWGraph_kokkos<LocalOrdinal, GlobalOrdinal, Node>::local_graph_type
+  constructLocalGraph(const ArrayRCP<const size_t>& rowPtrs, const ArrayRCP<const LocalOrdinal>& colPtrs) {
+    Kokkos::View<size_t*,       Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> > rows(const_cast<size_t*>(rowPtrs().getRawPtr()), rowPtrs().size());
+    Kokkos::View<LocalOrdinal*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> > cols(const_cast<LocalOrdinal*>(colPtrs().getRawPtr()), colPtrs().size());
+    typename LWGraph_kokkos<LocalOrdinal, GlobalOrdinal, Node>::local_graph_type lclGraph(cols, rows);
+    return lclGraph;
+  }
 
 /*!
    @class LWGraph
@@ -69,14 +82,11 @@ namespace MueLu {
   template<class LocalOrdinal = DefaultLocalOrdinal,
            class GlobalOrdinal = DefaultGlobalOrdinal,
            class Node = DefaultNode>
-  class LWGraph : public MueLu::GraphBase<LocalOrdinal,GlobalOrdinal,Node> {
+  class LWGraph : public MueLu::LWGraph_kokkos<LocalOrdinal,GlobalOrdinal,Tpetra::KokkosCompat::KokkosDeviceWrapperNode<Kokkos::Serial> > {
 #undef MUELU_LWGRAPH_SHORT
 #include "MueLu_UseShortNamesOrdinal.hpp"
 
   public:
-
-    //! @name Constructors/Destructors.
-    //@{
 
     //! LWGraph constructor
     //
@@ -85,62 +95,18 @@ namespace MueLu {
     // @param[in] domainMap: non-overlapping (domain) map for graph. Usually provided by AmalgamationFactory stored in UnAmalgamationInfo container
     // @param[in] importMap: overlapping map for graph. Usually provided by AmalgamationFactory stored in UnAmalgamationInfo container
     // @param[in] objectLabel: label string
-    LWGraph(const ArrayRCP<const LO>& rowPtrs, const ArrayRCP<const LO>& colPtrs,
+    LWGraph(const ArrayRCP<const size_t>& rowPtrs, const ArrayRCP<const LocalOrdinal>& colPtrs,
             const RCP<const Map>& domainMap, const RCP<const Map>& importMap, const std::string& objectLabel = "")
-            : rows_(rowPtrs), columns_(colPtrs), domainMap_(domainMap), importMap_(importMap), domainMapRef_(*domainMap), objectLabel_(objectLabel)
-    {
-      minLocalIndex_ = domainMapRef_.getMinLocalIndex();
-      maxLocalIndex_ = domainMapRef_.getMaxLocalIndex();
+      : LWGraph_kokkos(constructLocalGraph(rowPtrs, colPtrs), domainMap, importMap, objectLabel),
+        rows_(rowPtrs),
+        columns_(colPtrs) { }
 
-      maxNumRowEntries_ = 0;
+    LWGraph(const RCP<const Xpetra::CrsGraph<LocalOrdinal, GlobalOrdinal, Node> >& G, const std::string& objectLabel = "") : LWGraph_kokkos(G, objectLabel) {}
 
-      LO nRows = as<LO>(rowPtrs.size()-1);
-      for (LO i = 0; i < nRows; i++)
-        maxNumRowEntries_ = std::max(maxNumRowEntries_, as<size_t>(rowPtrs[i+1] - rowPtrs[i]));
-    }
-
-    virtual ~LWGraph() {}
-    //@}
-
-    size_t GetNodeNumVertices() const { return rows_.size()-1; }
-    size_t GetNodeNumEdges()    const { return rows_[rows_.size()-1]; }
-
-    // TODO: do we really need this function
-    // It is being called from CoupledAggregation, but do we need it there?
-    Xpetra::global_size_t GetGlobalNumEdges() const {
-      Xpetra::global_size_t in = GetNodeNumEdges(), out;
-      Teuchos::reduceAll(*domainMap_->getComm(), Teuchos::REDUCE_SUM, in, Teuchos::outArg(out));
-      return out;
-    }
-
-    const RCP<const Teuchos::Comm<int> > GetComm()      const    { return domainMap_->getComm(); }
-    const RCP<const Map>                 GetDomainMap() const    { return domainMap_; }
-    //! Returns overlapping import map (nodes).
-    const RCP<const Map>                 GetImportMap() const    { return importMap_; }
-
-    void SetBoundaryNodeMap(RCP<const Map> const &/* map */)           { throw Exceptions::NotImplemented("LWGraph: Boundary node map not implemented."); }
-
-    //! Return the list of vertices adjacent to the vertex 'v'.
-    Teuchos::ArrayView<const LO> getNeighborVertices(LO i) const { return columns_.view(rows_[i], rows_[i+1]-rows_[i]); }
-
-    //! Return true if vertex with local id 'v' is on current process.
-    bool isLocalNeighborVertex(LO i) const                       { return i >= minLocalIndex_ && i <= maxLocalIndex_; }
-
-    //! Set boolean array indicating which rows correspond to Dirichlet boundaries.
-    void SetBoundaryNodeMap(const ArrayRCP<const bool>& bndry)   { dirichletBoundaries_ = bndry; }
-
-    //! Returns the maximum number of entries across all rows/columns on this node
-    size_t getLocalMaxNumRowEntries () const                      { return maxNumRowEntries_; }
-
-    //! Returns map with global ids of boundary nodes.
-    const ArrayRCP<const bool> GetBoundaryNodeMap() const        { return dirichletBoundaries_; }
-
-
-    /// Return a simple one-line description of the Graph.
-    std::string description() const                              { return "MueLu.description()"; } //FIXME use object's label
+    // RCP<CrsGraph> GetCrsGraph() const;
 
     //! Return the row pointers of the local graph
-    const ArrayRCP<const LO> getRowPtrs() const {
+    const ArrayRCP<const size_t> getRowPtrs() const {
       return rows_;
     }
 
@@ -148,34 +114,15 @@ namespace MueLu {
     const ArrayRCP<const LO> getEntries() const {
       return columns_;
     }
-    
-    //! Print the Graph with some verbosity level to an FancyOStream object.
-    //using MueLu::Describable::describe; // overloading, not hiding
-    //void describe(Teuchos::FancyOStream &out, const VerbLevel verbLevel = Default) const;;
-    void print(Teuchos::FancyOStream &out, const VerbLevel verbLevel = Default) const;
-
-
-    RCP<CrsGraph> GetCrsGraph() const;
 
   private:
 
     //! Indices into columns_ array.  Part of local graph information.
-    const ArrayRCP<const LO> rows_;
+    const ArrayRCP<const size_t> rows_;
     //! Columns corresponding to connections.  Part of local graph information.
     const ArrayRCP<const LO> columns_;
-    //! Graph maps
-    const RCP<const Map> domainMap_, importMap_;
-    const Map& domainMapRef_;
-    //! Name of this graph.
-    const std::string objectLabel_;
-    //! Boolean array marking Dirichlet rows.
-    ArrayRCP<const bool> dirichletBoundaries_;
 
-    // local index boundaries (cached from domain map)
-    LO     minLocalIndex_, maxLocalIndex_;
-    size_t maxNumRowEntries_;
   };
-
 } // namespace MueLu
 
 #define MUELU_LWGRAPH_SHORT

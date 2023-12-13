@@ -137,10 +137,6 @@ namespace MueLu {
         RCP<Aggregates> data = currentLevel.Get<RCP<Aggregates> >(variableName, fact.get());
         Set(currentLevel, variableName, data);
       }
-      else if (variableType.find("Graph") != npos) {
-        RCP<Graph> data = currentLevel.Get<RCP<Graph> >(variableName, fact.get());
-        Set(currentLevel, variableName, data);
-      }
       else if (variableType.find("SmootherBase") != npos) {
         RCP<SmootherBase> data = currentLevel.Get<RCP<SmootherBase> >(variableName, fact.get());
         Set(currentLevel, variableName, data);

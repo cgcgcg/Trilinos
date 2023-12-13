@@ -53,6 +53,8 @@
 
 #include "MueLu_BaseClass.hpp"
 
+#include <Kokkos_StaticCrsGraph.hpp>
+
 namespace MueLu {
 
 /*!
@@ -75,6 +77,13 @@ namespace MueLu {
     using gno_t  = GlobalOrdinal;
     using node_t = Node;
 
+    using device_type         = typename Node::device_type;
+    using memory_space        = typename device_type::memory_space;
+    using local_graph_type    = Kokkos::StaticCrsGraph<LocalOrdinal,
+                                                       Kokkos::LayoutLeft,
+                                                       device_type, void, size_t>;
+    using boundary_nodes_type = Kokkos::View<const bool*, memory_space>;
+
     //! @name Constructors/Destructors.
     //@{
     virtual ~GraphBase() {};
@@ -93,18 +102,16 @@ namespace MueLu {
     //! Return number of edges owned by the calling node.
     virtual size_t GetNodeNumEdges()    const = 0;
 
-    virtual void   SetBoundaryNodeMap(const ArrayRCP<const bool > & boundaryArray) = 0;
+    virtual void   SetBoundaryNodeMap(const boundary_nodes_type boundaryArray) = 0;
 
     virtual size_t getLocalMaxNumRowEntries() const = 0;
 
-    virtual const ArrayRCP<const bool> GetBoundaryNodeMap() const = 0;
-
-    //FIXME is this necessary?
-    //! Return number of global edges in the graph.
-    virtual Xpetra::global_size_t GetGlobalNumEdges() const = 0;
+    virtual const boundary_nodes_type GetBoundaryNodeMap() const = 0;
 
     //! Return the list of vertices adjacent to the vertex 'v'.
-    virtual Teuchos::ArrayView<const LocalOrdinal> getNeighborVertices(LocalOrdinal v) const = 0;
+    virtual Kokkos::GraphRowViewConst<local_graph_type> getNeighborVertices(LocalOrdinal v) const = 0;
+
+    virtual RCP<CrsGraph> GetCrsGraph() const = 0;
 
     //! Return true if vertex with local id 'v' is on current process.
     virtual bool isLocalNeighborVertex(LocalOrdinal v) const = 0;

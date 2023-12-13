@@ -41,9 +41,6 @@ using AmalgamationInfo [[maybe_unused]] = MueLu::AmalgamationInfo<LocalOrdinal,G
 #ifdef MUELU_GLOBALLEXICOGRAPHICINDEXMANAGER_SHORT
 using GlobalLexicographicIndexManager [[maybe_unused]] = MueLu::GlobalLexicographicIndexManager<LocalOrdinal,GlobalOrdinal,Node>;
 #endif
-#ifdef MUELU_GRAPH_SHORT
-using Graph [[maybe_unused]] = MueLu::Graph<LocalOrdinal,GlobalOrdinal,Node>;
-#endif
 #ifdef MUELU_GRAPHBASE_SHORT
 using GraphBase [[maybe_unused]] = MueLu::GraphBase<LocalOrdinal,GlobalOrdinal,Node>;
 #endif
