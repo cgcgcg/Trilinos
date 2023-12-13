@@ -1302,6 +1302,47 @@ namespace MueLu {
   }
 
 
+  // Applies rowsum criterion
+  template<class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+  void
+  UtilitiesBase<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
+  ApplyRowSumCriterion(const Xpetra::Matrix<Scalar,LocalOrdinal,GlobalOrdinal,Node>& A,
+                       const Xpetra::Vector<LocalOrdinal,LocalOrdinal,GlobalOrdinal,Node> &BlockNumber,
+                       const typename Teuchos::ScalarTraits<Scalar>::magnitudeType rowSumTol,
+                       Kokkos::View<bool*, typename Node::device_type> & dirichletRows)
+  {
+    typedef Teuchos::ScalarTraits<Scalar> STS;
+    RCP<const Xpetra::Map<LocalOrdinal,GlobalOrdinal,Node>> rowmap = A.getRowMap();
+
+    TEUCHOS_TEST_FOR_EXCEPTION(!A.getColMap()->isSameAs(*BlockNumber.getMap()),std::runtime_error,"ApplyRowSumCriterion: BlockNumber must match's A's column map.");
+
+    auto dirichletRowsHost = Kokkos::create_mirror_view(dirichletRows);
+    Kokkos::deep_copy(dirichletRowsHost, dirichletRows);
+
+    Teuchos::ArrayRCP<const LocalOrdinal> block_id = BlockNumber.getData(0);
+    for (LocalOrdinal row = 0; row < Teuchos::as<LocalOrdinal>(rowmap->getLocalNumElements()); ++row) {
+      size_t nnz = A.getNumEntriesInLocalRow(row);
+      ArrayView<const LocalOrdinal> indices;
+      ArrayView<const Scalar> vals;
+      A.getLocalRowView(row, indices, vals);
+
+      Scalar rowsum = STS::zero();
+      Scalar diagval = STS::zero();
+      for (LocalOrdinal colID = 0; colID < Teuchos::as<LocalOrdinal>(nnz); colID++) {
+        LocalOrdinal col = indices[colID];
+        if (row == col)
+          diagval = vals[colID];
+        if(block_id[row] == block_id[col])
+          rowsum += vals[colID];
+      }
+      if (STS::real(rowsum) > STS::magnitude(diagval) * rowSumTol)
+        dirichletRowsHost(row) = true;
+    }
+
+    Kokkos::deep_copy(dirichletRows, dirichletRowsHost);
+  }
+
+
   template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
   Teuchos::ArrayRCP<const bool>
   UtilitiesBase<Scalar, LocalOrdinal, GlobalOrdinal, Node>::

@@ -363,6 +363,11 @@ namespace MueLu {
                                      const typename Teuchos::ScalarTraits<Scalar>::magnitudeType rowSumTol,
                                      Kokkos::View<bool*, typename NO::device_type> & dirichletRows);
 
+    static void ApplyRowSumCriterion(const Matrix& A,
+                                     const Xpetra::Vector<LocalOrdinal,LocalOrdinal,GlobalOrdinal,Node> &BlockNumber,
+                                     const typename Teuchos::ScalarTraits<Scalar>::magnitudeType rowSumTol,
+                                     Kokkos::View<bool*, typename NO::device_type> & dirichletRows);
+
 
     /*! @brief Detect Dirichlet columns based on Dirichlet rows
 
