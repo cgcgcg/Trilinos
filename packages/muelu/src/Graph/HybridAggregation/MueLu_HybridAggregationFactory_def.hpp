@@ -377,11 +377,10 @@ namespace MueLu {
 
       *out << "Treat Dirichlet BC" << std::endl;
       // Dirichlet boundary
-      ArrayRCP<const bool> dirichletBoundaryMap = graph->GetBoundaryNodeMap();
-      if (dirichletBoundaryMap != Teuchos::null)
-        for (LO i = 0; i < numRows; i++)
-          if (dirichletBoundaryMap[i] == true)
-            aggStat[i] = BOUNDARY;
+      auto dirichletBoundaryMap = graph->GetBoundaryNodeMap();
+      for (LO i = 0; i < numRows; i++)
+        if (dirichletBoundaryMap(i) == true)
+          aggStat[i] = BOUNDARY;
 
       // OnePt aggregation
       std::string mapOnePtName = pL.get<std::string>("OnePt aggregate map name");

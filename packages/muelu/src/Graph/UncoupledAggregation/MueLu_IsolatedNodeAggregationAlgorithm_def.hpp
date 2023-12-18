@@ -76,7 +76,7 @@ namespace MueLu {
 
     // Remove all isolated nodes
     for (LO i = 0; i < numRows; i++)
-      if (aggStat[i] != AGGREGATED && aggStat[i] != IGNORED && graph.getNeighborVertices(i).size() == 1) {
+      if (aggStat[i] != AGGREGATED && aggStat[i] != IGNORED && graph.getNeighborVertices(i).length == 1) {
         aggStat[i] = IGNORED;
         numNonAggregatedNodes--;
       }

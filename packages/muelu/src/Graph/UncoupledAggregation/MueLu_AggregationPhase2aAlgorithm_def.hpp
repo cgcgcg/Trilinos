@@ -133,11 +133,11 @@ namespace MueLu {
         numNeighbors++;
       }
 
-      ArrayView<const LocalOrdinal> neighOfINode = graph.getNeighborVertices(rootCandidate);
+      auto neighOfINode = graph.getNeighborVertices(rootCandidate);
 
       LO num_nonaggd_neighbors=0, num_local_neighbors=0;
-      for (int j = 0; j < neighOfINode.size(); j++) {
-        LO neigh = neighOfINode[j];
+      for (int j = 0; j < neighOfINode.length; j++) {
+        LO neigh = neighOfINode(j);
         if (graph.isLocalNeighborVertex(neigh))
           num_local_neighbors++;
 

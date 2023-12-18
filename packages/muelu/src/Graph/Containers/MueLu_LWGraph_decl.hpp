@@ -65,9 +65,19 @@ namespace MueLu {
            class Node = DefaultNode>
   typename LWGraph_kokkos<LocalOrdinal, GlobalOrdinal, Node>::local_graph_type
   constructLocalGraph(const ArrayRCP<const size_t>& rowPtrs, const ArrayRCP<const LocalOrdinal>& colPtrs) {
+    using local_graph_type = typename LWGraph_kokkos<LocalOrdinal, GlobalOrdinal, Node>::local_graph_type;
+    using entries_type = typename local_graph_type::entries_type;
+    using row_map_type = typename local_graph_type::row_map_type;
+
     Kokkos::View<size_t*,       Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> > rows(const_cast<size_t*>(rowPtrs().getRawPtr()), rowPtrs().size());
     Kokkos::View<LocalOrdinal*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> > cols(const_cast<LocalOrdinal*>(colPtrs().getRawPtr()), colPtrs().size());
-    typename LWGraph_kokkos<LocalOrdinal, GlobalOrdinal, Node>::local_graph_type lclGraph(cols, rows);
+
+    typename row_map_type::non_const_type rowsDevice("rows", rowPtrs().size());
+    typename entries_type::non_const_type colsDevice("cols", colPtrs().size());
+
+    Kokkos::deep_copy(rowsDevice, rows);
+    Kokkos::deep_copy(colsDevice, cols);
+    local_graph_type lclGraph(colsDevice, rowsDevice);
     return lclGraph;
   }
 
@@ -82,7 +92,7 @@ namespace MueLu {
   template<class LocalOrdinal = DefaultLocalOrdinal,
            class GlobalOrdinal = DefaultGlobalOrdinal,
            class Node = DefaultNode>
-  class LWGraph : public MueLu::LWGraph_kokkos<LocalOrdinal,GlobalOrdinal,Tpetra::KokkosCompat::KokkosDeviceWrapperNode<Kokkos::Serial> > {
+  class LWGraph : public MueLu::LWGraph_kokkos<LocalOrdinal,GlobalOrdinal,Node> {
 #undef MUELU_LWGRAPH_SHORT
 #include "MueLu_UseShortNamesOrdinal.hpp"
 
@@ -102,8 +112,6 @@ namespace MueLu {
         columns_(colPtrs) { }
 
     LWGraph(const RCP<const Xpetra::CrsGraph<LocalOrdinal, GlobalOrdinal, Node> >& G, const std::string& objectLabel = "") : LWGraph_kokkos(G, objectLabel) {}
-
-    // RCP<CrsGraph> GetCrsGraph() const;
 
     //! Return the row pointers of the local graph
     const ArrayRCP<const size_t> getRowPtrs() const {

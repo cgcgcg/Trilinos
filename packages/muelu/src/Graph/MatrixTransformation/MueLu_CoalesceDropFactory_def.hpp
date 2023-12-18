@@ -67,7 +67,6 @@
 #include "MueLu_AmalgamationInfo.hpp"
 #include "MueLu_Exceptions.hpp"
 #include "MueLu_GraphBase.hpp"
-#include "MueLu_Graph.hpp"
 #include "MueLu_Level.hpp"
 #include "MueLu_LWGraph.hpp"
 #include "MueLu_MasterList.hpp"
@@ -449,9 +448,9 @@ namespace MueLu {
         // Therefore, it is sufficient to check only threshold
         if ( BlockSize==1 && threshold == STS::zero() && !useSignedClassicalRS && !useSignedClassicalSA && A->hasCrsGraph()) {
           // Case 1:  scalar problem, no dropping => just use matrix graph
-          RCP<GraphBase> graph = rcp(new Graph(A->getCrsGraph(), "graph of A"));
+          RCP<GraphBase> graph = rcp(new LWGraph(A->getCrsGraph(), "graph of A"));
           // Detect and record rows that correspond to Dirichlet boundary conditions
-          ArrayRCP<bool > boundaryNodes = Teuchos::arcp_const_cast<bool>(MueLu::Utilities<SC,LO,GO,NO>::DetectDirichletRows(*A, dirichletThreshold));
+          auto boundaryNodes = MueLu::Utilities<SC,LO,GO,NO>::DetectDirichletRows_kokkos(*A, dirichletThreshold);
           if (rowSumTol > 0.)
             Utilities::ApplyRowSumCriterion(*A, rowSumTol, boundaryNodes);
 
@@ -461,7 +460,7 @@ namespace MueLu {
           if (GetVerbLevel() & Statistics1) {
             GO numLocalBoundaryNodes  = 0;
             GO numGlobalBoundaryNodes = 0;
-            for (LO i = 0; i < boundaryNodes.size(); ++i)
+            for (size_t i = 0; i < boundaryNodes.size(); ++i)
               if (boundaryNodes[i])
                 numLocalBoundaryNodes++;
             RCP<const Teuchos::Comm<int> > comm = A->getRowMap()->getComm();
@@ -481,8 +480,8 @@ namespace MueLu {
           // OR a matrix without a CrsGraph
 
           // allocate space for the local graph
-          ArrayRCP<LO> rows   (A->getLocalNumRows()+1);
-          ArrayRCP<LO> columns(A->getLocalNumEntries());
+          ArrayRCP<size_t> rows   (A->getLocalNumRows()+1);
+          ArrayRCP<LO>     columns(A->getLocalNumEntries());
 
           using MT = typename STS::magnitudeType;
           RCP<Vector> ghostedDiag;
@@ -505,7 +504,7 @@ namespace MueLu {
             ghostedDiag = MueLu::Utilities<SC,LO,GO,NO>::GetMatrixOverlappedDiagonal(*A);
             ghostedDiagVals = ghostedDiag->getData(0);
           }
-          ArrayRCP<bool> boundaryNodes = Teuchos::arcp_const_cast<bool>(MueLu::Utilities<SC,LO,GO,NO>::DetectDirichletRows(*A, dirichletThreshold));
+          auto boundaryNodes = MueLu::Utilities<SC,LO,GO,NO>::DetectDirichletRows_kokkos(*A, dirichletThreshold);
           if (rowSumTol > 0.) {
             if(ghostedBlockNumber.is_null()) {
               if (GetVerbLevel() & Statistics1)
@@ -715,7 +714,7 @@ namespace MueLu {
           if (GetVerbLevel() & Statistics1) {
             GO numLocalBoundaryNodes  = 0;
             GO numGlobalBoundaryNodes = 0;
-            for (LO i = 0; i < boundaryNodes.size(); ++i)
+            for (size_t i = 0; i < boundaryNodes.size(); ++i)
               if (boundaryNodes[i])
                 numLocalBoundaryNodes++;
             RCP<const Teuchos::Comm<int> > comm = A->getRowMap()->getComm();
@@ -771,17 +770,16 @@ namespace MueLu {
           LO numRows = Teuchos::as<LocalOrdinal>(uniqueMap->getLocalNumElements());
 
           // Allocate space for the local graph
-          ArrayRCP<LO> rows    = ArrayRCP<LO>(numRows+1);
-          ArrayRCP<LO> columns = ArrayRCP<LO>(A->getLocalNumEntries());
+          ArrayRCP<size_t> rows    = ArrayRCP<size_t>(numRows+1);
+          ArrayRCP<LO>     columns = ArrayRCP<LO>(A->getLocalNumEntries());
 
-          const ArrayRCP<bool> amalgBoundaryNodes(numRows, false);
+          typename LWGraph::boundary_nodes_type::non_const_type amalgBoundaryNodes("amalgamated boundary nodes", numRows, false);
 
           // Detect and record rows that correspond to Dirichlet boundary conditions
           // TODO If we use ArrayRCP<LO>, then we can record boundary nodes as usual.  Size
           // TODO the array one bigger than the number of local rows, and the last entry can
           // TODO hold the actual number of boundary nodes.  Clever, huh?
-          ArrayRCP<bool > pointBoundaryNodes;
-          pointBoundaryNodes = Teuchos::arcp_const_cast<bool>(MueLu::Utilities<SC,LO,GO,NO>::DetectDirichletRows(*A, dirichletThreshold));
+          auto pointBoundaryNodes = MueLu::Utilities<SC,LO,GO,NO>::DetectDirichletRows_kokkos(*A, dirichletThreshold);
           if (rowSumTol > 0.)
             Utilities::ApplyRowSumCriterion(*A, rowSumTol, pointBoundaryNodes);
 
@@ -870,7 +868,7 @@ namespace MueLu {
             GO numLocalBoundaryNodes  = 0;
             GO numGlobalBoundaryNodes = 0;
 
-            for (LO i = 0; i < amalgBoundaryNodes.size(); ++i)
+            for (size_t i = 0; i < amalgBoundaryNodes.size(); ++i)
               if (amalgBoundaryNodes[i])
                 numLocalBoundaryNodes++;
 
@@ -902,17 +900,16 @@ namespace MueLu {
           LO numRows = Teuchos::as<LocalOrdinal>(uniqueMap->getLocalNumElements());
 
           // Allocate space for the local graph
-          ArrayRCP<LO> rows    = ArrayRCP<LO>(numRows+1);
-          ArrayRCP<LO> columns = ArrayRCP<LO>(A->getLocalNumEntries());
+          ArrayRCP<size_t> rows    = ArrayRCP<size_t>(numRows+1);
+          ArrayRCP<LO>     columns = ArrayRCP<LO>(A->getLocalNumEntries());
 
-          const ArrayRCP<bool> amalgBoundaryNodes(numRows, false);
+          typename LWGraph::boundary_nodes_type::non_const_type amalgBoundaryNodes("amalgamated boundary nodes", numRows, false);
 
           // Detect and record rows that correspond to Dirichlet boundary conditions
           // TODO If we use ArrayRCP<LO>, then we can record boundary nodes as usual.  Size
           // TODO the array one bigger than the number of local rows, and the last entry can
           // TODO hold the actual number of boundary nodes.  Clever, huh?
-          ArrayRCP<bool > pointBoundaryNodes;
-          pointBoundaryNodes = Teuchos::arcp_const_cast<bool>(MueLu::Utilities<SC,LO,GO,NO>::DetectDirichletRows(*A, dirichletThreshold));
+          auto pointBoundaryNodes = MueLu::Utilities<SC,LO,GO,NO>::DetectDirichletRows_kokkos(*A, dirichletThreshold);
           if (rowSumTol > 0.)
             Utilities::ApplyRowSumCriterion(*A, rowSumTol, pointBoundaryNodes);
 
@@ -1005,7 +1002,7 @@ namespace MueLu {
             GO numLocalBoundaryNodes  = 0;
             GO numGlobalBoundaryNodes = 0;
 
-            for (LO i = 0; i < amalgBoundaryNodes.size(); ++i)
+            for (size_t i = 0; i < amalgBoundaryNodes.size(); ++i)
               if (amalgBoundaryNodes[i])
                 numLocalBoundaryNodes++;
 
@@ -1032,14 +1029,13 @@ namespace MueLu {
         // TODO If we use ArrayRCP<LO>, then we can record boundary nodes as usual.  Size
         // TODO the array one bigger than the number of local rows, and the last entry can
         // TODO hold the actual number of boundary nodes.  Clever, huh?
-        ArrayRCP<bool > pointBoundaryNodes;
-        pointBoundaryNodes = Teuchos::arcp_const_cast<bool>(MueLu::Utilities<SC,LO,GO,NO>::DetectDirichletRows(*A, dirichletThreshold));
+        auto pointBoundaryNodes = MueLu::Utilities<SC,LO,GO,NO>::DetectDirichletRows_kokkos(*A, dirichletThreshold);
         if (rowSumTol > 0.)
           Utilities::ApplyRowSumCriterion(*A, rowSumTol, pointBoundaryNodes);
 
         if ( (blkSize == 1) && (threshold == STS::zero()) ) {
           // Trivial case: scalar problem, no dropping. Can return original graph
-          RCP<GraphBase> graph = rcp(new Graph(A->getCrsGraph(), "graph of A"));
+          RCP<GraphBase> graph = rcp(new LWGraph(A->getCrsGraph(), "graph of A"));
           graph->SetBoundaryNodeMap(pointBoundaryNodes);
           graphType="unamalgamated";
           numTotal = A->getLocalNumEntries();
@@ -1047,7 +1043,7 @@ namespace MueLu {
           if (GetVerbLevel() & Statistics1) {
             GO numLocalBoundaryNodes  = 0;
             GO numGlobalBoundaryNodes = 0;
-            for (LO i = 0; i < pointBoundaryNodes.size(); ++i)
+            for (size_t i = 0; i < pointBoundaryNodes.size(); ++i)
               if (pointBoundaryNodes[i])
                 numLocalBoundaryNodes++;
             RCP<const Teuchos::Comm<int> > comm = A->getRowMap()->getComm();
@@ -1188,8 +1184,8 @@ namespace MueLu {
           // NOTE: ghostedLaplDiagData might be zero if we don't actually calculate the laplacian
 
           // allocate space for the local graph
-          ArrayRCP<LO> rows    = ArrayRCP<LO>(numRows+1);
-          ArrayRCP<LO> columns = ArrayRCP<LO>(A->getLocalNumEntries());
+          ArrayRCP<size_t> rows    = ArrayRCP<size_t>(numRows+1);
+          ArrayRCP<LO>     columns = ArrayRCP<LO>(A->getLocalNumEntries());
 
 #ifdef HAVE_MUELU_DEBUG
 	  // DEBUGGING
@@ -1197,12 +1193,12 @@ namespace MueLu {
 #endif
 
 	  // Extra array for if we're allowing symmetrization with cutting
-	  ArrayRCP<LO> rows_stop;
+	  ArrayRCP<size_t> rows_stop;
 	  bool use_stop_array = threshold != STS::zero() && distanceLaplacianAlgo == scaled_cut_symmetric;
 	  if(use_stop_array)
 	    rows_stop.resize(numRows);
 	 
-          const ArrayRCP<bool> amalgBoundaryNodes(numRows, false);
+          typename LWGraph::boundary_nodes_type::non_const_type amalgBoundaryNodes("amalgamated boundary nodes", numRows, false);
 
           LO realnnz = 0;
           rows[0] = 0;
@@ -1499,7 +1495,7 @@ namespace MueLu {
             GO numLocalBoundaryNodes  = 0;
             GO numGlobalBoundaryNodes = 0;
 
-            for (LO i = 0; i < amalgBoundaryNodes.size(); ++i)
+            for (size_t i = 0; i < amalgBoundaryNodes.size(); ++i)
               if (amalgBoundaryNodes[i])
                 numLocalBoundaryNodes++;
 
@@ -1562,7 +1558,7 @@ namespace MueLu {
 
       LO numRows = A->getRowMap()->getLocalNumElements();
       LO numNodes = nodeMap->getLocalNumElements();
-      const ArrayRCP<bool> amalgBoundaryNodes(numNodes, false);
+      typename LWGraph::boundary_nodes_type::non_const_type amalgBoundaryNodes("amalgamated boundary nodes", numNodes, false);
       const ArrayRCP<int>  numberDirichletRowsPerNode(numNodes, 0); // helper array counting the number of Dirichlet nodes associated with node
       bool bIsDiagonalEntry = false;       // boolean flag stating that grid==gcid
 
@@ -1613,7 +1609,7 @@ namespace MueLu {
       crsGraph->fillComplete(nodeMap,nodeMap);
 
       // 5) create MueLu Graph object
-      RCP<GraphBase> graph = rcp(new Graph(crsGraph, "amalgamated graph of A"));
+      RCP<GraphBase> graph = rcp(new LWGraph(crsGraph, "amalgamated graph of A"));
 
       // Detect and record rows that correspond to Dirichlet boundary conditions
       graph->SetBoundaryNodeMap(amalgBoundaryNodes);
@@ -1621,7 +1617,7 @@ namespace MueLu {
       if (GetVerbLevel() & Statistics1) {
         GO numLocalBoundaryNodes  = 0;
         GO numGlobalBoundaryNodes = 0;
-        for (LO i = 0; i < amalgBoundaryNodes.size(); ++i)
+        for (size_t i = 0; i < amalgBoundaryNodes.size(); ++i)
           if (amalgBoundaryNodes[i])
             numLocalBoundaryNodes++;
         RCP<const Teuchos::Comm<int> > comm = A->getRowMap()->getComm();
@@ -1804,7 +1800,8 @@ namespace MueLu {
 
     // allocate space for the local graph
     ArrayRCP<size_t> rows_mat;
-    ArrayRCP<LO> rows_graph,columns;
+    ArrayRCP<size_t> rows_graph;
+    ArrayRCP<LO> columns;
     ArrayRCP<SC> values;
     RCP<CrsMatrixWrap> crs_matrix_wrap;
     
@@ -1843,7 +1840,7 @@ namespace MueLu {
       else rows_graph[row+1] = realnnz;
     }
     
-    ArrayRCP<bool> boundaryNodes = Teuchos::arcp_const_cast<bool>(MueLu::Utilities<SC,LO,GO,NO>::DetectDirichletRows(*A, dirichletThreshold));
+    auto boundaryNodes = MueLu::Utilities<SC,LO,GO,NO>::DetectDirichletRows_kokkos(*A, dirichletThreshold);
     if (rowSumTol > 0.)
       Utilities::ApplyRowSumCriterion(*A, rowSumTol, boundaryNodes);
 
@@ -1858,7 +1855,7 @@ namespace MueLu {
     if (GetVerbLevel() & Statistics1) {
       GO numLocalBoundaryNodes  = 0;
       GO numGlobalBoundaryNodes = 0;
-      for (LO i = 0; i < boundaryNodes.size(); ++i)
+      for (size_t i = 0; i < boundaryNodes.size(); ++i)
         if (boundaryNodes[i])
           numLocalBoundaryNodes++;
       RCP<const Teuchos::Comm<int> > comm = A->getRowMap()->getComm();
@@ -1915,7 +1912,8 @@ namespace MueLu {
 
    // allocate space for the local graph
    ArrayRCP<size_t> rows_mat;
-   ArrayRCP<LO> rows_graph,columns;
+   ArrayRCP<size_t> rows_graph;
+   ArrayRCP<LO> columns;
     
    rows_graph.resize(inputGraph->GetNodeNumVertices()+1);
    columns.resize(inputGraph->GetNodeNumEdges());
@@ -1927,11 +1925,11 @@ namespace MueLu {
 
      for (LO row = 0; row < numRows; ++row) {
        LO row_block = row_block_number[row];
-       ArrayView<const LO> indices = inputGraph->getNeighborVertices(row);
+       auto indices = inputGraph->getNeighborVertices(row);
 
        LO rownnz = 0;
-       for (LO colID = 0; colID < Teuchos::as<LO>(indices.size()); colID++) {
-         LO col = indices[colID];
+       for (LO colID = 0; colID < Teuchos::as<LO>(indices.length); colID++) {
+         LO col = indices(colID);
          LO col_block = col_block_number[col];
 
          if((row_block == col_block) && (col < numRows)) {
@@ -1944,7 +1942,7 @@ namespace MueLu {
      }
    } else {
      // ghosting of boundary node map
-     Teuchos::ArrayRCP<const bool> boundaryNodes = inputGraph->GetBoundaryNodeMap();
+     auto boundaryNodes = inputGraph->GetBoundaryNodeMap();
      auto boundaryNodesVector = Xpetra::VectorFactory<LocalOrdinal,LocalOrdinal,GlobalOrdinal,Node>::Build(inputGraph->GetDomainMap());
      for (size_t i=0; i<inputGraph->GetNodeNumVertices(); i++)
        boundaryNodesVector->getDataNonConst(0)[i] = boundaryNodes[i];
@@ -1955,11 +1953,11 @@ namespace MueLu {
 
      for (LO row = 0; row < numRows; ++row) {
        LO row_block = row_block_number[row];
-       ArrayView<const LO> indices = inputGraph->getNeighborVertices(row);
+       auto indices = inputGraph->getNeighborVertices(row);
 
        LO rownnz = 0;
-       for (LO colID = 0; colID < Teuchos::as<LO>(indices.size()); colID++) {
-         LO col = indices[colID];
+       for (LO colID = 0; colID < Teuchos::as<LO>(indices.length); colID++) {
+         LO col = indices(colID);
          LO col_block = col_block_number[col];
 
          if((row_block == col_block) && ((row == col) || (boundaryColumn[col] == 0))) {
@@ -2002,7 +2000,7 @@ namespace MueLu {
           Kokkos::Compat::persistingView(tpGraphSym->getLocalIndicesHost());
           
      auto rowsSym = tpGraphSym->getLocalRowPtrsHost();
-     ArrayRCP<LO> rows_graphSym;
+     ArrayRCP<size_t> rows_graphSym;
      rows_graphSym.resize(rowsSym.size());
      for (size_t row = 0; row < rowsSym.size(); row++)
        rows_graphSym[row] = rowsSym[row];

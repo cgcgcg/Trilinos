@@ -60,7 +60,7 @@
 #include "MueLu_AggregationExportFactory_decl.hpp"
 #include "MueLu_Level.hpp"
 #include "MueLu_Aggregates.hpp"
-#include "MueLu_Graph.hpp"
+#include "MueLu_LWGraph.hpp"
 #include "MueLu_AmalgamationFactory.hpp"
 #include "MueLu_AmalgamationInfo.hpp"
 #include "MueLu_Monitor.hpp"
@@ -361,7 +361,6 @@ namespace MueLu {
   {
     using namespace std;
     ArrayView<const Scalar> values;
-    ArrayView<const LocalOrdinal> neighbors;
     //Allow two different colors of connections (by setting "aggregates" scalar to CONTRAST_1 or CONTRAST_2)
     vector<pair<int, int> > vert1; //vertices (node indices)
     vector<pair<int, int> > vert2; //size of every cell is assumed to be 2 vertices, since all edges are drawn as lines
@@ -385,30 +384,30 @@ namespace MueLu {
       {
         if(dofs == 1)
           A->getGlobalRowView(globRow, indices, values);
-        neighbors = G->getNeighborVertices((LocalOrdinal) globRow);
+        auto neighbors = G->getNeighborVertices((LocalOrdinal) globRow);
         int gEdge = 0;
         int aEdge = 0;
-        while(gEdge != int(neighbors.size()))
+        while(gEdge != int(neighbors.length))
         {
           if(dofs == 1)
           {
-            if(neighbors[gEdge] == indices[aEdge])
+            if(neighbors(gEdge) == indices[aEdge])
             {
               //graph and matrix both have this edge, wasn't filtered, show as color 1
-              vert1.push_back(pair<int, int>(int(globRow), neighbors[gEdge]));
+              vert1.push_back(pair<int, int>(int(globRow), neighbors(gEdge)));
               gEdge++;
               aEdge++;
             }
             else
             {
               //graph contains an edge at gEdge which was filtered from A, show as color 2
-              vert2.push_back(pair<int, int>(int(globRow), neighbors[gEdge]));
+              vert2.push_back(pair<int, int>(int(globRow), neighbors(gEdge)));
               gEdge++;
             }
           }
           else //for multiple DOF problems, don't try to detect filtered edges and ignore A
           {
-            vert1.push_back(pair<int, int>(int(globRow), neighbors[gEdge]));
+            vert1.push_back(pair<int, int>(int(globRow), neighbors(gEdge)));
             gEdge++;
           }
         }
@@ -421,29 +420,29 @@ namespace MueLu {
       {
         if(dofs == 1)
           A->getLocalRowView(locRow, indices, values);
-        neighbors = G->getNeighborVertices(locRow);
+        auto neighbors = G->getNeighborVertices(locRow);
         //Add those local indices (columns) to the list of connections (which are pairs of the form (localM, localN))
         int gEdge = 0;
         int aEdge = 0;
-        while(gEdge != int(neighbors.size()))
+        while(gEdge != int(neighbors.length))
         {
           if(dofs == 1)
           {
-            if(neighbors[gEdge] == indices[aEdge])
+            if(neighbors(gEdge) == indices[aEdge])
             {
-              vert1.push_back(pair<int, int>(locRow, neighbors[gEdge]));
+              vert1.push_back(pair<int, int>(locRow, neighbors(gEdge)));
               gEdge++;
               aEdge++;
             }
             else
             {
-              vert2.push_back(pair<int, int>(locRow, neighbors[gEdge]));
+              vert2.push_back(pair<int, int>(locRow, neighbors(gEdge)));
               gEdge++;
             }
           }
           else
           {
-            vert1.push_back(pair<int, int>(locRow, neighbors[gEdge]));
+            vert1.push_back(pair<int, int>(locRow, neighbors(gEdge)));
             gEdge++;
           }
         }

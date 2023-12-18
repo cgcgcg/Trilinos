@@ -68,11 +68,9 @@
 #include "MueLu_GraphBase.hpp"
 #include "MueLu_MasterList.hpp"
 #include "MueLu_Monitor.hpp"
-#include "MueLu_Graph.hpp"
 #include "MueLu_LWGraph.hpp"
 
 #ifdef HAVE_MUELU_ZOLTAN2
-#include "MueLu_Zoltan2GraphAdapter.hpp"
 #include <Zoltan2_XpetraCrsGraphAdapter.hpp>
 #include <Zoltan2_ColoringProblem.hpp>
 #include <Zoltan2_ColoringSolution.hpp>
@@ -375,8 +373,7 @@ namespace MueLu {
     size_t numRows = graph.GetNodeNumVertices();
     auto graphLWK = dynamic_cast<const LWGraph_kokkos*>(&graph);
     auto graphLW  = dynamic_cast<const LWGraph*>(&graph);
-    auto graphG   = dynamic_cast<const Graph*>(&graph);
-    TEUCHOS_TEST_FOR_EXCEPTION(!graphLW && !graphLWK && !graphG,std::invalid_argument,"Graph is not a LWGraph or LWGraph_kokkos object");
+    TEUCHOS_TEST_FOR_EXCEPTION(!graphLW && !graphLWK,std::invalid_argument,"Graph is not a LWGraph or LWGraph_kokkos object");
       // Run d1 graph coloring
       // Assume that the graph is symmetric so row map/entries and col map/entries are the same
 
@@ -396,24 +393,6 @@ namespace MueLu {
       std::copy(rowptrs.begin(),rowptrs.end(),rowptrs_s.begin());
       Kokkos::View<const size_t*,Kokkos::LayoutLeft,Kokkos::HostSpace> rowptrs_v(rowptrs_s.data(),(size_t)rowptrs.size());
       Kokkos::View<const LO*,Kokkos::LayoutLeft,Kokkos::HostSpace> entries_v(entries.getRawPtr(),(size_t)entries.size());
-      KokkosGraph::Experimental::graph_color(&kh,
-                                             numRows,
-                                             numRows, // FIXME: This should be the number of columns
-                                             rowptrs_v,
-                                             entries_v,
-                                             true);
-    }
-    else if(graphG) {
-      // FIXME:  This is a terrible, terrible hack, based on 0-based local indexing.
-      RCP<const CrsGraph> graphC = graphG->GetGraph();
-      size_t numEntries = graphC->getLocalNumEntries();
-      ArrayView<const LO> indices;
-      graphC->getLocalRowView(0,indices);
-      Kokkos::View<size_t*,Kokkos::LayoutLeft,Kokkos::HostSpace> rowptrs_v("rowptrs_v",graphC->getLocalNumRows()+1);
-      rowptrs_v[0]=0;
-      for(LO i=0; i<(LO)graphC->getLocalNumRows()+1; i++)
-        rowptrs_v[i+1] = rowptrs_v[i] + graphC->getNumEntriesInLocalRow(i);
-      Kokkos::View<const LO*,Kokkos::LayoutLeft,Kokkos::HostSpace> entries_v(&indices[0],numEntries);
       KokkosGraph::Experimental::graph_color(&kh,
                                              numRows,
                                              numRows, // FIXME: This should be the number of columns
@@ -459,11 +438,11 @@ namespace MueLu {
     for(LO row=0; row < Nrows; row++) {
       if(boundaryNodes[row])
         continue;
-      ArrayView<const LO> indices = graph.getNeighborVertices(row);
+      auto indices = graph.getNeighborVertices(row);
       bool has_colored_neighbor=false;
-      for(LO j=0; !has_colored_neighbor && j<(LO)indices.size(); j++) {
+      for(LO j=0; !has_colored_neighbor && j<(LO)indices.length; j++) {
         // FIXME: This does not handle ghosting correctly
-        if(myColors[indices[j]] == MIS)
+        if(myColors[indices(j)] == MIS)
           has_colored_neighbor=true;
       }
       if(!has_colored_neighbor)
@@ -488,8 +467,8 @@ namespace MueLu {
     //params.set("recolor_degrees",recolorDegrees);
 
     // Do the coloring via Zoltan2
-    using GraphAdapter = MueLuGraphBaseAdapter<GraphBase>;
-    GraphAdapter z_adapter(graph);
+    using GraphAdapter = Zoltan2::XpetraCrsGraphAdapter<CrsGraph>;
+    GraphAdapter z_adapter(graph->GetCrsGraph());
 
     // We need to provide the MPI Comm, or else we wind up using the default (eep!)
     Zoltan2::ColoringProblem<GraphAdapter> problem(&z_adapter,&params,graph->GetDomainMap()->getComm());

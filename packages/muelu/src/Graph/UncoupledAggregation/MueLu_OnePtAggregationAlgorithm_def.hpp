@@ -60,7 +60,6 @@
 
 #include "MueLu_OnePtAggregationAlgorithm_decl.hpp"
 
-//#include "MueLu_Graph.hpp"
 #include "MueLu_GraphBase.hpp"
 #include "MueLu_Aggregates.hpp"
 #include "MueLu_Exceptions.hpp"

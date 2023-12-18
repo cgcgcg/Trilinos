@@ -62,7 +62,6 @@
 
 #include "MueLu_Exceptions.hpp"
 #include "MueLu_GraphBase.hpp"
-#include "MueLu_Graph.hpp"
 #include "MueLu_Level.hpp"
 #include "MueLu_LWGraph.hpp"
 #include "MueLu_MasterList.hpp"
@@ -282,7 +281,7 @@ namespace MueLu {
   if (nBlks*nPDEs != nLoc )
      TEUCHOS_TEST_FOR_EXCEPTION(true, Exceptions::RuntimeError, "Number of local dofs not divisible by BlkSize");
 
-  Teuchos::ArrayRCP<LO>   newRowPtr(nBlks+1); /* coalesce & drop matrix     */
+  Teuchos::ArrayRCP<size_t> newRowPtr(nBlks+1); /* coalesce & drop matrix     */
   Teuchos::ArrayRCP<LO>   newCols(numMyNnz);  /* arrays                     */
 
   Teuchos::ArrayRCP<LO>   bcols(nBlks);       /* returned by dropfun(j,...) */
@@ -310,7 +309,7 @@ namespace MueLu {
                                                               /* processing different pt    */
                                                               /* rows within a block.       */
 
-  Teuchos::ArrayRCP<bool>   boundaryNodes(nBlks,false);
+  typename LWGraph::boundary_nodes_type::non_const_type boundaryNodes("boundaryNodes", nBlks,false);
 
 
   for (LO i = 0; i <  maxNzPerRow; i++)

@@ -53,7 +53,6 @@
 
 #include "MueLu_FactoryBase_fwd.hpp"
 #include "MueLu_Aggregates_fwd.hpp"
-//#include "MueLu_Graph_fwd.hpp"
 #include "MueLu_GraphBase.hpp"
 
 namespace MueLu {

@@ -61,6 +61,8 @@
 #include <Zoltan2_PartitioningSolution.hpp>
 #include "MueLu_GraphBase.hpp"
 
+#include <KokkosCompat_View.hpp>
+
 
 
 // Zoltab2 InputTraits for MueLu Graph objects
@@ -117,7 +119,11 @@ public:
   size_t getLocalNumCols() const { return getColMap()->getLocalNumElements();}
 
   void getLocalRowView(lno_t LocalRow, Teuchos::ArrayView< const lno_t > &indices) const {
-   indices = graph_->getNeighborVertices(LocalRow);
+    auto lclLWGraph = graph_->getLocalLWGraph();
+    auto rowPtrs = lclLWGraph.getRowPtrs();
+    auto entries = lclLWGraph.getEntries();
+    // Kokkos::subview()
+    indices = Kokkos::Compat::getArrayView(graph_->getNeighborVertices(LocalRow));
   }
 
 

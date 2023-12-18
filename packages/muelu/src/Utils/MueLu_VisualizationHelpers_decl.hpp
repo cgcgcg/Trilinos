@@ -51,6 +51,7 @@
 #include "MueLu_ConfigDefs.hpp"
 #include "MueLu_VisualizationHelpers_fwd.hpp"
 #include "MueLu_GraphBase.hpp"
+#include "MueLu_LWGraph_fwd.hpp"
 
 #include <list>
 

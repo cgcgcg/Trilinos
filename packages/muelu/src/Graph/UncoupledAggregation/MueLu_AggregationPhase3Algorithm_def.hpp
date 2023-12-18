@@ -87,14 +87,14 @@ namespace MueLu {
       if (aggStat[i] == AGGREGATED || aggStat[i] == IGNORED)
         continue;
 
-      ArrayView<const LocalOrdinal> neighOfINode = graph.getNeighborVertices(i);
+      auto neighOfINode = graph.getNeighborVertices(i);
 
       // We don't want a singleton. So lets see if there is an unaggregated
       // neighbor that we can also put with this point.
       bool isNewAggregate = false;
       bool failedToAggregate = true;
-      for (int j = 0; j < neighOfINode.size(); j++) {
-        LO neigh = neighOfINode[j];
+      for (int j = 0; j < neighOfINode.length; j++) {
+        LO neigh = neighOfINode(j);
 
         if (neigh != i && graph.isLocalNeighborVertex(neigh) && aggStat[neigh] == READY) {
           isNewAggregate = true;
@@ -122,17 +122,17 @@ namespace MueLu {
         // NOTE: This is very similar to phase 2b, but simplier: we stop with
         // the first found aggregate
         int j = 0;
-        for (; j < neighOfINode.size(); j++) {
-          LO neigh = neighOfINode[j];
+        for (; j < neighOfINode.length; j++) {
+          LO neigh = neighOfINode(j);
 
           // We don't check (neigh != rootCandidate), as it is covered by checking (aggStat[neigh] == AGGREGATED)
           if (graph.isLocalNeighborVertex(neigh) && aggStat[neigh] == AGGREGATED)
             break;
         }
 
-        if (j < neighOfINode.size()) {
+        if (j < neighOfINode.length) {
           // Assign to an adjacent aggregate
-          vertex2AggId[i] = vertex2AggId[neighOfINode[j]];
+          vertex2AggId[i] = vertex2AggId[neighOfINode(j)];
           numNonAggregatedNodes--;
           failedToAggregate = false;
         }

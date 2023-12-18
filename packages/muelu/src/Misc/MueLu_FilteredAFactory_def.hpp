@@ -161,9 +161,9 @@ namespace MueLu {
       size_t numGRows = G->GetNodeNumVertices();
       for (size_t i = 0; i < numGRows; i++) {
         // Set up filtering array
-        ArrayView<const LO> indsG = G->getNeighborVertices(i);
-        for(size_t j=0; j<(size_t)indsG.size(); j++) {
-          fprintf(f,"%d %d 1.0\n",(int)i,(int)indsG[j]);
+        auto indsG = G->getNeighborVertices(i);
+        for(size_t j=0; j<(size_t)indsG.length; j++) {
+          fprintf(f,"%d %d 1.0\n",(int)i,(int)indsG(j));
         }
       }
       fclose(f);
@@ -269,10 +269,10 @@ namespace MueLu {
     size_t numGRows = G.GetNodeNumVertices();
     for (size_t i = 0; i < numGRows; i++) {
       // Set up filtering array
-      ArrayView<const LO> indsG = G.getNeighborVertices(i);
-      for (size_t j = 0; j < as<size_t>(indsG.size()); j++)
+      auto indsG = G.getNeighborVertices(i);
+      for (size_t j = 0; j < as<size_t>(indsG.length); j++)
         for (size_t k = 0; k < blkSize; k++)
-          filter[indsG[j]*blkSize+k] = 1;
+          filter[indsG(j)*blkSize+k] = 1;
 
       for (size_t k = 0; k < blkSize; k++) {
         LO row = i*blkSize + k;
@@ -351,9 +351,9 @@ namespace MueLu {
       }
 
       // Reset filtering array
-      for (size_t j = 0; j < as<size_t> (indsG.size()); j++)
+      for (size_t j = 0; j < as<size_t> (indsG.length); j++)
         for (size_t k = 0; k < blkSize; k++)
-          filter[indsG[j]*blkSize+k] = 0;
+          filter[indsG(j)*blkSize+k] = 0;
     }
   }
 
@@ -375,10 +375,10 @@ namespace MueLu {
     size_t numGRows = G.GetNodeNumVertices();
     for (size_t i = 0; i < numGRows; i++) {
       // Set up filtering array
-      ArrayView<const LO> indsG = G.getNeighborVertices(i);
-      for (size_t j = 0; j < as<size_t>(indsG.size()); j++)
+      auto indsG = G.getNeighborVertices(i);
+      for (size_t j = 0; j < as<size_t>(indsG.length); j++)
         for (size_t k = 0; k < blkSize; k++)
-          filter[indsG[j]*blkSize+k] = 1;
+          filter[indsG(j)*blkSize+k] = 1;
 
       for (size_t k = 0; k < blkSize; k++) {
         LO row = i*blkSize + k;
@@ -449,9 +449,9 @@ namespace MueLu {
       }
 
       // Reset filtering array
-      for (size_t j = 0; j < as<size_t> (indsG.size()); j++)
+      for (size_t j = 0; j < as<size_t> (indsG.length); j++)
         for (size_t k = 0; k < blkSize; k++)
-          filter[indsG[j]*blkSize+k] = 0;
+          filter[indsG(j)*blkSize+k] = 0;
     }
   }
 
@@ -568,12 +568,12 @@ namespace MueLu {
                                  Exceptions::RuntimeError,"MueLu::FilteredAFactory::BuildNewUsingRootStencil: Cannot find root node");
 
       // Find the list of "good" node neighbors (aka nodes which border the root node in the Graph G)
-      ArrayView<const LO> goodNodeNeighbors  = G.getNeighborVertices(root_node);
+      auto goodNodeNeighbors  = G.getNeighborVertices(root_node);
 
       // Now find the list of "good" aggregate neighbors (aka the aggregates neighbor the root node in the Graph G)
       goodAggNeighbors.resize(0);
-      for(LO k=0; k<(LO) goodNodeNeighbors.size(); k++) {
-        goodAggNeighbors.push_back(vertex2AggId[goodNodeNeighbors[k]]);
+      for(LO k=0; k<(LO) goodNodeNeighbors.length; k++) {
+        goodAggNeighbors.push_back(vertex2AggId[goodNodeNeighbors(k)]);
       }
       sort_and_unique(goodAggNeighbors);
 
@@ -600,10 +600,10 @@ namespace MueLu {
       // if there are 2 or more of these connections, remove them from the bad list.
 
       for (LO k=nodesInAgg.ptr_h(i); k < nodesInAgg.ptr_h(i+1); k++) {
-        ArrayView<const LO> nodeNeighbors  = G.getNeighborVertices(k);
-        for (LO kk=0; kk < nodeNeighbors.size(); kk++) {
-          if ( (vertex2AggId[nodeNeighbors[kk]] >= 0) && (vertex2AggId[nodeNeighbors[kk]] < numAggs))
-            (badCount[vertex2AggId[nodeNeighbors[kk]]])++;
+        auto nodeNeighbors  = G.getNeighborVertices(k);
+        for (LO kk=0; kk < nodeNeighbors.length; kk++) {
+          if ( (vertex2AggId[nodeNeighbors(kk)] >= 0) && (vertex2AggId[nodeNeighbors(kk)] < numAggs))
+            (badCount[vertex2AggId[nodeNeighbors(kk)]])++;
         }
       }
       std::vector<LO> reallyBadAggNeighbors(std::min(G.getLocalMaxNumRowEntries()*maxAggSize,numNodes));
@@ -612,10 +612,10 @@ namespace MueLu {
         if (badCount[badAggNeighbors[k]] <= 1 ) reallyBadAggNeighbors.push_back(badAggNeighbors[k]);
       }
       for (LO k=nodesInAgg.ptr_h(i); k < nodesInAgg.ptr_h(i+1); k++) {
-        ArrayView<const LO> nodeNeighbors  = G.getNeighborVertices(k);
-        for (LO kk=0; kk < nodeNeighbors.size(); kk++) {
-          if ( (vertex2AggId[nodeNeighbors[kk]] >= 0) && (vertex2AggId[nodeNeighbors[kk]] < numAggs))
-            badCount[vertex2AggId[nodeNeighbors[kk]]] = 0;
+        auto nodeNeighbors  = G.getNeighborVertices(k);
+        for (LO kk=0; kk < nodeNeighbors.length; kk++) {
+          if ( (vertex2AggId[nodeNeighbors(kk)] >= 0) && (vertex2AggId[nodeNeighbors(kk)] < numAggs))
+            badCount[vertex2AggId[nodeNeighbors(kk)]] = 0;
         }
       }
 
@@ -649,9 +649,9 @@ namespace MueLu {
         LO row_node = nodesInAgg.nodes_h(k);
 
         // Set up filtering array
-        ArrayView<const LO> indsG = G.getNeighborVertices(row_node);
-        for (size_t j = 0; j < as<size_t>(indsG.size()); j++)
-          filter[indsG[j]]=true;
+        auto indsG = G.getNeighborVertices(row_node);
+        for (size_t j = 0; j < as<size_t>(indsG.length); j++)
+          filter[indsG(j)]=true;
 
         for (LO m = 0; m < (LO)blkSize; m++) {
           LO row = amalgInfo->ComputeLocalDOF(row_node,m);
@@ -699,8 +699,8 @@ namespace MueLu {
         }//end m "blkSize" loop
 
         // Clear filtering array
-        for (size_t j = 0; j < as<size_t>(indsG.size()); j++)
-          filter[indsG[j]]=false;
+        for (size_t j = 0; j < as<size_t>(indsG.length); j++)
+          filter[indsG(j)]=false;
 
       }// end k loop over number of nodes in this agg
     }//end i loop over numAggs

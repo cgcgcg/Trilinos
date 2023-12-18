@@ -93,10 +93,10 @@ namespace MueLu {
         if (aggStat[i] != READY)
           continue;
 
-        ArrayView<const LocalOrdinal> neighOfINode = graph.getNeighborVertices(i);
+        auto neighOfINode = graph.getNeighborVertices(i);
 
-        for (int j = 0; j < neighOfINode.size(); j++) {
-          LO neigh = neighOfINode[j];
+        for (int j = 0; j < neighOfINode.length; j++) {
+          LO neigh = neighOfINode(j);
 
           // We don't check (neigh != i), as it is covered by checking (aggStat[neigh] == AGGREGATED)
           if (graph.isLocalNeighborVertex(neigh) && aggStat[neigh] == AGGREGATED)
@@ -107,8 +107,8 @@ namespace MueLu {
         int bestAggId   = -1;
         int bestConnect = -1;
 
-        for (int j = 0; j < neighOfINode.size(); j++) {
-          LO neigh = neighOfINode[j];
+        for (int j = 0; j < neighOfINode.length; j++) {
+          LO neigh = neighOfINode(j);
           int aggId = vertex2AggId[neigh];
 
           // Note: The third condition is only relevant if the ML matching is enabled

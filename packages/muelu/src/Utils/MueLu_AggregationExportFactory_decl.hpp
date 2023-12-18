@@ -60,8 +60,8 @@
 #include "MueLu_VisualizationHelpers.hpp"
 #include "MueLu_AggregationExportFactory_fwd.hpp"
 #include "MueLu_Aggregates_fwd.hpp"
-#include "MueLu_Graph_fwd.hpp"
 #include "MueLu_GraphBase.hpp"
+#include "MueLu_LWGraph_fwd.hpp"
 #include "MueLu_AmalgamationFactory_fwd.hpp"
 #include "MueLu_AmalgamationInfo_fwd.hpp"
 

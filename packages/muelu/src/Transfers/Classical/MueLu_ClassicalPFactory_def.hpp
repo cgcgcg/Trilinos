@@ -1070,20 +1070,20 @@ GenerateStrengthFlags(const Matrix & A,const GraphBase & graph, Teuchos::Array<s
     A.getLocalRowView(i, A_indices, A_values);
     LO A_size = (LO) A_indices.size();
 
-    ArrayView<const LO> G_indices = graph.getNeighborVertices(i);
-    LO G_size = (LO) G_indices.size();
+    auto G_indices = graph.getNeighborVertices(i);
+    LO G_size = (LO) G_indices.length;
     
     // Both of these guys should be in the same (sorted) order, but let's check
     bool is_ok=true;
     for(LO j=0; j<A_size-1; j++)
       if (A_indices[j] >= A_indices[j+1]) { is_ok=false; break;}
     for(LO j=0; j<G_size-1; j++)
-      if (G_indices[j] >= G_indices[j+1]) { is_ok=false; break;}
+      if (G_indices(j) >= G_indices(j+1)) { is_ok=false; break;}
     TEUCHOS_TEST_FOR_EXCEPTION(!is_ok, Exceptions::RuntimeError,"ClassicalPFactory: Exected A and Graph to be sorted");
     
     // Now cycle through and set the flags - if the edge is in G it is strong
     for(LO g_idx=0, a_idx=0; g_idx < G_size; g_idx++) {
-      LO col = G_indices[g_idx];
+      LO col = G_indices(g_idx);
       while (A_indices[a_idx] != col && a_idx < A_size) a_idx++;
       if(a_idx == A_size) {is_ok=false;break;}
       edgeIsStrong[rowstart+a_idx] = true;

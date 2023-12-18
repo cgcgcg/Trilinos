@@ -97,14 +97,14 @@ namespace MueLu {
     //@{
 
     //! Return number of vertices owned by the calling node.
-    virtual size_t GetNodeNumVertices() const = 0;
+    KOKKOS_INLINE_FUNCTION virtual size_t GetNodeNumVertices() const = 0;
 
     //! Return number of edges owned by the calling node.
-    virtual size_t GetNodeNumEdges()    const = 0;
+    KOKKOS_INLINE_FUNCTION virtual size_t GetNodeNumEdges()    const = 0;
 
     virtual void   SetBoundaryNodeMap(const boundary_nodes_type boundaryArray) = 0;
 
-    virtual size_t getLocalMaxNumRowEntries() const = 0;
+    KOKKOS_INLINE_FUNCTION virtual size_t getLocalMaxNumRowEntries() const = 0;
 
     virtual const boundary_nodes_type GetBoundaryNodeMap() const = 0;
 

@@ -67,8 +67,7 @@
 #include "MueLu_Monitor.hpp"
 #include "MueLu_Utilities.hpp"
 #include "MueLu_GraphBase.hpp"
-#include "MueLu_Graph.hpp"
-#include "MueLu_LWGraph.hpp"
+#include "MueLu_LWGraph_kokkos.hpp"
 
 
 namespace MueLu {
@@ -491,14 +490,14 @@ namespace MueLu {
       FactoryMonitor m(*this, "Generating Graph (trivial)", currentLevel);
       /*** Case 1: Use the matrix is the graph ***/
       // Bricks are of non-trivial size in all active dimensions
-      RCP<GraphBase> graph = rcp(new Graph(A->getCrsGraph(), "graph of A"));
-      ArrayRCP<bool > boundaryNodes = Teuchos::arcp_const_cast<bool>(MueLu::Utilities<SC,LO,GO,NO>::DetectDirichletRows(*A, dirichletThreshold));
-      graph->SetBoundaryNodeMap(boundaryNodes);
+      RCP<LWGraph_kokkos> graph = rcp(new LWGraph_kokkos(A->getCrsGraph()->getLocalGraphDevice(), A->getRowMap(), A->getColMap(), "graph of A"));
+      Kokkos::View<bool *> boundaryNodes = MueLu::Utilities<SC,LO,GO,NO>::DetectDirichletRows_kokkos(*A, dirichletThreshold);
+      graph->getLocalLWGraph().SetBoundaryNodeMap(boundaryNodes);
       
       if (GetVerbLevel() & Statistics1) {
         GO numLocalBoundaryNodes  = 0;
         GO numGlobalBoundaryNodes = 0;
-        for (LO i = 0; i < boundaryNodes.size(); ++i)
+        for (size_t i = 0; i < boundaryNodes.size(); ++i)
           if (boundaryNodes[i])
             numLocalBoundaryNodes++;
         RCP<const Teuchos::Comm<int> > comm = A->getRowMap()->getComm();
@@ -517,9 +516,13 @@ namespace MueLu {
       bool drop_x = (bx_ == 1);
       bool drop_y = (nDim_> 1 && by_ == 1);
       bool drop_z = (nDim_> 2 && bz_ == 1);
-      
-      ArrayRCP<LO> rows   (A->getLocalNumRows()+1);
-      ArrayRCP<LO> columns(A->getLocalNumEntries());
+
+      typedef typename LWGraph_kokkos::local_graph_type   kokkos_graph_type;
+      typedef typename kokkos_graph_type::row_map_type::non_const_type    rows_type;
+      typedef typename kokkos_graph_type::entries_type::non_const_type    cols_type;
+
+      rows_type rows   ("rows", A->getLocalNumRows()+1);
+      cols_type columns("columns", A->getLocalNumEntries());
       
       size_t N = A->getRowMap()->getLocalNumElements();
 
@@ -529,7 +532,7 @@ namespace MueLu {
       auto colind = G.entries;
 
       int ct=0;
-      rows[0] = 0;
+      rows(0) = 0;
       for(size_t row=0; row<N; row++) {
         // NOTE: Assumes that the first part of the colmap is the rowmap
         int ir,jr,kr;
@@ -548,23 +551,24 @@ namespace MueLu {
           else {
             // Keep it
             //            printf("[%4d] KEEP row = (%d,%d,%d) col = (%d,%d,%d)\n",(int)row,ir,jr,kr,ic,jc,kc);
-            columns[ct] = col;
+            columns(ct) = col;
             ct++;
           }
         }
-        rows[row+1] = ct;
+        rows(row+1) = ct;
       }//end for
 
-      RCP<GraphBase> graph = rcp(new LWGraph(rows, columns, A->getRowMap(), A->getColMap(), "thresholded graph of A"));
+      kokkos_graph_type lclLWGraph(columns, rows);
+      RCP<LWGraph_kokkos> graph = rcp(new LWGraph_kokkos(lclLWGraph, A->getRowMap(), A->getColMap(), "thresholded graph of A"));
 
 
-      ArrayRCP<bool > boundaryNodes = Teuchos::arcp_const_cast<bool>(MueLu::Utilities<SC,LO,GO,NO>::DetectDirichletRows(*A, dirichletThreshold));
-      graph->SetBoundaryNodeMap(boundaryNodes);
+      Kokkos::View<bool *> boundaryNodes = MueLu::Utilities<SC,LO,GO,NO>::DetectDirichletRows_kokkos(*A, dirichletThreshold);
+      graph->getLocalLWGraph().SetBoundaryNodeMap(boundaryNodes);
       
       if (GetVerbLevel() & Statistics1) {
         GO numLocalBoundaryNodes  = 0;
         GO numGlobalBoundaryNodes = 0;
-        for (LO i = 0; i < boundaryNodes.size(); ++i)
+        for (size_t i = 0; i < boundaryNodes.size(); ++i)
           if (boundaryNodes[i])
             numLocalBoundaryNodes++;
         RCP<const Teuchos::Comm<int> > comm = A->getRowMap()->getComm();

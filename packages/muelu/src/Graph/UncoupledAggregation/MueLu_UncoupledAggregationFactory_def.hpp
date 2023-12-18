@@ -232,11 +232,10 @@ namespace MueLu {
       }
     }
 
-    ArrayRCP<const bool> dirichletBoundaryMap = graph->GetBoundaryNodeMap();
-    if (dirichletBoundaryMap != Teuchos::null)
-      for (LO i = 0; i < numRows; i++)
-        if (dirichletBoundaryMap[i] == true)
-          aggStat[i] = BOUNDARY;
+    auto dirichletBoundaryMap = graph->GetBoundaryNodeMap();
+    for (LO i = 0; i < numRows; i++)
+      if (dirichletBoundaryMap(i) == true)
+        aggStat[i] = BOUNDARY;
 
     LO nDofsPerNode = Get<LO>(currentLevel, "DofsPerNode");
     GO indexBase = graph->GetDomainMap()->getIndexBase();
