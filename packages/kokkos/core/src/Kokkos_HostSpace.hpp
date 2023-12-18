@@ -75,7 +75,7 @@ class HostSpace {
   /**\brief  Non-default memory space instance to choose allocation mechansim,
    * if available */
 
-  enum KOKKOS_DEPRECATED AllocationMechanism {
+  enum AllocationMechanism {
     STD_MALLOC,
     POSIX_MEMALIGN,
     POSIX_MMAP,

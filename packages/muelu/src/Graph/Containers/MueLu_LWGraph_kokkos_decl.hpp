@@ -73,20 +73,20 @@ namespace MueLu {
    */
   template<class LocalOrdinal = DefaultLocalOrdinal,
            class GlobalOrdinal = DefaultGlobalOrdinal,
-           class Node = DefaultNode>
-  class LWGraph_kokkos : public MueLu::GraphBase<LocalOrdinal, GlobalOrdinal, Node> {
+           class Node = DefaultNode,
+           class NodeForData = DefaultNode>
+  class LWGraphBase_kokkos : public MueLu::GraphBase<LocalOrdinal, GlobalOrdinal, Node> {
   public:
     using local_ordinal_type  = LocalOrdinal;
     using global_ordinal_type = GlobalOrdinal;
-    using device_type         = typename Node::device_type;
+    using device_type         = typename NodeForData::device_type;
     using execution_space     = typename device_type::execution_space;
     using memory_space        = typename device_type::memory_space;
-    // using device_type         = Kokkos::Device<execution_space, memory_space>;
     using node_type           = Node;
-    using local_lw_graph_type = MueLu::LocalLWGraph_kokkos<LocalOrdinal, GlobalOrdinal, node_type>;
+    using local_lw_graph_type = MueLu::LocalLWGraph_kokkos<LocalOrdinal, GlobalOrdinal, NodeForData>;
     using size_type           = size_t;
 
-    using map_type            = Xpetra::Map<LocalOrdinal, GlobalOrdinal, node_type>;
+    using map_type            = Xpetra::Map<LocalOrdinal, GlobalOrdinal, Node>;
     using local_graph_type    = typename local_lw_graph_type::local_graph_type;
     using boundary_nodes_type = typename local_lw_graph_type::boundary_nodes_type;
 
@@ -109,16 +109,29 @@ namespace MueLu {
     // @param[in] domainMap: non-overlapping (domain) map for graph. Usually provided by AmalgamationFactory stored in UnAmalgamationInfo container
     // @param[in] importMap: overlapping map for graph. Usually provided by AmalgamationFactory stored in UnAmalgamationInfo container
     // @param[in] objectLabel: label string
-    LWGraph_kokkos(const local_graph_type&    graph,
+    LWGraphBase_kokkos(const local_graph_type&    graph,
                    const RCP<const map_type>& domainMap,
                    const RCP<const map_type>& importMap,
                    const std::string&         objectLabel = "")
-      : lclLWGraph_(graph, domainMap), domainMap_(domainMap), importMap_(importMap), objectLabel_(objectLabel) { }
+      : domainMap_(domainMap), importMap_(importMap), objectLabel_(objectLabel) {
 
-    LWGraph_kokkos(const RCP<const Xpetra::CrsGraph<LocalOrdinal, GlobalOrdinal, Node> >& G, const std::string& objectLabel = "")
-      : lclLWGraph_(local_lw_graph_type(G->getLocalGraphDevice(), G->getRowMap())), domainMap_(G->getRowMap()), importMap_(G->getColMap()), objectLabel_(objectLabel){}
+      if constexpr (std::is_same(Node::device_type::memory_space, NodeForData::device_type::memory_space))
+        lclLWGraph_ = local_lw_graph_type(graph, domainMap);
+      else {
+        //
+      }
+    }
 
-    ~LWGraph_kokkos() = default;
+    LWGraphBase_kokkos(const RCP<const Xpetra::CrsGraph<LocalOrdinal, GlobalOrdinal, Node> >& G, const std::string& objectLabel = "")
+      : lclLWGraph_(local_lw_graph_type(G->getLocalGraphDevice(), G->getRowMap())), domainMap_(G->getRowMap()), importMap_(G->getColMap()), objectLabel_(objectLabel) {}
+
+    // LWGraph_kokkos(const RCP<const Xpetra::CrsGraph<LocalOrdinal, GlobalOrdinal, NodeForData> >& G, const std::string& objectLabel = "")
+    //   : lclLWGraph_(local_lw_graph_type(G->getLocalGraphDevice(), G->getRowMap())), domainMap_(G->getRowMap()), importMap_(G->getColMap()), objectLabel_(objectLabel) {}
+
+    LWGraph(const RCP<const Xpetra::CrsGraph<LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosDeviceWrapperNode<Kokkos::Serial> > >& G, const std::string& objectLabel = "") : LWGraph_kokkos<LocalOrdinal,GlobalOrdinal,Tpetra::KokkosCompat::KokkosDeviceWrapperNode<Kokkos::Serial> >::LWGraph_kokkos(G, objectLabel) { }
+
+
+    ~LWGraphBase_kokkos() = default;
     //@}
 
     const RCP<const Teuchos::Comm<int> > GetComm() const {
@@ -172,6 +185,16 @@ namespace MueLu {
       return lclLWGraph_;
     }
 
+    //! Return the row pointers of the local graph
+    typename local_graph_type::row_map_type getRowPtrs() const {
+      return lclLWGraph_->getRowPtrs();
+    }
+
+    //! Return the list entries in the local graph
+    typename local_graph_type::entries_type getEntries() const {
+      return lclLWGraph_->getEntries();
+    }
+
   private:
 
     //! Underlying graph (with label)
@@ -184,6 +207,18 @@ namespace MueLu {
     //! Name of this graph.
     const std::string objectLabel_;
   };
+
+
+  template<class LocalOrdinal = DefaultLocalOrdinal,
+           class GlobalOrdinal = DefaultGlobalOrdinal,
+           class Node = DefaultNode>
+  class LWGraph_kokkos : public MueLu::LWGraphBase_kokkos<LocalOrdinal, GlobalOrdinal, Node, Node> { };
+
+
+  template<class LocalOrdinal = DefaultLocalOrdinal,
+           class GlobalOrdinal = DefaultGlobalOrdinal,
+           class Node = DefaultNode>
+  class LWGraph : public MueLu::LWGraphBase_kokkos<LocalOrdinal, GlobalOrdinal, Node, Tpetra::KokkosCompat::KokkosDeviceWrapperNode<Kokkos::Serial> > { };
 
 }
 

@@ -92,7 +92,7 @@ namespace MueLu {
   template<class LocalOrdinal = DefaultLocalOrdinal,
            class GlobalOrdinal = DefaultGlobalOrdinal,
            class Node = DefaultNode>
-  class LWGraph : public MueLu::LWGraph_kokkos<LocalOrdinal,GlobalOrdinal,Node> {
+  class LWGraph : public MueLu::LWGraph_kokkos<LocalOrdinal,GlobalOrdinal,Tpetra::KokkosCompat::KokkosDeviceWrapperNode<Kokkos::Serial> > {
 #undef MUELU_LWGRAPH_SHORT
 #include "MueLu_UseShortNamesOrdinal.hpp"
 
@@ -107,11 +107,11 @@ namespace MueLu {
     // @param[in] objectLabel: label string
     LWGraph(const ArrayRCP<const size_t>& rowPtrs, const ArrayRCP<const LocalOrdinal>& colPtrs,
             const RCP<const Map>& domainMap, const RCP<const Map>& importMap, const std::string& objectLabel = "")
-      : LWGraph_kokkos(constructLocalGraph(rowPtrs, colPtrs), domainMap, importMap, objectLabel),
+      : LWGraph_kokkos<LocalOrdinal,GlobalOrdinal,Tpetra::KokkosCompat::KokkosDeviceWrapperNode<Kokkos::Serial> >::LWGraph_kokkos(constructLocalGraph(rowPtrs, colPtrs), domainMap, importMap, objectLabel),
         rows_(rowPtrs),
         columns_(colPtrs) { }
 
-    LWGraph(const RCP<const Xpetra::CrsGraph<LocalOrdinal, GlobalOrdinal, Node> >& G, const std::string& objectLabel = "") : LWGraph_kokkos(G, objectLabel) {}
+    LWGraph(const RCP<const Xpetra::CrsGraph<LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosDeviceWrapperNode<Kokkos::Serial> > >& G, const std::string& objectLabel = "") : LWGraph_kokkos<LocalOrdinal,GlobalOrdinal,Tpetra::KokkosCompat::KokkosDeviceWrapperNode<Kokkos::Serial> >::LWGraph_kokkos(G, objectLabel) { }
 
     //! Return the row pointers of the local graph
     const ArrayRCP<const size_t> getRowPtrs() const {
