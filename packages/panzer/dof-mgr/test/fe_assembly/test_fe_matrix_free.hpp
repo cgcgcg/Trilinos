@@ -95,6 +95,7 @@
 
 #include "Teuchos_oblackholestream.hpp"
 #include "Teuchos_RCP.hpp"
+#include "Teuchos_StackedTimer.hpp"
 #include <array>
 #include <set>
 #include <random>
@@ -247,11 +248,14 @@ int feAssemblyHex(int argc, char *argv[]) {
 
 #define ConstructWithLabel(obj, ...) obj(#obj, __VA_ARGS__)
 
-  Teuchos::MpiComm<int> comm(MPI_COMM_WORLD);
+  Teuchos::RCP<const Teuchos::MpiComm<int> > comm
+    = Teuchos::rcp_dynamic_cast<const Teuchos::MpiComm<int> >(Teuchos::DefaultComm<int>::getComm());
 
   //output stream/file
   Teuchos::RCP<Teuchos::FancyOStream> outStream;
+  Teuchos::RCP<Teuchos::StackedTimer> stacked_timer;
   std::string timingsFile = "";
+  std::string test_name = "Matrix-free driver";
 
   try {
 
@@ -262,7 +266,7 @@ int feAssemblyHex(int argc, char *argv[]) {
     local_ordinal_t nx = 2;
     local_ordinal_t ny            = nx;
     local_ordinal_t nz            = nx;
-    int np   = comm.getSize(); // number of processors
+    int np   = comm->getSize(); // number of processors
     int px = std::cbrt(np); while(np%px!=0) --px;
     int py = std::sqrt(np/px); while(np%py!=0) --py;
     int pz = np/(px*py);
@@ -281,6 +285,7 @@ int feAssemblyHex(int argc, char *argv[]) {
     int cubDegree = -1;
     clp.setOption("quadrature-degree",&cubDegree);
     clp.setOption("timings-file",&timingsFile);
+    clp.setOption("test-name", &test_name, "Name of test (for Watchr output)");
     clp.setOption("verbose", &verbose);
     auto cmdResult = clp.parse(argc,argv);
     cubDegree = (cubDegree == -1) ? 2*degree : cubDegree;
@@ -290,7 +295,7 @@ int feAssemblyHex(int argc, char *argv[]) {
       errorFlag++;
     }
 
-    outStream = ((comm.getRank () == 0) && verbose) ?
+    outStream = ((comm->getRank () == 0) && verbose) ?
       getFancyOStream(Teuchos::rcpFromRef (std::cout)) :
       getFancyOStream(Teuchos::rcp (new Teuchos::oblackholestream ()));
 
@@ -298,6 +303,9 @@ int feAssemblyHex(int argc, char *argv[]) {
     *outStream << "HostSpace::    ";   HostSpaceType().print_configuration(*outStream, false);
     *outStream << "\n";
 
+    stacked_timer = Teuchos::rcp(new Teuchos::StackedTimer("Matrix-free driver"));;
+    stacked_timer->setVerboseOstream(outStream);
+    Teuchos::TimeMonitor::setStackedTimer(stacked_timer);
 
     auto meshTimer =  Teuchos::rcp(new Teuchos::TimeMonitor(*Teuchos::TimeMonitor::getNewTimer("Mesh Generation")));
 
@@ -312,7 +320,7 @@ int feAssemblyHex(int argc, char *argv[]) {
 
     // build the topology
     auto connManager = Teuchos::rcp(new panzer::unit_test::CartesianConnManager);
-    connManager->initialize(comm,
+    connManager->initialize(*comm,
         global_ordinal_t(nx*px),
         global_ordinal_t(ny*py),
         global_ordinal_t(nz*pz),
@@ -322,7 +330,7 @@ int feAssemblyHex(int argc, char *argv[]) {
 
     // build the dof manager, and assocaite with the topology
     auto dofManager = Teuchos::rcp(new panzer::DOFManager);
-    dofManager->setConnManager(connManager,*comm.getRawMpiComm());
+    dofManager->setConnManager(connManager, *comm->getRawMpiComm());
 
     // add solution field to the element block
     Teuchos::RCP< Intrepid2::Basis<DeviceSpaceType, scalar_t,scalar_t> > basis = Teuchos::rcp(new Intrepid2::Basis_HGRAD_HEX_Cn_FEM<DeviceSpaceType,scalar_t,scalar_t>(degree));
@@ -331,7 +339,7 @@ int feAssemblyHex(int argc, char *argv[]) {
     dofManager->addField("block-0_0_0",fePattern);
 
     // try to get them all synced up
-    comm.barrier();
+    comm->barrier();
 
     dofManager->buildGlobalUnknowns();
 
@@ -504,9 +512,9 @@ int feAssemblyHex(int argc, char *argv[]) {
     auto globalIndexer = Teuchos::rcp_dynamic_cast<const panzer::GlobalIndexer >(dofManager);
     std::vector<global_ordinal_t> ownedIndices, ownedAndGhostedIndices;
     globalIndexer->getOwnedIndices(ownedIndices);
-    Teuchos::RCP<const map_t> ownedMap = Teuchos::rcp(new map_t(Teuchos::OrdinalTraits<global_ordinal_t>::invalid(),ownedIndices,0,Teuchos::rcpFromRef(comm)));
+    Teuchos::RCP<const map_t> ownedMap = Teuchos::rcp(new map_t(Teuchos::OrdinalTraits<global_ordinal_t>::invalid(),ownedIndices,0,comm));
     globalIndexer->getOwnedAndGhostedIndices(ownedAndGhostedIndices);
-    Teuchos::RCP<const map_t> ownedAndGhostedMap = Teuchos::rcp(new const map_t(Teuchos::OrdinalTraits<global_ordinal_t>::invalid(),ownedAndGhostedIndices,0,Teuchos::rcpFromRef(comm)));
+    Teuchos::RCP<const map_t> ownedAndGhostedMap = Teuchos::rcp(new const map_t(Teuchos::OrdinalTraits<global_ordinal_t>::invalid(),ownedAndGhostedIndices,0,comm));
 
      *outStream << "Total number of DoFs: " << ownedMap->getGlobalNumElements() << ", number of owned DoFs: " << ownedMap->getLocalNumElements() << "\n";
 
@@ -680,15 +688,13 @@ int feAssemblyHex(int argc, char *argv[]) {
   }
 
 
-  Teuchos::RCP<Teuchos::ParameterList> reportParams = parameterList(* (Teuchos::TimeMonitor::getValidReportParameters()));
-  reportParams->set("Report format", "YAML");
-  reportParams->set("YAML style", "spacious");
-  if ( timingsFile != "" ){
-    std::ofstream fout(timingsFile.c_str());
-    Teuchos::TimeMonitor::report(Teuchos::rcpFromRef(comm).ptr(), fout, reportParams);
-  } else {
-    Teuchos::TimeMonitor::report(Teuchos::rcpFromRef(comm).ptr(), *outStream);
-  }
+  stacked_timer->stop("Matrix-free driver");
+  Teuchos::StackedTimer::OutputOptions options;
+  options.output_fraction = options.output_histogram = options.output_minmax = true;
+  stacked_timer->report(*outStream, comm, options);
+  auto xmlOut = stacked_timer->reportWatchrXML(test_name + ' ' + std::to_string(comm->getSize()) + " ranks", comm);
+  if(xmlOut.length())
+    std::cout << "\nAlso created Watchr performance report " << xmlOut << '\n';
 
   if (errorFlag != 0)
     *outStream << "End Result: TEST FAILED = " << errorFlag << "\n";
