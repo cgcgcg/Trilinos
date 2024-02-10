@@ -36,6 +36,7 @@ class MatrixFreeRowMatrix : public Tpetra::RowMatrix<Scalar, LocalOrdinal, Globa
  public:
   using matrix_type = Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
   using mv_type     = Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
+  using vector_type = Tpetra::Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
   using map_type    = Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>;
   using import_type = Tpetra::Import<LocalOrdinal, GlobalOrdinal, Node>;
 
@@ -199,10 +200,8 @@ class MatrixFreeRowMatrix : public Tpetra::RowMatrix<Scalar, LocalOrdinal, Globa
       fst::integrate(elemsMat, transformedBasisValuesAtQPointsOriented, weightedTransformedBasisValuesAtQPointsOriented, true);
     }
 
-    X_ownedAndGhosted_->putScalar(0.);
-    Y_ownedAndGhosted_->putScalar(0.);
     X_ownedAndGhosted_->doImport(X, *importer_, Tpetra::INSERT);
-
+    Y_ownedAndGhosted_->putScalar(0.);
     {
       auto elementLIDs = globalIndexer_->getLIDs();
       auto elmtOffsetKokkos = dofManager_->getGIDFieldOffsetsKokkos(blockId,0);
@@ -239,17 +238,118 @@ class MatrixFreeRowMatrix : public Tpetra::RowMatrix<Scalar, LocalOrdinal, Globa
     Y.doExport(*Y_ownedAndGhosted_, *importer_, Tpetra::ADD_ASSIGN);
   }
 
+  void computeDiagonal(Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node>& diagonal) const {
+
+    auto basisCardinality = basis_->getCardinality();
+    LocalOrdinal numOwnedElems = elemOrts_.extent(0);
+    DynRankView elemsMat("elemsMat", numOwnedElems, basisCardinality, basisCardinality);
+    DynRankView elemsRHS("elemsRHS", numOwnedElems, basisCardinality);
+    constexpr LocalOrdinal dim = 3;
+    const std::string blockId = "eblock-0_0_0";
+
+    {
+      // ************************************ ASSEMBLY OF LOCAL ELEMENT MATRICES **************************************
+      // Compute quadrature (cubature) points
+      Intrepid2::DefaultCubatureFactory cubFactory;
+      auto cellCub = cubFactory.create<DeviceSpaceType, scalar_t, scalar_t>(topology_.getBaseKey(), cubDegree_);
+      auto numQPoints = cellCub->getNumPoints();
+      DynRankView ConstructWithLabel(quadPoints, numQPoints, dim);
+      DynRankView ConstructWithLabel(weights, numQPoints);
+      cellCub->getCubature(quadPoints, weights);
+
+      // compute oriented basis functions at quadrature points
+      auto basisCardinality = basis_->getCardinality();
+      DynRankView ConstructWithLabel(basisValuesAtQPointsOriented, numOwnedElems, basisCardinality, numQPoints);
+      DynRankView ConstructWithLabel(transformedBasisValuesAtQPointsOriented, numOwnedElems, basisCardinality, numQPoints);
+      DynRankView basisValuesAtQPointsCells("inValues", numOwnedElems, basisCardinality, numQPoints);
+      DynRankView ConstructWithLabel(basisValuesAtQPoints, basisCardinality, numQPoints);
+      basis_->getValues(basisValuesAtQPoints, quadPoints);
+      rst::clone(basisValuesAtQPointsCells,basisValuesAtQPoints);
+
+      // modify basis values to account for orientations
+      ots::modifyBasisByOrientation(basisValuesAtQPointsOriented,
+                                    basisValuesAtQPointsCells,
+                                    elemOrts_,
+                                    basis_.getRawPtr());
+
+      // transform basis values
+      fst::HGRADtransformVALUE(transformedBasisValuesAtQPointsOriented, basisValuesAtQPointsOriented);
+
+      DynRankView ConstructWithLabel(basisGradsAtQPointsOriented, numOwnedElems, basisCardinality, numQPoints, dim);
+      DynRankView ConstructWithLabel(transformedBasisGradsAtQPointsOriented, numOwnedElems, basisCardinality, numQPoints, dim);
+      DynRankView basisGradsAtQPointsCells("inValues", numOwnedElems, basisCardinality, numQPoints, dim);
+      DynRankView ConstructWithLabel(basisGradsAtQPoints, basisCardinality, numQPoints, dim);
+      basis_->getValues(basisGradsAtQPoints, quadPoints, Intrepid2::OPERATOR_GRAD);
+      rst::clone(basisGradsAtQPointsCells,basisGradsAtQPoints);
+
+      // modify basis values to account for orientations
+      ots::modifyBasisByOrientation(basisGradsAtQPointsOriented,
+                                    basisGradsAtQPointsCells,
+                                    elemOrts_,
+                                    basis_.getRawPtr());
+
+      // map basis functions to reference (oriented) element
+      DynRankView ConstructWithLabel(jacobianAtQPoints, numOwnedElems, numQPoints, dim, dim);
+      DynRankView ConstructWithLabel(jacobianAtQPoints_inv, numOwnedElems, numQPoints, dim, dim);
+      DynRankView ConstructWithLabel(jacobianAtQPoints_det, numOwnedElems, numQPoints);
+      ct::setJacobian(jacobianAtQPoints, quadPoints, physVertices_, topology_);
+      ct::setJacobianInv (jacobianAtQPoints_inv, jacobianAtQPoints);
+
+      fst::HGRADtransformGRAD(transformedBasisGradsAtQPointsOriented, jacobianAtQPoints_inv, basisGradsAtQPointsOriented);
+
+      // compute integrals to assembly local matrices
+
+      DynRankView ConstructWithLabel(weightedTransformedBasisValuesAtQPointsOriented, numOwnedElems, basisCardinality, numQPoints);
+      DynRankView ConstructWithLabel(weightedTransformedBasisGradsAtQPointsOriented, numOwnedElems, basisCardinality, numQPoints, dim);
+      DynRankView ConstructWithLabel(cellWeights, numOwnedElems, numQPoints);
+      rst::clone(cellWeights, weights);
+
+      fst::multiplyMeasure(weightedTransformedBasisGradsAtQPointsOriented, cellWeights, transformedBasisGradsAtQPointsOriented);
+      fst::multiplyMeasure(weightedTransformedBasisValuesAtQPointsOriented, cellWeights, transformedBasisValuesAtQPointsOriented);
+
+      fst::integrate(elemsMat, transformedBasisGradsAtQPointsOriented, weightedTransformedBasisGradsAtQPointsOriented);
+      fst::integrate(elemsMat, transformedBasisValuesAtQPointsOriented, weightedTransformedBasisValuesAtQPointsOriented, true);
+    }
+
+    diagonal.putScalar(0.);
+    Y_ownedAndGhosted_->putScalar(0.);
+    {
+      auto elementLIDs = globalIndexer_->getLIDs();
+      auto elmtOffsetKokkos = dofManager_->getGIDFieldOffsetsKokkos(blockId,0);
+
+      auto lclDiag = Y_ownedAndGhosted_->getLocalViewDevice(Tpetra::Access::OverwriteAll);
+
+      Kokkos::parallel_for
+        ("Matrix-free apply",
+         Kokkos::RangePolicy<DeviceSpaceType, int> (0, numOwnedElems),
+         KOKKOS_LAMBDA (const size_t elemId) {
+          // Get subviews
+          auto elemMat = Kokkos::subview(elemsMat,elemId, Kokkos::ALL(), Kokkos::ALL());
+          auto elemLIds  = Kokkos::subview(elementLIDs,elemId, Kokkos::ALL());
+
+          // For each DoF (row) on the current element
+          for (local_ordinal_t rowId = 0; rowId < basisCardinality; ++rowId) {
+            const local_ordinal_t localRowId = elemLIds(elmtOffsetKokkos(rowId));
+
+            Kokkos::atomic_add (&(lclDiag(localRowId, 0)), elemMat(rowId, rowId));
+          }
+        });
+      Kokkos::fence();
+    }
+    diagonal.doExport(*Y_ownedAndGhosted_, *importer_, Tpetra::ADD_ASSIGN);
+  }
+
   // Fake RowMatrix interface
   Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node> > getRowMap() const {
     return getRangeMap();
   }
 
   Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node> > getColMap() const {
-    throw std::runtime_error("Not implemented.");
+    return ownedAndGhostedMap_;
   }
 
   Teuchos::RCP<const Teuchos::Comm<int> > getComm() const {
-    return getDomainMap()->getComm();
+    return ownedMap_->getComm();
   }
 
   Teuchos::RCP<const RowGraph<LocalOrdinal, GlobalOrdinal, Node> > getGraph() const {
@@ -355,7 +455,7 @@ class MatrixFreeRowMatrix : public Tpetra::RowMatrix<Scalar, LocalOrdinal, Globa
   }
 
   void getLocalDiagCopy(Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node>& diag) const {
-    throw std::runtime_error("Not implemented.");
+    computeDiagonal(diag);
   }
 
   void leftScale(const Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node>& x) {

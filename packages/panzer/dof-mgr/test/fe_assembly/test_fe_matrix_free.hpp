@@ -98,13 +98,22 @@
 #include "Teuchos_oblackholestream.hpp"
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_StackedTimer.hpp"
+#include <Teuchos_XMLParameterListHelpers.hpp>
 #include <array>
 #include <set>
 #include <random>
 #include <algorithm>
 
+#include "Thyra_VectorBase.hpp"
 #include "Tpetra_MatrixFreeRowMatrix_decl.hpp"
 
+// Thyra includes
+#include <Thyra_LinearOpWithSolveBase.hpp>
+#include <Thyra_TpetraThyraWrappers.hpp>
+#include <Thyra_SolveSupportTypes.hpp>
+
+// Stratimikos includes
+#include <Stratimikos_LinearSolverBuilder.hpp>
 
 namespace Discretization {
 
@@ -294,6 +303,8 @@ int feAssemblyHex(int argc, char *argv[]) {
     clp.setOption("timings-file",&timingsFile);
     clp.setOption("test-name", &test_name, "Name of test (for Watchr output)");
     clp.setOption("verbose", &verbose);
+    std::string stratFileName = "stratimikos.xml";
+    clp.setOption("stratimikosParams", &stratFileName);
     auto cmdResult = clp.parse(argc,argv);
     cubDegree = (cubDegree == -1) ? 2*degree : cubDegree;
 
@@ -746,6 +757,59 @@ int feAssemblyHex(int argc, char *argv[]) {
       double diff_l2_norm = residual_crs->getVector(0)->norm2();
       *outStream << "Difference matrix vs matrix-free l2 norm : " << diff_l2_norm << "\n";
     }
+
+
+    // ************************************ SOLVE LINEAR SYSTEMS **************************************
+    {
+      Stratimikos::LinearSolverBuilder<scalar_t> linearSolverBuilder;
+      Teuchos::RCP<Teuchos::ParameterList> strat_params = Teuchos::rcp(new Teuchos::ParameterList("Stratimikos parameters"));
+      Teuchos::updateParametersFromXmlFileAndBroadcast(stratFileName, strat_params.ptr(), *comm);
+      linearSolverBuilder.setParameterList(strat_params);
+      Teuchos::RCP<Thyra::LinearOpWithSolveFactoryBase<scalar_t> > lowsFactory = createLinearSolveStrategy(linearSolverBuilder);
+      auto thyra_vs = Thyra::tpetraVectorSpace<scalar_t, local_ordinal_t, global_ordinal_t, node_t>(ownedMap);
+      auto thyra_b = Thyra::constTpetraVector<scalar_t, local_ordinal_t, global_ordinal_t, node_t>(thyra_vs, b->getVector(0));
+
+      {
+        Teuchos::RCP<Thyra::VectorBase<scalar_t> > thyra_x_crs;
+        Teuchos::RCP<const Thyra::LinearOpBase<scalar_t> > thyra_A_crs;
+        Teuchos::RCP<Thyra::LinearOpWithSolveBase<scalar_t> > thyra_inverse_A_crs;
+
+        {
+          Teuchos::TimeMonitor mfSolveTimer =  *Teuchos::TimeMonitor::getNewTimer("Matrix solver setup");
+          thyra_x_crs = Thyra::createMember(*thyra_vs);
+          thyra_x_crs->assign(0.);
+          thyra_A_crs = Thyra::tpetraLinearOp<scalar_t, local_ordinal_t, global_ordinal_t, node_t>(thyra_vs, thyra_vs, A_crs);
+          thyra_inverse_A_crs = Thyra::linearOpWithSolve(*lowsFactory, thyra_A_crs);
+        }
+
+        {
+          Teuchos::TimeMonitor mfSolveTimer =  *Teuchos::TimeMonitor::getNewTimer("Matrix solve");
+          Thyra::SolveStatus<scalar_t> status = Thyra::solve<scalar_t>(*thyra_inverse_A_crs, Thyra::NOTRANS, *thyra_b, thyra_x_crs.ptr());
+          errorFlag += (status.solveStatus != Thyra::SOLVE_STATUS_CONVERGED);
+        }
+      }
+
+      {
+        Teuchos::RCP<Thyra::VectorBase<scalar_t> > thyra_x_mf;
+        Teuchos::RCP<const Thyra::LinearOpBase<scalar_t> > thyra_A_mf;
+        Teuchos::RCP<Thyra::LinearOpWithSolveBase<scalar_t> > thyra_inverse_A_mf;
+
+        {
+          Teuchos::TimeMonitor mfSolveTimer =  *Teuchos::TimeMonitor::getNewTimer("Matrix-free solver setup");
+          thyra_x_mf = Thyra::createMember<scalar_t>(*thyra_vs);
+          thyra_x_mf->assign(0.);
+          thyra_A_mf = Thyra::tpetraLinearOp<scalar_t, local_ordinal_t, global_ordinal_t, node_t>(thyra_vs, thyra_vs, A_mf);
+          thyra_inverse_A_mf = Thyra::linearOpWithSolve(*lowsFactory, thyra_A_mf);
+        }
+
+        {
+          Teuchos::TimeMonitor mfSolveTimer =  *Teuchos::TimeMonitor::getNewTimer("Matrix-free solve");
+          Thyra::SolveStatus<scalar_t> status = Thyra::solve<scalar_t>(*thyra_inverse_A_mf, Thyra::NOTRANS, *thyra_b, thyra_x_mf.ptr());
+          errorFlag += (status.solveStatus != Thyra::SOLVE_STATUS_CONVERGED);
+        }
+      }
+    }
+
   } catch (const std::exception & err) {
     *outStream << " Exception\n";
     *outStream << err.what() << "\n\n";
