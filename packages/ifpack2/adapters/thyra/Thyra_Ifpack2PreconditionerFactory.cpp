@@ -54,7 +54,8 @@
 namespace Thyra {
 
   #define LCLINST(S,LO,GO,NO)                                     \
-    IFPACK2_INST(Ifpack2PreconditionerFactory,S,LO,GO,NO)
+    IFPACK2_INST(Ifpack2PreconditionerFactory,S,LO,GO,NO)         \
+    IFPACK2_INST_ROWMATRIX(Ifpack2PreconditionerFactory,S,LO,GO,NO)
 
   IFPACK2_ETI_MANGLING_TYPEDEFS()
 
