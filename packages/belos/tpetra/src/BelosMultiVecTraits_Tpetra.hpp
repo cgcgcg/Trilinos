@@ -52,6 +52,7 @@
 #include "Teuchos_Array.hpp"
 #include "Teuchos_ScalarTraits.hpp"
 #include "Kokkos_ArithTraits.hpp"
+#include "Tpetra_MultiVector_decl.hpp"
 
 #ifdef HAVE_BELOS_TSQR
 #  include "Tpetra_TsqrAdaptor.hpp"
@@ -147,8 +148,8 @@ namespace Belos {
     /// The returned Tpetra::MultiVector has the same Tpetra::Map
     /// (distribution over one or more parallel processes) as \c X.
     /// Its entries are not initialized and have undefined values.
-    static Teuchos::RCP<MV> Clone (const MV& X, const int numVecs) {
-      Teuchos::RCP<MV> Y (new MV (X.getMap (), numVecs, false));
+    static Teuchos::RCP<MV> Clone (const MV& X, const int numVecs SOURCE_LOCATION_DECL) {
+      Teuchos::RCP<MV> Y (new MV (X.getMap (), numVecs, false SOURCE_LOCATION_ARG));
       Y->setCopyOrView (Teuchos::View);
       return Y;
     }
