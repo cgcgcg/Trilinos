@@ -78,7 +78,7 @@ class VectorFactory {
  public:
   //! Constructor specifying the number of non-zeros for all rows.
   static Teuchos::RCP<Xpetra::Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
-  Build(const Teuchos::RCP<const Xpetra::Map<LocalOrdinal, GlobalOrdinal, Node>>& map, bool zeroOut = true) {
+  Build(const Teuchos::RCP<const Xpetra::Map<LocalOrdinal, GlobalOrdinal, Node>>& map, bool zeroOut = true SOURCE_LOCATION_DECL) {
     XPETRA_MONITOR("VectorFactory::Build");
 
     RCP<const Xpetra::BlockedMap<LocalOrdinal, GlobalOrdinal, Node>>
@@ -127,7 +127,7 @@ class VectorFactory<double, int, int, EpetraNode> {
  public:
   static RCP<Xpetra::Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
   Build(const Teuchos::RCP<const Xpetra::Map<LocalOrdinal, GlobalOrdinal, Node>>& map,
-        bool zeroOut = true);
+        bool zeroOut = true SOURCE_LOCATION_DECL);
 };
 #endif  // #if !defined(XPETRA_EPETRA_NO_32BIT_GLOBAL_INDICES)
 
@@ -153,7 +153,7 @@ class VectorFactory<double, int, long long, EpetraNode> {
  public:
   static RCP<Xpetra::Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
   Build(const Teuchos::RCP<const Xpetra::Map<LocalOrdinal, GlobalOrdinal, Node>>& map,
-        bool zeroOut = true);
+        bool zeroOut = true SOURCE_LOCATION_DECL);
 };
 #endif  // #if !defined(XPETRA_EPETRA_NO_64BIT_GLOBAL_INDICES)
 #define XPETRA_VECTORFACTORY_SHORT
@@ -181,7 +181,7 @@ class VectorFactory<int, int, int, EpetraNode> {
  public:
   static RCP<Xpetra::Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
   Build(const Teuchos::RCP<const Xpetra::Map<LocalOrdinal, GlobalOrdinal, Node>>& map,
-        bool zeroOut = true);
+        bool zeroOut = true SOURCE_LOCATION_DECL);
 };
 #endif  // #if !defined(XPETRA_EPETRA_NO_32BIT_GLOBAL_INDICES)
 
@@ -209,7 +209,7 @@ class VectorFactory<int, int, long long, EpetraNode> {
  public:
   static RCP<Xpetra::Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
   Build(const Teuchos::RCP<const Xpetra::Map<LocalOrdinal, GlobalOrdinal, Node>>& map,
-        bool zeroOut = true);
+        bool zeroOut = true SOURCE_LOCATION_DECL);
 };
 #endif  // !defined(XPETRA_EPETRA_NO_64BIT_GLOBAL_INDICES)
 

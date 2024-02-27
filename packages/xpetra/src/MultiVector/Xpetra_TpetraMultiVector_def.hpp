@@ -61,8 +61,8 @@ namespace Xpetra {
 
 //! Basic constuctor.
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::TpetraMultiVector(const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node> > &map, size_t NumVectors, bool zeroOut)
-  : vec_(Teuchos::rcp(new Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>(toTpetra(map), NumVectors, zeroOut))) {
+TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::TpetraMultiVector(const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node> > &map, size_t NumVectors, bool zeroOut SOURCE_LOCATION_DEF)
+  : vec_(Teuchos::rcp(new Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>(toTpetra(map), NumVectors, zeroOut SOURCE_LOCATION_ARG))) {
   // TAW 1/30/2016: even though Tpetra allows numVecs == 0, Epetra does not. Introduce exception to keep behavior of Epetra and Tpetra consistent.
   TEUCHOS_TEST_FOR_EXCEPTION(NumVectors < 1, std::invalid_argument, "Xpetra::TpetraMultiVector(map,numVecs,zeroOut): numVecs = " << NumVectors << " < 1.");
 }

@@ -46,6 +46,7 @@
 #ifndef XPETRA_MULTIVECTORFACTORY_DECL_HPP
 #define XPETRA_MULTIVECTORFACTORY_DECL_HPP
 
+#include "Tpetra_MultiVector_decl.hpp"
 #include "Xpetra_ConfigDefs.hpp"
 #include "Xpetra_MultiVector_decl.hpp"
 
@@ -91,7 +92,7 @@ class MultiVectorFactory {
  public:
   //! Constructor specifying the number of non-zeros for all rows.
   static Teuchos::RCP<MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
-  Build(const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node>> &map, size_t NumVectors, bool zeroOut = true);
+  Build(const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node>> &map, size_t NumVectors, bool zeroOut = true SOURCE_LOCATION_DECL);
 
   //! Set multi-vector values from array of pointers using Teuchos memory management classes. (copy).
   static Teuchos::RCP<MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
@@ -125,7 +126,7 @@ class MultiVectorFactory<double, int, int, EpetraNode> {
 
  public:
   static RCP<MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
-  Build(const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node>> &map, size_t NumVectors, bool zeroOut = true);
+  Build(const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node>> &map, size_t NumVectors, bool zeroOut = true SOURCE_LOCATION_DECL);
 
   //! Set multi-vector values from array of pointers using Teuchos memory management classes. (copy).
   static Teuchos::RCP<MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
@@ -151,7 +152,7 @@ class MultiVectorFactory<int, int, int, EpetraNode> {
 
  public:
   static RCP<MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
-  Build(const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node>> &map, size_t NumVectors, bool zeroOut = true);
+  Build(const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node>> &map, size_t NumVectors, bool zeroOut = true SOURCE_LOCATION_DECL);
 
   //! Set multi-vector values from array of pointers using Teuchos memory management classes. (copy).
   static Teuchos::RCP<MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
@@ -182,7 +183,7 @@ class MultiVectorFactory<double, int, long long, EpetraNode> {
   static RCP<MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
   Build(const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node>> &map,
         size_t NumVectors,
-        bool zeroOut = true);
+        bool zeroOut = true SOURSOURCE_LOCATION_DECL);
 
   //! Set multi-vector values from array of pointers using Teuchos memory management classes. (copy).
   static Teuchos::RCP<MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
@@ -210,7 +211,7 @@ class MultiVectorFactory<int, int, long long, EpetraNode> {
   static RCP<MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
   Build(const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node>> &map,
         size_t NumVectors,
-        bool zeroOut = true);
+        bool zeroOut = true SOURCE_LOCATION_DECL);
 
   //! Set multi-vector values from array of pointers using Teuchos memory management classes. (copy).
   static Teuchos::RCP<MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>

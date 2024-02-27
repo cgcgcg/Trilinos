@@ -46,6 +46,7 @@
 #ifndef XPETRA_TPETRAMULTIVECTOR_DECL_HPP
 #define XPETRA_TPETRAMULTIVECTOR_DECL_HPP
 
+#include "Tpetra_MultiVector_decl.hpp"
 #include "Xpetra_TpetraConfigDefs.hpp"
 #include "Xpetra_MultiVector_decl.hpp"
 
@@ -92,7 +93,7 @@ class TpetraMultiVector
   //@{
 
   //! Basic constuctor.
-  TpetraMultiVector(const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node> > &map, size_t NumVectors, bool zeroOut = true);
+  TpetraMultiVector(const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node> > &map, size_t NumVectors, bool zeroOut = true SOURCE_LOCATION_DECL);
 
   //! Copy constructor (performs a deep copy).
   TpetraMultiVector(const MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node> &source, const Teuchos::DataAccess copyOrView = Teuchos::Copy);

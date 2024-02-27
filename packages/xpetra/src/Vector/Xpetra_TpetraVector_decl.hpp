@@ -46,6 +46,7 @@
 #ifndef XPETRA_TPETRAVECTOR_DECL_HPP
 #define XPETRA_TPETRAVECTOR_DECL_HPP
 
+#include "Tpetra_MultiVector_decl.hpp"
 #include "Xpetra_TpetraConfigDefs.hpp"
 
 #include "Xpetra_Vector.hpp"
@@ -94,7 +95,7 @@ class TpetraVector
   //@{
 
   //! Sets all vector entries to zero.
-  TpetraVector(const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node>>& map, bool zeroOut = true);
+  TpetraVector(const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node>>& map, bool zeroOut = true SOURCE_LOCATION_DECL);
 
   //! Set multi-vector values from an array using Teuchos memory management classes. (copy)
   TpetraVector(const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node>>& map, const Teuchos::ArrayView<const Scalar>& A);

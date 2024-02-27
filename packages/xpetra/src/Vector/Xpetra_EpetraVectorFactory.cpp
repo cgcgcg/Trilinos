@@ -43,6 +43,7 @@
 // ***********************************************************************
 //
 // @HEADER
+#include "Tpetra_MultiVector_decl.hpp"
 #include "Xpetra_VectorFactory.hpp"
 #include "Xpetra_Vector.hpp"
 #include "Xpetra_BlockedVector.hpp"
@@ -56,7 +57,7 @@ namespace Xpetra {
 
 RCP<Xpetra::Vector<double, int, int, EpetraNode>>
 VectorFactory<double, int, int, EpetraNode>::
-    Build(const Teuchos::RCP<const Xpetra::Map<int, int, EpetraNode>>& map, bool zeroOut) {
+    Build(const Teuchos::RCP<const Xpetra::Map<int, int, EpetraNode>>& map, bool zeroOut SOURCE_LOCATION_DEF) {
   XPETRA_MONITOR("VectorFactory::Build");
 
   RCP<const Xpetra::BlockedMap<LocalOrdinal, GlobalOrdinal, Node>>
@@ -68,7 +69,7 @@ VectorFactory<double, int, int, EpetraNode>::
 
 #ifdef HAVE_XPETRA_TPETRA
   if (map->lib() == UseTpetra) {
-    return rcp(new TpetraVector(map, zeroOut));
+    return rcp(new TpetraVector(map, zeroOut SOURCE_LOCATION_ARG));
   }
 #endif  // HAVE_XPETRA_TPETRA
 
@@ -85,7 +86,7 @@ VectorFactory<double, int, int, EpetraNode>::
 
 RCP<Xpetra::Vector<double, int, long long, EpetraNode>>
 VectorFactory<double, int, long long, EpetraNode>::
-    Build(const Teuchos::RCP<const Xpetra::Map<int, long long, EpetraNode>>& map, bool zeroOut) {
+    Build(const Teuchos::RCP<const Xpetra::Map<int, long long, EpetraNode>>& map, bool zeroOut SOURCE_LOCATION_DEF) {
   XPETRA_MONITOR("VectorFactory::Build");
 
   RCP<const Xpetra::BlockedMap<LocalOrdinal, GlobalOrdinal, Node>> bmap =
@@ -96,7 +97,7 @@ VectorFactory<double, int, long long, EpetraNode>::
 
 #ifdef HAVE_XPETRA_TPETRA
   if (map->lib() == UseTpetra) {
-    return rcp(new TpetraVector(map, zeroOut));
+    return rcp(new TpetraVector(map, zeroOut SOURCE_LOCATION_ARG));
   }
 #endif
 
@@ -114,7 +115,7 @@ VectorFactory<double, int, long long, EpetraNode>::
 
 RCP<Xpetra::Vector<int, int, int, EpetraNode>>
 VectorFactory<int, int, int, EpetraNode>::
-    Build(const Teuchos::RCP<const Xpetra::Map<int, int, EpetraNode>>& map, bool zeroOut) {
+    Build(const Teuchos::RCP<const Xpetra::Map<int, int, EpetraNode>>& map, bool zeroOut SOURCE_LOCATION_DEF) {
   XPETRA_MONITOR("VectorFactory::Build");
 
   RCP<const Xpetra::BlockedMap<LocalOrdinal, GlobalOrdinal, Node>> bmap =
@@ -125,7 +126,7 @@ VectorFactory<int, int, int, EpetraNode>::
 
 #ifdef HAVE_XPETRA_TPETRA
   if (map->lib() == UseTpetra) {
-    return rcp(new TpetraVector(map, zeroOut));
+    return rcp(new TpetraVector(map, zeroOut SOURCE_LOCATION_ARG));
   }
 #endif  // HAVE_XPETRA_TPETRA
 
@@ -142,7 +143,7 @@ VectorFactory<int, int, int, EpetraNode>::
 
 RCP<Xpetra::Vector<int, int, long long, EpetraNode>>
 VectorFactory<int, int, long long, EpetraNode>::
-    Build(const Teuchos::RCP<const Xpetra::Map<int, long long, EpetraNode>>& map, bool zeroOut) {
+    Build(const Teuchos::RCP<const Xpetra::Map<int, long long, EpetraNode>>& map, bool zeroOut SOURCE_LOCATION_DEF) {
   XPETRA_MONITOR("VectorFactory::Build");
 
   RCP<const Xpetra::BlockedMap<LocalOrdinal, GlobalOrdinal, Node>> bmap =
@@ -154,7 +155,7 @@ VectorFactory<int, int, long long, EpetraNode>::
 
 #ifdef HAVE_XPETRA_TPETRA
   if (map->lib() == UseTpetra) {
-    return rcp(new TpetraVector(map, zeroOut));
+    return rcp(new TpetraVector(map, zeroOut SOURCE_LOCATION_ARG));
   }
 #endif  // HAVE_XPETRA_TPETRA
 

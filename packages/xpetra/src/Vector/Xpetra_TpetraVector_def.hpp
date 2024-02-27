@@ -45,6 +45,7 @@
 // @HEADER
 #ifndef XPETRA_TPETRAVECTOR_DEF_HPP
 #define XPETRA_TPETRAVECTOR_DEF_HPP
+#include "Tpetra_MultiVector_decl.hpp"
 #include "Xpetra_TpetraVector_decl.hpp"
 
 namespace Xpetra {
@@ -52,8 +53,9 @@ namespace Xpetra {
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 TpetraVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     TpetraVector(const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node>>& map,
-                 bool zeroOut)
-  : TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>(map, 1, zeroOut) {
+                 bool zeroOut
+                     SOURCE_LOCATION_DEF)
+  : TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>(map, 1, zeroOut SOURCE_LOCATION_ARG) {
 }
 
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>

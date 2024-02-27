@@ -43,6 +43,7 @@
 // ***********************************************************************
 //
 // @HEADER
+#include "Tpetra_MultiVector_decl.hpp"
 #include "Xpetra_MultiVectorFactory_decl.hpp"
 #include "Xpetra_BlockedMultiVector.hpp"
 
@@ -59,7 +60,7 @@ MultiVectorFactory<double, int, int, EpetraNode>::
 
 RCP<MultiVector<double, int, int, EpetraNode>>
 MultiVectorFactory<double, int, int, EpetraNode>::
-    Build(const Teuchos::RCP<const Map<int, int, EpetraNode>>& map, size_t NumVectors, bool zeroOut) {
+    Build(const Teuchos::RCP<const Map<int, int, EpetraNode>>& map, size_t NumVectors, bool zeroOut SOURCE_LOCATION_DEF) {
   using BlockedMultiVector = Xpetra::BlockedMultiVector<double, int, int, EpetraNode>
 
       XPETRA_MONITOR("MultiVectorFactory::Build");
@@ -72,7 +73,7 @@ MultiVectorFactory<double, int, int, EpetraNode>::
 
 #ifdef HAVE_XPETRA_TPETRA
   if (map->lib() == UseTpetra) {
-    return rcp(new TpetraMultiVector<double, int, int, EpetraNode>(map, NumVectors, zeroOut));
+    return rcp(new TpetraMultiVector<double, int, int, EpetraNode>(map, NumVectors, zeroOut SOURCE_LOCATION_ARG));
   }
 #endif
 
@@ -128,7 +129,7 @@ MultiVectorFactory<int, int, int, EpetraNode>::
 
 RCP<MultiVector<int, int, int, EpetraNode>>
 MultiVectorFactory<int, int, int, EpetraNode>::
-    Build(const Teuchos::RCP<const Map<int, int, EpetraNode>>& map, size_t NumVectors, bool zeroOut) {
+    Build(const Teuchos::RCP<const Map<int, int, EpetraNode>>& map, size_t NumVectors, bool zeroOut SOURCE_LOCATION_DEF) {
   XPETRA_MONITOR("MultiVectorFactory::Build");
 
   RCP<const BlockedMap<int, int, EpetraNode>> bmap = Teuchos::rcp_dynamic_cast<const BlockedMap<int, int, EpetraNode>>(map);
@@ -139,7 +140,7 @@ MultiVectorFactory<int, int, int, EpetraNode>::
 
 #ifdef HAVE_XPETRA_TPETRA
   if (map->lib() == UseTpetra) {
-    return rcp(new TpetraMultiVector<int, int, int, EpetraNode>(map, NumVectors, zeroOut));
+    return rcp(new TpetraMultiVector<int, int, int, EpetraNode>(map, NumVectors, zeroOut SOURCE_LOCATION_ARG));
   }
 #endif
 

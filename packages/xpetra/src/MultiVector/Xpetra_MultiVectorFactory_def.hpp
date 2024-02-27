@@ -46,6 +46,7 @@
 #ifndef XPETRA_MULTIVECTORFACTORY_DEF_HPP
 #define XPETRA_MULTIVECTORFACTORY_DEF_HPP
 
+#include "Tpetra_MultiVector_decl.hpp"
 #include "Xpetra_MultiVectorFactory_decl.hpp"
 
 #include "Xpetra_BlockedMultiVector.hpp"
@@ -59,7 +60,8 @@ Teuchos::RCP<MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
 MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     Build(const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node>>& map,
           size_t NumVectors,
-          bool zeroOut) {
+          bool zeroOut
+              SOURCE_LOCATION_DEF) {
   XPETRA_MONITOR("MultiVectorFactory::Build");
 
   RCP<const BlockedMap<LocalOrdinal, GlobalOrdinal, Node>> bmap =
@@ -71,7 +73,7 @@ MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 
 #ifdef HAVE_XPETRA_TPETRA
   if (map->lib() == UseTpetra) {
-    return rcp(new TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>(map, NumVectors, zeroOut));
+    return rcp(new TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>(map, NumVectors, zeroOut SOURCE_LOCATION_ARG));
   }
 #endif
 
