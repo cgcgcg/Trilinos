@@ -50,6 +50,7 @@
 /// Tpetra::MultiVector, include "Tpetra_MultiVector_decl.hpp".
 
 #include "Tpetra_Core.hpp"
+#include "Tpetra_MultiVector_decl.hpp"
 #include "Tpetra_Util.hpp"
 #include "Tpetra_Vector.hpp"
 #include "Tpetra_Details_allReduceView.hpp"
@@ -149,7 +150,8 @@ namespace { // (anonymous)
   allocDualView (const size_t lclNumRows,
                  const size_t numCols,
                  const bool zeroOut = true,
-                 const bool allowPadding = false)
+                 const bool allowPadding = false
+                 SOURCE_LOCATION_DECL)
   {
     using ::Tpetra::Details::Behavior;
     using Kokkos::AllowPadding;
@@ -163,7 +165,7 @@ namespace { // (anonymous)
     // argument to Kokkos::view_alloc.  This is because view_alloc
     // also allows a raw pointer as its first argument.  See
     // https://github.com/kokkos/kokkos/issues/434.
-    const std::string label ("MV::DualView");
+    const std::string label = SOURCE_LOCATION_TRANSFORM("MV::DualView");
     const bool debug = Behavior::debug ();
 
     // NOTE (mfh 18 Feb 2015, 12 Apr 2015, 22 Sep 2016) Our separate
@@ -458,19 +460,21 @@ namespace Tpetra {
   MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   MultiVector (const Teuchos::RCP<const map_type>& map,
                const size_t numVecs,
-               const bool zeroOut) : /* default is true */
+               const bool zeroOut /* default is true */
+               SOURCE_LOCATION_DEF) :
     base_type (map)
   {
     ::Tpetra::Details::ProfilingRegion region ("Tpetra::MV ctor (map,numVecs,zeroOut)");
 
     const size_t lclNumRows = this->getLocalLength ();
-    view_ = allocDualView<Scalar, LocalOrdinal, GlobalOrdinal, Node> (lclNumRows, numVecs, zeroOut);
+    view_ = allocDualView<Scalar, LocalOrdinal, GlobalOrdinal, Node> (lclNumRows, numVecs, zeroOut, false SOURCE_LOCATION_ARG);
   }
 
   template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
   MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   MultiVector (const MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>& source,
-               const Teuchos::DataAccess copyOrView) :
+               const Teuchos::DataAccess copyOrView
+               SOURCE_LOCATION_DEF) :
     base_type (source),
     view_ (source.view_),
     whichVectors_ (source.whichVectors_)

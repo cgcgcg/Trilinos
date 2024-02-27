@@ -50,6 +50,7 @@
 #include "KokkosCompat_View.hpp"
 #include "KokkosBlas1_nrm2w_squared.hpp"
 #include "Teuchos_CommHelpers.hpp"
+#include "Tpetra_MultiVector_decl.hpp"
 
 namespace Tpetra {
 
@@ -60,10 +61,9 @@ namespace Tpetra {
   {}
 
   template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-  Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
-  Vector (const Teuchos::RCP<const map_type>& map,
-          const bool zeroOut)
-    : base_type (map, 1, zeroOut)
+  Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Vector(
+      const Teuchos::RCP<const map_type> &map, const bool zeroOut SOURCE_LOCATION_DEF)
+    : base_type (map, 1, zeroOut SOURCE_LOCATION_ARG)
   {}
 
   template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>

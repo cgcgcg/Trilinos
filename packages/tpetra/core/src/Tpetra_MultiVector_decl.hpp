@@ -61,6 +61,7 @@
 #include "Tpetra_KokkosRefactor_Details_MultiVectorLocalDeepCopy.hpp"
 #include "Tpetra_Access.hpp"
 #include "Tpetra_Details_WrappedDualView.hpp"
+#include "Tpetra_SourceLocation.hpp"
 #include <type_traits>
 
 #ifdef HAVE_TPETRACORE_TEUCHOSNUMERICS
@@ -487,7 +488,8 @@ namespace Tpetra {
     ///   the MultiVector to zero.
     MultiVector (const Teuchos::RCP<const map_type>& map,
                  const size_t numVecs,
-                 const bool zeroOut = true);
+                 const bool zeroOut = true
+                 SOURCE_LOCATION_DECL);
 
     /// \brief Copy constructor, with option to do deep or shallow copy.
     ///
@@ -500,7 +502,8 @@ namespace Tpetra {
     /// a deep copy of the input MultiVector.
     ///
     MultiVector (const MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>& source,
-                 const Teuchos::DataAccess copyOrView);
+                 const Teuchos::DataAccess copyOrView
+                 SOURCE_LOCATION_DECL);
 
     /// \brief Create multivector by copying two-dimensional array of local data.
     ///

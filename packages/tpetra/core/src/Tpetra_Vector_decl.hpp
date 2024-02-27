@@ -146,8 +146,9 @@ public:
   ///   Vector's entries be zero on return.  If false, the Vector's
   ///   entries have undefined values on return, and must be set
   ///   explicitly.
-  explicit Vector (const Teuchos::RCP<const map_type>& map,
-                   const bool zeroOut = true);
+  explicit Vector(const Teuchos::RCP<const map_type> &map,
+                  const bool zeroOut = true
+                  SOURCE_LOCATION_DECL);
 
   /// \brief Copy constructor (shallow or deep copy).
   ///
