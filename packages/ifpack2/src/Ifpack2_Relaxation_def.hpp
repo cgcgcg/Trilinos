@@ -689,6 +689,9 @@ apply (const Tpetra::MultiVector<scalar_type, local_ordinal_type, global_ordinal
         ApplyFlops_ += numGlobalRows * numVectors;
       }
     }
+    // All operations are local to the MPI rank. In order for the timer to be meaningful, we need to fence.
+    if (TimerForApply_)
+      Kokkos::fence();
   }
   ApplyTime_ += (time.wallTime() - startTime);
   ++NumApply_;
