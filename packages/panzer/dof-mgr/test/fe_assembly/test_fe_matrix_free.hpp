@@ -76,6 +76,8 @@
 #include "Intrepid2_CellTools.hpp"
 #include "Intrepid2_FunctionSpaceTools.hpp"
 #include "Intrepid2_LagrangianInterpolation.hpp"
+#include "Intrepid2_CellGeometry.hpp"
+#include "Intrepid2_IntegrationTools.hpp"
 
 #include "Panzer_IntrepidFieldPattern.hpp"
 #include "Panzer_DOFManager.hpp"
@@ -186,13 +188,13 @@ namespace Example {
     }
   };
 
-template<typename ValueType, typename DeviceSpaceType>
+template<typename ValueType, typename DeviceType>
 int feAssemblyHex(int argc, char *argv[]) {
 
   // host_memory/execution/mirror_space deprecated for kokkos@3.7.00, removed after release
   // see https://github.com/kokkos/kokkos/pull/3973
-  using exec_space = typename Kokkos::is_space<DeviceSpaceType>::execution_space;
-  using mem_space = typename Kokkos::is_space<DeviceSpaceType>::memory_space;
+  using exec_space = typename DeviceType::execution_space;
+  using mem_space = typename DeviceType::memory_space;
   using do_not_use_host_memory_space = std::conditional_t<
       std::is_same<mem_space, Kokkos::HostSpace>::value
 #if defined(KOKKOS_ENABLE_CUDA)
@@ -229,13 +231,13 @@ int feAssemblyHex(int argc, char *argv[]) {
   using host_mirror_space = std::conditional_t<
       std::is_same<exec_space, do_not_use_host_execution_space>::value &&
           std::is_same<mem_space, do_not_use_host_memory_space>::value,
-      DeviceSpaceType,
+      DeviceType,
       Kokkos::Device<do_not_use_host_execution_space,
                      do_not_use_host_memory_space>>;
 
   using HostSpaceType = typename host_mirror_space::execution_space;
 
-  using DynRankView = Kokkos::DynRankView<ValueType,DeviceSpaceType>;
+  using DynRankView = Kokkos::DynRankView<ValueType,DeviceType>;
 
   using map_t = Tpetra::Map<panzer::LocalOrdinal, panzer::GlobalOrdinal>;
 
@@ -249,15 +251,14 @@ int feAssemblyHex(int argc, char *argv[]) {
   using vector_t = Tpetra::Vector<scalar_t, local_ordinal_t, global_ordinal_t,node_t>;
   using multivector_t = Tpetra::MultiVector<scalar_t, local_ordinal_t, global_ordinal_t,node_t>;
   using rowmatrix_t = Tpetra::RowMatrix<scalar_t, local_ordinal_t, global_ordinal_t,node_t>;
-  using crs_t = Tpetra::CrsMatrix<scalar_t, local_ordinal_t, global_ordinal_t,node_t>;
 
-  using DynRankViewGId = Kokkos::DynRankView<global_ordinal_t,DeviceSpaceType>;
+  using DynRankViewGId = Kokkos::DynRankView<global_ordinal_t,DeviceType>;
 
-  using ct = Intrepid2::CellTools<DeviceSpaceType>;
-  using ots = Intrepid2::OrientationTools<DeviceSpaceType>;
-  using rst = Intrepid2::RealSpaceTools<DeviceSpaceType>;
-  using fst = Intrepid2::FunctionSpaceTools<DeviceSpaceType>;
-  using li = Intrepid2::LagrangianInterpolation<DeviceSpaceType>;
+  using ct = Intrepid2::CellTools<DeviceType>;
+  using ots = Intrepid2::OrientationTools<DeviceType>;
+  using fst = Intrepid2::FunctionSpaceTools<DeviceType>;
+  using li = Intrepid2::LagrangianInterpolation<DeviceType>;
+  using its = Intrepid2::IntegrationTools<DeviceType>;
 
   int errorFlag = 0;
 
@@ -317,8 +318,8 @@ int feAssemblyHex(int argc, char *argv[]) {
       getFancyOStream(Teuchos::rcpFromRef (std::cout)) :
       getFancyOStream(Teuchos::rcp (new Teuchos::oblackholestream ()));
 
-    *outStream << "DeviceSpace::  "; DeviceSpaceType().print_configuration(*outStream, false);
-    *outStream << "HostSpace::    ";   HostSpaceType().print_configuration(*outStream, false);
+    *outStream << "DeviceSpace::  "; DeviceType().print_configuration(*outStream, false);
+    *outStream << "HostSpace::    "; HostSpaceType().print_configuration(*outStream, false);
     *outStream << "\n";
 
     stacked_timer = Teuchos::rcp(new Teuchos::StackedTimer("Matrix-free driver"));;
@@ -336,11 +337,11 @@ int feAssemblyHex(int argc, char *argv[]) {
 
     Teuchos::RCP<panzer::unit_test::CartesianConnManager> connManager;
     Teuchos::RCP<panzer::DOFManager> dofManager;
-    Teuchos::RCP< Intrepid2::Basis<DeviceSpaceType, scalar_t,scalar_t> > basis;
+    Teuchos::RCP< Intrepid2::Basis<DeviceType, scalar_t,scalar_t> > basis;
 
     const std::string blockId = "eblock-0_0_0";
     DynRankView physVertices;
-    Kokkos::DynRankView<Intrepid2::Orientation,DeviceSpaceType> elemOrts("elemOrts", numOwnedElems);
+    Kokkos::DynRankView<Intrepid2::Orientation,DeviceType> elemOrts("elemOrts", numOwnedElems);
 
     Teuchos::RCP<const panzer::GlobalIndexer> globalIndexer;
     Teuchos::RCP<const map_t> ownedMap, ownedAndGhostedMap;
@@ -368,7 +369,8 @@ int feAssemblyHex(int argc, char *argv[]) {
       dofManager->setConnManager(connManager, *comm->getRawMpiComm());
 
       // add solution field to the element block
-      basis = Teuchos::rcp(new Intrepid2::Basis_HGRAD_HEX_Cn_FEM<DeviceSpaceType,scalar_t,scalar_t>(degree));
+      using CG_DNBasis = Intrepid2::DerivedNodalBasisFamily<DeviceType,scalar_t,scalar_t>;
+      basis = Teuchos::rcp(new typename CG_DNBasis::HGRAD_HEX(degree));
       auto basisCardinality = basis->getCardinality();
       Teuchos::RCP<panzer::Intrepid2FieldPattern> fePattern = Teuchos::rcp(new panzer::Intrepid2FieldPattern(basis));
       dofManager->addField("block-0_0_0",fePattern);
@@ -412,7 +414,7 @@ int feAssemblyHex(int argc, char *argv[]) {
       {
         auto physVerticesHost = Kokkos::create_mirror_view(physVertices);
         DynRankView ConstructWithLabel(refVertices, numNodesPerElem, dim);
-        Intrepid2::Basis_HGRAD_HEX_C1_FEM<DeviceSpaceType,scalar_t,scalar_t> hexaLinearBasis;
+        Intrepid2::Basis_HGRAD_HEX_C1_FEM<DeviceType,scalar_t,scalar_t> hexaLinearBasis;
         hexaLinearBasis.getDofCoords(refVertices);
         auto refVerticesHost = Kokkos::create_mirror_view(refVertices);
         Kokkos::deep_copy(refVerticesHost, refVertices);
@@ -434,11 +436,11 @@ int feAssemblyHex(int argc, char *argv[]) {
 
     // *********************************** COMPUTE ELEMENTS' ORIENTATION BASED ON GLOBAL IDs  ************************************
 
+    DynRankViewGId ConstructWithLabel(elemNodesGID, numOwnedElems, numNodesPerElem);
     {
       auto orientationsTimer =  Teuchos::rcp(new Teuchos::TimeMonitor(*Teuchos::TimeMonitor::getNewTimer("Orientations")));
 
-      //compute global ids of element vertices
-      DynRankViewGId ConstructWithLabel(elemNodesGID, numOwnedElems, numNodesPerElem);
+      //compute global ids of element vertices     
       {
         auto elemNodesGID_host = Kokkos::create_mirror_view(elemNodesGID);
 
@@ -452,90 +454,96 @@ int feAssemblyHex(int argc, char *argv[]) {
       }
 
       // compute orientations for cells (one time computation)
-      ots::getOrientation(elemOrts, elemNodesGID, topology);
+      ots::getOrientation(elemOrts, elemNodesGID, topology);      
     }
 
+    Kokkos::DynRankView<int,DeviceType> emptyView;
+    // In principle we could pass elemNodesGID instead of emptyView, but then physVertices should be a 2d array
+    // indexed by global ids instead of local ids, which is not efficient
+    auto geometry = Teuchos::rcp(new Intrepid2::CellGeometry<scalar_t, dim, DeviceType>(topology, emptyView, physVertices));
+    auto cubature = Intrepid2::DefaultCubatureFactory::create<DeviceType, scalar_t, scalar_t>(topology.getBaseKey(),cubDegree);
+
     auto basisCardinality = basis->getCardinality();
+    DynRankView elemsMatStiff("elemsMatStiff", numOwnedElems, basisCardinality, basisCardinality);
     DynRankView elemsMat("elemsMat", numOwnedElems, basisCardinality, basisCardinality);
     DynRankView elemsRHS("elemsRHS", numOwnedElems, basisCardinality);
+    DynRankView elemsRHSTmp("elemsRHS", numOwnedElems, basisCardinality);
     {
       auto localFeAssemblyTimer =  Teuchos::rcp(new Teuchos::TimeMonitor(*Teuchos::TimeMonitor::getNewTimer("Local Finite Element Assembly")));
 
       // ************************************ ASSEMBLY OF LOCAL ELEMENT MATRICES **************************************
       // Compute quadrature (cubature) points
-      Intrepid2::DefaultCubatureFactory cubFactory;
-      auto cellCub = cubFactory.create<DeviceSpaceType, scalar_t, scalar_t>(topology.getBaseKey(), cubDegree);
-      auto numQPoints = cellCub->getNumPoints();
-      DynRankView ConstructWithLabel(quadPoints, numQPoints, dim);
-      DynRankView ConstructWithLabel(weights, numQPoints);
-      cellCub->getCubature(quadPoints, weights);
 
+      
+      auto numQPoints = cubature->getNumPoints();
+      auto tensorQuadWeights = cubature->allocateCubatureWeights();
+      Intrepid2::TensorPoints<scalar_t,DeviceType> tensorQuadPoints  = cubature->allocateCubaturePoints();  
+      cubature->getCubature(tensorQuadPoints, tensorQuadWeights);
 
-      //Compute physical Dof Coordinates and Reference coordinates
-      DynRankView ConstructWithLabel(funAtQPoints, numOwnedElems, numQPoints);
-      {
+      // compute oriented basis functions at quadrature points
+      auto basisCardinality = basis->getCardinality();
+      auto basisValuesAtQPoints = basis->allocateBasisValues(tensorQuadPoints, Intrepid2::OPERATOR_VALUE);
+      basis->getValues(basisValuesAtQPoints, tensorQuadPoints, Intrepid2::OPERATOR_VALUE);
+      auto basisGradsAtQPoints = basis->allocateBasisValues(tensorQuadPoints, Intrepid2::OPERATOR_GRAD);
+      basis->getValues(basisGradsAtQPoints, tensorQuadPoints, Intrepid2::OPERATOR_GRAD);
+
+      auto jacobian = geometry->allocateJacobianData(tensorQuadPoints);
+      auto jacobianDet = ct::allocateJacobianDet(jacobian);
+      auto jacobianInv = ct::allocateJacobianInv(jacobian);
+      auto cellMeasures = geometry->allocateCellMeasure(jacobianDet, tensorQuadWeights);
+      auto refData = geometry->getJacobianRefData(tensorQuadPoints);
+
+      // compute jacobian and cell measures
+      geometry->setJacobian(jacobian, tensorQuadPoints, refData);
+      ct::setJacobianDet(jacobianDet, jacobian);
+      ct::setJacobianInv(jacobianInv, jacobian);
+      geometry->computeCellMeasure(cellMeasures, jacobianDet, tensorQuadWeights);
+    
+      // lazily-evaluated transformed values and gradients:
+      auto transformedBasisValues = fst::getHGRADtransformVALUE(numOwnedElems, basisValuesAtQPoints);
+      auto transformedBasisGradients = fst::getHGRADtransformGRAD(jacobianInv, basisGradsAtQPoints);
+
+      // assemble the matrix: integrate and apply orientation
+      auto integralData = its::allocateIntegralData(transformedBasisGradients, cellMeasures, transformedBasisGradients);    
+
+      bool sumInto = false;
+      its::integrate(integralData, transformedBasisValues, cellMeasures, transformedBasisValues, sumInto);
+      sumInto = true;
+      its::integrate(integralData, transformedBasisGradients, cellMeasures, transformedBasisGradients, sumInto);
+
+      ots::modifyMatrixByOrientation(elemsMat, integralData.getUnderlyingView(), elemOrts, basis.get(), basis.get());
+
+  
+    // ************************************ ASSEMBLY OF LOCAL ELEMENT RHS VECTORS **************************************
+
+    //Compute physical points where to evaluate the function
+    DynRankView ConstructWithLabel(funAtQPoints, numOwnedElems, numQPoints);
+    {
+        DynRankView quadPoints("quadPoints", tensorQuadPoints.extent_int(0), tensorQuadPoints.extent_int(1));
+        tensorQuadPoints.copyPointsContainer(quadPoints, tensorQuadPoints);
         DynRankView ConstructWithLabel(physQPoints, numOwnedElems, numQPoints, dim);
         ct::mapToPhysicalFrame(physQPoints,quadPoints,physVertices,basis->getBaseCellTopology());
         EvalRhsFunctor<DynRankView> functor;
         functor.funAtPoints = funAtQPoints;
         functor.points = physQPoints;
-        Kokkos::parallel_for("loop for evaluating the rhs at quadrature points", numOwnedElems,functor);
-      }
+        Kokkos::parallel_for("loop for evaluating the rhs at quadrature points", 
+          Kokkos::RangePolicy<typename DeviceType::execution_space, int> (0, numOwnedElems),
+          functor);
+    }
 
-      // compute oriented basis functions at quadrature points
-      auto basisCardinality = basis->getCardinality();
-      DynRankView ConstructWithLabel(basisValuesAtQPointsOriented, numOwnedElems, basisCardinality, numQPoints);
-      DynRankView ConstructWithLabel(transformedBasisValuesAtQPointsOriented, numOwnedElems, basisCardinality, numQPoints);
-      DynRankView basisValuesAtQPointsCells("inValues", numOwnedElems, basisCardinality, numQPoints);
-      DynRankView ConstructWithLabel(basisValuesAtQPoints, basisCardinality, numQPoints);
-      basis->getValues(basisValuesAtQPoints, quadPoints);
-      rst::clone(basisValuesAtQPointsCells,basisValuesAtQPoints);
+    //compute the weighted basis functions
+    DynRankView ConstructWithLabel(weightedTransformedBasisValuesAtQPoints, numOwnedElems, basisCardinality, numQPoints);
+    auto policy = Kokkos::MDRangePolicy<typename DeviceType::execution_space,Kokkos::Rank<3>>({0,0,0},{numOwnedElems, basisCardinality, numQPoints});
+    Kokkos::parallel_for("compute weighted basis", policy,
+    KOKKOS_LAMBDA (const int &cell, const int &field, const int &point) {
+      weightedTransformedBasisValuesAtQPoints(cell,field,point) = transformedBasisValues(cell,field,point)*cellMeasures(cell,point);
+    });
 
-      // modify basis values to account for orientations
-      ots::modifyBasisByOrientation(basisValuesAtQPointsOriented,
-                                    basisValuesAtQPointsCells,
-                                    elemOrts,
-                                    basis.getRawPtr());
 
-      // transform basis values
-      fst::HGRADtransformVALUE(transformedBasisValuesAtQPointsOriented, basisValuesAtQPointsOriented);
+    // assemble the rhs: integrate and apply orientation
+    fst::integrate(elemsRHSTmp, funAtQPoints, weightedTransformedBasisValuesAtQPoints);
 
-      DynRankView ConstructWithLabel(basisGradsAtQPointsOriented, numOwnedElems, basisCardinality, numQPoints, dim);
-      DynRankView ConstructWithLabel(transformedBasisGradsAtQPointsOriented, numOwnedElems, basisCardinality, numQPoints, dim);
-      DynRankView basisGradsAtQPointsCells("inValues", numOwnedElems, basisCardinality, numQPoints, dim);
-      DynRankView ConstructWithLabel(basisGradsAtQPoints, basisCardinality, numQPoints, dim);
-      basis->getValues(basisGradsAtQPoints, quadPoints, Intrepid2::OPERATOR_GRAD);
-      rst::clone(basisGradsAtQPointsCells,basisGradsAtQPoints);
-
-      // modify basis values to account for orientations
-      ots::modifyBasisByOrientation(basisGradsAtQPointsOriented,
-                                    basisGradsAtQPointsCells,
-                                    elemOrts,
-                                    basis.getRawPtr());
-
-      // map basis functions to reference (oriented) element
-      DynRankView ConstructWithLabel(jacobianAtQPoints, numOwnedElems, numQPoints, dim, dim);
-      DynRankView ConstructWithLabel(jacobianAtQPoints_inv, numOwnedElems, numQPoints, dim, dim);
-      DynRankView ConstructWithLabel(jacobianAtQPoints_det, numOwnedElems, numQPoints);
-      ct::setJacobian(jacobianAtQPoints, quadPoints, physVertices, topology);
-      ct::setJacobianInv (jacobianAtQPoints_inv, jacobianAtQPoints);
-
-      fst::HGRADtransformGRAD(transformedBasisGradsAtQPointsOriented, jacobianAtQPoints_inv, basisGradsAtQPointsOriented);
-
-      // compute integrals to assembly local matrices
-
-      DynRankView ConstructWithLabel(weightedTransformedBasisValuesAtQPointsOriented, numOwnedElems, basisCardinality, numQPoints);
-      DynRankView ConstructWithLabel(weightedTransformedBasisGradsAtQPointsOriented, numOwnedElems, basisCardinality, numQPoints, dim);
-      DynRankView ConstructWithLabel(cellWeights, numOwnedElems, numQPoints);
-      rst::clone(cellWeights, weights);
-
-      fst::multiplyMeasure(weightedTransformedBasisGradsAtQPointsOriented, cellWeights, transformedBasisGradsAtQPointsOriented);
-      fst::multiplyMeasure(weightedTransformedBasisValuesAtQPointsOriented, cellWeights, transformedBasisValuesAtQPointsOriented);
-
-      fst::integrate(elemsMat, transformedBasisGradsAtQPointsOriented, weightedTransformedBasisGradsAtQPointsOriented);
-      fst::integrate(elemsMat, transformedBasisValuesAtQPointsOriented, weightedTransformedBasisValuesAtQPointsOriented, true);
-      Kokkos::fence(); //make sure that funAtQPoints has been evaluated
-      fst::integrate(elemsRHS, funAtQPoints, weightedTransformedBasisValuesAtQPointsOriented);
+    ots::modifyBasisByOrientation(elemsRHS, elemsRHSTmp, elemOrts, basis.get());
     }
 
     // ************************************ GENERATE GRAPH **************************************
@@ -626,7 +634,7 @@ int feAssemblyHex(int argc, char *argv[]) {
 
         Kokkos::parallel_for
           ("Assemble FE matrix and right-hand side",
-           Kokkos::RangePolicy<DeviceSpaceType, int> (0, numOwnedElems),
+           Kokkos::RangePolicy<typename DeviceType::execution_space, int> (0, numOwnedElems),
            KOKKOS_LAMBDA (const size_t elemId) {
             // Get subviews
             auto elemRHS    = Kokkos::subview(elemsRHS,elemId, Kokkos::ALL());
@@ -651,8 +659,8 @@ int feAssemblyHex(int argc, char *argv[]) {
     Teuchos::RCP<rowmatrix_t> A_mf;
     {
       A_mf = Teuchos::rcp(new Tpetra::MatrixFreeRowMatrix<scalar_t, local_ordinal_t, global_ordinal_t>(ownedMap, ownedAndGhostedMap,
-                                                                                                       topology, basis, cubDegree,
-                                                                                                       physVertices, elemOrts,
+                                                                                                       basis, geometry,
+                                                                                                       cubature, elemOrts,
                                                                                                        dofManager, globalIndexer));
     }
 
@@ -673,7 +681,9 @@ int feAssemblyHex(int argc, char *argv[]) {
         EvalSolFunctor<DynRankView> functor;
         functor.funAtPoints = funAtDofPoints;
         functor.points = physDofPoints;
-        Kokkos::parallel_for("loop for evaluating the function at DoF points", numOwnedElems,functor);
+        Kokkos::parallel_for("loop for evaluating the function at DoF points", 
+          Kokkos::RangePolicy<typename DeviceType::execution_space, int> (0, numOwnedElems),
+          functor);
         Kokkos::fence(); //make sure that funAtDofPoints has been evaluated
       }
 
