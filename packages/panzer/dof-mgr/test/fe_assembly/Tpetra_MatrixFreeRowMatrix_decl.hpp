@@ -41,7 +41,7 @@ class MatrixFreeRowMatrix : public Tpetra::RowMatrix<Scalar, LocalOrdinal, Globa
   using vector_type = Tpetra::Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
   using map_type    = Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>;
   using import_type = Tpetra::Import<LocalOrdinal, GlobalOrdinal, Node>;
-
+  
   //! The RowMatrix representing the base class of CrsMatrix
   using row_matrix_type = RowMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
 
@@ -83,6 +83,15 @@ class MatrixFreeRowMatrix : public Tpetra::RowMatrix<Scalar, LocalOrdinal, Globa
   using li = Intrepid2::LagrangianInterpolation<DeviceType>;
   using its = Intrepid2::IntegrationTools<DeviceType>;
 
+  using tbv        = Intrepid2::TransformedBasisValues<Scalar, DeviceType>;
+  using data       = Intrepid2::Data<Scalar,DeviceType>;
+  using tensorData = Intrepid2::TensorData<Scalar,DeviceType>;
+  
+  data jacobianInv_;
+  tensorData cellMeasures_;
+  tbv transformedBasisValues_;
+  tbv transformedBasisGradients_;
+  
   //! @name Constructor/Destructor
   //@{
 
@@ -107,6 +116,44 @@ class MatrixFreeRowMatrix : public Tpetra::RowMatrix<Scalar, LocalOrdinal, Globa
     importer_ = rcp(new import_type(ownedMap_, ownedAndGhostedMap_));
     X_ownedAndGhosted_ = rcp(new mv_type(ownedAndGhostedMap_, 1));
     Y_ownedAndGhosted_ = rcp(new mv_type(ownedAndGhostedMap_, 1));
+    
+    // partial assembly: compute basis values, allocate storage
+    
+    auto basisCardinality = basis_->getCardinality();
+    LocalOrdinal numOwnedElems = elemOrts_.extent(0);
+    DynRankView elemsRHS("elemsRHS", numOwnedElems, basisCardinality);
+    const std::string blockId = "eblock-0_0_0";
+
+    {
+      // ************************************ ASSEMBLY OF LOCAL ELEMENT MATRICES **************************************
+      
+      // Compute quadrature (cubature) points
+      auto tensorQuadWeights = cubature_->allocateCubatureWeights();
+      Intrepid2::TensorPoints<scalar_t,DeviceType> tensorQuadPoints  = cubature_->allocateCubaturePoints();
+      cubature_->getCubature(tensorQuadPoints, tensorQuadWeights);
+      
+      // compute oriented basis functions at quadrature points
+      auto basisValuesAtQPoints = basis_->allocateBasisValues(tensorQuadPoints, Intrepid2::OPERATOR_VALUE);
+      basis_->getValues(basisValuesAtQPoints, tensorQuadPoints, Intrepid2::OPERATOR_VALUE);
+      auto basisGradsAtQPoints = basis_->allocateBasisValues(tensorQuadPoints, Intrepid2::OPERATOR_GRAD);
+      basis_->getValues(basisGradsAtQPoints, tensorQuadPoints, Intrepid2::OPERATOR_GRAD);
+      
+      auto jacobian = geometry_->allocateJacobianData(tensorQuadPoints);
+      auto jacobianDet = ct::allocateJacobianDet(jacobian);
+      jacobianInv_ = ct::allocateJacobianInv(jacobian);
+      cellMeasures_ = geometry_->allocateCellMeasure(jacobianDet, tensorQuadWeights);
+      auto refData = geometry_->getJacobianRefData(tensorQuadPoints);
+      
+      // compute jacobian and cell measures
+      geometry_->setJacobian(jacobian, tensorQuadPoints, refData);
+      ct::setJacobianDet(jacobianDet, jacobian);
+      ct::setJacobianInv(jacobianInv_, jacobian);
+      geometry_->computeCellMeasure(cellMeasures_, jacobianDet, tensorQuadWeights);
+      
+      // lazily-evaluated transformed values and gradients:
+      transformedBasisValues_ = fst::getHGRADtransformVALUE(numOwnedElems, basisValuesAtQPoints);
+      transformedBasisGradients_ = fst::getHGRADtransformGRAD(jacobianInv_, basisGradsAtQPoints);
+    }
   };
 
   //! Returns the Tpetra::Map object associated with the domain of this operator.
@@ -137,42 +184,13 @@ class MatrixFreeRowMatrix : public Tpetra::RowMatrix<Scalar, LocalOrdinal, Globa
     const std::string blockId = "eblock-0_0_0";
 
     {
-      // ************************************ ASSEMBLY OF LOCAL ELEMENT MATRICES **************************************
-
-      // Compute quadrature (cubature) points
-      auto tensorQuadWeights = cubature_->allocateCubatureWeights();
-      Intrepid2::TensorPoints<scalar_t,DeviceType> tensorQuadPoints  = cubature_->allocateCubaturePoints();  
-      cubature_->getCubature(tensorQuadPoints, tensorQuadWeights);
-
-      // compute oriented basis functions at quadrature points
-      auto basisValuesAtQPoints = basis_->allocateBasisValues(tensorQuadPoints, Intrepid2::OPERATOR_VALUE);
-      basis_->getValues(basisValuesAtQPoints, tensorQuadPoints, Intrepid2::OPERATOR_VALUE);
-      auto basisGradsAtQPoints = basis_->allocateBasisValues(tensorQuadPoints, Intrepid2::OPERATOR_GRAD);
-      basis_->getValues(basisGradsAtQPoints, tensorQuadPoints, Intrepid2::OPERATOR_GRAD);
-
-      auto jacobian = geometry_->allocateJacobianData(tensorQuadPoints);
-      auto jacobianDet = ct::allocateJacobianDet(jacobian);
-      auto jacobianInv = ct::allocateJacobianInv(jacobian);
-      auto cellMeasures = geometry_->allocateCellMeasure(jacobianDet, tensorQuadWeights);
-      auto refData = geometry_->getJacobianRefData(tensorQuadPoints);
-
-      // compute jacobian and cell measures
-      geometry_->setJacobian(jacobian, tensorQuadPoints, refData);
-      ct::setJacobianDet(jacobianDet, jacobian);
-      ct::setJacobianInv(jacobianInv, jacobian);
-      geometry_->computeCellMeasure(cellMeasures, jacobianDet, tensorQuadWeights);
-    
-      // lazily-evaluated transformed values and gradients:
-      auto transformedBasisValues = fst::getHGRADtransformVALUE(numOwnedElems, basisValuesAtQPoints);
-      auto transformedBasisGradients = fst::getHGRADtransformGRAD(jacobianInv, basisGradsAtQPoints);
-
       // assemble the matrix: integrate and apply orientation
-      auto integralData = its::allocateIntegralData(transformedBasisGradients, cellMeasures, transformedBasisGradients);    
+      auto integralData = its::allocateIntegralData(transformedBasisGradients_, cellMeasures_, transformedBasisGradients_);
 
       bool sumInto = false;
-      its::integrate(integralData, transformedBasisValues, cellMeasures, transformedBasisValues, sumInto);
+      its::integrate(integralData, transformedBasisValues_, cellMeasures_, transformedBasisValues_, sumInto);
       sumInto = true;
-      its::integrate(integralData, transformedBasisGradients, cellMeasures, transformedBasisGradients, sumInto);
+      its::integrate(integralData, transformedBasisGradients_, cellMeasures_, transformedBasisGradients_, sumInto);
 
       ots::modifyMatrixByOrientation(elemsMat, integralData.getUnderlyingView(), elemOrts_, basis_.get(), basis_.get());
     }
@@ -225,40 +243,14 @@ class MatrixFreeRowMatrix : public Tpetra::RowMatrix<Scalar, LocalOrdinal, Globa
 
     {
       // ************************************ ASSEMBLY OF LOCAL ELEMENT MATRICES **************************************
-      // Compute quadrature (cubature) points
-      auto tensorQuadWeights = cubature_->allocateCubatureWeights();
-      Intrepid2::TensorPoints<scalar_t,DeviceType> tensorQuadPoints  = cubature_->allocateCubaturePoints();  
-      cubature_->getCubature(tensorQuadPoints, tensorQuadWeights);
-
-      // compute oriented basis functions at quadrature points
-      auto basisValuesAtQPoints = basis_->allocateBasisValues(tensorQuadPoints, Intrepid2::OPERATOR_VALUE);
-      basis_->getValues(basisValuesAtQPoints, tensorQuadPoints, Intrepid2::OPERATOR_VALUE);
-      auto basisGradsAtQPoints = basis_->allocateBasisValues(tensorQuadPoints, Intrepid2::OPERATOR_GRAD);
-      basis_->getValues(basisGradsAtQPoints, tensorQuadPoints, Intrepid2::OPERATOR_GRAD);
-
-      auto jacobian = geometry_->allocateJacobianData(tensorQuadPoints);
-      auto jacobianDet = ct::allocateJacobianDet(jacobian);
-      auto jacobianInv = ct::allocateJacobianInv(jacobian);
-      auto cellMeasures = geometry_->allocateCellMeasure(jacobianDet, tensorQuadWeights);
-      auto refData = geometry_->getJacobianRefData(tensorQuadPoints);
-
-      // compute jacobian and cell measures
-      geometry_->setJacobian(jacobian, tensorQuadPoints, refData);
-      ct::setJacobianDet(jacobianDet, jacobian);
-      ct::setJacobianInv(jacobianInv, jacobian);
-      geometry_->computeCellMeasure(cellMeasures, jacobianDet, tensorQuadWeights);
-    
-      // lazily-evaluated transformed values and gradients:
-      auto transformedBasisValues = fst::getHGRADtransformVALUE(numOwnedElems, basisValuesAtQPoints);
-      auto transformedBasisGradients = fst::getHGRADtransformGRAD(jacobianInv, basisGradsAtQPoints);
 
       // assemble the matrix: integrate and apply orientation
-      auto integralData = its::allocateIntegralData(transformedBasisGradients, cellMeasures, transformedBasisGradients);    
+      auto integralData = its::allocateIntegralData(transformedBasisGradients_, cellMeasures_, transformedBasisGradients_);
 
       bool sumInto = false;
-      its::integrate(integralData, transformedBasisValues, cellMeasures, transformedBasisValues, sumInto);
+      its::integrate(integralData, transformedBasisValues_, cellMeasures_, transformedBasisValues_, sumInto);
       sumInto = true;
-      its::integrate(integralData, transformedBasisGradients, cellMeasures, transformedBasisGradients, sumInto);
+      its::integrate(integralData, transformedBasisGradients_, cellMeasures_, transformedBasisGradients_, sumInto);
 
       ots::modifyMatrixByOrientation(elemsMat, integralData.getUnderlyingView(), elemOrts_, basis_.get(), basis_.get());
     }
