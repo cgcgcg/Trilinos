@@ -47,7 +47,7 @@
 #define MUELU_REPARTITIONBLOCKDIAGONALFACTORY_FWD_HPP
 
 #include "MueLu_ConfigDefs.hpp"
-#ifdef HAVE_MPI
+#if defined(HAVE_MPI) && defined(HAVE_MUELU_EXTENDED_FEATURES)
 
 namespace MueLu {
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>

@@ -77,7 +77,6 @@
 #include <MueLu_Utilities.hpp>
 #include <MueLu_Version.hpp>
 
-#include <MueLu_PgPFactory.hpp>
 #include <MueLu_RAPFactory.hpp>
 #include <MueLu_GenericRFactory.hpp>
 #include <MueLu_DirectSolver.hpp>

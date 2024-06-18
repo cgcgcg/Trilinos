@@ -46,6 +46,9 @@
 #ifndef MUELU_BLOCKEDJACOBISMOOTHER_FWD_HPP
 #define MUELU_BLOCKEDJACOBISMOOTHER_FWD_HPP
 
+#include "MueLu_ConfigDefs.hpp"
+#if defined(HAVE_MUELU_EXTENDED_FEATURES)
+
 namespace MueLu {
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 class BlockedJacobiSmoother;
@@ -53,6 +56,8 @@ class BlockedJacobiSmoother;
 
 #ifndef MUELU_BLOCKEDJACOBISMOOTHER_SHORT
 #define MUELU_BLOCKEDJACOBISMOOTHER_SHORT
+#endif
+
 #endif
 
 #endif  // MUELU_BLOCKEDJACOBISMOOTHER_FWD_HPP

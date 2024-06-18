@@ -67,7 +67,6 @@
 
 #include "MueLu_TentativePFactory.hpp"
 #include "MueLu_SaPFactory.hpp"
-#include "MueLu_PgPFactory.hpp"
 #include "MueLu_AmalgamationFactory.hpp"
 #include "MueLu_TransPFactory.hpp"
 #include "MueLu_GenericRFactory.hpp"
@@ -82,6 +81,10 @@
 #include "MueLu_UncoupledAggregationFactory.hpp"
 #include "MueLu_NullspaceFactory.hpp"
 #include "MueLu_ParameterListUtils.hpp"
+
+#if defined(HAVE_MUELU_EXTENDED_FEATURES)
+#include "MueLu_PgPFactory.hpp"
+#endif
 
 #include "MueLu_CoalesceDropFactory_kokkos.hpp"
 // #include "MueLu_CoordinatesTransferFactory_kokkos.hpp"
@@ -294,9 +297,13 @@ void MLParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::SetP
     PFact = SaPFact;
     RFact = rcp(new TransPFactory());
   } else if (bEnergyMinimization == true) {
+#if defined(HAVE_MUELU_EXTENDED_FEATURES)
     // Petrov Galerkin PG-AMG smoothed aggregation (energy minimization in ML)
     PFact = rcp(new PgPFactory());
     RFact = rcp(new GenericRFactory());
+#else
+    throw std::runtime_error("Cannot use emin aggregation - MueLu was not configured with extentended features (Toggled using the Boolean CMake option MueLu_ENABLE_Extended_Features.)");
+#endif
   }
 
   RCP<RAPFactory> AcFact = rcp(new RAPFactory());

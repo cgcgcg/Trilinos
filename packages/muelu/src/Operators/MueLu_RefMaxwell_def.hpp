@@ -68,7 +68,9 @@
 #include "MueLu_UncoupledAggregationFactory.hpp"
 #include "MueLu_TentativePFactory.hpp"
 #include "MueLu_SaPFactory.hpp"
+#ifdef HAVE_MUELU_EXTENDED_FEATURES
 #include "MueLu_AggregationExportFactory.hpp"
+#endif
 #include "MueLu_Utilities.hpp"
 #include "MueLu_Maxwell_Utils.hpp"
 
@@ -1796,6 +1798,7 @@ void RefMaxwell<Scalar, LocalOrdinal, GlobalOrdinal, Node>::buildNodalProlongato
     coarseLevel.Request("Nullspace", TentativePFact.get());
     coarseLevel.Request("Coordinates", Tfact.get());
 
+#ifdef HAVE_MUELU_EXTENDED_FEATURES
     RCP<AggregationExportFactory> aggExport;
     bool exportVizData = parameterList_.get<bool>("aggregation: export visualization data");
     if (exportVizData) {
@@ -1810,6 +1813,7 @@ void RefMaxwell<Scalar, LocalOrdinal, GlobalOrdinal, Node>::buildNodalProlongato
       fineLevel.Request("Aggregates", UncoupledAggFact.get());
       fineLevel.Request("UnAmalgamationInfo", amalgFact.get());
     }
+#endif
 
     if (algo == "sa")
       coarseLevel.Get("P", P_nodal, SaPFact.get());
@@ -1818,8 +1822,10 @@ void RefMaxwell<Scalar, LocalOrdinal, GlobalOrdinal, Node>::buildNodalProlongato
     coarseLevel.Get("Nullspace", Nullspace_nodal, TentativePFact.get());
     coarseLevel.Get("Coordinates", CoarseCoords_nodal, Tfact.get());
 
+#ifdef HAVE_MUELU_EXTENDED_FEATURES
     if (exportVizData)
       aggExport->Build(fineLevel, coarseLevel);
+#endif
   }
 }
 

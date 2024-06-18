@@ -46,6 +46,9 @@
 #ifndef MUELU_HYBRIDAGGREGATIONFACTORY_FWD_HPP
 #define MUELU_HYBRIDAGGREGATIONFACTORY_FWD_HPP
 
+#include "MueLu_ConfigDefs.hpp"
+#if defined(HAVE_MUELU_EXTENDED_FEATURES)
+
 namespace MueLu {
 template <class LocalOrdinal, class GlobalOrdinal, class Node>
 class HybridAggregationFactory;
@@ -53,6 +56,8 @@ class HybridAggregationFactory;
 
 #ifndef MUELU_HYBRIDAGGREGATIONFACTORY_SHORT
 #define MUELU_HYBRIDAGGREGATIONFACTORY_SHORT
+#endif
+
 #endif
 
 #endif  // MUELU_HYBRIDAGGREGATIONFACTORY_FWD_HPP

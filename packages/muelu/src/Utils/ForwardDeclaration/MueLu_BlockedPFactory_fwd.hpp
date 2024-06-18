@@ -46,6 +46,9 @@
 #ifndef MUELU_BLOCKEDPFACTORY_FWD_HPP
 #define MUELU_BLOCKEDPFACTORY_FWD_HPP
 
+#include "MueLu_ConfigDefs.hpp"
+#if defined(HAVE_MUELU_EXTENDED_FEATURES)
+
 namespace MueLu {
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 class BlockedPFactory;
@@ -53,6 +56,8 @@ class BlockedPFactory;
 
 #ifndef MUELU_BLOCKEDPFACTORY_SHORT
 #define MUELU_BLOCKEDPFACTORY_SHORT
+#endif
+
 #endif
 
 #endif  // MUELU_BLOCKEDPFACTORY_FWD_HPP

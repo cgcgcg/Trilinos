@@ -98,12 +98,29 @@ ENDIF ()
 
 # Enable experimental code
 TRIBITS_ADD_OPTION_AND_DEFINE(
+  ${PACKAGE_NAME}_ENABLE_Extended_Features
+  HAVE_${PACKAGE_NAME_UC}_EXTENDED_FEATURES
+  "Enable extended features code."
+  NO)
+
+IF (${PACKAGE_NAME}_ENABLE_Extended_Features)
+  MESSAGE(STATUS "MueLu: Enabling extended features")
+ELSE()
+  MESSAGE(STATUS "MueLu: Extended features are DISABLED")
+ENDIF()
+
+
+# Enable experimental code
+TRIBITS_ADD_OPTION_AND_DEFINE(
   ${PACKAGE_NAME}_ENABLE_Experimental
   HAVE_${PACKAGE_NAME_UC}_EXPERIMENTAL
   "Enable experimental code."
   NO)
 IF (${PACKAGE_NAME}_ENABLE_Experimental AND NOT Xpetra_ENABLE_Experimental)
   MESSAGE(FATAL_ERROR "Option MueLu_ENABLE_Experimental=ON requires Xpetra_ENABLE_Experimental=ON.")
+ENDIF ()
+IF (${PACKAGE_NAME}_ENABLE_Experimental AND NOT ${PACKAGE_NAME}_ENABLE_Extended_Features)
+  MESSAGE(FATAL_ERROR "Option MueLu_ENABLE_Experimental=ON requires MueLu_ENABLE_Extended_Features=ON.")
 ENDIF ()
 
 IF (${PACKAGE_NAME}_ENABLE_Experimental)

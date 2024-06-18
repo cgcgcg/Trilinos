@@ -83,11 +83,13 @@ IF (${PACKAGE_NAME}_HAVE_TPETRA_SOLVER_STACK OR ${PACKAGE_NAME}_HAVE_EPETRA_SOLV
    COMM mpi
    )
 
-  TRIBITS_ADD_EXECUTABLE(
-    ComboPDriver
-    SOURCES ComboPDriver.cpp
-    COMM mpi
-  )
+  IF(${PACKAGE_NAME}_Extended_Features)
+    TRIBITS_ADD_EXECUTABLE(
+      ComboPDriver
+      SOURCES ComboPDriver.cpp
+      COMM mpi
+    )
+  ENDIF()
 
  TRIBITS_ADD_EXECUTABLE(
    TAFCPerformance
@@ -163,9 +165,11 @@ TRIBITS_COPY_FILES_TO_BINARY_DIR(ReadMatrix_cp
     SOURCE_FILES import.xml
     )
 
-  TRIBITS_COPY_FILES_TO_BINARY_DIR(ComboP_cp
-    SOURCE_FILES aux1.mat aux2.mat  coords1.mat  coords2.mat  multiPhys4x4.mat multiPhys4x4.mat  null1.mat null2.mat comboP.xml
+  IF(${PACKAGE_NAME}_Extended_Features)
+    TRIBITS_COPY_FILES_TO_BINARY_DIR(ComboP_cp
+      SOURCE_FILES aux1.mat aux2.mat  coords1.mat  coords2.mat  multiPhys4x4.mat multiPhys4x4.mat  null1.mat null2.mat comboP.xml
     )
+  ENDIF()
 
 ENDIF()
 
@@ -295,14 +299,16 @@ IF (${PACKAGE_NAME}_HAVE_TPETRA_SOLVER_STACK)
     #do not check for convergence
   )
 
-  TRIBITS_ADD_TEST(
-    ComboPDriver
-    NAME "ComboPTest"
-    ARGS "--linAlgebra=Tpetra --its=9"
-    NUM_MPI_PROCS  4
-    COMM mpi
-    PASS_REGULAR_EXPRESSION "Belos converged"
-  )
+  IF(${PACKAGE_NAME}_Extended_Features)
+    TRIBITS_ADD_TEST(
+      ComboPDriver
+      NAME "ComboPTest"
+      ARGS "--linAlgebra=Tpetra --its=9"
+      NUM_MPI_PROCS  4
+      COMM mpi
+      PASS_REGULAR_EXPRESSION "Belos converged"
+    )
+  ENDIF()
 
 ENDIF()
 

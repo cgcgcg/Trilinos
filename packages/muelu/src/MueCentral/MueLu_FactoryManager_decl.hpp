@@ -51,22 +51,17 @@
 #include "MueLu_FactoryManagerBase.hpp"
 
 #include "MueLu_AmalgamationFactory_fwd.hpp"
-#include "MueLu_AggregateQualityEstimateFactory_fwd.hpp"
 #include "MueLu_CoalesceDropFactory_fwd.hpp"
 #include "MueLu_CoarseMapFactory_fwd.hpp"
-#include "MueLu_ConstraintFactory_fwd.hpp"
 #include "MueLu_DirectSolver_fwd.hpp"
 #include "MueLu_InitialBlockNumberFactory_fwd.hpp"
 #include "MueLu_LineDetectionFactory_fwd.hpp"
 #include "MueLu_NullspaceFactory_fwd.hpp"
-#include "MueLu_PatternFactory_fwd.hpp"
 #include "MueLu_RAPFactory_fwd.hpp"
 #include "MueLu_RepartitionHeuristicFactory_fwd.hpp"
 #include "MueLu_RepartitionFactory_fwd.hpp"
 #include "MueLu_SaPFactory_fwd.hpp"
-#include "MueLu_ScaledNullspaceFactory_fwd.hpp"
 #include "MueLu_SmootherFactory_fwd.hpp"
-#include "MueLu_StructuredAggregationFactory_fwd.hpp"
 #include "MueLu_TentativePFactory_fwd.hpp"
 #include "MueLu_TransPFactory_fwd.hpp"
 #include "MueLu_TrilinosSmoother_fwd.hpp"
@@ -74,6 +69,14 @@
 #include "MueLu_ZoltanInterface_fwd.hpp"
 #include "MueLu_InterfaceMappingTransferFactory_fwd.hpp"
 #include "MueLu_InterfaceAggregationFactory_fwd.hpp"
+
+#ifdef HAVE_MUELU_EXTENDED_FEATURES
+#include "MueLu_AggregateQualityEstimateFactory_fwd.hpp"
+#include "MueLu_ConstraintFactory_fwd.hpp"
+#include "MueLu_PatternFactory_fwd.hpp"
+#include "MueLu_ScaledNullspaceFactory_fwd.hpp"
+#include "MueLu_StructuredAggregationFactory_fwd.hpp"
+#endif
 
 #include "MueLu_CoalesceDropFactory_kokkos_fwd.hpp"
 #include "MueLu_TentativePFactory_kokkos_fwd.hpp"

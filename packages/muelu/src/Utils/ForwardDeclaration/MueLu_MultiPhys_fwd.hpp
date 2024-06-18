@@ -46,6 +46,9 @@
 #ifndef MUELU_MULTIPHYS_FWD_HPP
 #define MUELU_MULTIPHYS_FWD_HPP
 
+#include "MueLu_ConfigDefs.hpp"
+#if defined(HAVE_MUELU_EXTENDED_FEATURES)
+
 namespace MueLu {
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 class MultiPhys;
@@ -53,6 +56,8 @@ class MultiPhys;
 
 #ifndef MUELU_MULTIPHYS_SHORT
 #define MUELU_MULTIPHYS_SHORT
+#endif
+
 #endif
 
 #endif  // MUELU_MULTIPHYS_FWD_HPP

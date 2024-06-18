@@ -46,6 +46,9 @@
 #ifndef MUELU_AGGREGATEQUALITYESTIMATEFACTORY_FWD_HPP
 #define MUELU_AGGREGATEQUALITYESTIMATEFACTORY_FWD_HPP
 
+#include "MueLu_ConfigDefs.hpp"
+#if defined(HAVE_MUELU_EXTENDED_FEATURES)
+
 namespace MueLu {
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 class AggregateQualityEstimateFactory;
@@ -53,6 +56,8 @@ class AggregateQualityEstimateFactory;
 
 #ifndef MUELU_AGGREGATEQUALITYESTIMATEFACTORY_SHORT
 #define MUELU_AGGREGATEQUALITYESTIMATEFACTORY_SHORT
+#endif
+
 #endif
 
 #endif  // MUELU_AGGREGATEQUALITYESTIMATEFACTORY_FWD_HPP

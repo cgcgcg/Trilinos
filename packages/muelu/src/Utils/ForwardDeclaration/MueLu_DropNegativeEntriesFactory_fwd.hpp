@@ -46,6 +46,9 @@
 #ifndef MUELU_DROPNEGATIVEENTRIESFACTORY_FWD_HPP
 #define MUELU_DROPNEGATIVEENTRIESFACTORY_FWD_HPP
 
+#include "MueLu_ConfigDefs.hpp"
+#if defined(HAVE_MUELU_EXTENDED_FEATURES)
+
 namespace MueLu {
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 class DropNegativeEntriesFactory;
@@ -53,6 +56,8 @@ class DropNegativeEntriesFactory;
 
 #ifndef MUELU_DROPNEGATIVEENTRIESFACTORY_SHORT
 #define MUELU_DROPNEGATIVEENTRIESFACTORY_SHORT
+#endif
+
 #endif
 
 #endif  // MUELU_DROPNEGATIVEENTRIESFACTORY_FWD_HPP

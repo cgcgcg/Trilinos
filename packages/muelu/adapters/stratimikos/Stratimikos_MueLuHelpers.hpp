@@ -54,7 +54,7 @@
 #include "Thyra_MueLuRefMaxwellPreconditionerFactory.hpp"
 #include "Thyra_MueLuMaxwell1PreconditionerFactory.hpp"
 
-#if defined(HAVE_MUELU_EXPERIMENTAL) && defined(HAVE_MUELU_TEKO)
+#if defined(HAVE_MUELU_EXPERIMENTAL) && defined(HAVE_MUELU_EXTENDED_FEATURES) && defined(HAVE_MUELU_TEKO)
 #include "Thyra_MueLuTpetraQ2Q1PreconditionerFactory.hpp"
 #endif
 
@@ -127,7 +127,7 @@ MUELU_DEPRECATED void enableMueLuMaxwell1(LinearSolverBuilder<double>& builder, 
   enableMueLuMaxwell1<double, LocalOrdinal, GlobalOrdinal, Node>(builder, stratName);
 }
 
-#if defined(HAVE_MUELU_EXPERIMENTAL) && defined(HAVE_MUELU_TEKO)
+#if defined(HAVE_MUELU_EXPERIMENTAL) && defined(HAVE_MUELU_TEKO) && defined(HAVE_MUELU_EXTENDED_FEATURES)
 #if 0
   // Dynamically register MueLu Tpetra adapters in Stratimikos
   void enableMueLuTpetraQ2Q1(DefaultLinearSolverBuilder &builder, const std::string &stratName = "MueLu");

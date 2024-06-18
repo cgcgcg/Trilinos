@@ -52,30 +52,33 @@
 #include "MueLu_AmalgamationFactory.hpp"
 #include "MueLu_CoalesceDropFactory.hpp"
 #include "MueLu_CoarseMapFactory.hpp"
-#include "MueLu_ConstraintFactory.hpp"
-#include "MueLu_AggregateQualityEstimateFactory.hpp"
 #include "MueLu_DirectSolver.hpp"
 #include "MueLu_InitialBlockNumberFactory.hpp"
 #include "MueLu_LineDetectionFactory.hpp"
 // #include "MueLu_MultiVectorTransferFactory.hpp"
 #include "MueLu_NoFactory.hpp"
 #include "MueLu_NullspaceFactory.hpp"
-#include "MueLu_PatternFactory.hpp"
 #include "MueLu_RAPFactory.hpp"
 #include "MueLu_RepartitionHeuristicFactory.hpp"
 #include "MueLu_RepartitionFactory.hpp"
 #include "MueLu_SaPFactory.hpp"
-#include "MueLu_ScaledNullspaceFactory.hpp"
 #include "MueLu_SmootherFactory.hpp"
 #include "MueLu_TentativePFactory.hpp"
 #include "MueLu_TransPFactory.hpp"
 #include "MueLu_TrilinosSmoother.hpp"
 #include "MueLu_UncoupledAggregationFactory.hpp"
-#include "MueLu_StructuredAggregationFactory.hpp"
 #include "MueLu_ZoltanInterface.hpp"
 #include "MueLu_InterfaceMappingTransferFactory.hpp"
 #include "MueLu_InterfaceAggregationFactory.hpp"
+
+#ifdef HAVE_MUELU_EXTENDED_FEATURES
+#include "MueLu_AggregateQualityEstimateFactory.hpp"
+#include "MueLu_ConstraintFactory.hpp"
 #include "MueLu_InverseApproximationFactory.hpp"
+#include "MueLu_PatternFactory.hpp"
+#include "MueLu_ScaledNullspaceFactory.hpp"
+#include "MueLu_StructuredAggregationFactory.hpp"
+#endif
 
 #include "MueLu_CoalesceDropFactory_kokkos.hpp"
 #include "MueLu_TentativePFactory_kokkos.hpp"
@@ -123,7 +126,9 @@ const RCP<const FactoryBase> FactoryManager<Scalar, LocalOrdinal, GlobalOrdinal,
   } else {
     // No factory was created for this name, but we may know which one to create
     if (varName == "A") return SetAndReturnDefaultFactory(varName, rcp(new RAPFactory()));
+#ifdef HAVE_MUELU_EXTENDED_FEATURES
     if (varName == "Ainv") return SetAndReturnDefaultFactory(varName, rcp(new InverseApproximationFactory()));
+#endif
     if (varName == "RAP Pattern") return GetFactory("A");
     if (varName == "AP Pattern") return GetFactory("A");
     if (varName == "Ptent") return MUELU_KOKKOS_FACTORY(varName, TentativePFactory, TentativePFactory_kokkos);
@@ -139,7 +144,9 @@ const RCP<const FactoryBase> FactoryManager<Scalar, LocalOrdinal, GlobalOrdinal,
       factory->SetFactory("Nullspace", GetFactory("Ptent"));
       return SetAndReturnDefaultFactory(varName, factory);
     }
+#ifdef HAVE_MUELU_EXTENDED_FEATURES
     if (varName == "Scaled Nullspace") return SetAndReturnDefaultFactory(varName, rcp(new ScaledNullspaceFactory()));
+#endif
 
     if (varName == "Coordinates") return GetFactory("Ptent");
     if (varName == "Node Comm") return GetFactory("Ptent");
@@ -169,7 +176,9 @@ const RCP<const FactoryBase> FactoryManager<Scalar, LocalOrdinal, GlobalOrdinal,
     if (varName == "Graph") return MUELU_KOKKOS_FACTORY(varName, CoalesceDropFactory, CoalesceDropFactory_kokkos);
     if (varName == "UnAmalgamationInfo") return SetAndReturnDefaultFactory(varName, rcp(new AmalgamationFactory()));
     if (varName == "Aggregates") return SetAndReturnDefaultFactory(varName, rcp(new UncoupledAggregationFactory()));
+#ifdef HAVE_MUELU_EXTENDED_FEATURES
     if (varName == "AggregateQualities") return SetAndReturnDefaultFactory(varName, rcp(new AggregateQualityEstimateFactory()));
+#endif
     if (varName == "CoarseMap") return SetAndReturnDefaultFactory(varName, rcp(new CoarseMapFactory()));
     if (varName == "DofsPerNode") return GetFactory("Graph");
     if (varName == "Filtering") return GetFactory("Graph");
@@ -178,8 +187,10 @@ const RCP<const FactoryBase> FactoryManager<Scalar, LocalOrdinal, GlobalOrdinal,
     if (varName == "LineDetection_Layers") return GetFactory("LineDetection_VertLineIds");
     if (varName == "CoarseNumZLayers") return GetFactory("LineDetection_VertLineIds");
 
+#ifdef HAVE_MUELU_EXTENDED_FEATURES
     // Structured
     if (varName == "structuredInterpolationOrder") return SetAndReturnDefaultFactory(varName, rcp(new StructuredAggregationFactory()));
+#endif
 
     // Non-Galerkin
     if (varName == "K") return GetFactory("A");
@@ -191,12 +202,14 @@ const RCP<const FactoryBase> FactoryManager<Scalar, LocalOrdinal, GlobalOrdinal,
     if (varName == "PreSmoother") return GetFactory("Smoother");
     if (varName == "PostSmoother") return GetFactory("Smoother");
 
+#ifdef HAVE_MUELU_EXTENDED_FEATURES
     if (varName == "Ppattern") {
       RCP<PatternFactory> PpFact = rcp(new PatternFactory);
       PpFact->SetFactory("P", GetFactory("Ptent"));
       return SetAndReturnDefaultFactory(varName, PpFact);
     }
     if (varName == "Constraint") return SetAndReturnDefaultFactory(varName, rcp(new ConstraintFactory()));
+#endif
 
     if (varName == "Smoother") {
       Teuchos::ParameterList smootherParamList;

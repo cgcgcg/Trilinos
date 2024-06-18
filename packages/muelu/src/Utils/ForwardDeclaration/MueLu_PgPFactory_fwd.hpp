@@ -46,6 +46,9 @@
 #ifndef MUELU_PGPFACTORY_FWD_HPP
 #define MUELU_PGPFACTORY_FWD_HPP
 
+#include "MueLu_ConfigDefs.hpp"
+#if defined(HAVE_MUELU_EXTENDED_FEATURES)
+
 namespace MueLu {
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 class PgPFactory;
@@ -53,6 +56,8 @@ class PgPFactory;
 
 #ifndef MUELU_PGPFACTORY_SHORT
 #define MUELU_PGPFACTORY_SHORT
+#endif
+
 #endif
 
 #endif  // MUELU_PGPFACTORY_FWD_HPP

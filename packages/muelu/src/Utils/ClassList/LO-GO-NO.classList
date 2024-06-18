@@ -6,7 +6,7 @@ AggregationPhase3Algorithm
 AggregationStructuredAlgorithm
 AmalgamationInfo
 GlobalLexicographicIndexManager
-HybridAggregationFactory
+HybridAggregationFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
 IndexManager
 IndexManager_kokkos
 InterfaceAggregationAlgorithm
@@ -21,7 +21,7 @@ PreserveDirichletAggregationAlgorithm
 PRFactory
 RebalanceMapFactory
 RepartitionInterface
-StructuredAggregationFactory_kokkos
+StructuredAggregationFactory_kokkos - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
 UncoupledAggregationFactory
 UncoupledIndexManager
 UserAggregationFactory

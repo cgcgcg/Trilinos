@@ -1,38 +1,38 @@
-AdaptiveSaMLParameterListInterpreter
-AggregationExportFactory
-AggregateQualityEstimateFactory
+AdaptiveSaMLParameterListInterpreter - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+AggregationExportFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+AggregateQualityEstimateFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
 AmalgamationFactory
 Amesos2Smoother - #if defined(HAVE_MUELU_AMESOS2)
 AMGXOperator - #if defined(HAVE_MUELU_AMGX)
-AlgebraicPermutationStrategy
+AlgebraicPermutationStrategy - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
 BelosSmoother - #if defined(HAVE_MUELU_BELOS)
-BlackBoxPFactory
-BlockedCoarseMapFactory
-BlockedCoordinatesTransferFactory
-BlockedDirectSolver
-BlockedGaussSeidelSmoother
-BlockedJacobiSmoother
-BlockedPFactory
-BlockedRAPFactory
-BrickAggregationFactory
-BraessSarazinSmoother
-CGSolver
-ClassicalMapFactory
-ClassicalPFactory
+BlackBoxPFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+BlockedCoarseMapFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+BlockedCoordinatesTransferFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+BlockedDirectSolver - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+BlockedGaussSeidelSmoother - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+BlockedJacobiSmoother - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+BlockedPFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+BlockedRAPFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+BrickAggregationFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+BraessSarazinSmoother - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+CGSolver - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+ClassicalMapFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+ClassicalPFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
 CloneRepartitionInterface
 CoalesceDropFactory
 CoalesceDropFactory_kokkos
 CoarseMapFactory
-CoarseningVisualizationFactory
-CombinePFactory
-Constraint
-ConstraintFactory
+CoarseningVisualizationFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+CombinePFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+Constraint - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+ConstraintFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
 CoordinatesTransferFactory
-CoupledRBMFactory
+CoupledRBMFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
 DemoFactory
 DirectSolver
-DropNegativeEntriesFactory
-EminPFactory
+DropNegativeEntriesFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+EminPFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
 FacadeBGS2x2
 FacadeClassBase
 FacadeClassFactory
@@ -42,11 +42,11 @@ FactoryManager
 FakeSmootherPrototype
 FilteredAFactory
 FineLevelInputDataFactory
-GeneralGeometricPFactory
+GeneralGeometricPFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
 GenericRFactory
-GeometricInterpolationPFactory
-GeometricInterpolationPFactory_kokkos
-GMRESSolver
+GeometricInterpolationPFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+GeometricInterpolationPFactory_kokkos - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+GMRESSolver - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
 Hierarchy
 HierarchyManager
 HierarchyFactory
@@ -56,71 +56,71 @@ Ifpack2Smoother - #if defined(HAVE_MUELU_IFPACK2)
 IndefBlockedDiagonalSmoother
 InitialBlockNumberFactory
 IntrepidPCoarsenFactory - #ifdef HAVE_MUELU_INTREPID2
-InverseApproximationFactory
+InverseApproximationFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
 LineDetectionFactory
 LocalPermutationStrategy
-LowPrecisionFactory
+LowPrecisionFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
 MapTransferFactory
 MatrixAnalysisFactory
-MergedBlockedMatrixFactory
-MergedSmoother
+MergedBlockedMatrixFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+MergedSmoother - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
 MLParameterListInterpreter - #if defined(HAVE_MUELU_DEPRECATED_CODE)
 MultiVectorTransferFactory
-NotayAggregationFactory
+NotayAggregationFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
 NullspaceFactory
 NullspaceFactory_kokkos - #if defined(HAVE_MUELU_DEPRECATED_CODE)
 NullspacePresmoothFactory
 ParameterListInterpreter
-PatternFactory
+PatternFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
 PerfUtils
 PerfModels
-PermutationFactory
-PermutingSmoother
-PgPFactory
+PermutationFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+PermutingSmoother - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+PgPFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
 PreDropFunctionBaseClass
 PreDropFunctionConstVal
-ProjectorSmoother
+ProjectorSmoother - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
 RAPFactory
 RAPShiftFactory
 RebalanceAcFactory
-RebalanceBlockAcFactory
-RebalanceBlockInterpolationFactory
-RebalanceBlockRestrictionFactory
+RebalanceBlockAcFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+RebalanceBlockInterpolationFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+RebalanceBlockRestrictionFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
 RebalanceTransferFactory
 RefMaxwellSmoother
-RegionRFactory
-RegionRFactory_kokkos
+RegionRFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+RegionRFactory_kokkos - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
 ReitzingerPFactory
-ReorderBlockAFactory
+ReorderBlockAFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
 RepartitionFactory - #ifdef HAVE_MPI
-RepartitionBlockDiagonalFactory - #ifdef HAVE_MPI
+RepartitionBlockDiagonalFactory - #if defined(HAVE_MPI) && defined(HAVE_MUELU_EXTENDED_FEATURES)
 RepartitionHeuristicFactory - #ifdef HAVE_MPI
-ReplicatePFactory
+ReplicatePFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
 RigidBodyModeFactory
 SaPFactory
 SaPFactory_kokkos - #if defined(HAVE_MUELU_DEPRECATED_CODE)
-ScaledNullspaceFactory
-SchurComplementFactory
-SegregatedAFactory
-ShiftedLaplacian - #if defined(HAVE_MUELU_IFPACK2) && defined(HAVE_MUELU_BELOS) && defined(HAVE_MUELU_TPETRA_INST_INT_INT)
-ShiftedLaplacianOperator - #if defined(HAVE_MUELU_BELOS) && defined(HAVE_MUELU_TPETRA_INST_INT_INT)
-SimpleSmoother
+ScaledNullspaceFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+SchurComplementFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+SegregatedAFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+ShiftedLaplacian - #if defined(HAVE_MUELU_IFPACK2) && defined(HAVE_MUELU_BELOS) && defined(HAVE_MUELU_TPETRA_INST_INT_INT) && defined(HAVE_MUELU_EXTENDED_FEATURES)
+ShiftedLaplacianOperator - #if defined(HAVE_MUELU_BELOS) && defined(HAVE_MUELU_TPETRA_INST_INT_INT) && defined(HAVE_MUELU_EXTENDED_FEATURES)
+SimpleSmoother - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
 Smoother
 SmootherBase
 SmootherFactory
 SmootherPrototype
-SmooVecCoalesceDropFactory
+SmooVecCoalesceDropFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
 SolverBase
-SteepestDescentSolver
+SteepestDescentSolver - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
 StratimikosSmoother - #if defined(HAVE_MUELU_STRATIMIKOS) && defined(HAVE_MUELU_THYRA)
-StructuredAggregationFactory
-StructuredLineDetectionFactory
-SubBlockAFactory
+StructuredAggregationFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+StructuredLineDetectionFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+SubBlockAFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
 TekoSmoother - #ifdef HAVE_MUELU_TEKO
 TentativePFactory
 TentativePFactory_kokkos
-MatrixFreeTentativeP
-MatrixFreeTentativePFactory
+MatrixFreeTentativeP - #if defined(HAVE_MUELU_EXPERIMENTAL)
+MatrixFreeTentativePFactory - #if defined(HAVE_MUELU_EXPERIMENTAL)
 ThresholdAFilterFactory
 ToggleCoordinatesTransferFactory
 TogglePFactory
@@ -130,21 +130,21 @@ TpetraOperator
 TransPFactory
 RfromP_Or_TransP
 TrilinosSmoother
-UnsmooshFactory
+UnsmooshFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
 UserPFactory
 Utilities
 UtilitiesBase
-VariableDofLaplacianFactory
+VariableDofLaplacianFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
 SemiCoarsenPFactory
 SemiCoarsenPFactory_kokkos
-UzawaSmoother
-VisualizationHelpers
-ZeroSubBlockAFactory
+UzawaSmoother - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+VisualizationHelpers - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
+ZeroSubBlockAFactory - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
 ZoltanInterface - #if defined(HAVE_MUELU_ZOLTAN) && defined(HAVE_MPI)
 Zoltan2Interface - #if defined(HAVE_MUELU_ZOLTAN2) && defined(HAVE_MPI)
 NodePartitionInterface - #if defined(HAVE_MPI)
 XpetraOperator
 RefMaxwell
 Maxwell1
-MultiPhys
+MultiPhys - #if defined(HAVE_MUELU_EXTENDED_FEATURES)
 Maxwell_Utils

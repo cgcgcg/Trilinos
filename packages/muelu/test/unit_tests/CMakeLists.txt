@@ -24,20 +24,14 @@ ENDIF()
 
 APPEND_SET(SOURCES
   Aggregates.cpp
-  AggregateQualityEstimateFactory.cpp
   AmalgamationFactory.cpp
   AmalgamationInfo.cpp
-  BlackBoxPFactory.cpp
   CoalesceDropFactory.cpp
   CoarseMapFactory.cpp
-  ClassicalPFactory.cpp
   FineLevelInputDataFactory.cpp
-  GeneralGeometricPFactory.cpp
   GenericRFactory.cpp
   Hierarchy.cpp
-  IndexManager.cpp
   Level.cpp
-  LowPrecision.cpp
   LWGraph.cpp
   MapTransferFactory.cpp
   Memory.cpp
@@ -49,33 +43,44 @@ APPEND_SET(SOURCES
   ParameterList/FactoryFactory.cpp
   ParameterList/ParameterListInterpreter.cpp
   PermutedTransferFactory.cpp
-  AlgebraicPermutationStrategy.cpp
-  PgPFactory.cpp
   RAPFactory.cpp
   RAPShiftFactory.cpp
   RebalanceAcFactory.cpp
   ReitzingerPFactory.cpp
   Regression.cpp
   SaPFactory.cpp
-  ScaledNullspaceFactory.cpp
-  SegregatedAFactory.cpp
   SemiCoarsenPFactory.cpp
   Smoothers/SmootherFactory.cpp
-  StructuredAggregationFactory.cpp
-  StructuredLineDetection.cpp
   TentativePFactory.cpp
   ThresholdAFilterFactory.cpp
   TransPFactory.cpp
   UncoupledAggregationFactory.cpp
-  UnsmooshFactory.cpp
   UserData/CreateXpetraPreconditioner.cpp
   Utilities.cpp
   VariableContainer.cpp
-  VariableDofLaplacianFactory.cpp
-  MueLu_CoupledRBMFactory.cpp
-  PermutationFactory.cpp
   RigidBodyModeFactory.cpp
 )
+
+IF (${PACKAGE_NAME}_ENABLE_Extended_Features)
+  APPEND_SET(SOURCES
+    AggregateQualityEstimateFactory.cpp
+    AlgebraicPermutationStrategy.cpp
+    BlackBoxPFactory.cpp
+    ClassicalPFactory.cpp
+    GeneralGeometricPFactory.cpp
+    IndexManager.cpp
+    LowPrecision.cpp
+    PgPFactory.cpp
+    ScaledNullspaceFactory.cpp
+    SegregatedAFactory.cpp
+    StructuredAggregationFactory.cpp
+    StructuredLineDetection.cpp
+    VariableDofLaplacianFactory.cpp
+    MueLu_CoupledRBMFactory.cpp
+    PermutationFactory.cpp
+    UnsmooshFactory.cpp
+  )
+ENDIF()
 
 APPEND_SET(SOURCES_INTREPID2
   MueLu_UnitTests.cpp
@@ -266,11 +271,15 @@ ENDIF()
     COMM serial mpi
     )
 
+IF(${PACKAGE_NAME}_ENABLE_Extended_Features)
+
   TRIBITS_ADD_EXECUTABLE(
     UnitTests_Blocked
     SOURCES ${SOURCES_BLOCKED}
     COMM serial mpi
     )
+
+ENDIF()
 
   IF (${PACKAGE_NAME}_ENABLE_CreatePreconditionerTests)
     TRIBITS_ADD_EXECUTABLE(
@@ -358,23 +367,27 @@ ENDIF()
     COMM mpi
     )
 
-  TRIBITS_ADD_TEST(
-    UnitTests_Blocked
-    NAME "UnitTestsBlockedTpetra"
-    ARGS "--linAlgebra=Tpetra"
-    PASS_REGULAR_EXPRESSION "End Result: TEST PASSED"
-    NUM_MPI_PROCS 1
-    COMM serial mpi
+  IF(${PACKAGE_NAME}_ENABLE_Extended_Features)
+
+    TRIBITS_ADD_TEST(
+      UnitTests_Blocked
+      NAME "UnitTestsBlockedTpetra"
+      ARGS "--linAlgebra=Tpetra"
+      PASS_REGULAR_EXPRESSION "End Result: TEST PASSED"
+      NUM_MPI_PROCS 1
+      COMM serial mpi
     )
 
-  TRIBITS_ADD_TEST(
-    UnitTests_Blocked
-    NAME "UnitTestsBlockedTpetra"
-    ARGS "--linAlgebra=Tpetra"
-    PASS_REGULAR_EXPRESSION "End Result: TEST PASSED"
-    NUM_MPI_PROCS 4
-    COMM mpi
+    TRIBITS_ADD_TEST(
+      UnitTests_Blocked
+      NAME "UnitTestsBlockedTpetra"
+      ARGS "--linAlgebra=Tpetra"
+      PASS_REGULAR_EXPRESSION "End Result: TEST PASSED"
+      NUM_MPI_PROCS 4
+      COMM mpi
     )
+
+  ENDIF()
 
   TRIBITS_ADD_TEST(
     UnitTests_Intrepid2

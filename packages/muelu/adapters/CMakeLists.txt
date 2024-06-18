@@ -61,7 +61,7 @@ APPEND_SET(HEADERS
   tpetra/MueLu_TpetraOperatorAsRowMatrix.hpp
 )
 
-IF (${PACKAGE_NAME}_ENABLE_Belos AND ${PACKAGE_NAME}_ENABLE_Ifpack2 AND Tpetra_INST_INT_INT AND ${PACKAGE_NAME}_ENABLE_Experimental)
+IF (${PACKAGE_NAME}_ENABLE_Belos AND ${PACKAGE_NAME}_ENABLE_Ifpack2 AND Tpetra_INST_INT_INT AND ${PACKAGE_NAME}_ENABLE_Experimental AND ${PACKAGE_NAME}_ENABLE_Extended_Features)
 
   APPEND_SET(HEADERS
     tpetra/MueLu_ShiftedLaplacian_decl.hpp
@@ -111,7 +111,7 @@ IF (${PACKAGE_NAME}_ENABLE_Stratimikos)
   # Tpetra specific extensions
   IF (${PACKAGE_NAME}_ENABLE_Stratimikos AND ${PACKAGE_NAME}_ENABLE_ThyraTpetraAdapters)
     TRIBITS_SET_AND_INC_DIRS(DIR ${CMAKE_CURRENT_SOURCE_DIR}/stratimikos)
-    IF (${PACKAGE_NAME}_ENABLE_Teko AND ${PACKAGE_NAME}_ENABLE_Experimental)
+    IF (${PACKAGE_NAME}_ENABLE_Teko AND ${PACKAGE_NAME}_ENABLE_Experimental AND ${PACKAGE_NAME}_ENABLE_Extended_Features)
       APPEND_SET(HEADERS
         ${DIR}/Thyra_MueLuTpetraQ2Q1PreconditionerFactory_decl.hpp
         ${DIR}/Thyra_MueLuTpetraQ2Q1PreconditionerFactory_def.hpp

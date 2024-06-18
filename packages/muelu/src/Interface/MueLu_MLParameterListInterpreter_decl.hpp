@@ -62,7 +62,6 @@
 
 #include "MueLu_TentativePFactory_fwd.hpp"
 #include "MueLu_SaPFactory_fwd.hpp"
-#include "MueLu_PgPFactory_fwd.hpp"
 #include "MueLu_AmalgamationFactory_fwd.hpp"
 #include "MueLu_TransPFactory_fwd.hpp"
 #include "MueLu_GenericRFactory_fwd.hpp"
@@ -75,6 +74,10 @@
 #include "MueLu_UncoupledAggregationFactory_fwd.hpp"
 #include "MueLu_NullspaceFactory_fwd.hpp"
 #include "MueLu_FactoryBase_fwd.hpp"
+
+#ifdef HAVE_MUELU_EXTENDED_FEATURES
+#include "MueLu_PgPFactory_fwd.hpp"
+#endif
 
 #if defined(HAVE_MUELU_ISORROPIA) && defined(HAVE_MPI)
 #include "MueLu_RepartitionHeuristicFactory_fwd.hpp"

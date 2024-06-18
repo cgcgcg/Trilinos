@@ -50,7 +50,7 @@
 #include "MueLu_ConfigDefs.hpp"
 
 #include "Thyra_MueLuPreconditionerFactory.hpp"
-#if defined(HAVE_MUELU_EXPERIMENTAL) && defined(HAVE_MUELU_TEKO)
+#if defined(HAVE_MUELU_EXPERIMENTAL) && defined(HAVE_MUELU_TEKO) && defined(HAVE_MUELU_EXTENDED_FEATURES)
 #include "Thyra_MueLuTpetraQ2Q1PreconditionerFactory.hpp"
 #endif
 
@@ -61,7 +61,7 @@
 
 namespace Stratimikos {
 
-#if defined(HAVE_MUELU_EXPERIMENTAL) && defined(HAVE_MUELU_TEKO)
+#if defined(HAVE_MUELU_EXPERIMENTAL) && defined(HAVE_MUELU_TEKO) && defined(HAVE_MUELU_EXTENDED_FEATURES)
 #if 0
   void enableMueLuTpetraQ2Q1(DefaultLinearSolverBuilder &builder, const std::string &stratName) {
     const Teuchos::RCP<const Teuchos::ParameterList> precValidParams = Teuchos::sublist(builder.getValidParameters(), "Preconditioner Types");

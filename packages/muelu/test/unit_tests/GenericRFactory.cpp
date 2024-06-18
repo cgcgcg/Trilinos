@@ -218,6 +218,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(GenericRFactory, SymmetricProblem, Scalar, Loc
   // R1->describe(*fos,Teuchos::VERB_EXTREME);
 }
 
+#ifdef HAVE_MUELU_EXTENDED_FEATURES
 // check Hierarchy::Setup routine with GenericRFactory as restriction factory
 TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(GenericRFactory, GenericRSetup, Scalar, LocalOrdinal, GlobalOrdinal, Node) {
 #include <MueLu_UseShortNames.hpp>
@@ -348,11 +349,18 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(GenericRFactory, GenericRSetup, Scalar, LocalO
     }
   }  // end for i=1..5
 }
+#endif
 
+#ifdef HAVE_MUELU_EXTENDED_FEATURES
 #define MUELU_ETI_GROUP(Scalar, LO, GO, Node)                                                   \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(GenericRFactory, Constructor, Scalar, LO, GO, Node)      \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(GenericRFactory, SymmetricProblem, Scalar, LO, GO, Node) \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(GenericRFactory, GenericRSetup, Scalar, LO, GO, Node)
+#else
+#define MUELU_ETI_GROUP(Scalar, LO, GO, Node)                                              \
+  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(GenericRFactory, Constructor, Scalar, LO, GO, Node) \
+  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(GenericRFactory, SymmetricProblem, Scalar, LO, GO, Node)
+#endif
 
 #include <MueLu_ETI_4arg.hpp>
 

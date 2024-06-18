@@ -59,18 +59,11 @@
 #include "MueLu_Hierarchy.hpp"
 #include "MueLu_FactoryManager.hpp"
 
-#include "MueLu_AggregationExportFactory.hpp"
-#include "MueLu_AggregateQualityEstimateFactory.hpp"
 #include "MueLu_AmalgamationFactory.hpp"
-#include "MueLu_BrickAggregationFactory.hpp"
-#include "MueLu_ClassicalMapFactory.hpp"
-#include "MueLu_ClassicalPFactory.hpp"
 #include "MueLu_CoalesceDropFactory.hpp"
 #include "MueLu_CoarseMapFactory.hpp"
-#include "MueLu_ConstraintFactory.hpp"
 #include "MueLu_CoordinatesTransferFactory.hpp"
 #include "MueLu_DirectSolver.hpp"
-#include "MueLu_EminPFactory.hpp"
 #include "MueLu_Exceptions.hpp"
 #include "MueLu_FacadeClassFactory.hpp"
 #include "MueLu_FactoryFactory.hpp"
@@ -79,12 +72,8 @@
 #include "MueLu_InitialBlockNumberFactory.hpp"
 #include "MueLu_LineDetectionFactory.hpp"
 #include "MueLu_LocalOrdinalTransferFactory.hpp"
-#include "MueLu_NotayAggregationFactory.hpp"
 #include "MueLu_NullspaceFactory.hpp"
 #include "MueLu_PatternFactory.hpp"
-#include "MueLu_ReplicatePFactory.hpp"
-#include "MueLu_CombinePFactory.hpp"
-#include "MueLu_PgPFactory.hpp"
 #include "MueLu_RAPFactory.hpp"
 #include "MueLu_RAPShiftFactory.hpp"
 #include "MueLu_RebalanceAcFactory.hpp"
@@ -93,10 +82,8 @@
 #include "MueLu_RepartitionHeuristicFactory.hpp"
 #include "MueLu_ReitzingerPFactory.hpp"
 #include "MueLu_SaPFactory.hpp"
-#include "MueLu_ScaledNullspaceFactory.hpp"
 #include "MueLu_SemiCoarsenPFactory.hpp"
 #include "MueLu_SmootherFactory.hpp"
-#include "MueLu_SmooVecCoalesceDropFactory.hpp"
 #include "MueLu_TentativePFactory.hpp"
 #include "MueLu_TogglePFactory.hpp"
 #include "MueLu_ToggleCoordinatesTransferFactory.hpp"
@@ -105,7 +92,23 @@
 #include "MueLu_ZoltanInterface.hpp"
 #include "MueLu_Zoltan2Interface.hpp"
 #include "MueLu_NodePartitionInterface.hpp"
+
+#ifdef HAVE_MUELU_EXTENDED_FEATURES
+#include "MueLu_AggregationExportFactory.hpp"
+#include "MueLu_AggregateQualityEstimateFactory.hpp"
+#include "MueLu_BrickAggregationFactory.hpp"
+#include "MueLu_ClassicalMapFactory.hpp"
+#include "MueLu_ClassicalPFactory.hpp"
+#include "MueLu_CombinePFactory.hpp"
+#include "MueLu_ConstraintFactory.hpp"
+#include "MueLu_EminPFactory.hpp"
 #include "MueLu_LowPrecisionFactory.hpp"
+#include "MueLu_NotayAggregationFactory.hpp"
+#include "MueLu_ReplicatePFactory.hpp"
+#include "MueLu_PgPFactory.hpp"
+#include "MueLu_ScaledNullspaceFactory.hpp"
+#include "MueLu_SmooVecCoalesceDropFactory.hpp"
+#endif
 
 #include "MueLu_CoalesceDropFactory_kokkos.hpp"
 #include "MueLu_SemiCoarsenPFactory_kokkos.hpp"
@@ -1048,6 +1051,7 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     throw std::runtime_error("Cannot use MATLAB evolutionary strength-of-connection - MueLu was not configured with MATLAB support.");
 #endif
   } else if (MUELU_TEST_PARAM_2LIST(paramList, paramList, "aggregation: drop scheme", std::string, "unsupported vector smoothing")) {
+#ifdef HAVE_MUELU_EXTENDED_FEATURES
     dropFactory = rcp(new MueLu::SmooVecCoalesceDropFactory<SC, LO, GO, NO>());
     ParameterList dropParams;
     MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "aggregation: drop scheme", std::string, dropParams);
@@ -1056,6 +1060,9 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "aggregation: number of times to pre or post smooth", int, dropParams);
     MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "aggregation: penalty parameters", Teuchos::Array<double>, dropParams);
     dropFactory->SetParameterList(dropParams);
+#else
+    throw std::runtime_error("Cannot use vector smoothing - MueLu was not configured with extentended features. (Toggled using the Boolean CMake option MueLu_ENABLE_Extended_Features.)");
+#endif
   } else {
     MUELU_KOKKOS_FACTORY_NO_DECL(dropFactory, CoalesceDropFactory, CoalesceDropFactory_kokkos);
     ParameterList dropParams;
@@ -1138,6 +1145,7 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     //      aggFactory->SetFactory("UnAmalgamationInfo", manager.GetFactory("UnAmalgamationInfo"));
 
   } else if (aggType == "brick") {
+#ifdef HAVE_MUELU_EXTENDED_FEATURES
     aggFactory = rcp(new BrickAggregationFactory());
     ParameterList aggParams;
     MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "aggregation: brick x size", int, aggParams);
@@ -1158,7 +1166,11 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
       // contain factories for two different levels
       aggFactory->SetFactory("Coordinates", this->GetFactoryManager(levelID - 1)->GetFactory("Coordinates"));
     }
+#else
+    throw std::runtime_error("Cannot use brick aggregation - MueLu was not configured with extentended features (Toggled using the Boolean CMake option MueLu_ENABLE_Extended_Features.)");
+#endif
   } else if (aggType == "classical") {
+#ifdef HAVE_MUELU_EXTENDED_FEATURES
     // Map and coloring
     RCP<Factory> mapFact = rcp(new ClassicalMapFactory());
     ParameterList mapParams;
@@ -1205,7 +1217,11 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
       keeps.push_back(keep_pair("Ptent", aggFactory.get()));
     }
     return;
+#else
+    throw std::runtime_error("Cannot use classical aggregation - MueLu was not configured with extentended features. (Toggled using the Boolean CMake option MueLu_ENABLE_Extended_Features.)");
+#endif
   } else if (aggType == "notay") {
+#ifdef HAVE_MUELU_EXTENDED_FEATURES
     aggFactory = rcp(new NotayAggregationFactory());
     ParameterList aggParams;
     MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "aggregation: pairwise: size", int, aggParams);
@@ -1216,6 +1232,9 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     aggFactory->SetParameterList(aggParams);
     aggFactory->SetFactory("DofsPerNode", manager.GetFactory("Graph"));
     aggFactory->SetFactory("Graph", manager.GetFactory("Graph"));
+#else
+    throw std::runtime_error("Cannot use notay aggregation - MueLu was not configured with extentended features. (Toggled using the Boolean CMake option MueLu_ENABLE_Extended_Features.)");
+#endif
   }
 #ifdef HAVE_MUELU_MATLAB
   else if (aggType == "matlab") {
@@ -1232,6 +1251,7 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   coarseMap->SetFactory("Aggregates", manager.GetFactory("Aggregates"));
   manager.SetFactory("CoarseMap", coarseMap);
 
+#ifdef HAVE_MUELU_EXTENDED_FEATURES
   // Aggregate qualities
   if (MUELU_TEST_PARAM_2LIST(paramList, defaultList, "aggregation: compute aggregate qualities", bool, true)) {
     RCP<Factory> aggQualityFact = rcp(new AggregateQualityEstimateFactory());
@@ -1250,6 +1270,10 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     assert(aggType == "uncoupled");
     aggFactory->SetFactory("AggregateQualities", aggQualityFact);
   }
+#else
+  if (MUELU_TEST_PARAM_2LIST(paramList, defaultList, "aggregation: compute aggregate qualities", bool, true))
+    throw std::runtime_error("Cannot display aggregate qualities - MueLu was not configured with extentended features. (Toggled using the Boolean CMake option MueLu_ENABLE_Extended_Features.)");
+#endif
 
   // Tentative P
   MUELU_KOKKOS_FACTORY(Ptent, TentativePFactory, TentativePFactory_kokkos);
@@ -1352,6 +1376,7 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   }
 
   if (MUELU_TEST_PARAM_2LIST(paramList, defaultList, "aggregation: export visualization data", bool, true)) {
+#ifdef HAVE_MUELU_EXTENDED_FEATURES
     RCP<AggregationExportFactory> aggExport = rcp(new AggregationExportFactory());
     ParameterList aggExportParams;
     MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "aggregation: output filename", std::string, aggExportParams);
@@ -1368,6 +1393,9 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
       RAP->AddTransferFactory(aggExport);
     else
       RAPs->AddTransferFactory(aggExport);
+#else
+    throw std::runtime_error("Cannot use aggregate export - MueLu was not configured with extentended features. (Toggled using the Boolean CMake option MueLu_ENABLE_Extended_Features.)");
+#endif
   }
   if (!RAP.is_null())
     manager.SetFactory("A", RAP);
@@ -1382,7 +1410,6 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     if (!RAP.is_null()) {
       keeps.push_back(keep_pair("AP reuse data", RAP.get()));
       keeps.push_back(keep_pair("RAP reuse data", RAP.get()));
-
     } else {
       keeps.push_back(keep_pair("AP reuse data", RAPs.get()));
       keeps.push_back(keep_pair("RAP reuse data", RAPs.get()));
@@ -1774,6 +1801,7 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   MUELU_SET_VAR_2LIST(paramList, defaultList, "transfers: half precision", bool, enableLowPrecision);
 
   if (enableLowPrecision) {
+#ifdef HAVE_MUELU_EXTENDED_FEATURES
     // Low precision P
     auto newP = rcp(new LowPrecisionFactory());
     ParameterList newPparams;
@@ -1791,6 +1819,9 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
       newR->SetFactory("R", manager.GetFactory("R"));
       manager.SetFactory("R", newR);
     }
+#else
+    throw std::runtime_error("Cannot use half precision transfers - MueLu was not configured with extentended features (Toggled using the Boolean CMake option MueLu_ENABLE_Extended_Features.)");
+#endif
   }
 }
 
@@ -1818,9 +1849,13 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   nullSpaceFactory = nullSpace;
 
   if (paramList.isParameter("restriction: scale nullspace") && paramList.get<bool>("restriction: scale nullspace")) {
+#ifdef HAVE_MUELU_EXTENDED_FEATURES
     RCP<ScaledNullspaceFactory> scaledNSfactory = rcp(new ScaledNullspaceFactory());
     scaledNSfactory->SetFactory("Nullspace", nullSpaceFactory);
     manager.SetFactory("Scaled Nullspace", scaledNSfactory);
+#else
+    throw std::runtime_error("Cannot use scaled nullspace - MueLu was not configured with extentended features. (Toggled using the Boolean CMake option MueLu_ENABLE_Extended_Features.)");
+#endif
   }
 }
 
@@ -2009,6 +2044,7 @@ template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     UpdateFactoryManager_Emin(ParameterList& paramList, const ParameterList& defaultList, FactoryManager& manager,
                               int /* levelID */, std::vector<keep_pair>& /* keeps */) const {
+#ifdef HAVE_MUELU_EXTENDED_FEATURES
   MUELU_SET_VAR_2LIST(paramList, defaultList, "emin: pattern", std::string, patternType);
   MUELU_SET_VAR_2LIST(paramList, defaultList, "reuse: type", std::string, reuseType);
   TEUCHOS_TEST_FOR_EXCEPTION(patternType != "AkPtent", Exceptions::InvalidArgument,
@@ -2074,6 +2110,9 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   P->SetFactory("P", manager.GetFactory("Ptent"));
   P->SetFactory("Constraint", manager.GetFactory("Constraint"));
   manager.SetFactory("P", P);
+#else
+  throw std::runtime_error("Cannot use emin aggregation - MueLu was not configured with extentended features (-D MueLu_ENABLE_Extended_Features:BOOL=ON).");
+#endif
 }
 
 // =====================================================================================================
@@ -2083,6 +2122,7 @@ template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     UpdateFactoryManager_PG(ParameterList& /* paramList */, const ParameterList& /* defaultList */, FactoryManager& manager,
                             int /* levelID */, std::vector<keep_pair>& /* keeps */) const {
+#ifdef HAVE_MUELU_EXTENDED_FEATURES
   TEUCHOS_TEST_FOR_EXCEPTION(this->implicitTranspose_, Exceptions::RuntimeError,
                              "Implicit transpose not supported with Petrov-Galerkin smoothed transfer operators: Set \"transpose: use implicit\" to false!\n"
                              "Petrov-Galerkin transfer operator smoothing for non-symmetric problems requires a separate handling of the restriction operator which "
@@ -2092,6 +2132,9 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   auto P = rcp(new PgPFactory());
   P->SetFactory("P", manager.GetFactory("Ptent"));
   manager.SetFactory("P", P);
+#else
+  throw std::runtime_error("Cannot use pg algorithm - MueLu was not configured with extentended features (-D MueLu_ENABLE_Extended_Features:BOOL=ON).");
+#endif
 }
 
 // =====================================================================================================
@@ -2100,6 +2143,7 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     UpdateFactoryManager_Replicate(ParameterList& paramList, const ParameterList& defaultList, FactoryManager& manager, int /* levelID */, std::vector<keep_pair>& keeps) const {
+#ifdef HAVE_MUELU_EXTENDED_FEATURES
   auto P = rcp(new MueLu::ReplicatePFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>());
 
   ParameterList Pparams;
@@ -2107,6 +2151,9 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 
   P->SetParameterList(Pparams);
   manager.SetFactory("P", P);
+#else
+  throw std::runtime_error("Cannot use replicate algorithm - MueLu was not configured with extentended features (-D MueLu_ENABLE_Extended_Features:BOOL=ON).");
+#endif
 }
 
 // =====================================================================================================
@@ -2115,6 +2162,7 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     UpdateFactoryManager_Combine(ParameterList& paramList, const ParameterList& defaultList, FactoryManager& manager, int /* levelID */, std::vector<keep_pair>& keeps) const {
+#ifdef HAVE_MUELU_EXTENDED_FEATURES
   auto P = rcp(new MueLu::CombinePFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>());
 
   ParameterList Pparams;
@@ -2122,6 +2170,9 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 
   P->SetParameterList(Pparams);
   manager.SetFactory("P", P);
+#else
+  throw std::runtime_error("Cannot use combine algorithm - MueLu was not configured with extentended features (-D MueLu_ENABLE_Extended_Features:BOOL=ON).");
+#endif
 }
 
 // =====================================================================================================

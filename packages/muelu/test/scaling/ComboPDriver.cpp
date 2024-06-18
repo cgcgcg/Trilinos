@@ -57,7 +57,7 @@
 #include <MueLu_Exceptions.hpp>
 #include <MueLu_ParameterListInterpreter.hpp>
 
-#include "MueLu_SemiCoarsenPFactory.hpp"  // for semi-coarsening constants
+// #include "MueLu_SemiCoarsenPFactory.hpp"  // for semi-coarsening constants
 #include <MueLu_TestHelpers.hpp>
 #include <MueLu_MultiPhys.hpp>
 

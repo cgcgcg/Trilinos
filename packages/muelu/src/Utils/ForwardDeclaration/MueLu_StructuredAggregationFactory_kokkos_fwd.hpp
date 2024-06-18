@@ -46,6 +46,9 @@
 #ifndef MUELU_STRUCTUREDAGGREGATIONFACTORY_KOKKOS_FWD_HPP
 #define MUELU_STRUCTUREDAGGREGATIONFACTORY_KOKKOS_FWD_HPP
 
+#include "MueLu_ConfigDefs.hpp"
+#if defined(HAVE_MUELU_EXTENDED_FEATURES)
+
 namespace MueLu {
 template <class LocalOrdinal, class GlobalOrdinal, class Node>
 class StructuredAggregationFactory_kokkos;
@@ -53,6 +56,8 @@ class StructuredAggregationFactory_kokkos;
 
 #ifndef MUELU_STRUCTUREDAGGREGATIONFACTORY_KOKKOS_SHORT
 #define MUELU_STRUCTUREDAGGREGATIONFACTORY_KOKKOS_SHORT
+#endif
+
 #endif
 
 #endif  // MUELU_STRUCTUREDAGGREGATIONFACTORY_KOKKOS_FWD_HPP

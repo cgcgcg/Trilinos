@@ -52,13 +52,15 @@
 #include <MueLu_FactoryManagerBase.hpp>
 #include <MueLu_CoalesceDropFactory.hpp>
 #include <MueLu_UncoupledAggregationFactory.hpp>
-#include <MueLu_StructuredAggregationFactory.hpp>
-#include <MueLu_UncoupledAggregationFactory.hpp>
-#include <MueLu_HybridAggregationFactory.hpp>
 #include <MueLu_AmalgamationFactory.hpp>
 #include <MueLu_AmalgamationInfo.hpp>
 #include <MueLu_Aggregates.hpp>
 #include <MueLu_FilteredAFactory.hpp>
+
+#ifdef HAVE_MUELU_EXTENDED_FEATURES
+#include <MueLu_StructuredAggregationFactory.hpp>
+#include <MueLu_HybridAggregationFactory.hpp>
+#endif
 
 namespace MueLuTests {
 
@@ -130,6 +132,7 @@ class AggregateGenerator {
     return aggregates;
   }  // gimmeUncoupledAggregates
 
+#ifdef HAVE_MUELU_EXTENDED_FEATURES
   // Little utility to generate uncoupled aggregates.
   static RCP<Aggregates>
   gimmeStructuredAggregates(const RCP<Matrix>& A,
@@ -171,6 +174,7 @@ class AggregateGenerator {
 
     return aggregates;
   }  // gimmeStructuredAggregates
+#endif
 
   // Little utility to generate uncoupled aggregates with some specified root nodes on interface.
   static RCP<Aggregates>
@@ -209,6 +213,7 @@ class AggregateGenerator {
     return aggregates;
   }  // gimmeInterfaceAggregates
 
+#ifdef HAVE_MUELU_EXTENDED_FEATURES
   // Little utility to generate hybrid structured and uncoupled aggregates
   static RCP<Aggregates>
   gimmeHybridAggregates(const RCP<Matrix>& A, RCP<AmalgamationInfo>& amalgInfo,
@@ -258,6 +263,7 @@ class AggregateGenerator {
     level.Release("Aggregates", aggFact.get());
     return aggregates;
   }  // gimmeHybridAggregates
+#endif
 };
 
 TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(Aggregates, JustAggregation, Scalar, LocalOrdinal, GlobalOrdinal, Node) {
@@ -677,6 +683,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(Aggregates, UncoupledInterface, Scalar, LocalO
 
 }  // UncoupledInterface
 
+#ifdef HAVE_MUELU_EXTENDED_FEATURES
 TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(Aggregates, JustStructuredAggregationGlobal, Scalar, LocalOrdinal, GlobalOrdinal, Node) {
 #include <MueLu_UseShortNames.hpp>
   MUELU_TESTING_SET_OSTREAM;
@@ -833,6 +840,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(Aggregates, HybridAggregation, Scalar, LocalOr
   TEST_EQUALITY(aggregates != Teuchos::null, true);
   TEST_EQUALITY(aggregates->AggregatesCrossProcessors(), false);
 }
+#endif
 
 TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(Aggregates, GreedyDirichlet, Scalar, LocalOrdinal, GlobalOrdinal, Node) {
 #include <MueLu_UseShortNames.hpp>
@@ -1371,6 +1379,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(Aggregates, AllowDroppingToCreateAdditionalDir
 
 }  // AllowDroppingToCreateAdditionalDirichletRows
 
+#ifdef HAVE_MUELU_EXTENDED_FEATURES
 #define MUELU_ETI_GROUP(Scalar, LO, GO, Node)                                                                          \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(Aggregates, JustAggregation, Scalar, LO, GO, Node)                              \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(Aggregates, GetNumAggregates, Scalar, LO, GO, Node)                             \
@@ -1390,7 +1399,25 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(Aggregates, AllowDroppingToCreateAdditionalDir
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(FilteredA, SpreadLumpingReuseGraph, Scalar, LO, GO, Node)                       \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(FilteredA, SpreadLumpingNoStencilRootNoReuseGraph, Scalar, LO, GO, Node)        \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(FilteredA, SpreadNoLumpingNoStencilRootNoReuseGraph, Scalar, LO, GO, Node)
-
+#else
+#define MUELU_ETI_GROUP(Scalar, LO, GO, Node)                                                                          \
+  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(Aggregates, JustAggregation, Scalar, LO, GO, Node)                              \
+  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(Aggregates, GetNumAggregates, Scalar, LO, GO, Node)                             \
+  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(Aggregates, JustUncoupledAggregation, Scalar, LO, GO, Node)                     \
+  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(Aggregates, JustUncoupledAggregationFactory, Scalar, LO, GO, Node)              \
+  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(Aggregates, GetNumUncoupledAggregates, Scalar, LO, GO, Node)                    \
+  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(Aggregates, UncoupledPhase1, Scalar, LO, GO, Node)                              \
+  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(Aggregates, UncoupledPhase2, Scalar, LO, GO, Node)                              \
+  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(Aggregates, UncoupledPhase3, Scalar, LO, GO, Node)                              \
+  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(Aggregates, UncoupledInterface, Scalar, LO, GO, Node)                           \
+  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(Aggregates, GreedyDirichlet, Scalar, LO, GO, Node)                              \
+  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(Aggregates, AllowDroppingToCreateAdditionalDirichletRows, Scalar, LO, GO, Node) \
+  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(FilteredA, RootStencil, Scalar, LO, GO, Node)                                   \
+  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(FilteredA, SpreadLumpingRootStencil, Scalar, LO, GO, Node)                      \
+  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(FilteredA, SpreadLumpingReuseGraph, Scalar, LO, GO, Node)                       \
+  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(FilteredA, SpreadLumpingNoStencilRootNoReuseGraph, Scalar, LO, GO, Node)        \
+  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(FilteredA, SpreadNoLumpingNoStencilRootNoReuseGraph, Scalar, LO, GO, Node)
+#endif
 //  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(Aggregates,HybridAggregation,Scalar,LO,GO,Node)
 
 #include <MueLu_ETI_4arg.hpp>

@@ -21,21 +21,31 @@ APPEND_SET(SOURCES
   AmalgamationInfo_kokkos.cpp
   CoalesceDropFactory_kokkos.cpp
   CoarseMapFactory_kokkos.cpp
-  IndexManager_kokkos.cpp
   LWGraph_kokkos.cpp
-  MatrixFree_kokkos.cpp
   MueLu_TestHelpers_kokkos.cpp
   MueLu_UnitTests_kokkos.cpp
-  NotayAggregationFactory.cpp
   Regression.cpp
   SaPFactory_kokkos.cpp
   SemiCoarsenPFactory_kokkos.cpp
-  StructuredAggregation_kokkos.cpp
   TentativePFactory_kokkos.cpp
   UncoupledAggregationFactory_kokkos.cpp
   UseKokkos_kokkos.cpp
   Utilities_kokkos.cpp
 )
+
+IF(${PACKAGE_NAME}_ENABLE_Extended_Features)
+  APPEND_SET(SOURCES
+    IndexManager_kokkos.cpp
+    NotayAggregationFactory.cpp
+    StructuredAggregation_kokkos.cpp
+  )
+ENDIF()
+
+IF(${PACKAGE_NAME}_ENABLE_Experimental)
+  APPEND_SET(SOURCES
+    MatrixFree_kokkos.cpp
+  )
+ENDIF()
 
 ### Tests that require other Trilinos packages
 

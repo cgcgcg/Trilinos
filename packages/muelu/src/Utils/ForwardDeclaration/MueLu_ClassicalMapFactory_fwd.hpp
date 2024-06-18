@@ -46,6 +46,9 @@
 #ifndef MUELU_CLASSICALMAPFACTORY_FWD_HPP
 #define MUELU_CLASSICALMAPFACTORY_FWD_HPP
 
+#include "MueLu_ConfigDefs.hpp"
+#if defined(HAVE_MUELU_EXTENDED_FEATURES)
+
 namespace MueLu {
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 class ClassicalMapFactory;
@@ -53,6 +56,8 @@ class ClassicalMapFactory;
 
 #ifndef MUELU_CLASSICALMAPFACTORY_SHORT
 #define MUELU_CLASSICALMAPFACTORY_SHORT
+#endif
+
 #endif
 
 #endif  // MUELU_CLASSICALMAPFACTORY_FWD_HPP

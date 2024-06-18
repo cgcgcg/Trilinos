@@ -46,6 +46,9 @@
 #ifndef MUELU_MATRIXFREETENTATIVEPFACTORY_FWD_HPP
 #define MUELU_MATRIXFREETENTATIVEPFACTORY_FWD_HPP
 
+#include "MueLu_ConfigDefs.hpp"
+#if defined(HAVE_MUELU_EXPERIMENTAL)
+
 namespace MueLu {
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 class MatrixFreeTentativePFactory;
@@ -53,6 +56,8 @@ class MatrixFreeTentativePFactory;
 
 #ifndef MUELU_MATRIXFREETENTATIVEPFACTORY_SHORT
 #define MUELU_MATRIXFREETENTATIVEPFACTORY_SHORT
+#endif
+
 #endif
 
 #endif  // MUELU_MATRIXFREETENTATIVEPFACTORY_FWD_HPP

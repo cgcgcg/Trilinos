@@ -46,6 +46,9 @@
 #ifndef MUELU_BRICKAGGREGATIONFACTORY_FWD_HPP
 #define MUELU_BRICKAGGREGATIONFACTORY_FWD_HPP
 
+#include "MueLu_ConfigDefs.hpp"
+#if defined(HAVE_MUELU_EXTENDED_FEATURES)
+
 namespace MueLu {
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 class BrickAggregationFactory;
@@ -53,6 +56,8 @@ class BrickAggregationFactory;
 
 #ifndef MUELU_BRICKAGGREGATIONFACTORY_SHORT
 #define MUELU_BRICKAGGREGATIONFACTORY_SHORT
+#endif
+
 #endif
 
 #endif  // MUELU_BRICKAGGREGATIONFACTORY_FWD_HPP

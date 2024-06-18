@@ -46,6 +46,9 @@
 #ifndef MUELU_SUBBLOCKAFACTORY_FWD_HPP
 #define MUELU_SUBBLOCKAFACTORY_FWD_HPP
 
+#include "MueLu_ConfigDefs.hpp"
+#if defined(HAVE_MUELU_EXTENDED_FEATURES)
+
 namespace MueLu {
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 class SubBlockAFactory;
@@ -53,6 +56,8 @@ class SubBlockAFactory;
 
 #ifndef MUELU_SUBBLOCKAFACTORY_SHORT
 #define MUELU_SUBBLOCKAFACTORY_SHORT
+#endif
+
 #endif
 
 #endif  // MUELU_SUBBLOCKAFACTORY_FWD_HPP

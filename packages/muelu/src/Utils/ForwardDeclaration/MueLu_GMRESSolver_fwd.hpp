@@ -46,6 +46,9 @@
 #ifndef MUELU_GMRESSOLVER_FWD_HPP
 #define MUELU_GMRESSOLVER_FWD_HPP
 
+#include "MueLu_ConfigDefs.hpp"
+#if defined(HAVE_MUELU_EXTENDED_FEATURES)
+
 namespace MueLu {
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 class GMRESSolver;
@@ -53,6 +56,8 @@ class GMRESSolver;
 
 #ifndef MUELU_GMRESSOLVER_SHORT
 #define MUELU_GMRESSOLVER_SHORT
+#endif
+
 #endif
 
 #endif  // MUELU_GMRESSOLVER_FWD_HPP

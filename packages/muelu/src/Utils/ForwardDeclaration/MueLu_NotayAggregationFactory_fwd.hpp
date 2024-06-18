@@ -46,6 +46,9 @@
 #ifndef MUELU_NOTAYAGGREGATIONFACTORY_FWD_HPP
 #define MUELU_NOTAYAGGREGATIONFACTORY_FWD_HPP
 
+#include "MueLu_ConfigDefs.hpp"
+#if defined(HAVE_MUELU_EXTENDED_FEATURES)
+
 namespace MueLu {
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 class NotayAggregationFactory;
@@ -53,6 +56,8 @@ class NotayAggregationFactory;
 
 #ifndef MUELU_NOTAYAGGREGATIONFACTORY_SHORT
 #define MUELU_NOTAYAGGREGATIONFACTORY_SHORT
+#endif
+
 #endif
 
 #endif  // MUELU_NOTAYAGGREGATIONFACTORY_FWD_HPP

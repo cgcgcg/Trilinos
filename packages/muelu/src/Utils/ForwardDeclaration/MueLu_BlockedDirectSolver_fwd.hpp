@@ -46,6 +46,9 @@
 #ifndef MUELU_BLOCKEDDIRECTSOLVER_FWD_HPP
 #define MUELU_BLOCKEDDIRECTSOLVER_FWD_HPP
 
+#include "MueLu_ConfigDefs.hpp"
+#if defined(HAVE_MUELU_EXTENDED_FEATURES)
+
 namespace MueLu {
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 class BlockedDirectSolver;
@@ -53,6 +56,8 @@ class BlockedDirectSolver;
 
 #ifndef MUELU_BLOCKEDDIRECTSOLVER_SHORT
 #define MUELU_BLOCKEDDIRECTSOLVER_SHORT
+#endif
+
 #endif
 
 #endif  // MUELU_BLOCKEDDIRECTSOLVER_FWD_HPP
