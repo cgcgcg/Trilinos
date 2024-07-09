@@ -14,7 +14,6 @@
 #include <MueLu_InitialBlockNumberFactory.hpp>
 #include <MueLu_AmalgamationFactory.hpp>
 #include <MueLu_CoalesceDropFactory.hpp>
-#include <MueLu_PreDropFunctionConstVal.hpp>
 #include <MueLu_LWGraph.hpp>
 
 // Galeri
@@ -74,38 +73,6 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, Build, Scalar, LocalOrdin
   TEST_EQUALITY(myDomainMap->getMinLocalIndex(), 0);
   TEST_EQUALITY(myDomainMap->getGlobalNumElements(), 36);
 }  // Build
-
-// TODO remove this
-TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, PreDrop, Scalar, LocalOrdinal, GlobalOrdinal, Node) {
-#include <MueLu_UseShortNames.hpp>
-  MUELU_TESTING_SET_OSTREAM;
-  MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
-  out << "version: " << MueLu::Version() << std::endl;
-
-  Level fineLevel;
-  TestHelpers::TestFactory<SC, LO, GO, NO>::createSingleLevelHierarchy(fineLevel);
-
-  RCP<Matrix> A = TestHelpers::TestFactory<SC, LO, GO, NO>::Build1DPoisson(3);
-  fineLevel.Set("A", A);
-  A->describe(out, Teuchos::VERB_EXTREME);
-
-  CoalesceDropFactory dropFact = CoalesceDropFactory();
-  dropFact.SetVerbLevel(MueLu::Extreme);
-  dropFact.SetPreDropFunction(rcp(new PreDropFunctionConstVal(0.00001)));
-
-  fineLevel.Request("Graph", &dropFact);
-
-  dropFact.Build(fineLevel);
-
-  fineLevel.print(out);
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &dropFact);
-
-  std::cout << graph->GetDomainMap()->getGlobalNumElements() << std::endl;
-  graph->print(out, MueLu::Debug);
-
-  //    TEST_EQUALITY(1 == 0, true);
-
-}  // PreDrop
 
 TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationBasic, Scalar, LocalOrdinal, GlobalOrdinal, Node) {
   // unit test for block size 3.
@@ -2373,7 +2340,6 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, SignedClassicalSA, Scalar
 #define MUELU_ETI_GROUP(SC, LO, GO, Node)                                                                             \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(CoalesceDropFactory, Constructor, SC, LO, GO, Node)                            \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(CoalesceDropFactory, Build, SC, LO, GO, Node)                                  \
-  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(CoalesceDropFactory, PreDrop, SC, LO, GO, Node)                                \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(CoalesceDropFactory, AmalgamationBasic, SC, LO, GO, Node)                      \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(CoalesceDropFactory, AmalgamationStrided, SC, LO, GO, Node)                    \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(CoalesceDropFactory, AmalgamationStrided2, SC, LO, GO, Node)                   \

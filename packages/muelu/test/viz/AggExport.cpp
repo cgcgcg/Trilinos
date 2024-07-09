@@ -267,6 +267,8 @@ int main_(Teuchos::CommandLineProcessor& clp, Xpetra::UnderlyingLib& lib, int ar
         paramList.set<std::string>("aggregation: output filename", "Output/MPI-Viz-Output-" + matrixType + "-" + aggVizType + aggQuality + "-Level%LEVELID");
     }
 
+    paramList.set("aggregation: backend", "host");
+
     if (nullspace.is_null()) {
       int blkSize = 1;
       if (paramList.isSublist("Matrix")) {

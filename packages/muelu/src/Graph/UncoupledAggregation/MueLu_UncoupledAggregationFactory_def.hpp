@@ -183,14 +183,14 @@ void UncoupledAggregationFactory<LocalOrdinal, GlobalOrdinal, Node>::Build(Level
   // "Graph" can have type "LWGraph" or "LWGraph_kokkos".
   // The aggregation phases can call either "BuildAggregatesNonKokkos" or "BuildAggregates".
 
-  // "aggregation: backend" can take values "default", "non-Kokkos" or "Kokkos".
+  // "aggregation: backend" can take values "default", "host" or "Kokkos".
   // "default": run depending on the type of "Graph"
   // "non-Kokkos": run the non-Kokkos aggregation, moving "Graph" to host if necessary
   // "Kokkos": run the Kokkos aggregation, potentially move "Graph", moving "Graph" to device if necessary
 
   bool runOnHost;
   if (IsType<RCP<LWGraph>>(currentLevel, "Graph")) {
-    if ((aggregationBackend == "default") || (aggregationBackend == "non-Kokkos")) {
+    if ((aggregationBackend == "default") || (aggregationBackend == "host")) {
       graph      = Get<RCP<LWGraph>>(currentLevel, "Graph");
       aggregates = rcp(new Aggregates(*graph));
       comm       = graph->GetComm();
