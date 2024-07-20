@@ -261,16 +261,16 @@ class HYPRE_SpmV_Pack {
     MakeContiguousMaps(A, c_row_map, c_col_map, c_domain_map);
 
     // Create matrix
-    int row_lo = c_row_map->getMinGlobalIndex();
-    int row_hi = c_row_map->getMaxGlobalIndex();
-    int dom_lo = c_domain_map->getMinGlobalIndex();
-    int dom_hi = c_domain_map->getMaxGlobalIndex();
+    HYPRE_Int row_lo = c_row_map->getMinGlobalIndex();
+    HYPRE_Int row_hi = c_row_map->getMaxGlobalIndex();
+    HYPRE_Int dom_lo = c_domain_map->getMinGlobalIndex();
+    HYPRE_Int dom_hi = c_domain_map->getMaxGlobalIndex();
     HYPRE_IJMatrixCreate(comm, row_lo, row_hi, dom_lo, dom_hi, &ij_matrix);
     HYPRE_IJMatrixSetObjectType(ij_matrix, HYPRE_PARCSR);
     HYPRE_IJMatrixInitialize(ij_matrix);
 
     // Fill matrix
-    std::vector<GO> new_indices(A.getLocalMaxNumRowEntries());
+    std::vector<HYPRE_Int> new_indices(A.getLocalMaxNumRowEntries());
     for (LO i = 0; i < (LO)A.getLocalNumRows(); i++) {
       typename crs_matrix_type::values_host_view_type values;
       typename crs_matrix_type::local_inds_host_view_type indices;
@@ -278,9 +278,9 @@ class HYPRE_SpmV_Pack {
       for (LO j = 0; j < (LO)indices.extent(0); j++) {
         new_indices[j] = c_col_map->getGlobalElement(indices(j));
       }
-      GO GlobalRow[1];
-      GO numEntries = (GO)indices.extent(0);
-      GlobalRow[0]  = c_row_map->getGlobalElement(i);
+      HYPRE_Int GlobalRow[1];
+      HYPRE_Int numEntries = (GO)indices.extent(0);
+      GlobalRow[0]         = c_row_map->getGlobalElement(i);
       HYPRE_IJMatrixSetValues(ij_matrix, 1, &numEntries, GlobalRow, new_indices.data(), values.data());
     }
     HYPRE_IJMatrixAssemble(ij_matrix);
