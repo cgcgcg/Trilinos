@@ -20,7 +20,7 @@
 #include "MueLu_CoarseMapFactory.hpp"
 #include "MueLu_IndexManager_kokkos.hpp"
 #include "MueLu_StructuredAggregationFactory_kokkos.hpp"
-#include "MueLu_TentativePFactory_kokkos.hpp"
+#include "MueLu_TentativePFactory.hpp"
 
 namespace MueLuTests {
 
@@ -280,7 +280,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(StructuredAggregation_kokkos, UncoupledTentati
 
   RCP<CoarseMapFactory> coarseMapFact = rcp(new CoarseMapFactory());
   coarseMapFact->SetFactory("Aggregates", StructuredAggFact);
-  RCP<TentativePFactory_kokkos> TentativePFact = rcp(new TentativePFactory_kokkos());
+  RCP<TentativePFactory> TentativePFact = rcp(new TentativePFactory());
   TentativePFact->SetFactory("Aggregates", StructuredAggFact);
   TentativePFact->SetFactory("UnAmalgamationInfo", amalgFact);
   TentativePFact->SetFactory("CoarseMap", coarseMapFact);

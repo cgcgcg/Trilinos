@@ -40,7 +40,6 @@
 #include "MueLu_InterfaceAggregationFactory_fwd.hpp"
 
 #include "MueLu_CoalesceDropFactory_kokkos_fwd.hpp"
-#include "MueLu_TentativePFactory_kokkos_fwd.hpp"
 
 namespace MueLu {
 

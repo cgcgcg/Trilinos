@@ -49,7 +49,6 @@
 
 #include "MueLu_CoalesceDropFactory_kokkos.hpp"
 // #include "MueLu_CoordinatesTransferFactory_kokkos.hpp"
-#include "MueLu_TentativePFactory_kokkos.hpp"
 
 #if defined(HAVE_MUELU_ISORROPIA) && defined(HAVE_MPI)
 #include "MueLu_IsorropiaInterface.hpp"
@@ -243,10 +242,7 @@ void MLParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::SetP
   RCP<Factory> PFact;
   RCP<Factory> RFact;
   RCP<Factory> PtentFact;
-  if (useKokkosRefactor)
-    PtentFact = rcp(new TentativePFactory_kokkos());
-  else
-    PtentFact = rcp(new TentativePFactory());
+  PtentFact = rcp(new TentativePFactory());
   if (agg_damping == 0.0 && bEnergyMinimization == false) {
     // tentative prolongation operator (PA-AMG)
     PFact = PtentFact;

@@ -36,7 +36,7 @@
 
     <!-- Note that ParameterLists must be defined prior to being used -->
     <ParameterList name="myProlongatorFact">
-      <Parameter name="factory" type="string"               value="TentativePFactory_kokkos"/>
+      <Parameter name="factory" type="string"               value="TentativePFactory"/>
       <Parameter name="CoarseMap"                           type="string" value="myCoarseMapFact"/>
       <Parameter name="Aggregates"                          type="string" value="myAggregationFact"/>
       <Parameter name="UnAmalgamationInfo"                  type="string" value="myAmalgamationFact"/>

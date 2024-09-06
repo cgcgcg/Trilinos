@@ -74,7 +74,6 @@
 
 #include "MueLu_CoalesceDropFactory_kokkos.hpp"
 #include "MueLu_SemiCoarsenPFactory_kokkos.hpp"
-#include "MueLu_TentativePFactory_kokkos.hpp"
 
 #ifdef HAVE_MUELU_MATLAB
 #include "../matlab/src/MueLu_MatlabSmoother_decl.hpp"
@@ -1220,7 +1219,7 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   }
 
   // Tentative P
-  MUELU_KOKKOS_FACTORY(Ptent, TentativePFactory, TentativePFactory_kokkos);
+  RCP<Factory> Ptent = rcp(new TentativePFactory());
   ParameterList ptentParams;
   if (paramList.isSublist("matrixmatrix: kernel params"))
     ptentParams.sublist("matrixmatrix: kernel params", false) = paramList.sublist("matrixmatrix: kernel params");

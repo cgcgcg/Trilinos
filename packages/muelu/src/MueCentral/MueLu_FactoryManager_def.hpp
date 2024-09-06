@@ -42,7 +42,6 @@
 #include "MueLu_InverseApproximationFactory.hpp"
 
 #include "MueLu_CoalesceDropFactory_kokkos.hpp"
-#include "MueLu_TentativePFactory_kokkos.hpp"
 
 #include "MueLu_FactoryManager_decl.hpp"
 
@@ -106,7 +105,7 @@ const RCP<const FactoryBase> FactoryManager<Scalar, LocalOrdinal, GlobalOrdinal,
     if (varName == "Ainv") return SetAndReturnDefaultFactory(varName, rcp(new InverseApproximationFactory()));
     if (varName == "RAP Pattern") return GetFactory("A");
     if (varName == "AP Pattern") return GetFactory("A");
-    if (varName == "Ptent") return MUELU_KOKKOS_FACTORY(varName, TentativePFactory, TentativePFactory_kokkos);
+    if (varName == "Ptent") return SetAndReturnDefaultFactory(varName, rcp(new TentativePFactory()));
     if (varName == "P") {
       // GetFactory("Ptent"): we need to use the same factory instance for both "P" and "Nullspace"
       RCP<Factory> factory = rcp(new SaPFactory());

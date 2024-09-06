@@ -37,7 +37,6 @@
 #include "MueLu_Maxwell_Utils.hpp"
 
 #include "MueLu_CoalesceDropFactory_kokkos.hpp"
-#include "MueLu_TentativePFactory_kokkos.hpp"
 #include <Kokkos_Core.hpp>
 #include <KokkosSparse_CrsMatrix.hpp>
 
@@ -1713,12 +1712,11 @@ void RefMaxwell<Scalar, LocalOrdinal, GlobalOrdinal, Node>::buildNodalProlongato
     Tfact            = rcp(new CoordinatesTransferFactory());
     UncoupledAggFact = rcp(new UncoupledAggregationFactory());
     if (useKokkos_) {
-      dropFact       = rcp(new CoalesceDropFactory_kokkos());
-      TentativePFact = rcp(new TentativePFactory_kokkos());
+      dropFact = rcp(new CoalesceDropFactory_kokkos());
     } else {
-      dropFact       = rcp(new CoalesceDropFactory());
-      TentativePFact = rcp(new TentativePFactory());
+      dropFact = rcp(new CoalesceDropFactory());
     }
+    TentativePFact = rcp(new TentativePFactory());
     if (algo == "sa")
       SaPFact = rcp(new SaPFactory());
     dropFact->SetFactory("UnAmalgamationInfo", amalgFact);

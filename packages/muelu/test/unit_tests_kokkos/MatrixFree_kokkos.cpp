@@ -19,7 +19,7 @@
 #include "MueLu_AmalgamationFactory.hpp"
 #include "MueLu_CoalesceDropFactory_kokkos.hpp"
 #include "MueLu_CoarseMapFactory.hpp"
-#include "MueLu_TentativePFactory_kokkos.hpp"
+#include "MueLu_TentativePFactory.hpp"
 #include "MueLu_MatrixFreeTentativePFactory.hpp"
 #include "MueLu_UncoupledAggregationFactory.hpp"
 #include "MueLu_NullspaceFactory.hpp"
@@ -367,7 +367,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(MatrixFreeTentativePFactory, MatrixVsMatrixFre
     RCP<CoarseMapFactory> coarseMapFact = rcp(new CoarseMapFactory());
     coarseMapFact->SetFactory("Aggregates", aggFact);
 
-    RCP<TentativePFactory_kokkos> TentativePFact = rcp(new TentativePFactory_kokkos());
+    RCP<TentativePFactory> TentativePFact = rcp(new TentativePFactory());
     TentativePFact->SetFactory("Aggregates", aggFact);
     TentativePFact->SetFactory("UnAmalgamationInfo", amalgFact);
     TentativePFact->SetFactory("CoarseMap", coarseMapFact);

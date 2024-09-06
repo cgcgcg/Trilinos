@@ -118,7 +118,7 @@ StructuredLineDetectionFactory
 SubBlockAFactory
 TekoSmoother - #ifdef HAVE_MUELU_TEKO
 TentativePFactory
-TentativePFactory_kokkos
+TentativePFactory_kokkos - #if defined(HAVE_MUELU_DEPRECATED_CODE)
 MatrixFreeTentativeP
 MatrixFreeTentativePFactory
 ThresholdAFilterFactory

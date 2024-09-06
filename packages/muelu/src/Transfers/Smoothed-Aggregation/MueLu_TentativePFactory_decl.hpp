@@ -11,19 +11,9 @@
 #define MUELU_TENTATIVEPFACTORY_DECL_HPP
 
 #include <Teuchos_ScalarTraits.hpp>
-#include <Teuchos_SerialDenseMatrix.hpp>
-#include <Teuchos_SerialQRDenseSolver.hpp>
+#include <Tpetra_KokkosCompat_ClassicNodeAPI_Wrapper.hpp>
 
 #include <Xpetra_CrsGraphFactory_fwd.hpp>
-#include <Xpetra_CrsMatrix_fwd.hpp>
-#include <Xpetra_Matrix_fwd.hpp>
-#include <Xpetra_MultiVector_fwd.hpp>
-#include <Xpetra_MapFactory_fwd.hpp>
-#include <Xpetra_Map_fwd.hpp>
-#include <Xpetra_MultiVectorFactory_fwd.hpp>
-#include <Xpetra_Import_fwd.hpp>
-#include <Xpetra_ImportFactory_fwd.hpp>
-#include <Xpetra_CrsMatrixWrap_fwd.hpp>
 
 #include "MueLu_ConfigDefs.hpp"
 
@@ -74,12 +64,17 @@ namespace MueLu {
   | P       | TentativePFactory   | Non-smoothed "tentative" prolongation operator (with piece-wise constant transfer operator basis functions)
   | Nullspace | TentativePFactory | Coarse near null space vectors. Please also check the documentation of the NullspaceFactory for the special dependency tree of the "Nullspace" variable throughout all multigrid levels.
 */
-
 template <class Scalar        = DefaultScalar,
           class LocalOrdinal  = DefaultLocalOrdinal,
           class GlobalOrdinal = DefaultGlobalOrdinal,
           class Node          = DefaultNode>
 class TentativePFactory : public PFactory {
+ public:
+  using execution_space = typename Node::execution_space;
+  using range_type      = Kokkos::RangePolicy<LocalOrdinal, execution_space>;
+  using DeviceType      = typename Node::device_type;
+
+ private:
 #undef MUELU_TENTATIVEPFACTORY_SHORT
 #include "MueLu_UseShortNames.hpp"
 
@@ -111,21 +106,25 @@ class TentativePFactory : public PFactory {
 
   //@}
 
- private:
-  void BuildPuncoupled(RCP<Matrix> A, RCP<Aggregates> aggregates, RCP<AmalgamationInfo> amalgInfo, RCP<MultiVector> fineNullspace,
-                       RCP<const Map> coarseMap, RCP<Matrix>& Ptentative, RCP<MultiVector>& coarseNullspace, const int levelID) const;
-  void BuildPcoupled(RCP<Matrix> A, RCP<Aggregates> aggregates, RCP<AmalgamationInfo> amalgInfo, RCP<MultiVector> fineNullspace,
-                     RCP<const Map> coarseMap, RCP<Matrix>& Ptentative, RCP<MultiVector>& coarseNullspace) const;
-  void BuildPuncoupledBlockCrs(RCP<Matrix> A, RCP<Aggregates> aggregates, RCP<AmalgamationInfo> amalgInfo, RCP<MultiVector> fineNullspace,
-                               RCP<const Map> coarseMap, RCP<Matrix>& Ptentative, RCP<MultiVector>& coarseNullspace, const int levelID) const;
+  // NOTE: All of these should really be private, but CUDA doesn't like that
+
+  void BuildPuncoupled(Level& coarseLevel, RCP<Matrix> A, RCP<Aggregates> aggregates,
+                       RCP<AmalgamationInfo> amalgInfo, RCP<MultiVector> fineNullspace,
+                       RCP<const Map> coarseMap, RCP<Matrix>& Ptentative,
+                       RCP<MultiVector>& coarseNullspace, int levelID) const;
+
+  void BuildPuncoupledBlockCrs(Level& coarseLevel, RCP<Matrix> A, RCP<Aggregates> aggregates, RCP<AmalgamationInfo> amalgInfo,
+                               RCP<MultiVector> fineNullspace, RCP<const Map> coarsePointMap, RCP<Matrix>& Ptentative, RCP<MultiVector>& coarseNullspace, int levelID) const;
+
+  void BuildPcoupled(RCP<Matrix> A, RCP<Aggregates> aggregates,
+                     RCP<AmalgamationInfo> amalgInfo, RCP<MultiVector> fineNullspace,
+                     RCP<const Map> coarseMap, RCP<Matrix>& Ptentative,
+                     RCP<MultiVector>& coarseNullspace) const;
 
   mutable bool bTransferCoordinates_ = false;
-
-};  // class TentativePFactory
+};
 
 }  // namespace MueLu
-
-// TODO: noQR_
 
 #define MUELU_TENTATIVEPFACTORY_SHORT
 #endif  // MUELU_TENTATIVEPFACTORY_DECL_HPP

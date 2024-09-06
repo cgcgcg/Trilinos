@@ -34,7 +34,7 @@
 
 
     <ParameterList name="myTentativePFact2">
-      <Parameter name="factory"                             type="string" value="TentativePFactory_kokkos"/>
+      <Parameter name="factory"                             type="string" value="TentativePFactory"/>
       <Parameter name="Aggregates"                          type="string" value="UncoupledAggregationFact2"/>
       <Parameter name="CoarseMap"                           type="string" value="MyCoarseMap2"/>
     </ParameterList>

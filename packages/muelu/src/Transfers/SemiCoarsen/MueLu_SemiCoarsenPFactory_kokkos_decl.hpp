@@ -27,7 +27,7 @@ namespace MueLu {
   The semi-coarsening is performed along user-provided "vertical lines" (in z-direction).
   The line detection algorithm can be found in the LineDetectionFactory.
   Usually, the SemiCoarsenPFactory_kokkos is used together with the TogglePFactory and a
-  second TentativePFactory_kokkos which allows to dynamically switch from semi-coarsening to
+  second TentativePFactory which allows to dynamically switch from semi-coarsening to
   aggregation-based coarsening (or any other compatible coarsening algorithm).
 
   ## Input/output of SemiCoarsenPFactory_kokkos ##
