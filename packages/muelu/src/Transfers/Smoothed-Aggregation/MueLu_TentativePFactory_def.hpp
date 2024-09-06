@@ -37,7 +37,7 @@ RCP<const ParameterList> TentativePFactory<Scalar, LocalOrdinal, GlobalOrdinal, 
 #define SET_VALID_ENTRY(name) validParamList->setEntry(name, MasterList::getEntry(name))
   SET_VALID_ENTRY("tentative: calculate qr");
   SET_VALID_ENTRY("tentative: build coarse coordinates");
-  // SET_VALID_ENTRY("tentative: constant column sums");
+  SET_VALID_ENTRY("tentative: constant column sums");
 #undef SET_VALID_ENTRY
   validParamList->set<std::string>("Nullspace name", "Nullspace", "Name for the input nullspace");
 
@@ -96,6 +96,8 @@ void TentativePFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::BuildP(Level&
   const ParameterList& pL = GetParameterList();
   std::string nspName     = "Nullspace";
   if (pL.isParameter("Nullspace name")) nspName = pL.get<std::string>("Nullspace name");
+
+  TEUCHOS_ASSERT(!pL.get<bool>("tentative: constant column sums"));
 
   RCP<Matrix> Ptentative;
   auto A          = Get<RCP<Matrix>>(fineLevel, "A");
