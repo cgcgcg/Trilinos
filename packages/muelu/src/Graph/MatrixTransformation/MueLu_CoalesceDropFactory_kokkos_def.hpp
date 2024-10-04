@@ -48,6 +48,7 @@ RCP<const ParameterList> CoalesceDropFactory_kokkos<Scalar, LocalOrdinal, Global
   SET_VALID_ENTRY("aggregation: row sum drop tol");
   SET_VALID_ENTRY("aggregation: drop scheme");
   SET_VALID_ENTRY("aggregation: block diagonal: interleaved blocksize");
+  SET_VALID_ENTRY("aggregation: distance laplacian metric");
   SET_VALID_ENTRY("aggregation: distance laplacian directional weights");
   SET_VALID_ENTRY("aggregation: dropping may create Dirichlet");
   SET_VALID_ENTRY("aggregation: distance laplacian algo");
@@ -76,6 +77,7 @@ RCP<const ParameterList> CoalesceDropFactory_kokkos<Scalar, LocalOrdinal, Global
   validParamList->set<RCP<const FactoryBase>>("UnAmalgamationInfo", Teuchos::null, "Generating factory for UnAmalgamationInfo");
   validParamList->set<RCP<const FactoryBase>>("Coordinates", Teuchos::null, "Generating factory for Coordinates");
   validParamList->set<RCP<const FactoryBase>>("BlockNumber", Teuchos::null, "Generating factory for BlockNumber");
+  validParamList->set<RCP<const FactoryBase>>("Material", Teuchos::null, "Generating factory for Material");
 
   return validParamList;
 }
@@ -85,10 +87,13 @@ void CoalesceDropFactory_kokkos<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Decl
   Input(currentLevel, "A");
   Input(currentLevel, "UnAmalgamationInfo");
 
-  const ParameterList& pL = GetParameterList();
-  std::string algo        = pL.get<std::string>("aggregation: drop scheme");
+  const ParameterList& pL    = GetParameterList();
+  std::string algo           = pL.get<std::string>("aggregation: drop scheme");
+  std::string distLaplMetric = pL.get<std::string>("aggregation: distance laplacian metric");
   if (algo == "distance laplacian" || algo == "block diagonal distance laplacian") {
     Input(currentLevel, "Coordinates");
+    if (distLaplMetric == "material")
+      Input(currentLevel, "Material");
   }
   if (algo == "signed classical sa")
     ;
@@ -195,6 +200,7 @@ std::tuple<GlobalOrdinal, typename MueLu::LWGraph_kokkos<LocalOrdinal, GlobalOrd
   const std::string algo               = pL.get<std::string>("aggregation: drop scheme");
   std::string classicalAlgoStr         = pL.get<std::string>("aggregation: classical algo");
   std::string distanceLaplacianAlgoStr = pL.get<std::string>("aggregation: distance laplacian algo");
+  std::string distanceLaplacianMetric  = pL.get<std::string>("aggregation: distance laplacian metric");
   MT threshold;
   // If we're doing the ML-style halving of the drop tol at each level, we do that here.
   if (pL.get<bool>("aggregation: use ml scaling of drop tol"))
@@ -495,11 +501,11 @@ std::tuple<GlobalOrdinal, typename MueLu::LWGraph_kokkos<LocalOrdinal, GlobalOrd
         using doubleMultiVector = Xpetra::MultiVector<typename Teuchos::ScalarTraits<Scalar>::magnitudeType, LO, GO, NO>;
         auto coords             = Get<RCP<doubleMultiVector>>(currentLevel, "Coordinates");
 
-        auto dist2 = DistanceLaplacian::DistanceFunctor(*A, coords);
-
         if (algo == "block diagonal distance laplacian") {
           auto BlockNumbers      = GetBlockNumberMVs(currentLevel);
           auto block_diagonalize = Misc::BlockDiagonalizeFunctor(*A, *std::get<0>(BlockNumbers), *std::get<1>(BlockNumbers), results);
+
+          auto dist2 = DistanceLaplacian::UnweightedDistanceFunctor(*A, coords);
 
           if (distanceLaplacianAlgoStr == "default") {
             auto dist_laplacian_dropping = DistanceLaplacian::DropFunctor(*A, threshold, dist2, results);
@@ -549,39 +555,85 @@ std::tuple<GlobalOrdinal, typename MueLu::LWGraph_kokkos<LocalOrdinal, GlobalOrd
           }
         } else {
           if (distanceLaplacianAlgoStr == "default") {
-            auto dist_laplacian_dropping = DistanceLaplacian::DropFunctor(*A, threshold, dist2, results);
+            if (distanceLaplacianMetric == "unweighted") {
+              auto dist2                   = DistanceLaplacian::UnweightedDistanceFunctor(*A, coords);
+              auto dist_laplacian_dropping = DistanceLaplacian::DropFunctor(*A, threshold, dist2, results);
 
-            if (aggregationMayCreateDirichlet) {
-              runCountingFunctor(dist_laplacian_dropping,
-                                 drop_boundaries,
-                                 preserve_diagonals,
-                                 mark_singletons_as_boundary);
-            } else {
-              runCountingFunctor(dist_laplacian_dropping,
-                                 drop_boundaries,
-                                 preserve_diagonals);
+              if (aggregationMayCreateDirichlet) {
+                runCountingFunctor(dist_laplacian_dropping,
+                                   drop_boundaries,
+                                   preserve_diagonals,
+                                   mark_singletons_as_boundary);
+              } else {
+                runCountingFunctor(dist_laplacian_dropping,
+                                   drop_boundaries,
+                                   preserve_diagonals);
+              }
+            } else if (distanceLaplacianMetric == "material") {
+              auto material = Get<RCP<MultiVector>>(currentLevel, "Material");
+              if (material->getNumVectors() == 1) {
+                auto dist2                   = DistanceLaplacian::ScalarMaterialDistanceFunctor(*A, coords, material);
+                auto dist_laplacian_dropping = DistanceLaplacian::DropFunctor(*A, threshold, dist2, results);
+
+                if (aggregationMayCreateDirichlet) {
+                  runCountingFunctor(dist_laplacian_dropping,
+                                     drop_boundaries,
+                                     preserve_diagonals,
+                                     mark_singletons_as_boundary);
+                } else {
+                  runCountingFunctor(dist_laplacian_dropping,
+                                     drop_boundaries,
+                                     preserve_diagonals);
+                }
+              } else {
+                TEUCHOS_TEST_FOR_EXCEPTION(coords->getNumVectors() * coords->getNumVectors() != material->getNumVectors(), Exceptions::RuntimeError, "Need \"Material\" to have spatialDim^2 vectors.");
+
+                auto dist2                   = DistanceLaplacian::TensorMaterialDistanceFunctor(*A, coords, material);
+                auto dist_laplacian_dropping = DistanceLaplacian::DropFunctor(*A, threshold, dist2, results);
+
+                if (aggregationMayCreateDirichlet) {
+                  runCountingFunctor(dist_laplacian_dropping,
+                                     drop_boundaries,
+                                     preserve_diagonals,
+                                     mark_singletons_as_boundary);
+                } else {
+                  runCountingFunctor(dist_laplacian_dropping,
+                                     drop_boundaries,
+                                     preserve_diagonals);
+                }
+              }
             }
+
           } else if (distanceLaplacianAlgoStr == "unscaled cut") {
-            auto comparison = CutDrop::UnscaledDistanceLaplacianComparison(*A, dist2, results);
-            auto cut_drop   = CutDrop::CutDropFunctor(comparison, threshold);
+            if (distanceLaplacianMetric == "unweighted") {
+              auto dist2      = DistanceLaplacian::UnweightedDistanceFunctor(*A, coords);
+              auto comparison = CutDrop::UnscaledDistanceLaplacianComparison(*A, dist2, results);
+              auto cut_drop   = CutDrop::CutDropFunctor(comparison, threshold);
 
-            runCountingFunctor(drop_boundaries,
-                               preserve_diagonals,
-                               cut_drop);
+              runCountingFunctor(drop_boundaries,
+                                 preserve_diagonals,
+                                 cut_drop);
+            }
           } else if (distanceLaplacianAlgoStr == "scaled cut") {
-            auto comparison = CutDrop::ScaledDistanceLaplacianComparison(*A, dist2, results);
-            auto cut_drop   = CutDrop::CutDropFunctor(comparison, threshold);
+            if (distanceLaplacianMetric == "unweighted") {
+              auto dist2      = DistanceLaplacian::UnweightedDistanceFunctor(*A, coords);
+              auto comparison = CutDrop::ScaledDistanceLaplacianComparison(*A, dist2, results);
+              auto cut_drop   = CutDrop::CutDropFunctor(comparison, threshold);
 
-            runCountingFunctor(drop_boundaries,
-                               preserve_diagonals,
-                               cut_drop);
+              runCountingFunctor(drop_boundaries,
+                                 preserve_diagonals,
+                                 cut_drop);
+            }
           } else if (distanceLaplacianAlgoStr == "scaled cut symmetric") {
-            auto comparison = CutDrop::ScaledDistanceLaplacianComparison(*A, dist2, results);
-            auto cut_drop   = CutDrop::CutDropFunctor(comparison, threshold);
+            if (distanceLaplacianMetric == "unweighted") {
+              auto dist2      = DistanceLaplacian::UnweightedDistanceFunctor(*A, coords);
+              auto comparison = CutDrop::ScaledDistanceLaplacianComparison(*A, dist2, results);
+              auto cut_drop   = CutDrop::CutDropFunctor(comparison, threshold);
 
-            runCountingFunctor(drop_boundaries,
-                               preserve_diagonals,
-                               cut_drop);
+              runCountingFunctor(drop_boundaries,
+                                 preserve_diagonals,
+                                 cut_drop);
+            }
 
             auto symmetrize = Misc::SymmetrizeFunctor(lclA, results);
 
@@ -970,7 +1022,7 @@ std::tuple<GlobalOrdinal, typename MueLu::LWGraph_kokkos<LocalOrdinal, GlobalOrd
         using doubleMultiVector = Xpetra::MultiVector<typename Teuchos::ScalarTraits<Scalar>::magnitudeType, LO, GO, NO>;
         auto coords             = Get<RCP<doubleMultiVector>>(currentLevel, "Coordinates");
 
-        auto dist2 = DistanceLaplacian::DistanceFunctor(*A, coords);
+        auto dist2 = DistanceLaplacian::UnweightedDistanceFunctor(*A, coords);
 
         if (distanceLaplacianAlgoStr == "default") {
           auto dist_laplacian_dropping = DistanceLaplacian::DropFunctor(*A, threshold, dist2, results);

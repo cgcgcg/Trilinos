@@ -326,6 +326,207 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, DistanceLaplacianC
 
 }  // DistanceLaplacianCutScaled
 
+TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, DistanceLaplacianScalarMaterial, Scalar, LocalOrdinal, GlobalOrdinal, Node) {
+#include <MueLu_UseShortNames.hpp>
+  typedef Teuchos::ScalarTraits<SC> STS;
+  typedef typename STS::magnitudeType real_type;
+  typedef Xpetra::MultiVector<real_type, LO, GO, NO> RealValuedMultiVector;
+
+  MUELU_TESTING_SET_OSTREAM;
+  MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
+  out << "version: " << MueLu::Version() << std::endl;
+
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
+
+  Level fineLevel;
+  TestHelpers_kokkos::TestFactory<SC, LO, GO, NO>::createSingleLevelHierarchy(fineLevel);
+
+  RCP<Matrix> A = TestHelpers_kokkos::TestFactory<SC, LO, GO, NO>::Build1DPoisson(36);
+  fineLevel.Set("A", A);
+
+  Teuchos::ParameterList galeriList;
+  galeriList.set("nx", Teuchos::as<GlobalOrdinal>(36));
+  RCP<RealValuedMultiVector> coordinates = Galeri::Xpetra::Utils::CreateCartesianCoordinates<SC, LO, GO, Map, RealValuedMultiVector>("1D", A->getRowMap(), galeriList);
+  fineLevel.Set("Coordinates", coordinates);
+
+  auto material = MultiVectorFactory::Build(A->getRowMap(), 1);
+  material->putScalar(1.0);
+  fineLevel.Set("Material", material);
+
+  CoalesceDropFactory_kokkos coalesceDropFact;
+  coalesceDropFact.SetDefaultVerbLevel(MueLu::Extreme);
+  // We're dropping all the interior off-diagonal entries.
+  // dx = 1/36
+  // L_ij = -36
+  // L_ii = 72
+  // criterion for dropping is |L_ij|^2 <= tol^2 * |L_ii*L_jj|
+  coalesceDropFact.SetParameter("aggregation: drop tol", Teuchos::ParameterEntry(0.51));
+  coalesceDropFact.SetParameter("aggregation: drop scheme", Teuchos::ParameterEntry(std::string("distance laplacian")));
+  coalesceDropFact.SetParameter("aggregation: distance laplacian metric", Teuchos::ParameterEntry(std::string("material")));
+  fineLevel.Request("Graph", &coalesceDropFact);
+  fineLevel.Request("DofsPerNode", &coalesceDropFact);
+
+  coalesceDropFact.Build(fineLevel);
+
+  RCP<LWGraph_kokkos> graph = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &coalesceDropFact);
+  LO myDofsPerNode          = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
+
+  const RCP<const Map> myImportMap = graph->GetImportMap();  // < note that the ImportMap is built from the column map of the matrix A WITHOUT dropping!
+  const RCP<const Map> myDomainMap = graph->GetDomainMap();
+
+  TEST_EQUALITY(myImportMap->getMaxAllGlobalIndex(), 35);
+  TEST_EQUALITY(myImportMap->getMinAllGlobalIndex(), 0);
+  TEST_EQUALITY(myImportMap->getMinLocalIndex(), 0);
+  TEST_EQUALITY(myImportMap->getGlobalNumElements(), Teuchos::as<size_t>(36 + (comm->getSize() - 1) * 2));
+
+  TEST_EQUALITY(myDomainMap->getMaxAllGlobalIndex(), 35);
+  TEST_EQUALITY(myDomainMap->getMinAllGlobalIndex(), 0);
+  TEST_EQUALITY(myDomainMap->getMinLocalIndex(), 0);
+  TEST_EQUALITY(myDomainMap->getGlobalNumElements(), 36);
+
+  TEST_EQUALITY(graph->GetGlobalNumEdges(), 40);
+
+}  // DistanceLaplacianScalarMaterial
+
+template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+using materialTestCase = std::tuple<RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>,
+                                    RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>,
+                                    RCP<Xpetra::MultiVector<typename Teuchos::ScalarTraits<Scalar>::magnitudeType, LocalOrdinal, GlobalOrdinal, Node>>,
+                                    RCP<Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>>;
+
+template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+materialTestCase<Scalar, LocalOrdinal, GlobalOrdinal, Node> constructVariableMaterialMatrix(RCP<const Teuchos::Comm<int>> &comm) {
+#include <MueLu_UseShortNames.hpp>
+  using ATS              = Kokkos::ArithTraits<Scalar>;
+  using impl_scalar_type = typename ATS::val_type;
+  using implATS          = Kokkos::ArithTraits<impl_scalar_type>;
+  using magnitudeType    = typename implATS::magnitudeType;
+
+  RCP<const Map> map = MapFactory::Build(Xpetra::UseTpetra, 27 * comm->getSize(), 0, comm);
+
+  RCP<Matrix> A;
+  {
+    using local_matrix_type              = typename Matrix::local_matrix_type;
+    std::vector<LocalOrdinal> rowptr     = {0, 8, 20, 37, 49, 61, 79, 106, 124, 132, 143, 155, 173, 185, 193, 211, 223, 231, 243, 251, 263, 281, 293, 301, 313, 325, 333, 341};
+    std::vector<LocalOrdinal> indices    = {0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 0, 1, 2, 3, 4, 5, 6, 7, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 18, 19, 20, 21, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 0, 1, 2, 3, 4, 5, 6, 7, 12, 13, 14, 15, 18, 19, 20, 21, 24, 25, 1, 2, 5, 6, 8, 9, 10, 11, 1, 5, 6, 8, 9, 10, 11, 12, 14, 16, 17, 1, 2, 5, 6, 8, 9, 10, 11, 19, 20, 22, 23, 1, 2, 5, 6, 8, 9, 10, 11, 12, 14, 16, 17, 19, 20, 22, 23, 24, 26, 2, 3, 6, 7, 9, 11, 12, 13, 14, 15, 16, 17, 2, 3, 6, 7, 12, 13, 14, 15, 2, 3, 6, 7, 9, 11, 12, 13, 14, 15, 16, 17, 20, 21, 23, 24, 25, 26, 2, 3, 6, 7, 12, 13, 14, 15, 20, 21, 24, 25, 2, 6, 9, 11, 12, 14, 16, 17, 2, 6, 9, 11, 12, 14, 16, 17, 20, 23, 24, 26, 4, 5, 6, 7, 18, 19, 20, 21, 4, 5, 6, 7, 10, 11, 18, 19, 20, 21, 22, 23, 4, 5, 6, 7, 10, 11, 14, 15, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 4, 5, 6, 7, 14, 15, 18, 19, 20, 21, 24, 25, 5, 6, 10, 11, 19, 20, 22, 23, 5, 6, 10, 11, 14, 17, 19, 20, 22, 23, 24, 26, 6, 7, 11, 14, 15, 17, 20, 21, 23, 24, 25, 26, 6, 7, 14, 15, 20, 21, 24, 25, 6, 11, 14, 17, 20, 23, 24, 26};
+    std::vector<impl_scalar_type> values = {42.66666666666667, -4.884981308350689e-15, -10.666666666666664, 4.440892098500626e-16, -7.105427357601002e-15, -10.666666666666668, -10.66666666666666, -10.666666666666664, -4.884981308350689e-15, 85.33333333333334, -1.7763568394002505e-15, -10.666666666666664, -10.666666666666666, -1.3100631690576847e-14, -21.33333333333333, -10.666666666666664, -8.881784197001252e-16, -10.666666666666663, -10.666666666666666, -10.666666666666663, -10.666666666666664, -1.7763568394002505e-15, 170.66666666666666, -7.105427357601002e-15, -10.666666666666663, -21.333333333333332, -2.4452662117369073e-14, -21.333333333333332, -10.666666666666663, -10.666666666666663, -21.33333333333333, -1.021405182655144e-14, -10.666666666666664, -21.333333333333336, -10.666666666666664, -10.666666666666664, -10.666666666666664, 4.440892098500626e-16, -10.666666666666664, -7.105427357601002e-15, 85.33333333333334, -10.666666666666664, -10.666666666666664, -21.333333333333332, -1.0658141036401503e-14, -10.666666666666664, -2.6645352591003757e-15, -10.666666666666664, -10.666666666666666, -7.105427357601002e-15, -10.666666666666666, -10.666666666666663, -10.666666666666664, 43.00000000000001, 6.106226635438361e-16, -10.749999999999995, 8.81239525796218e-16, -2.42861286636753e-17, -0.08333333333333333, -0.08333333333333329, -0.0833333333333333, -10.666666666666668, -1.3100631690576847e-14, -21.333333333333332, -10.666666666666664, 6.106226635438361e-16, 86.0, -2.6662699825763525e-15, -10.75, -10.666666666666666, -10.666666666666663, -9.08995101411847e-16, -10.749999999999996, -0.08333333333333333, -3.469446951953614e-17, -0.16666666666666663, -0.0833333333333333, -0.08333333333333333, -0.08333333333333331, -10.66666666666666, -21.33333333333333, -2.4452662117369073e-14, -21.333333333333332, -10.749999999999995, -2.6662699825763525e-15, 172.00000000000006, -6.6509298068950784e-15, -10.666666666666663, -21.33333333333333, -10.749999999999996, -7.632783294297951e-17, -21.333333333333336, -10.666666666666664, -1.0314665788158095e-14, -10.750000000000002, -10.666666666666663, -10.75, -0.08333333333333329, -0.16666666666666663, -4.683753385137379e-17, -0.16666666666666663, -0.0833333333333333, -0.16666666666666663, -0.16666666666666663, -0.08333333333333331, -0.0833333333333333, -10.666666666666664, -10.666666666666664, -21.333333333333332, -1.0658141036401503e-14, 8.81239525796218e-16, -10.75, -6.6509298068950784e-15, 86.00000000000001, -10.666666666666663, -10.666666666666664, -10.749999999999998, -3.594347042223944e-15, -0.08333333333333331, -0.0833333333333333, -0.16666666666666663, -1.214306433183765e-17, -0.08333333333333329, -0.08333333333333331, -8.881784197001252e-16, -10.666666666666663, -10.666666666666666, -10.666666666666663, 42.66666666666666, -1.7763568394002505e-15, -7.105427357601002e-15, -10.666666666666666, -10.666666666666663, -10.666666666666663, -21.33333333333333, -1.7763568394002505e-15, 85.33333333333334, -10.666666666666666, -1.3378187446733136e-14, -10.666666666666664, -10.666666666666664, -6.217248937900877e-15, -10.666666666666668, -10.666666666666666, -10.666666666666663, -9.08995101411847e-16, -10.749999999999996, -7.105427357601002e-15, -10.666666666666666, 43.000000000000014, -1.824929096727601e-15, -0.08333333333333333, -0.08333333333333331, -2.0816681711721685e-17, -0.08333333333333333, -10.666666666666663, -21.33333333333333, -10.749999999999996, -7.632783294297951e-17, -10.666666666666666, -1.3378187446733136e-14, -1.824929096727601e-15, 86.0, -10.666666666666663, -10.75, -10.666666666666668, -4.9960036108132044e-15, -0.0833333333333333, -0.16666666666666663, -0.08333333333333333, -3.469446951953614e-17, -0.0833333333333333, -0.08333333333333333, -1.021405182655144e-14, -10.666666666666664, -21.333333333333336, -10.666666666666663, -10.666666666666664, -10.666666666666663, 85.33333333333334, -3.552713678800501e-15, -1.0658141036401503e-14, -10.666666666666664, 8.881784197001252e-16, -10.666666666666666, -10.666666666666664, -2.6645352591003757e-15, -10.666666666666664, -10.666666666666664, -3.552713678800501e-15, 42.66666666666667, -10.666666666666664, -3.3306690738754696e-15, -21.333333333333336, -10.666666666666664, -1.0314665788158095e-14, -10.749999999999998, -10.666666666666664, -10.75, -1.0658141036401503e-14, -10.666666666666664, 86.0, -4.4825254619240695e-15, -10.666666666666666, 4.371503159461554e-16, -0.16666666666666666, -0.0833333333333333, -0.0833333333333333, -1.713039432527097e-17, -0.08333333333333333, -0.0833333333333333, -10.666666666666664, -10.666666666666666, -10.750000000000002, -3.594347042223944e-15, -10.666666666666664, -3.3306690738754696e-15, -4.4825254619240695e-15, 43.00000000000001, -0.0833333333333333, -0.08333333333333331, -0.08333333333333333, 6.938893903907228e-18, -10.666666666666664, -10.666666666666663, -6.217248937900877e-15, -10.666666666666668, 8.881784197001252e-16, -10.666666666666666, 42.66666666666667, -6.2727600891321345e-15, -10.666666666666664, -10.75, -10.666666666666668, -4.9960036108132044e-15, -10.666666666666666, 4.371503159461554e-16, -6.2727600891321345e-15, 43.00000000000001, -0.0833333333333333, -0.08333333333333333, -0.0833333333333333, -1.3877787807814457e-17, -2.42861286636753e-17, -0.08333333333333333, -0.08333333333333329, -0.08333333333333331, 0.33333333333333337, -2.0816681711721685e-17, -0.08333333333333331, -1.3877787807814457e-17, -0.08333333333333333, -3.469446951953614e-17, -0.16666666666666663, -0.0833333333333333, -0.08333333333333333, -0.0833333333333333, -2.0816681711721685e-17, 0.6666666666666667, -3.469446951953614e-17, -0.08333333333333334, -2.0816681711721685e-17, -0.08333333333333333, -0.08333333333333329, -0.16666666666666663, -4.683753385137379e-17, -0.16666666666666663, -0.08333333333333331, -0.16666666666666663, -0.16666666666666666, -0.0833333333333333, -0.0833333333333333, -0.08333333333333331, -3.469446951953614e-17, 1.3333333333333335, -5.984795992119984e-17, -0.08333333333333333, -3.165870343657673e-17, -1.0451708942760263e-16, -0.08333333333333334, -0.08333333333333333, -0.0833333333333333, -0.0833333333333333, -0.16666666666666663, -1.214306433183765e-17, -0.0833333333333333, -0.08333333333333331, -1.3877787807814457e-17, -0.08333333333333334, -5.984795992119984e-17, 0.6666666666666667, -0.08333333333333331, -4.85722573273506e-17, -0.08333333333333333, -0.0833333333333333, -2.0816681711721685e-17, -0.08333333333333333, -2.0816681711721685e-17, -0.08333333333333333, 0.33333333333333337, -2.42861286636753e-17, -0.08333333333333331, -0.16666666666666663, -0.08333333333333333, -3.469446951953614e-17, -0.0833333333333333, -0.08333333333333333, -0.08333333333333333, -3.165870343657673e-17, -2.42861286636753e-17, 0.6666666666666669, -0.08333333333333333, -5.2475385148298415e-17, -0.16666666666666663, -0.08333333333333329, -0.0833333333333333, -1.713039432527097e-17, -0.08333333333333333, -0.0833333333333333, -1.0451708942760263e-16, -0.08333333333333331, -0.08333333333333333, 0.6666666666666667, -5.2909066017292616e-17, -3.903127820947816e-18, -0.08333333333333331, -0.08333333333333331, -0.08333333333333333, 6.938893903907228e-18, -0.08333333333333334, -4.85722573273506e-17, -5.2909066017292616e-17, 0.3333333333333334, -0.0833333333333333, -0.08333333333333333, -0.0833333333333333, -1.3877787807814457e-17, -0.08333333333333333, -5.2475385148298415e-17, -3.903127820947816e-18, 0.3333333333333334};
+    local_matrix_type lclMatrix("lclA", 27, 27, 341, values.data(), rowptr.data(), indices.data());
+    A = MatrixFactory::Build(map, map, lclMatrix);
+  }
+
+  RCP<Matrix> droppedA;
+  {
+    using local_matrix_type              = typename Matrix::local_matrix_type;
+    std::vector<LocalOrdinal> rowptr     = {0, 8, 20, 37, 49, 57, 69, 87, 99, 107, 118, 126, 138, 150, 158, 170, 178, 186, 194, 199, 206, 216, 223, 228, 235, 242, 247, 252};
+    std::vector<LocalOrdinal> indices    = {0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 0, 1, 2, 3, 4, 5, 6, 7, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 0, 1, 2, 3, 4, 5, 6, 7, 12, 13, 14, 15, 1, 2, 5, 6, 8, 9, 10, 11, 1, 5, 6, 8, 9, 10, 11, 12, 14, 16, 17, 1, 2, 5, 6, 8, 9, 10, 11, 1, 2, 5, 6, 8, 9, 10, 11, 12, 14, 16, 17, 2, 3, 6, 7, 9, 11, 12, 13, 14, 15, 16, 17, 2, 3, 6, 7, 12, 13, 14, 15, 2, 3, 6, 7, 9, 11, 12, 13, 14, 15, 16, 17, 2, 3, 6, 7, 12, 13, 14, 15, 2, 6, 9, 11, 12, 14, 16, 17, 2, 6, 9, 11, 12, 14, 16, 17, 4, 5, 6, 7, 18, 4, 5, 6, 7, 10, 11, 19, 4, 5, 6, 7, 10, 11, 14, 15, 17, 20, 4, 5, 6, 7, 14, 15, 21, 5, 6, 10, 11, 22, 5, 6, 10, 11, 14, 17, 23, 6, 7, 11, 14, 15, 17, 24, 6, 7, 14, 15, 25, 6, 11, 14, 17, 26};
+    std::vector<impl_scalar_type> values = {42.66666666666667, -4.884981308350689e-15, -10.666666666666664, 4.440892098500626e-16, -7.105427357601002e-15, -10.666666666666668, -10.66666666666666, -10.666666666666664, -4.884981308350689e-15, 85.33333333333334, -1.7763568394002505e-15, -10.666666666666664, -10.666666666666666, -1.3100631690576847e-14, -21.33333333333333, -10.666666666666664, -8.881784197001252e-16, -10.666666666666663, -10.666666666666666, -10.666666666666663, -10.666666666666664, -1.7763568394002505e-15, 170.66666666666666, -7.105427357601002e-15, -10.666666666666663, -21.333333333333332, -2.4452662117369073e-14, -21.333333333333332, -10.666666666666663, -10.666666666666663, -21.33333333333333, -1.021405182655144e-14, -10.666666666666664, -21.333333333333336, -10.666666666666664, -10.666666666666664, -10.666666666666664, 4.440892098500626e-16, -10.666666666666664, -7.105427357601002e-15, 85.33333333333334, -10.666666666666664, -10.666666666666664, -21.333333333333332, -1.0658141036401503e-14, -10.666666666666664, -2.6645352591003757e-15, -10.666666666666664, -10.666666666666666, -7.105427357601002e-15, -10.666666666666666, -10.666666666666663, -10.666666666666664, 43.00000000000001, 6.106226635438361e-16, -10.749999999999995, 8.81239525796218e-16, -10.666666666666668, -1.3100631690576847e-14, -21.333333333333332, -10.666666666666664, 6.106226635438361e-16, 86.0, -2.6662699825763525e-15, -10.75, -10.666666666666666, -10.666666666666663, -9.08995101411847e-16, -10.749999999999996, -10.66666666666666, -21.33333333333333, -2.4452662117369073e-14, -21.333333333333332, -10.749999999999995, -2.6662699825763525e-15, 172.00000000000006, -6.6509298068950784e-15, -10.666666666666663, -21.33333333333333, -10.749999999999996, -7.632783294297951e-17, -21.333333333333336, -10.666666666666664, -1.0314665788158095e-14, -10.750000000000002, -10.666666666666663, -10.75, -10.666666666666664, -10.666666666666664, -21.333333333333332, -1.0658141036401503e-14, 8.81239525796218e-16, -10.75, -6.6509298068950784e-15, 86.00000000000001, -10.666666666666663, -10.666666666666664, -10.749999999999998, -3.594347042223944e-15, -8.881784197001252e-16, -10.666666666666663, -10.666666666666666, -10.666666666666663, 42.66666666666666, -1.7763568394002505e-15, -7.105427357601002e-15, -10.666666666666666, -10.666666666666663, -10.666666666666663, -21.33333333333333, -1.7763568394002505e-15, 85.33333333333334, -10.666666666666666, -1.3378187446733136e-14, -10.666666666666664, -10.666666666666664, -6.217248937900877e-15, -10.666666666666668, -10.666666666666666, -10.666666666666663, -9.08995101411847e-16, -10.749999999999996, -7.105427357601002e-15, -10.666666666666666, 43.000000000000014, -1.824929096727601e-15, -10.666666666666663, -21.33333333333333, -10.749999999999996, -7.632783294297951e-17, -10.666666666666666, -1.3378187446733136e-14, -1.824929096727601e-15, 86.0, -10.666666666666663, -10.75, -10.666666666666668, -4.9960036108132044e-15, -1.021405182655144e-14, -10.666666666666664, -21.333333333333336, -10.666666666666663, -10.666666666666664, -10.666666666666663, 85.33333333333334, -3.552713678800501e-15, -1.0658141036401503e-14, -10.666666666666664, 8.881784197001252e-16, -10.666666666666666, -10.666666666666664, -2.6645352591003757e-15, -10.666666666666664, -10.666666666666664, -3.552713678800501e-15, 42.66666666666667, -10.666666666666664, -3.3306690738754696e-15, -21.333333333333336, -10.666666666666664, -1.0314665788158095e-14, -10.749999999999998, -10.666666666666664, -10.75, -1.0658141036401503e-14, -10.666666666666664, 86.0, -4.4825254619240695e-15, -10.666666666666666, 4.371503159461554e-16, -10.666666666666664, -10.666666666666666, -10.750000000000002, -3.594347042223944e-15, -10.666666666666664, -3.3306690738754696e-15, -4.4825254619240695e-15, 43.00000000000001, -10.666666666666664, -10.666666666666663, -6.217248937900877e-15, -10.666666666666668, 8.881784197001252e-16, -10.666666666666666, 42.66666666666667, -6.2727600891321345e-15, -10.666666666666664, -10.75, -10.666666666666668, -4.9960036108132044e-15, -10.666666666666666, 4.371503159461554e-16, -6.2727600891321345e-15, 43.00000000000001, -2.42861286636753e-17, -0.08333333333333333, -0.08333333333333329, -0.08333333333333331, 0.33333333333333337, -0.08333333333333333, -3.469446951953614e-17, -0.16666666666666663, -0.0833333333333333, -0.08333333333333333, -0.0833333333333333, 0.6666666666666667, -0.08333333333333329, -0.16666666666666663, -4.683753385137379e-17, -0.16666666666666663, -0.08333333333333331, -0.16666666666666663, -0.16666666666666666, -0.0833333333333333, -0.0833333333333333, 1.3333333333333335, -0.0833333333333333, -0.0833333333333333, -0.16666666666666663, -1.214306433183765e-17, -0.0833333333333333, -0.08333333333333331, 0.6666666666666667, -0.08333333333333333, -0.0833333333333333, -2.0816681711721685e-17, -0.08333333333333333, 0.33333333333333337, -0.08333333333333331, -0.16666666666666663, -0.08333333333333333, -3.469446951953614e-17, -0.0833333333333333, -0.08333333333333333, 0.6666666666666669, -0.16666666666666663, -0.08333333333333329, -0.0833333333333333, -1.713039432527097e-17, -0.08333333333333333, -0.0833333333333333, 0.6666666666666667, -0.08333333333333331, -0.08333333333333331, -0.08333333333333333, 6.938893903907228e-18, 0.3333333333333334, -0.0833333333333333, -0.08333333333333333, -0.0833333333333333, -1.3877787807814457e-17, 0.3333333333333334};
+    local_matrix_type lclMatrix("lclA", 27, 27, 252, values.data(), rowptr.data(), indices.data());
+    droppedA = MatrixFactory::Build(map, map, lclMatrix);
+  }
+
+  auto coords = Xpetra::MultiVectorFactory<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>::Build(map, 3);
+  {
+    magnitudeType data[27][3] = {{0.0, 0.0, 2.0}, {0.0, 0.0, 1.0}, {0.0, 1.0, 1.0}, {0.0, 1.0, 2.0}, {1.0, 0.0, 2.0}, {1.0, 0.0, 1.0}, {1.0, 1.0, 1.0}, {1.0, 1.0, 2.0}, {0.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {1.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {0.0, 2.0, 1.0}, {0.0, 2.0, 2.0}, {1.0, 2.0, 1.0}, {1.0, 2.0, 2.0}, {0.0, 2.0, 0.0}, {1.0, 2.0, 0.0}, {2.0, 0.0, 2.0}, {2.0, 0.0, 1.0}, {2.0, 1.0, 1.0}, {2.0, 1.0, 2.0}, {2.0, 0.0, 0.0}, {2.0, 1.0, 0.0}, {2.0, 2.0, 1.0}, {2.0, 2.0, 2.0}, {2.0, 2.0, 0.0}};
+    Kokkos::View<magnitudeType **, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> kv(&data[0][0], 27, 3);
+    auto lclMV = coords->getHostLocalView(Xpetra::Access::OverwriteAll);
+    Kokkos::deep_copy(lclMV, kv);
+  }
+
+  auto material = MultiVectorFactory::Build(map, 9);
+  {
+    impl_scalar_type data[27][9] = {{128.0, 0.0, 0.0, 0.0, 128.0, 0.0, 0.0, 0.0, 128.0}, {128.0, 0.0, 0.0, 0.0, 128.0, 0.0, 0.0, 0.0, 128.0}, {128.0, 0.0, 0.0, 0.0, 128.0, 0.0, 0.0, 0.0, 128.0}, {128.0, 0.0, 0.0, 0.0, 128.0, 0.0, 0.0, 0.0, 128.0}, {64.5, 0.0, 0.0, 0.0, 64.5, 0.0, 0.0, 0.0, 64.5}, {64.5, 0.0, 0.0, 0.0, 64.5, 0.0, 0.0, 0.0, 64.5}, {64.5, 0.0, 0.0, 0.0, 64.5, 0.0, 0.0, 0.0, 64.5}, {64.5, 0.0, 0.0, 0.0, 64.5, 0.0, 0.0, 0.0, 64.5}, {128.0, 0.0, 0.0, 0.0, 128.0, 0.0, 0.0, 0.0, 128.0}, {128.0, 0.0, 0.0, 0.0, 128.0, 0.0, 0.0, 0.0, 128.0}, {64.5, 0.0, 0.0, 0.0, 64.5, 0.0, 0.0, 0.0, 64.5}, {64.5, 0.0, 0.0, 0.0, 64.5, 0.0, 0.0, 0.0, 64.5}, {128.0, 0.0, 0.0, 0.0, 128.0, 0.0, 0.0, 0.0, 128.0}, {128.0, 0.0, 0.0, 0.0, 128.0, 0.0, 0.0, 0.0, 128.0}, {64.5, 0.0, 0.0, 0.0, 64.5, 0.0, 0.0, 0.0, 64.5}, {64.5, 0.0, 0.0, 0.0, 64.5, 0.0, 0.0, 0.0, 64.5}, {128.0, 0.0, 0.0, 0.0, 128.0, 0.0, 0.0, 0.0, 128.0}, {64.5, 0.0, 0.0, 0.0, 64.5, 0.0, 0.0, 0.0, 64.5}, {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0}, {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0}, {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0}, {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0}, {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0}, {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0}, {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0}, {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0}, {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0}};
+    Kokkos::View<impl_scalar_type **, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> kv(&data[0][0], 27, 9);
+    auto lclMV = material->getHostLocalView(Xpetra::Access::OverwriteAll);
+    Kokkos::deep_copy(lclMV, kv);
+  }
+  return std::make_tuple(A, droppedA, coords, material);
+}
+
+TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, DistanceLaplacianTensorMaterial, Scalar, LocalOrdinal, GlobalOrdinal, Node) {
+#include <MueLu_UseShortNames.hpp>
+  typedef Teuchos::ScalarTraits<SC> STS;
+  typedef typename STS::magnitudeType real_type;
+  typedef Xpetra::MultiVector<real_type, LO, GO, NO> RealValuedMultiVector;
+
+  MUELU_TESTING_SET_OSTREAM;
+  MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
+  out << "version: " << MueLu::Version() << std::endl;
+
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
+
+  RCP<Matrix> A, expectedFilteredA;
+  RCP<RealValuedMultiVector> coordinates;
+  RCP<MultiVector> material;
+  {
+    auto testCase     = constructVariableMaterialMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>(comm);
+    A                 = std::get<0>(testCase);
+    expectedFilteredA = std::get<1>(testCase);
+    coordinates       = std::get<2>(testCase);
+    material          = std::get<3>(testCase);
+  }
+
+  RCP<Matrix> filteredA;
+  {
+    Level fineLevel;
+    TestHelpers_kokkos::TestFactory<SC, LO, GO, NO>::createSingleLevelHierarchy(fineLevel);
+    fineLevel.Set("A", A);
+    fineLevel.Set("Coordinates", coordinates);
+    fineLevel.Set("Material", material);
+
+    CoalesceDropFactory_kokkos coalesceDropFact;
+    coalesceDropFact.SetDefaultVerbLevel(MueLu::Extreme);
+    coalesceDropFact.SetParameter("aggregation: drop tol", Teuchos::ParameterEntry(0.02));
+    coalesceDropFact.SetParameter("aggregation: drop scheme", Teuchos::ParameterEntry(std::string("distance laplacian")));
+    coalesceDropFact.SetParameter("aggregation: distance laplacian metric", Teuchos::ParameterEntry(std::string("material")));
+    coalesceDropFact.SetParameter("filtered matrix: reuse graph", Teuchos::ParameterEntry(false));
+    coalesceDropFact.SetParameter("filtered matrix: use lumping", Teuchos::ParameterEntry(false));
+    fineLevel.Request("Graph", &coalesceDropFact);
+    fineLevel.Request("A", &coalesceDropFact);
+    fineLevel.Request("DofsPerNode", &coalesceDropFact);
+
+    coalesceDropFact.Build(fineLevel);
+
+    // RCP<LWGraph_kokkos> graph = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &coalesceDropFact);
+    filteredA = fineLevel.Get<RCP<Matrix>>("A", &coalesceDropFact);
+  }
+
+  using TF = TestHelpers_kokkos::TestFactory<SC, LO, GO, NO>;
+  {
+    auto lclA                 = A->getLocalMatrixHost();
+    auto lclFilteredA         = filteredA->getLocalMatrixHost();
+    auto lclExpectedFilteredA = expectedFilteredA->getLocalMatrixHost();
+
+    out << "A:\n"
+        << TF::localMatToString(lclA);
+
+    out << "\nFiltered A:\n"
+        << TF::localMatToString(lclFilteredA);
+
+    out << "\nExpected A:\n"
+        << TF::localMatToString(lclExpectedFilteredA) << std::endl;
+
+    TEST_EQUALITY(lclFilteredA.graph.row_map.extent(0), lclExpectedFilteredA.graph.row_map.extent(0));
+    TEST_EQUALITY(lclFilteredA.graph.entries.extent(0), lclExpectedFilteredA.graph.entries.extent(0));
+
+    for (size_t row = 0; row < std::min(lclFilteredA.graph.row_map.extent(0) - 1,
+                                        lclExpectedFilteredA.graph.row_map.extent(0) - 1);
+         ++row) {
+      out << std::endl;
+      TEST_EQUALITY(lclFilteredA.graph.row_map(row), lclExpectedFilteredA.graph.row_map(row));
+      TEST_EQUALITY(lclFilteredA.graph.row_map(row + 1) - lclFilteredA.graph.row_map(row), lclExpectedFilteredA.graph.row_map(row + 1) - lclExpectedFilteredA.graph.row_map(row));
+
+      for (size_t entry = 0; entry < std::min(lclFilteredA.graph.row_map(row + 1) - lclFilteredA.graph.row_map(row), lclExpectedFilteredA.graph.row_map(row + 1) - lclExpectedFilteredA.graph.row_map(row)); ++entry) {
+        auto offset         = lclFilteredA.graph.row_map(row);
+        auto offsetExpected = lclExpectedFilteredA.graph.row_map(row);
+        TEST_EQUALITY(lclFilteredA.graph.entries(offset + entry), lclExpectedFilteredA.graph.entries(offsetExpected + entry));
+        TEST_EQUALITY(lclFilteredA.values(offset + entry), lclExpectedFilteredA.values(offsetExpected + entry));
+      }
+    }
+  }
+
+}  // DistanceLaplacianTensorMaterial
+
 TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, ClassicalScaledCut, Scalar, LocalOrdinal, GlobalOrdinal, Node) {
 #include <MueLu_UseShortNames.hpp>
   typedef Teuchos::ScalarTraits<SC> STS;
@@ -2225,6 +2426,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, 2x2, Scalar, Local
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(CoalesceDropFactory_kokkos, DistanceLaplacianScaledCut, SC, LO, GO, NO)             \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(CoalesceDropFactory_kokkos, DistanceLaplacianUnscaledCut, SC, LO, GO, NO)           \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(CoalesceDropFactory_kokkos, DistanceLaplacianCutSym, SC, LO, GO, NO)                \
+  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(CoalesceDropFactory_kokkos, DistanceLaplacianScalarMaterial, SC, LO, GO, NO)        \
+  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(CoalesceDropFactory_kokkos, DistanceLaplacianTensorMaterial, SC, LO, GO, NO)        \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(CoalesceDropFactory_kokkos, ClassicalScaledCut, SC, LO, GO, NO)                     \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(CoalesceDropFactory_kokkos, ClassicalUnScaledCut, SC, LO, GO, NO)                   \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(CoalesceDropFactory_kokkos, ClassicalCutSym, SC, LO, GO, NO)                        \
