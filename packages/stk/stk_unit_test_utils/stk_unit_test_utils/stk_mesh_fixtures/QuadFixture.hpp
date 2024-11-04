@@ -39,7 +39,7 @@
 #include <memory>
 #include <ostream>                      // for basic_ostream::operator<<
 #include <stk_mesh/base/BulkData.hpp>   // for BulkData
-#include <stk_mesh/base/LegacyCoordinateSystems.hpp>  // for Cartesian
+#include <stk_mesh/base/CoordinateSystems.hpp>  // for Cartesian
 #include <stk_mesh/base/Field.hpp>      // for Field
 #include <stk_mesh/base/MetaData.hpp>   // for MetaData
 #include <stk_mesh/base/Types.hpp>      // for EntityId
@@ -67,7 +67,7 @@ class QuadFixture
 {
 public:
   typedef double Scalar;
-  typedef Field<Scalar, legacy::Cartesian> CoordFieldType;
+  typedef Field<Scalar> CoordFieldType;
 
   /**
    * Set up meta data to support this fixture. Meta data is left uncommitted
@@ -89,7 +89,7 @@ public:
   const unsigned                m_spatial_dimension;
 
 private:
-  std::shared_ptr<BulkData> m_bulk_p;
+  std::shared_ptr<BulkData>     m_bulk_p;
 
 public:
   MetaData &                    m_meta;
@@ -97,7 +97,7 @@ public:
   Part &                        m_quad_part;
   PartVector                    m_elem_parts;
   PartVector                    m_node_parts;
-  CoordFieldType &              m_coord_field;
+  CoordFieldType *              m_coord_field;
   const unsigned                m_nx;
   const unsigned                m_ny;
   const size_t                  m_node_id_start = 1;
@@ -181,7 +181,7 @@ class Quad9Fixture
 {
 public:
   typedef double Scalar;
-  typedef Field<Scalar, legacy::Cartesian> CoordFieldType;
+  typedef Field<Scalar> CoordFieldType;
 
   /**
    * Set up meta data to support this fixture. Meta data is left uncommitted
@@ -211,7 +211,7 @@ public:
   Part &                        m_quad_part;
   PartVector                    m_elem_parts;
   PartVector                    m_node_parts;
-  CoordFieldType &              m_coord_field;
+  CoordFieldType *              m_coord_field;
   const unsigned                m_nx;
   const unsigned                m_ny;
   const size_t                  m_node_id_start = 1;
@@ -417,9 +417,12 @@ public:
   void fill_node_map( int proc_rank);
 };
 
-using Quad4Fixture = QuadFixture;
+using
+Quad4Fixture
+STK_DEPRECATED_MSG("Please use the non-simple_fields-namespaced version of this class instead") = QuadFixture;
 
-class Quad9Fixture
+class STK_DEPRECATED_MSG("Please use the non-simple_fields-namespaced version of this class instead")
+Quad9Fixture
 {
 public:
   typedef double Scalar;

@@ -1,48 +1,12 @@
 // @HEADER
-//
-// ***********************************************************************
-//
+// *****************************************************************************
 //        MueLu: A package for multigrid based preconditioning
-//                  Copyright 2012 Sandia Corporation
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
-// the U.S. Government retains certain rights in this software.
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
-//
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact
-//                    Jonathan Hu       (jhu@sandia.gov)
-//                    Andrey Prokopenko (aprokop@sandia.gov)
-//                    Ray Tuminaro      (rstumin@sandia.gov)
-//
-// ***********************************************************************
-//
+// Copyright 2012 NTESS and the MueLu contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+// *****************************************************************************
 // @HEADER
+
 #ifndef MUELU_IFPACK2SMOOTHER_DEF_HPP
 #define MUELU_IFPACK2SMOOTHER_DEF_HPP
 
@@ -586,6 +550,14 @@ void Ifpack2Smoother<Scalar, LocalOrdinal, GlobalOrdinal, Node>::SetupLineSmooth
       myparamList.set("partitioner: map", TVertLineIdSmoo);
       myparamList.set("partitioner: local parts", maxPart + 1);
     } else {
+      if (myparamList.isParameter("partitioner: block size") &&
+          myparamList.get<int>("partitioner: block size") != -1) {
+        int block_size = myparamList.get<int>("partitioner: block size");
+        TEUCHOS_TEST_FOR_EXCEPTION(numLocalRows % block_size != 0, Exceptions::RuntimeError,
+                                   "MueLu::Ifpack2Smoother::Setup(): the number of local nodes is incompatible with the specified block size.");
+        numLocalRows /= block_size;
+      }
+
       // we assume a constant number of DOFs per node
       size_t numDofsPerNode = numLocalRows / TVertLineIdSmoo.size();
 
@@ -717,14 +689,14 @@ void Ifpack2Smoother<Scalar, LocalOrdinal, GlobalOrdinal, Node>::SetupChebyshev(
     prec_ = Ifpack2::Factory::create(type_, tA, overlap_);
     SetPrecParameters();
     {
-      SubFactoryMonitor(*this, "Preconditioner init", currentLevel);
+      SubFactoryMonitor m(*this, "Preconditioner init", currentLevel);
       prec_->initialize();
     }
   } else
     SetPrecParameters();
 
   {
-    SubFactoryMonitor(*this, "Preconditioner compute", currentLevel);
+    SubFactoryMonitor m(*this, "Preconditioner compute", currentLevel);
     prec_->compute();
   }
 
@@ -782,7 +754,7 @@ void Ifpack2Smoother<Scalar, LocalOrdinal, GlobalOrdinal, Node>::SetupHiptmair(L
   }
   if (smoother2 == "CHEBYSHEV") {
     ParameterList& list2 = paramList.sublist("hiptmair: smoother list 2");
-    SetupChebyshevEigenvalues(currentLevel, "A", "EdgeMatrix ", list2);
+    SetupChebyshevEigenvalues(currentLevel, "NodeMatrix", "NodeMatrix ", list2);
   }
 
   // FIXME: Should really add some checks to make sure the eigenvalue calcs worked like in
@@ -830,9 +802,10 @@ template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 Scalar Ifpack2Smoother<Scalar, LocalOrdinal, GlobalOrdinal, Node>::SetupChebyshevEigenvalues(Level& currentLevel, const std::string& matrixName, const std::string& label, ParameterList& paramList) const {
   // Helper: This gets used for smoothers that want to set up Chebyhev
   typedef Teuchos::ScalarTraits<SC> STS;
-  SC negone                  = -STS::one();
-  RCP<const Matrix> currentA = currentLevel.Get<RCP<Matrix>>(matrixName);
-  SC lambdaMax               = negone;
+  SC negone              = -STS::one();
+  RCP<Operator> currentA = currentLevel.Get<RCP<Operator>>(matrixName);
+  RCP<Matrix> matA       = rcp_dynamic_cast<Matrix>(currentA);
+  SC lambdaMax           = negone;
 
   std::string maxEigString   = "chebyshev: max eigenvalue";
   std::string eigRatioString = "chebyshev: ratio eigenvalue";
@@ -844,12 +817,11 @@ Scalar Ifpack2Smoother<Scalar, LocalOrdinal, GlobalOrdinal, Node>::SetupChebyshe
     else
       lambdaMax = paramList.get<SC>(maxEigString);
     this->GetOStream(Statistics1) << label << maxEigString << " (cached with smoother parameter list) = " << lambdaMax << std::endl;
-    RCP<Matrix> matA = rcp_dynamic_cast<Matrix>(A_);
     if (!matA.is_null())
       matA->SetMaxEigenvalueEstimate(lambdaMax);
 
-  } else {
-    lambdaMax = currentA->GetMaxEigenvalueEstimate();
+  } else if (!matA.is_null()) {
+    lambdaMax = matA->GetMaxEigenvalueEstimate();
     if (lambdaMax != negone) {
       this->GetOStream(Statistics1) << label << maxEigString << " (cached with matrix) = " << lambdaMax << std::endl;
       paramList.set(maxEigString, lambdaMax);
@@ -871,11 +843,11 @@ Scalar Ifpack2Smoother<Scalar, LocalOrdinal, GlobalOrdinal, Node>::SetupChebyshe
     //   ratio = max(number of fine DOFs / number of coarse DOFs, defaultValue)
     //
     // NOTE: We don't need to request previous level matrix as we know for sure it was constructed
-    RCP<const Matrix> fineA = currentLevel.GetPreviousLevel()->Get<RCP<Matrix>>(matrixName);
-    size_t nRowsFine        = fineA->getGlobalNumRows();
-    size_t nRowsCoarse      = currentA->getGlobalNumRows();
+    RCP<const Operator> fineA = currentLevel.GetPreviousLevel()->Get<RCP<Operator>>(matrixName);
+    size_t nRowsFine          = fineA->getDomainMap()->getGlobalNumElements();
+    size_t nRowsCoarse        = currentA->getDomainMap()->getGlobalNumElements();
 
-    SC levelRatio = as<SC>(as<float>(nRowsFine) / nRowsCoarse);
+    SC levelRatio = as<SC>(as<double>(nRowsFine) / nRowsCoarse);
     if (STS::magnitude(levelRatio) > STS::magnitude(ratio))
       ratio = levelRatio;
   }
@@ -913,8 +885,9 @@ Scalar Ifpack2Smoother<Scalar, LocalOrdinal, GlobalOrdinal, Node>::SetupChebyshe
       paramList.remove(paramName);
     }
     if (doScale) {
+      TEUCHOS_ASSERT(!matA.is_null());
       const bool doReciprocal                                                       = true;
-      RCP<Vector> lumpedDiagonal                                                    = Utilities::GetLumpedMatrixDiagonal(*currentA, doReciprocal, chebyReplaceTol, chebyReplaceVal, chebyReplaceSingleEntryRowWithZero, useAverageAbsDiagVal);
+      RCP<Vector> lumpedDiagonal                                                    = Utilities::GetLumpedMatrixDiagonal(*matA, doReciprocal, chebyReplaceTol, chebyReplaceVal, chebyReplaceSingleEntryRowWithZero, useAverageAbsDiagVal);
       const Xpetra::TpetraVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>& tmpVec = dynamic_cast<const Xpetra::TpetraVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>&>(*lumpedDiagonal);
       paramList.set("chebyshev: operator inv diagonal", tmpVec.getTpetra_Vector());
     }

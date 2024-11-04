@@ -52,12 +52,12 @@
 #include "Ioss_GroupingEntity.h"            // for GroupingEntity
 #include "SidesetTranslator.hpp"            // for fill_element_and_side_ids
 #include "stk_io/OutputParams.hpp"          // for OutputParams
-#include "stk_mesh/base/BulkData.hpp"       // for BulkData
 #include "stk_mesh/base/FieldState.hpp"     // for FieldState
 #include "stk_mesh/base/Part.hpp"           // for Part
 #include "stk_topology/topology.hpp"        // for topology
 #include "stk_util/util/ParameterList.hpp"  // for Type
 #include "stk_util/util/ReportHandler.hpp"  // for ThrowRequireMsg
+#include "Ioss_SideBlock.h"                         // for SideBlock
 namespace Ioss { class DatabaseIO; }
 namespace Ioss { class ElementTopology; }
 namespace Ioss { class EntityBlock; }
@@ -76,7 +76,6 @@ namespace stk { namespace mesh { class Part; } }
 
 namespace Ioss {
 class SideSet;
-class SideBlock;
 class NodeBlock;
 class Field;
 class GroupingEntity;
@@ -642,6 +641,11 @@ const stk::mesh::Part* get_parent_element_block(const stk::mesh::BulkData &bulk,
                                                 const Ioss::Region &ioRegion,
                                                 const std::string& name);
 
+int64_t get_side_offset(const Ioss::ElementTopology* sideTopo,
+                        const Ioss::ElementTopology* parentTopo);
+
+int64_t get_side_offset(const Ioss::SideBlock* sb);
+
 template <typename INT>
 void fill_data_for_side_block( OutputParams &params,
                                Ioss::GroupingEntity & io ,
@@ -660,7 +664,14 @@ void fill_data_for_side_block( OutputParams &params,
         parentElementBlock = get_parent_element_block(params.bulk_data(), params.io_region(), io.name());
     }
 
-    fill_element_and_side_ids(params, part, parentElementBlock, stk_elem_topology, sides, elem_side_ids);
+    // An offset required to translate Ioss's interpretation of shell ordinals 
+    INT sideOrdOffset = 0;
+    if(io.type() == Ioss::SIDEBLOCK) {
+      Ioss::SideBlock* sb = dynamic_cast<Ioss::SideBlock*>(&io);
+      sideOrdOffset = get_side_offset(sb);
+    }
+    
+    fill_element_and_side_ids(params, part, parentElementBlock, stk_elem_topology, sides, elem_side_ids, sideOrdOffset);
 }
 
 namespace impl {
@@ -668,8 +679,7 @@ namespace impl {
 const stk::mesh::FieldBase *declare_stk_field_internal(stk::mesh::MetaData &meta,
                                                        stk::mesh::EntityRank type,
                                                        stk::mesh::Part &part,
-                                                       const Ioss::Field &io_field,
-                                                       bool use_cartesian_for_scalar);
+                                                       const Ioss::Field &io_field);
 }//namespace impl
 
 }//namespace io

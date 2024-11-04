@@ -1,48 +1,12 @@
 // @HEADER
-//
-// ***********************************************************************
-//
+// *****************************************************************************
 //             Xpetra: A linear algebra interface package
-//                  Copyright 2012 Sandia Corporation
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
-// the U.S. Government retains certain rights in this software.
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
-//
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact
-//                    Jonathan Hu       (jhu@sandia.gov)
-//                    Andrey Prokopenko (aprokop@sandia.gov)
-//                    Ray Tuminaro      (rstumin@sandia.gov)
-//
-// ***********************************************************************
-//
+// Copyright 2012 NTESS and the Xpetra contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+// *****************************************************************************
 // @HEADER
+
 #ifndef XPETRA_TPETRACRSGRAPH_DEF_HPP
 #define XPETRA_TPETRACRSGRAPH_DEF_HPP
 #include "Xpetra_TpetraConfigDefs.hpp"
@@ -380,6 +344,11 @@ typename Xpetra::CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::local_graph_type::
 template <class LocalOrdinal, class GlobalOrdinal, class Node>
 typename Xpetra::CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::local_graph_type TpetraCrsGraph<LocalOrdinal, GlobalOrdinal, Node>::getLocalGraphDevice() const {
   return getTpetra_CrsGraph()->getLocalGraphDevice();
+}
+
+template <class LocalOrdinal, class GlobalOrdinal, class Node>
+void TpetraCrsGraph<LocalOrdinal, GlobalOrdinal, Node>::getLocalDiagOffsets(const Kokkos::View<size_t *, typename Node::device_type, Kokkos::MemoryUnmanaged> &offsets) const {
+  getTpetra_CrsGraph()->getLocalDiagOffsets(offsets);
 }
 
 template <class LocalOrdinal, class GlobalOrdinal, class Node>
@@ -1095,6 +1064,11 @@ class TpetraCrsGraph<int, long long, EpetraNode>
     TEUCHOS_TEST_FOR_EXCEPTION(true, Xpetra::Exceptions::RuntimeError,
                                "Epetra does not support Kokkos::StaticCrsGraph!");
     TEUCHOS_UNREACHABLE_RETURN((local_graph_type()));
+  }
+
+  void getLocalDiagOffsets(const Kokkos::View<size_t *, typename Node::device_type, Kokkos::MemoryUnmanaged> &offsets) const {
+    TEUCHOS_TEST_FOR_EXCEPTION(true, Xpetra::Exceptions::RuntimeError,
+                               "Epetra does not support getLocalDiagOffsets!");
   }
 
   typename local_graph_type::HostMirror getLocalGraphHost() const {

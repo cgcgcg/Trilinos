@@ -1,3 +1,12 @@
+// @HEADER
+// *****************************************************************************
+//          Tpetra: Templated Linear Algebra Services Package
+//
+// Copyright 2008 NTESS and the Tpetra contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+// *****************************************************************************
+// @HEADER
+
 #ifndef TPETRA_KOKKOSCOMPAT_CLASSICNODEAPI_WRAPPER_HPP
 #define TPETRA_KOKKOSCOMPAT_CLASSICNODEAPI_WRAPPER_HPP
 
@@ -51,14 +60,8 @@ public:
   static constexpr bool is_serial = false;
 #endif
 
-  //! Whether the ExecutionSpace is CPU-like (its default memory space is HostSpace or HBWSpace)
-#ifdef KOKKOS_HBWSPACE_HPP
-  static constexpr bool is_cpu =
-    std::is_same_v<typename ExecutionSpace::memory_space, Kokkos::HostSpace> ||
-    std::is_same_v<typename ExecutionSpace::memory_space, Kokkos::Experimental::HBWSpace>;
-#else
   static constexpr bool is_cpu = std::is_same_v<typename ExecutionSpace::memory_space, Kokkos::HostSpace>;
-#endif
+
   //! Whether the ExecutionSpace is GPU-like (its default memory space is not HostSpace)
   static constexpr bool is_gpu = !is_cpu;
 

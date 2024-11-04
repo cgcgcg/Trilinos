@@ -38,7 +38,7 @@
 #include <stddef.h>                     // for size_t, NULL
 #include <map>                          // for multimap, etc
 #include <stk_mesh/base/BulkData.hpp>   // for BulkData, etc
-#include <stk_mesh/base/LegacyCoordinateSystems.hpp>  // for Cartesian
+#include <stk_mesh/base/CoordinateSystems.hpp>  // for Cartesian
 #include <stk_mesh/base/Field.hpp>      // for Field
 #include <stk_mesh/base/MetaData.hpp>   // for MetaData
 #include <stk_mesh/base/Types.hpp>      // for EntityId, PartVector
@@ -65,8 +65,9 @@ namespace fixtures {
 class PyramidFixture
 {
 public:
-  typedef double                   Scalar;
-  typedef Field<Scalar, legacy::Cartesian> CoordFieldType;
+  static std::string name() { return "PyramidFixture"; }
+  typedef double        Scalar;
+  typedef Field<Scalar> CoordFieldType;
 
   /**
    * Set up meta data to support this fixture. Meta data is left uncommitted
@@ -119,7 +120,7 @@ public:
   BulkData&         m_bulk_data;
   PartVector        m_elem_parts;
   PartVector        m_node_parts;
-  CoordFieldType &  m_coord_field ;
+  CoordFieldType *  m_coord_field ;
   bool              owns_mesh = true;
   stk::topology     m_elem_topology = stk::topology::PYRAMID_5;
   stk::topology     m_face_topology = stk::topology::QUAD_4;
@@ -198,7 +199,8 @@ namespace simple_fields {
  * A coordinate field will be added to all nodes, a coordinate-gather field
  * will be added to all elements.
  */
-class PyramidFixture
+class STK_DEPRECATED_MSG("Please use the non-simple_fields-namespaced version of this class instead")
+PyramidFixture
 {
 public:
   static std::string name() { return "PyramidFixture"; }

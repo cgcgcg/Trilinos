@@ -1,48 +1,12 @@
 // @HEADER
-//
-// ***********************************************************************
-//
+// *****************************************************************************
 //        MueLu: A package for multigrid based preconditioning
-//                  Copyright 2012 Sandia Corporation
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
-// the U.S. Government retains certain rights in this software.
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
-//
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact
-//                    Jonathan Hu       (jhu@sandia.gov)
-//                    Andrey Prokopenko (aprokop@sandia.gov)
-//                    Ray Tuminaro      (rstumin@sandia.gov)
-//
-// ***********************************************************************
-//
+// Copyright 2012 NTESS and the MueLu contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+// *****************************************************************************
 // @HEADER
+
 #ifndef MUELU_INTERFACEAGGREGATIONFACTORY_DEF_HPP_
 #define MUELU_INTERFACEAGGREGATIONFACTORY_DEF_HPP_
 
@@ -248,7 +212,6 @@ void InterfaceAggregationFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Bui
     primalInterfaceDofRowMap = Get<RCP<const Map>>(currentLevel, "Primal interface DOF map");
   }
   TEUCHOS_ASSERT(!primalInterfaceDofRowMap.is_null());
-
   if (A01->IsView("stridedMaps") && rcp_dynamic_cast<const StridedMap>(A01->getRowMap("stridedMaps")) != Teuchos::null) {
     auto stridedRowMap   = rcp_dynamic_cast<const StridedMap>(A01->getRowMap("stridedMaps"));
     auto stridedColMap   = rcp_dynamic_cast<const StridedMap>(A01->getColMap("stridedMaps"));
@@ -286,9 +249,8 @@ void InterfaceAggregationFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Bui
    * - is 2 or 3 (for 2d or 3d problems) on coarser levels (same as on finest level, whereas there
    *   are 3 or 6 displacement dofs per node)
    */
-  GlobalOrdinal dualDofOffset = A01->getColMap()->getMinAllGlobalIndex();
+  GlobalOrdinal dualDofOffset = A01->getRowMap()->getMaxAllGlobalIndex() + 1;
   LocalOrdinal dualBlockDim   = numDofsPerDualNode;
-
   // Generate global replicated mapping "lagrNodeId -> dispNodeId"
   RCP<const Map> dualDofMap    = A01->getDomainMap();
   GlobalOrdinal gMaxDualNodeId = AmalgamationFactory::DOFGid2NodeId(
@@ -326,22 +288,22 @@ void InterfaceAggregationFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Bui
       const GlobalOrdinal gPrimalNodeId = AmalgamationFactory::DOFGid2NodeId(gPrimalRowId, primalBlockDim, primalDofOffset, primalInterfaceDofRowMap->getIndexBase());
       const LocalOrdinal lPrimalNodeId  = lPrimalRowId / numDofsPerPrimalNode;
       const LocalOrdinal primalAggId    = primalVertex2AggId[lPrimalNodeId];
+      const GlobalOrdinal gDualDofId    = A01->getDomainMap()->getGlobalElement(r);
+      const GlobalOrdinal gDualNodeId   = AmalgamationFactory::DOFGid2NodeId(gDualDofId, dualBlockDim, dualDofOffset, 0);
 
-      const GlobalOrdinal gDualDofId = A01->getColMap()->getGlobalElement(r);
+      TEUCHOS_TEST_FOR_EXCEPTION(local_dualNodeId2primalNodeId[gDualNodeId - gMinDualNodeId] != -GO_ONE,
+                                 MueLu::Exceptions::RuntimeError,
+                                 "PROC: " << myRank << " gDualNodeId " << gDualNodeId
+                                          << " is already connected to primal nodeId "
+                                          << local_dualNodeId2primalNodeId[gDualNodeId - gMinDualNodeId]
+                                          << ". This shouldn't be. A possible reason might be: "
+                                             "Check if parallel distribution of primalInterfaceDofRowMap corresponds "
+                                             "to the parallel distribution of subblock matrix A01.");
 
-      const GlobalOrdinal gDualNodeId = AmalgamationFactory::DOFGid2NodeId(gDualDofId, dualBlockDim, dualDofOffset, 0);
-
-      if (local_dualNodeId2primalNodeId[gDualNodeId - gMinDualNodeId] == -GO_ONE) {
-        local_dualNodeId2primalNodeId[gDualNodeId - gMinDualNodeId] = gPrimalNodeId;
-        local_dualNodeId2primalAggId[gDualNodeId - gMinDualNodeId]  = primalAggId;
-      } else {
-        GetOStream(Warnings) << "PROC: " << myRank << " gDualNodeId " << gDualNodeId << " is already connected to primal nodeId "
-                             << local_dualNodeId2primalNodeId[gDualNodeId - gMinDualNodeId]
-                             << ". Ignore new dispNodeId: " << gPrimalNodeId << std::endl;
-      }
+      local_dualNodeId2primalNodeId[gDualNodeId - gMinDualNodeId] = gPrimalNodeId;
+      local_dualNodeId2primalAggId[gDualNodeId - gMinDualNodeId]  = primalAggId;
     }
   }
-
   const int dualNodeId2primalNodeIdSize = Teuchos::as<int>(local_dualNodeId2primalNodeId.size());
   Teuchos::reduceAll(*comm, Teuchos::REDUCE_MAX, dualNodeId2primalNodeIdSize,
                      &local_dualNodeId2primalNodeId[0], &dualNodeId2primalNodeId[0]);
@@ -389,7 +351,6 @@ void InterfaceAggregationFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Bui
   }
 
   const LocalOrdinal fullblocksize    = numDofsPerDualNode;
-  const GlobalOrdinal offset          = A01->getColMap()->getMinAllGlobalIndex();
   const LocalOrdinal blockid          = -1;
   const LocalOrdinal nStridedOffset   = 0;
   const LocalOrdinal stridedblocksize = fullblocksize;
@@ -408,7 +369,7 @@ void InterfaceAggregationFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Bui
 
   RCP<AmalgamationInfo> dualAmalgamationInfo = rcp(new AmalgamationInfo(rowTranslation, colTranslation,
                                                                         A01->getDomainMap(), A01->getDomainMap(), A01->getDomainMap(),
-                                                                        fullblocksize, offset, blockid, nStridedOffset, stridedblocksize));
+                                                                        fullblocksize, dualDofOffset, blockid, nStridedOffset, stridedblocksize));
 
   dualAggregates->SetNumAggregates(nLocalAggregates);
   dualAggregates->AggregatesCrossProcessors(primalAggregates->AggregatesCrossProcessors());

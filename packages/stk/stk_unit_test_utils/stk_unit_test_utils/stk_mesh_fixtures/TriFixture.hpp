@@ -42,7 +42,7 @@
 #include <memory>
 #include <stddef.h>                     // for size_t, NULL
 #include <stk_mesh/base/BulkData.hpp>   // for BulkData, etc
-#include <stk_mesh/base/LegacyCoordinateSystems.hpp>  // for Cartesian
+#include <stk_mesh/base/CoordinateSystems.hpp>  // for Cartesian
 #include <stk_mesh/base/Field.hpp>      // for Field
 #include <stk_mesh/base/MetaData.hpp>   // for MetaData
 #include <stk_mesh/base/Types.hpp>      // for EntityId, PartVector
@@ -68,8 +68,8 @@ template <int DIM>
 class TriFixtureImpl
 {
  public:
-  typedef double                   Scalar;
-  typedef Field<Scalar, legacy::Cartesian> CoordFieldType;
+  typedef double        Scalar;
+  typedef Field<Scalar> CoordFieldType;
 
   /**
    * Set up meta data to support this fixture. Meta data is left uncommitted
@@ -101,7 +101,7 @@ class TriFixtureImpl
   BulkData &        m_bulk_data;
   PartVector        m_elem_parts;
   PartVector        m_node_parts;
-  CoordFieldType &  m_coord_field ;
+  CoordFieldType *  m_coord_field;
   const size_t      m_node_id_start = 1;
   const size_t      m_elem_id_start = 1;
   stk::topology     m_elem_topology;
@@ -270,8 +270,10 @@ class TriFixtureImpl
 
 } // impl
 
-using TriFixture = impl::TriFixtureImpl<2>;
-using TriShellFixture = impl::TriFixtureImpl<3>;
+using TriFixture
+STK_DEPRECATED_MSG("Please use the non-simple_fields-namespaced version of this class instead") = impl::TriFixtureImpl<2>;
+using TriShellFixture
+STK_DEPRECATED_MSG("Please use the non-simple_fields-namespaced version of this class instead")  = impl::TriFixtureImpl<3>;
 
 } // namespace simple_fields
 

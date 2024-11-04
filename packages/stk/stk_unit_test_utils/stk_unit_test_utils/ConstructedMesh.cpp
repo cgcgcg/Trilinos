@@ -19,7 +19,7 @@
 #include <vector>                                    // for vector
 
 #include "stk_mesh/base/FieldParallel.hpp"
-#include "stk_mesh/base/LegacyCoordinateSystems.hpp"       // for Cartesian
+#include "stk_mesh/base/CoordinateSystems.hpp"       // for Cartesian
 #include "stk_mesh/base/Entity.hpp"                  // for Entity
 #include "stk_mesh/base/FieldBase.hpp"               // for field_data
 #include "stk_mesh/base/Types.hpp"                   // for EntityId, etc
@@ -34,7 +34,10 @@ namespace stk
 {
 namespace unit_test_util
 {
-void ConstructedMesh::create_block_elements_and_nodes(stk::mesh::BulkData& bulk, const ConstructedElementBlock& block, const unsigned elemIdOffset)
+
+void ConstructedMesh::create_block_elements_and_nodes(stk::mesh::BulkData& bulk,
+                                                      const ConstructedElementBlock& block,
+                                                      const unsigned elemIdOffset)
 {
   stk::mesh::Part* part = bulk.mesh_meta_data().get_part(block.name);
   STK_ThrowRequire(nullptr != part);
@@ -75,9 +78,9 @@ void ConstructedMesh::populate_bulk_data(stk::mesh::BulkData& bulk)
     meta.set_part_id(block, elemBlock.id);
   }
 
-  stk::mesh::Field<double, stk::mesh::legacy::Cartesian> & coordsField =
-      stk::mesh::legacy::declare_field<stk::mesh::Field<double, stk::mesh::legacy::Cartesian>>(meta, stk::topology::NODE_RANK, "coordinates", 1);
+  stk::mesh::Field<double> & coordsField = meta.declare_field<double>(stk::topology::NODE_RANK, "coordinates", 1);
   stk::mesh::put_field_on_mesh(coordsField, meta.universal_part(), m_spatialDimension, nullptr);
+  stk::io::set_field_output_type(coordsField, stk::io::FieldOutputType::VECTOR_3D);
 
   bulk.modification_begin();
   if(bulk.parallel_rank() == 0) {

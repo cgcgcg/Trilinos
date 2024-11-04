@@ -1,48 +1,11 @@
-/*
 // @HEADER
-//
-// ***********************************************************************
-//
+// *****************************************************************************
 //      Teko: A package for block and physics based preconditioning
-//                  Copyright 2010 Sandia Corporation
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
-// the U.S. Government retains certain rights in this software.
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
-//
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Eric C. Cyr (eccyr@sandia.gov)
-//
-// ***********************************************************************
-//
+// Copyright 2010 NTESS and the Teko contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+// *****************************************************************************
 // @HEADER
-
-*/
 
 #include "Teko_GaussSeidelPreconditionerFactory.hpp"
 
@@ -102,19 +65,30 @@ void GaussSeidelPreconditionerFactory::initializeFromParameterList(
   pl.print(DEBUG_STREAM);
   Teko_DEBUG_MSG_END();
 
-  const std::string inverse_type = "Inverse Type";
+  const std::string inverse_type        = "Inverse Type";
+  const std::string preconditioner_type = "Preconditioner Type";
   std::vector<RCP<InverseFactory> > inverses;
+  std::vector<RCP<InverseFactory> > preconditioners;
 
   RCP<const InverseLibrary> invLib = getInverseLibrary();
 
   // get string specifying default inverse
-  std::string invStr = "Amesos";
+  std::string invStr = "";
+#if defined(Teko_ENABLE_Amesos)
+  invStr = "Amesos";
+#elif defined(Teko_ENABLE_Amesos2)
+  invStr = "Amesos2";
+#endif
+  std::string precStr = "None";
   if (pl.isParameter(inverse_type)) invStr = pl.get<std::string>(inverse_type);
+  if (pl.isParameter(preconditioner_type)) precStr = pl.get<std::string>(preconditioner_type);
   if (pl.isParameter("Use Upper Triangle"))
     solveType_ = pl.get<bool>("Use Upper Triangle") ? GS_UseUpperTriangle : GS_UseLowerTriangle;
 
   Teko_DEBUG_MSG("GSPrecFact: Building default inverse \"" << invStr << "\"", 5);
   RCP<InverseFactory> defaultInverse = invLib->getInverseFactory(invStr);
+  RCP<InverseFactory> defaultPrec;
+  if (precStr != "None") defaultPrec = invLib->getInverseFactory(precStr);
 
   // now check individual solvers
   Teuchos::ParameterList::ConstIterator itr;
@@ -144,6 +118,29 @@ void GaussSeidelPreconditionerFactory::initializeFromParameterList(
         inverses[position - 1] = invLib->getInverseFactory(invStr2);
       } else
         inverses[position - 1] = invLib->getInverseFactory(invStr2);
+    } else if (fieldName.compare(0, preconditioner_type.length(), preconditioner_type) == 0 &&
+               fieldName != preconditioner_type) {
+      int position = -1;
+      std::string preconditioner, type;
+
+      // figure out position
+      std::stringstream ss(fieldName);
+      ss >> preconditioner >> type >> position;
+
+      if (position <= 0) {
+        Teko_DEBUG_MSG("Gauss-Seidel \"Preconditioner Type\" must be a (strictly) positive integer",
+                       1);
+      }
+
+      // inserting preconditioner factory into vector
+      std::string precStr2 = pl.get<std::string>(fieldName);
+      Teko_DEBUG_MSG(
+          "GSPrecFact: Building preconditioner " << position << " \"" << precStr2 << "\"", 5);
+      if (position > (int)preconditioners.size()) {
+        preconditioners.resize(position, defaultPrec);
+        preconditioners[position - 1] = invLib->getInverseFactory(precStr2);
+      } else
+        preconditioners[position - 1] = invLib->getInverseFactory(precStr2);
     }
   }
 
@@ -151,7 +148,8 @@ void GaussSeidelPreconditionerFactory::initializeFromParameterList(
   if (inverses.size() == 0) inverses.push_back(defaultInverse);
 
   // based on parameter type build a strategy
-  invOpsStrategy_ = rcp(new InvFactoryDiagStrategy(inverses, defaultInverse));
+  invOpsStrategy_ =
+      rcp(new InvFactoryDiagStrategy(inverses, preconditioners, defaultInverse, defaultPrec));
 }
 
 }  // namespace Teko
