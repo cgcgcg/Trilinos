@@ -463,6 +463,8 @@ int feAssemblyHex(int argc, char *argv[]) {
     auto geometry = Teuchos::rcp(new Intrepid2::CellGeometry<scalar_t, dim, DeviceType>(topology, emptyView, physVertices));
     auto cubature = Intrepid2::DefaultCubatureFactory::create<DeviceType, scalar_t, scalar_t>(topology.getBaseKey(),cubDegree);
 
+    auto crsTotalTimer = Teuchos::TimeMonitor::getNewTimer("Crs-Specific Total Time");
+    crsTotalTimer->start();
     auto basisCardinality = basis->getCardinality();
     DynRankView elemsMatStiff("elemsMatStiff", numOwnedElems, basisCardinality, basisCardinality);
     DynRankView elemsMat("elemsMat", numOwnedElems, basisCardinality, basisCardinality);
@@ -512,7 +514,7 @@ int feAssemblyHex(int argc, char *argv[]) {
       its::integrate(integralData, transformedBasisGradients, cellMeasures, transformedBasisGradients, sumInto);
 
       ots::modifyMatrixByOrientation(elemsMat, integralData.getUnderlyingView(), elemOrts, basis.get(), basis.get());
-
+      crsTotalTimer->stop();
   
     // ************************************ ASSEMBLY OF LOCAL ELEMENT RHS VECTORS **************************************
 
@@ -613,6 +615,7 @@ int feAssemblyHex(int argc, char *argv[]) {
 
     // ************************************ MATRIX ASSEMBLY **************************************
 
+    crsTotalTimer->start();
     {
       auto matrixAndRhsAllocationTimer =  Teuchos::rcp(new Teuchos::TimeMonitor(*Teuchos::TimeMonitor::getNewTimer("Allocation of Matrix and Rhs")));
 
@@ -655,7 +658,10 @@ int feAssemblyHex(int argc, char *argv[]) {
       }
       Tpetra::endAssembly(*A_crs, *b);
     }
+    crsTotalTimer->stop();
 
+    auto mfTotalTimer = Teuchos::TimeMonitor::getNewTimer("MF-Specific Total Time");
+    mfTotalTimer->start();
     Teuchos::RCP<rowmatrix_t> A_mf;
     {
       A_mf = Teuchos::rcp(new Tpetra::MatrixFreeRowMatrix<scalar_t, local_ordinal_t, global_ordinal_t>(ownedMap, ownedAndGhostedMap,
@@ -663,6 +669,7 @@ int feAssemblyHex(int argc, char *argv[]) {
                                                                                                        cubature, elemOrts,
                                                                                                        dofManager, globalIndexer));
     }
+    mfTotalTimer->stop();
 
     // ************************************ CODE VERIFICATION **************************************
 
@@ -771,6 +778,7 @@ int feAssemblyHex(int argc, char *argv[]) {
 
     // ************************************ SOLVE LINEAR SYSTEMS **************************************
     {
+      crsTotalTimer->start();
       Stratimikos::LinearSolverBuilder<scalar_t> linearSolverBuilder;
       Teuchos::RCP<Teuchos::ParameterList> strat_params = Teuchos::rcp(new Teuchos::ParameterList("Stratimikos parameters"));
       Teuchos::updateParametersFromXmlFileAndBroadcast(stratFileName, strat_params.ptr(), *comm);
@@ -798,7 +806,9 @@ int feAssemblyHex(int argc, char *argv[]) {
           errorFlag += (status.solveStatus != Thyra::SOLVE_STATUS_CONVERGED);
         }
       }
+      crsTotalTimer->stop();
 
+      mfTotalTimer->start();
       {
         Teuchos::RCP<Thyra::VectorBase<scalar_t> > thyra_x_mf;
         Teuchos::RCP<const Thyra::LinearOpBase<scalar_t> > thyra_A_mf;
@@ -818,8 +828,10 @@ int feAssemblyHex(int argc, char *argv[]) {
           errorFlag += (status.solveStatus != Thyra::SOLVE_STATUS_CONVERGED);
         }
       }
+      mfTotalTimer->stop();
     }
-
+    *outStream << "Standard Assembly total: " << crsTotalTimer->totalElapsedTime() << " seconds." << std::endl;
+    *outStream << "Matrix-Free total:       " <<  mfTotalTimer->totalElapsedTime() << " seconds." << std::endl;
   } catch (const std::exception & err) {
     *outStream << " Exception\n";
     *outStream << err.what() << "\n\n";
