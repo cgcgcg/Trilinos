@@ -1202,6 +1202,7 @@ void PAMatrix<DeviceType,Scalar>::apply(const OutputViewType &outputVector,
     int workspace2_size = maxIntermediateSize_ * Cw * N;
     ScratchView    workspace1   (workspace.data(),                   workspace1_size);
     ScratchView    workspace2   (workspace.data() + workspace1_size, workspace2_size);
+    INTREPID2_TEST_FOR_EXCEPTION(workspace1_size + workspace2_size > workspace.extent_int(0), std::invalid_argument, "Allocated workspace size is not sufficient");
     
     std::pair<int,int> cellRange = {startCell, startCell + Cw};
     
