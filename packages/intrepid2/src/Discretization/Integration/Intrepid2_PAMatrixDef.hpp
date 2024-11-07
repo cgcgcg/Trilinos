@@ -82,6 +82,7 @@ void pointDataMultiply(const ordinal_type numCells, const ordinal_type numPoints
        const Scalar &alpha, const Scalar* A, const ordinal_type &LDA,
        const Scalar *B, const Scalar &beta, Scalar *C)
   {
+    Teuchos::TimeMonitor gemmTimer = *Teuchos::TimeMonitor::getNewTimer("gemm");
     Teuchos::ETransp trA = (transA == 'T') ? Teuchos::TRANS : (transA == 'C') ? Teuchos::CONJ_TRANS : Teuchos::NO_TRANS;
     Teuchos::ETransp trB = (transB == 'T') ? Teuchos::TRANS : (transB == 'C') ? Teuchos::CONJ_TRANS : Teuchos::NO_TRANS;
     Teuchos::BLAS<int,Scalar> blas;
@@ -91,6 +92,7 @@ void pointDataMultiply(const ordinal_type numCells, const ordinal_type numPoints
     INTREPID2_TEST_FOR_EXCEPTION(LDB==0, std::invalid_argument, "LDB cannot be 0");
     INTREPID2_TEST_FOR_EXCEPTION(LDC==0, std::invalid_argument, "LDC cannot be 0");
     blas.GEMM(trA, trB, M, N, K, alpha, A, LDA, B, LDB, beta, C, LDC);
+    PAMatrix<DeviceType,Scalar>::recordGEMMFlops(M,N,K);
   }
 
 #ifdef HAVE_INTREPID2_KOKKOSKERNELS
@@ -101,14 +103,16 @@ void pointDataMultiply(const ordinal_type numCells, const ordinal_type numPoints
        const Scalar &alpha, const Scalar* A, const ordinal_type &LDA,
        const Scalar *B, const Scalar &beta, Scalar *C)
   {
-    using ConstView2D = Kokkos::View<const Scalar**, DeviceType, Kokkos::MemoryUnmanaged>;
-    using      View2D = Kokkos::View<      Scalar**, DeviceType, Kokkos::MemoryUnmanaged>;
-    ConstView2D AView(A,M,K);
-    ConstView2D BView(B,N,K);
-         View2D CView(C,M,N);
+    Teuchos::TimeMonitor gemmTimer = *Teuchos::TimeMonitor::getNewTimer("gemm");
+    using ConstView2D = Kokkos::View<const Scalar**, Kokkos::LayoutLeft, DeviceType, Kokkos::MemoryUnmanaged>;
+    using      View2D = Kokkos::View<      Scalar**, Kokkos::LayoutLeft, DeviceType, Kokkos::MemoryUnmanaged>;
+    ConstView2D AView = (transA != 'N') ? ConstView2D(A,K,M) : ConstView2D(A,M,K);
+    ConstView2D BView = (transB != 'N') ? ConstView2D(B,N,K) : ConstView2D(B,K,N);
+    View2D CView(C,M,N);
     
     typename DeviceType::execution_space exec_space;
     KokkosBlas::gemm(exec_space, &transA, &transB, alpha, AView, BView, beta, CView);
+    PAMatrix<DeviceType,Scalar>::recordGEMMFlops(M,N,K);
   }
 #else
   template<typename DeviceType,typename Scalar>
@@ -431,39 +435,39 @@ using GemmDeviceType = Kokkos::Serial;
       gemm<GemmDeviceType>('N', 'T', M, N1, K, alpha, A, LDA, B_j, beta, C_j);
       
       using namespace std;
-      cout << "j = " << j << std::endl;
-      cout << "computed A * B^T = C:\n";
-      cout << "A:\n";
-      for (int m=0; m<M; m++)
-      {
-        cout << "[ ";
-        for (int k=0; k<K; k++)
-        {
-          cout << *(A + m + k * M) << " ";
-        }
-        cout << "]\n";
-      }
-      cout << "B:\n";
-      for (int n1=0; n1<N1; n1++)
-      {
-        cout << "[ ";
-        for (int k=0; k<K; k++)
-        {
-          cout << *(B_j + n1 + k * N1) << " ";
-        }
-        cout << "]\n";
-      }
-      
-      cout << "C:\n";
-      for (int n1=0; n1<N1; n1++)
-      {
-        cout << "[ ";
-        for (int m=0; m<M; m++)
-        {
-          cout << *(C_j + m + n1 * M) << " ";
-        }
-        cout << "]\n";
-      }
+//      cout << "j = " << j << std::endl;
+//      cout << "computed A * B^T = C:\n";
+//      cout << "A:\n";
+//      for (int m=0; m<M; m++)
+//      {
+//        cout << "[ ";
+//        for (int k=0; k<K; k++)
+//        {
+//          cout << *(A + m + k * M) << " ";
+//        }
+//        cout << "]\n";
+//      }
+//      cout << "B:\n";
+//      for (int n1=0; n1<N1; n1++)
+//      {
+//        cout << "[ ";
+//        for (int k=0; k<K; k++)
+//        {
+//          cout << *(B_j + n1 + k * N1) << " ";
+//        }
+//        cout << "]\n";
+//      }
+//      
+//      cout << "C:\n";
+//      for (int n1=0; n1<N1; n1++)
+//      {
+//        cout << "[ ";
+//        for (int m=0; m<M; m++)
+//        {
+//          cout << *(C_j + m + n1 * M) << " ";
+//        }
+//        cout << "]\n";
+//      }
     });
     
     DispatchExecutionSpace().fence();
@@ -1468,6 +1472,38 @@ void PAMatrix<DeviceType,Scalar>::assemble(Data<Scalar,DeviceType> &integrals) c
     OrientationTools<DeviceType>::modifyMatrixByOrientation(integrals.getUnderlyingView(), unorientatedValues,
                                                             _orientations, leftBasis.get(), rightBasis.get());
     ExecutionSpace().fence();
+  }
+}
+
+template<typename DeviceType,class Scalar>
+double PAMatrix<DeviceType,Scalar>::recordGEMMFlops(const ordinal_type &M, const ordinal_type &N, const ordinal_type &K)
+{
+  static double cumulativeCount = 0;
+  
+  // compute the product of  M x K with K x N: each entry in the final matrix costs K multiplies and K - 1 adds
+  const double approximateFlops = M * N * (2 * K - 1);
+  cumulativeCount += approximateFlops;
+  return cumulativeCount;
+}
+
+template<typename DeviceType,class Scalar>
+double PAMatrix<DeviceType,Scalar>::gemmThroughputGFlops()
+{
+  auto approximateFlopCountTotal = recordGEMMFlops(0,0,0);
+  
+  Teuchos::stat_map_type statData;
+  std::vector<std::string> statNames;
+  Teuchos::TimeMonitor::computeGlobalTimerStatistics(statData, statNames, Teuchos::Intersection, "gemm");
+//  Teuchos::TimeMonitor::computeGlobalTimerStatistics(statData, statNames, Teuchos::Intersection);
+  
+  if (statData["gemm"].size() > 0)
+  {
+    const double timeInSeconds = statData["gemm"][0].first;
+    return approximateFlopCountTotal / timeInSeconds / 1.0e9;
+  }
+  else
+  {
+    return 0;
   }
 }
 
