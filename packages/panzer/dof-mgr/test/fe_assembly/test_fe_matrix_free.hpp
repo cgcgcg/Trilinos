@@ -261,6 +261,10 @@ int feAssemblyHex(int argc, char *argv[]) {
   using its = Intrepid2::IntegrationTools<DeviceType>;
 
   int errorFlag = 0;
+  
+  double standardAssemblyTotalTime = 0;
+  double matrixFreeTotalTime = 0;
+  double gemmThroughput = 0;
 
 
 #define ConstructWithLabel(obj, ...) obj(#obj, __VA_ARGS__)
@@ -513,6 +517,12 @@ int feAssemblyHex(int argc, char *argv[]) {
       sumInto = true;
       its::integrate(integralData, transformedBasisGradients, cellMeasures, transformedBasisGradients, sumInto);
 
+//      {
+//        // DEBUGGING
+//        std::cout << "elemOrts(0): " << elemOrts(0) << std::endl;
+//        std::cout << "elemOrts(1): " << elemOrts(1) << std::endl;
+//      }
+      
       ots::modifyMatrixByOrientation(elemsMat, integralData.getUnderlyingView(), elemOrts, basis.get(), basis.get());
       crsTotalTimer->stop();
   
@@ -748,7 +758,7 @@ int feAssemblyHex(int argc, char *argv[]) {
 
     Teuchos::RCP<multivector_t> residual_mf = Teuchos::rcp(new multivector_t(x->getMap(), x->getNumVectors()));
     {
-      Teuchos::TimeMonitor applyCrsTimer =  *Teuchos::TimeMonitor::getNewTimer("Matrix-free apply");
+      Teuchos::TimeMonitor applyMFTimer =  *Teuchos::TimeMonitor::getNewTimer("Matrix-free apply");
       A_mf->apply(*x, *residual_mf, Teuchos::NO_TRANS);
     }
     // Tpetra::MatrixMarket::Writer<crs_t>::writeDenseFile("b_mf", *residual_mf);
@@ -830,8 +840,9 @@ int feAssemblyHex(int argc, char *argv[]) {
       }
       mfTotalTimer->stop();
     }
-    *outStream << "Standard Assembly total: " << crsTotalTimer->totalElapsedTime() << " seconds." << std::endl;
-    *outStream << "Matrix-Free total:       " <<  mfTotalTimer->totalElapsedTime() << " seconds." << std::endl;
+    standardAssemblyTotalTime = crsTotalTimer->totalElapsedTime();
+    matrixFreeTotalTime = mfTotalTimer->totalElapsedTime();
+    gemmThroughput = Intrepid2::PAMatrix<DeviceType,double>::gemmThroughputGFlops();
   } catch (const std::exception & err) {
     *outStream << " Exception\n";
     *outStream << err.what() << "\n\n";
@@ -847,6 +858,11 @@ int feAssemblyHex(int argc, char *argv[]) {
   if(xmlOut.length())
     *outStream << "\nAlso created Watchr performance report " << xmlOut << '\n';
 
+  *outStream << "Standard Assembly total: " << standardAssemblyTotalTime << " seconds." << std::endl;
+  *outStream << "Matrix-Free total:       " << matrixFreeTotalTime << " seconds." << std::endl << std::endl;
+  
+  *outStream << "PAMatrix GEMM Throughput: " << gemmThroughput << " GFlops.\n";
+  
   if (errorFlag != 0)
     *outStream << "End Result: TEST FAILED = " << errorFlag << "\n";
   else
