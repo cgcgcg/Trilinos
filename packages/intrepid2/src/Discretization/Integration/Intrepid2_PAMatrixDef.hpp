@@ -527,6 +527,14 @@ _basisValuesLeft(basisValuesLeft),
 _basisValuesRight(basisValuesRight),
 _orientations(orientations)
 {
+  init(basisValuesLeft, cellMeasures, basisValuesRight, orientations);
+} // PAMatrix()
+
+template<typename DeviceType,class Scalar>
+void PAMatrix<DeviceType,Scalar>::init(const TransformedBasisValues<Scalar,DeviceType> basisValuesLeft,
+                                  const TensorData<Scalar,DeviceType> cellMeasures,
+                                  const TransformedBasisValues<Scalar,DeviceType> basisValuesRight,
+                                  const ScalarView<Orientation,DeviceType> orientations) {
   using ExecutionSpace = typename DeviceType::execution_space;
 
   const bool layoutLeft = layoutLeft_;
@@ -1066,8 +1074,9 @@ _orientations(orientations)
       maxIntermediateSize_ = max(perCellSize,maxIntermediateSize_);
     }
   }
-  
-} // PAMatrix()
+
+}
+
 
 template<typename DeviceType,class Scalar>
 PAMatrix<DeviceType,Scalar>::PAMatrix(const TransformedBasisValues<Scalar,DeviceType> basisValues,

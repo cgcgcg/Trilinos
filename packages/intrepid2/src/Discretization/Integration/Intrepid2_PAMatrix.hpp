@@ -92,7 +92,11 @@ namespace Intrepid2 {
     
     PAMatrix()
     {}
-    
+
+    void init(const TransformedBasisValues<Scalar,DeviceType> basisValuesLeft,
+              const TensorData<Scalar,DeviceType> cellMeasures,
+              const TransformedBasisValues<Scalar,DeviceType> basisValuesRight,
+              const ScalarView<Orientation,DeviceType> orientations);
     /** \brief   Constructs a <b>PAMatrix</b>  representing the contraction of \a <b>basisValuesLeft</b> against \a <b>basisValuesRight</b> containers on
                  point and space dimensions, weighting each point according to <b>cellMeasures</b>.
 
