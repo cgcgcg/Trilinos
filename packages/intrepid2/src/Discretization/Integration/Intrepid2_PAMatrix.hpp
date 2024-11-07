@@ -229,6 +229,13 @@ namespace Intrepid2 {
      \note This method is asymptotically more expensive per entry than extracting diagonals, rows, and columns.  The cost of this evaluation scales with the number of quadrature points, generally O(p^d), with no possibility of reuse of intermediate sums from one row/column to another.  The diagonal, row, and column extraction methods, on the other hand, produce O(p^d) values in O(p^{d+1}) time.
     */
     void extractEntry(const Data<Scalar,DeviceType> &entry, const ordinal_type &i, const ordinal_type &j) const;
+    
+    
+    
+    //! Accumulates into a static variable with cumulative flop count.  Returns its current value.
+    static double recordGEMMFlops(const ordinal_type &M, const ordinal_type &N, const ordinal_type &K);
+    static double gemmThroughputGFlops();
+
   }; // end PAMatrix class
 
 } // end namespace Intrepid2
