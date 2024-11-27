@@ -44,7 +44,7 @@ class MatrixFreeRowMatrix : public Tpetra::RowMatrix<Scalar, LocalOrdinal, Globa
   using vector_type = Tpetra::Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
   using map_type    = Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>;
   using import_type = Tpetra::Import<LocalOrdinal, GlobalOrdinal, Node>;
-  
+
   //! The RowMatrix representing the base class of CrsMatrix
   using row_matrix_type = RowMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
 
@@ -91,14 +91,14 @@ class MatrixFreeRowMatrix : public Tpetra::RowMatrix<Scalar, LocalOrdinal, Globa
   using data       = Intrepid2::Data<Scalar,DeviceType>;
   using tensorData = Intrepid2::TensorData<Scalar,DeviceType>;
   using PAMatrix   = Intrepid2::PAMatrix<DeviceType,Scalar>;
-  
+
   data jacobianInv_;
   tensorData cellMeasures_;
   tbv transformedBasisValues_;
   tbv transformedBasisGradients_;
   PAMatrix paGradGrad_;
   PAMatrix paValueValue_;
-  
+
   //! @name Constructor/Destructor
   //@{
 
@@ -123,9 +123,9 @@ class MatrixFreeRowMatrix : public Tpetra::RowMatrix<Scalar, LocalOrdinal, Globa
     importer_ = rcp(new import_type(ownedMap_, ownedAndGhostedMap_));
     X_ownedAndGhosted_ = rcp(new mv_type(ownedAndGhostedMap_, 1));
     Y_ownedAndGhosted_ = rcp(new mv_type(ownedAndGhostedMap_, 1));
-    
+
     // partial assembly: compute basis values, allocate storage
-    
+
     int basisCardinality = int(basis_->getCardinality());
     LocalOrdinal numOwnedElems = elemOrts_.extent_int(0);
     DynRankView elemsRHS("elemsRHS", numOwnedElems, basisCardinality);
@@ -133,12 +133,12 @@ class MatrixFreeRowMatrix : public Tpetra::RowMatrix<Scalar, LocalOrdinal, Globa
 
     {
       // ************************************ ASSEMBLY OF LOCAL ELEMENT MATRICES **************************************
-      
+
       // Compute quadrature (cubature) points
       auto tensorQuadWeights = cubature_->allocateCubatureWeights();
       Intrepid2::TensorPoints<scalar_t,DeviceType> tensorQuadPoints  = cubature_->allocateCubaturePoints();
       cubature_->getCubature(tensorQuadPoints, tensorQuadWeights);
-      
+
       // compute oriented basis functions at quadrature points
       auto basisValuesAtQPoints = basis_->allocateBasisValues(tensorQuadPoints, Intrepid2::OPERATOR_VALUE);
       basis_->getValues(basisValuesAtQPoints, tensorQuadPoints, Intrepid2::OPERATOR_VALUE);
@@ -146,23 +146,23 @@ class MatrixFreeRowMatrix : public Tpetra::RowMatrix<Scalar, LocalOrdinal, Globa
       auto basisGradsAtQPoints = basis_->allocateBasisValues(tensorQuadPoints, Intrepid2::OPERATOR_GRAD);
       basis_->getValues(basisGradsAtQPoints, tensorQuadPoints, Intrepid2::OPERATOR_GRAD);
       basisGradsAtQPoints.setBasis(basis_);
-      
+
       auto jacobian = geometry_->allocateJacobianData(tensorQuadPoints);
       auto jacobianDet = ct::allocateJacobianDet(jacobian);
       jacobianInv_ = ct::allocateJacobianInv(jacobian);
       cellMeasures_ = geometry_->allocateCellMeasure(jacobianDet, tensorQuadWeights);
       auto refData = geometry_->getJacobianRefData(tensorQuadPoints);
-      
+
       // compute jacobian and cell measures
       geometry_->setJacobian(jacobian, tensorQuadPoints, refData);
       ct::setJacobianDet(jacobianDet, jacobian);
       ct::setJacobianInv(jacobianInv_, jacobian);
       geometry_->computeCellMeasure(cellMeasures_, jacobianDet, tensorQuadWeights);
-      
+
       // lazily-evaluated transformed values and gradients:
       transformedBasisValues_ = fst::getHGRADtransformVALUE(numOwnedElems, basisValuesAtQPoints);
       transformedBasisGradients_ = fst::getHGRADtransformGRAD(jacobianInv_, basisGradsAtQPoints);
-      
+
       paGradGrad_   = PAMatrix(transformedBasisGradients_, cellMeasures_, transformedBasisGradients_, elemOrts_);
       paValueValue_ = PAMatrix(transformedBasisValues_,    cellMeasures_, transformedBasisValues_,    elemOrts_);
     }
@@ -189,13 +189,13 @@ class MatrixFreeRowMatrix : public Tpetra::RowMatrix<Scalar, LocalOrdinal, Globa
              Scalar alpha          = Teuchos::ScalarTraits<Scalar>::one(),
              Scalar beta           = Teuchos::ScalarTraits<Scalar>::zero()) const {
     using ExecutionSpace = typename DeviceType::execution_space;
-    
+
     auto basisCardinality = basis_->getCardinality();
     LocalOrdinal numOwnedElems = elemOrts_.extent(0);
     //    DynRankView elemsMat("elemsMat", numOwnedElems, basisCardinality, basisCardinality);
     //    DynRankView elemsRHS("elemsRHS", numOwnedElems, basisCardinality);
     const std::string blockId = "eblock-0_0_0";
-    
+
     //    {
     //      // assemble the matrix: integrate and apply orientation
     //      auto integralData = its::allocateIntegralData(transformedBasisGradients_, cellMeasures_, transformedBasisGradients_);
@@ -207,16 +207,16 @@ class MatrixFreeRowMatrix : public Tpetra::RowMatrix<Scalar, LocalOrdinal, Globa
     //
     //      ots::modifyMatrixByOrientation(elemsMat, integralData.getUnderlyingView(), elemOrts_, basis_.get(), basis_.get());
     //    }
-    
+
     X_ownedAndGhosted_->doImport(X, *importer_, Tpetra::INSERT);
     Y_ownedAndGhosted_->putScalar(0.);
     {
       auto elementLIDs = globalIndexer_->getLIDs();
       auto elmtOffsetKokkos = dofManager_->getGIDFieldOffsetsKokkos(blockId,0);
-      
+
       auto lclX = X_ownedAndGhosted_->getLocalViewDevice(Tpetra::Access::ReadOnly);     // View<const Scalar**> (C*F2,N)
       auto lclY = Y_ownedAndGhosted_->getLocalViewDevice(Tpetra::Access::OverwriteAll); // View<Scalar**> (C*F1,N)
-      
+
       const int C  = numOwnedElems;
       const int F1 = basisCardinality;
       const int F2 = basisCardinality;
@@ -231,7 +231,7 @@ class MatrixFreeRowMatrix : public Tpetra::RowMatrix<Scalar, LocalOrdinal, Globa
         X_3D(c,f,n) = alpha * lclX(localColId, n);
       });
       ExecutionSpace().fence();
-      
+
 //      using namespace std;
 //      cout << "MF: elementLIDs:\n";
 //      Intrepid2::printFunctor2(elementLIDs, cout);
@@ -241,28 +241,28 @@ class MatrixFreeRowMatrix : public Tpetra::RowMatrix<Scalar, LocalOrdinal, Globa
 //      Intrepid2::printFunctor2(lclX, cout);
 //      cout << "MF: X_3D:\n";
 //      Intrepid2::printFunctor3(X_3D, cout);
-      
+
       {
         //MARK: Grad-Grad
         auto gradGradWorkspace = paGradGrad_.allocateWorkspace(C,N);
-        
+
         {
           Teuchos::TimeMonitor gradGradTimer =  *Teuchos::TimeMonitor::getNewTimer("grad-grad apply");
           paGradGrad_.apply(Y_3D,X_3D,gradGradWorkspace);
         }
       }
-      
+
       {
         // MARK: Value-Value
         auto valueValueWorkspace = paValueValue_.allocateWorkspace(C,N);
-        
+
         {
           Teuchos::TimeMonitor gradGradTimer =  *Teuchos::TimeMonitor::getNewTimer("value-value apply");
           const bool sumInto = true;
           paValueValue_.apply(Y_3D,X_3D,valueValueWorkspace,sumInto);
         }
       }
-      
+
       policy = Kokkos::MDRangePolicy<ExecutionSpace,Kokkos::Rank<3>>({0,0,0},{C,F1,N});
       Kokkos::parallel_for("output to lclY", policy,
                            KOKKOS_LAMBDA(const local_ordinal_t &c, const local_ordinal_t &f, const local_ordinal_t &n)
@@ -271,12 +271,12 @@ class MatrixFreeRowMatrix : public Tpetra::RowMatrix<Scalar, LocalOrdinal, Globa
         lclY(localRowId, n) += Y_3D(c,f,n);
       });
       ExecutionSpace().fence();
-      
+
 //      cout << "MF: lclY:\n";
 //      Intrepid2::printFunctor2(lclY, std::cout);
 //      cout << "MF: Y_3D:\n";
 //      Intrepid2::printFunctor3(Y_3D, std::cout);
-      
+
       //      Kokkos::parallel_for
       //        ("Matrix-free apply",
       //         Kokkos::RangePolicy<typename DeviceType::execution_space, int> (0, numOwnedElems),
@@ -301,7 +301,7 @@ class MatrixFreeRowMatrix : public Tpetra::RowMatrix<Scalar, LocalOrdinal, Globa
       //        });
       //      Kokkos::fence();
     }
-    
+
     Y.scale(beta);
     Y.doExport(*Y_ownedAndGhosted_, *importer_, Tpetra::ADD_ASSIGN);
   }
@@ -424,6 +424,10 @@ class MatrixFreeRowMatrix : public Tpetra::RowMatrix<Scalar, LocalOrdinal, Globa
 
   bool hasColMap() const {
     return false;
+  }
+
+  bool hasDiagonal() const {
+    return true;
   }
 
   bool isLocallyIndexed() const {
