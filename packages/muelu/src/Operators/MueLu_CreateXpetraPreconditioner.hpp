@@ -34,13 +34,12 @@ namespace MueLu {
   @brief Helper function to create a MueLu preconditioner that can be used by Xpetra.
   @ingroup MueLuAdapters
   Given an Xpetra::Matrix, this function returns a constructed MueLu preconditioner.
-  @param[in] inA Matrix
+  @param[in] op Matrix
   @param[in] inParamList Parameter list
 */
-
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 Teuchos::RCP<MueLu::Hierarchy<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
-CreateXpetraPreconditioner(Teuchos::RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>> op,
+CreateXpetraPreconditioner(Teuchos::RCP<Xpetra::Operator<Scalar, LocalOrdinal, GlobalOrdinal, Node>> op,
                            const Teuchos::ParameterList& inParamList) {
   using SC = Scalar;
   using LO = LocalOrdinal;
@@ -88,7 +87,12 @@ CreateXpetraPreconditioner(Teuchos::RCP<Xpetra::Matrix<Scalar, LocalOrdinal, Glo
   H->setlib(op->getDomainMap()->lib());
 
   // Set fine level operator
-  H->GetLevel(0)->Set("A", op);
+  auto mat = rcp_dynamic_cast<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>(op);
+  std::cout << "HERE " << mat << std::endl;
+  if (!mat.is_null())
+    H->GetLevel(0)->Set("A", mat);
+  else
+    H->GetLevel(0)->Set("A", op);
   H->SetProcRankVerbose(op->getDomainMap()->getComm()->getRank());
 
   // Stick the non-serializible data on the hierarchy.
@@ -105,13 +109,29 @@ CreateXpetraPreconditioner(Teuchos::RCP<Xpetra::Matrix<Scalar, LocalOrdinal, Glo
     const bool writeZeroTimers  = false;
     const bool ignoreZeroTimers = true;
     const std::string filter    = timerName;
-    Teuchos::TimeMonitor::summarize(op->getRowMap()->getComm().ptr(), H->GetOStream(Statistics0), alwaysWriteLocal, writeGlobalStats,
+    Teuchos::TimeMonitor::summarize(op->getDomainMap()->getComm().ptr(), H->GetOStream(Statistics0), alwaysWriteLocal, writeGlobalStats,
                                     writeZeroTimers, Teuchos::Union, filter, ignoreZeroTimers);
   }
 
   tm->reset();
 
   return H;
+}
+
+/*!
+  @brief Helper function to create a MueLu preconditioner that can be used by Xpetra.
+  @ingroup MueLuAdapters
+  Given an Xpetra::Matrix, this function returns a constructed MueLu preconditioner.
+  @param[in] mat Matrix
+  @param[in] inParamList Parameter list
+*/
+
+template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+Teuchos::RCP<MueLu::Hierarchy<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
+CreateXpetraPreconditioner(Teuchos::RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>> mat,
+                           const Teuchos::ParameterList& inParamList) {
+  auto op = rcp_dynamic_cast<Xpetra::Operator<Scalar, LocalOrdinal, GlobalOrdinal, Node>>(mat, true);
+  return CreateXpetraPreconditioner(op, inParamList);
 }
 
 /*!
