@@ -28,9 +28,15 @@ const Teuchos::RCP<const Xpetra::Map<LocalOrdinal, GlobalOrdinal, Node> >
 XpetraOperator<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     getDomainMap() const {
   typedef Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node> Matrix;
+  typedef Xpetra::Operator<Scalar, LocalOrdinal, GlobalOrdinal, Node> Op;
 
-  RCP<Matrix> A = Hierarchy_->GetLevel(0)->template Get<RCP<Matrix> >("A");
-  return A->getDomainMap();
+  if (Hierarchy_->GetLevel(0)->template IsType<RCP<Matrix> >("A")) {
+    RCP<Matrix> A = Hierarchy_->GetLevel(0)->template Get<RCP<Matrix> >("A");
+    return A->getDomainMap();
+  } else {
+    RCP<Op> A = Hierarchy_->GetLevel(0)->template Get<RCP<Op> >("A");
+    return A->getDomainMap();
+  }
 }
 
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
@@ -38,9 +44,15 @@ const Teuchos::RCP<const Xpetra::Map<LocalOrdinal, GlobalOrdinal, Node> >
 XpetraOperator<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     getRangeMap() const {
   typedef Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node> Matrix;
+  typedef Xpetra::Operator<Scalar, LocalOrdinal, GlobalOrdinal, Node> Op;
 
-  RCP<Matrix> A = Hierarchy_->GetLevel(0)->template Get<RCP<Matrix> >("A");
-  return A->getRangeMap();
+  if (Hierarchy_->GetLevel(0)->template IsType<RCP<Matrix> >("A")) {
+    RCP<Matrix> A = Hierarchy_->GetLevel(0)->template Get<RCP<Matrix> >("A");
+    return A->getRangeMap();
+  } else {
+    RCP<Op> A = Hierarchy_->GetLevel(0)->template Get<RCP<Op> >("A");
+    return A->getRangeMap();
+  }
 }
 
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
