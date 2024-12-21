@@ -3,4 +3,6 @@
 
 #cmakedefine HAVE_PYTRILINOS2_MUELU
 
+#cmakedefine HAVE_PYTRILINOS2_SHYLU_DDFROSCH
+
 #endif

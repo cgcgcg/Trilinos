@@ -16,6 +16,10 @@
 #include <Stratimikos_MueLuHelpers.hpp>
 #endif
 
+#ifdef HAVE_PYTRILINOS2_SHYLU_DDFROSCH
+#include <Stratimikos_FROSch_decl.hpp>
+#include <Stratimikos_FROSch_def.hpp>
+#endif
 
 #define BINDER_STRATIMIKOS_LINEARSOLVERBUILDER_INSTANT(SC) \
   template class Stratimikos::LinearSolverBuilder<SC>;
@@ -24,6 +28,10 @@
   template void enableMueLu<SCALAR, LO, GO, NO>(Stratimikos::LinearSolverBuilder<SCALAR>& builder, const std::string& stratName); \
   template void enableMueLuRefMaxwell<SCALAR, LO, GO, NO>(Stratimikos::LinearSolverBuilder<SCALAR>& builder, const std::string& stratName); \
   template void enableMueLuMaxwell1<SCALAR, LO, GO, NO>(Stratimikos::LinearSolverBuilder<SCALAR>& builder, const std::string& stratName);
+
+
+#define BINDER_STRATIMIKOS_FROSCH_INSTANT(SCALAR,LO,GO,NO) \
+  template void enableFROSch<SCALAR, LO, GO, NO>(Stratimikos::LinearSolverBuilder<SCALAR>& builder, const std::string& stratName);
 
 
 namespace Stratimikos {
@@ -35,6 +43,10 @@ namespace Stratimikos {
 
 #ifdef HAVE_PYTRILINOS2_MUELU
   BINDER_STRATIMIKOS_MUELU_INSTANT(Tpetra::Details::DefaultTypes::scalar_type, Tpetra::Details::DefaultTypes::local_ordinal_type, Tpetra::Details::DefaultTypes::global_ordinal_type, Tpetra::KokkosClassic::DefaultNode::DefaultNodeType)
+#endif
+
+#ifdef HAVE_PYTRILINOS2_SHYLU_DDFROSCH
+  BINDER_STRATIMIKOS_FROSCH_INSTANT(Tpetra::Details::DefaultTypes::scalar_type, Tpetra::Details::DefaultTypes::local_ordinal_type, Tpetra::Details::DefaultTypes::global_ordinal_type, Tpetra::KokkosClassic::DefaultNode::DefaultNodeType)
 #endif
 
 }
