@@ -74,7 +74,7 @@ def main():
     parser = ArgumentParser()
     parser.add_argument("--problemSize", default=1000, help="Global problem size", type=int)
     parser.add_argument("--solver", default="GMRES", choices=["LU", "CG", "BiCGStab", "GMRES"], help="Linear solver")
-    parser.add_argument("--prec", default="None", choices=["None", "Jacobi", "Chebyshev", "ILU", "multigrid"], help="Preconditioner")
+    parser.add_argument("--prec", default="None", choices=["None", "Jacobi", "Chebyshev", "ILU", "multigrid", "block_gauss_seidel"], help="Preconditioner")
     parser.add_argument("--maxIts", default=100, help="Maximum number of iterations", type=int)
     args = parser.parse_args()
 
@@ -124,6 +124,10 @@ def main():
         Stratimikos.enableMueLuRefMaxwell(linearSolverBuilder, "MueLuRefMaxwell")
     if hasattr(Stratimikos, "enableMueLuMaxwell1"):
         Stratimikos.enableMueLuMaxwell1(linearSolverBuilder, "MueLuMaxwell1")
+    if hasattr(Stratimikos, "addTekoToStratimikosBuilder"):
+        Stratimikos.addTekoToStratimikosBuilder(linearSolverBuilder, "Teko")
+    else:
+        assert args.prec != "block_gauss_seidel", "\"block_gauss_seidel\" preconditioner requires Teko package."
 
     # Print default parameters
     validParams = linearSolverBuilder.getValidParameters()

@@ -16,3 +16,4 @@
 #include <PyTrilinos2_MueLu_ETI.hpp>
 #endif
 #include <PyTrilinos2_stream.hpp>
+#include <PyTrilinos2_Teko.hpp>
