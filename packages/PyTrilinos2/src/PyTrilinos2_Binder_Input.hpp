@@ -15,4 +15,5 @@
 #ifdef HAVE_PYTRILINOS2_MUELU
 #include <PyTrilinos2_MueLu_ETI.hpp>
 #endif
+#include <PyTrilinos2_Panzer_ETI.hpp>
 #include <PyTrilinos2_stream.hpp>
