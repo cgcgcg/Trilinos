@@ -58,6 +58,7 @@
 #include "stk_io/OutputVariableParams.hpp"  // for OutputVariableParams
 #include "stk_mesh/base/FieldState.hpp"     // for FieldState
 #include "stk_mesh/base/Types.hpp"          // for EntityRank, FieldVector
+#include "stk_mesh/base/MeshBuilder.hpp"    // for MeshBuilder
 #include "stk_topology/topology.hpp"        // for topology, topology::rank_t
 #include "stk_util/util/ReportHandler.hpp"  // for ThrowAssert, ThrowRequire...
 namespace Ioss { class DatabaseIO; }

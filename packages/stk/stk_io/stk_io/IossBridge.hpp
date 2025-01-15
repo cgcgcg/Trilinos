@@ -50,7 +50,7 @@
 #include <limits>
 #include "Ioss_EntityType.h"                // for EntityType, SIDEBLOCK
 #include "Ioss_GroupingEntity.h"            // for GroupingEntity
-#include "SidesetTranslator.hpp"            // for fill_element_and_side_ids
+#include "stk_io/SidesetTranslator.hpp"            // for fill_element_and_side_ids
 #include "stk_io/OutputParams.hpp"          // for OutputParams
 #include "stk_mesh/base/FieldState.hpp"     // for FieldState
 #include "stk_mesh/base/Part.hpp"           // for Part
@@ -668,13 +668,13 @@ void fill_data_for_side_block( OutputParams &params,
         parentElementBlock = get_parent_element_block(params.bulk_data(), params.io_region(), io.name());
     }
 
-    // An offset required to translate Ioss's interpretation of shell ordinals 
+    // An offset required to translate Ioss's interpretation of shell ordinals
     INT sideOrdOffset = 0;
     if(io.type() == Ioss::SIDEBLOCK) {
       Ioss::SideBlock* sb = dynamic_cast<Ioss::SideBlock*>(&io);
       sideOrdOffset = get_side_offset(sb);
     }
-    
+
     fill_element_and_side_ids(params, part, parentElementBlock, stk_elem_topology, sides, elem_side_ids, sideOrdOffset);
 }
 
@@ -689,4 +689,3 @@ const stk::mesh::FieldBase *declare_stk_field_internal(stk::mesh::MetaData &meta
 }//namespace io
 }//namespace stk
 #endif
-

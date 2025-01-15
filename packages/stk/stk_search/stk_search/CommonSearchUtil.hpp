@@ -46,7 +46,7 @@
 #include "stk_search/BoxIdent.hpp"
 #include "stk_search/kdtree/KDTree_BoundingBox.hpp"
 #include "stk_search/kdtree/KDTree.hpp"
-#include "DeviceMPIUtils.hpp"
+#include "stk_search/DeviceMPIUtils.hpp"
 #include <any>
 #include <memory>
 

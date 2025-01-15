@@ -35,7 +35,7 @@
 #define STK_SEARCH_HELPER_TRAITS_H
 
 #include <type_traits>
-#include "BoxIdent.hpp"
+#include "stk_search/BoxIdent.hpp"
 #include "Kokkos_Core.hpp"
 #include "stk_search/SearchMethod.hpp"
 

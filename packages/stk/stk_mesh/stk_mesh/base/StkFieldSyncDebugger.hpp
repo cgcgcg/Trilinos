@@ -35,10 +35,10 @@
 #ifndef STKFIELDSYNCDEBUGGER_HPP
 #define STKFIELDSYNCDEBUGGER_HPP
 
-#include "FieldSyncDebugging.hpp"
-#include "Entity.hpp"
-#include "Bucket.hpp"
-#include "NgpTypes.hpp"
+#include "stk_mesh/base/FieldSyncDebugging.hpp"
+#include "stk_mesh/base/Entity.hpp"
+#include "stk_mesh/base/Bucket.hpp"
+#include "stk_mesh/base/NgpTypes.hpp"
 #include <cstddef>
 #include <vector>
 

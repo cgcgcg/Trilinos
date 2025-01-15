@@ -41,6 +41,7 @@
 #include <stk_util/util/ReportHandler.hpp>
 #include <stk_util/util/PairIter.hpp>
 #include <algorithm>
+#include <vector>
 
 //----------------------------------------------------------------------
 

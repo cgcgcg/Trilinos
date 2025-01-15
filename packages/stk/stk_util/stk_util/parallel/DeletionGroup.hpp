@@ -3,7 +3,7 @@
 
 #include <vector>
 #include "stk_util/parallel/MPITag.hpp"
-#include "IbarrierReplacement.hpp"
+#include "stk_util/parallel/IbarrierReplacement.hpp"
 
 namespace stk {
 namespace impl {

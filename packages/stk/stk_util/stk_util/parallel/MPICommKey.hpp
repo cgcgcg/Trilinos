@@ -7,8 +7,8 @@
 #include <vector>
 #include <deque>
 #include <memory>
-#include "Parallel.hpp"  // for MPI
-#include "MPIFinalizationCallback.hpp"
+#include "stk_util/parallel/Parallel.hpp"  // for MPI
+#include "stk_util/parallel/MPIFinalizationCallback.hpp"
 
 // Detect if MPI has bug
 #ifdef MPICH
