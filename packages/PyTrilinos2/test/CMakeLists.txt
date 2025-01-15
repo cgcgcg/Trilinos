@@ -7,7 +7,7 @@ PyTrilinos2_MAKE_MPI_TEST(CG)
 PyTrilinos2_MAKE_MPI_TEST(parameterList)
 
 TRIBITS_COPY_FILES_TO_BINARY_DIR(Stratimiko_cp
-    SOURCE_FILES Stratimikos.py)
+    SOURCE_FILES Stratimikos.py Panzer.py)
 
 TRIBITS_ADD_TEST(
   ${Python3_EXECUTABLE}
@@ -20,6 +20,16 @@ TRIBITS_ADD_TEST(
   POSTFIX_AND_ARGS_3 "BiCGStab_Chebyshev" Stratimikos.py --problemSize=100   --solver=BiCGStab --prec=Chebyshev
   POSTFIX_AND_ARGS_4 "GMRES_ILU"          Stratimikos.py --problemSize=1000  --solver=GMRES    --prec=ILU
   POSTFIX_AND_ARGS_5 "CG_multigrid"       Stratimikos.py --problemSize=10000 --solver=CG       --prec=multigrid
+  PASS_REGULAR_EXPRESSION "OK"
+  ENVIRONMENT "PYTHONPATH=${PyTrilinos2_PYTHONPATH}:$ENV{PYTHONPATH}"
+)
+
+TRIBITS_ADD_TEST(
+  ${Python3_EXECUTABLE}
+  NOEXEPREFIX
+  NOEXESUFFIX
+  NAME Panzer
+  POSTFIX_AND_ARGS_0 "Tri"                 Panzer.py
   PASS_REGULAR_EXPRESSION "OK"
   ENVIRONMENT "PYTHONPATH=${PyTrilinos2_PYTHONPATH}:$ENV{PYTHONPATH}"
 )
