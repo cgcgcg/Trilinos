@@ -1,7 +1,7 @@
 #ifndef stk_util_parallel_IbarrierReplacement
 #define stk_util_parallel_IbarrierReplacement
 
-#include "IallreduceReplacement.hpp"
+#include "stk_util/parallel/IallreduceReplacement.hpp"
 #include <memory>
 
 namespace stk {

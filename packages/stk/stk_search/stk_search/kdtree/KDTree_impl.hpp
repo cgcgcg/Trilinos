@@ -6,15 +6,15 @@
  // Redistribution and use in source and binary forms, with or without
  // modification, are permitted provided that the following conditions are
  // met:
- // 
+ //
  //     * Redistributions of source code must retain the above copyright
  //       notice, this list of conditions and the following disclaimer.
- // 
+ //
  //     * Redistributions in binary form must reproduce the above
  //       copyright notice, this list of conditions and the following
  //       disclaimer in the documentation and/or other materials provided
  //       with the distribution.
- // 
+ //
 //     * Neither the name of NTESS nor the names of its contributors
 //       may be used to endorse or promote products derived from this
 //       software without specific prior written permission.
@@ -43,7 +43,7 @@
 #include <stk_search/kdtree/KDTree_Threaded_Sort.hpp>  // for ThreadedSort
 #include <utility>                                     // for pair, make_pair
 
-#include "KDTree_BoundingBox.hpp"
+#include "stk_search/kdtree/KDTree_BoundingBox.hpp"
 
 // #######################   End Clang Header Tool Managed Headers  ########################
 
@@ -82,7 +82,7 @@ inline void adjust_moment_split(const int num_boxes, const float global_center_x
   moment_z *= num_boxes;
   moment_z -= global_center_z * global_center_z;
 }
- 
+
 template <typename RangeBoxType>
 inline void split_boxes(const int &num_boxes, const stk::search::ObjectBoundingBox_T<RangeBoxType> *boxes, float& moment_x, float& moment_y, float& moment_z) {
   float global_center_x(0.0);
@@ -267,8 +267,8 @@ inline void store_3_node_tree(ObjectBoundingBoxHierarchy_T<RangeBoxType> *root_n
 //  Extract 'numLimb' subtrees from the hierarchy_data by drilling down to the lower level trees
 //
 template <typename RangeBoxType>
-inline void update_tree_partial(ObjectBoundingBoxHierarchy_T<RangeBoxType>*  hierarchy_data, 
-                         ObjectBoundingBoxHierarchy_T<RangeBoxType>** subTreeHier, 
+inline void update_tree_partial(ObjectBoundingBoxHierarchy_T<RangeBoxType>*  hierarchy_data,
+                         ObjectBoundingBoxHierarchy_T<RangeBoxType>** subTreeHier,
                          unsigned subdivisionLevel,
                          unsigned mySubTree) {
   //
@@ -299,7 +299,7 @@ inline void update_tree_partial(ObjectBoundingBoxHierarchy_T<RangeBoxType>*  hie
 //  subtrees already complete via threaded processing.
 //
 template <typename RangeBoxType>
-inline void complete_tree_partial(ObjectBoundingBoxHierarchy_T<RangeBoxType>*  hierarchy_data, 
+inline void complete_tree_partial(ObjectBoundingBoxHierarchy_T<RangeBoxType>*  hierarchy_data,
                                                        unsigned subdivisionLevel) {
   if(subdivisionLevel == 1) {
     //  Terminal thread leaf case
@@ -606,7 +606,7 @@ inline void create_hierarchy_loop(ObjectBoundingBoxHierarchy_T<RangeBoxType> *hi
         //
         int *primary_index, *sub_index1, *sub_index2;
         int *primary_sindex, *sub_sindex1, *sub_sindex2;
-     
+
         if(moment_x > moment_y && moment_x > moment_z) {
           primary_index = index_array0_t;
           sub_index1   = index_array1_t;
@@ -721,7 +721,7 @@ inline void create_hierarchy_loop(ObjectBoundingBoxHierarchy_T<RangeBoxType> *hi
 }
 
 //
-// Threaded hierarchy creation routine, basically drill down the tree until have created enough sub-limbs to efficently 
+// Threaded hierarchy creation routine, basically drill down the tree until have created enough sub-limbs to efficently
 // thread then pass each limb down to a threaded
 //
 #ifdef _OPENMP
@@ -783,7 +783,7 @@ void create_hierarchy_loop_threaded(ObjectBoundingBoxHierarchy_T<RangeBoxType> *
   for(unsigned i=0; i<numLimb; ++i) {
     if(limbHier[i] == nullptr) continue;
     create_hierarchy_loop(limbHier[i], limbBoxes[i], limbScratchBoxes[i], limbNumBoxes[i],
-                          limbIndex0[i], limbIndex1[i], limbIndex2[i], 
+                          limbIndex0[i], limbIndex1[i], limbIndex2[i],
                           limbSIndex0[i], limbSIndex1[i], limbSIndex2[i]);
   }
 
@@ -798,7 +798,7 @@ inline void create_hierarchy(ObjectBoundingBoxHierarchy_T<RangeBoxType> *hierarc
                                                   const int num_boxes) {
   //
   //  Generate an initial sorting of the input boxes, sort in each of the three coordinate directions independently
-  //  Iterating though the box list in the order given by the 'index' arrays will return the boxes in each of the 
+  //  Iterating though the box list in the order given by the 'index' arrays will return the boxes in each of the
   //  three sorted orders.
   //
   std::vector< std::pair<float,int> > centroid_x(num_boxes);
@@ -852,7 +852,7 @@ inline void create_hierarchy(ObjectBoundingBoxHierarchy_T<RangeBoxType> *hierarc
   int maxThreadCount= omp_get_max_threads();
 
   if(maxThreadCount <= 8) {
-    //  This method avoids thread nesting and the potential overhead it inccurs.  Overall it is theoretically not 
+    //  This method avoids thread nesting and the potential overhead it inccurs.  Overall it is theoretically not
     //  all that scalable and is targeted to relatively low thread counts.
     create_hierarchy_loop_threaded(hierarchy_data,
                                                    boxes,
@@ -885,7 +885,7 @@ inline void create_hierarchy(ObjectBoundingBoxHierarchy_T<RangeBoxType> *hierarc
     omp_set_nested(origNesting);
   }
 
-#else 
+#else
   //  Pure serial tree creation
   create_hierarchy_loop(hierarchy_data,
                         boxes,
@@ -904,7 +904,7 @@ inline void create_hierarchy(ObjectBoundingBoxHierarchy_T<RangeBoxType> *hierarc
 //
 //  Divide up the first few nodes (subdivisionLevel) of the hierarchy, but do NOT set their bounding boxes.  The remainder
 //  of the hierarchy can then be computed in thread separate computations.
-//  
+//
 template <typename RangeBoxType>
 void create_hierarchy_partial(ObjectBoundingBoxHierarchy_T<RangeBoxType> *const hierarchy_start_ptr,
                                                           stk::search::ObjectBoundingBox_T<RangeBoxType> *const boxes_start_ptr,
@@ -1013,7 +1013,7 @@ void create_hierarchy_partial(ObjectBoundingBoxHierarchy_T<RangeBoxType> *const 
     }
   }
   //
-  //  Resort the boxes based off of the primary array.  First use the new primary_sindex array to story a mapping between old box 
+  //  Resort the boxes based off of the primary array.  First use the new primary_sindex array to story a mapping between old box
   //  positions and new box positions.
   //
 #pragma omp parallel for schedule(static) default(none) shared(primary_index, primary_sindex) firstprivate(scratch_boxes_start_ptr, boxes_start_ptr, num_boxes)
@@ -1042,7 +1042,7 @@ void create_hierarchy_partial(ObjectBoundingBoxHierarchy_T<RangeBoxType> *const 
         } else {
           sub_sindex1[right_pos1++] = primary1 - left_child_size;
         }
-      }      
+      }
     }
   #pragma omp section
     {
@@ -1056,7 +1056,7 @@ void create_hierarchy_partial(ObjectBoundingBoxHierarchy_T<RangeBoxType> *const 
         } else {
           sub_sindex2[right_pos2++] = primary2 - left_child_size;
         }
-      }      
+      }
     }
   #pragma omp section
     {
@@ -1071,7 +1071,7 @@ void create_hierarchy_partial(ObjectBoundingBoxHierarchy_T<RangeBoxType> *const 
         } else {
           sub_sindex1[right_pos1--] = primary1 - left_child_size;
         }
-      }      
+      }
     }
 #pragma omp section
     {
@@ -1086,7 +1086,7 @@ void create_hierarchy_partial(ObjectBoundingBoxHierarchy_T<RangeBoxType> *const 
         } else {
           sub_sindex2[right_pos2--] = primary2 - left_child_size;
         }
-      }      
+      }
     }
   }
   //
@@ -1163,7 +1163,7 @@ void create_hierarchy_partial(ObjectBoundingBoxHierarchy_T<RangeBoxType> *const 
 
 #ifdef _OPENMP
 //
-//  Alternative algorithm to threaded tree creation based on forks.  Possibly ideal for large thread counts, also 
+//  Alternative algorithm to threaded tree creation based on forks.  Possibly ideal for large thread counts, also
 //  forking is a natural and easier to understand way to write the recursive algorthm.
 //
 template <typename RangeBoxType>
@@ -1177,7 +1177,7 @@ inline void create_hierarchy_fork_threaded(ObjectBoundingBoxHierarchy_T<RangeBox
                                                                 int* const sindex_array0_t_start_ptr,
                                                                 int* const sindex_array1_t_start_ptr,
                                                                 int* const sindex_array2_t_start_ptr,
-                                                                int numThreadsToUse) { 
+                                                                int numThreadsToUse) {
 
   if(numThreadsToUse == 1) {
     //
@@ -1242,7 +1242,7 @@ inline void create_hierarchy_fork_threaded(ObjectBoundingBoxHierarchy_T<RangeBox
     }
   }
   //
-  //  Resort the boxes based off of the primary array.  First use the new primary_sindex array to story a mapping between old box 
+  //  Resort the boxes based off of the primary array.  First use the new primary_sindex array to story a mapping between old box
   //  positions and new box positions.  Partion the 'sub' lists to the left and right sub trees.  Note the sub lists still
   //  need to remain in sorted order and are partioned with the below code.
   //
@@ -1272,7 +1272,7 @@ inline void create_hierarchy_fork_threaded(ObjectBoundingBoxHierarchy_T<RangeBox
         } else {
           sub_sindex1[right_pos1++] = primary1 - left_child_size;
         }
-      }      
+      }
     }
   #pragma omp section
     {
@@ -1286,7 +1286,7 @@ inline void create_hierarchy_fork_threaded(ObjectBoundingBoxHierarchy_T<RangeBox
         } else {
           sub_sindex2[right_pos2++] = primary2 - left_child_size;
         }
-      }      
+      }
     }
   #pragma omp section
     {
@@ -1301,7 +1301,7 @@ inline void create_hierarchy_fork_threaded(ObjectBoundingBoxHierarchy_T<RangeBox
         } else {
           sub_sindex1[right_pos1--] = primary1 - left_child_size;
         }
-      }      
+      }
     }
   #pragma omp section
     {
@@ -1316,7 +1316,7 @@ inline void create_hierarchy_fork_threaded(ObjectBoundingBoxHierarchy_T<RangeBox
         } else {
           sub_sindex2[right_pos2--] = primary2 - left_child_size;
         }
-      }      
+      }
     }
   }
   //
@@ -1528,4 +1528,3 @@ int ProximitySearchTree_T<RangeBoxType>::UpdateSearch(std::vector<stk::search::O
 }
 
 #endif
-

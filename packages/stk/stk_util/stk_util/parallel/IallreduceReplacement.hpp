@@ -3,8 +3,8 @@
 
 #include <stddef.h>
 #include <functional>
-#include "Parallel.hpp"
-#include "TreeReductionIndexer.hpp"
+#include "stk_util/parallel/Parallel.hpp"
+#include "stk_util/parallel/TreeReductionIndexer.hpp"
 
 namespace stk {
 namespace impl {
@@ -191,7 +191,7 @@ class IAllreduceReplacement
                           !(m_indexer.is_rank_on_level(m_currentLevel + 1, m_myrank));
 
       if (m_indexer.is_rank_on_level(m_currentLevel + 1, m_myrank))
-      {        
+      {
         m_currentLevel++;
         start_recv_from_children();
       }  else
@@ -254,12 +254,12 @@ class IAllreduceReplacement
     bool finish_reduction_down()
     {
       int flag1, flag2, flag3;
-      MPI_Testall(m_childRequests.size(), m_childRequests.data(), &flag1, MPI_STATUSES_IGNORE); 
+      MPI_Testall(m_childRequests.size(), m_childRequests.data(), &flag1, MPI_STATUSES_IGNORE);
 
       MPI_Test(&m_recvFromParentRequest, &flag2, MPI_STATUS_IGNORE);
       MPI_Test(&m_sendToParentRequest, &flag3, MPI_STATUS_IGNORE);
 
-      return flag1 && flag2 && flag3;  
+      return flag1 && flag2 && flag3;
     }
 
 
@@ -272,14 +272,14 @@ class IAllreduceReplacement
       {
         MPI_Irecv(m_recv_buffers[i].data(), m_recv_buffers[i].size(), m_datatype,
                   m_childRanks[i], m_tag, m_comm, &(m_childRequests[i]));
-      }      
+      }
     }
 
     void start_send_to_parent()
     {
       int parentRank = m_indexer.get_parent_rank(m_currentLevel+1, m_myrank);
-      MPI_Isend(m_output_buffer->data(), m_output_buffer->size(), m_datatype, parentRank, 
-                m_tag, m_comm, &(m_sendToParentRequest));    
+      MPI_Isend(m_output_buffer->data(), m_output_buffer->size(), m_datatype, parentRank,
+                m_tag, m_comm, &(m_sendToParentRequest));
     }
 
     void start_send_to_children()
@@ -287,7 +287,7 @@ class IAllreduceReplacement
       int numChildren = m_indexer.get_child_ranks(m_currentLevel-1, m_myrank, m_childRanks);
       for (int i=0; i < numChildren; ++i)
       {
-        MPI_Isend(m_output_buffer->data(), m_output_buffer->size(), m_datatype, 
+        MPI_Isend(m_output_buffer->data(), m_output_buffer->size(), m_datatype,
                   m_childRanks[i], m_tag, m_comm, &(m_childRequests[i]));
       }
     }
@@ -295,7 +295,7 @@ class IAllreduceReplacement
     void start_recv_from_parent()
     {
       int parentRank = m_indexer.get_parent_rank(m_currentLevel+1, m_myrank);
-      MPI_Irecv(m_output_buffer->data(), m_output_buffer->size(), m_datatype, 
+      MPI_Irecv(m_output_buffer->data(), m_output_buffer->size(), m_datatype,
                 parentRank, m_tag, m_comm, &(m_recvFromParentRequest));
     }
 

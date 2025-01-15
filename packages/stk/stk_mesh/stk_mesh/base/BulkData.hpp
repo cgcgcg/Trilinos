@@ -63,7 +63,7 @@
 #include "stk_mesh/baseImpl/MeshModification.hpp"
 #include "stk_mesh/baseImpl/elementGraph/GraphTypes.hpp"
 #include <stk_mesh/baseImpl/elementGraph/MeshDiagnosticObserver.hpp>
-#include "NgpProfilingBlock.hpp"
+#include "stk_mesh/base/NgpProfilingBlock.hpp"
 #include "stk_mesh/baseImpl/SoloSideIdGenerator.hpp"
 #include "stk_mesh/baseImpl/SideSetImpl.hpp"
 #include "stk_mesh/baseImpl/NgpMeshHostData.hpp"
@@ -96,9 +96,9 @@ void replace_bulk_data(const stk::mesh::BulkData & inMesh, T & outMesh, std::fun
 
 } }
 
-#include "EntityCommListInfo.hpp"
-#include "SharedEntityType.hpp"
-#include "CommListUpdater.hpp"
+#include "stk_mesh/base/EntityCommListInfo.hpp"
+#include "stk_mesh/base/SharedEntityType.hpp"
+#include "stk_mesh/base/CommListUpdater.hpp"
 
 namespace stk {
 namespace mesh {
@@ -2349,4 +2349,3 @@ inline impl::NgpMeshHostData<NgpMemSpace>* get_ngp_mesh_host_data(const BulkData
 } // namespace stk
 
 #endif //  stk_mesh_BulkData_hpp
-

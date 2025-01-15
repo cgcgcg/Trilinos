@@ -4,7 +4,7 @@
 #include <functional>
 #include <cassert>
 
-#include "Parallel.hpp"  // for MPI
+#include "stk_util/parallel/Parallel.hpp"  // for MPI
 
 
 namespace stk {
