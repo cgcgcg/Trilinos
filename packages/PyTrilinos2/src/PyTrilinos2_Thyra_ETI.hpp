@@ -24,6 +24,10 @@
 #include <Thyra_SolveSupportTypes.hpp>
 #include <Thyra_OperatorVectorTypes.hpp>
 
+#include <Thyra_StateFuncModelEvaluatorBase.hpp>
+#include "Thyra_ModelEvaluatorBase_def.hpp"
+#include "Teuchos_ExplicitInstantiationHelpers.hpp"
+
 
 #define BINDER_THYRA_WRAPPERS_INSTANT(SC,LO,GO,NO) \
   template Teuchos::RCP<Thyra::VectorBase<SC> > createVector<SC, LO, GO, NO>(const Teuchos::RCP<Tpetra::Vector<SC, LO, GO, NO> > &tpetraVector, \
@@ -65,6 +69,12 @@
 #define BINDER_TPETRA_OPERATOR_INSTANT(SC,LO,GO,NO) \
    template class Tpetra::Operator<SC, LO, GO, NO>;
 
+#define BINDER_THYRA_MODELEVALUATOR_INSTANT(SC) \
+  THYRA_MODEL_EVALUATOR_BASE_INSTANT(SC) \
+  template class Thyra::ModelEvaluator<SC>; \
+  template class Thyra::ModelEvaluatorDefaultBase<SC>; \
+  template class Thyra::StateFuncModelEvaluatorBase<SC>;
+
 namespace Tpetra {
   BINDER_TPETRA_OPERATOR_INSTANT(Tpetra::Details::DefaultTypes::scalar_type, Tpetra::Details::DefaultTypes::local_ordinal_type, Tpetra::Details::DefaultTypes::global_ordinal_type, Tpetra::Details::DefaultTypes::node_type)
 }
@@ -82,6 +92,7 @@ namespace Thyra {
   BINDER_THYRA_VECTOR_INSTANT(Tpetra::Details::DefaultTypes::scalar_type, Tpetra::Details::DefaultTypes::local_ordinal_type, Tpetra::Details::DefaultTypes::global_ordinal_type, Tpetra::Details::DefaultTypes::node_type)
   BINDER_THYRA_LINEAROP_INSTANT(Tpetra::Details::DefaultTypes::scalar_type, Tpetra::Details::DefaultTypes::local_ordinal_type, Tpetra::Details::DefaultTypes::global_ordinal_type, Tpetra::Details::DefaultTypes::node_type)
   BINDER_THYRA_LINEARSOLVER_INSTANT(Tpetra::Details::DefaultTypes::scalar_type)
+  BINDER_THYRA_MODELEVALUATOR_INSTANT(Tpetra::Details::DefaultTypes::scalar_type)
 }
 
 #endif // PYTRILINOS2_THYRA_ETI
