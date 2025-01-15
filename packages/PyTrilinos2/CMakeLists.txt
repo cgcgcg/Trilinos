@@ -42,7 +42,7 @@ TRIBITS_ADD_OPTION_AND_DEFINE(PyTrilinos2_BINDER_VERBOSE
 
 ###################################################################################################
 
-SET(PyTrilinos2_BINDER_NUM_FILES "150" CACHE STRING "Maxinum number of generated files by binder.")
+SET(PyTrilinos2_BINDER_NUM_FILES "250" CACHE STRING "Maxinum number of generated files by binder.")
 
 function(get_all_include_dirs  LIBRARY_NAME all_include_dirs all_visited_libs)
   if (TARGET ${LIBRARY_NAME})
