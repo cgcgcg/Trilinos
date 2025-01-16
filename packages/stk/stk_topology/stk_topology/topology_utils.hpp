@@ -6,15 +6,15 @@
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
-// 
+//
 //     * Redistributions of source code must retain the above copyright
 //       notice, this list of conditions and the following disclaimer.
-// 
+//
 //     * Redistributions in binary form must reproduce the above
 //       copyright notice, this list of conditions and the following
 //       disclaimer in the documentation and/or other materials provided
 //       with the distribution.
-// 
+//
 //     * Neither the name of NTESS nor the names of its contributors
 //       may be used to endorse or promote products derived from this
 //       software without specific prior written permission.
@@ -30,7 +30,7 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 
 #ifndef STKTOPOLOGY_TOPOLOGY_TCC
 #define STKTOPOLOGY_TOPOLOGY_TCC
@@ -183,13 +183,18 @@ struct side_rank_impl {
   using result_type = stk::topology::rank_t;
 
   STK_INLINE_FUNCTION
+  side_rank_impl()
+    : m_ordinal(0)
+  {}
+
+  STK_INLINE_FUNCTION
   side_rank_impl(unsigned ordinal)
     : m_ordinal(ordinal)
   {}
 
   template <typename Topology>
   STK_INLINE_FUNCTION
-  result_type operator()(Topology) const { 
+  result_type operator()(Topology) const {
     if (!has_mixed_rank_sides_impl{}(Topology{})) {
       return Topology::side_rank;
     } else {
@@ -275,6 +280,11 @@ struct defined_on_spatial_dimension_impl {
   using result_type = bool;
 
   STK_INLINE_FUNCTION
+  defined_on_spatial_dimension_impl()
+    : m_ordinal(0)
+  {}
+
+  STK_INLINE_FUNCTION
   defined_on_spatial_dimension_impl(unsigned ordinal)
     : m_ordinal(ordinal)
   {}
@@ -290,6 +300,11 @@ struct face_topology_impl {
   using result_type = stk::topology;
 
   STK_INLINE_FUNCTION
+  face_topology_impl()
+    : m_ordinal(0)
+  {}
+
+  STK_INLINE_FUNCTION
   face_topology_impl(unsigned ordinal)
     : m_ordinal(ordinal)
   {}
@@ -300,6 +315,27 @@ struct face_topology_impl {
 
   unsigned m_ordinal;
 };
+
+struct shell_side_topology_impl {
+  using result_type = stk::topology;
+
+  STK_INLINE_FUNCTION
+  shell_side_topology_impl(unsigned ordinal)
+    : m_ordinal(ordinal)
+  {}
+
+  template <typename Topology>
+  STK_INLINE_FUNCTION
+  result_type operator()(Topology) const {
+    if constexpr (Topology::is_shell)
+      return Topology::shell_side_topology(m_ordinal);
+
+    return topology::topology_t::INVALID_TOPOLOGY;
+  }
+
+  unsigned m_ordinal;
+};
+
 
 template <typename OrdinalOutputIterator>
 struct edge_node_ordinals_impl {
@@ -413,4 +449,3 @@ struct permutation_nodes_impl {
 } /*namespace stk*/
 
 #endif //STKTOPOLOGY_TOPOLOGY_TCC
-
