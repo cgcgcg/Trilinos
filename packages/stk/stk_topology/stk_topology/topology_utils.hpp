@@ -161,6 +161,11 @@ struct side_rank_impl {
   using result_type = stk::topology::rank_t;
 
   STK_INLINE_FUNCTION
+  side_rank_impl()
+    : m_ordinal(0)
+  {}
+
+  STK_INLINE_FUNCTION
   side_rank_impl(unsigned ordinal)
     : m_ordinal(ordinal)
   {}
@@ -253,6 +258,11 @@ struct defined_on_spatial_dimension_impl {
   using result_type = bool;
 
   STK_INLINE_FUNCTION
+  defined_on_spatial_dimension_impl()
+    : m_ordinal(0)
+  {}
+
+  STK_INLINE_FUNCTION
   defined_on_spatial_dimension_impl(unsigned ordinal)
     : m_ordinal(ordinal)
   {}
@@ -268,6 +278,11 @@ struct face_topology_impl {
   using result_type = stk::topology;
 
   STK_INLINE_FUNCTION
+  face_topology_impl()
+    : m_ordinal(0)
+  {}
+
+  STK_INLINE_FUNCTION
   face_topology_impl(unsigned ordinal)
     : m_ordinal(ordinal)
   {}
@@ -281,6 +296,11 @@ struct face_topology_impl {
 
 struct shell_side_topology_impl {
   using result_type = stk::topology;
+
+  STK_INLINE_FUNCTION
+  shell_side_topology_impl()
+    : m_ordinal(0)
+  {}
 
   STK_INLINE_FUNCTION
   shell_side_topology_impl(unsigned ordinal)
