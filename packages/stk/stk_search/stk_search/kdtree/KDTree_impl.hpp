@@ -44,6 +44,7 @@
 #include <utility>                                     // for pair, make_pair
 
 #include "stk_search/kdtree/KDTree_BoundingBox.hpp"
+#include "stk_search/kdtree/KDTree.hpp"
 
 // #######################   End Clang Header Tool Managed Headers  ########################
 
