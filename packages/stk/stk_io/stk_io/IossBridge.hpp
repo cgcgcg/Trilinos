@@ -153,7 +153,7 @@ void get_selected_nodes(OutputParams &params,
                         stk::mesh::EntityVector &nodes);
 size_t count_selected_nodes(OutputParams &params,
                             const stk::mesh::Selector &selector);
-bool node_is_connected_to_local_element(const stk::mesh::BulkData &bulk, stk::mesh::Entity node);
+bool node_is_connected_to_local_element(const stk::mesh::BulkData &bulk, stk::mesh::Entity node, const stk::mesh::Selector *subsetSelector);
 
 /** \addtogroup stk_io_module
  * \{
@@ -282,7 +282,6 @@ bool is_field_on_part(const stk::mesh::FieldBase *field,
  */
 
 
-std::string get_field_name(const stk::mesh::FieldBase &f, Ioss::DatabaseUsage dbUsage);
 void getNamedFields(const stk::mesh::MetaData &meta, Ioss::GroupingEntity *io_entity, std::vector<FieldAndName> &namedFields);
 
 void ioss_add_fields(const stk::mesh::Part &part,

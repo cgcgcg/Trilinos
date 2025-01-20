@@ -127,7 +127,6 @@ public:
   MeshField& set_inactive();
   MeshField& set_single_state(bool yesno);
   MeshField& set_read_once(bool yesno);
-  MeshField& set_classic_restart();
 
   double get_read_time() const {return m_timeToRead;}
 
