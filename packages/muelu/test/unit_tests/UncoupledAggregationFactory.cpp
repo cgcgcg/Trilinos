@@ -112,6 +112,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(UncoupledAggregationFactory, Build_ML, Scalar,
   // Test the ML style options
   aggFact->SetParameter("aggregation: match ML phase2a", Teuchos::ParameterEntry(true));
   aggFact->SetParameter("aggregation: match ML phase2b", Teuchos::ParameterEntry(true));
+  aggFact->SetParameter("aggregation: backend", Teuchos::ParameterEntry(std::string("host")));
   aggFact->SetFactory("Graph", dropFact);
 
   aLevel.Request(*aggFact);

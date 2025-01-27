@@ -322,7 +322,10 @@ int main_(Teuchos::CommandLineProcessor& clp, Xpetra::UnderlyingLib lib, int arg
       ParameterList mueluList;
       mueluList.set("verbosity", "interfacetest");
       mueluList.set("coarse: max size", 100);
-      mueluList.set("use kokkos refactor", useKokkos);
+      if (useKokkos)
+        mueluList.set("aggregation: backend", "kokkos");
+      else
+        mueluList.set("aggregation: backend", "host");
       mueluList.set("aggregation: deterministic", useKokkos);
 
       ParameterListInterpreter mueLuFactory(mueluList);
@@ -367,7 +370,10 @@ int main_(Teuchos::CommandLineProcessor& clp, Xpetra::UnderlyingLib lib, int arg
       ParameterList mueluList;
       mueluList.set("verbosity", "interfacetest");
       mueluList.set("coarse: max size", 100);
-      mueluList.set("use kokkos refactor", useKokkos);
+      if (useKokkos)
+        mueluList.set("aggregation: backend", "kokkos");
+      else
+        mueluList.set("aggregation: backend", "host");
       mueluList.set("aggregation: deterministic", useKokkos);
       ParameterList& level0 = mueluList.sublist("level 0");
       level0.set("Coordinates", coordinates0);
@@ -399,7 +405,10 @@ int main_(Teuchos::CommandLineProcessor& clp, Xpetra::UnderlyingLib lib, int arg
       mueluList.set("transpose: use implicit", false);
       mueluList.set("max levels", 4);
       mueluList.set("coarse: max size", 100);
-      mueluList.set("use kokkos refactor", useKokkos);
+      if (useKokkos)
+        mueluList.set("aggregation: backend", "kokkos");
+      else
+        mueluList.set("aggregation: backend", "host");
       mueluList.set("aggregation: deterministic", useKokkos);
       ParameterList& level0 = mueluList.sublist("level 0");
       level0.set("Coordinates", coordinates0);
@@ -430,7 +439,10 @@ int main_(Teuchos::CommandLineProcessor& clp, Xpetra::UnderlyingLib lib, int arg
       mueluList.set("coarse: max size", 100);
       mueluList.set("transpose: use implicit", true);
       mueluList.set("max levels", 2);
-      mueluList.set("use kokkos refactor", useKokkos);
+      if (useKokkos)
+        mueluList.set("aggregation: backend", "kokkos");
+      else
+        mueluList.set("aggregation: backend", "host");
       mueluList.set("aggregation: deterministic", useKokkos);
       ParameterList& level0 = mueluList.sublist("level 0");
       level0.set("Coordinates", coordinates0);

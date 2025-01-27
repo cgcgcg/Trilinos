@@ -203,7 +203,10 @@ int main_(Teuchos::CommandLineProcessor& clp, Xpetra::UnderlyingLib& lib, int ar
         bool coordsSet = false;
         if (dirList[k] == prefix + "EasyParameterListInterpreter/" ||
             dirList[k] == prefix + "EasyParameterListInterpreter-heavy/") {
-          paramList.set("use kokkos refactor", useKokkos);
+          if (useKokkos)
+            paramList.set("aggregation: backend", "kokkos");
+          else
+            paramList.set("aggregation: backend", "host");
           mueluFactory = Teuchos::rcp(new ParameterListInterpreter(paramList, comm));
         } else if (dirList[k] == prefix + "FactoryParameterListInterpreter/" ||
                    dirList[k] == prefix + "FactoryParameterListInterpreter-heavy/") {
@@ -215,7 +218,10 @@ int main_(Teuchos::CommandLineProcessor& clp, Xpetra::UnderlyingLib& lib, int ar
             paramList.remove("parameter list: syntax");
           RCP<Teuchos::ParameterList> mueluParamList = Teuchos::getParametersFromXmlString(MueLu::ML2MueLuParameterTranslator::translate(paramList, "SA"));
           mueluParamList->set("multigrid algorithm", "sa");
-          mueluParamList->set("use kokkos refactor", useKokkos);
+          if (useKokkos)
+            mueluParamList->set("aggregation: backend", "kokkos");
+          else
+            mueluParamList->set("aggregation: backend", "host");
 
           // If we are using Kokkos refactor, we need to strip off the options that Kokkos doesn't support
           if (useKokkos) {
@@ -233,7 +239,10 @@ int main_(Teuchos::CommandLineProcessor& clp, Xpetra::UnderlyingLib& lib, int ar
           RCP<Teuchos::ParameterList> mueluParamList = Teuchos::getParametersFromXmlString(MueLu::ML2MueLuParameterTranslator::translate(paramList, "SA"));
 
           mueluParamList->set("multigrid algorithm", "sa");
-          mueluParamList->set("use kokkos refactor", useKokkos);
+          if (useKokkos)
+            mueluParamList->set("aggregation: backend", "kokkos");
+          else
+            mueluParamList->set("aggregation: backend", "host");
           mueluFactory = Teuchos::rcp(new ParameterListInterpreter(*mueluParamList));
         } else
           TEUCHOS_TEST_FOR_EXCEPTION(true, MueLu::Exceptions::RuntimeError, "Not a test directory");

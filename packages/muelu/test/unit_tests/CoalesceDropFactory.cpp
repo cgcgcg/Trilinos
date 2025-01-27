@@ -56,8 +56,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, Build, Scalar, LocalOrdin
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  auto graph_d     = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &coalesceDropFact);
+  auto graph       = graph_d->copyToHost();
+  LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 
   const RCP<const Map> myImportMap = graph->GetImportMap();  // < note that the ImportMap is built from the column map of the matrix A WITHOUT dropping!
@@ -102,8 +103,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationBasic, Scalar
   dropFact.Build(fineLevel);
 
   fineLevel.print(out);
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &dropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &dropFact);
+  auto graph_d     = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &dropFact);
+  auto graph       = graph_d->copyToHost();
+  LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &dropFact);
   TEST_EQUALITY(Teuchos::as<int>(graph->GetDomainMap()->getGlobalNumElements()) == comm->getSize(), true);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == blockSize, true);
   bool bCorrectGraph = false;
@@ -198,8 +200,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationStrided, Scal
 
   dropFact.Build(fineLevel);
   fineLevel.print(out);
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &dropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &dropFact);
+  auto graph_d     = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &dropFact);
+  auto graph       = graph_d->copyToHost();
+  LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &dropFact);
   TEST_EQUALITY(Teuchos::as<int>(graph->GetDomainMap()->getGlobalNumElements()) == comm->getSize(), true);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == blockSize, true);
   bool bCorrectGraph = false;
@@ -302,7 +305,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationStrided2, Sca
   dropFact.Build(fineLevel);
 
   fineLevel.print(out);
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &dropFact);
+  auto graph_d = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &dropFact);
+  auto graph   = graph_d->copyToHost();
 
   LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &dropFact);
   TEST_EQUALITY(Teuchos::as<int>(graph->GetDomainMap()->getGlobalNumElements()) == comm->getSize(), true);
@@ -408,7 +412,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationStridedOffset
   dropFact.Build(fineLevel);
 
   fineLevel.print(out);
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &dropFact);
+  auto graph_d = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &dropFact);
+  auto graph   = graph_d->copyToHost();
 
   LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &dropFact);
   TEST_EQUALITY(Teuchos::as<int>(graph->GetDomainMap()->getGlobalNumElements()) == comm->getSize(), true);
@@ -488,8 +493,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationLightweight, 
 
   dropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &dropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &dropFact);
+  auto graph_d     = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &dropFact);
+  auto graph       = graph_d->copyToHost();
+  LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &dropFact);
   TEST_EQUALITY(Teuchos::as<int>(graph->GetDomainMap()->getGlobalNumElements()) == comm->getSize(), true);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == blockSize, true);
   bool bCorrectGraph = false;
@@ -567,8 +573,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationLightweightDr
 
   dropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &dropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &dropFact);
+  auto graph_d     = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &dropFact);
+  auto graph       = graph_d->copyToHost();
+  LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &dropFact);
   TEST_EQUALITY(Teuchos::as<int>(graph->GetDomainMap()->getGlobalNumElements()) == 3 * comm->getSize(), true);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
   bool bCorrectGraph = false;
@@ -646,8 +653,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationStridedLW, Sc
   dropFact.Build(fineLevel);
 
   fineLevel.print(out);
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &dropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &dropFact);
+  auto graph_d     = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &dropFact);
+  auto graph       = graph_d->copyToHost();
+  LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &dropFact);
   TEST_EQUALITY(Teuchos::as<int>(graph->GetDomainMap()->getGlobalNumElements()) == comm->getSize(), true);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == blockSize, true);
   bool bCorrectGraph = false;
@@ -751,7 +759,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationStrided2LW, S
   dropFact.Build(fineLevel);
 
   fineLevel.print(out);
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &dropFact);
+  auto graph_d = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &dropFact);
+  auto graph   = graph_d->copyToHost();
 
   LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &dropFact);
   TEST_EQUALITY(Teuchos::as<int>(graph->GetDomainMap()->getGlobalNumElements()) == comm->getSize(), true);
@@ -858,7 +867,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationStridedOffset
   dropFact.Build(fineLevel);
 
   fineLevel.print(out);
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &dropFact);
+  auto graph_d = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &dropFact);
+  auto graph   = graph_d->copyToHost();
 
   LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &dropFact);
   TEST_EQUALITY(Teuchos::as<int>(graph->GetDomainMap()->getGlobalNumElements()) == comm->getSize(), true);
@@ -930,7 +940,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationDroppingLW, S
   dropFact.Build(fineLevel);
 
   fineLevel.print(out);
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &dropFact);
+  auto graph_d = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &dropFact);
+  auto graph   = graph_d->copyToHost();
 
   LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &dropFact);
   TEST_EQUALITY(Teuchos::as<int>(graph->GetDomainMap()->getGlobalNumElements()) == comm->getSize(), true);
@@ -1020,7 +1031,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationStridedOffset
   dropFact.Build(fineLevel);
 
   fineLevel.print(out);
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &dropFact);
+  auto graph_d = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &dropFact);
+  auto graph   = graph_d->copyToHost();
 
   LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &dropFact);
   TEST_EQUALITY(Teuchos::as<int>(graph->GetDomainMap()->getGlobalNumElements()) == comm->getSize(), true);
@@ -1097,8 +1109,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, DistanceLaplacian, Scalar
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  auto graph_d     = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &coalesceDropFact);
+  auto graph       = graph_d->copyToHost();
+  LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 
   const RCP<const Map> myImportMap = graph->GetImportMap();  // < note that the ImportMap is built from the column map of the matrix A WITHOUT dropping!
@@ -1162,8 +1175,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, DistanceLaplacianScaledCu
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  auto graph_d     = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &coalesceDropFact);
+  auto graph       = graph_d->copyToHost();
+  LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 
   const RCP<const Map> myImportMap = graph->GetImportMap();  // < note that the ImportMap is built from the column map of the matrix A WITHOUT dropping!
@@ -1228,8 +1242,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, DistanceLaplacianUnscaled
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  auto graph_d     = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &coalesceDropFact);
+  auto graph       = graph_d->copyToHost();
+  LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 
   const RCP<const Map> myImportMap = graph->GetImportMap();  // < note that the ImportMap is built from the column map of the matrix A WITHOUT dropping!
@@ -1294,8 +1309,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, DistanceLaplacianCutSym, 
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  auto graph_d     = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &coalesceDropFact);
+  auto graph       = graph_d->copyToHost();
+  LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 
   const RCP<const Map> myImportMap = graph->GetImportMap();  // < note that the ImportMap is built from the column map of the matrix A WITHOUT dropping!
@@ -1380,8 +1396,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, ClassicalScaledCut, Scala
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  auto graph_d     = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &coalesceDropFact);
+  auto graph       = graph_d->copyToHost();
+  LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 
   const RCP<const Map> myImportMap = graph->GetImportMap();  // < note that the ImportMap is built from the column map of the matrix A WITHOUT dropping!
@@ -1498,8 +1515,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, ClassicalUnScaledCut, Sca
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  auto graph_d     = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &coalesceDropFact);
+  auto graph       = graph_d->copyToHost();
+  LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 
   const RCP<const Map> myImportMap = graph->GetImportMap();  // < note that the ImportMap is built from the column map of the matrix A WITHOUT dropping!
@@ -1588,8 +1606,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, SignaledClassical, Scalar
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  auto graph_d     = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &coalesceDropFact);
+  auto graph       = graph_d->copyToHost();
+  LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 
   const RCP<const Map> myImportMap = graph->GetImportMap();  // < note that the ImportMap is built from the column map of the matrix A WITHOUT dropping!
@@ -1647,7 +1666,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, SignaledScaledCutClassica
 
   TEST_THROW(coalesceDropFact.Build(fineLevel), MueLu::Exceptions::RuntimeError);
 
-  //    RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
+  //    auto graph_d = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &coalesceDropFact);
+  //    auto graph = graph_d->copyToHost();
   //    LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   //    TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 
@@ -1706,7 +1726,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, SignaledUnscaledCutClassi
 
   TEST_THROW(coalesceDropFact.Build(fineLevel), MueLu::Exceptions::RuntimeError);
 
-  //    RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
+  //    auto graph_d = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &coalesceDropFact);
+  //    auto graph = graph_d->copyToHost();
   //    LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   //    TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 
@@ -1763,8 +1784,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, BlockDiagonalColoredSigne
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  auto graph_d     = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &coalesceDropFact);
+  auto graph       = graph_d->copyToHost();
+  LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 
   const RCP<const Map> myImportMap = graph->GetImportMap();  // < note that the ImportMap is built from the column map of the matrix A WITHOUT dropping!
@@ -1840,8 +1862,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, BlockDiagonalNoColoredSig
   // Need an importer
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  auto graph_d     = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &coalesceDropFact);
+  auto graph       = graph_d->copyToHost();
+  LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 
   const RCP<const Map> myImportMap = graph->GetImportMap();  // < note that the ImportMap is built from the column map of the matrix A WITHOUT dropping!
@@ -1898,8 +1921,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, BlockDiagonalSignedClassi
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  auto graph_d     = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &coalesceDropFact);
+  auto graph       = graph_d->copyToHost();
+  LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 
   const RCP<const Map> myImportMap = graph->GetImportMap();  // < note that the ImportMap is built from the column map of the matrix A WITHOUT dropping!
@@ -1961,8 +1985,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, BlockDiagonal, Scalar, Lo
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  auto graph_d     = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &coalesceDropFact);
+  auto graph       = graph_d->copyToHost();
+  LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 }
 
@@ -2006,8 +2031,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, BlockDiagonalClassical, S
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  auto graph_d     = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &coalesceDropFact);
+  auto graph       = graph_d->copyToHost();
+  LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 }
 
@@ -2051,8 +2077,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, BlockDiagonalDistanceLapl
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  auto graph_d     = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &coalesceDropFact);
+  auto graph       = graph_d->copyToHost();
+  LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 }
 
@@ -2101,8 +2128,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, BlockDiagonalDistanceDiff
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  auto graph_d     = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &coalesceDropFact);
+  auto graph       = graph_d->copyToHost();
+  LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 }
 
@@ -2152,8 +2180,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, BlockDiagonalDistanceLapl
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  auto graph_d     = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &coalesceDropFact);
+  auto graph       = graph_d->copyToHost();
+  LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 }
 
@@ -2198,8 +2227,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, DistanceLaplacianWeighted
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  auto graph_d     = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &coalesceDropFact);
+  auto graph       = graph_d->copyToHost();
+  LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 }
 
@@ -2234,7 +2264,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AggresiveDroppingIsMarked
 
     dropFact.Build(fineLevel);
 
-    RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &dropFact);
+    auto graph_d = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &dropFact);
+    auto graph   = graph_d->copyToHost();
 
     auto boundaryNodes         = graph->GetBoundaryNodeMap();
     bool allNodesAreOnBoundary = true;
@@ -2261,7 +2292,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AggresiveDroppingIsMarked
 
     dropFact.Build(fineLevel);
 
-    RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &dropFact);
+    auto graph_d = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &dropFact);
+    auto graph   = graph_d->copyToHost();
 
     auto boundaryNodes         = graph->GetBoundaryNodeMap();
     bool allNodesAreOnBoundary = true;
@@ -2288,7 +2320,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AggresiveDroppingIsMarked
 
     dropFact.Build(fineLevel);
 
-    RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &dropFact);
+    auto graph_d = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &dropFact);
+    auto graph   = graph_d->copyToHost();
 
     auto boundaryNodes         = graph->GetBoundaryNodeMap();
     bool allNodesAreOnBoundary = true;
@@ -2332,8 +2365,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, SignedClassicalSA, Scalar
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  auto graph_d     = fineLevel.Get<RCP<LWGraph_kokkos> >("Graph", &coalesceDropFact);
+  auto graph       = graph_d->copyToHost();
+  LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 }
 

@@ -402,6 +402,9 @@ std::string ML2MueLuParameterTranslator::SetParameterList(const Teuchos::Paramet
   // make sure that MueLu's phase2b matches ML's
   mueluss << "<Parameter name=\"aggregation: match ML phase2b\"      type=\"bool\"     value=\"true\"/>" << std::endl;
 
+  // make sure we run the host algos that can match ML
+  mueluss << "<Parameter name=\"aggregation: backend\"      type=\"string\"     value=\"host\"/>" << std::endl;
+
   // make sure that MueLu's drop tol matches ML's
   mueluss << "<Parameter name=\"aggregation: use ml scaling of drop tol\"      type=\"bool\"     value=\"true\"/>" << std::endl;
 

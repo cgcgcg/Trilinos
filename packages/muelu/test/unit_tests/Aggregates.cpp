@@ -83,6 +83,7 @@ class AggregateGenerator {
     aggFact->SetParameter("aggregation: enable phase 3", Teuchos::ParameterEntry(bPhase3));
     aggFact->SetParameter("aggregation: phase3 avoid singletons", Teuchos::ParameterEntry(true));
     aggFact->SetParameter("aggregation: use interface aggregation", Teuchos::ParameterEntry(false));
+    aggFact->SetParameter("aggregation: backend", Teuchos::ParameterEntry(std::string("host")));
     level.Request("Aggregates", aggFact.get());
     level.Request("UnAmalgamationInfo", amalgFact.get());
 
@@ -161,6 +162,7 @@ class AggregateGenerator {
     aggFact->SetParameter("aggregation: enable phase 2a", Teuchos::ParameterEntry(true));
     aggFact->SetParameter("aggregation: enable phase 2b", Teuchos::ParameterEntry(true));
     aggFact->SetParameter("aggregation: enable phase 3", Teuchos::ParameterEntry(true));
+    aggFact->SetParameter("aggregation: backend", Teuchos::ParameterEntry(std::string("host")));
 
     level.Set("nodeOnInterface", nodeOnInterface);
 
@@ -210,6 +212,7 @@ class AggregateGenerator {
     aggFact->SetParameter("aggregation: enable phase 3", Teuchos::ParameterEntry(true));
 
     aggFact->SetParameter("aggregation: match ML phase2a", Teuchos::ParameterEntry(true));
+    aggFact->SetParameter("aggregation: backend", Teuchos::ParameterEntry("host"));
 
     // Hybrid
     level.Set("aggregationRegionType", regionType);
@@ -1294,7 +1297,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(Aggregates, AllowDroppingToCreateAdditionalDir
   level.Request(*aggFact);
   aggFact->Build(level);
   RCP<Aggregates> aggregates = level.Get<RCP<Aggregates>>("Aggregates", aggFact.get());
-  RCP<LWGraph> graph         = level.Get<RCP<LWGraph_kokkos>>("Graph", dropFact.get())->copyToHost();
+  auto graph                 = level.Get<RCP<LWGraph_kokkos>>("Graph", dropFact.get())->copyToHost();
   auto dirichletBoundaryMap  = graph->GetBoundaryNodeMap();
   int numDirichletRows       = 0;
   LO numRows                 = graph->GetNodeNumVertices();

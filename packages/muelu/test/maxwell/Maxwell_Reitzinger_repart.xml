@@ -43,10 +43,11 @@
     <Parameter name="aggregation: match ML phase1" type="bool" value="true"/>
     <Parameter name="aggregation: match ML phase2a" type="bool" value="true"/>
     <Parameter name="aggregation: match ML phase2b" type="bool" value="true"/>
+    <Parameter name="aggregation: backend" type="string" value="host"/>
     <Parameter name="aggregation: use ml scaling of drop tol" type="bool" value="true"/>
     <Parameter name="rap: fix zero diagonals" type="bool" value="true"/>
     <Parameter name="rap: fix zero diagonals threshold" type="double" value="1e-10"/>
-    
+
     <!-- Currently needed but we should fix this -->
     <Parameter name="tentative: constant column sums" type="bool" value="false"/>
     <Parameter name="tentative: calculate qr" type="bool" value="false"/>
@@ -58,7 +59,7 @@
     <Parameter        name="repartition: min rows per proc"       type="int"      value="20"/> <!-- 20 for 4 procs -->
     <Parameter        name="repartition: max imbalance"           type="double"   value="1.1"/>
     <Parameter        name="repartition: remap parts"             type="bool"     value="true"/>
-    
+
     <!-- We probably want this in general -->
     <Parameter        name="repartition: use subcommunicators"             type="bool"     value="true"/>
 
