@@ -1,5 +1,5 @@
-/*! 
-\mainpage Trilinos/Ifpack2: Incomplete factorizations, relaxations, and domain decomposition for Tpetra objects
+/*!
+\page ifpack2 Ifpack2: Incomplete factorizations, relaxations, and domain decomposition for Tpetra objects
 
 \section Ifpack2_intro What is Ifpack2?
 

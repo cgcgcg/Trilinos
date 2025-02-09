@@ -1,4 +1,4 @@
-# Rapid Optimization Library (ROL)
+# Rapid Optimization Library (ROL) {#rol}
 
 ![Rapid Optimization Library](https://raw.githubusercontent.com/sandialabs/rol/refs/heads/develop/rol.png)
 

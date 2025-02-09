@@ -13,7 +13,7 @@
 
 /*!
 
-\mainpage
+\page panzer Panzer
 
 \section main_index Index
 
@@ -81,24 +81,6 @@ NOTE: Panzer is a work in progress and is considered research stable code.  Do n
 - \ref questions
 
 \section user_guide_getting_started Getting Started
-
-*/
-
-/* ************************************************************************ */
-/* ************************************************************************ */
-
-/*! \page todo ToDo List
-
-Short Term:
-<ul>
-<li> ???
-</ul>
-
-Long Term:
-<ul>
-<li> ???
-<li>
-</ul>
 
 */
 

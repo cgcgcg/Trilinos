@@ -6,7 +6,7 @@
 
 /*!
 
-\mainpage
+\page xpetra Xpetra
 
 @image html xpetra.jpg
 
@@ -60,42 +60,6 @@ Xpetra is used by the MueLu and Zoltan2 projects.
 - \ref questions
 
 \section user_guide_getting_started Getting Started
-
-*/
-
-/* ************************************************************************ */
-/* ************************************************************************ */
-
-/*! \page todo ToDo List
-
-Short Term:
-<ul>
-<li> ???
-</ul>
-
-Long Term:
-<ul>
-<li> ???
-<li>
-</ul>
-
-*/
-
-/* ************************************************************************ */
-/* ************************************************************************ */
-
-/*! \page faq Frequently Asked Questions
-
-\section Questions
-\ref faq1
-
-\ref faq2
-
-\section faq1 1. Why name the code Xpetra?
-Why not?
-
-\section faq2 2. Put your question here?
-Answer your question here.
 
 */
 

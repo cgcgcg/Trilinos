@@ -5,11 +5,11 @@
 
 Ordering methods currently available:
 <ul>
-<li> \ref amdPage for fill-reducing ordering.
+<li> \subpage amdPage for fill-reducing ordering.
 <li> random ordering
-<li> \ref rcmPage for bandwidth-reducing ordering.
+<li> \subpage rcmPage for bandwidth-reducing ordering.
 <li> sorted_degree ordering
-<li> \ref ndPage for nested dissection based ordering.
+<li> \subpage ndPage for nested dissection based ordering.
 </ul>
 These are all serial.
 

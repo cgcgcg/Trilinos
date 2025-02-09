@@ -1,4 +1,4 @@
-/*! \mainpage Support Software for Vector Reduction/Transformation Operators
+/*! \page Support Software for Vector Reduction/Transformation Operators
 
 This doxygen collection contains documentation for some general support
 software for implementing and using RTOp objects.

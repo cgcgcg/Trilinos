@@ -1,4 +1,4 @@
-/*! \mainpage Trilinos/Adelus: Object-Oriented Interface to a Direct Matrix Solve (Dense matrices)
+/*! \page adelus Adelus: Object-Oriented Interface to a Direct Matrix Solve (Dense matrices)
 
 \section intro Introduction
 Adelus is an object-oriented interface to a LU solver for dense matrices on parallel platforms. These matrices are
