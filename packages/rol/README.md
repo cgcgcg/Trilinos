@@ -1,4 +1,4 @@
-# Rapid Optimization Library (ROL) Package
+# Rapid Optimization Library (ROL) Package {#rol}
 
 ![Rapid Optimization Library](rol.png)
 

@@ -40,12 +40,12 @@ Here we describe a typical way a user might use Zoltan2 for partitioning.
 
 Partitioning functionality that is available now is:
 <ul>
-<li> \ref blockPage for simple weighted identifiers (really created as a sample algorithm).
-<li> \ref mjPage Multi-jagged for weighted geometric coordinates.
-<li> \ref rcbPage for weighted geometric coordinates.
-<li> \ref scotchPartPage for undirected weighted graphs.
-<li> \ref parmetisPartPage for undirected weighted graphs.
-<li> \ref sphynxPage for undirected weighted graphs.
+<li> \subpage blockPage for simple weighted identifiers (really created as a sample algorithm).
+<li> \subpage mjPage Multi-jagged for weighted geometric coordinates.
+<li> \subpage rcbPage for weighted geometric coordinates.
+<li> \subpage scotchPartPage for undirected weighted graphs.
+<li> \subpage parmetisPartPage for undirected weighted graphs.
+<li> \subpage sphynxPage for undirected weighted graphs.
 </ul>
 These algorithms are all parallel.
 

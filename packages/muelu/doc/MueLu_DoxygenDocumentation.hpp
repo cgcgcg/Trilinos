@@ -12,7 +12,7 @@
 
 /*!
 
-\mainpage
+\page muelu MueLu - Algebraic Multigrid
 
 @image html muelu.png
 

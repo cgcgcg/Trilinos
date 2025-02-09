@@ -337,9 +337,3 @@ The block algorithm in Zoltan2_AlgBlock.hpp is a simple example
 of a Zoltan2 algorithm.
 
 */
-
-/*! \page z2_developer_teuchos_comm Teuchos_CommHelpers.hpp
-
-\include Teuchos_CommHelpers.hpp
-*/
-

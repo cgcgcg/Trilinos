@@ -12,7 +12,7 @@
 /* ************************************************************************ */
 
 /*!
-  \mainpage NOX & LOCA: Object-Oriented Nonlinear Solver and Continuation Packages
+  \page nox NOX & LOCA: Object-Oriented Nonlinear Solver and Continuation Packages
 
   \section introduction Introduction
 

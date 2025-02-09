@@ -222,7 +222,7 @@ namespace Intrepid2 {
 }// end namespace Intrepid2
 
 
-/*! \mainpage INTREPID2 Documentation (Development Version)
+/*! \page intrepid2 INTREPID2 Documentation (Development Version)
 
   \section intro_sec Introduction
 
@@ -349,6 +349,13 @@ namespace Intrepid2 {
 
   \subsection doen_qs_sec Done!
 
+  \subpage cell_tools_page
+
+  \subpage basis_page
+
+  \subpage function_space_tools_page
+
+  \subpage pagePolylib
 
 */
 

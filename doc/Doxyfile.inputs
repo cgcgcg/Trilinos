@@ -1,0 +1,273 @@
+INPUT = index.md core.md linear_solvers.md nonlinear_solvers.md discretization.md analysis.md interfaces.md tpls.md
+INPUT += seacas.md stk.md
+IMAGE_PATH = .
+
+# adelus
+INPUT += ../packages/adelus/doc/index_my.doc  ../packages/adelus/src
+IMAGE_PATH += ../packages/adelus/doc
+IMAGE_PATH += ../packages/adelus/doc
+
+# amesos2
+INPUT += ../packages/amesos2/src ../packages/amesos2/doc/index.doc
+IMAGE_PATH += ../packages/amesos2/doc
+EXAMPLE_PATH += ../packages/amesos2/example
+EXCLUDE += ../packages/amesos2/src/basker/README.md
+EXCLUDE += ../packages/amesos2/src/KLU2/README.md
+
+# anasazi
+INPUT += ../packages/anasazi/doc/index.doc ../packages/anasazi/doc/groups.doc ../packages/anasazi/src ../packages/anasazi/thyra/src ../packages/anasazi/tpetra/src
+IMAGE_PATH += ../packages/anasazi/doc/images
+EXAMPLE_PATH += ../packages/anasazi/tpetra/example
+
+# belos
+INPUT += ../packages/belos/src ../packages/belos/doc/index.doc
+IMAGE_PATH += ../packages/belos/doc/images
+EXAMPLE_PATH += ../packages/belos/tpetra/example \
+                         ../packages/belos/tpetra/example/BlockCG/BlockCGTpetraExFile.cpp \
+                         ../packages/belos/tpetra/example/BlockCG/PseudoBlockCGTpetraExFile.cpp \
+                         ../packages/belos/tpetra/example/BlockGmres/PseudoBlockGmresTpetraExFile.cpp \
+                         ../packages/belos/tpetra/example/BlockGmres/BlockGmresTpetraExFile.cpp \
+                         ../packages/belos/tpetra/example/BlockGmres/BlockGmresTpetraGaleriEx.cpp \
+                         ../packages/belos/tpetra/example/RCG/RCGTpetraExFile.cpp \
+                         ../packages/belos/tpetra/example/PCPG/PCPGTpetraExFile.cpp \
+                         ../packages/belos/tpetra/example/GCRODR/GCRODRTpetraExFile.cpp \
+                         ../packages/belos/tpetra/example/TFQMR/TFQMRTpetraExFile.cpp \
+                         ../packages/belos/tpetra/example/TFQMR/PseudoBlockTFQMREpetraExFile.cpp \
+                         ../packages/belos/tpetra/example/SolverFactory/SolverFactoryTpetraGaleriEx.cpp
+
+# compadre
+INPUT += ../packages/compadre/README.md ../packages/compadre/src
+EXAMPLE_PATH += ../packages/compadre/examples
+
+# galeri
+INPUT += ../packages/galeri/doc/index.doc ../packages/galeri/doc/maps.doc ../packages/galeri/doc/matrices.doc ../packages/galeri/doc/utils.doc ../packages/galeri/doc/fe.doc
+INPUT += ../packages/galeri/src-xpetra
+IMAGE_PATH += ../packages/galeri/doc
+EXAMPLE_PATH += ../packages/galeri/example-xpetra
+
+# ifpack2
+INPUT += ../packages/ifpack2/src ../packages/ifpack2/doc/index.doc
+IMAGE_PATH += ../packages/ifpack2/doc
+EXAMPLE_PATH += ../packages/ifpack2/example
+
+# intrepid2
+INPUT +=  \
+../packages/intrepid2//src/Cell \
+../packages/intrepid2/src/Discretization \
+../packages/intrepid2/src/Orientation \
+../packages/intrepid2/src/Projection \
+../packages/intrepid2/src/Shared
+IMAGE_PATH += ../packages/intrepid2/doc
+EXAMPLE_PATH += ../packages/intrepid2/assembly-examples
+
+# kokkos
+INPUT += kokkos.md
+
+# kokkos-kernels
+INPUT += kokkos-kernels.md
+
+# muelu
+INPUT += ../packages/muelu/doc/MueLu_DoxygenDocumentation.hpp ../packages/muelu/doc/MueLu_groups ../packages/muelu/src
+IMAGE_PATH += ../packages/muelu/doc
+EXAMPLE_PATH += ../packages/muelu/example
+
+# nox
+INPUT += ../packages/nox/src
+INPUT += ../packages/nox/src-loca
+INPUT += ../packages/nox/src-epetra
+INPUT += ../packages/nox/src-thyra
+INPUT += ../packages/nox/src-petsc
+INPUT += ../packages/nox/src-lapack
+INPUT += ../packages/nox/src-loca/src
+INPUT += ../packages/nox/src-loca/src-lapack
+INPUT += ../packages/nox/src-loca/src-epetra
+INPUT += ../packages/nox/src-loca/src-thyra
+EXAMPLE_PATH += ../packages/nox/examples
+
+# panzer
+INPUT += ../packages/panzer/disc-fe/src ../packages/panzer/adapters-stk/src ../packages/panzer/core/src ../packages/panzer/dof-mgr/src ../packages/panzer/expr-eval/src ../packages/panzer/doc/Panzer_DoxygenDocumentation.hpp
+EXAMPLE_PATH += ../packages/panzer/adapters-stk/example
+
+# phalanx
+INPUT += ../packages/phalanx/src
+EXAMPLE_PATH += ../packages/phalanx/example
+
+# rol
+INPUT += ../packages/rol/README.md
+INPUT                  += ../packages/rol/src/vector \
+                         ../packages/rol/src/function/ \
+                         ../packages/rol/src/function/boundconstraint \
+                         ../packages/rol/src/function/constraint \
+                         ../packages/rol/src/function/objective \
+                         ../packages/rol/src/function/nlls \
+                         ../packages/rol/src/function/operator \
+                         ../packages/rol/src/function/simopt \
+                         ../packages/rol/src/function/std \
+                         ../packages/rol/src/algorithm \
+                         ../packages/rol/src/status \
+                         ../packages/rol/src/step \
+                         ../packages/rol/src/sol \
+                         ../packages/rol/src/sol/algorithm \
+                         ../packages/rol/src/sol/function \
+                         ../packages/rol/src/sol/function/randvarfunctional \
+                         ../packages/rol/src/sol/function/randvarfunctional/error \
+                         ../packages/rol/src/sol/function/randvarfunctional/deviation \
+                         ../packages/rol/src/sol/function/randvarfunctional/regret \
+                         ../packages/rol/src/sol/function/randvarfunctional/risk \
+                         ../packages/rol/src/sol/function/randvarfunctional/risk/spectral \
+                         ../packages/rol/src/sol/function/randvarfunctional/risk/fdivergence \
+                         ../packages/rol/src/sol/function/randvarfunctional/probability \
+                         ../packages/rol/src/sol/function/distribution \
+                         ../packages/rol/src/sol/function/expectationquad \
+                         ../packages/rol/src/sol/vector \
+                         ../packages/rol/src/sol/sampler \
+                         ../packages/rol/src/zoo \
+                         ../packages/rol/src/zoo/testproblems \
+                         ../packages/rol/test/function \
+                         ../packages/rol/test/step \
+                         ../packages/rol/test/vector \
+                         ../packages/rol/example/rosenbrock \
+                         ../packages/rol/example/json \
+                         ../packages/rol/example/sacado \
+                         ../packages/rol/example/zakharov \
+                         ../packages/rol/example/dual-spaces/rosenbrock-1 \
+                         ../packages/rol/example/dual-spaces/simple-eq-constr-1 \
+                         ../packages/rol/example/burgers-control \
+                         ../packages/rol/example/poisson-control \
+                         ../packages/rol/example/poisson-inversion \
+                         ../packages/rol/example/gross-pitaevskii
+                         #../packages/rol/example/PDE-OPT/adv-diff-react/ROL_ExperimentDesignObjective.hpp \
+IMAGE_PATH += ../packages/rol
+
+# rtop
+INPUT += ../packages/rtop/doc/index.doc
+
+# sacado
+INPUT += ../packages/sacado/doc/index.doc ../packages/sacado/src
+
+# shards
+INPUT += ../packages/shards/doc/ ../packages/shards/src
+
+# # stokhos
+INPUT += ../packages/stokhos/doc/index.doc ../packages/stokhos/src
+
+
+# stratimikos
+INPUT += ../packages/stratimikos/doc/index.doc ../packages/stratimikos/doc/groups.doc ../packages/stratimikos/src \
+         ../packages/stratimikos/adapters/amesos/src \
+         ../packages/stratimikos/adapters/aztecoo/src \
+         ../packages/stratimikos/adapters/belos/src \
+         ../packages/stratimikos/adapters/ifpack/src \
+         ../packages/stratimikos/adapters/ml/src
+EXAMPLE_PATH += ../packages/stratimikos/test \
+             ../packages/stratimikos/example \
+             ../packages/stratimikos/test/test_single_stratimikos_solver.cpp \
+             ../packages/stratimikos/example/simple_stratimikos_example.cpp \
+             ../packages/stratimikos/example/MixedOrderPhysicsBasedPreconditioner.cpp
+EXCLUDE += ../packages/stratimikos/adapters/belos/src/tpetra/README.md
+
+# shylu
+INPUT += ../packages/shylu/doc ../packages/shylu/shylu_dd  ../packages/shylu/shylu_node
+EXCLUDE += ../packages/shylu/shylu_node/tacho/README.md
+EXCLUDE += ../packages/shylu/shylu_node/tacho/unit-test
+
+# teko
+INPUT += ../packages/teko/doc/mainpage.doxygen ../packages/teko/src
+
+# tempus
+INPUT += ../packages/tempus/doc/index.doc ../packages/tempus/src ../packages/tempus/test ../packages/tempus/unit_test ../packages/tempus/examples
+EXAMPLE_PATH = ../packages/tempus/examples
+
+# teuchos
+INPUT += ../packages/teuchos/doc/index.doc ../packages/teuchos/doc/groups.doc \
+         ../packages/teuchos/core/src ../packages/teuchos/parameterlist/src ../packages/teuchos/comm/src ../packages/teuchos/numerics/src ../packages/teuchos/remainder/src ../packages/teuchos/parser/src
+EXAMPLE_PATH += \
+                ../packages/teuchos/core/example/CommandLineProcessor/cxx_main.cpp \
+                ../packages/teuchos/core/example/RefCountPtr/cxx_main.cpp \
+                ../packages/teuchos/core/test/MemoryManagement/ArrayRCP_test.cpp \
+                ../packages/teuchos/core/test/MemoryManagement/RCP_test.cpp \
+                ../packages/teuchos/core/test/UnitTest/Int_UnitTests.cpp \
+                ../packages/teuchos/core/test/UnitTest/TemplateFunc_UnitTests.cpp \
+                ../packages/teuchos/core/test/UnitTest/vector_UnitTests.cpp \
+                ../packages/teuchos/parameterlist/example/ParameterList/cxx_main.cpp \
+                ../packages/teuchos/parameterlist/test/FancyOutputting/FancyOutputting_test.cpp \
+                ../packages/teuchos/comm/example/TimeMonitor/cxx_main.cpp \
+                ../packages/teuchos/numerics/example/BLAS/cxx_main.cpp \
+                ../packages/teuchos/numerics/example/DenseMatrix/cxx_main.cpp \
+                ../packages/teuchos/numerics/example/DenseMatrix/cxx_main_sym.cpp \
+                ../packages/teuchos/numerics/example/LAPACK/cxx_main.cpp \
+                ../packages/teuchos/parser/example/Calc.cpp
+
+#thyra
+INPUT += ../packages/thyra/doc/index.doc \
+      ../packages/thyra/doc/faq.doc \
+      ../packages/thyra/doc/groups.doc \
+      ../packages/thyra/doc/dirs.doc \
+      ../packages/thyra/core/src/interfaces/operator_vector/fundamental \
+      ../packages/thyra/core/src/interfaces/operator_vector/extended \
+      ../packages/thyra/core/src/interfaces/operator_solve/fundamental \
+      ../packages/thyra/core/src/interfaces/operator_solve/extended \
+      ../packages/thyra/core/src/interfaces/nonlinear/model_evaluator/fundamental \
+      ../packages/thyra/core/src/interfaces/nonlinear/solvers/fundamental \
+      ../packages/thyra/core/src/support/operator_vector/client_support \
+      ../packages/thyra/core/src/support/operator_vector/adapter_support \
+      ../packages/thyra/core/src/support/operator_solve/client_support \
+      ../packages/thyra/core/src/support/nonlinear/model_evaluator/client_support \
+      ../packages/thyra/core/src/support/nonlinear/solvers/client_support \
+      ../packages/thyra/adapters/epetra/src \
+      ../packages/thyra/adapters/epetraext/src/model_evaluator \
+      ../packages/thyra/adapters/epetraext/src/transformer \
+      ../packages/thyra/adapters/tpetra/src \
+      ../packages/thyra/core/example/operator_vector/exampleImplicitlyComposedLinearOperators.cpp \
+      ../packages/thyra/core/example/operator_vector/ExampleTridiagSerialLinearOp.hpp \
+      ../packages/thyra/core/example/operator_vector/ExampleTridiagSpmdLinearOp.hpp \
+      ../packages/thyra/core/example/operator_vector/sillyCgSolve.hpp \
+      ../packages/thyra/core/example/operator_vector/sillyPowerMethod.hpp \
+      ../packages/thyra/core/example/operator_vector/sillyModifiedGramSchmidt.hpp \
+      ../packages/thyra/core/example/operator_solve/Thyra_LinearOpWithSolveFactoryExamples.hpp \
+      ../packages/thyra/core/test/nonlinear/models/
+IMAGE_PATH += ../packages/thyra/doc/images \
+           ../packages/thyra/core/src/support/operator_vector/doc/images \
+           ../packages/thyra/core/src/interfaces/operator_vector/fundamental/doc/images
+EXAMPLE_PATH += ../packages/thyra/core/example/operator_vector \
+             ../packages/thyra/core/example/operator_solve \
+             ../packages/thyra/core/test/operator_vector \
+             ../packages/thyra/core/test/operator_solve
+
+
+
+# tpetra
+INPUT                  += ../packages/tpetra/core/doc/index.doc \
+                         ../packages/tpetra/core/doc/groups.doc \
+                         ../packages/tpetra/core/src \
+                         ../packages/tpetra/core/ext \
+                         ../packages/tpetra/core/inout \
+                         ../packages/tpetra/core/example/Lesson01-Init/index.doc \
+                         ../packages/tpetra/core/example/Lesson02-Map-Vector/index.doc \
+                         ../packages/tpetra/core/example/Lesson03-Power-Method/index.doc \
+                         ../packages/tpetra/core/example/Lesson04-Sparse-Matrix-Fill/index.doc \
+                         ../packages/tpetra/core/example/Lesson05-Redistribution/index.doc \
+                         ../packages/tpetra/core/example/Lesson06-Custom-Operator/index.doc \
+                         ../packages/tpetra/core/example/Lesson07-Kokkos-Fill/index.doc
+EXAMPLE_PATH           +=  ../packages/tpetra/core/example/Lesson01-Init \
+                          ../packages/tpetra/core/example/Lesson02-Map-Vector \
+                          ../packages/tpetra/core/example/Lesson03-Power-Method \
+                          ../packages/tpetra/core/example/Lesson04-Sparse-Matrix-Fill \
+                          ../packages/tpetra/core/example/Lesson05-Redistribution \
+                          ../packages/tpetra/core/example/Lesson06-Custom-Operator \
+                          ../packages/tpetra/core/example/Lesson07-Kokkos-Fill
+
+
+# trilinoscouplings
+INPUT += ../packages/trilinoscouplings/src ../packages/trilinoscouplings/doc/index.doc ../packages/trilinoscouplings/examples/scaling
+EXAMPLE_PATH += ../packages/trilinoscouplings/examples
+
+
+# xpetra
+INPUT    += ../packages/xpetra/doc/Xpetra_DoxygenDocumentation.hpp ../packages/xpetra/src
+EXAMPLE_PATH += ../packages/xpetra/example
+
+# zoltan2
+INPUT += ../packages/zoltan2/doc ../packages/zoltan2/doc/algorithm ../packages/zoltan2/core/src ../packages/zoltan2/sphynx/src ../packages/zoltan2/test ../packages/zoltan2/example
+IMAGE_PATH += ../packages/zoltan2/doc/images
+EXAMPLE_PATH += ../packages/zoltan2/example

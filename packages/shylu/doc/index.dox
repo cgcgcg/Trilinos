@@ -1,5 +1,5 @@
 /*!
-\mainpage Trilinos/ShyLU:  Scalable/Sparse Hybrid LU
+\page shylu ShyLU:  Scalable/Sparse Hybrid LU
 
 \section Contact Information
 
@@ -25,4 +25,4 @@ ShyLU is currently build on top of the older Trilinos, i.e.,  Epetra/Ifpack/Zolt
 
 Currently, ShyLU has two subpackage: core and ichol.
 Core contains the current secondary-stable ShyLU source code and test, and ichol contain and experimental task-based scheduled incomplete Cholesky that uses Qthreads/Kokkos.
-*/ 
+*/

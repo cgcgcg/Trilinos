@@ -1,4 +1,4 @@
-/*! \mainpage Stratimikos: Thyra-based strategies for linear solvers
+/*! \page stratimikos Stratimikos: Thyra-based strategies for linear solvers
 
 The package Stratimikos contains a unified set of Thyra-based wrappers to
 linear solver and preconditioner capabilities in Trilinos.  The word

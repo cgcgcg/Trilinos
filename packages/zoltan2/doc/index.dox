@@ -1,4 +1,4 @@
-/*! \mainpage Trilinos/Zoltan2: Load Balancing and Combinatorial Scientific Computing.
+/*! \page zoltan2 Zoltan2: Load Balancing and Combinatorial Scientific Computing.
 
 \section mainpage_contents Contents
 <ul>
@@ -11,7 +11,7 @@
 
 <hr>
 
-Information specifically for developers can be found at \ref z2_developer.
+Information specifically for developers can be found at \subpage z2_developer.
 
 <hr>
 
@@ -27,9 +27,9 @@ This library is currently under active development.
 The capabilities in Zoltan2 roughly fall within the following areas (click on the link for a full description
 of an area and how Zoltan2 can be used in this context):
 <ul>
-<li> \ref partitionPage 
-<li> \ref orderingPage
-<li> \ref coloringPage  
+<li> \subpage partitionPage
+<li> \subpage orderingPage
+<li> \subpage coloringPage
 </ul>
 
 

@@ -1,5 +1,5 @@
-/*! 
-\mainpage Trilinos/Tpetra: Next-generation distributed linear algebra
+/*!
+\page tpetra Tpetra: Next-generation distributed linear algebra
 
 \section tpetra_outline Outline
 
@@ -168,13 +168,13 @@ and example code that builds and runs.  In fact, the code passes
 nightly tests on many different platforms.
 
 <ul>
-<li> \ref Tpetra_Lesson01 </li>
-<li> \ref Tpetra_Lesson02 </li>
-<li> \ref Tpetra_Lesson03 </li>
-<li> \ref Tpetra_Lesson04 </li>
-<li> \ref Tpetra_Lesson05 </li>
-<li> \ref Tpetra_Lesson06 </li>
-<li> \ref Tpetra_Lesson07 </li>
+<li> \subpage Tpetra_Lesson01 </li>
+<li> \subpage Tpetra_Lesson02 </li>
+<li> \subpage Tpetra_Lesson03 </li>
+<li> \subpage Tpetra_Lesson04 </li>
+<li> \subpage Tpetra_Lesson05 </li>
+<li> \subpage Tpetra_Lesson06 </li>
+<li> \subpage Tpetra_Lesson07 </li>
 </ul>
 
 */

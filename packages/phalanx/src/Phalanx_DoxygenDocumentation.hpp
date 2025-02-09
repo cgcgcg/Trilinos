@@ -13,19 +13,20 @@
 
 /*!
 
-\mainpage
+\page phalanx Phalanx
 
 \section main_index Index
 
 - \ref overview
 - \ref news
-- \ref user_guide
-- \ref faq
+- \subpage user_guide
+- \subpage faq
 - \ref bugs
 - \ref history
 - \ref authors
 - \ref copyright
-- \ref questions
+- \subpage questions
+- \subpage developer_notes
 
 \section overview Overview
 
@@ -1480,14 +1481,6 @@ element assembly for nonlinear equation sets.
 
   */
 
-/* ************************************************************************ */
-/* ************************************************************************ */
-
-/*! \page junk Junk
-
-  \todo Nothing pending!
-
-*/
 
 /* ************************************************************************ */
 /* ************************************************************************ */

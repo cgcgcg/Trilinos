@@ -1,4 +1,4 @@
-/*! \mainpage Collection of Concrete Vector Reduction/Transformation Operator Implementations
+/*! \page rtop Collection of Concrete Vector Reduction/Transformation Operator Implementations
 
 This doxygen collection contains documentation a collection of concrete RTOp implementations.
 

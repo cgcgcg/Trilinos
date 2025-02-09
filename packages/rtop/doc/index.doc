@@ -1,6 +1,6 @@
 ? Doxyfile
 ? html
-/*! \mainpage RTOp: Interfaces, Support Software, and Concrete Implementations of Vector Reduction/Transformation Operators
+/*! \page rtop RTOp: Interfaces, Support Software, and Concrete Implementations of Vector Reduction/Transformation Operators
 
 The documentation for the RTOp package is broken up into the following three
 separate doxygen documentation collections:

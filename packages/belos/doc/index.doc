@@ -1,5 +1,5 @@
 /*!
-\mainpage Belos: An Iterative Linear Solvers Package
+\page belos Belos: An Iterative Linear Solvers Package
 
 %Belos is an extensible and interoperable C++ framework for the
 numerical solution of large-scale linear systems of equations.  It
