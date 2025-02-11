@@ -2383,9 +2383,13 @@ void MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::copyAndPermute(
         auto x_1d = Kokkos::subview (x_2d, rowRng, 0);
         auto y_2d = y.getLocalViewDevice(Access::ReadOnly);
         auto y_1d = Kokkos::subview (y_2d, rowRng, 0);
-        lclDot = KokkosBlas::dot (x_1d, y_1d);
+        {
+          ::Tpetra::Details::ProfilingRegion regionLocal ("multiVectorSingleColumnDot::lclDot");
+          lclDot = KokkosBlas::dot (x_1d, y_1d);
+        }
 
         if (x.isDistributed ()) {
+          ::Tpetra::Details::ProfilingRegion regionLocal ("multiVectorSingleColumnDot::reduce");
           using Teuchos::outArg;
           using Teuchos::REDUCE_SUM;
           using Teuchos::reduceAll;
@@ -4218,6 +4222,7 @@ void MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::copyAndPermute(
        "Failed to make temporary constant-stride copies of MultiVectors.");
 
     {
+      ::Tpetra::Details::ProfilingRegion regionLocal ("multiply::local");
       const LO A_lclNumRows = A_tmp->getLocalLength ();
       const LO A_numVecs = A_tmp->getNumVectors ();
       auto A_lcl = A_tmp->getLocalViewDevice(Access::ReadOnly);
@@ -4262,6 +4267,7 @@ void MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::copyAndPermute(
 
     // If Case 2 then sum up *this and distribute it to all processes.
     if (Case2) {
+      ::Tpetra::Details::ProfilingRegion regionLocal ("multiply::reduce");
       this->reduce ();
     }
   }

@@ -20,6 +20,7 @@
 #include "Tpetra_Details_MpiTypeTraits.hpp"
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_Time.hpp"
+#include "Tpetra_Details_Profiling.hpp"
 
 #include "Kokkos_TeuchosCommAdapters.hpp"
 
@@ -425,9 +426,10 @@ void DistributorActor::doPosts(const DistributorPlan& plan,
   }
 #endif // defined(HAVE_TPETRACORE_MPI_ADVANCE)
 // clang-format off
-  
+
 #else // HAVE_TPETRA_MPI
     if (plan.hasSelfMessage()) {
+      ::Tpetra::Details::ProfilingRegion regionLocal ("doPosts::self1");
       // This is how we "send a message to ourself": we copy from
       // the export buffer to the import buffer.  That saves
       // Teuchos::Comm implementations other than MpiComm (in
@@ -477,6 +479,7 @@ void DistributorActor::doPosts(const DistributorPlan& plan,
   // to the "unexpected queue" (of arrived messages not yet matched
   // with a receive).
   {
+    ::Tpetra::Details::ProfilingRegion regionLocal ("doPosts::recvs1");
 #ifdef HAVE_TPETRA_DISTRIBUTOR_TIMINGS
     Teuchos::TimeMonitor timeMonRecvs (*timer_doPosts3KV_recvs_);
 #endif // HAVE_TPETRA_DISTRIBUTOR_TIMINGS
@@ -533,6 +536,7 @@ void DistributorActor::doPosts(const DistributorPlan& plan,
   size_t selfIndex = 0;
 
   if (plan.getIndicesTo().is_null()) {
+    ::Tpetra::Details::ProfilingRegion regionLocal ("doPosts::sends1");
 
 #ifdef HAVE_TPETRA_DISTRIBUTOR_TIMINGS
     Teuchos::TimeMonitor timeMonSends2 (*timer_doPosts3KV_sends_fast_);
@@ -910,6 +914,7 @@ void DistributorActor::doPosts(const DistributorPlan& plan,
 
 #else // HAVE_TPETRA_MPI
     if (plan.hasSelfMessage()) {
+      ::Tpetra::Details::ProfilingRegion regionLocal ("doPosts::self");
 
       size_t selfReceiveOffset = 0;
 
@@ -980,6 +985,7 @@ void DistributorActor::doPosts(const DistributorPlan& plan,
 #ifdef HAVE_TPETRA_DISTRIBUTOR_TIMINGS
     Teuchos::TimeMonitor timeMonRecvs (*timer_doPosts4KV_recvs_);
 #endif // HAVE_TPETRA_DISTRIBUTOR_TIMINGS
+    ::Tpetra::Details::ProfilingRegion regionLocal ("doPosts::recvs");
 
     size_t curBufferOffset = 0;
     size_t curLIDoffset = 0;
@@ -1018,6 +1024,7 @@ void DistributorActor::doPosts(const DistributorPlan& plan,
 #ifdef HAVE_TPETRA_DISTRIBUTOR_TIMINGS
   Teuchos::TimeMonitor timeMonSends (*timer_doPosts4KV_sends_);
 #endif // HAVE_TPETRA_DISTRIBUTOR_TIMINGS
+  ::Tpetra::Details::ProfilingRegion regionLocal ("doPosts::sends");
 
   // setup arrays containing starting-offsets into exports for each send,
   // and num-packets-to-send for each send.
