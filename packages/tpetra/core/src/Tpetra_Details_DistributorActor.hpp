@@ -21,6 +21,7 @@
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_Time.hpp"
 #include "Tpetra_Details_Profiling.hpp"
+#include "Teuchos_Details_MpiCommRequest.hpp"
 
 #include "Kokkos_TeuchosCommAdapters.hpp"
 
@@ -40,6 +41,8 @@ class DistributorActor {
 public:
   DistributorActor();
   DistributorActor(const DistributorActor& otherActor);
+
+  ~DistributorActor();
 
   template <class ExpView, class ImpView>
   void doPostsAndWaits(const DistributorPlan& plan,
@@ -102,6 +105,9 @@ private:
   int mpiTag_;
 
   Teuchos::Array<Teuchos::RCP<Teuchos::CommRequest<int>>> requests_;
+
+  std::vector<MPI_Request> persistentRequestsRecv_;
+  std::vector<MPI_Request> persistentRequestsSend_;
 
 #ifdef HAVE_TPETRA_DISTRIBUTOR_TIMINGS
   Teuchos::RCP<Teuchos::Time> timer_doPosts3KV_;
@@ -484,34 +490,82 @@ void DistributorActor::doPosts(const DistributorPlan& plan,
     Teuchos::TimeMonitor timeMonRecvs (*timer_doPosts3KV_recvs_);
 #endif // HAVE_TPETRA_DISTRIBUTOR_TIMINGS
 
-    size_t curBufferOffset = 0;
-    for (size_type i = 0; i < actualNumReceives; ++i) {
-      const size_t curBufLen = plan.getLengthsFrom()[i] * numPackets;
-      if (plan.getProcsFrom()[i] != myRank) {
-        // If my process is receiving these packet(s) from another
-        // process (not a self-receive):
-        //
-        // 1. Set up the persisting view (recvBuf) of the imports
-        //    array, given the offset and size (total number of
-        //    packets from process getProcsFrom()[i]).
-        // 2. Start the Irecv and save the resulting request.
-        TEUCHOS_TEST_FOR_EXCEPTION(
-            curBufferOffset + curBufLen > static_cast<size_t> (imports.size ()),
-            std::logic_error, "Tpetra::Distributor::doPosts(3 args, Kokkos): "
-            "Exceeded size of 'imports' array in packing loop on Process " <<
-            myRank << ".  imports.size() = " << imports.size () << " < "
-            "curBufferOffset(" << curBufferOffset << ") + curBufLen(" <<
-            curBufLen << ").");
-        imports_view_type recvBuf =
-          subview_offset (imports, curBufferOffset, curBufLen);
-        requests_.push_back (ireceive<int> (recvBuf, plan.getProcsFrom()[i],
-              mpiTag_, *plan.getComm()));
+    if (persistentRequestsRecv_.size() == 0) {
+      auto comm = plan.getComm();
+      Teuchos::RCP<const Teuchos::MpiComm<int> > mpiComm = Teuchos::rcp_dynamic_cast<const Teuchos::MpiComm<int> >(comm);
+      MPI_Comm rawComm                          = (*mpiComm->getRawMpiComm())();
+      typename imports_view_type::value_type t;
+      MPI_Datatype rawType = MpiTypeTraits<typename imports_view_type::value_type>::getType (t);
+
+      auto procsFrom = plan.getProcsFrom();
+      auto lengthsFrom = plan.getLengthsFrom();
+
+      size_t curBufferOffset = 0;
+      for (size_type i = 0; i < actualNumReceives; ++i) {
+        const size_t curBufLen = lengthsFrom[i] * numPackets;
+        if (procsFrom[i] != myRank) {
+          // If my process is receiving these packet(s) from another
+          // process (not a self-receive):
+          //
+          // 1. Set up the persisting view (recvBuf) of the imports
+          //    array, given the offset and size (total number of
+          //    packets from process getProcsFrom()[i]).
+          // 2. Start the Irecv and save the resulting request.
+          TEUCHOS_TEST_FOR_EXCEPTION(
+                                     curBufferOffset + curBufLen > static_cast<size_t> (imports.size ()),
+                                     std::logic_error, "Tpetra::Distributor::doPosts(3 args, Kokkos): "
+                                                       "Exceeded size of 'imports' array in packing loop on Process " <<
+                                                       myRank << ".  imports.size() = " << imports.size () << " < "
+                                                                                                              "curBufferOffset(" << curBufferOffset << ") + curBufLen(" <<
+                                                       curBufLen << ").");
+
+          if (sendType == Details::DISTRIBUTOR_PERSISTENT) {
+            MPI_Request rawRequest = MPI_REQUEST_NULL;
+            const int err = MPI_Recv_init(imports.data()+curBufferOffset, curBufLen, rawType, procsFrom[i], mpiTag_, rawComm, &rawRequest);
+            TEUCHOS_TEST_FOR_EXCEPTION(err != MPI_SUCCESS,
+                                       std::runtime_error,
+                                       "MPI_Recv_init failed with the following error: "
+                                       << ::Teuchos::Details::getMpiErrorString (err));
+
+            persistentRequestsRecv_.push_back(rawRequest);
+          } else {
+            MPI_Request rawRequest = MPI_REQUEST_NULL;
+            const int err = MPI_Irecv(imports.data()+curBufferOffset, curBufLen, rawType, procsFrom[i], mpiTag_, rawComm, &rawRequest);
+            TEUCHOS_TEST_FOR_EXCEPTION(err != MPI_SUCCESS,
+                                       std::runtime_error,
+                                       "MPI_Irecv failed with the following error: "
+                                       << ::Teuchos::Details::getMpiErrorString (err));
+
+            imports_view_type recvBuf = subview_offset (imports, curBufferOffset, curBufLen);
+            auto myBuf = Kokkos::Compat::persistingView(recvBuf);
+            Teuchos::ArrayRCP<const char> buf = Teuchos::arcp_const_cast<const char> (Teuchos::arcp_reinterpret_cast<char> (myBuf));
+            Teuchos::RCP<Teuchos::CommRequest<int> > req (new Teuchos::Details::MpiCommRequest (rawRequest, buf));
+            requests_.push_back(req);
+          }
+        }
+        else { // Receiving from myself
+          selfReceiveOffset = curBufferOffset; // Remember the self-recv offset
+        }
+        curBufferOffset += curBufLen;
       }
-      else { // Receiving from myself
-        selfReceiveOffset = curBufferOffset; // Remember the self-recv offset
+    } else {
+      auto procsFrom = plan.getProcsFrom();
+      auto lengthsFrom = plan.getLengthsFrom();
+
+      size_t curBufferOffset = 0;
+      for (size_type i = 0; i < actualNumReceives; ++i) {
+        const size_t curBufLen = lengthsFrom[i] * numPackets;
+        if (procsFrom[i] == myRank) {
+          selfReceiveOffset = curBufferOffset; // Remember the self-recv offset
+        }
+        curBufferOffset += curBufLen;
       }
-      curBufferOffset += curBufLen;
     }
+
+    if (persistentRequestsRecv_.size() > 0) {
+      MPI_Startall(persistentRequestsRecv_.size(), persistentRequestsRecv_.data());
+    }
+
   }
 
 #ifdef HAVE_TPETRA_DISTRIBUTOR_TIMINGS
@@ -542,37 +596,85 @@ void DistributorActor::doPosts(const DistributorPlan& plan,
     Teuchos::TimeMonitor timeMonSends2 (*timer_doPosts3KV_sends_fast_);
 #endif // HAVE_TPETRA_DISTRIBUTOR_TIMINGS
 
-    // Data are already blocked (laid out) by process, so we don't
-    // need a separate send buffer (besides the exports array).
-    for (size_t i = 0; i < numBlocks; ++i) {
-      size_t p = i + procIndex;
-      if (p > (numBlocks - 1)) {
-        p -= numBlocks;
-      }
-
-      if (plan.getProcsTo()[p] != myRank) {
-        exports_view_type tmpSend = subview_offset(
-            exports, plan.getStartsTo()[p]*numPackets, plan.getLengthsTo()[p]*numPackets);
-
-        if (sendType == Details::DISTRIBUTOR_ISEND) {
-          // NOTE: This looks very similar to the tmpSend above, but removing
-          // tmpSendBuf and uses tmpSend leads to a performance hit on Arm
-          // SerialNode builds
-          exports_view_type tmpSendBuf =
-            subview_offset (exports, plan.getStartsTo()[p] * numPackets,
-                plan.getLengthsTo()[p] * numPackets);
-          requests_.push_back (isend<int> (tmpSendBuf, plan.getProcsTo()[p],
-                mpiTag_, *plan.getComm()));
+    if (persistentRequestsSend_.size() == 0) {
+      // Data are already blocked (laid out) by process, so we don't
+      // need a separate send buffer (besides the exports array).
+      for (size_t i = 0; i < numBlocks; ++i) {
+        size_t p = i + procIndex;
+        if (p > (numBlocks - 1)) {
+          p -= numBlocks;
         }
-        else {  // DISTRIBUTOR_SEND
-          send<int> (tmpSend,
-              as<int> (tmpSend.size ()),
-              plan.getProcsTo()[p], mpiTag_, *plan.getComm());
+
+        auto comm = plan.getComm();
+        Teuchos::RCP<const Teuchos::MpiComm<int> > mpiComm = Teuchos::rcp_dynamic_cast<const Teuchos::MpiComm<int> >(comm);
+        MPI_Comm rawComm                          = (*mpiComm->getRawMpiComm())();
+        typename exports_view_type::non_const_value_type t;
+        MPI_Datatype rawType = MpiTypeTraits<typename exports_view_type::non_const_value_type>::getType (t);
+
+        auto procsTo = plan.getProcsTo();
+        auto startsTo = plan.getStartsTo();
+        auto lengthsTo = plan.getLengthsTo();
+
+        if (procsTo[p] != myRank) {
+          exports_view_type tmpSend = subview_offset(
+                                                     exports, plan.getStartsTo()[p]*numPackets, plan.getLengthsTo()[p]*numPackets);
+
+          if (sendType == Details::DISTRIBUTOR_ISEND) {
+            ::Tpetra::Details::ProfilingRegion regionIsend ("doPosts::isends_request");
+            MPI_Request rawRequest = MPI_REQUEST_NULL;
+            const int err = MPI_Isend(exports.data()+startsTo[p]*numPackets, lengthsTo[p]*numPackets, rawType, procsTo[p], mpiTag_, rawComm, &rawRequest);
+            TEUCHOS_TEST_FOR_EXCEPTION(err != MPI_SUCCESS,
+                                       std::runtime_error,
+                                       "MPI_Isend failed with the following error: "
+                                       << ::Teuchos::Details::getMpiErrorString (err));
+
+            // NOTE: This looks very similar to the tmpSend above, but removing
+            // tmpSendBuf and uses tmpSend leads to a performance hit on Arm
+            // SerialNode builds
+            exports_view_type tmpSendBuf = subview_offset (exports, startsTo[p] * numPackets, lengthsTo[p] * numPackets);
+            auto myBuf = Kokkos::Compat::persistingView(tmpSendBuf);
+            Teuchos::ArrayRCP<const char> buf = Teuchos::arcp_const_cast<const char> (Teuchos::arcp_reinterpret_cast<const char> (myBuf));
+            Teuchos::RCP<Teuchos::CommRequest<int> > req (new Teuchos::Details::MpiCommRequest (rawRequest, buf));
+            requests_.push_back(req);
+
+          }
+          else if (sendType == Details::DISTRIBUTOR_PERSISTENT) {
+            ::Tpetra::Details::ProfilingRegion regionIsend ("doPosts::psends_request");
+            MPI_Request rawRequest = MPI_REQUEST_NULL;
+            const int err = MPI_Send_init(exports.data()+startsTo[p]*numPackets, lengthsTo[p]*numPackets, rawType, procsTo[p], mpiTag_, rawComm, &rawRequest);
+            TEUCHOS_TEST_FOR_EXCEPTION(err != MPI_SUCCESS,
+                                       std::runtime_error,
+                                       "MPI_Send_init failed with the following error: "
+                                       << ::Teuchos::Details::getMpiErrorString (err));
+            persistentRequestsSend_.push_back(rawRequest);
+
+          }
+          else {  // DISTRIBUTOR_SEND
+            send<int> (tmpSend,
+                       as<int> (tmpSend.size ()),
+                       plan.getProcsTo()[p], mpiTag_, *plan.getComm());
+          }
+        }
+        else { // "Sending" the message to myself
+          selfNum = p;
         }
       }
-      else { // "Sending" the message to myself
-        selfNum = p;
+    } else {
+      auto procsTo = plan.getProcsTo();
+
+      for (size_t i = 0; i < numBlocks; ++i) {
+        size_t p = i + procIndex;
+        if (p > (numBlocks - 1)) {
+          p -= numBlocks;
+        }
+        if (procsTo[p] == myRank) { // "Sending" the message to myself
+          selfNum = p;
+        }
       }
+    }
+
+    if (persistentRequestsSend_.size() > 0) {
+      MPI_Startall(persistentRequestsSend_.size(), persistentRequestsSend_.data());
     }
 
     if (plan.hasSelfMessage()) {
@@ -602,16 +704,16 @@ void DistributorActor::doPosts(const DistributorPlan& plan,
 
     // This buffer is long enough for only one message at a time.
     // Thus, we use DISTRIBUTOR_SEND always in this case, regardless
-    // of sendType requested by user. 
+    // of sendType requested by user.
     // This code path formerly errored out with message:
-    //     Tpetra::Distributor::doPosts(3 args, Kokkos): 
+    //     Tpetra::Distributor::doPosts(3 args, Kokkos):
     //     The "send buffer" code path
     //     doesn't currently work with nonblocking sends.
     // Now, we opt to just do the communication in a way that works.
 #ifdef HAVE_TPETRA_DEBUG
     if (sendType != Details::DISTRIBUTOR_SEND) {
       if (plan.getComm()->getRank() == 0)
-        std::cout << "The requested Tpetra send type " 
+        std::cout << "The requested Tpetra send type "
                   << DistributorSendTypeEnumToString(sendType)
                   << " requires Distributor data to be ordered by"
                   << " the receiving processor rank.  Since these"
@@ -1114,16 +1216,16 @@ void DistributorActor::doPosts(const DistributorPlan& plan,
 
     // This buffer is long enough for only one message at a time.
     // Thus, we use DISTRIBUTOR_SEND always in this case, regardless
-    // of sendType requested by user. 
+    // of sendType requested by user.
     // This code path formerly errored out with message:
-    //     Tpetra::Distributor::doPosts(4-arg, Kokkos): 
+    //     Tpetra::Distributor::doPosts(4-arg, Kokkos):
     //     The "send buffer" code path
     //     doesn't currently work with nonblocking sends.
     // Now, we opt to just do the communication in a way that works.
 #ifdef HAVE_TPETRA_DEBUG
     if (sendType != Details::DISTRIBUTOR_SEND) {
       if (plan.getComm()->getRank() == 0)
-        std::cout << "The requested Tpetra send type " 
+        std::cout << "The requested Tpetra send type "
                   << DistributorSendTypeEnumToString(sendType)
                   << " requires Distributor data to be ordered by"
                   << " the receiving processor rank.  Since these"
@@ -1132,7 +1234,7 @@ void DistributorActor::doPosts(const DistributorPlan& plan,
     }
 #endif
 
-    Kokkos::View<Packet*,Layout,Device,Mem> sendArray ("sendArray", 
+    Kokkos::View<Packet*,Layout,Device,Mem> sendArray ("sendArray",
                                                         maxNumPackets);
 
     Array<size_t> indicesOffsets (numExportPacketsPerLID.size(), 0);

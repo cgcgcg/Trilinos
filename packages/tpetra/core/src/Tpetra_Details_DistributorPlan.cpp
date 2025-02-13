@@ -29,6 +29,10 @@ DistributorSendTypeEnumToString (EDistributorSendType sendType)
   else if (sendType == DISTRIBUTOR_ALLTOALL) {
     return "Alltoall";
   }
+  else if (sendType == DISTRIBUTOR_PERSISTENT) {
+    return "Persistent";
+  }
+
 #if defined(HAVE_TPETRACORE_MPI_ADVANCE)
   else if (sendType == DISTRIBUTOR_MPIADVANCE_ALLTOALL) {
     return "MpiAdvanceAlltoall";
@@ -187,7 +191,7 @@ size_t DistributorPlan::createFromSends(const Teuchos::ArrayView<const int>& exp
   // numActive is the number of sends that are not Null
   size_t numActive = 0;
   int needSendBuff = 0; // Boolean
-  
+
   for (size_t i = 0; i < numExports; ++i) {
     const int exportID = exportProcIDs[i];
     if (exportID >= 0) {
@@ -578,7 +582,7 @@ void DistributorPlan::createFromSendsAndRecvs(const Teuchos::ArrayView<const int
   totalReceiveLength_ = remoteProcIDs.size();
   indicesFrom_.clear ();
   numReceives_-=sendMessageToSelf_;
-  
+
 #if defined(HAVE_TPETRACORE_MPI_ADVANCE)
   initializeMpiAdvance();
 #endif
@@ -893,6 +897,7 @@ Teuchos::Array<std::string> distributorSendTypes()
   sendTypes.push_back ("Isend");
   sendTypes.push_back ("Send");
   sendTypes.push_back ("Alltoall");
+  sendTypes.push_back ("Persistent");
 #if defined(HAVE_TPETRACORE_MPI_ADVANCE)
   sendTypes.push_back ("MpiAdvanceAlltoall");
   sendTypes.push_back ("MpiAdvanceNbralltoallv");
@@ -915,6 +920,7 @@ DistributorPlan::getValidParameters() const
   sendTypeEnums.push_back (Details::DISTRIBUTOR_ISEND);
   sendTypeEnums.push_back (Details::DISTRIBUTOR_SEND);
   sendTypeEnums.push_back (Details::DISTRIBUTOR_ALLTOALL);
+  sendTypeEnums.push_back (Details::DISTRIBUTOR_PERSISTENT);
 #if defined(HAVE_TPETRACORE_MPI_ADVANCE)
   sendTypeEnums.push_back (Details::DISTRIBUTOR_MPIADVANCE_ALLTOALL);
   sendTypeEnums.push_back (Details::DISTRIBUTOR_MPIADVANCE_NBRALLTOALLV);
@@ -959,7 +965,7 @@ void DistributorPlan::initializeMpiAdvance() {
   else if (sendType_ == DISTRIBUTOR_MPIADVANCE_NBRALLTOALLV) {
     int numRecvs = (int)(numReceives_ + (sendMessageToSelf_ ? 1 : 0));
     int *sourceRanks = procsFrom_.data();
-    
+
     // int *sourceWeights = static_cast<int*>(lengthsFrom_.data());// lengthsFrom_ may not be int
     const int *sourceWeights = MPI_UNWEIGHTED;
     int numSends = (int)(numSendsToOtherProcs_ + (sendMessageToSelf_ ? 1 : 0));

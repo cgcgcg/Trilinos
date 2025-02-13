@@ -7,7 +7,7 @@
 // *****************************************************************************
 // @HEADER
 
-/*! \file 
+/*! \file
 
    How we communicate (Send, ISend).
    How / whether a Distributor is initialized.
@@ -42,7 +42,8 @@ namespace Details {
 enum EDistributorSendType {
   DISTRIBUTOR_ISEND, // Use MPI_Isend (Teuchos::isend)
   DISTRIBUTOR_SEND,  // Use MPI_Send (Teuchos::send)
-  DISTRIBUTOR_ALLTOALL // Use MPI_Alltoall
+  DISTRIBUTOR_ALLTOALL, // Use MPI_Alltoall
+  DISTRIBUTOR_PERSISTENT // Use perstent requests
 #if defined(HAVE_TPETRACORE_MPI_ADVANCE)
   ,
   DISTRIBUTOR_MPIADVANCE_ALLTOALL,
@@ -137,7 +138,7 @@ private:
   /// This method computes numReceives_, lengthsFrom_, procsFrom_,
   /// totalReceiveLength_, indicesFrom_, and startsFrom_.
   ///
-  /// \note This method currently ignores the sendType_ 
+  /// \note This method currently ignores the sendType_
   ///   parameter, and always uses ireceive() /
   ///   send() for communication of the process IDs from which our
   ///   process is receiving and their corresponding receive packet

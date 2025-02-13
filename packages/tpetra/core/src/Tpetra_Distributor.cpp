@@ -32,6 +32,7 @@ namespace Tpetra {
     Teuchos::Array<std::string> sendTypes;
     sendTypes.push_back ("Isend");
     sendTypes.push_back ("Send");
+    sendTypes.push_back ("Persistent");
     sendTypes.push_back ("Alltoall");
 #if defined(HAVE_TPETRACORE_MPI_ADVANCE)
     sendTypes.push_back ("MpiAdvanceAlltoall");
@@ -170,6 +171,7 @@ namespace Tpetra {
     Array<Details::EDistributorSendType> sendTypeEnums;
     sendTypeEnums.push_back (Details::DISTRIBUTOR_ISEND);
     sendTypeEnums.push_back (Details::DISTRIBUTOR_SEND);
+    sendTypeEnums.push_back (Details::DISTRIBUTOR_PERSISTENT);
     sendTypeEnums.push_back (Details::DISTRIBUTOR_ALLTOALL);
 #if defined(HAVE_TPETRACORE_MPI_ADVANCE)
     sendTypeEnums.push_back(Details::DISTRIBUTOR_MPIADVANCE_ALLTOALL);

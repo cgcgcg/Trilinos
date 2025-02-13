@@ -30,6 +30,22 @@ namespace Details {
 #endif // HAVE_TPETRA_DISTRIBUTOR_TIMINGS
   }
 
+  DistributorActor::~DistributorActor()
+  {
+    if (persistentRequestsRecv_.size() > 0) {
+      for (auto &rawRequest : persistentRequestsRecv_) {
+        MPI_Request_free(&rawRequest);
+      }
+      persistentRequestsRecv_.resize(0);
+    }
+    if (persistentRequestsSend_.size() > 0) {
+      for (auto &rawRequest : persistentRequestsSend_) {
+        MPI_Request_free(&rawRequest);
+      }
+      persistentRequestsSend_.resize(0);
+    }
+  }
+
   void DistributorActor::doWaits(const DistributorPlan& plan) {
 #ifdef HAVE_TPETRA_DISTRIBUTOR_TIMINGS
     Teuchos::TimeMonitor timeMon (*timer_doWaits_);
@@ -42,6 +58,14 @@ namespace Details {
       // outstanding nonblocking communication requests.
       requests_.resize(0);
     }
+    if (persistentRequestsRecv_.size() > 0) {
+      std::vector<MPI_Status> rawMpiStatuses(persistentRequestsRecv_.size());
+      MPI_Waitall(persistentRequestsRecv_.size(), persistentRequestsRecv_.data(), rawMpiStatuses.data());
+    }
+    if (persistentRequestsSend_.size() > 0) {
+      std::vector<MPI_Status> rawMpiStatuses(persistentRequestsSend_.size());
+      MPI_Waitall(persistentRequestsSend_.size(), persistentRequestsSend_.data(), rawMpiStatuses.data());
+    }
   }
 
   bool DistributorActor::isReady() const {
@@ -49,6 +73,21 @@ namespace Details {
     for (auto& request : requests_) {
       result &= request->isReady();
     }
+
+    if (persistentRequestsRecv_.size() > 0) {
+      int flag = 0;
+      std::vector<MPI_Status> rawMpiStatuses(persistentRequestsRecv_.size());
+      MPI_Testall(persistentRequestsRecv_.size(), const_cast<MPI_Request*>(persistentRequestsRecv_.data()), &flag, rawMpiStatuses.data());
+      result &= (flag != 0);
+    }
+
+    if (persistentRequestsSend_.size() > 0) {
+      int flag = 0;
+      std::vector<MPI_Status> rawMpiStatuses(persistentRequestsSend_.size());
+      MPI_Testall(persistentRequestsSend_.size(), const_cast<MPI_Request*>(persistentRequestsSend_.data()), &flag, rawMpiStatuses.data());
+      result &= (flag != 0);
+    }
+
     return result;
   }
 
