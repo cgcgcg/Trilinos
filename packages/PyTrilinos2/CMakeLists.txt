@@ -40,6 +40,12 @@ TRIBITS_ADD_OPTION_AND_DEFINE(PyTrilinos2_BINDER_VERBOSE
   "Increase the verbosity of binder."
   OFF )
 
+TRIBITS_ADD_OPTION_AND_DEFINE(PyTrilinos2_PYBIND11_VERBOSE
+  PYBIND11_DETAILED_ERROR_MESSAGES
+  "Increase the verbosity of pybind11."
+  OFF )
+
+
 ###################################################################################################
 
 SET(PyTrilinos2_BINDER_NUM_FILES "150" CACHE STRING "Maxinum number of generated files by binder.")
@@ -262,6 +268,7 @@ ELSE()
   list(APPEND BINDER_OPTIONS "-I${TPL_MPI_INCLUDE_DIRS}")
 ENDIF()
 list(APPEND BINDER_OPTIONS -DNDEBUG)
+list(APPEND BINDER_OPTIONS -DPYBIND11_DETAILED_ERROR_MESSAGES)
 
 message("BINDER_OPTIONS='${BINDER_OPTIONS}'")
 
