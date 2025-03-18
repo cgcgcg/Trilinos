@@ -316,6 +316,37 @@ class TestFactory {
     return BuildMatrix(matrixList, lib);
   }
 
+  // Create a 2D Elasticity matrix with the specified number of rows
+  // nx: global number of rows
+  // ny: global number of rows
+  static std::pair<RCP<Matrix>, RCP<MultiVector>> Build2DElasticity(GO nx, GO ny = -1, Xpetra::UnderlyingLib lib = Xpetra::NotSpecified) {  // global_size_t
+
+    if (lib == Xpetra::NotSpecified)
+      lib = TestHelpers_kokkos::Parameters::getLib();
+
+    RCP<const Teuchos::Comm<int> > comm = TestHelpers_kokkos::Parameters::getDefaultComm();
+
+    if (ny == -1) ny = nx;
+
+    ParameterList galeriList;
+    galeriList.set("nx", nx);
+    galeriList.set("ny", ny);
+
+    RCP<const Map> map = MapFactory::Build(lib, nx*ny, 0, comm);
+
+    map = Xpetra::MapFactory<LO, GO, NO>::Build(map, 2);
+
+    RCP<Galeri::Xpetra::Problem<Map, CrsMatrixWrap, MultiVector>> Pr =
+        Galeri::Xpetra::BuildProblem<SC, LO, GO, Map, CrsMatrixWrap, MultiVector>("Elasticity2D", map, galeriList);
+
+    RCP<Matrix> A = Pr->BuildMatrix();
+    A->SetFixedBlockSize(2);
+
+    RCP<MultiVector> coords = Pr->BuildCoords();
+
+    return std::make_pair(A, coords);
+  }
+
   // Create a tridiagonal matrix (stencil = [b,a,c]) with the specified number of rows
   static RCP<Matrix> BuildTridiag(RCP<const Map> rowMap, SC a, SC b, SC c, Xpetra::UnderlyingLib lib = Xpetra::NotSpecified) {
     if (lib == Xpetra::NotSpecified)
