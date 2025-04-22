@@ -15,7 +15,7 @@ Obviously, there are cases where some highly oscillatory error modes are left an
 In other cases there are only low frequency error modes left.
 Theses are two typical cases one might find in practice.
 
-Multigrid methods are built upont the observation
+Multigrid methods are built upon the observation
 that (cheap) level smoothing method often are able to smooth out high oscillatory error components,
 whereas they cannot reduce low frequency error components very well.
 These low frequency error components are then transferred to a coarse level,

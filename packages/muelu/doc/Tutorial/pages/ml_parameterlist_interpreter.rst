@@ -101,7 +101,7 @@ we can use it the same way as described in :ref:`Iteration Phase <user_api/itera
 .. note::
   You will see a warning by the **MLParameterListInterpreter**,
   that the parameter list could not be validated.
-  The reason is the follwing:
+  The reason is the following:
   Since this tutorial example runs with the Tpetra backend,
   ML, which is purely Epetra-based, cannot validate the parameter list.
 
