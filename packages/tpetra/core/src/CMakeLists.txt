@@ -700,7 +700,7 @@ IF (${PACKAGE_NAME}_ENABLE_EXPLICIT_INSTANTIATION)
     MESSAGE(STATUS "Tpetra: Using Full ETI")
     SET (CrsMatrix_ETI_SCALARS ${MultiVector_ETI_SCALARS})
   ENDIF()
-    
+
   # Generate ETI .cpp files for Tpetra::CrsMatrix.
   TPETRA_PROCESS_ALL_SLGN_TEMPLATES(CRSMATRIX_OUTPUT_FILES "Tpetra_ETI_SC_LO_GO_NT.tmpl" "CrsMatrix" "CRSMATRIX" "${CrsMatrix_ETI_SCALARS}" "${TpetraCore_ETI_LORDS}" "${TpetraCore_ETI_GORDS}" "${TpetraCore_ETI_NODES}" TRUE)
   LIST(APPEND SOURCES ${CRSMATRIX_OUTPUT_FILES})
@@ -929,6 +929,16 @@ IF (${PACKAGE_NAME}_ENABLE_EXPLICIT_INSTANTIATION)
     "${TpetraCore_ETI_NODES}")
   LIST(APPEND SOURCES ${UNPACKCRSGRAPHANDCOMBINE_OUTPUT_FILES})
 
+  # Generate ETI .cpp files for Tpetra::PartitioningTools
+  TPETRA_PROCESS_ALL_LGN_TEMPLATES(PARTITIONINGTOOLS_OUTPUT_FILES
+    "Tpetra_ETI_LO_GO_NT.tmpl"
+    "PartitioningTools"
+    "PARTITIONINGTOOLS"
+    "${TpetraCore_ETI_LORDS}"
+    "${TpetraCore_ETI_GORDS}"
+    "${TpetraCore_ETI_NODES}")
+  LIST(APPEND SOURCES ${PARTITIONINGTOOLS_OUTPUT_FILES})
+
   #MESSAGE(STATUS "SOURCES = ${SOURCES}")
 ENDIF()
 
@@ -955,4 +965,3 @@ SET_PROPERTY(
 # that running "make" will also rerun CMake in order to regenerate Makefiles.
 #
 # Here's another change.  Again.
-
