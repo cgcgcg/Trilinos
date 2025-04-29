@@ -15,6 +15,10 @@
 #include <sstream>
 
 #include "MueLu_RepartitionFactory_decl.hpp"  // TMP JG NOTE: before other includes, otherwise I cannot test the fwd declaration in _def
+#include "Xpetra_Access.hpp"
+#include "Xpetra_MapFactory_decl.hpp"
+#include "Xpetra_Vector.hpp"
+#include "Xpetra_VectorFactory_decl.hpp"
 
 #ifdef HAVE_MPI
 #include <Teuchos_DefaultMpiComm.hpp>
@@ -43,6 +47,382 @@
 
 namespace MueLu {
 
+//----------------------------------------------------------------------
+template <typename T, typename W>
+struct Triplet {
+  T i, j;
+  W v;
+};
+template <typename T, typename W>
+static bool compareTriplets(const Triplet<T, W>& a, const Triplet<T, W>& b) {
+  return (a.v > b.v);  // descending order
+}
+
+template <class PartitionVector, class WeightVector>
+void AssignPartitionsToRanks(PartitionVector& decomposition,
+                             const WeightVector& weights,
+                             const typename PartitionVector::scalar_type numPartitions,
+                             const bool willAcceptPartition,
+                             const bool allSubdomainsAcceptPartitions,
+                             const int maxLocalEdges) {
+  using LocalOrdinal  = typename PartitionVector::local_ordinal_type;
+  using GlobalOrdinal = typename PartitionVector::global_ordinal_type;
+  using NodeType      = typename PartitionVector::node_type;
+
+  auto rowMap = decomposition.getMap();
+
+  RCP<const Teuchos::Comm<int>> comm = rowMap->getComm()->duplicate();
+  int numProcs                       = comm->getSize();
+
+  RCP<const Teuchos::MpiComm<int>> tmpic = rcp_dynamic_cast<const Teuchos::MpiComm<int>>(comm);
+  TEUCHOS_TEST_FOR_EXCEPTION(tmpic == Teuchos::null, std::runtime_error, "Cannot cast base Teuchos::Comm to Teuchos::MpiComm object.");
+  RCP<const Teuchos::OpaqueWrapper<MPI_Comm>> rawMpiComm = tmpic->getRawMpiComm();
+
+  // maxLocalEdges is a constant which determines the number of largest edges which are being exchanged
+  // The idea is that we do not want to construct the full bipartite graph, but simply a subset of
+  // it, which requires less communication. By selecting largest local edges we hope to achieve
+  // similar results but at a lower cost.
+  const int dataSize = 2 * maxLocalEdges;
+
+  typename PartitionVector::dual_view_type::t_host_um decompEntries;
+  typename WeightVector::dual_view_type::t_host_const_um lclWeight;
+  if (decomposition.getLocalLength() > 0) {
+    decompEntries = decomposition.getHostLocalView(Xpetra::Access::ReadWrite);
+    lclWeight     = weights.getHostLocalView(Xpetra::Access::ReadOnly);
+  }
+
+  // Step 1: Sort local edges by weight
+  // Each edge of a bipartite graph corresponds to a triplet (i, j, v) where
+  //   i: processor id that has some piece of part with part_id = j
+  //   j: part id
+  //   v: weight of the edge
+  // We set edge weights to be the total number of nonzeros in rows on this processor which
+  // correspond to this part_id. The idea is that when we redistribute matrix, this weight
+  // is a good approximation of the amount of data to move.
+  // We use two maps, original which maps a partition id of an edge to the corresponding weight,
+  // and a reverse one, which is necessary to sort by edges.
+  std::map<GlobalOrdinal, GlobalOrdinal> lEdges;
+  if (willAcceptPartition)
+    for (LocalOrdinal i = 0; i < decompEntries.extent(0); i++)
+      lEdges[decompEntries(i, 0)] += lclWeight(i, 0);
+
+  // Reverse map, so that edges are sorted by weight.
+  // This results in multimap, as we may have edges with the same weight
+  std::multimap<GlobalOrdinal, GlobalOrdinal> revlEdges;
+  for (auto it = lEdges.begin(); it != lEdges.end(); it++)
+    revlEdges.insert(std::make_pair(it->second, it->first));
+
+  // Both lData and gData are arrays of data which we communicate. The data is stored
+  // in pairs, so that data[2*i+0] is the part index, and data[2*i+1] is the corresponding edge weight.
+  // We do not store processor id in data, as we can compute that by looking on the offset in the gData.
+  Teuchos::Array<GlobalOrdinal> lData(dataSize, -1);
+  Teuchos::Array<GlobalOrdinal> gData(numProcs * dataSize);
+  int numEdges = 0;
+  for (auto rit = revlEdges.rbegin(); rit != revlEdges.rend() && numEdges < maxLocalEdges; rit++) {
+    lData[2 * numEdges + 0] = rit->second;  // part id
+    lData[2 * numEdges + 1] = rit->first;   // edge weight
+    numEdges++;
+  }
+
+  // Step 2: Gather most edges
+  // Each processors contributes maxLocalEdges edges by providing maxLocalEdges pairs <part id, weight>, which is of size dataSize
+  MPI_Datatype MpiType = Teuchos::Details::MpiTypeTraits<GlobalOrdinal>::getType();
+  MPI_Allgather(static_cast<void*>(lData.getRawPtr()), dataSize, MpiType, static_cast<void*>(gData.getRawPtr()), dataSize, MpiType, *rawMpiComm);
+
+  // Step 3: Construct mapping
+
+  // Construct the set of triplets
+  Teuchos::Array<Triplet<int, int>> gEdges(numProcs * maxLocalEdges);
+  Teuchos::Array<bool> procWillAcceptPartition(numProcs, allSubdomainsAcceptPartitions);
+  size_t k = 0;
+  for (LocalOrdinal i = 0; i < gData.size(); i += 2) {
+    int procNo           = i / dataSize;  // determine the processor by its offset (since every processor sends the same amount)
+    GlobalOrdinal part   = gData[i + 0];
+    GlobalOrdinal weight = gData[i + 1];
+    if (part != -1) {  // skip nonexistent edges
+      gEdges[k].i                     = procNo;
+      gEdges[k].j                     = part;
+      gEdges[k].v                     = weight;
+      procWillAcceptPartition[procNo] = true;
+      k++;
+    }
+  }
+  gEdges.resize(k);
+
+  // Sort edges by weight
+  // NOTE: compareTriplets is actually a reverse sort, so the edges weight is in decreasing order
+  std::sort(gEdges.begin(), gEdges.end(), compareTriplets<int, int>);
+
+  // Do matching
+  std::map<int, int> match;
+  Teuchos::Array<char> matchedRanks(numProcs, 0);
+  Teuchos::Array<char> matchedParts(numPartitions, 0);
+  int numMatched = 0;
+  for (typename Teuchos::Array<Triplet<int, int>>::const_iterator it = gEdges.begin(); it != gEdges.end(); it++) {
+    GlobalOrdinal rank = it->i;
+    GlobalOrdinal part = it->j;
+    if (matchedRanks[rank] == 0 && matchedParts[part] == 0) {
+      matchedRanks[rank] = 1;
+      matchedParts[part] = 1;
+      match[part]        = rank;
+      numMatched++;
+    }
+  }
+  // GetOStream(Statistics1) << "Number of unassigned partitions before cleanup stage: " << (numPartitions - numMatched) << " / " << numPartitions << std::endl;
+
+  // Step 4: Assign unassigned partitions if necessary.
+  // We do that through desperate matching for remaining partitions:
+  // We select the lowest rank that can still take a partition.
+  // The reason it is done this way is that we don't need any extra communication, as we don't
+  // need to know which parts are valid.
+  if (numPartitions - numMatched > 0) {
+    Teuchos::Array<char> partitionCounts(numPartitions, 0);
+    for (auto it = match.begin(); it != match.end(); it++)
+      partitionCounts[it->first] += 1;
+    for (int part = 0, matcher = 0; part < numPartitions; part++) {
+      if (partitionCounts[part] == 0) {
+        // Find first non-matched rank that accepts partitions
+        while (matchedRanks[matcher] || !procWillAcceptPartition[matcher])
+          matcher++;
+
+        match[part] = matcher++;
+        numMatched++;
+      }
+    }
+  }
+
+  TEUCHOS_TEST_FOR_EXCEPTION(numMatched != numPartitions, std::runtime_error, "MueLu::RepartitionFactory::DeterminePartitionPlacement: Only " << numMatched << " partitions out of " << numPartitions << " got assigned to ranks.");
+
+  // Step 5: Permute entries in the decomposition vector
+  for (LocalOrdinal i = 0; i < decompEntries.extent(0); i++)
+    decompEntries(i, 0) = match[decompEntries(i, 0)];
+}
+
+template <class PartitionVector, class ImportType>
+Teuchos::RCP<ImportType>
+buildImporterFromPartitioningAlltoall(const Teuchos::RCP<PartitionVector>& parts) {
+  using PartitionNumber = typename PartitionVector::scalar_type;
+  using LocalOrdinal    = typename PartitionVector::local_ordinal_type;
+  using GlobalOrdinal   = typename PartitionVector::global_ordinal_type;
+  using NodeType        = typename PartitionVector::node_type;
+
+  using MapType = typename ImportType::map_type;
+
+  auto map                                            = parts->getMap();
+  auto comm                                           = map->getComm();
+  RCP<const Teuchos::OpaqueWrapper<MPI_Comm>> rawComm = rcp_dynamic_cast<const Teuchos::MpiComm<int>>(comm, true)->getRawMpiComm();
+
+  MPI_Datatype MpiTypeInt           = Teuchos::Details::MpiTypeTraits<int>::getType();
+  MPI_Datatype MpiTypeGlobalOrdinal = Teuchos::Details::MpiTypeTraits<GlobalOrdinal>::getType();
+  int status                        = -1;
+  int numRanks                      = comm->getSize();
+  int numParts                      = parts->normInf();
+  TEUCHOS_ASSERT(numParts >= 1);
+  LocalOrdinal numElements = map->getLocalNumElements();
+
+  auto lclParts = parts->getHostLocalView(Xpetra::Access::ReadOnly);
+
+  std::vector<int> send_counts(numRanks);
+  std::vector<int> send_offsets(numParts + 1);
+  std::vector<GlobalOrdinal> send_gids(numElements);
+  std::vector<int> recv_counts(numRanks);
+  std::vector<int> recv_offsets(numRanks + 1);
+
+  for (GlobalOrdinal i = 0; i < numElements; i++) {
+    int partNum = lclParts(i, 0);
+    ++send_counts[partNum];
+  }
+
+  send_offsets[0] = 0;
+  send_offsets[1] = 0;
+  // send_offsets[2] = send_counts[0];
+  // send_offsets[3] = send_counts[0]+send_counts[1];
+  // etc
+  for (GlobalOrdinal i = 1; i < numParts; i++) {
+    send_offsets[i + 1] = send_offsets[i] + send_counts[i - 1];
+  }
+
+  // We increment send_offsets as we enter values into send_gids.
+  for (GlobalOrdinal i = 0; i < numElements; i++) {
+    int partNum                            = lclParts(i, 0);
+    send_gids[send_offsets[partNum + 1]++] = map->getGlobalElement(i);
+  }
+  // Now:
+  // send_offsets[0] = 0;
+  // send_offsets[1] = send_counts[0];
+  // send_offsets[2] = send_counts[0]+send_counts[1];
+  // etc
+
+  status = MPI_Alltoall(send_counts.data(), 1, MpiTypeInt,
+                        recv_counts.data(), 1, MpiTypeInt,
+                        (*rawComm)());
+  TEUCHOS_ASSERT(status == 0);
+
+  recv_offsets[0] = 0;
+  for (GlobalOrdinal i = 0; i < numRanks; i++) {
+    recv_offsets[i + 1] = recv_offsets[i] + recv_counts[i];
+  }
+
+  std::vector<GlobalOrdinal> recv_gids(recv_offsets[numRanks]);
+
+  status = MPI_Alltoallv(send_gids.data(), send_counts.data(), send_offsets.data(), MpiTypeGlobalOrdinal,
+                         recv_gids.data(), recv_counts.data(), recv_offsets.data(), MpiTypeGlobalOrdinal,
+                         (*rawComm)());
+  TEUCHOS_ASSERT(status == 0);
+
+  // NOTE 2: The general sorting algorithm could be sped up by using the knowledge that original myGIDs and all received chunks
+  // (i.e. it->second) are sorted. Therefore, a merge sort would work well in this situation.
+  std::sort(recv_gids.begin(), recv_gids.end());
+
+  auto newMap   = Xpetra::MapFactory<LocalOrdinal, GlobalOrdinal, NodeType>::Build(map->lib(), map->getGlobalNumElements(), recv_gids, map->getIndexBase(), comm);
+  auto importer = Xpetra::ImportFactory<LocalOrdinal, GlobalOrdinal, NodeType>::Build(map, newMap);
+  return importer;
+}
+
+template <class PartitionVector, class ImportType>
+Teuchos::RCP<ImportType>
+buildImporterFromPartitioningSendRecv(const Teuchos::RCP<PartitionVector>& decomposition) {
+  using LO = typename PartitionVector::local_ordinal_type;
+  using GO = typename PartitionVector::global_ordinal_type;
+  using NO = typename PartitionVector::node_type;
+
+  using MapFactory    = Xpetra::MapFactory<LO, GO, NO>;
+  using ExportFactory = Xpetra::ExportFactory<LO, GO, NO>;
+  using ImportFactory = Xpetra::ImportFactory<LO, GO, NO>;
+
+  auto rowMap  = decomposition->getMap();
+  auto comm    = rowMap->getComm();
+  auto myRank  = comm->getRank();
+  int numProcs = comm->getSize();
+
+  RCP<const Teuchos::MpiComm<int>> tmpic = rcp_dynamic_cast<const Teuchos::MpiComm<int>>(comm);
+  TEUCHOS_TEST_FOR_EXCEPTION(tmpic == Teuchos::null, Exceptions::RuntimeError, "Cannot cast base Teuchos::Comm to Teuchos::MpiComm object.");
+  RCP<const Teuchos::OpaqueWrapper<MPI_Comm>> rawMpiComm = tmpic->getRawMpiComm();
+
+  ArrayRCP<const GO> decompEntries;
+  if (decomposition->getLocalLength() > 0)
+    decompEntries = decomposition->getData(0);
+
+#ifdef HAVE_MUELU_DEBUG
+  // Test range of partition ids
+  int incorrectRank = -1;
+  for (int i = 0; i < decompEntries.size(); i++)
+    if (decompEntries[i] >= numProcs || decompEntries[i] < 0) {
+      incorrectRank = myRank;
+      break;
+    }
+
+  int incorrectGlobalRank = -1;
+  MueLu_maxAll(comm, incorrectRank, incorrectGlobalRank);
+  TEUCHOS_TEST_FOR_EXCEPTION(incorrectGlobalRank > -1, Exceptions::RuntimeError, "pid " + Teuchos::toString(incorrectGlobalRank) + " encountered a partition number is that out-of-range");
+#endif
+
+  Array<GO> myGIDs;
+  myGIDs.reserve(decomposition->getLocalLength());
+
+  // Step 0: Construct mapping
+  //    part number -> GIDs I own which belong to this part
+  // NOTE: my own part GIDs are not part of the map
+  using map_type = std::map<GO, Array<GO>>;
+  map_type sendMap;
+  for (LO i = 0; i < decompEntries.size(); i++) {
+    GO id  = decompEntries[i];
+    GO GID = rowMap->getGlobalElement(i);
+
+    if (id == myRank)
+      myGIDs.push_back(GID);
+    else
+      sendMap[id].push_back(GID);
+  }
+  decompEntries = Teuchos::null;
+
+  int numSend = sendMap.size();
+  int numRecv;
+
+  // Arrayify map keys
+  Array<GO> myParts(numSend);
+  Array<GO> myPart(1);
+  int cnt   = 0;
+  myPart[0] = myRank;
+  for (typename map_type::const_iterator it = sendMap.begin(); it != sendMap.end(); it++)
+    myParts[cnt++] = it->first;
+
+  // Step 1: Find out how many processors send me data
+  // partsIndexBase starts from zero, as the processors ids start from zero
+  {
+    // SubFactoryMonitor m1(*this, "Mapping Step 1", currentLevel);
+    GO partsIndexBase = 0;
+    auto lib          = rowMap->lib();
+    auto partsIHave   = MapFactory ::Build(lib, Teuchos::OrdinalTraits<Xpetra::global_size_t>::invalid(), myParts(), partsIndexBase, comm);
+    auto partsIOwn    = MapFactory ::Build(lib, numProcs, myPart(), partsIndexBase, comm);
+    auto partsExport  = ExportFactory::Build(partsIHave, partsIOwn);
+
+    auto partsISend    = Xpetra::VectorFactory<GO, LO, GO, NO>::Build(partsIHave);
+    auto numPartsIRecv = Xpetra::VectorFactory<GO, LO, GO, NO>::Build(partsIOwn);
+    if (numSend) {
+      ArrayRCP<GO> partsISendData = partsISend->getDataNonConst(0);
+      for (int i = 0; i < numSend; i++)
+        partsISendData[i] = 1;
+    }
+    (numPartsIRecv->getDataNonConst(0))[0] = 0;
+
+    numPartsIRecv->doExport(*partsISend, *partsExport, Xpetra::ADD);
+    numRecv = (numPartsIRecv->getData(0))[0];
+  }
+
+  // Step 2: Get my GIDs from everybody else
+  MPI_Datatype MpiType = Teuchos::Details::MpiTypeTraits<GO>::getType();
+  int msgTag           = 12345;  // TODO: use Comm::dup for all internal messaging
+
+  // Post sends
+  Array<MPI_Request> sendReqs(numSend);
+  cnt = 0;
+  for (typename map_type::iterator it = sendMap.begin(); it != sendMap.end(); it++)
+    MPI_Isend(static_cast<void*>(it->second.getRawPtr()), it->second.size(), MpiType, Teuchos::as<GO>(it->first), msgTag, *rawMpiComm, &sendReqs[cnt++]);
+
+  map_type recvMap;
+  size_t totalGIDs = myGIDs.size();
+  for (int i = 0; i < numRecv; i++) {
+    MPI_Status status;
+    MPI_Probe(MPI_ANY_SOURCE, msgTag, *rawMpiComm, &status);
+
+    // Get rank and number of elements from status
+    int fromRank = status.MPI_SOURCE;
+    int count;
+    MPI_Get_count(&status, MpiType, &count);
+
+    recvMap[fromRank].resize(count);
+    MPI_Recv(static_cast<void*>(recvMap[fromRank].getRawPtr()), count, MpiType, fromRank, msgTag, *rawMpiComm, &status);
+
+    totalGIDs += count;
+  }
+
+  // Do waits on send requests
+  if (numSend) {
+    Array<MPI_Status> sendStatuses(numSend);
+    MPI_Waitall(numSend, sendReqs.getRawPtr(), sendStatuses.getRawPtr());
+  }
+
+  // Merge GIDs
+  myGIDs.reserve(totalGIDs);
+  for (typename map_type::const_iterator it = recvMap.begin(); it != recvMap.end(); it++) {
+    int offset = myGIDs.size();
+    int len    = it->second.size();
+    if (len) {
+      myGIDs.resize(offset + len);
+      memcpy(myGIDs.getRawPtr() + offset, it->second.getRawPtr(), len * sizeof(GO));
+    }
+  }
+  // NOTE 2: The general sorting algorithm could be sped up by using the knowledge that original myGIDs and all received chunks
+  // (i.e. it->second) are sorted. Therefore, a merge sort would work well in this situation.
+  std::sort(myGIDs.begin(), myGIDs.end());
+
+  // Step 3: Construct importer
+  auto newRowMap = MapFactory ::Build(rowMap->lib(), rowMap->getGlobalNumElements(), myGIDs(), rowMap->getIndexBase(), comm);
+  auto importer  = ImportFactory::Build(rowMap, newRowMap);
+  return importer;
+}
+
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 RepartitionFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::RepartitionFactory() = default;
 
@@ -62,9 +442,9 @@ RCP<const ParameterList> RepartitionFactory<Scalar, LocalOrdinal, GlobalOrdinal,
   SET_VALID_ENTRY("repartition: save importer");
 #undef SET_VALID_ENTRY
 
-  validParamList->set<RCP<const FactoryBase> >("A", Teuchos::null, "Factory of the matrix A");
-  validParamList->set<RCP<const FactoryBase> >("number of partitions", Teuchos::null, "Instance of RepartitionHeuristicFactory.");
-  validParamList->set<RCP<const FactoryBase> >("Partition", Teuchos::null, "Factory of the partition");
+  validParamList->set<RCP<const FactoryBase>>("A", Teuchos::null, "Factory of the matrix A");
+  validParamList->set<RCP<const FactoryBase>>("number of partitions", Teuchos::null, "Instance of RepartitionHeuristicFactory.");
+  validParamList->set<RCP<const FactoryBase>>("Partition", Teuchos::null, "Factory of the partition");
 
   return validParamList;
 }
@@ -86,24 +466,15 @@ void RepartitionFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(Level&
   bool remapPartitions = pL.get<bool>("repartition: remap parts");
 
   // TODO: We only need a CrsGraph. This class does not have to be templated on Scalar types.
-  RCP<Matrix> A = Get<RCP<Matrix> >(currentLevel, "A");
+  RCP<Matrix> A = Get<RCP<Matrix>>(currentLevel, "A");
   if (A == Teuchos::null) {
-    Set<RCP<const Import> >(currentLevel, "Importer", Teuchos::null);
+    Set<RCP<const Import>>(currentLevel, "Importer", Teuchos::null);
     return;
   }
-  RCP<const Map> rowMap     = A->getRowMap();
-  GO indexBase              = rowMap->getIndexBase();
-  Xpetra::UnderlyingLib lib = rowMap->lib();
+  RCP<const Map> rowMap = A->getRowMap();
 
-  RCP<const Teuchos::Comm<int> > origComm = rowMap->getComm();
-  RCP<const Teuchos::Comm<int> > comm     = origComm;
-
-  int myRank   = comm->getRank();
-  int numProcs = comm->getSize();
-
-  RCP<const Teuchos::MpiComm<int> > tmpic = rcp_dynamic_cast<const Teuchos::MpiComm<int> >(comm);
-  TEUCHOS_TEST_FOR_EXCEPTION(tmpic == Teuchos::null, Exceptions::RuntimeError, "Cannot cast base Teuchos::Comm to Teuchos::MpiComm object.");
-  RCP<const Teuchos::OpaqueWrapper<MPI_Comm> > rawMpiComm = tmpic->getRawMpiComm();
+  RCP<const Teuchos::Comm<int>> comm = rowMap->getComm();
+  int numProcs                       = comm->getSize();
 
   /////
   int numPartitions = Get<int>(currentLevel, "number of partitions");
@@ -111,10 +482,10 @@ void RepartitionFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(Level&
   // ======================================================================================================
   // Construct decomposition vector
   // ======================================================================================================
-  RCP<GOVector> decomposition = Get<RCP<GOVector> >(currentLevel, "Partition");
+  RCP<GOVector> decomposition = Get<RCP<GOVector>>(currentLevel, "Partition");
 
   // check which factory provides "Partition"
-  if (remapPartitions == true && Teuchos::rcp_dynamic_cast<const CloneRepartitionInterface>(GetFactory("Partition")) != Teuchos::null) {
+  if (remapPartitions && Teuchos::rcp_dynamic_cast<const CloneRepartitionInterface>(GetFactory("Partition")) != Teuchos::null) {
     // if "Partition" is provided by a CloneRepartitionInterface class we have to switch of remapPartitions
     // as we can assume the processor Ids in Partition to be the expected ones. If we would do remapping we
     // would get different processors for the different blocks which screws up matrix-matrix multiplication.
@@ -131,7 +502,7 @@ void RepartitionFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(Level&
   } else if (numPartitions == -1) {
     // No repartitioning necessary: decomposition should be Teuchos::null
     GetOStream(Runtime0) << "No repartitioning necessary: partitions were left unchanged by the repartitioner" << std::endl;
-    Set<RCP<const Import> >(currentLevel, "Importer", Teuchos::null);
+    Set<RCP<const Import>>(currentLevel, "Importer", Teuchos::null);
     return;
   }
 
@@ -202,7 +573,14 @@ void RepartitionFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(Level&
       allSubdomainsAcceptPartitions = false;
     }
 
-    DeterminePartitionPlacement(*A, *decomposition, numPartitions, acceptPartition, allSubdomainsAcceptPartitions);
+    auto weights = Xpetra::VectorFactory<LocalOrdinal, LocalOrdinal, GlobalOrdinal, Node>::Build(decomposition->getMap());
+    {
+      auto lclWeights = weights->getHostLocalView(Xpetra::Access::OverwriteAll);
+      for (size_t i = 0; i < A->getRowMap()->getLocalNumElements(); ++i)
+        lclWeights(i, 0) = A->getNumEntriesInLocalRow(i);
+    }
+    const int maxLocalEdges = pL.get<int>("repartition: remap num values");
+    AssignPartitionsToRanks(*decomposition, *weights, numPartitions, acceptPartition, allSubdomainsAcceptPartitions, maxLocalEdges);
   }
 
   // ======================================================================================================
@@ -213,145 +591,18 @@ void RepartitionFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(Level&
   //  * If a processor owns a partition, that partition number is equal to the processor rank
   //  * The decomposition vector contains the partitions ids that the corresponding GID belongs to
 
-  ArrayRCP<const GO> decompEntries;
-  if (decomposition->getLocalLength() > 0)
-    decompEntries = decomposition->getData(0);
-
-#ifdef HAVE_MUELU_DEBUG
-  // Test range of partition ids
-  int incorrectRank = -1;
-  for (int i = 0; i < decompEntries.size(); i++)
-    if (decompEntries[i] >= numProcs || decompEntries[i] < 0) {
-      incorrectRank = myRank;
-      break;
-    }
-
-  int incorrectGlobalRank = -1;
-  MueLu_maxAll(comm, incorrectRank, incorrectGlobalRank);
-  TEUCHOS_TEST_FOR_EXCEPTION(incorrectGlobalRank > -1, Exceptions::RuntimeError, "pid " + Teuchos::toString(incorrectGlobalRank) + " encountered a partition number is that out-of-range");
-#endif
-
-  Array<GO> myGIDs;
-  myGIDs.reserve(decomposition->getLocalLength());
-
-  // Step 0: Construct mapping
-  //    part number -> GIDs I own which belong to this part
-  // NOTE: my own part GIDs are not part of the map
-  typedef std::map<GO, Array<GO> > map_type;
-  map_type sendMap;
-  for (LO i = 0; i < decompEntries.size(); i++) {
-    GO id  = decompEntries[i];
-    GO GID = rowMap->getGlobalElement(i);
-
-    if (id == myRank)
-      myGIDs.push_back(GID);
-    else
-      sendMap[id].push_back(GID);
-  }
-  decompEntries = Teuchos::null;
+  RCP<const Import> rowMapImporter = buildImporterFromPartitioningSendRecv<GOVector, Import>(decomposition);
+  // RCP<const Import> rowMapImporter = buildImporterFromPartitioningAlltoall<GOVector, Import>(decomposition);
 
   if (IsPrint(Statistics2)) {
-    GO numLocalKept = myGIDs.size(), numGlobalKept, numGlobalRows = A->getGlobalNumRows();
+    GO numLocalKept = rowMapImporter->getTargetMap()->getLocalNumElements();
+    GO numGlobalKept;
+    GO numGlobalRows = A->getGlobalNumRows();
     MueLu_sumAll(comm, numLocalKept, numGlobalKept);
     GetOStream(Statistics2) << "Unmoved rows: " << numGlobalKept << " / " << numGlobalRows << " (" << 100 * Teuchos::as<double>(numGlobalKept) / numGlobalRows << "%)" << std::endl;
   }
 
-  int numSend = sendMap.size(), numRecv;
-
-  // Arrayify map keys
-  Array<GO> myParts(numSend), myPart(1);
-  int cnt   = 0;
-  myPart[0] = myRank;
-  for (typename map_type::const_iterator it = sendMap.begin(); it != sendMap.end(); it++)
-    myParts[cnt++] = it->first;
-
-  // Step 1: Find out how many processors send me data
-  // partsIndexBase starts from zero, as the processors ids start from zero
-  {
-    SubFactoryMonitor m1(*this, "Mapping Step 1", currentLevel);
-    GO partsIndexBase       = 0;
-    RCP<Map> partsIHave     = MapFactory ::Build(lib, Teuchos::OrdinalTraits<Xpetra::global_size_t>::invalid(), myParts(), partsIndexBase, comm);
-    RCP<Map> partsIOwn      = MapFactory ::Build(lib, numProcs, myPart(), partsIndexBase, comm);
-    RCP<Export> partsExport = ExportFactory::Build(partsIHave, partsIOwn);
-
-    RCP<GOVector> partsISend    = Xpetra::VectorFactory<GO, LO, GO, NO>::Build(partsIHave);
-    RCP<GOVector> numPartsIRecv = Xpetra::VectorFactory<GO, LO, GO, NO>::Build(partsIOwn);
-    if (numSend) {
-      ArrayRCP<GO> partsISendData = partsISend->getDataNonConst(0);
-      for (int i = 0; i < numSend; i++)
-        partsISendData[i] = 1;
-    }
-    (numPartsIRecv->getDataNonConst(0))[0] = 0;
-
-    numPartsIRecv->doExport(*partsISend, *partsExport, Xpetra::ADD);
-    numRecv = (numPartsIRecv->getData(0))[0];
-  }
-
-  // Step 2: Get my GIDs from everybody else
-  MPI_Datatype MpiType = Teuchos::Details::MpiTypeTraits<GO>::getType();
-  int msgTag           = 12345;  // TODO: use Comm::dup for all internal messaging
-
-  // Post sends
-  Array<MPI_Request> sendReqs(numSend);
-  cnt = 0;
-  for (typename map_type::iterator it = sendMap.begin(); it != sendMap.end(); it++)
-    MPI_Isend(static_cast<void*>(it->second.getRawPtr()), it->second.size(), MpiType, Teuchos::as<GO>(it->first), msgTag, *rawMpiComm, &sendReqs[cnt++]);
-
-  map_type recvMap;
-  size_t totalGIDs = myGIDs.size();
-  for (int i = 0; i < numRecv; i++) {
-    MPI_Status status;
-    MPI_Probe(MPI_ANY_SOURCE, msgTag, *rawMpiComm, &status);
-
-    // Get rank and number of elements from status
-    int fromRank = status.MPI_SOURCE, count;
-    MPI_Get_count(&status, MpiType, &count);
-
-    recvMap[fromRank].resize(count);
-    MPI_Recv(static_cast<void*>(recvMap[fromRank].getRawPtr()), count, MpiType, fromRank, msgTag, *rawMpiComm, &status);
-
-    totalGIDs += count;
-  }
-
-  // Do waits on send requests
-  if (numSend) {
-    Array<MPI_Status> sendStatuses(numSend);
-    MPI_Waitall(numSend, sendReqs.getRawPtr(), sendStatuses.getRawPtr());
-  }
-
-  // Merge GIDs
-  myGIDs.reserve(totalGIDs);
-  for (typename map_type::const_iterator it = recvMap.begin(); it != recvMap.end(); it++) {
-    int offset = myGIDs.size(), len = it->second.size();
-    if (len) {
-      myGIDs.resize(offset + len);
-      memcpy(myGIDs.getRawPtr() + offset, it->second.getRawPtr(), len * sizeof(GO));
-    }
-  }
-  // NOTE 2: The general sorting algorithm could be sped up by using the knowledge that original myGIDs and all received chunks
-  // (i.e. it->second) are sorted. Therefore, a merge sort would work well in this situation.
-  std::sort(myGIDs.begin(), myGIDs.end());
-
-  // Step 3: Construct importer
-  RCP<Map> newRowMap;
-  {
-    SubFactoryMonitor m1(*this, "Map construction", currentLevel);
-    newRowMap = MapFactory ::Build(lib, rowMap->getGlobalNumElements(), myGIDs(), indexBase, origComm);
-  }
-
-  RCP<const Import> rowMapImporter;
-
   RCP<const BlockedMap> blockedRowMap = Teuchos::rcp_dynamic_cast<const BlockedMap>(rowMap);
-
-  {
-    SubFactoryMonitor m1(*this, "Import construction", currentLevel);
-    // Generate a nonblocked rowmap if we need one
-    if (blockedRowMap.is_null())
-      rowMapImporter = ImportFactory::Build(rowMap, newRowMap);
-    else {
-      rowMapImporter = ImportFactory::Build(blockedRowMap->getMap(), newRowMap);
-    }
-  }
 
   // If we're running BlockedCrs we should chop up the newRowMap into a newBlockedRowMap here (and do likewise for importers)
   if (!blockedRowMap.is_null()) {
@@ -361,7 +612,7 @@ void RepartitionFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(Level&
     // NOTE: This code qualifies as "correct but not particularly performant"  If this needs to be sped up, we can probably read data from the existing importer to
     // build sub-importers rather than generating new ones ex nihilo
     size_t numBlocks = blockedRowMap->getNumMaps();
-    std::vector<RCP<const Import> > subImports(numBlocks);
+    std::vector<RCP<const Import>> subImports(numBlocks);
 
     for (size_t i = 0; i < numBlocks; i++) {
       RCP<const Map> source = blockedRowMap->getMap(i);
@@ -392,8 +643,11 @@ void RepartitionFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(Level&
     // Print the grid of processors
     GetOStream(Statistics2) << "Partition distribution over cores (ownership is indicated by '+')" << std::endl;
 
-    char amActive = (myGIDs.size() ? 1 : 0);
+    char amActive = (rowMapImporter->getTargetMap()->getLocalNumElements() ? 1 : 0);
     std::vector<char> areActive(numProcs, 0);
+    RCP<const Teuchos::MpiComm<int>> tmpic = rcp_dynamic_cast<const Teuchos::MpiComm<int>>(comm);
+    TEUCHOS_TEST_FOR_EXCEPTION(tmpic == Teuchos::null, Exceptions::RuntimeError, "Cannot cast base Teuchos::Comm to Teuchos::MpiComm object.");
+    RCP<const Teuchos::OpaqueWrapper<MPI_Comm>> rawMpiComm = tmpic->getRawMpiComm();
     MPI_Gather(&amActive, 1, MPI_CHAR, &areActive[0], 1, MPI_CHAR, 0, *rawMpiComm);
 
     int rowWidth = std::min(Teuchos::as<int>(ceil(sqrt(numProcs))), 100);
@@ -410,28 +664,17 @@ void RepartitionFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(Level&
 
 }  // Build
 
-//----------------------------------------------------------------------
-template <typename T, typename W>
-struct Triplet {
-  T i, j;
-  W v;
-};
-template <typename T, typename W>
-static bool compareTriplets(const Triplet<T, W>& a, const Triplet<T, W>& b) {
-  return (a.v > b.v);  // descending order
-}
-
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 void RepartitionFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     DeterminePartitionPlacement(const Matrix& A, GOVector& decomposition, GO numPartitions, bool willAcceptPartition, bool allSubdomainsAcceptPartitions) const {
   RCP<const Map> rowMap = A.getRowMap();
 
-  RCP<const Teuchos::Comm<int> > comm = rowMap->getComm()->duplicate();
-  int numProcs                        = comm->getSize();
+  RCP<const Teuchos::Comm<int>> comm = rowMap->getComm()->duplicate();
+  int numProcs                       = comm->getSize();
 
-  RCP<const Teuchos::MpiComm<int> > tmpic = rcp_dynamic_cast<const Teuchos::MpiComm<int> >(comm);
+  RCP<const Teuchos::MpiComm<int>> tmpic = rcp_dynamic_cast<const Teuchos::MpiComm<int>>(comm);
   TEUCHOS_TEST_FOR_EXCEPTION(tmpic == Teuchos::null, Exceptions::RuntimeError, "Cannot cast base Teuchos::Comm to Teuchos::MpiComm object.");
-  RCP<const Teuchos::OpaqueWrapper<MPI_Comm> > rawMpiComm = tmpic->getRawMpiComm();
+  RCP<const Teuchos::OpaqueWrapper<MPI_Comm>> rawMpiComm = tmpic->getRawMpiComm();
 
   const Teuchos::ParameterList& pL = GetParameterList();
 
@@ -486,7 +729,7 @@ void RepartitionFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   // Step 3: Construct mapping
 
   // Construct the set of triplets
-  Teuchos::Array<Triplet<int, int> > gEdges(numProcs * maxLocal);
+  Teuchos::Array<Triplet<int, int>> gEdges(numProcs * maxLocal);
   Teuchos::Array<bool> procWillAcceptPartition(numProcs, allSubdomainsAcceptPartitions);
   size_t k = 0;
   for (LO i = 0; i < gData.size(); i += 2) {
@@ -511,7 +754,7 @@ void RepartitionFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   std::map<int, int> match;
   Teuchos::Array<char> matchedRanks(numProcs, 0), matchedParts(numPartitions, 0);
   int numMatched = 0;
-  for (typename Teuchos::Array<Triplet<int, int> >::const_iterator it = gEdges.begin(); it != gEdges.end(); it++) {
+  for (typename Teuchos::Array<Triplet<int, int>>::const_iterator it = gEdges.begin(); it != gEdges.end(); it++) {
     GO rank = it->i;
     GO part = it->j;
     if (matchedRanks[rank] == 0 && matchedParts[part] == 0) {
