@@ -86,7 +86,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, DistanceLaplacian,
   out << "version: " << MueLu::Version() << std::endl;
 
   RCP<const Teuchos::Comm<int>> comm = TestHelpers_kokkos::Parameters::getDefaultComm();
-  auto lib = TestHelpers_kokkos::Parameters::getLib();
+  auto lib                           = TestHelpers_kokkos::Parameters::getLib();
 
   // 1 dof per node
   {
@@ -144,8 +144,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, DistanceLaplacian,
     GO nx = 10, ny = 10;
 
     auto [A, coordinates] = TestHelpers_kokkos::TestFactory<SC, LO, GO, NO>::Build2DElasticity(nx, ny);
-
-    auto nodeMap = MapFactory::Build(lib, nx*ny, 0, comm);
+    auto nodeMap          = MapFactory::Build(lib, nx * ny, 0, comm);
 
     Teuchos::ParameterList galeriList;
     galeriList.set("nx", Teuchos::as<GlobalOrdinal>(nx));
@@ -156,9 +155,11 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, DistanceLaplacian,
     fineLevel.Set("A", A);
 
     std::cout << A->getGlobalNumEntries() << std::endl;
-
-    fineLevel.Set("Coordinates", coordinates);
-    //fineLevel.Set("Coordinates", coords);
+    // std::cout << A->getRowMap()->getGlobalNumElements() << std::endl;
+    // std::cout << coordinates->getMap()->getGlobalNumElements() << std::endl;
+    // std::cout << coords->getMap()->getGlobalNumElements() << std::endl;
+    // fineLevel.Set("Coordinates", coordinates);
+    fineLevel.Set("Coordinates", coords);
 
     CoalesceDropFactory_kokkos coalesceDropFact;
     coalesceDropFact.SetDefaultVerbLevel(MueLu::Extreme);
