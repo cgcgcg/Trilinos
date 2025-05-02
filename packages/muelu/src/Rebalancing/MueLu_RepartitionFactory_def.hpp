@@ -60,6 +60,7 @@ RCP<const ParameterList> RepartitionFactory<Scalar, LocalOrdinal, GlobalOrdinal,
   SET_VALID_ENTRY("repartition: remap accept partition");
   SET_VALID_ENTRY("repartition: node repartition level");
   SET_VALID_ENTRY("repartition: save importer");
+  SET_VALID_ENTRY("repartition: importer params");
 #undef SET_VALID_ENTRY
 
   validParamList->set<RCP<const FactoryBase> >("A", Teuchos::null, "Factory of the matrix A");
@@ -353,6 +354,9 @@ void RepartitionFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(Level&
     }
   }
 
+  RCP<ParameterList> importerParams = Teuchos::rcp_const_cast<ParameterList>(rcpFromRef(pL.sublist("repartition: importer params")));
+  rowMapImporter->setDistributorParameters(importerParams);
+
   // If we're running BlockedCrs we should chop up the newRowMap into a newBlockedRowMap here (and do likewise for importers)
   if (!blockedRowMap.is_null()) {
     SubFactoryMonitor m1(*this, "Blocking newRowMap and Importer", currentLevel);
@@ -367,6 +371,7 @@ void RepartitionFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(Level&
       RCP<const Map> source = blockedRowMap->getMap(i);
       RCP<const Map> target = blockedTargetMap->getMap(i);
       subImports[i]         = ImportFactory::Build(source, target);
+      subImports[i]->setDistributorParameters(importerParams);
     }
     Set(currentLevel, "SubImporters", subImports);
   }
