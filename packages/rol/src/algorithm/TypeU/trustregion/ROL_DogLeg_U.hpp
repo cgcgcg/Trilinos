@@ -42,7 +42,7 @@ public:
               int                      &iter,
               const Real                del,
               TrustRegionModel_U<Real> &model ) {
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
     const Real zero(0), half(0.5), one(1), two(2);
     iter = 0;
     // Set s to be the gradient

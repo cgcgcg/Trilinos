@@ -33,7 +33,7 @@ void DoubleWellPenalty<Real>::sumAll(Real *input, Real *output, int size, const 
 }
 
 template<typename Real>
-Real DoubleWellPenalty<Real>::value( const Vector<Real> &x, Real &tol ) {
+Real DoubleWellPenalty<Real>::value( const Vector<Real> &x, Tolerance<Real> &tol ) {
   startTimer("value");
   const Real one(1);
   const std::vector<Real> &xdata = getConstData(x);
@@ -45,7 +45,7 @@ Real DoubleWellPenalty<Real>::value( const Vector<Real> &x, Real &tol ) {
 }
 
 template<typename Real>
-void DoubleWellPenalty<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+void DoubleWellPenalty<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
   startTimer("gradient");
   const Real one(1), two(2), three(3);
   Real xi(0);
@@ -59,7 +59,7 @@ void DoubleWellPenalty<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, 
 }
 
 template<typename Real>
-void DoubleWellPenalty<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+void DoubleWellPenalty<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
   startTimer("hessVec");
   const Real one(1), two(2), three(3);
   Real xi(0), vi(0);

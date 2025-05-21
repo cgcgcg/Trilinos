@@ -65,7 +65,7 @@ public:
 
   virtual void initialize(const Vector<Real> &g);
 
-  virtual unsigned solveDual(const Real t, const unsigned maxit = 1000, const Real tol = 1.e-8) = 0;
+  virtual unsigned solveDual(const Real t, const unsigned maxit = 1000, const Tolerance<Real> tol = 1.e-8) = 0;
 
   const Real linearizationError(const unsigned i) const;
 
@@ -101,9 +101,9 @@ protected:
 
   Real evaluateObjective(std::vector<Real> &g, const std::vector<Real> &x, const Real t) const;
 
-  unsigned solveDual_dim1(const Real t, const unsigned maxit = 1000, const Real tol = 1.e-8);
+  unsigned solveDual_dim1(const Real t, const unsigned maxit = 1000, const Tolerance<Real> tol = 1.e-8);
 
-  unsigned solveDual_dim2(const Real t, const unsigned maxit = 1000, const Real tol = 1.e-8);
+  unsigned solveDual_dim2(const Real t, const unsigned maxit = 1000, const Tolerance<Real> tol = 1.e-8);
 
 }; // class Bundle_U 
 

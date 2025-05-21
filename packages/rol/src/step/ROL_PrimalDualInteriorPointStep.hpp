@@ -153,7 +153,7 @@ private:
   void updateState( const V& x, const V &l, OBJ &obj, 
                     EQCON &con, BND &bnd, ALGO &algo_state ) {
   
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
     ROL::Ptr<STATE> state = Step<Real>::getState();
 
     obj.update(x,true,algo_state.iter);
@@ -258,7 +258,7 @@ public:
     if( precond_ == ROL::nullPtr) {
       class IdentityOperator : public LINOP {
       public: 
-        apply( V& Hv, const V &v, Real tol ) const {
+        apply( V& Hv, const V &v, Tolerance<Real> tol ) const {
           Hv.set(v);
         }
       }; // class IdentityOperator
@@ -293,7 +293,7 @@ public:
 
     Real one(1.0); 
     Real zero(0.0);
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
 
     x_ = x.clone();
     g_ = g.clone();

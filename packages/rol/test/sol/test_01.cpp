@@ -33,8 +33,8 @@ typedef double RealT;
 template<class Real>
 class ParametrizedObjectiveEx1 : public ROL::Objective<Real> {
 public:
-  Real value( const ROL::Vector<Real> &x, Real &tol ) {
-    ROL::Ptr<const std::vector<Real> > ex = 
+  Real value( const ROL::Vector<Real> &x, ROL::Tolerance<Real> &tol ) {
+    ROL::Ptr<const std::vector<Real> > ex =
       dynamic_cast<const ROL::StdVector<Real>&>(x).getVector();
     Real quad = 0.0, lin = 0.0;
     std::vector<Real> p = this->getParameter();
@@ -46,8 +46,8 @@ public:
     return std::exp(p[0])*quad + lin + p[size+1];
   }
 
-  void gradient( ROL::Vector<Real> &g, const ROL::Vector<Real> &x, Real &tol ) {
-    ROL::Ptr<const std::vector<Real> > ex = 
+  void gradient( ROL::Vector<Real> &g, const ROL::Vector<Real> &x, ROL::Tolerance<Real> &tol ) {
+    ROL::Ptr<const std::vector<Real> > ex =
       dynamic_cast<const ROL::StdVector<Real>&>(x).getVector();
     ROL::Ptr<std::vector<Real> > eg =
       dynamic_cast<ROL::StdVector<Real>&>(g).getVector();
@@ -58,10 +58,10 @@ public:
     }
   }
 
-  void hessVec( ROL::Vector<Real> &hv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &x, Real &tol ) {
-    ROL::Ptr<const std::vector<Real> > ex = 
+  void hessVec( ROL::Vector<Real> &hv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &x, ROL::Tolerance<Real> &tol ) {
+    ROL::Ptr<const std::vector<Real> > ex =
       dynamic_cast<const ROL::StdVector<Real>&>(x).getVector();
-    ROL::Ptr<const std::vector<Real> > ev = 
+    ROL::Ptr<const std::vector<Real> > ev =
       dynamic_cast<const ROL::StdVector<Real>&>(v).getVector();
     ROL::Ptr<std::vector<Real> > ehv =
       dynamic_cast<ROL::StdVector<Real>&>(hv).getVector();
@@ -131,7 +131,7 @@ int main(int argc, char* argv[]) {
     /**********************************************************************************************/
     // Get ROL parameterlist
     std::string filename = "input_01.xml";
-    
+
     auto parlist = ROL::getParametersFromXmlFile( filename );
     ROL::ParameterList list = *parlist;
     list.sublist("General").set("Output Level",print ? 1 : 0);
@@ -160,7 +160,7 @@ int main(int argc, char* argv[]) {
     // Build bound constraints
     std::vector<RealT> l(dim,0.0);
     std::vector<RealT> u(dim,1.0);
-    ROL::Ptr<ROL::BoundConstraint<RealT> > bnd = 
+    ROL::Ptr<ROL::BoundConstraint<RealT> > bnd =
       ROL::makePtr<ROL::StdBoundConstraint<RealT>>(l,u);
     //bnd->deactivate();
     // Test parametrized objective functions
@@ -175,7 +175,7 @@ int main(int argc, char* argv[]) {
     /************************* MEAN VALUE *********************************************************/
     /**********************************************************************************************/
     *outStream << "\nMean Value\n";
-    list.sublist("SOL").sublist("Objective").set("Type","Mean Value"); 
+    list.sublist("SOL").sublist("Objective").set("Type","Mean Value");
     //setRandomVector(*x_ptr);
     flag = setUpAndSolve(list,pObj,sampler,x,bnd,*outStream);
     printSolution(*x_ptr,*outStream);
@@ -184,7 +184,7 @@ int main(int argc, char* argv[]) {
     /************************* RISK NEUTRAL *******************************************************/
     /**********************************************************************************************/
     *outStream << "\nRisk Neutral\n";
-    list.sublist("SOL").sublist("Objective").set("Type","Risk Neutral"); 
+    list.sublist("SOL").sublist("Objective").set("Type","Risk Neutral");
     //setRandomVector(*x_ptr);
     flag = setUpAndSolve(list,pObj,sampler,x,bnd,*outStream);
     printSolution(*x_ptr,*outStream);
@@ -195,7 +195,7 @@ int main(int argc, char* argv[]) {
     for (ROL::ERiskMeasure er = ROL::RISKMEASURE_CVAR; er != ROL::RISKMEASURE_LAST; er++) {
       std::string name = ROL::ERiskMeasureToString(er);
       *outStream << std::endl << "Risk Averse: " << name << std::endl;
-      list.sublist("SOL").sublist("Objective").set("Type","Risk Averse"); 
+      list.sublist("SOL").sublist("Objective").set("Type","Risk Averse");
       list.sublist("SOL").sublist("Objective").sublist("Risk Measure").set("Name",name);
       if (er == ROL::RISKMEASURE_MEANDEVIATION           ||
           er == ROL::RISKMEASURE_MEANVARIANCE            ||
@@ -243,7 +243,7 @@ int main(int argc, char* argv[]) {
     /************************* CONVEX COMBINATION OF RISK MEASURES ********************************/
     /**********************************************************************************************/
     *outStream << "\nRisk Averse: Convex Combination of Risk Measures\n";
-    list.sublist("SOL").sublist("Objective").set("Type","Risk Averse"); 
+    list.sublist("SOL").sublist("Objective").set("Type","Risk Averse");
     list.sublist("SOL").sublist("Objective").sublist("Risk Measure").set("Name","Convex Combination Risk Measure");
     //setRandomVector(*x_ptr);
     flag = setUpAndSolve(list,pObj,sampler,x,bnd,*outStream);
@@ -256,7 +256,7 @@ int main(int argc, char* argv[]) {
     for (ROL::EDeviationMeasure ed = ROL::DEVIATIONMEASURE_MEANVARIANCEQUADRANGLE; ed != ROL::DEVIATIONMEASURE_LAST; ed++) {
       std::string name = ROL::EDeviationMeasureToString(ed);
       *outStream << std::endl << "Deviation: " << name << std::endl;
-      list.sublist("SOL").sublist("Objective").set("Type","Deviation"); 
+      list.sublist("SOL").sublist("Objective").set("Type","Deviation");
       list.sublist("SOL").sublist("Objective").sublist("Deviation Measure").set("Name",name);
       list.sublist("Status Test").set("Gradient Tolerance",tol);
       if (ed == ROL::DEVIATIONMEASURE_LOGQUANTILEQUADRANGLE)
@@ -272,7 +272,7 @@ int main(int argc, char* argv[]) {
     for (ROL::ERegretMeasure er = ROL::REGRETMEASURE_MEANABSOLUTELOSS; er != ROL::REGRETMEASURE_LAST; er++) {
       std::string name = ROL::ERegretMeasureToString(er);
       *outStream << std::endl << "Regret: " << name << std::endl;
-      list.sublist("SOL").sublist("Objective").set("Type","Regret"); 
+      list.sublist("SOL").sublist("Objective").set("Type","Regret");
       list.sublist("SOL").sublist("Objective").sublist("Regret Measure").set("Name",name);
       //setRandomVector(*x_ptr);
       flag = setUpAndSolve(list,pObj,sampler,x,bnd,*outStream);
@@ -285,7 +285,7 @@ int main(int argc, char* argv[]) {
     for (ROL::EProbability ep = ROL::PROBABILITY_BPOE; ep != ROL::PROBABILITY_LAST; ep++) {
       std::string name = ROL::EProbabilityToString(ep);
       *outStream << std::endl << "Probability: " << name << std::endl;
-      list.sublist("SOL").sublist("Objective").set("Type","Probability"); 
+      list.sublist("SOL").sublist("Objective").set("Type","Probability");
       list.sublist("SOL").sublist("Objective").sublist("Probability").set("Name",name);
       //setRandomVector(*x_ptr);
       flag = setUpAndSolve(list,pObj,sampler,x,bnd,*outStream);

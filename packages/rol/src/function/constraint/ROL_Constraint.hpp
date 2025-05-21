@@ -92,7 +92,7 @@ public:
   */
   virtual void value(Vector<Real> &c,
                      const Vector<Real> &x,
-                     Real &tol) = 0;
+                     Tolerance<Real> &tol) = 0;
 
  
   /** \brief Apply the constraint Jacobian at \f$x\f$, \f$c'(x) \in L(\mathcal{X}, \mathcal{C})\f$,
@@ -112,7 +112,7 @@ public:
   virtual void applyJacobian(Vector<Real> &jv,
                              const Vector<Real> &v,
                              const Vector<Real> &x,
-                             Real &tol);
+                             Tolerance<Real> &tol);
 
 
   /** \brief Apply the adjoint of the the constraint Jacobian at \f$x\f$, \f$c'(x)^* \in L(\mathcal{C}^*, \mathcal{X}^*)\f$,
@@ -132,7 +132,7 @@ public:
   virtual void applyAdjointJacobian(Vector<Real> &ajv,
                                     const Vector<Real> &v,
                                     const Vector<Real> &x,
-                                    Real &tol);
+                                    Tolerance<Real> &tol);
 
 
   /** \brief Apply the adjoint of the the constraint Jacobian at \f$x\f$, \f$c'(x)^* \in L(\mathcal{C}^*, \mathcal{X}^*)\f$,
@@ -155,7 +155,7 @@ public:
                                     const Vector<Real> &v,
                                     const Vector<Real> &x,
                                     const Vector<Real> &dualv,
-                                    Real &tol);
+                                    Tolerance<Real> &tol);
 
 
   /** \brief Apply the derivative of the adjoint of the constraint Jacobian at \f$x\f$
@@ -178,7 +178,7 @@ public:
                                    const Vector<Real> &u,
                                    const Vector<Real> &v,
                                    const Vector<Real> &x,
-                                   Real &tol);
+                                   Tolerance<Real> &tol);
 
 
   /** \brief Approximately solves the <em> augmented system </em>
@@ -224,7 +224,7 @@ public:
                                                  const Vector<Real> &b1,
                                                  const Vector<Real> &b2,
                                                  const Vector<Real> &x,
-                                                 Real &tol);
+                                                 Tolerance<Real> &tol);
 
 
   /** \brief Apply a constraint preconditioner at \f$x\f$, \f$P(x) \in L(\mathcal{C}, \mathcal{C}^*)\f$,
@@ -250,7 +250,7 @@ public:
                                    const Vector<Real> &v,
                                    const Vector<Real> &x,
                                    const Vector<Real> &g,
-                                   Real &tol) {
+                                   Tolerance<Real> &tol) {
     pv.set(v.dual());
   }
 

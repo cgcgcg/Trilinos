@@ -39,11 +39,11 @@ public:
     dwa_ = g.clone();
   }
 
-  void applyFullHessian(Vector<Real> &hv, const Vector<Real> &v, Real &tol) {
+  void applyFullHessian(Vector<Real> &hv, const Vector<Real> &v, Tolerance<Real> &tol) {
     TrustRegionModel<Real>::applyHessian(hv,v,tol);
   }
 
-  void applyFreeHessian(Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol) {
+  void applyFreeHessian(Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol) {
     const Real zero(0);
     pwa_->set(v);
     TrustRegionModel<Real>::getBoundConstraint()->pruneActive(*pwa_,x,zero);
@@ -51,11 +51,11 @@ public:
     TrustRegionModel<Real>::getBoundConstraint()->pruneActive(hv,x,zero);
   }
 
-  void applyFullPrecond(Vector<Real> &pv, const Vector<Real> &v, Real &tol) {
+  void applyFullPrecond(Vector<Real> &pv, const Vector<Real> &v, Tolerance<Real> &tol) {
     TrustRegionModel<Real>::applyPrecond(pv,v,tol);
   }
 
-  void applyFreePrecond(Vector<Real> &pv, const Vector<Real> &v, const Vector<Real> &x, Real &tol) {
+  void applyFreePrecond(Vector<Real> &pv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol) {
     const Real zero(0);
     dwa_->set(v);
     TrustRegionModel<Real>::getBoundConstraint()->pruneActive(*dwa_,x,zero);

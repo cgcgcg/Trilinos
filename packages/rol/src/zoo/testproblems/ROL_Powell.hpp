@@ -33,7 +33,7 @@ class Objective_Powell : public Objective<Real> {
 public:
   Objective_Powell() {}
 
-  Real value( const Vector<Real> &x, Real &tol ) {
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
     ROL::Ptr<const std::vector<Real> > xp
       = dynamic_cast<const PrimalScaledStdVector<Real>&>(x).getVector();
 
@@ -43,7 +43,7 @@ public:
     return f1*f1+f2*f2;
   }
 
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
     ROL::Ptr<std::vector<Real> > gp
       = dynamic_cast<DualScaledStdVector<Real>&>(g).getVector();
     ROL::Ptr<const std::vector<Real> > xp
@@ -61,7 +61,7 @@ public:
     (*gp)[1] = 2.0*(f12*f1 + f22*f2);
   }
 #if USE_HESSVEC
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
     ROL::Ptr<std::vector<Real> > hvp
       = dynamic_cast<DualScaledStdVector<Real>&>(hv).getVector();
     ROL::Ptr<const std::vector<Real> > vp
@@ -95,7 +95,7 @@ public:
     (*hvp)[1] = h21*(*vp)[0] + h22*(*vp)[1];
   }
 #endif
-  void invHessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  void invHessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
     ROL::Ptr<std::vector<Real> > hvp
       = dynamic_cast<PrimalScaledStdVector<Real>&>(hv).getVector();
     ROL::Ptr<const std::vector<Real> > vp

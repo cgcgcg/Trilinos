@@ -90,7 +90,7 @@ public:
 
   }
 
-  void value( V &c, const V &x, Real &tol ) {
+  void value( V &c, const V &x, Tolerance<Real> &tol ) {
 
     
 
@@ -144,7 +144,7 @@ public:
 
   }   
 
-  void applyJacobian( V &jv, const V &v, const V &x, Real &tol ) {
+  void applyJacobian( V &jv, const V &v, const V &x, Tolerance<Real> &tol ) {
 
     
 
@@ -256,7 +256,7 @@ public:
     s_->set(s);  
   }
 
-  void apply( V &Hv, const V &v, Real &tol ) const {
+  void apply( V &Hv, const V &v, Tolerance<Real> &tol ) const {
 
     
     
@@ -288,7 +288,7 @@ public:
 
   }
 
-  void applyInverse( V &Hv, const V &v, Real &tol ) const {
+  void applyInverse( V &Hv, const V &v, Tolerance<Real> &tol ) const {
 
     
     

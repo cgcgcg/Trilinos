@@ -36,14 +36,14 @@ public:
 
   Objective_HS24() : rt3_(std::sqrt(3)) {}
 
-  Real value( const Vector<Real> &x, Real &tol ) {
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
 
     Ptr<const vector> xp = dynamic_cast<const SV&>(x).getVector(); 
 
     return rt3_*(*xp)[0]*std::pow((*xp)[1],3)*((*xp)[0]-6)/81.0;
   }
 
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
 
     Ptr<const vector> xp = dynamic_cast<const SV&>(x).getVector(); 
 
@@ -55,7 +55,7 @@ public:
   }  
 
   
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
 
     Ptr<const vector> xp = dynamic_cast<const SV&>(x).getVector(); 
     Ptr<const vector> vp = dynamic_cast<const SV&>(v).getVector(); 
@@ -86,7 +86,7 @@ private:
 public:
   Constraint_HS24() : rt3_(std::sqrt(3)) {}
 
-  void value( Vector<Real> &c, const Vector<Real> &x, Real &tol ) {
+  void value( Vector<Real> &c, const Vector<Real> &x, Tolerance<Real> &tol ) {
 
     Ptr<const vector> xp = dynamic_cast<const SV&>(x).getVector();
     Ptr<vector> cp = dynamic_cast<SV&>(c).getVector();
@@ -98,7 +98,7 @@ public:
   }
 
   void applyJacobian( Vector<Real> &jv, const Vector<Real> &v,
-                      const Vector<Real> &x, Real &tol ) {
+                      const Vector<Real> &x, Tolerance<Real> &tol ) {
 
     Ptr<const vector> vp = dynamic_cast<const SV&>(v).getVector();
     Ptr<vector> jvp = dynamic_cast<SV&>(jv).getVector();
@@ -111,7 +111,7 @@ public:
   }
 
   void applyAdjointJacobian( Vector<Real> &ajv, const Vector<Real> &v, 
-                             const Vector<Real> &x, Real &tol ) {
+                             const Vector<Real> &x, Tolerance<Real> &tol ) {
 
     Ptr<const vector> vp = dynamic_cast<const SV&>(v).getVector();
     Ptr<vector> ajvp = dynamic_cast<SV&>(ajv).getVector();
@@ -123,7 +123,7 @@ public:
 
   
   void applyAdjointHessian( Vector<Real> &ahuv, const Vector<Real> &u,
-                            const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+                            const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
     ahuv.zero();
   }
 

@@ -161,11 +161,11 @@ public:
     }
   }
 
-  void apply(Vector<Real> &Hv, const Vector<Real> &v, Real &tol) const {
+  void apply(Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol) const {
     applyB(Hv,v);
   }
 
-  void applyInverse(Vector<Real> &Hv, const Vector<Real> &v, Real &tol) const {
+  void applyInverse(Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol) const {
     applyH(Hv,v);
   }
 

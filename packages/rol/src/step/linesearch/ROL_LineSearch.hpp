@@ -22,7 +22,7 @@
 #include "ROL_BoundConstraint.hpp"
 #include "ROL_ScalarFunction.hpp"
 
-namespace ROL { 
+namespace ROL {
 
 template<class Real>
 class LineSearch {
@@ -45,7 +45,7 @@ private:
   bool acceptMin_;    // Use smallest fval if sufficient decrease not satisfied
   bool itcond_;       // true if maximum function evaluations reached
 
-  ROL::Ptr<Vector<Real> > xtst_; 
+  ROL::Ptr<Vector<Real> > xtst_;
   ROL::Ptr<Vector<Real> > d_;
   ROL::Ptr<Vector<Real> > g_;
   ROL::Ptr<Vector<Real> > grad_;
@@ -62,7 +62,7 @@ public:
     // Enumerations
     std::string descentName = parlist.sublist("Step").sublist("Line Search").sublist("Descent Method").get("Type","Quasi-Newton Method");
     edesc_ = StringToEDescent(descentName);
-    
+
     std::string condName = parlist.sublist("Step").sublist("Line Search").sublist("Curvature Condition").get("Type","Strong Wolfe Conditions");
     econd_ = StringToECurvatureCondition(condName);
     // Linesearch Parameters
@@ -75,9 +75,9 @@ public:
     c1_           = parlist.sublist("Step").sublist("Line Search").get("Sufficient Decrease Tolerance",oem4);
     c2_           = parlist.sublist("Step").sublist("Line Search").sublist("Curvature Condition").get("General Parameter",p9);
     c3_           = parlist.sublist("Step").sublist("Line Search").sublist("Curvature Condition").get("Generalized Wolfe Parameter",p6);
- 
+
     fmin_      = std::numeric_limits<Real>::max();
-    alphaMin_  = 0; 
+    alphaMin_  = 0;
     itcond_    = false;
 
     c1_ = ((c1_ < zero) ? oem4 : c1_);
@@ -103,7 +103,7 @@ public:
   }
 
   virtual void run( Real &alpha, Real &fval, int &ls_neval, int &ls_ngrad,
-                    const Real &gs, const Vector<Real> &s, const Vector<Real> &x, 
+                    const Real &gs, const Vector<Real> &s, const Vector<Real> &x,
                     Objective<Real> &obj, BoundConstraint<Real> &con ) = 0;
 
   // Set epsilon for epsilon active sets
@@ -127,14 +127,15 @@ public:
     }
     setNextInitialAlpha(alpha);
   }
- 
+
 
 protected:
-  virtual bool status( const ELineSearch type, int &ls_neval, int &ls_ngrad, const Real alpha, 
-                       const Real fold, const Real sgold, const Real fnew, 
-                       const Vector<Real> &x, const Vector<Real> &s, 
-                       Objective<Real> &obj, BoundConstraint<Real> &con ) { 
-    Real tol = std::sqrt(ROL_EPSILON<Real>()), one(1), two(2);
+  virtual bool status( const ELineSearch type, int &ls_neval, int &ls_ngrad, const Real alpha,
+                       const Real fold, const Real sgold, const Real fnew,
+                       const Vector<Real> &x, const Vector<Real> &s,
+                       Objective<Real> &obj, BoundConstraint<Real> &con ) {
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
+    Real one(1), two(2);
 
     // Check Armijo Condition
     bool armijo = false;
@@ -170,7 +171,7 @@ protected:
 
     // Check Maximum Iteration
     itcond_ = false;
-    if ( ls_neval >= maxit_ ) { 
+    if ( ls_neval >= maxit_ ) {
       itcond_ = true;
     }
 
@@ -201,14 +202,14 @@ protected:
           sgnew = s.dot(g_->dual());
         }
         ls_ngrad++;
-   
-        if (    ((econd_ == CURVATURECONDITION_WOLFE)       
+
+        if (    ((econd_ == CURVATURECONDITION_WOLFE)
                      && (sgnew >= c2_*sgold))
-             || ((econd_ == CURVATURECONDITION_STRONGWOLFE) 
+             || ((econd_ == CURVATURECONDITION_STRONGWOLFE)
                      && (std::abs(sgnew) <= c2_*std::abs(sgold)))
-             || ((econd_ == CURVATURECONDITION_GENERALIZEDWOLFE) 
+             || ((econd_ == CURVATURECONDITION_GENERALIZEDWOLFE)
                      && (c2_*sgold <= sgnew && sgnew <= -c3_*sgold))
-             || ((econd_ == CURVATURECONDITION_APPROXIMATEWOLFE) 
+             || ((econd_ == CURVATURECONDITION_APPROXIMATEWOLFE)
                      && (c2_*sgold <= sgnew && sgnew <= (two*c1_ - one)*sgold)) ) {
           curvcond = true;
         }
@@ -233,8 +234,8 @@ protected:
     }
   }
 
-  virtual Real getInitialAlpha(int &ls_neval, int &ls_ngrad, const Real fval, const Real gs, 
-                               const Vector<Real> &x, const Vector<Real> &s, 
+  virtual Real getInitialAlpha(int &ls_neval, int &ls_ngrad, const Real fval, const Real gs,
+                               const Vector<Real> &x, const Vector<Real> &s,
                                Objective<Real> &obj, BoundConstraint<Real> &con) {
     Real val(1), one(1), half(0.5);
     if (useralpha_ || usePrevAlpha_ ) {
@@ -242,7 +243,7 @@ protected:
     }
     else {
       if (edesc_ == DESCENT_STEEPEST || edesc_ == DESCENT_NONLINEARCG) {
-        Real tol = std::sqrt(ROL_EPSILON<Real>());
+        Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
         // Evaluate objective at x + s
         updateIterate(*d_,x,s,one,con);
         obj.update(*d_);
@@ -262,7 +263,7 @@ protected:
 
   void setNextInitialAlpha( Real alpha ) {
     if( usePrevAlpha_ ) {
-      alpha0_  = alpha; 
+      alpha0_  = alpha;
     }
   }
 
@@ -281,7 +282,7 @@ protected:
   bool useLocalMinimizer() {
     return itcond_ && acceptMin_;
   }
- 
+
   bool takeNoStep() {
     return itcond_ && !acceptMin_;
   }

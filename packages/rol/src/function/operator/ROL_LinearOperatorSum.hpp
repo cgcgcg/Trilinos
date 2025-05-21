@@ -64,7 +64,7 @@ public:
     }
   }
 
-  virtual void apply( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  virtual void apply( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
     (*ops_)[0]->apply(Hv,v,tol);
     for( size_type i=1; i<ops_->size(); ++i ) {
       (*ops_)[i]->apply(*scratch_,v,tol);
@@ -72,7 +72,7 @@ public:
     }
   }
 
-  virtual void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  virtual void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
       ROL_TEST_FOR_EXCEPTION( true, std::invalid_argument, 
                                   ">>> ERROR (ROL_LinearOperatorSum, applyInverse): "
                                   "Inverse is not defined for general sum of operators.");     

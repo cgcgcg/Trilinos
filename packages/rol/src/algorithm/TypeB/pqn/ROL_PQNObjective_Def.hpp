@@ -22,7 +22,7 @@ PQNObjective<Real>::PQNObjective(const Ptr<Secant<Real>> &secant,
 }
 
 template<typename Real>
-Real PQNObjective<Real>::value( const Vector<Real> &x, Real &tol ) {
+Real PQNObjective<Real>::value( const Vector<Real> &x, Tolerance<Real> &tol ) {
   pwa_->set(x);
   pwa_->axpy(static_cast<Real>(-1),*x_);
   secant_->applyB(*dwa_, *pwa_);
@@ -32,7 +32,7 @@ Real PQNObjective<Real>::value( const Vector<Real> &x, Real &tol ) {
 }
 
 template<typename Real>
-void PQNObjective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+void PQNObjective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
   pwa_->set(x);
   pwa_->axpy(static_cast<Real>(-1),*x_);
   secant_->applyB(g, *pwa_);
@@ -40,7 +40,7 @@ void PQNObjective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Real 
 }
 
 template<typename Real>
-void PQNObjective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+void PQNObjective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
   secant_->applyB(hv, v);
 }
 

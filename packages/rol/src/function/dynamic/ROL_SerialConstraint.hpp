@@ -31,7 +31,7 @@ class SerialConstraint : public Constraint_SimOpt<Real>,
                          public SerialFunction<Real> {
 private:
 
-  using PV = PartitionedVector<Real>;  
+  using PV = PartitionedVector<Real>;
   using SerialFunction<Real>::ts;
   using SerialFunction<Real>::clone;
 
@@ -45,16 +45,16 @@ public:
   using SerialFunction<Real>::getInitialCondition;
   using SerialFunction<Real>::getSkipInitialCondition;
 
-  SerialConstraint( const Ptr<DynamicConstraint<Real>>& con, 
-                    const Vector<Real>& u_initial, 
-                    const TimeStampsPtr<Real>& timeStampsPtr ) : 
-    SerialFunction<Real>::SerialFunction( u_initial, timeStampsPtr ), 
+  SerialConstraint( const Ptr<DynamicConstraint<Real>>& con,
+                    const Vector<Real>& u_initial,
+                    const TimeStampsPtr<Real>& timeStampsPtr ) :
+    SerialFunction<Real>::SerialFunction( u_initial, timeStampsPtr ),
     con_(con) {}
 
-  virtual void solve(       Vector<Real>& c, 
+  virtual void solve(       Vector<Real>& c,
                             Vector<Real>& u,
-                      const Vector<Real>& z, 
-                      Real& tol ) override {
+                      const Vector<Real>& z,
+                      Tolerance<Real>& tol ) override {
 
     auto& cp = partition(c);
     auto& up = partition(u);
@@ -63,7 +63,7 @@ public:
     if( !getSkipInitialCondition() )
       con_->solve( cp[0], getInitialCondition(), up[0], zp[0], ts(0) );
 
-    for( size_type k=1; k<numTimeSteps(); ++k ) 
+    for( size_type k=1; k<numTimeSteps(); ++k )
        con_->solve( cp[k], up[k-1], up[k], zp[k], ts(k) );
 
   } // solve
@@ -79,41 +79,41 @@ public:
       con_->update( up[k-1], up[k], zp[k], ts(k) );
   }
 
-   
+
   using Constraint_SimOpt<Real>::value;
-  virtual void value(       Vector<Real>& c, 
-                      const Vector<Real>& u, 
-                      const Vector<Real>& z, 
-                      Real& tol ) override {
+  virtual void value(       Vector<Real>& c,
+                      const Vector<Real>& u,
+                      const Vector<Real>& z,
+                      Tolerance<Real>& tol ) override {
 
     auto& cp = partition(c);
     auto& up = partition(u);
     auto& zp = partition(z);
-  
+
     if( !getSkipInitialCondition() )
       con_->value( cp[0], getInitialCondition(), up[0], zp[0], ts(0) );
-    
-    for( size_type k=1; k<numTimeSteps(); ++k ) 
+
+    for( size_type k=1; k<numTimeSteps(); ++k )
       con_->value( cp[k], up[k-1], up[k], zp[k], ts(k) );
 
   } // value
 
 
-  virtual void applyJacobian_1(       Vector<Real>& jv, 
-                                const Vector<Real>& v, 
-                                const Vector<Real>& u, 
-                                const Vector<Real>& z, 
-                                Real& tol ) override {
+  virtual void applyJacobian_1(       Vector<Real>& jv,
+                                const Vector<Real>& v,
+                                const Vector<Real>& u,
+                                const Vector<Real>& z,
+                                Tolerance<Real>& tol ) override {
 
     auto& jvp = partition(jv);   auto& vp = partition(v);
     auto& up  = partition(u);    auto& zp = partition(z);
 
     auto  tmp = clone(jvp[0]);
-    auto& x   = *tmp; 
+    auto& x   = *tmp;
 
     if( !getSkipInitialCondition() )
       con_->applyJacobian_un( jvp[0],  vp[0], getZeroState(), up[0], zp[0], ts(0) );
-    
+
     for( size_type k=1; k<numTimeSteps(); ++k ) {
 
       con_->applyJacobian_uo( x, vp[k-1], up[k-1], up[k], zp[k], ts(k) );
@@ -123,13 +123,13 @@ public:
     } // end for
 
   } // applyJacobian_1
-  
 
-  virtual void applyInverseJacobian_1(       Vector<Real>& ijv, 
-                                       const Vector<Real>& v, 
-                                       const Vector<Real>& u, 
-                                       const Vector<Real>& z, 
-                                       Real& tol) override {
+
+  virtual void applyInverseJacobian_1(       Vector<Real>& ijv,
+                                       const Vector<Real>& v,
+                                       const Vector<Real>& u,
+                                       const Vector<Real>& z,
+                                       Tolerance<Real>& tol) override {
 
     auto& ijvp = partition(ijv);  auto& vp = partition(v);
     auto& up   = partition(u);    auto& zp = partition(z);
@@ -137,8 +137,8 @@ public:
     auto  tmp  = clone(ijvp[0]);
     auto& x    = *tmp;
 
-    if( !getSkipInitialCondition() ) 
-      con_->applyInverseJacobian_un( ijvp[0], vp[0], getZeroState(), 
+    if( !getSkipInitialCondition() )
+      con_->applyInverseJacobian_un( ijvp[0], vp[0], getZeroState(),
                                      up[0], zp[0], ts(0) );
 
     for( size_type k=1; k<numTimeSteps(); ++k ) {
@@ -151,25 +151,25 @@ public:
     } // end for
 
   } // applyInverseJacobian_1
-  
- 
+
+
   using Constraint_SimOpt<Real>::applyAdjointJacobian_1;
-  virtual void applyAdjointJacobian_1(       Vector<Real>& ajv, 
-                                       const Vector<Real>& v, 
-                                       const Vector<Real>& u, 
-                                       const Vector<Real>& z, 
-                                       const Vector<Real>& dualv, 
-                                       Real& tol) override {
+  virtual void applyAdjointJacobian_1(       Vector<Real>& ajv,
+                                       const Vector<Real>& v,
+                                       const Vector<Real>& u,
+                                       const Vector<Real>& z,
+                                       const Vector<Real>& dualv,
+                                       Tolerance<Real>& tol) override {
 
     auto& ajvp  = partition(ajv);   auto& vp = partition(v);
     auto& up    = partition(u);     auto& zp = partition(z);
 
-    auto  tmp  = clone(ajvp[0]); 
-    auto& x    = *tmp; 
+    auto  tmp  = clone(ajvp[0]);
+    auto& x    = *tmp;
 
     if( !getSkipInitialCondition() )
       con_->applyAdjointJacobian_un( ajvp[0],  vp[0], getZeroState(), up[0], zp[0], ts(0) );
-   
+
     for( size_type k=1; k<numTimeSteps(); ++k ) {
 
       con_->applyAdjointJacobian_un( ajvp[k], vp[k], up[k-1], up[k], zp[k], ts(k) );
@@ -180,17 +180,17 @@ public:
 
   } // applyAdjointJacobian_1
 
-  void applyInverseAdjointJacobian_1(       Vector<Real>& iajv, 
-                                      const Vector<Real>& v, 
-                                      const Vector<Real>& u, 
-                                      const Vector<Real>& z, 
-                                      Real& tol) override {
+  void applyInverseAdjointJacobian_1(       Vector<Real>& iajv,
+                                      const Vector<Real>& v,
+                                      const Vector<Real>& u,
+                                      const Vector<Real>& z,
+                                      Tolerance<Real>& tol) override {
 
     auto& iajvp = partition(iajv);  auto& vp = partition(v);
     auto& up    = partition(u);     auto& zp = partition(z);
 
     auto  tmp  = clone(iajvp[0]);
-    auto& x    = *tmp; 
+    auto& x    = *tmp;
 
     size_type k = numTimeSteps()-1;
 
@@ -201,7 +201,7 @@ public:
       con_->applyAdjointJacobian_uo( x, iajvp[k+1], up[k], up[k+1], zp[k+1], ts(k+1) );
       x.scale(-1.0);
       x.plus( vp[k] );
-      con_->applyInverseAdjointJacobian_un( iajvp[k], x, up[k-1], up[k], zp[k], ts(k) );             
+      con_->applyInverseAdjointJacobian_un( iajvp[k], x, up[k-1], up[k], zp[k], ts(k) );
 
     } // end for
 
@@ -209,39 +209,39 @@ public:
     x.scale(-1.0);
     x.plus( vp[0] );
 
-    if( !getSkipInitialCondition() ) 
-      con_->applyInverseAdjointJacobian_un( iajvp[0], x, getZeroState(), up[0], zp[0], ts(0) );           
+    if( !getSkipInitialCondition() )
+      con_->applyInverseAdjointJacobian_un( iajvp[0], x, getZeroState(), up[0], zp[0], ts(0) );
 
-    // this weird condition places iajvp in the final vector slot    
+    // this weird condition places iajvp in the final vector slot
     else iajvp[0].set(x);
-     
+
   } // applyInverseAdjointJacobian_1
 
 
-  virtual void applyJacobian_2(       Vector<Real>& jv, 
-                                const Vector<Real>& v, 
-                                const Vector<Real>& u, 
-                                const Vector<Real>& z, 
-                                Real &tol ) override { 
- 
+  virtual void applyJacobian_2(       Vector<Real>& jv,
+                                const Vector<Real>& v,
+                                const Vector<Real>& u,
+                                const Vector<Real>& z,
+                                Tolerance<Real> &tol ) override {
+
     auto& jvp = partition(jv);   auto& vp = partition(v);
     auto& up  = partition(u);    auto& zp = partition(z);
-  
+
     if( !getSkipInitialCondition() )
       con_->applyJacobian_z( jvp[0], vp[0], getInitialCondition(), up[0], zp[0], ts(0) );
-  
-    for( size_type k=1; k<numTimeSteps(); ++k ) 
+
+    for( size_type k=1; k<numTimeSteps(); ++k )
       con_->applyJacobian_z( jvp[k], vp[k], up[k-1], up[k], zp[k], ts(k) );
 
   } // applyJacobian_2
 
- 
+
   using Constraint_SimOpt<Real>::applyAdjointJacobian_2;
-  virtual void applyAdjointJacobian_2(       Vector<Real>& ajv, 
-                                       const Vector<Real>& v, 
-                                       const Vector<Real>& u, 
-                                       const Vector<Real>& z, 
-                                       Real& tol ) override {
+  virtual void applyAdjointJacobian_2(       Vector<Real>& ajv,
+                                       const Vector<Real>& v,
+                                       const Vector<Real>& u,
+                                       const Vector<Real>& z,
+                                       Tolerance<Real>& tol ) override {
 
     auto& ajvp  = partition(ajv);   auto& vp = partition(v);
     auto& up    = partition(u);     auto& zp = partition(z);
@@ -249,26 +249,26 @@ public:
     if( !getSkipInitialCondition() )
       con_->applyAdjointJacobian_z( ajvp[0], vp[0], getInitialCondition(), up[0], zp[0], ts(0) );
 
-    for( size_type k=1; k<numTimeSteps(); ++k ) 
+    for( size_type k=1; k<numTimeSteps(); ++k )
       con_->applyAdjointJacobian_z( ajvp[k], vp[k], up[k-1], up[k], zp[k], ts(k) );
 
   } // applyAdjointJacobian_2
 
 
 
-  virtual void applyAdjointHessian_11(       Vector<Real>& ahwv, 
-                                       const Vector<Real>& w, 
-                                       const Vector<Real>& v, 
-                                       const Vector<Real>& u, 
-                                       const Vector<Real>& z, 
-                                       Real& tol) override {
+  virtual void applyAdjointHessian_11(       Vector<Real>& ahwv,
+                                       const Vector<Real>& w,
+                                       const Vector<Real>& v,
+                                       const Vector<Real>& u,
+                                       const Vector<Real>& z,
+                                       Tolerance<Real>& tol) override {
 
     auto& ahwvp = partition(ahwv);    auto& wp = partition(w);
     auto& vp    = partition(v);       auto& up = partition(u);
     auto& zp    = partition(z);
 
-    auto  tmp  = clone(ahwvp[0]); 
-    auto& x    = *tmp; 
+    auto  tmp  = clone(ahwvp[0]);
+    auto& x    = *tmp;
 
    if( !getSkipInitialCondition() ) {
 
@@ -297,13 +297,13 @@ public:
   } // applyAdjointHessian_11
 
 
-  // TODO: Implement off-diagonal blocks  
+  // TODO: Implement off-diagonal blocks
   virtual void applyAdjointHessian_12(       Vector<Real>& ahwv,
                                        const Vector<Real>& w,
                                        const Vector<Real>& v,
                                        const Vector<Real>& u,
                                        const Vector<Real>& z,
-                                       Real& tol) override {
+                                       Tolerance<Real>& tol) override {
   }
 
 
@@ -312,24 +312,24 @@ public:
                                        const Vector<Real>& v,
                                        const Vector<Real>& u,
                                        const Vector<Real>& z,
-                                       Real& tol) override { 
+                                       Tolerance<Real>& tol) override {
   }
 
-  virtual void applyAdjointHessian_22(       Vector<Real>& ahwv, 
-                                       const Vector<Real>& w, 
+  virtual void applyAdjointHessian_22(       Vector<Real>& ahwv,
+                                       const Vector<Real>& w,
                                        const Vector<Real>& v,
-                                       const Vector<Real>& u, 
-                                       const Vector<Real>& z, 
-                                       Real& tol) override {
+                                       const Vector<Real>& u,
+                                       const Vector<Real>& z,
+                                       Tolerance<Real>& tol) override {
 
     auto& ahwvp = partition(ahwv); auto& vp = partition(v);   auto& wp = partition(w);
     auto& up    = partition(u);    auto& zp = partition(z);
-  
-    con_->applyAdjointHessian_z_z( ahwvp[0], wp[0], vp[0], getInitialCondition(), 
+
+    con_->applyAdjointHessian_z_z( ahwvp[0], wp[0], vp[0], getInitialCondition(),
                                    up[0], zp[0], ts(0) );
-  
+
     for( size_type k=1; k<numTimeSteps(); ++k ) {
-      con_->applyAdjointHessian_z_z( ahwvp[k], wp[k], vp[k], up[k-1], 
+      con_->applyAdjointHessian_z_z( ahwvp[k], wp[k], vp[k], up[k-1],
                                      up[k], zp[k], ts(k) );
     }
 

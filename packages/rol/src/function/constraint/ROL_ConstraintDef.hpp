@@ -19,13 +19,13 @@ template <class Real>
 void Constraint<Real>::applyJacobian(Vector<Real> &jv,
                                      const Vector<Real> &v,
                                      const Vector<Real> &x,
-                                     Real &tol) {
+                                     Tolerance<Real> &tol) {
   // By default we compute the finite-difference approximation.
   const Real one(1);
-  Real ctol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> ctol = std::sqrt(ROL_EPSILON<Real>());
 
   // Get step length.
-  Real h = std::max(one,x.norm()/v.norm())*tol;
+  Real h = std::max(one,x.norm()/v.norm())*tol.get();
   //Real h = 2.0/(v.norm()*v.norm())*tol;
 
   // Compute constraint at x.
@@ -52,7 +52,7 @@ template <class Real>
 void Constraint<Real>::applyAdjointJacobian(Vector<Real> &ajv,
                                             const Vector<Real> &v,
                                             const Vector<Real> &x,
-                                            Real &tol) {
+                                            Tolerance<Real> &tol) {
   applyAdjointJacobian(ajv,v,x,v.dual(),tol);
 }
 
@@ -65,12 +65,13 @@ void Constraint<Real>::applyAdjointJacobian(Vector<Real> &ajv,
                                             const Vector<Real> &v,
                                             const Vector<Real> &x,
                                             const Vector<Real> &dualv,
-                                            Real &tol) { 
+                                            Tolerance<Real> &tol) {
   // By default we compute the finite-difference approximation.
   // This requires the implementation of a vector-space basis for the optimization variables.
   // The default implementation requires that the constraint space is equal to its dual.
   const Real one(1);
-  Real h(0), ctol = std::sqrt(ROL_EPSILON<Real>());
+  Real h(0);
+  Tolerance<Real> ctol = std::sqrt(ROL_EPSILON<Real>());
 
   ROL::Ptr<Vector<Real> > xnew = x.clone();
   ROL::Ptr<Vector<Real> > ex   = x.clone();
@@ -78,12 +79,12 @@ void Constraint<Real>::applyAdjointJacobian(Vector<Real> &ajv,
   ROL::Ptr<Vector<Real> > cnew = dualv.clone();  // in general, should be in the constraint space
   ROL::Ptr<Vector<Real> > c0   = dualv.clone();  // in general, should be in the constraint space
   this->value(*c0,x,ctol);
-  
+
   ajv.zero();
   for ( int i = 0; i < ajv.dimension(); i++ ) {
     ex = x.basis(i);
     eajv = ajv.basis(i);
-    h = std::max(one,x.norm()/ex->norm())*tol;
+    h = std::max(one,x.norm()/ex->norm())*tol.get();
     xnew->set(x);
     xnew->axpy(h,*ex);
     this->update(*xnew,UpdateType::Temp);
@@ -101,7 +102,7 @@ void Constraint<Real>::applyHessian(Vector<Real> &huv,
                                     const Vector<Real> &u,
                                     const Vector<Real> &v,
                                     const Vector<Real> &x,
-                                    Real &tol ) {
+                                    Tolerance<Real> &tol ) {
   Real jtol = std::sqrt(ROL_EPSILON<Real>());
 
   // Get step length.
@@ -133,9 +134,9 @@ void Constraint<Real>::applyAdjointHessian(Vector<Real> &huv,
                                            const Vector<Real> &u,
                                            const Vector<Real> &v,
                                            const Vector<Real> &x,
-                                           Real &tol ) {
+                                           Tolerance<Real> &tol ) {
   // Get step length.
-  Real h = std::max(static_cast<Real>(1),x.norm()/v.norm())*tol;
+  Real h = std::max(static_cast<Real>(1),x.norm()/v.norm())*tol.get();
 
   // Compute constraint Jacobian at x.
   ROL::Ptr<Vector<Real> > aju = huv.clone();
@@ -163,19 +164,19 @@ std::vector<Real> Constraint<Real>::solveAugmentedSystem(Vector<Real> &v1,
                                                          const Vector<Real> &b1,
                                                          const Vector<Real> &b2,
                                                          const Vector<Real> &x,
-                                                         Real &tol) {
+                                                         Tolerance<Real> &tol) {
 
   /*** Initialization. ***/
   const Real zero(0), one(1);
   int m = 200;           // Krylov space size.
-  Real zerotol = zero;
+  Tolerance<Real> zerotol = zero;
   int i = 0;
   int k = 0;
   Real temp = zero;
   Real resnrm = zero;
 
   //tol = std::sqrt(b1.dot(b1)+b2.dot(b2))*1e-8;
-  tol = std::sqrt(b1.dot(b1)+b2.dot(b2))*tol;
+  tol = std::sqrt(b1.dot(b1)+b2.dot(b2))*tol.get();
 
   // Set initial guess to zero.
   v1.zero(); v2.zero();
@@ -195,7 +196,7 @@ std::vector<Real> Constraint<Real>::solveAugmentedSystem(Vector<Real> &v1,
   Ptr<Vector<Real>> w1temp = b1.clone();
   Ptr<Vector<Real>> Z2temp = v2.clone();
 
-  std::vector<Real> res(m+1, zero); 
+  std::vector<Real> res(m+1, zero);
   LA::Matrix<Real> H(m+1,m);
   LA::Vector<Real> cs(m);
   LA::Vector<Real> sn(m);
@@ -235,7 +236,7 @@ std::vector<Real> Constraint<Real>::solveAugmentedSystem(Vector<Real> &v1,
     applyJacobian(*w2, *(Z1[i]), x, zerotol);
     applyAdjointJacobian(*w1temp, *Z2temp, x, zerotol);
     w1->set(*(V1[i])); w1->plus(*w1temp);
-    
+
     // Evaluate coefficients and orthogonalize using Gram-Schmidt.
     for (k=0; k<=i; k++) {
       H(k,i) = w1->dot(*(V1[k])) + w2->dot(*(V2[k]));
@@ -243,7 +244,7 @@ std::vector<Real> Constraint<Real>::solveAugmentedSystem(Vector<Real> &v1,
       w2->axpy(-H(k,i), *(V2[k]));
     }
     H(i+1,i) = std::sqrt(w1->dot(*w1) + w2->dot(*w2));
-    
+
     V1.push_back(b1.clone()); (V1[i+1])->set(*w1); (V1[i+1])->scale(one/H(i+1,i));
     V2.push_back(b2.clone()); (V2[i+1])->set(*w2); (V2[i+1])->scale(one/H(i+1,i));
 
@@ -340,7 +341,7 @@ std::vector<std::vector<Real> > Constraint<Real>::checkApplyJacobian(const Vecto
   for(int i=0;i<numSteps;++i) {
     steps[i] = pow(10,-i);
   }
- 
+
   return checkApplyJacobian(x,v,jv,steps,printToStream,outStream,order);
 }
 
@@ -351,11 +352,11 @@ template <class Real>
 std::vector<std::vector<Real> > Constraint<Real>::checkApplyJacobian(const Vector<Real> &x,
                                                                      const Vector<Real> &v,
                                                                      const Vector<Real> &jv,
-                                                                     const std::vector<Real> &steps, 
+                                                                     const std::vector<Real> &steps,
                                                                      const bool printToStream,
                                                                      std::ostream & outStream,
                                                                      const int order) {
-  ROL_TEST_FOR_EXCEPTION( order<1 || order>4, std::invalid_argument, 
+  ROL_TEST_FOR_EXCEPTION( order<1 || order>4, std::invalid_argument,
                               "Error: finite difference order must be 1,2,3, or 4" );
 
   const Real one(1.0);
@@ -363,7 +364,7 @@ std::vector<std::vector<Real> > Constraint<Real>::checkApplyJacobian(const Vecto
   using Finite_Difference_Arrays::shifts;
   using Finite_Difference_Arrays::weights;
 
-  Real tol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
 
   int numSteps = steps.size();
   int numVals = 4;
@@ -394,7 +395,7 @@ std::vector<std::vector<Real> > Constraint<Real>::checkApplyJacobian(const Vecto
     Real eta = steps[i];
 
     xnew->set(x);
- 
+
     cdif->set(*c);
     cdif->scale(weights[order-1][0]);
 
@@ -405,12 +406,12 @@ std::vector<std::vector<Real> > Constraint<Real>::checkApplyJacobian(const Vecto
        if( weights[order-1][j+1] != 0 ) {
            this->update(*xnew,UpdateType::Temp);
            this->value(*cnew,*xnew,tol);
-           cdif->axpy(weights[order-1][j+1],*cnew);    
+           cdif->axpy(weights[order-1][j+1],*cnew);
        }
 
     }
 
-    cdif->scale(one/eta);    
+    cdif->scale(one/eta);
 
     // Compute norms of Jacobian-vector products, finite-difference approximations, and error.
     jvCheck[i][0] = eta;
@@ -460,7 +461,7 @@ std::vector<std::vector<Real> > Constraint<Real>::checkApplyAdjointJacobian(cons
                                                                             const bool printToStream,
                                                                             std::ostream & outStream,
                                                                             const int numSteps) {
-  Real tol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
   const Real one(1);
 
   int numVals = 4;
@@ -556,11 +557,11 @@ Real Constraint<Real>::checkAdjointConsistencyJacobian(const Vector<Real> &w,
                                                        const Vector<Real> &dualv,
                                                        const bool printToStream,
                                                        std::ostream & outStream) {
-  Real tol = ROL_EPSILON<Real>();
+  Tolerance<Real> tol = ROL_EPSILON<Real>();
 
   ROL::Ptr<Vector<Real> > Jv = dualw.clone();
   ROL::Ptr<Vector<Real> > Jw = dualv.clone();
-  
+
   this->update(x,UpdateType::Temp);
   applyJacobian(*Jv,v,x,tol);
   applyAdjointJacobian(*Jw,w,x,tol);
@@ -575,7 +576,7 @@ Real Constraint<Real>::checkAdjointConsistencyJacobian(const Vector<Real> &w,
   if ( printToStream ) {
     std::stringstream hist;
     hist << std::scientific << std::setprecision(8);
-    hist << "\nTest Consistency of Jacobian and its adjoint: \n  |<w,Jv> - <adj(J)w,v>| = " 
+    hist << "\nTest Consistency of Jacobian and its adjoint: \n  |<w,Jv> - <adj(J)w,v>| = "
          << diff << "\n";
     hist << "  |<w,Jv>|               = " << std::abs(wJv) << "\n";
     hist << "  Relative Error         = " << diff / (std::abs(wJv)+ROL_UNDERFLOW<Real>()) << "\n";
@@ -591,13 +592,13 @@ std::vector<std::vector<Real> > Constraint<Real>::checkApplyAdjointHessian(const
                                                                            const Vector<Real> &hv,
                                                                            const bool printToStream,
                                                                            std::ostream & outStream,
-                                                                           const int numSteps,  
+                                                                           const int numSteps,
                                                                            const int order) {
   std::vector<Real> steps(numSteps);
   for(int i=0;i<numSteps;++i) {
     steps[i] = pow(10,-i);
   }
- 
+
   return checkApplyAdjointHessian(x,u,v,hv,steps,printToStream,outStream,order);
 }
 
@@ -607,7 +608,7 @@ std::vector<std::vector<Real> > Constraint<Real>::checkApplyAdjointHessian(const
                                                                            const Vector<Real> &u,
                                                                            const Vector<Real> &v,
                                                                            const Vector<Real> &hv,
-                                                                           const std::vector<Real> &steps,  
+                                                                           const std::vector<Real> &steps,
                                                                            const bool printToStream,
                                                                            std::ostream & outStream,
                                                                            const int order) {
@@ -615,7 +616,7 @@ std::vector<std::vector<Real> > Constraint<Real>::checkApplyAdjointHessian(const
   using Finite_Difference_Arrays::weights;
 
   const Real one(1);
-  Real tol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
 
   int numSteps = steps.size();
   int numVals = 4;
@@ -649,13 +650,13 @@ std::vector<std::vector<Real> > Constraint<Real>::checkApplyAdjointHessian(const
     xnew->set(x);
 
     AJdif->set(*AJu);
-    AJdif->scale(weights[order-1][0]);     
+    AJdif->scale(weights[order-1][0]);
 
     for(int j=0; j<order; ++j) {
 
-        xnew->axpy(eta*shifts[order-1][j],v); 
+        xnew->axpy(eta*shifts[order-1][j],v);
 
-        if( weights[order-1][j+1] != 0 ) {    
+        if( weights[order-1][j+1] != 0 ) {
             this->update(*xnew,UpdateType::Temp);
             this->applyAdjointJacobian(*AJnew, u, *xnew, tol);
             AJdif->axpy(weights[order-1][j+1],*AJnew);

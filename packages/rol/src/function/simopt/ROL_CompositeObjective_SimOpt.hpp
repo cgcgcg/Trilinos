@@ -60,7 +60,7 @@ private:
     }
   }
 
-  void computeValue(const Vector<Real> &u, const Vector<Real> &z, Real &tol) {
+  void computeValue(const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol) {
     initialize(u,z);
     if (!isValueComputed_) {
       int size = obj_vec_.size();
@@ -71,7 +71,7 @@ private:
     }
   }
 
-  void computeGradient(const Vector<Real> &u, const Vector<Real> &z, Real &tol) {
+  void computeGradient(const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol) {
     computeValue(u,z,tol);
     if (!isGradientComputed_) {
       std_obj_->gradient(*(obj_grad_vec_),*(obj_value_vec_),tol);
@@ -79,7 +79,7 @@ private:
     }
   }
 
-  void computeGradient1(const Vector<Real> &u, const Vector<Real> &z, Real &tol) {
+  void computeGradient1(const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol) {
     computeGradient(u,z,tol);
     if (!isGradient1Computed_) {
       int size = obj_vec_.size();
@@ -90,7 +90,7 @@ private:
     }
   }
 
-  void computeGradient2(const Vector<Real> &u, const Vector<Real> &z, Real &tol) {
+  void computeGradient2(const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol) {
     computeGradient(u,z,tol);
     if (!isGradient2Computed_) {
       int size = obj_vec_.size();
@@ -101,7 +101,7 @@ private:
     }
   }
 
-  void computeHessVec11(const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Real &tol) {
+  void computeHessVec11(const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol) {
     computeGradient1(u,z,tol);
     int size = obj_vec_.size();
     for (int i = 0; i < size; ++i) {
@@ -112,7 +112,7 @@ private:
     std_obj_->hessVec(*(obj_hess_vec_),*(obj_gv_vec_),*(obj_value_vec_),tol);
   }
 
-  void computeHessVec12(const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Real &tol) {
+  void computeHessVec12(const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol) {
     computeGradient1(u,z,tol);
     computeGradient2(u,z,tol);
     int size = obj_vec_.size();
@@ -124,7 +124,7 @@ private:
     std_obj_->hessVec(*(obj_hess_vec_),*(obj_gv_vec_),*(obj_value_vec_),tol);
   }
 
-  void computeHessVec21(const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Real &tol) {
+  void computeHessVec21(const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol) {
     computeGradient1(u,z,tol);
     computeGradient2(u,z,tol);
     int size = obj_vec_.size();
@@ -136,7 +136,7 @@ private:
     std_obj_->hessVec(*(obj_hess_vec_),*(obj_gv_vec_),*(obj_value_vec_),tol);
   }
 
-  void computeHessVec22(const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Real &tol) {
+  void computeHessVec22(const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol) {
     computeGradient2(u,z,tol);
     int size = obj_vec_.size();
     for (int i = 0; i < size; ++i) {
@@ -186,13 +186,13 @@ public:
     isGradient2Computed_ = false;
   }
 
-  Real value( const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
+  Real value( const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
     computeValue(u,z,tol);
     return std_obj_->value(*obj_value_vec_,tol);
   }
 
 
-  void gradient_1( Vector<Real> &g, const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
+  void gradient_1( Vector<Real> &g, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
     g.zero();
     computeGradient1(u,z,tol);
     int size = obj_vec_.size();
@@ -201,7 +201,7 @@ public:
     }
   }
 
-  void gradient_2( Vector<Real> &g, const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
+  void gradient_2( Vector<Real> &g, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
     g.zero();
     computeGradient2(u,z,tol);
     int size = obj_vec_.size();
@@ -211,7 +211,7 @@ public:
   }
 
   void hessVec_11( Vector<Real> &hv, const Vector<Real> &v, 
-             const Vector<Real> &u,  const Vector<Real> &z, Real &tol ) {
+             const Vector<Real> &u,  const Vector<Real> &z, Tolerance<Real> &tol ) {
     hv.zero();
     computeHessVec11(v,u,z,tol);
     int size = obj_vec_.size();
@@ -222,7 +222,7 @@ public:
   }
 
   void hessVec_12( Vector<Real> &hv, const Vector<Real> &v, 
-             const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
+             const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
     hv.zero();
     computeHessVec12(v,u,z,tol);
     int size = obj_vec_.size();
@@ -233,7 +233,7 @@ public:
   }
 
   void hessVec_21( Vector<Real> &hv, const Vector<Real> &v, 
-             const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
+             const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
     hv.zero();
     computeHessVec21(v,u,z,tol);
     int size = obj_vec_.size();
@@ -244,7 +244,7 @@ public:
   }
 
   void hessVec_22( Vector<Real> &hv, const Vector<Real> &v, 
-             const Vector<Real> &u,  const Vector<Real> &z, Real &tol ) {
+             const Vector<Real> &u,  const Vector<Real> &z, Tolerance<Real> &tol ) {
     hv.zero();
     computeHessVec22(v,u,z,tol);
     int size = obj_vec_.size();

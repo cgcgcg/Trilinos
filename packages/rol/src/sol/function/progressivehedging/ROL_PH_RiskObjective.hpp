@@ -34,14 +34,14 @@ private:
   bool isGradientComputed_;
   Ptr<Vector<Real>> g_;
 
-  void getValue(const Vector<Real> &x, Real &tol) {
+  void getValue(const Vector<Real> &x, Tolerance<Real> &tol) {
     if (!isValueComputed_) {
       val_ = obj_->value(x,tol);
       isValueComputed_ = true;
     }
   }
 
-  void getGradient(const Vector<Real> &x, Real &tol) {
+  void getGradient(const Vector<Real> &x, Tolerance<Real> &tol) {
     if (!isGradientInitialized_) {
       g_ = x.dual().clone();
       isGradientInitialized_ = true;
@@ -124,7 +124,7 @@ public:
     isGradientComputed_ = false;
   }
 
-  Real value( const Vector<Real> &x, Real &tol ) {
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
     Ptr<const Vector<Real>> xvec = getConstVector(x);
     Ptr<const std::vector<Real>> xstat = getConstStat(x);
     getValue(*xvec,tol);
@@ -132,7 +132,7 @@ public:
     return (*xstat)[0] + reg;
   }
 
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
     Ptr<Vector<Real>>            gvec  = getVector(g);
     Ptr<std::vector<Real>>       gstat = getStat(g);
     Ptr<const Vector<Real>>      xvec  = getConstVector(x);
@@ -144,7 +144,7 @@ public:
     (*gstat)[0] = static_cast<Real>(1)-reg;
   }
 
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
     Ptr<Vector<Real>>            hvec  = getVector(hv);
     Ptr<std::vector<Real>>       hstat = getStat(hv);
     Ptr<const Vector<Real>>      vvec  = getConstVector(v);

@@ -34,7 +34,7 @@ private:
   Ptr<Objective<Real>> obj_;
   Ptr<const Vector<Real>> x_, g_;
   Ptr<Vector<Real>> dual_;
-  Real tol_;
+  Tolerance<Real> tol_;
 
   Ptr<Secant<Real>> secant_;
   bool useSecantPrecond_;
@@ -44,7 +44,7 @@ protected:
   /***************************************************************************/
   /*********  BEGIN WRAPPERS FOR HESSIAN/PRECOND APPLICATION  ****************/
   /***************************************************************************/
-  void applyHessian(Vector<Real> &hv, const Vector<Real> &v, Real &tol) {
+  void applyHessian(Vector<Real> &hv, const Vector<Real> &v, Tolerance<Real> &tol) {
     if ( useSecantHessVec_ && secant_ != nullPtr ) {
       secant_->applyB(hv,v);
     }
@@ -53,7 +53,7 @@ protected:
     }
   }
 
-  void applyInvHessian(Vector<Real> &hv, const Vector<Real> &v, Real &tol) {
+  void applyInvHessian(Vector<Real> &hv, const Vector<Real> &v, Tolerance<Real> &tol) {
     if ( useSecantHessVec_ && secant_ != nullPtr ) {
       secant_->applyH(hv,v);
     }
@@ -62,7 +62,7 @@ protected:
     }
   }
 
-  void applyPrecond(Vector<Real> &Pv, const Vector<Real> &v, Real &tol) {
+  void applyPrecond(Vector<Real> &Pv, const Vector<Real> &v, Tolerance<Real> &tol) {
     if ( useSecantPrecond_  && secant_ != nullPtr ) {
       secant_->applyH(Pv,v);
     }
@@ -92,7 +92,7 @@ public:
     dual_ = g.clone();
   }
 
-  // Some versions of Clang will issue a warning that update hides and 
+  // Some versions of Clang will issue a warning that update hides and
   // overloaded virtual function without this using declaration
   using Objective<Real>::update;
 
@@ -103,7 +103,7 @@ public:
     if ( !useSecantHessVec_ &&
         (etr == TRUSTREGION_U_DOGLEG || etr == TRUSTREGION_U_DOUBLEDOGLEG) ) {
       try {
-        Real htol = std::sqrt(ROL_EPSILON<Real>());
+        Tolerance<Real> htol = std::sqrt(ROL_EPSILON<Real>());
         Ptr<Vector<Real>> v  = g.clone();
         Ptr<Vector<Real>> hv = x.clone();
         obj.invHessVec(*hv,*v,x,htol);
@@ -117,7 +117,7 @@ public:
   virtual void setData(Objective<Real>    &obj,
                        const Vector<Real> &x,
                        const Vector<Real> &g,
-                       Real &tol) {
+                       Tolerance<Real> &tol) {
     obj_ = makePtrFromRef(obj);
     x_   = makePtrFromRef(x);
     g_   = makePtrFromRef(g);
@@ -135,27 +135,27 @@ public:
   /***************************************************************************/
   /*********  BEGIN OBJECTIVE FUNCTION DEFINITIONS  **************************/
   /***************************************************************************/
-  virtual Real value( const Vector<Real> &s, Real &tol ) override {
+  virtual Real value( const Vector<Real> &s, Tolerance<Real> &tol ) override {
     applyHessian(*dual_,s,tol);
     dual_->scale(static_cast<Real>(0.5));
     dual_->plus(*g_);
     return dual_->apply(s);
   }
 
-  virtual void gradient( Vector<Real> &g, const Vector<Real> &s, Real &tol ) override {
+  virtual void gradient( Vector<Real> &g, const Vector<Real> &s, Tolerance<Real> &tol ) override {
     applyHessian(g,s,tol);
     g.plus(*g_);
   }
 
-  virtual void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &s, Real &tol ) override {
+  virtual void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &s, Tolerance<Real> &tol ) override {
     applyHessian(hv,v,tol);
   }
 
-  virtual void invHessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &s, Real &tol ) override {
+  virtual void invHessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &s, Tolerance<Real> &tol ) override {
     applyInvHessian(hv,v,tol);
   }
 
-  virtual void precond( Vector<Real> &Pv, const Vector<Real> &v, const Vector<Real> &s, Real &tol ) override {
+  virtual void precond( Vector<Real> &Pv, const Vector<Real> &v, const Vector<Real> &s, Tolerance<Real> &tol ) override {
     applyPrecond(Pv,v,tol);
   }
   /***************************************************************************/

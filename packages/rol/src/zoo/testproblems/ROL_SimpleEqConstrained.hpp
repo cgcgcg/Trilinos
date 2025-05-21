@@ -54,7 +54,7 @@ namespace ZOO {
   public:
     Objective_SimpleEqConstrained() {}
 
-    Real value( const Vector<Real> &x, Real &tol ) {
+    Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
  
      
      ROL::Ptr<const vector> xp = getVector<XPrim>(x); 
@@ -78,7 +78,7 @@ namespace ZOO {
       return val;
     }
 
-    void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+    void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
 
       
       ROL::Ptr<const vector> xp = getVector<XPrim>(x);
@@ -107,7 +107,7 @@ namespace ZOO {
       (*gp)[4] = x1*x2*x3*x4 * expxi;
     }
 
-    void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+    void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
 
       
       ROL::Ptr<const vector> xp = getVector<XPrim>(x);
@@ -203,7 +203,7 @@ namespace ZOO {
   public:
     EqualityConstraint_SimpleEqConstrained() {}
 
-    void value( Vector<Real> &c, const Vector<Real> &x, Real &tol ) {
+    void value( Vector<Real> &c, const Vector<Real> &x, Tolerance<Real> &tol ) {
 
       
       ROL::Ptr<const vector> xp = getVector<XPrim>(x);
@@ -228,7 +228,7 @@ namespace ZOO {
       (*cp)[2] = x1*x1*x1 + x2*x2*x2 + 1.0;
     }
   
-    void applyJacobian( Vector<Real> &jv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+    void applyJacobian( Vector<Real> &jv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
 
       
       ROL::Ptr<const vector> xp = getVector<XPrim>(x);
@@ -264,7 +264,7 @@ namespace ZOO {
 
     } //applyJacobian
 
-    void applyAdjointJacobian( Vector<Real> &ajv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+    void applyAdjointJacobian( Vector<Real> &ajv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
 
       
       ROL::Ptr<const vector> xp = getVector<XPrim>(x);
@@ -301,7 +301,7 @@ namespace ZOO {
 
     } //applyAdjointJacobian
 
-    void applyAdjointHessian( Vector<Real> &ahuv, const Vector<Real> &u, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+    void applyAdjointHessian( Vector<Real> &ahuv, const Vector<Real> &u, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
       
       ROL::Ptr<const vector> xp = getVector<XPrim>(x);
       ROL::Ptr<const vector> up = getVector<CDual>(u);
@@ -344,7 +344,7 @@ namespace ZOO {
 
     } //applyAdjointHessian
 
-    /*std::vector<Real> solveAugmentedSystem(Vector<Real> &v1, Vector<Real> &v2, const Vector<Real> &b1, const Vector<Real> &b2, const Vector<Real> &x, Real &tol) {
+    /*std::vector<Real> solveAugmentedSystem(Vector<Real> &v1, Vector<Real> &v2, const Vector<Real> &b1, const Vector<Real> &b2, const Vector<Real> &x, Tolerance<Real> &tol) {
       ROL::Ptr<std::vector<Real> > v1p =
         ROL::constPtrCast<std::vector<Real> >((dynamic_cast<XPrim&>(v1)).getVector());    
       ROL::Ptr<std::vector<Real> > v2p =

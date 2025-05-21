@@ -12,7 +12,7 @@
 
 #include "ROL_RandVarFunctional.hpp"
 
-/** @ingroup stochastic_group 
+/** @ingroup stochastic_group
     \class ROL::SmoothedPOE
     \brief Provides the implementation of the smoothed probability of exceedance.
 
@@ -81,7 +81,7 @@ public:
   void updateValue(Objective<Real>         &obj,
                    const Vector<Real>      &x,
                    const std::vector<Real> &xstat,
-                   Real                    &tol) {
+                   Tolerance<Real>         &tol) {
     Real val = computeValue(obj,x,tol);
     Real sp  = smoothHeaviside(val-threshold_,0);
     if ( std::abs(sp) > ROL_EPSILON<Real>() ) {
@@ -100,7 +100,7 @@ public:
   void updateGradient(Objective<Real>         &obj,
                       const Vector<Real>      &x,
                       const std::vector<Real> &xstat,
-                      Real                    &tol) {
+                      Tolerance<Real>         &tol) {
     Real val = computeValue(obj,x,tol);
     Real sp  = smoothHeaviside(val-threshold_,1);
     if ( std::abs(sp) > ROL_EPSILON<Real>() ) {
@@ -122,7 +122,7 @@ public:
                      const std::vector<Real> &vstat,
                      const Vector<Real>      &x,
                      const std::vector<Real> &xstat,
-                     Real                    &tol) {
+                     Tolerance<Real>         &tol) {
     Real val = computeValue(obj,x,tol);
     Real sp1 = smoothHeaviside(val-threshold_,1);
     Real sp2 = smoothHeaviside(val-threshold_,2);

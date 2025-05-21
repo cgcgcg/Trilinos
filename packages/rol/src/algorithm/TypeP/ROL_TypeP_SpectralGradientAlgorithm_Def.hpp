@@ -23,8 +23,8 @@ SpectralGradientAlgorithm<Real>::SpectralGradientAlgorithm(ParameterList &list) 
   ParameterList &lslist = list.sublist("Step").sublist("Spectral Gradient");
   maxit_        = lslist.get("Function Evaluation Limit",                        20);
   lambda_       = lslist.get("Initial Spectral Step Size",                     -1.0);
-  lambdaMin_    = lslist.get("Minimum Spectral Step Size",                     1e-8); 
-  lambdaMax_    = lslist.get("Maximum Spectral Step Size",                      1e8); 
+  lambdaMin_    = lslist.get("Minimum Spectral Step Size",                     1e-8);
+  lambdaMax_    = lslist.get("Maximum Spectral Step Size",                      1e8);
   sigma1_       = lslist.get("Lower Step Size Safeguard",                       0.1);
   sigma2_       = lslist.get("Upper Step Size Safeguard",                       0.9);
   rhodec_       = lslist.get("Backtracking Rate",                              1e-1);
@@ -45,7 +45,7 @@ void SpectralGradientAlgorithm<Real>::initialize(Vector<Real>       &x,
                                                  Vector<Real>       &dg,
                                                  std::ostream       &outStream) {
   const Real zero(0);
-  Real ftol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> ftol = std::sqrt(ROL_EPSILON<Real>());
   // Initialize data
   TypeP::Algorithm<Real>::initialize(x,g);
   // Update approximate gradient and approximate objective function.
@@ -69,7 +69,7 @@ void SpectralGradientAlgorithm<Real>::initialize(Vector<Real>       &x,
 
 template<typename Real>
 void SpectralGradientAlgorithm<Real>::run( Vector<Real>       &x,
-                                           const Vector<Real> &g, 
+                                           const Vector<Real> &g,
                                            Objective<Real>    &sobj,
                                            Objective<Real>    &nobj,
                                            std::ostream       &outStream ) {
@@ -78,7 +78,8 @@ void SpectralGradientAlgorithm<Real>::run( Vector<Real>       &x,
   Ptr<Vector<Real>> s = x.clone(), px = x.clone(), dg = x.clone(), y = g.clone(), xmin = x.clone();
   initialize(x,g,sobj,nobj,*s,*dg,outStream);
   Real strial(0), ntrial(0), Ftrial(0), Fmin(0), Fmax(0), Qk(0), alpha(1), rhoTmp(1);
-  Real gs(0), ys(0), snorm(state_->snorm), ss(0), tol(std::sqrt(ROL_EPSILON<Real>()));
+  Real gs(0), ys(0), snorm(state_->snorm), ss(0);
+  Tolerance<Real> tol(std::sqrt(ROL_EPSILON<Real>()));
   int ls_nfval = 0;
   std::deque<Real> Fqueue; Fqueue.push_back(state_->value);
 
@@ -175,7 +176,7 @@ void SpectralGradientAlgorithm<Real>::run( Vector<Real>       &x,
     // Compute spectral proximal gradient step
     pgstep(*state_->iterateVec, *state_->stepVec, nobj, x, *dg, lambda_, tol);
     snorm         = state_->stepVec->norm();
-    state_->gnorm = snorm / lambda_; 
+    state_->gnorm = snorm / lambda_;
 
     // Update Output
     if (verbosity_ > 0) writeOutput(outStream,writeHeader_);
@@ -201,7 +202,7 @@ void SpectralGradientAlgorithm<Real>::writeHeader( std::ostream& os ) const {
     os << "  #sval    - Cumulative number of times the smooth objective function was evaluated" << std::endl;
     os << "  #nval    - Cumulative number of times the nonsmooth objective function was evaluated" << std::endl;
     os << "  #grad    - Cumulative number of times the gradient was computed" << std::endl;
-    os << "  #prox    - Cumulative number of times the proximal operator was computed" << std::endl; 
+    os << "  #prox    - Cumulative number of times the proximal operator was computed" << std::endl;
     os << std::string(109,'-') << std::endl;
   }
 
@@ -215,7 +216,7 @@ void SpectralGradientAlgorithm<Real>::writeHeader( std::ostream& os ) const {
   os << std::setw(10) << std::left << "#sval";
   os << std::setw(10) << std::left << "#nval";
   os << std::setw(10) << std::left << "#grad";
-  os << std::setw(10) << std::left << "#nprox"; 
+  os << std::setw(10) << std::left << "#nprox";
   os << std::endl;
   os.flags(osFlags);
 }
@@ -244,7 +245,7 @@ void SpectralGradientAlgorithm<Real>::writeOutput( std::ostream& os, bool write_
     os << std::setw(10) << std::left << state_->nsval;
     os << std::setw(10) << std::left << state_->nnval;
     os << std::setw(10) << std::left << state_->ngrad;
-    os << std::setw(10) << std::left << state_->nprox; 
+    os << std::setw(10) << std::left << state_->nprox;
     os << std::endl;
   }
   else {
@@ -258,7 +259,7 @@ void SpectralGradientAlgorithm<Real>::writeOutput( std::ostream& os, bool write_
     os << std::setw(10) << std::left << state_->nsval;
     os << std::setw(10) << std::left << state_->nnval;
     os << std::setw(10) << std::left << state_->ngrad;
-    os << std::setw(10) << std::left << state_->nprox; 
+    os << std::setw(10) << std::left << state_->nprox;
     os << std::endl;
   }
   os.flags(osFlags);

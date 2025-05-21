@@ -180,7 +180,7 @@ public:
 
 
   // Evaluate the gradient of the Lagrangian
-  void value( V &c, const V &x, Real &tol ) {
+  void value( V &c, const V &x, Tolerance<Real> &tol ) {
 
     
 
@@ -277,7 +277,7 @@ public:
   // [ J31  0  J33  0  ] [ vzl ]   [ jvzl ]   [ J31*vx          + J33*vzl           ]
   // [ J41  0   0  J44 ] [ vzu ]   [ jvzu ]   [ J41*vx                    + J44*vzu ]
   //
-  void applyJacobian( V &jv, const V &v, const V &x, Real &tol ) {
+  void applyJacobian( V &jv, const V &v, const V &x, Tolerance<Real> &tol ) {
 
     
 

@@ -77,7 +77,7 @@ template<typename Real>
 void BilinearConstraint<Real>::value(Vector<Real> &c,
            const Vector<Real> &u,
            const Vector<Real> &z,
-           Real &tol) {
+           Tolerance<Real> &tol) {
   startTimer("value");
   M_->apply(c,u,z);
   computeG(*g_);
@@ -89,7 +89,7 @@ template<typename Real>
 void BilinearConstraint<Real>::solve(Vector<Real> &c,
            Vector<Real> &u, 
            const Vector<Real> &z,
-           Real &tol) {
+           Tolerance<Real> &tol) {
   startTimer("solve");
   computeG(*g_);
   M_->applyInverse(u,*g_,z);
@@ -102,7 +102,7 @@ void BilinearConstraint<Real>::applyJacobian_1(Vector<Real> &jv,
                      const Vector<Real> &v,
                      const Vector<Real> &u,
                      const Vector<Real> &z,
-                     Real &tol) {
+                     Tolerance<Real> &tol) {
   startTimer("applyJacobian_1");
   M_->apply(jv,v,z);
   stopTimer("applyJacobian_1");
@@ -113,7 +113,7 @@ void BilinearConstraint<Real>::applyJacobian_2(Vector<Real> &jv,
                      const Vector<Real> &v,
                      const Vector<Real> &u,
                      const Vector<Real> &z,
-                     Real &tol) {
+                     Tolerance<Real> &tol) {
   startTimer("applyJacobian_2");
   M_->applyDeriv(jv,u,v);
   stopTimer("applyJacobian_2");
@@ -124,7 +124,7 @@ void BilinearConstraint<Real>::applyInverseJacobian_1(Vector<Real> &ijv,
                             const Vector<Real> &v,
                             const Vector<Real> &u,
                             const Vector<Real> &z,
-                            Real &tol) {
+                            Tolerance<Real> &tol) {
   startTimer("applyInverseJacobian_1");
   M_->applyInverse(ijv,v,z);
   stopTimer("applyInverseJacobian_1");
@@ -135,7 +135,7 @@ void BilinearConstraint<Real>::applyAdjointJacobian_1(Vector<Real> &ajv,
                             const Vector<Real> &v,
                             const Vector<Real> &u,
                             const Vector<Real> &z,
-                            Real &tol) {
+                            Tolerance<Real> &tol) {
   startTimer("applyAdjointJacobian_1");
   applyJacobian_1(ajv,v,u,z,tol);
   stopTimer("applyAdjointJacobian_1");
@@ -146,7 +146,7 @@ void BilinearConstraint<Real>::applyAdjointJacobian_2(Vector<Real> &ajv,
                             const Vector<Real> &v,
                             const Vector<Real> &u,
                             const Vector<Real> &z,
-                            Real &tol) {
+                            Tolerance<Real> &tol) {
   startTimer("applyAdjointJacobian_2");
   if (!isPinit_) {
     p_ = ajv.clone();
@@ -161,7 +161,7 @@ void BilinearConstraint<Real>::applyInverseAdjointJacobian_1(Vector<Real> &iajv,
                                    const Vector<Real> &v,
                                    const Vector<Real> &u,
                                    const Vector<Real> &z,
-                                   Real &tol) {
+                                   Tolerance<Real> &tol) {
   startTimer("applyInverseAdjointJacobian_1");
   applyInverseJacobian_1(iajv,v,u,z,tol);
   stopTimer("applyInverseAdjointJacobian_1");
@@ -173,7 +173,7 @@ void BilinearConstraint<Real>::applyAdjointHessian_11(Vector<Real> &ahwv,
                             const Vector<Real> &v,
                             const Vector<Real> &u,
                             const Vector<Real> &z,
-                            Real &tol) {
+                            Tolerance<Real> &tol) {
   startTimer("applyAdjointHessian_11");
   ahwv.zero();
   stopTimer("applyAdjointHessian_11");
@@ -185,7 +185,7 @@ void BilinearConstraint<Real>::applyAdjointHessian_12(Vector<Real> &ahwv,
                             const Vector<Real> &v,
                             const Vector<Real> &u,
                             const Vector<Real> &z,
-                            Real &tol) {
+                            Tolerance<Real> &tol) {
   startTimer("applyAdjointHessian_12");
   applyAdjointJacobian_2(ahwv,v,w,z,tol);
   stopTimer("applyAdjointHessian_12");
@@ -197,7 +197,7 @@ void BilinearConstraint<Real>::applyAdjointHessian_21(Vector<Real> &ahwv,
                             const Vector<Real> &v,
                             const Vector<Real> &u,
                             const Vector<Real> &z,
-                            Real &tol) {
+                            Tolerance<Real> &tol) {
   startTimer("applyAdjointHessian_21");
   applyJacobian_2(ahwv,v,w,z,tol);
   stopTimer("applyAdjointHessian_21");
@@ -209,7 +209,7 @@ void BilinearConstraint<Real>::applyAdjointHessian_22(Vector<Real> &ahwv,
                             const Vector<Real> &v,
                             const Vector<Real> &u,
                             const Vector<Real> &z,
-                            Real &tol) {
+                            Tolerance<Real> &tol) {
   startTimer("applyAdjointHessian_22");
   ahwv.zero();
   stopTimer("applyAdjointHessian_22");

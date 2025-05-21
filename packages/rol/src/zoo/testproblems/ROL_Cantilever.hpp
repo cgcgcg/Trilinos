@@ -32,16 +32,16 @@ namespace ZOO {
   public:
     Objective_Cantilever() {}
 
-    Real value( const std::vector<Real> &x, Real &tol ) {
+    Real value( const std::vector<Real> &x, Tolerance<Real> &tol ) {
       return x[0]*x[1];
     }
 
-    void gradient( std::vector<Real> &g, const std::vector<Real> &x, Real &tol ) {
+    void gradient( std::vector<Real> &g, const std::vector<Real> &x, Tolerance<Real> &tol ) {
       g[0] = x[1];
       g[1] = x[0];
     }
 #if USE_HESSVEC
-    void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+    void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Tolerance<Real> &tol ) {
       hv[0] = v[1];
       hv[1] = v[0];
     }
@@ -136,7 +136,7 @@ namespace ZOO {
   public:
     Constraint_Cantilever() {}
 
-    void value( std::vector<Real> &c, const std::vector<Real> &x, Real &tol ) {
+    void value( std::vector<Real> &c, const std::vector<Real> &x, Tolerance<Real> &tol ) {
       const Real R(40000), D(2.2535), one(1);
       Real s = stress(x[0],x[1],0)/R;
       Real d = displacement(x[0],x[1],0)/D;
@@ -144,7 +144,7 @@ namespace ZOO {
       c[1] = d - one;
     }
 
-    void applyJacobian( std::vector<Real> &jv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+    void applyJacobian( std::vector<Real> &jv, const std::vector<Real> &v, const std::vector<Real> &x, Tolerance<Real> &tol ) {
       const Real R(40000), D(2.2535);
       Real s0 = stress(x[0],x[1],1,0)/R, s1 = stress(x[0],x[1],1,1)/R;
       Real d0 = displacement(x[0],x[1],1,0)/D, d1 = displacement(x[0],x[1],1,1)/D;
@@ -152,7 +152,7 @@ namespace ZOO {
       jv[1] = d0*v[0] + d1*v[1];
     }
 
-    void applyAdjointJacobian( std::vector<Real> &ajv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+    void applyAdjointJacobian( std::vector<Real> &ajv, const std::vector<Real> &v, const std::vector<Real> &x, Tolerance<Real> &tol ) {
       const Real R(40000), D(2.2535);
       Real s0 = stress(x[0],x[1],1,0)/R, s1 = stress(x[0],x[1],1,1)/R;
       Real d0 = displacement(x[0],x[1],1,0)/D, d1 = displacement(x[0],x[1],1,1)/D;
@@ -160,7 +160,7 @@ namespace ZOO {
       ajv[1] = s1*v[0] + d1*v[1];
     }
 #if USE_HESSVEC
-    void applyAdjointHessian( std::vector<Real> &ahuv, const std::vector<Real> &u, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+    void applyAdjointHessian( std::vector<Real> &ahuv, const std::vector<Real> &u, const std::vector<Real> &v, const std::vector<Real> &x, Tolerance<Real> &tol ) {
       const Real R(40000), D(2.2535);
       Real s00 = stress(x[0],x[1],2,0,0)/R, s01 = stress(x[0],x[1],2,0,1)/R;
       Real s10 = stress(x[0],x[1],2,1,0)/R, s11 = stress(x[0],x[1],2,1,1)/R;

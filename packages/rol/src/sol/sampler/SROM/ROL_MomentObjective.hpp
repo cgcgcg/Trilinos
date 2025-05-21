@@ -131,7 +131,7 @@ public:
     }
   }
 
-  Real value( const Vector<Real> &x, Real &tol ) {
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
     const SROMVector<Real> &ex = dynamic_cast<const SROMVector<Real>&>(x);
     const ProbabilityVector<Real> &prob = *(ex.getProbabilityVector());
     const AtomVector<Real> &atom = *(ex.getAtomVector());
@@ -146,7 +146,7 @@ public:
     return val;
   }
 
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
     g.zero();
     const SROMVector<Real> &ex = dynamic_cast<const SROMVector<Real>&>(x);
     const ProbabilityVector<Real> &prob = *(ex.getProbabilityVector());
@@ -180,7 +180,7 @@ public:
     }
   }
 
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
     hv.zero();
     const SROMVector<Real> &ev = dynamic_cast<const SROMVector<Real>&>(v);
     const ProbabilityVector<Real> &vprob = *(ev.getProbabilityVector());

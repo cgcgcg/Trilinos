@@ -17,7 +17,7 @@
 namespace ROL {
 
 template<typename Real>
-Real Objective<Real>::dirDeriv( const Vector<Real> &x, const Vector<Real> &d, Real &tol) {
+Real Objective<Real>::dirDeriv( const Vector<Real> &x, const Vector<Real> &d, Tolerance<Real> &tol) {
   if (dual_ == nullPtr) dual_ = x.dual().clone();
   gradient(*dual_,x,tol);
   //return d.dot(dual_->dual());
@@ -37,7 +37,7 @@ Real Objective<Real>::dirDeriv( const Vector<Real> &x, const Vector<Real> &d, Re
 }
 
 template<typename Real>
-void Objective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+void Objective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
   if (prim_ == nullPtr) prim_ = x.clone();
   if (basis_ == nullPtr) basis_ = x.clone();
 
@@ -58,7 +58,7 @@ void Objective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Real &to
 }
 
 template<typename Real>
-void Objective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+void Objective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
   const Real zero(0), vnorm = v.norm();
   // Get Step Length
   if ( vnorm == zero ) {
@@ -69,7 +69,7 @@ void Objective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Ve
     if (dual_ == nullPtr) dual_ = hv.clone();
 
     //Real h = 2.0/(v.norm()*v.norm())*tol;
-    const Real one(1), h(std::max(one,x.norm()/vnorm)*tol);
+    const Real one(1), h(std::max(one,x.norm()/vnorm)*tol.get());
 
     gradient(*dual_,x,tol);           // Compute gradient at x
     prim_->set(x); prim_->axpy(h,v);  // Set prim = x + hv
@@ -82,7 +82,7 @@ void Objective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Ve
 }
 
 template<typename Real>
-void Objective<Real>::proxJacVec(Vector<Real> &Jv, const Vector<Real> &v, const Vector<Real> &x, Real t, Real &tol) {
+void Objective<Real>::proxJacVec(Vector<Real> &Jv, const Vector<Real> &v, const Vector<Real> &x, Real t, Tolerance<Real> &tol) {
   const Real zero(0), vnorm = v.norm();
   // Get Step Length
   if ( vnorm == zero ) {
@@ -92,7 +92,7 @@ void Objective<Real>::proxJacVec(Vector<Real> &Jv, const Vector<Real> &v, const 
     if (prim_ == nullPtr) prim_ = x.clone();
 
     //Real h = 2.0/(v.norm()*v.norm())*tol;
-    const Real one(1), h(std::max(one,x.norm()/vnorm)*tol);
+    const Real one(1), h(std::max(one,x.norm()/vnorm)*tol.get());
 
     prim_->set(x); prim_->axpy(h,v);  // Set prim = x + hv
     prox(Jv,*prim_,t,tol);            // Compute prox at prim
@@ -131,13 +131,13 @@ std::vector<std::vector<Real>> Objective<Real>::checkGradient( const Vector<Real
                                                                std::ostream & outStream,
                                                                const int order ) {
 
-  ROL_TEST_FOR_EXCEPTION( order<1 || order>4, std::invalid_argument, 
+  ROL_TEST_FOR_EXCEPTION( order<1 || order>4, std::invalid_argument,
                               "Error: finite difference order must be 1,2,3, or 4" );
 
   using Finite_Difference_Arrays::shifts;
   using Finite_Difference_Arrays::weights;
 
-  Real tol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
 
   int numSteps = steps.size();
   int numVals = 4;
@@ -177,7 +177,7 @@ std::vector<std::vector<Real>> Objective<Real>::checkGradient( const Vector<Real
       // Evaluate at x <- x+eta*c_i*d.
       xnew->axpy(eta*shifts[order-1][j], d);
 
-      // Only evaluate at shifts where the weight is nonzero  
+      // Only evaluate at shifts where the weight is nonzero
       if( weights[order-1][j+1] != 0 ) {
         update(*xnew,UpdateType::Temp);
         gCheck[i][2] += weights[order-1][j+1] * this->value(*xnew,tol);
@@ -246,14 +246,14 @@ std::vector<std::vector<Real>> Objective<Real>::checkHessVec( const Vector<Real>
                                                               std::ostream & outStream,
                                                               const int order ) {
 
-  ROL_TEST_FOR_EXCEPTION( order<1 || order>4, std::invalid_argument, 
+  ROL_TEST_FOR_EXCEPTION( order<1 || order>4, std::invalid_argument,
                               "Error: finite difference order must be 1,2,3, or 4" );
 
   using Finite_Difference_Arrays::shifts;
   using Finite_Difference_Arrays::weights;
 
   const Real one(1);
-  Real tol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
 
   int numSteps = steps.size();
   int numVals = 4;
@@ -280,7 +280,7 @@ std::vector<std::vector<Real>> Objective<Real>::checkHessVec( const Vector<Real>
   Ptr<Vector<Real>> xnew = x.clone();
 
   for (int i=0; i<numSteps; i++) {
-    Real eta = steps[i]; 
+    Real eta = steps[i];
     // Evaluate objective value at x+eta*d.
     xnew->set(x);
     gdif->set(*g);
@@ -288,14 +288,14 @@ std::vector<std::vector<Real>> Objective<Real>::checkHessVec( const Vector<Real>
     for (int j=0; j<order; ++j) {
       // Evaluate at x <- x+eta*c_i*d.
       xnew->axpy(eta*shifts[order-1][j], v);
-      // Only evaluate at shifts where the weight is nonzero  
+      // Only evaluate at shifts where the weight is nonzero
       if ( weights[order-1][j+1] != 0 ) {
         update(*xnew,UpdateType::Temp);
-        gradient(*gnew, *xnew, tol); 
+        gradient(*gnew, *xnew, tol);
         gdif->axpy(weights[order-1][j+1],*gnew);
       }
     }
-    gdif->scale(one/eta);    
+    gdif->scale(one/eta);
 
     // Compute norms of hessvec, finite-difference hessvec, and error.
     hvCheck[i][0] = eta;
@@ -342,8 +342,8 @@ std::vector<Real> Objective<Real>::checkHessSym( const Vector<Real> &x,
                                                  const bool printToStream,
                                                  std::ostream & outStream ) {
 
-  Real tol = std::sqrt(ROL_EPSILON<Real>());
-  
+  Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
+
   // Compute (Hessian at x) times (vector v).
   Ptr<Vector<Real>> h = hv.clone();
   update(x,UpdateType::Temp);
@@ -394,7 +394,7 @@ std::vector<std::vector<Real>> Objective<Real>::checkProxJacVec( const Vector<Re
                                                                  int numSteps) {
 
   const Real one(1), scale(0.1);
-  Real tol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
 
   int numVals = 4;
   std::vector<Real> tmp(numVals);

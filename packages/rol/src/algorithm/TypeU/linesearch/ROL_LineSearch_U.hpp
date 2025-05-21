@@ -52,7 +52,7 @@ private:
                 const Real alpha,      // current step length
                 const Real fnew,       // f(x+alpha*s)
                 Objective<Real> &obj) {
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
     Real val(0);
     xtst_->set(x); xtst_->axpy(alpha,s);
     if (FDdirDeriv_) {
@@ -212,7 +212,7 @@ protected:
     else {
       const Real one(1), half(0.5);
       if (edesc_ == DESCENT_U_STEEPEST || edesc_ == DESCENT_U_NONLINEARCG) {
-        Real tol = std::sqrt(ROL_EPSILON<Real>());
+        Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
         // Evaluate objective at x + s
         xtst_->set(x); xtst_->plus(s);
         obj.update(*xtst_,UpdateType::Trial);

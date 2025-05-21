@@ -25,7 +25,7 @@ void StdConstraint<Real>::update( const Vector<Real> &x, UpdateType type, int it
 }
 
 template<typename Real>
-void StdConstraint<Real>::value(Vector<Real> &c, const Vector<Real> &x, Real &tol) {
+void StdConstraint<Real>::value(Vector<Real> &c, const Vector<Real> &x, Tolerance<Real> &tol) {
   StdVector<Real> cs = dynamic_cast<StdVector<Real>&>(c);
   const StdVector<Real> xs = dynamic_cast<const StdVector<Real>&>(x);
   value(*(cs.getVector()),*(xs.getVector()),tol);
@@ -34,7 +34,7 @@ void StdConstraint<Real>::value(Vector<Real> &c, const Vector<Real> &x, Real &to
 template<typename Real>
 void StdConstraint<Real>::applyJacobian(Vector<Real> &jv,
                                   const Vector<Real> &v, 
-                                  const Vector<Real> &x, Real &tol) {
+                                  const Vector<Real> &x, Tolerance<Real> &tol) {
   StdVector<Real> jvs = dynamic_cast<StdVector<Real>&>(jv);
   const StdVector<Real> vs = dynamic_cast<const StdVector<Real>&>(v);
   const StdVector<Real> xs = dynamic_cast<const StdVector<Real>&>(x);
@@ -49,7 +49,7 @@ void StdConstraint<Real>::applyJacobian(Vector<Real> &jv,
 template<typename Real>
 void StdConstraint<Real>::applyJacobian( std::vector<Real> &jv,
                                    const std::vector<Real> &v, 
-                                   const std::vector<Real> &x, Real &tol ) {
+                                   const std::vector<Real> &x, Tolerance<Real> &tol ) {
   ROL_TEST_FOR_EXCEPTION(true, std::invalid_argument,
     ">>> ERROR (ROL::StdConstraint): applyJacobian not implemented!");
 }
@@ -57,7 +57,7 @@ void StdConstraint<Real>::applyJacobian( std::vector<Real> &jv,
 template<typename Real>
 void StdConstraint<Real>::applyAdjointJacobian(Vector<Real> &ajv,
                                          const Vector<Real> &v,
-                                         const Vector<Real> &x, Real &tol) {
+                                         const Vector<Real> &x, Tolerance<Real> &tol) {
   StdVector<Real> ajvs = dynamic_cast<StdVector<Real>&>(ajv);
   const StdVector<Real> vs = dynamic_cast<const StdVector<Real>&>(v);
   const StdVector<Real> xs = dynamic_cast<const StdVector<Real>&>(x);
@@ -72,7 +72,7 @@ void StdConstraint<Real>::applyAdjointJacobian(Vector<Real> &ajv,
 template<typename Real>
 void StdConstraint<Real>::applyAdjointJacobian( std::vector<Real> &ajv,
                                           const std::vector<Real> &v, 
-                                          const std::vector<Real> &x, Real &tol ) {
+                                          const std::vector<Real> &x, Tolerance<Real> &tol ) {
   ROL_TEST_FOR_EXCEPTION(true, std::invalid_argument,
     ">>> ERROR (ROL::StdConstraint): applyAdjointJacobian not implemented!");
 }
@@ -81,7 +81,7 @@ template<typename Real>
 void StdConstraint<Real>::applyAdjointHessian(Vector<Real> &ahuv,
                                         const Vector<Real> &u,
                                         const Vector<Real> &v,
-                                        const Vector<Real> &x, Real &tol) {
+                                        const Vector<Real> &x, Tolerance<Real> &tol) {
   StdVector<Real> ahuvs = dynamic_cast<StdVector<Real>&>(ahuv);
   const StdVector<Real> us = dynamic_cast<const StdVector<Real>&>(u);
   const StdVector<Real> vs = dynamic_cast<const StdVector<Real>&>(v);
@@ -99,7 +99,7 @@ template<typename Real>
 void StdConstraint<Real>::applyAdjointHessian( std::vector<Real> &ahuv,
                                          const std::vector<Real> &u,
                                          const std::vector<Real> &v,
-                                         const std::vector<Real> &x, Real &tol ) {
+                                         const std::vector<Real> &x, Tolerance<Real> &tol ) {
   ROL_TEST_FOR_EXCEPTION(true, std::invalid_argument, 
     ">>> ERROR (ROL::StdConstraint) : applyAdjointHessian not implemented!");
 }
@@ -109,7 +109,7 @@ std::vector<Real> StdConstraint<Real>::solveAugmentedSystem(Vector<Real> &v1,
                                                             Vector<Real> &v2,
                                                       const Vector<Real> &b1,
                                                       const Vector<Real> &b2,
-                                                      const Vector<Real> &x, Real &tol) {
+                                                      const Vector<Real> &x, Tolerance<Real> &tol) {
   StdVector<Real> v1s = dynamic_cast<StdVector<Real>&>(v1);
   StdVector<Real> v2s = dynamic_cast<StdVector<Real>&>(v2);
   const StdVector<Real> b1s = dynamic_cast<const StdVector<Real>&>(b1);
@@ -129,7 +129,7 @@ std::vector<Real> StdConstraint<Real>::solveAugmentedSystem( std::vector<Real> &
                                                              std::vector<Real> &v2,
                                                        const std::vector<Real> &b1,
                                                        const std::vector<Real> &b2,
-                                                       const std::vector<Real> &x, Real tol ) {
+                                                       const std::vector<Real> &x, Tolerance<Real> tol ) {
   ROL_TEST_FOR_EXCEPTION(true, std::invalid_argument, 
     ">>> ERROR (ROL::StdConstraint) : solveAugmentedSystem not implemented!");
   return std::vector<Real>();
@@ -139,7 +139,7 @@ template<typename Real>
 void StdConstraint<Real>::applyPreconditioner(Vector<Real> &pv,
                                         const Vector<Real> &v,
                                         const Vector<Real> &x,
-                                        const Vector<Real> &g, Real &tol) {
+                                        const Vector<Real> &g, Tolerance<Real> &tol) {
   StdVector<Real> pvs = dynamic_cast<StdVector<Real>&>(pv);
   const StdVector<Real> vs = dynamic_cast<const StdVector<Real>&>(v);
   const StdVector<Real> xs = dynamic_cast<const StdVector<Real>&>(x);
@@ -157,7 +157,7 @@ template<typename Real>
 void StdConstraint<Real>::applyPreconditioner( std::vector<Real> &pv,
                                          const std::vector<Real> &v,
                                          const std::vector<Real> &x,
-                                         const std::vector<Real> &g, Real &tol ) {
+                                         const std::vector<Real> &g, Tolerance<Real> &tol ) {
   ROL_TEST_FOR_EXCEPTION(true, std::invalid_argument, 
     ">>> ERROR (ROL::StdConstraint) : applyPreconditioner not implemented!");
 }

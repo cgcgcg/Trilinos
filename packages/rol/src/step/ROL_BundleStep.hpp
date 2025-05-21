@@ -60,7 +60,7 @@ private:
 
   // Algorithmic parameters
   Real T_;
-  Real tol_;
+  Tolerance<Real> tol_;
   Real m1_;
   Real m2_;
   Real m3_;
@@ -72,7 +72,7 @@ private:
   bool first_print_;
   bool isConvex_;
 
-  Real ftol_;
+  Tolerance<Real> ftol_;
 
   int verbosity_;
 
@@ -94,7 +94,7 @@ public:
     Real zero(0), two(2), oem3(1.e-3), oem6(1.e-6), oem8(1.e-8), p1(0.1), p2(0.2), p9(0.9), oe3(1.e3), oe8(1.e8);
     ROL::Ptr<StepState<Real> > state = Step<Real>::getState();
     state->searchSize = parlist.sublist("Step").sublist("Bundle").get("Initial Trust-Region Parameter", oe3);
-    T_   = parlist.sublist("Step").sublist("Bundle").get("Maximum Trust-Region Parameter",       oe8); 
+    T_   = parlist.sublist("Step").sublist("Bundle").get("Maximum Trust-Region Parameter",       oe8);
     tol_ = parlist.sublist("Step").sublist("Bundle").get("Epsilon Solution Tolerance",           oem6);
     m1_  = parlist.sublist("Step").sublist("Bundle").get("Upper Threshold for Serious Step",     p1);
     m2_  = parlist.sublist("Step").sublist("Bundle").get("Lower Threshold for Serious Step",     p2);
@@ -116,7 +116,7 @@ public:
     }
     isConvex_ = ((coeff == zero) ? true : false);
 
-    // Initialize QP solver 
+    // Initialize QP solver
     QPtol_   = parlist.sublist("Step").sublist("Bundle").get("Cutting Plane Tolerance", oem8);
     QPmaxit_ = parlist.sublist("Step").sublist("Bundle").get("Cutting Plane Iteration Limit", 1000);
 
@@ -131,9 +131,9 @@ public:
     verbosity_ = parlist.sublist("General").get("Print Verbosity", 0);
   }
 
-  void initialize( Vector<Real> &x, const Vector<Real> &g, 
-                   Objective<Real> &obj, BoundConstraint<Real> &con, 
-                   AlgorithmState<Real> &algo_state ) { 
+  void initialize( Vector<Real> &x, const Vector<Real> &g,
+                   Objective<Real> &obj, BoundConstraint<Real> &con,
+                   AlgorithmState<Real> &algo_state ) {
     // Call default initializer, but maintain current searchSize
     ROL::Ptr<StepState<Real> > state = Step<Real>::getState();
     Real searchSize = state->searchSize;
@@ -152,8 +152,8 @@ public:
     }
   }
 
-  void compute( Vector<Real> &s, const Vector<Real> &x, Objective<Real> &obj, 
-                BoundConstraint<Real> &con, AlgorithmState<Real> &algo_state ) { 
+  void compute( Vector<Real> &s, const Vector<Real> &x, Objective<Real> &obj,
+                BoundConstraint<Real> &con, AlgorithmState<Real> &algo_state ) {
     ROL::Ptr<StepState<Real> > state = Step<Real>::getState();
     first_print_ = false;                     // Print header only on first serious step
     QPiter_ = (step_flag_==1 ? 0 : QPiter_);  // Reset QPiter only on serious steps
@@ -354,7 +354,7 @@ public:
     aggLinErrOld_      = aggLinErrNew_;
   } // End Compute
 
-  void update( Vector<Real> &x, const Vector<Real> &s, Objective<Real> &obj, 
+  void update( Vector<Real> &x, const Vector<Real> &s, Objective<Real> &obj,
                BoundConstraint<Real> &con, AlgorithmState<Real> &algo_state ) {
     ROL::Ptr<StepState<Real> > state = Step<Real>::getState();
     state->flag = step_flag_;

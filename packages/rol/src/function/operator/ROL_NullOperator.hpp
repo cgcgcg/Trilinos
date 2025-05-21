@@ -23,11 +23,11 @@ namespace ROL {
 template<class Real>
 class NullOperator : public LinearOperator<Real> {
 
-  void apply( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  void apply( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
     Hv.zero(); 
   }
 
-  void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
     ROL_TEST_FOR_EXCEPTION( true, std::logic_error,
                                 ">>> ERROR (ROL_NullOperator, applyInverse): "
                                 "Null Operator has no inverse.");

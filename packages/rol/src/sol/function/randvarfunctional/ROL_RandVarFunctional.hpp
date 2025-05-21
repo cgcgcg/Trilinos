@@ -66,7 +66,7 @@ protected:
 
   // Evaluate objective function at current parameter
   Real computeValue(Objective<Real> &obj, const Vector<Real> &x,
-                    Real &tol) {
+                    Tolerance<Real> &tol) {
     Real val(0);
     bool isComputed = false;
     if (storage_) {
@@ -81,10 +81,10 @@ protected:
     }
     return val;
   }
- 
+
   // Evaluate gradient of objective function at current parameter
   void computeGradient(Vector<Real> &g, Objective<Real> &obj,
-                       const Vector<Real> &x, Real &tol) {
+                       const Vector<Real> &x, Tolerance<Real> &tol) {
     bool isComputed = false;
     if (storage_) {
       isComputed = gradient_storage_->get(g,point_);
@@ -101,7 +101,7 @@ protected:
   // Evaluate Gradient-times-a-vector at current parameter
   Real computeGradVec(Vector<Real> &g, Objective<Real> &obj,
                       const Vector<Real> &v, const Vector<Real> &x,
-                      Real &tol) {
+                      Tolerance<Real> &tol) {
     Real gv(0);
     computeGradient(g,obj,x,tol);
     bool isComputed = false;
@@ -121,7 +121,7 @@ protected:
   // Evaluate Hessian-times-a-vector at current parameter
   void computeHessVec(Vector<Real> &hv, Objective<Real> &obj,
                       const Vector<Real> &v, const Vector<Real> &x,
-                      Real &tol) {
+                      Tolerance<Real> &tol) {
     bool isComputed = false;
     if (storage_hessvec_) {
       isComputed = hessvec_storage_->get(hv,point_);
@@ -262,7 +262,7 @@ public:
   virtual void updateValue(Objective<Real>         &obj,
                            const Vector<Real>      &x,
                            const std::vector<Real> &xstat,
-                           Real                    &tol) {
+                           Tolerance<Real>         &tol) {
     Real val = computeValue(obj,x,tol);
     val_ += weight_ * val;
   }
@@ -279,7 +279,7 @@ public:
   virtual void updateGradient(Objective<Real>         &obj,
                               const Vector<Real>      &x,
                               const std::vector<Real> &xstat,
-                              Real                    &tol) {
+                              Tolerance<Real>         &tol) {
     computeGradient(*dualVector_,obj,x,tol);
     g_->axpy(weight_,*dualVector_);
   }
@@ -304,7 +304,7 @@ public:
                              const std::vector<Real> &vstat,
                              const Vector<Real>      &x,
                              const std::vector<Real> &xstat,
-                             Real                    &tol) {
+                             Tolerance<Real>         &tol) {
     computeHessVec(*dualVector_,obj,v,x,tol);
     hv_->axpy(weight_,*dualVector_);
   }

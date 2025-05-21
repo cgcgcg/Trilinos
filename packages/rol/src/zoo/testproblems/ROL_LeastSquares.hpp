@@ -33,7 +33,7 @@ class Objective_LeastSquares : public Objective<Real> {
 
 public:
 
-  Real value( const Vector<Real> &x, Real &tol ) {
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
     ROL::Ptr<const std::vector<Real> > ex
       = dynamic_cast<const StdVector<Real>&>(x).getVector();
 
@@ -56,7 +56,7 @@ public:
     return val;
   }
 
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
     ROL::Ptr<std::vector<Real> > eg
       = dynamic_cast<StdVector<Real>&>(g).getVector();
     ROL::Ptr<const std::vector<Real> > ex
@@ -90,7 +90,7 @@ public:
     }
   }
 #if USE_HESSVEC
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
     ROL::Ptr<std::vector<Real> > ehv
       = dynamic_cast<StdVector<Real>&>(hv).getVector();
     ROL::Ptr<const std::vector<Real> > ev

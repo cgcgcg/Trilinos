@@ -26,11 +26,11 @@ class Sacado_Objective : public Objective<Real> {
 
     /* Evaluate the gradient at x */
     template<class ScalarT>
-    void gradientAD( Vector<ScalarT> &g, const Vector<ScalarT> &x, Real &tol );
+    void gradientAD( Vector<ScalarT> &g, const Vector<ScalarT> &x, ROL::Tolerance<Real> &tol );
 
     /* Compute the action of the Hessian evaluated at x on a vector v */
     template<class ScalarT>
-    void hessVecAD( Vector<ScalarT> &hv, const Vector<ScalarT> &v, const Vector<ScalarT> &x, Real &tol );
+    void hessVecAD( Vector<ScalarT> &hv, const Vector<ScalarT> &v, const Vector<ScalarT> &x, ROL::Tolerance<Real> &tol );
 
 
     public:
@@ -39,17 +39,17 @@ class Sacado_Objective : public Objective<Real> {
     Sacado_Objective(const Obj<Real> &obj) : obj_(obj) {}
 
     /* Evaluate the objective function at x */
-    Real value( const Vector<Real> &x, Real &tol ) {
+    Real value( const Vector<Real> &x, ROL::Tolerance<Real> &tol ) {
       return obj_.value(x,tol);
     }
 
     /* Evaluate the gradient at x */
-    void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+    void gradient( Vector<Real> &g, const Vector<Real> &x, ROL::Tolerance<Real> &tol ) {
         this->gradientAD(g,x,tol);
     }
 
     /* Compute the action of the Hessian evaluated at x on a vector v */
-    void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+    void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, ROL::Tolerance<Real> &tol ) {
         this->hessVecAD(hv,v,x,tol);
     }
 };
@@ -58,7 +58,7 @@ class Sacado_Objective : public Objective<Real> {
 
 template<class Real, template<class> class Obj>
 template<class ScalarT>
-void Sacado_Objective<Real,Obj>::gradientAD(Vector<ScalarT> &g, const Vector<ScalarT> &x, Real &tol) {
+void Sacado_Objective<Real,Obj>::gradientAD(Vector<ScalarT> &g, const Vector<ScalarT> &x, ROL::Tolerance<Real> &tol) {
 
     // Data type which supports automatic differentiation
     typedef Sacado::Fad::DFad<ScalarT> FadType;
@@ -66,8 +66,8 @@ void Sacado_Objective<Real,Obj>::gradientAD(Vector<ScalarT> &g, const Vector<Sca
     typedef std::vector<ScalarT>       vector;
     typedef StdVector<ScalarT>         SV;
 
-           
-    
+
+
 
     // Get a pointer to the optimization vector
     ROL::Ptr<const vector> xp = dynamic_cast<const SV&>(x).getVector();
@@ -102,7 +102,7 @@ void Sacado_Objective<Real,Obj>::gradientAD(Vector<ScalarT> &g, const Vector<Sca
 template <class Real, template<class> class Obj>
 template <class ScalarT>
 void Sacado_Objective<Real,Obj>::hessVecAD( Vector<ScalarT> &hv, const Vector<ScalarT> &v,
-                                            const Vector<ScalarT> &x, Real &tol ) {
+                                            const Vector<ScalarT> &x, ROL::Tolerance<Real> &tol ) {
 
     // Data type which supports automatic differentiation
     typedef Sacado::Fad::SFad<ScalarT,1> FadType;
@@ -110,8 +110,8 @@ void Sacado_Objective<Real,Obj>::hessVecAD( Vector<ScalarT> &hv, const Vector<Sc
     typedef std::vector<ScalarT>         vector;
     typedef StdVector<ScalarT>           SV;
 
-           
-    
+
+
 
     // Get a pointer to the optimization vector
     ROL::Ptr<const vector> xp = dynamic_cast<const SV&>(x).getVector();

@@ -54,7 +54,7 @@ public:
               int                      &iter,
               const Real                del,
               TrustRegionModel_U<Real> &model ) {
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
     const Real zero(0), one(1), two(2), half(0.5);
     // Initialize step
     s.zero(); s_->zero();

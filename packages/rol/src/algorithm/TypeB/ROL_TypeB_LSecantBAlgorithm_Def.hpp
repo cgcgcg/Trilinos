@@ -34,7 +34,7 @@ LSecantBAlgorithm<Real>::LSecantBAlgorithm(ParameterList &list,
   redlim_    = lmlist.sublist("Cauchy Point").get("Maximum Number of Reduction Steps", 10);
   explim_    = lmlist.sublist("Cauchy Point").get("Maximum Number of Expansion Steps", 10);
   alpha_     = lmlist.sublist("Cauchy Point").get("Initial Step Size",                 1.0);
-  normAlpha_ = lmlist.sublist("Cauchy Point").get("Normalize Initial Step Size",       false); 
+  normAlpha_ = lmlist.sublist("Cauchy Point").get("Normalize Initial Step Size",       false);
   interpf_   = lmlist.sublist("Cauchy Point").get("Reduction Rate",                    0.1);
   extrapf_   = lmlist.sublist("Cauchy Point").get("Expansion Rate",                    10.0);
   qtol_      = lmlist.sublist("Cauchy Point").get("Decrease Tolerance",                1e-8);
@@ -68,7 +68,7 @@ void LSecantBAlgorithm<Real>::initialize(Vector<Real>          &x,
   // Initialize data
   TypeB::Algorithm<Real>::initialize(x,g);
   // Update approximate gradient and approximate objective function.
-  Real ftol = static_cast<Real>(0.1)*ROL_OVERFLOW<Real>(); 
+  Tolerance<Real> ftol = static_cast<Real>(0.1)*ROL_OVERFLOW<Real>();
   proj_->project(x,outStream); state_->nproj++;
   state_->iterateVec->set(x);
   obj.update(x,UpdateType::Initial,state_->iter);
@@ -96,12 +96,12 @@ void LSecantBAlgorithm<Real>::initialize(Vector<Real>          &x,
 
 template<typename Real>
 void LSecantBAlgorithm<Real>::run(Vector<Real>          &x,
-                                  const Vector<Real>    &g, 
+                                  const Vector<Real>    &g,
                                   Objective<Real>       &obj,
                                   BoundConstraint<Real> &bnd,
                                   std::ostream          &outStream ) {
   const Real zero(0), one(1);
-  Real tol0 = ROL_EPSILON<Real>(), ftol = ROL_EPSILON<Real>();
+  Tolerance<Real> tol0 = ROL_EPSILON<Real>(), ftol = ROL_EPSILON<Real>();
   Real gfnorm(0), gs(0), ftrial(0), q(0), tol(0), stol(0), snorm(0);
   // Initialize trust-region data
   initialize(x,g,obj,bnd,outStream);
@@ -291,7 +291,7 @@ Real LSecantBAlgorithm<Real>::dsrch(Vector<Real> &x, Vector<Real> &s, Real &fnew
                                     Real fold, Real gs, Objective<Real> &obj,
                                     Vector<Real> &pwa, std::ostream &outStream) {
   const Real one(1);
-  Real tol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
   Real snorm(0);
   int nsteps = 0;
   // Reduce beta until sufficient decrease is satisfied
@@ -334,7 +334,7 @@ Real LSecantBAlgorithm<Real>::dpcg(Vector<Real> &w, int &iflag, int &iter,
   // q = hessian applied to step p (dual)
   // t = gradient (dual)
   // r = preconditioned gradient (primal)
-  Real tol0 = ROL_EPSILON<Real>(), tolB(0);
+  Tolerance<Real> tol0 = ROL_EPSILON<Real>(), tolB(0);
   const Real minIntSize = ROL_EPSILON<Real>();
   const Real zero(0), half(0.5), one(1), two(2);
   Real rho(0), kappa(0), beta(0), sigma(0), alpha(0), alphatmp(0);
@@ -412,7 +412,7 @@ void LSecantBAlgorithm<Real>::applyFreeHessian(Vector<Real> &hv,
                                               const Vector<Real> &x,
                                               Secant<Real> &secant,
                                               BoundConstraint<Real> &bnd,
-                                              Real &tol,
+                                              Tolerance<Real> &tol,
                                               Vector<Real> &pwa) const {
   const Real zero(0);
   pwa.set(v);
@@ -429,7 +429,7 @@ void LSecantBAlgorithm<Real>::applyFreePrecond(Vector<Real> &hv,
                                               const Vector<Real> &x,
                                               Secant<Real> &secant,
                                               BoundConstraint<Real> &bnd,
-                                              Real &tol,
+                                              Tolerance<Real> &tol,
                                               Vector<Real> &dwa,
                                               Vector<Real> &pwa) const {
   if (!hasEcon_) {
@@ -456,7 +456,7 @@ void LSecantBAlgorithm<Real>::writeHeader( std::ostream& os ) const {
     os << std::string(114,'-') << std::endl;
     os << " L-Secant-B line search method status output definitions" << std::endl << std::endl;
     os << "  iter    - Number of iterates (steps taken)" << std::endl;
-    os << "  value   - Objective function value" << std::endl; 
+    os << "  value   - Objective function value" << std::endl;
     os << "  gnorm   - Norm of the gradient" << std::endl;
     os << "  snorm   - Norm of the step (update to optimization vector)" << std::endl;
     os << "  LSpar   - Line-Search parameter" << std::endl;

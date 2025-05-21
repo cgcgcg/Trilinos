@@ -41,7 +41,7 @@ public:
 
   void value(Vector<Real> &c,
              const Vector<Real> &x,
-             Real &tol) {
+             Tolerance<Real> &tol) {
     c.zero();
     SimulatedVector<Real> &pc = dynamic_cast<SimulatedVector<Real>&>(c);
     const Vector_SimOpt<Real> &uz = dynamic_cast<const Vector_SimOpt<Real>&>(x);
@@ -72,7 +72,7 @@ public:
   virtual void applyJacobian(Vector<Real> &jv,
                              const Vector<Real> &v,
                              const Vector<Real> &x,
-                             Real &tol) {
+                             Tolerance<Real> &tol) {
     jv.zero();
     // cast jv
     SimulatedVector<Real> &pjv = dynamic_cast<SimulatedVector<Real>&>(jv);
@@ -116,7 +116,7 @@ public:
   virtual void applyAdjointJacobian(Vector<Real> &ajv,
                                     const Vector<Real> &v,
                                     const Vector<Real> &x,
-                                    Real &tol) {
+                                    Tolerance<Real> &tol) {
     ajv.zero();
     // split ajv
     Vector_SimOpt<Real> &ajvuz = dynamic_cast<Vector_SimOpt<Real>&>(ajv);
@@ -166,7 +166,7 @@ public:
                                    const Vector<Real> &u,
                                    const Vector<Real> &v,
                                    const Vector<Real> &x,
-                                   Real &tol) {
+                                   Tolerance<Real> &tol) {
     ahuv.zero();
     // split ahuv
     Vector_SimOpt<Real> &ahuvuz = dynamic_cast<Vector_SimOpt<Real>&>(ahuv);
@@ -226,7 +226,7 @@ public:
                                    const Vector<Real> &v,
                                    const Vector<Real> &x,
                                    const Vector<Real> &g,
-                                   Real &tol) {
+                                   Tolerance<Real> &tol) {
     Pv.zero();
     // cast Pv
     SimulatedVector<Real> &ppv = dynamic_cast<SimulatedVector<Real>&>(Pv);

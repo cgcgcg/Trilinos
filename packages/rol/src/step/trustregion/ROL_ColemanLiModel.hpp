@@ -215,7 +215,7 @@ private:
   /*********  BEGIN OBJECTIVE FUNCTION DEFINITIONS  **************************/
   /***************************************************************************/
   // Note that s is the \f$\hat{s}\f$ and \f$\psi\f$ is the $\hat\psi$ from the paper
-  Real value( const Vector<Real> &s, Real &tol ) {
+  Real value( const Vector<Real> &s, Tolerance<Real> &tol ) {
     const Ptr<const Vector<Real>> gc = TrustRegionModel<Real>::getGradient();
     // Apply Hessian to s
     hessVec(*hv_, s, s, tol);
@@ -227,14 +227,14 @@ private:
     return hv_->dot(s.dual());    
   }
 
-  void gradient( Vector<Real> &g, const Vector<Real> &s, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &s, Tolerance<Real> &tol ) {
     const Ptr<const Vector<Real>> gc = TrustRegionModel<Real>::getGradient();
     hessVec(g, s, s, tol);
     applyInverseD(*prim_, gc->dual());
     g.plus(prim_->dual());    
   }
 
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &s, Real &tol ) {
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &s, Tolerance<Real> &tol ) {
     const Ptr<const Vector<Real>> gc = TrustRegionModel<Real>::getGradient();
     // Build B = inv(D) * Hessian * inv(D)
     applyInverseD(*prim_, v);
@@ -253,7 +253,7 @@ private:
   }
 
   void primalTransform( Vector<Real> &tiv, const Vector<Real> &v ) { 
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
 
     /**************************************************************************/
     /*      PERFORM OPTIMAL SCALING OF TRUST REGION SUBPROBLEM SOLUTION       */
@@ -404,7 +404,7 @@ private:
 
   Real minimize1D(Real &tau, const Real lowerBound, const Real upperBound, const Vector<Real> &p) {
     const Ptr<const Vector<Real>> gc = TrustRegionModel<Real>::getGradient();
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
 
     // Compute coefficients of one dimensional quadratic
     hessVec(*hv_, p, p, tol);

@@ -62,7 +62,7 @@ public:
     con_->update(*x_,flag,true);  
   }
  
-  void apply( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  void apply( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
 
     
 
@@ -92,7 +92,7 @@ public:
 
   }
 
-  void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
      ROL_TEST_FOR_EXCEPTION( true , std::logic_error, 
                                 ">>> ERROR (ROL_PrimalDualInteriorPointBlock11, applyInverse): "
                                 "Not implemented.");    
@@ -119,7 +119,7 @@ class PrimalDualInteriorPointBlock12 : public LinearOperator<Real> {
  
 public:
  
-  void apply( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const { 
+  void apply( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const { 
     
 
     PV &Hv_pv = dynamic_cast<PV&>(Hv);
@@ -139,7 +139,7 @@ public:
    
   }
 
-  void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
      ROL_TEST_FOR_EXCEPTION( true , std::logic_error, 
                                 ">>> ERROR (ROL_PrimalDualInteriorPointBlock12, applyInverse): "
                                 "Not implemented.");    
@@ -177,7 +177,7 @@ public:
     zu_ = z_pv.get(UPPER);  
   } 
 
-  virtual void apply( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const { 
+  virtual void apply( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const { 
     
 
     PV &Hv_pv = dynamic_cast<PV&>(Hv);
@@ -199,7 +199,7 @@ public:
     Hvzu->scale(-1.0); 
   }
 
-  virtual void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  virtual void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
      ROL_TEST_FOR_EXCEPTION( true , std::logic_error, 
                                 ">>> ERROR (ROL_PrimalDualInteriorPointBlock21, applyInverse): "
                                 "Not implemented.");    
@@ -245,7 +245,7 @@ public:
     x_  = x_pv.get(OPT);
   }
  
-  virtual void apply( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const { 
+  virtual void apply( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const { 
     
 
     PV &Hv_pv = dynamic_cast<PV&>(Hv);
@@ -269,7 +269,7 @@ public:
 
   }
 
-  virtual void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  virtual void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
 
     
 

@@ -77,16 +77,16 @@ public:
     cdual_->set(c1_->dual());
   }
 
-  Real value( const Vector<Real> &x, Real &tol ) {
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
     Real half(0.5);
     return half*(c1_->dot(*cdual_));
   }
 
-  void gradient( Vector<Real> &g, const Vector<Real> &u, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &u, Tolerance<Real> &tol ) {
     con_->applyAdjointJacobian_un(g,*cdual_,*uo_,u,*z_,*ts_);
   }
 
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, Real &tol ) {
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, Tolerance<Real> &tol ) {
     con_->applyJacobian_un(*c2_,v,*uo_,u,*z_,*ts_);
     con_->applyAdjointJacobian_un(hv,c2_->dual(),*uo_,u,*z_,*ts_);
     if ( !GaussNewtonHessian_ ) {
@@ -95,7 +95,7 @@ public:
     }
   }
 
-  void precond( Vector<Real> &pv, const Vector<Real> &v, const Vector<Real> &u, Real &tol ) {
+  void precond( Vector<Real> &pv, const Vector<Real> &v, const Vector<Real> &u, Tolerance<Real> &tol ) {
     con_->applyInverseAdjointJacobian_un(*cdual_,v,*uo_,u,*z_,*ts_);
     con_->applyInverseJacobian_un(pv,cdual_->dual(),*uo_,u,*z_,*ts_);
   }

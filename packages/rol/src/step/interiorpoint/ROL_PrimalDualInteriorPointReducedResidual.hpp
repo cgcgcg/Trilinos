@@ -159,7 +159,7 @@ public:
 
 
   // Evaluate the gradient of the Lagrangian
-  void value( V &c, const V &x, Real &tol ) {
+  void value( V &c, const V &x, Tolerance<Real> &tol ) {
     
 
     PV &c_pv = dynamic_cast<PV&>(c);
@@ -184,7 +184,7 @@ public:
     
   }
 
-  void applyJacobian( V &jv, const V &v, const V &x, Real &tol ) {
+  void applyJacobian( V &jv, const V &v, const V &x, Tolerance<Real> &tol ) {
 
     
 

@@ -49,7 +49,7 @@ ProbabilityConstraint<Real>::ProbabilityConstraint(const Vector<Real> &p,
 template<typename Real>
 void ProbabilityConstraint<Real>::value(Vector<Real> &c,
            const Vector<Real> &x,
-           Real &tol) {
+           Tolerance<Real> &tol) {
   c.zero();
   std::vector<Real>       &cdata = getData(c);
   const std::vector<Real> &xdata = getConstData(x);
@@ -64,7 +64,7 @@ template<typename Real>
 void ProbabilityConstraint<Real>::applyJacobian(Vector<Real> &jv,
                    const Vector<Real> &v,
                    const Vector<Real> &x,
-                   Real &tol) {
+                   Tolerance<Real> &tol) {
   jv.zero();
   std::vector<Real>       &jdata = getData(jv);
   const std::vector<Real> &vdata = getConstData(v);
@@ -79,7 +79,7 @@ template<typename Real>
 void ProbabilityConstraint<Real>::applyAdjointJacobian(Vector<Real> &ajv,
                           const Vector<Real> &v,
                           const Vector<Real> &x,
-                          Real &tol) {
+                          Tolerance<Real> &tol) {
   const std::vector<Real> &vdata = getConstData(v);
   ajv.setScalar(vdata[0]);
   if (useScale_) ajv.scale(scale_);
@@ -90,7 +90,7 @@ void ProbabilityConstraint<Real>::applyAdjointHessian(Vector<Real> &ahuv,
                          const Vector<Real> &u,
                          const Vector<Real> &v,
                          const Vector<Real> &x,
-                         Real &tol) {
+                         Tolerance<Real> &tol) {
   ahuv.zero();
 }
 

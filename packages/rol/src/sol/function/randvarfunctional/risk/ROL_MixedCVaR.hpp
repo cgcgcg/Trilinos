@@ -136,7 +136,7 @@ public:
   void updateValue(Objective<Real>         &obj,
                    const Vector<Real>      &x,
                    const std::vector<Real> &xstat,
-                   Real                    &tol) override {
+                   Tolerance<Real>         &tol) override {
     Real pf(0), one(1);
     Real val = computeValue(obj,x,tol);
     for (int i = 0; i < size_; i++) {
@@ -159,7 +159,7 @@ public:
   void updateGradient(Objective<Real>         &obj,
                       const Vector<Real>      &x,
                       const std::vector<Real> &xstat,
-                      Real                    &tol) override {
+                      Tolerance<Real>         &tol) override {
     Real pf(0), c(0), one(1);
     Real val = computeValue(obj,x,tol);
     for (int i = 0; i < size_; i++) {
@@ -190,7 +190,7 @@ public:
                      const std::vector<Real> &vstat,
                      const Vector<Real>      &x,
                      const std::vector<Real> &xstat,
-                     Real                    &tol) override {
+                     Tolerance<Real>         &tol) override {
     Real pf1(0), pf2(0), c(0), one(1);
     Real val = computeValue(obj,x,tol);
     for (int i = 0; i < size_; i++) {

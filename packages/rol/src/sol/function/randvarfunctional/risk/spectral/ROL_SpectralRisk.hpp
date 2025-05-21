@@ -212,14 +212,14 @@ public:
   void updateValue(Objective<Real>         &obj,
                    const Vector<Real>      &x,
                    const std::vector<Real> &xstat,
-                   Real                    &tol) override {
+                   Tolerance<Real>         &tol) override {
     mqq_->updateValue(obj,x,xstat,tol);
   }
 
   void updateGradient(Objective<Real>         &obj,
                       const Vector<Real>      &x,
                       const std::vector<Real> &xstat,
-                      Real                    &tol) override {
+                      Tolerance<Real>         &tol) override {
     mqq_->updateGradient(obj,x,xstat,tol);
   }
 
@@ -228,7 +228,7 @@ public:
                      const std::vector<Real> &vstat,
                      const Vector<Real>      &x,
                      const std::vector<Real> &xstat,
-                     Real                    &tol) override {
+                     Tolerance<Real>         &tol) override {
     mqq_->updateHessVec(obj,v,vstat,x,xstat,tol);
   }
 

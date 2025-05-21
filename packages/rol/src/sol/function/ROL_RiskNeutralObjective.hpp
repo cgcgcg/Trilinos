@@ -49,7 +49,7 @@ private:
   }
 
   void getValue(Real &val, const Vector<Real> &x,
-          const std::vector<Real> &param, Real &tol) {
+          const std::vector<Real> &param, Tolerance<Real> &tol) {
     bool isComputed = false;
     if ( storage_) {
       isComputed = value_storage_->get(val,param);
@@ -64,7 +64,7 @@ private:
   }
 
   void getGradient(Vector<Real> &g, const Vector<Real> &x,
-             const std::vector<Real> &param, Real &tol) {
+             const std::vector<Real> &param, Tolerance<Real> &tol) {
     bool isComputed = false;
     if ( storage_) {
       isComputed = gradient_storage_->get(g,param);
@@ -79,7 +79,7 @@ private:
   }
 
   void getHessVec(Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x,
-            const std::vector<Real> &param, Real &tol) {
+            const std::vector<Real> &param, Tolerance<Real> &tol) {
     ParametrizedObjective_->setParameter(param);
     ParametrizedObjective_->hessVec(hv,v,x,tol);
   }
@@ -87,7 +87,7 @@ private:
 
 public:
   RiskNeutralObjective( const Ptr<Objective<Real>>       &pObj,
-                        const Ptr<SampleGenerator<Real>> &vsampler, 
+                        const Ptr<SampleGenerator<Real>> &vsampler,
                         const Ptr<SampleGenerator<Real>> &gsampler,
                         const Ptr<SampleGenerator<Real>> &hsampler,
                         const bool storage = true )
@@ -99,7 +99,7 @@ public:
   }
 
   RiskNeutralObjective( const Ptr<Objective<Real>>       &pObj,
-                        const Ptr<SampleGenerator<Real>> &vsampler, 
+                        const Ptr<SampleGenerator<Real>> &vsampler,
                         const Ptr<SampleGenerator<Real>> &gsampler,
                         const bool storage = true )
     : ParametrizedObjective_(pObj),
@@ -155,9 +155,9 @@ public:
     //}
   }
 
-  Real value( const Vector<Real> &x, Real &tol ) {
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
     initialize(x);
-    Real myval(0), ptval(0), val(0), one(1), two(2), error(two*tol + one);
+    Real myval(0), ptval(0), val(0), one(1), two(2), error(two*tol.get() + one);
     std::vector<Real> ptvals;
     while ( error > tol ) {
       ValueSampler_->refine();
@@ -176,11 +176,11 @@ public:
     return value_;
   }
 
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
     initialize(x);
     g.zero(); pointDual_->zero(); sumDual_->zero();
     std::vector<Ptr<Vector<Real>>> ptgs;
-    Real one(1), two(2), error(two*tol + one);
+    Real one(1), two(2), error(two*tol.get() + one);
     while ( error > tol ) {
       GradientSampler_->refine();
       for ( int i = GradientSampler_->start(); i < GradientSampler_->numMySamples(); ++i ) {
@@ -191,7 +191,7 @@ public:
       }
       error = GradientSampler_->computeError(ptgs,x);
 //if (GradientSampler_->batchID()==0) {
-//  std::cout << "IN GRADIENT: ERROR = " << error << "  TOL = " << tol << std::endl;  
+//  std::cout << "IN GRADIENT: ERROR = " << error << "  TOL = " << tol << std::endl;
 //}
       ptgs.clear();
     }
@@ -203,7 +203,7 @@ public:
   }
 
   void hessVec( Vector<Real> &hv, const Vector<Real> &v,
-          const Vector<Real> &x, Real &tol ) {
+          const Vector<Real> &x, Tolerance<Real> &tol ) {
     initialize(x);
     hv.zero(); pointDual_->zero(); sumDual_->zero();
     for ( int i = 0; i < HessianSampler_->numMySamples(); ++i ) {
@@ -214,7 +214,7 @@ public:
   }
 
   void precond( Vector<Real> &Pv, const Vector<Real> &v,
-                        const Vector<Real> &x, Real &tol ) {
+                        const Vector<Real> &x, Tolerance<Real> &tol ) {
     Pv.set(v.dual());
   }
 };

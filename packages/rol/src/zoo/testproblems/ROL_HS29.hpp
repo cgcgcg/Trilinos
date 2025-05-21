@@ -44,7 +44,7 @@ private:
 
 public:
   
-  Real value( const Vector<Real> &x, Real &tol ) {
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
 
     
     Ptr<const vector> xp = getVector(x);    
@@ -53,7 +53,7 @@ public:
 
   }
 
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
 
     
     Ptr<const vector> xp = getVector(x);
@@ -65,7 +65,7 @@ public:
 
   }
 
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
 
     
     Ptr<const vector> xp = getVector(x);
@@ -102,7 +102,7 @@ private:
 
 public:
 
-  void value( Vector<Real> &c, const Vector<Real> &x, Real &tol ) {
+  void value( Vector<Real> &c, const Vector<Real> &x, Tolerance<Real> &tol ) {
 
     
 
@@ -114,7 +114,7 @@ public:
   }
  
   void applyJacobian( Vector<Real> &jv, const Vector<Real> &v, 
-                      const Vector<Real> &x, Real &tol ) {
+                      const Vector<Real> &x, Tolerance<Real> &tol ) {
 
     
     
@@ -127,7 +127,7 @@ public:
   }
    
   void applyAdjointJacobian( Vector<Real> &ajv, const Vector<Real> &v,
-                             const Vector<Real> &x, Real &tol ) {
+                             const Vector<Real> &x, Tolerance<Real> &tol ) {
 
     
 
@@ -142,7 +142,7 @@ public:
   }
 
   void applyAdjointHessian( Vector<Real> &ahuv, const Vector<Real> &u,
-                            const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+                            const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
 
     
   

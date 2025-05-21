@@ -130,8 +130,8 @@ private:
   bool useMin_;
   bool useNMSP_;
   ETrustRegionP algSelect_;
-  int ncgType_; 
-  Real etaNCG_; 
+  int ncgType_;
+  Real etaNCG_;
   Real desPar_;
 
   // Inexactness Parameters
@@ -143,11 +143,11 @@ private:
   Real force_;
   int updateIter_;
   Real forceFactor_;
-  Real gtol_;
+  Tolerance<Real> gtol_;
 
   bool initProx_;
-  Real t0_; 
-  
+  Real t0_;
+
   mutable int nhess_;  ///< Number of Hessian applications
   unsigned verbosity_; ///< Output level (default: 0)
   bool writeHeader_;   ///< Flag to write header at every iteration
@@ -158,19 +158,19 @@ private:
 
   void initialize(Vector<Real>        &x,
                   const Vector<Real>  &g,
-                  Real                 ftol,
+                  Tolerance<Real>     ftol,
                   Objective<Real>     &sobj,
                   Objective<Real>     &nobj,
-                  Vector<Real>        &px, 
+                  Vector<Real>        &px,
                   Vector<Real>        &dg,
-                  std::ostream        &outStream = std::cout); 
+                  std::ostream        &outStream = std::cout);
 
 public:
   TrustRegionAlgorithm(ParameterList &list, const Ptr<Secant<Real>> &secant = nullPtr);
 
   using TypeP::Algorithm<Real>::run;
   void run( Vector<Real>          &x,
-            const Vector<Real>    &g, 
+            const Vector<Real>    &g,
             Objective<Real>       &sobj,
 						Objective<Real>       &nobj,
             std::ostream          &outStream = std::cout) override;
@@ -183,8 +183,8 @@ public:
 
 private:
 
-  Real computeValue(Real inTol,
-                    Real &outTol,
+  Real computeValue(Tolerance<Real> inTol,
+                    Tolerance<Real> &outTol,
                     Real pRed,
                     Real &fold,
                     int iter,
@@ -201,7 +201,7 @@ private:
                        Objective<Real> &sobj,
                        Objective<Real> &nobj,
                        bool accept,
-                       Real &gtol,
+                       Tolerance<Real> &gtol,
                        Real &gnorm,
                        std::ostream &outStream = std::cout) const;
 
@@ -225,80 +225,80 @@ private:
   //   model -- Trust region model
   //   dwa   -- Dual working array, stores Hessian applied to step
   //   dwa1  -- Dual working array
-  Real dcauchy(Vector<Real>             &s, 
-               Real                     &alpha, 
+  Real dcauchy(Vector<Real>             &s,
+               Real                     &alpha,
                Real                     &sval,
                Real                     &nval,
-               const Vector<Real>       &x, 
+               const Vector<Real>       &x,
                const Vector<Real>       &g,
-               Real                      del, 
+               Real                      del,
                TrustRegionModel_U<Real> &model,
                Objective<Real>          &nobj,
                Vector<Real>             &px,
-               Vector<Real>             &dwa, 
+               Vector<Real>             &dwa,
                Vector<Real>             &dwa1,
                std::ostream             &outStream = std::cout);
 
-  void dspg2(Vector<Real> &y, 
+  void dspg2(Vector<Real> &y,
              Real &sval,
              Real &nval,
              Real &pRed,
-             Vector<Real> &gmod, 
+             Vector<Real> &gmod,
              const Vector<Real> &x,
-             Real del, 
-             TrustRegionModel_U<Real> &model, 
+             Real del,
+             TrustRegionModel_U<Real> &model,
              Objective<Real> &nobj,
              Vector<Real> &pwa,
-             Vector<Real> &pwa1, 
-             Vector<Real> &pwa2, 
-             Vector<Real> &dwa, 
+             Vector<Real> &pwa1,
+             Vector<Real> &pwa2,
+             Vector<Real> &dwa,
              std::ostream &outStream = std::cout);
 
-  void dspg(Vector<Real> &y, 
+  void dspg(Vector<Real> &y,
             Real &sval,
-            Real &nval, 
+            Real &nval,
             Vector<Real> &gmod,
             const Vector<Real> &x,
-            Real del, 
-            TrustRegionModel_U<Real> &model, 
+            Real del,
+            TrustRegionModel_U<Real> &model,
             Objective<Real> &nobj,
             Vector<Real> &ymin,
-            Vector<Real> &pwa, 
-            Vector<Real> &pwa1, 
+            Vector<Real> &pwa,
+            Vector<Real> &pwa1,
             Vector<Real> &pwa2,
-            Vector<Real> &pwa3, 
-            Vector<Real> &pwa4, 
+            Vector<Real> &pwa3,
+            Vector<Real> &pwa4,
             Vector<Real> &pwa5,
-            Vector<Real> &dwa, 
+            Vector<Real> &dwa,
             std::ostream &outStream = std::cout);
-   
-	void dncg(Vector<Real> &y, 
+
+	void dncg(Vector<Real> &y,
             Real &sval,
-            Real &nval, 
+            Real &nval,
             Vector<Real> &gmod,
             const Vector<Real> &x,
-            Real del, 
-            TrustRegionModel_U<Real> &model, 
+            Real del,
+            TrustRegionModel_U<Real> &model,
             Objective<Real> &nobj,
-            Vector<Real> &s, 
-            Vector<Real> &pwa1, 
+            Vector<Real> &s,
+            Vector<Real> &pwa1,
             Vector<Real> &pwa2,
-            Vector<Real> &pwa3, 
-            Vector<Real> &pwa4, 
-            Vector<Real> &pwa5, 
-            Vector<Real> &dwa, 
+            Vector<Real> &pwa3,
+            Vector<Real> &pwa4,
+            Vector<Real> &pwa5,
+            Vector<Real> &dwa,
             std::ostream &outStream = std::cout);
 
 
-  void dprox(Vector<Real> &x, 
-             const Vector<Real> &x0, 
+  void dprox(Vector<Real> &x,
+             const Vector<Real> &x0,
              Real t,
              Real del,
              Objective<Real> &nobj,
-             Vector<Real> &y0, 
-             Vector<Real> &y1, 
+             Vector<Real> &y0,
+             Vector<Real> &y1,
              Vector<Real> &yc,
-             Vector<Real> &pwa, 
+             Vector<Real> &pwa,
              std::ostream &outStream = std::cout) const;
 
   void dbls(Real &alpha, Real &nval, Real &pred,
@@ -308,7 +308,7 @@ private:
             Real kappa, Real gs,
             Objective<Real> &nobj,
             Vector<Real> &pwa);
-  
+
 }; // class ROL::TypeP::TrustRegionAlgorithm
 
 } // namespace TypeP

@@ -23,7 +23,7 @@ class valConstraint : public ROL::Constraint_SimOpt<Real> {
 public:
   valConstraint(void) : ROL::Constraint_SimOpt<Real>() {}
 
-  void value(ROL::Vector<Real> &c, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+  void value(ROL::Vector<Real> &c, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     ROL::Ptr<std::vector<Real> > cp
       = dynamic_cast<ROL::StdVector<Real>&>(c).getVector();
     ROL::Ptr<const std::vector<Real> > up
@@ -39,7 +39,7 @@ public:
   }
 
   void applyJacobian_1(ROL::Vector<Real> &jv, const ROL::Vector<Real> &v,
-                       const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+                       const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     ROL::Ptr<std::vector<Real> > jvp
       = dynamic_cast<ROL::StdVector<Real>&>(jv).getVector();
     ROL::Ptr<const std::vector<Real> > vp
@@ -53,7 +53,7 @@ public:
   }
 
   void applyJacobian_2(ROL::Vector<Real> &jv, const ROL::Vector<Real> &v,
-                       const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+                       const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     ROL::Ptr<std::vector<Real> > jvp
       = dynamic_cast<ROL::StdVector<Real>&>(jv).getVector();
     ROL::Ptr<const std::vector<Real> > vp
@@ -67,7 +67,7 @@ public:
   }
 
   void applyAdjointJacobian_1(ROL::Vector<Real> &ajv, const ROL::Vector<Real> &v,
-                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     ROL::Ptr<std::vector<Real> > ajvp
       = dynamic_cast<ROL::StdVector<Real>&>(ajv).getVector();
     ROL::Ptr<const std::vector<Real> > vp
@@ -81,7 +81,7 @@ public:
   }
 
   void applyAdjointJacobian_2(ROL::Vector<Real> &ajv, const ROL::Vector<Real> &v,
-                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     ROL::Ptr<std::vector<Real> > ajvp
       = dynamic_cast<ROL::StdVector<Real>&>(ajv).getVector();
     ROL::Ptr<const std::vector<Real> > vp
@@ -94,7 +94,7 @@ public:
   }
 
   void applyAdjointHessian_11(ROL::Vector<Real> &ahwv, const ROL::Vector<Real> &w, const ROL::Vector<Real> &v,
-                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     ROL::Ptr<std::vector<Real> > ahwvp
       = dynamic_cast<ROL::StdVector<Real>&>(ahwv).getVector();
     ROL::Ptr<const std::vector<Real> > wp
@@ -110,7 +110,7 @@ public:
   }
 
   void applyAdjointHessian_12(ROL::Vector<Real> &ahwv, const ROL::Vector<Real> &w, const ROL::Vector<Real> &v,
-                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     ROL::Ptr<std::vector<Real> > ahwvp
       = dynamic_cast<ROL::StdVector<Real>&>(ahwv).getVector();
     ROL::Ptr<const std::vector<Real> > wp
@@ -125,7 +125,7 @@ public:
   }
 
   void applyAdjointHessian_21(ROL::Vector<Real> &ahwv, const ROL::Vector<Real> &w, const ROL::Vector<Real> &v,
-                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     ROL::Ptr<std::vector<Real> > ahwvp
       = dynamic_cast<ROL::StdVector<Real>&>(ahwv).getVector();
     ROL::Ptr<const std::vector<Real> > wp
@@ -141,7 +141,7 @@ public:
   }
 
   void applyAdjointHessian_22(ROL::Vector<Real> &ahwv, const ROL::Vector<Real> &w, const ROL::Vector<Real> &v,
-                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     ROL::Ptr<std::vector<Real> > ahwvp
       = dynamic_cast<ROL::StdVector<Real>&>(ahwv).getVector();
     ROL::Ptr<const std::vector<Real> > wp
@@ -161,7 +161,7 @@ class redConstraint : public ROL::Constraint_SimOpt<Real> {
 public:
   redConstraint(void) : ROL::Constraint_SimOpt<Real>() {}
 
-  void value(ROL::Vector<Real> &c, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+  void value(ROL::Vector<Real> &c, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     ROL::Ptr<std::vector<Real> > cp
       = dynamic_cast<ROL::StdVector<Real>&>(c).getVector();
     ROL::Ptr<const std::vector<Real> > up
@@ -175,7 +175,7 @@ public:
   }
 
   void applyJacobian_1(ROL::Vector<Real> &jv, const ROL::Vector<Real> &v,
-                       const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+                       const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     ROL::Ptr<std::vector<Real> > jvp
       = dynamic_cast<ROL::StdVector<Real>&>(jv).getVector();
     ROL::Ptr<const std::vector<Real> > vp
@@ -188,7 +188,7 @@ public:
   }
 
   void applyJacobian_2(ROL::Vector<Real> &jv, const ROL::Vector<Real> &v,
-                       const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+                       const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     ROL::Ptr<std::vector<Real> > jvp
       = dynamic_cast<ROL::StdVector<Real>&>(jv).getVector();
     ROL::Ptr<const std::vector<Real> > vp
@@ -203,7 +203,7 @@ public:
   }
 
   void applyAdjointJacobian_1(ROL::Vector<Real> &ajv, const ROL::Vector<Real> &v,
-                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     ROL::Ptr<std::vector<Real> > ajvp
       = dynamic_cast<ROL::StdVector<Real>&>(ajv).getVector();
     ROL::Ptr<const std::vector<Real> > vp
@@ -216,7 +216,7 @@ public:
   }
 
   void applyAdjointJacobian_2(ROL::Vector<Real> &ajv, const ROL::Vector<Real> &v,
-                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     ROL::Ptr<std::vector<Real> > ajvp
       = dynamic_cast<ROL::StdVector<Real>&>(ajv).getVector();
     ROL::Ptr<const std::vector<Real> > vp
@@ -231,7 +231,7 @@ public:
   }
 
   void applyInverseJacobian_1(ROL::Vector<Real> &ijv, const ROL::Vector<Real> &v,
-                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     ROL::Ptr<std::vector<Real> > ijvp
       = dynamic_cast<ROL::StdVector<Real>&>(ijv).getVector();
     ROL::Ptr<const std::vector<Real> > vp
@@ -244,7 +244,7 @@ public:
   }
 
   void applyInverseAdjointJacobian_1(ROL::Vector<Real> &ijv, const ROL::Vector<Real> &v,
-                                     const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+                                     const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     ROL::Ptr<std::vector<Real> > ijvp
       = dynamic_cast<ROL::StdVector<Real>&>(ijv).getVector();
     ROL::Ptr<const std::vector<Real> > vp
@@ -257,7 +257,7 @@ public:
   }
 
   void applyAdjointHessian_11(ROL::Vector<Real> &ahwv, const ROL::Vector<Real> &w, const ROL::Vector<Real> &v,
-                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     ROL::Ptr<std::vector<Real> > ahwvp
       = dynamic_cast<ROL::StdVector<Real>&>(ahwv).getVector();
     ROL::Ptr<const std::vector<Real> > wp
@@ -272,7 +272,7 @@ public:
   }
 
   void applyAdjointHessian_12(ROL::Vector<Real> &ahwv, const ROL::Vector<Real> &w, const ROL::Vector<Real> &v,
-                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     ROL::Ptr<std::vector<Real> > ahwvp
       = dynamic_cast<ROL::StdVector<Real>&>(ahwv).getVector();
     ROL::Ptr<const std::vector<Real> > wp
@@ -287,7 +287,7 @@ public:
   }
 
   void applyAdjointHessian_21(ROL::Vector<Real> &ahwv, const ROL::Vector<Real> &w, const ROL::Vector<Real> &v,
-                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     ROL::Ptr<std::vector<Real> > ahwvp
       = dynamic_cast<ROL::StdVector<Real>&>(ahwv).getVector();
     ROL::Ptr<const std::vector<Real> > wp
@@ -302,7 +302,7 @@ public:
   }
 
   void applyAdjointHessian_22(ROL::Vector<Real> &ahwv, const ROL::Vector<Real> &w, const ROL::Vector<Real> &v,
-                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     ROL::Ptr<std::vector<Real> > ahwvp
       = dynamic_cast<ROL::StdVector<Real>&>(ahwv).getVector();
     ROL::Ptr<const std::vector<Real> > wp
@@ -392,8 +392,8 @@ int main(int argc, char *argv[]) {
     ROL::Ptr<ROL::Constraint_SimOpt<RealT> > redCon = ROL::makePtr<redConstraint<RealT>>();
     redCon->checkAdjointConsistencyJacobian_1(*cz,*ds,*s,*z,true,*outStream);
     redCon->checkAdjointConsistencyJacobian_2(*cz,*dz,*s,*z,true,*outStream);
-    redCon->checkInverseJacobian_1(*cz,*ds,*s,*z,true,*outStream); 
-    redCon->checkInverseAdjointJacobian_1(*ds,*cz,*s,*z,true,*outStream); 
+    redCon->checkInverseJacobian_1(*cz,*ds,*s,*z,true,*outStream);
+    redCon->checkInverseAdjointJacobian_1(*ds,*cz,*s,*z,true,*outStream);
     redCon->checkApplyJacobian_1(*s,*z,*ds,*cz,true,*outStream);
     redCon->checkApplyJacobian_2(*s,*z,*dz,*cz,true,*outStream);
     redCon->checkApplyJacobian(y,dy,*cz,true,*outStream);
@@ -428,4 +428,3 @@ int main(int argc, char *argv[]) {
   return 0;
 
 }
-

@@ -84,7 +84,7 @@ public:
       @param[in]          x   is the current iterate.
       @param[in]          tol is a tolerance for inexact objective function computation.
   */
-  virtual Real value( const Vector<Real> &x, Real &tol ) = 0;
+  virtual Real value( const Vector<Real> &x, Tolerance<Real> &tol ) = 0;
 
   /** \brief Compute gradient.
 
@@ -99,7 +99,7 @@ public:
       The bases must be related through the Riesz map, i.e., \f$ R \{\phi_i\} = \{\psi_j\}\f$,
       and this must be reflected in the implementation of the ROL::Vector::dual() method.
   */
-  virtual void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) ;
+  virtual void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) ;
 
   /** \brief Compute directional derivative.
 
@@ -108,7 +108,7 @@ public:
       @param[in]          d   is the direction.
       @param[in]          tol is a tolerance for inexact objective function computation.
   */
-  virtual Real dirDeriv( const Vector<Real> &x, const Vector<Real> &d, Real &tol ) ;
+  virtual Real dirDeriv( const Vector<Real> &x, const Vector<Real> &d, Tolerance<Real> &tol ) ;
 
   /** \brief Apply Hessian approximation to vector.
 
@@ -118,7 +118,7 @@ public:
       @param[in]          x   is the current iterate.
       @param[in]          tol is a tolerance for inexact objective function computation.
   */
-  virtual void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol );
+  virtual void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol );
 
   /** \brief Apply inverse Hessian approximation to vector.
 
@@ -128,7 +128,7 @@ public:
       @param[in]          x   is the current iterate.
       @param[in]          tol is a tolerance for inexact objective function computation.
   */
-  virtual void invHessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  virtual void invHessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
     ROL_UNUSED(hv);
     ROL_UNUSED(v);
     ROL_UNUSED(x);
@@ -146,7 +146,7 @@ public:
       @param[in]          x   is the current iterate.
       @param[in]          tol is a tolerance for inexact objective function computation.
   */
-  virtual void precond( Vector<Real> &Pv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  virtual void precond( Vector<Real> &Pv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
     ROL_UNUSED(x);
     ROL_UNUSED(tol);
     Pv.set(v.dual());
@@ -160,7 +160,7 @@ public:
       @param[in]          t   is the proximity operator parameter (positive scalar).
       @param[in]          tol is a tolerance for inexact objective function computation.
   */
-  virtual void prox( Vector<Real> &Pv, const Vector<Real> &v, Real t, Real &tol){
+  virtual void prox( Vector<Real> &Pv, const Vector<Real> &v, Real t, Tolerance<Real> &tol){
     ROL_UNUSED(Pv);
     ROL_UNUSED(v);
     ROL_UNUSED(t);
@@ -179,7 +179,7 @@ public:
       @param[in]          t   is the proximity operator parameter (positive scalar).
       @param[in]          tol is a tolerance for inexact objective function computation.
   */
-  virtual void proxJacVec( Vector<Real> &Jv, const Vector<Real> &v, const Vector<Real> &x, Real t, Real &tol);
+  virtual void proxJacVec( Vector<Real> &Jv, const Vector<Real> &v, const Vector<Real> &x, Real t, Tolerance<Real> &tol);
 
   /** \brief Finite-difference gradient check.
 

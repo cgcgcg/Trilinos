@@ -28,7 +28,7 @@ namespace ROL {
   template<class Real>
   Teuchos::SerialDenseMatrix<int, Real> computeDenseHessian(Objective<Real> &obj, const Vector<Real> &x) {
 
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
 
     int dim = x.dimension();
     Teuchos::SerialDenseMatrix<int, Real> H(dim, dim);
@@ -54,7 +54,7 @@ namespace ROL {
   template<class Real>
   Teuchos::SerialDenseMatrix<int, Real> computeScaledDenseHessian(Objective<Real> &obj, const Vector<Real> &x) {
 
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
 
     int dim = x.dimension();
     Teuchos::SerialDenseMatrix<int, Real> H(dim, dim);
@@ -242,19 +242,19 @@ namespace ROL {
       con_->update(x,flag,iter);
     }
 
-    Real value( const Vector<Real> &x, Real &tol ) {
+    Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
       return obj_->value(x,tol);
     }
 
-    void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+    void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
       obj_->gradient(g,x,tol);
     }
 
-    Real dirDeriv( const Vector<Real> &x, const Vector<Real> &d, Real &tol ) {
+    Real dirDeriv( const Vector<Real> &x, const Vector<Real> &d, Tolerance<Real> &tol ) {
       return obj_->dirDeriv(x,d,tol);
     }
 
-    void hessVec( Vector<Real> &Hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+    void hessVec( Vector<Real> &Hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
       if ( useSecantHessVec_ ) {
         secant_->applyB( Hv, v );
       }
@@ -263,7 +263,7 @@ namespace ROL {
       }
     }
 
-    void invHessVec( Vector<Real> &Hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+    void invHessVec( Vector<Real> &Hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
       if ( useSecantHessVec_ ) {
         secant_->applyH(Hv,v);
       }
@@ -272,7 +272,7 @@ namespace ROL {
       }
     }
 
-    void precond( Vector<Real> &Mv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+    void precond( Vector<Real> &Mv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
       if ( useSecantPrecond_ ) {
         secant_->applyH( Mv, v );
       }
@@ -293,7 +293,7 @@ namespace ROL {
                    tol  objective function tolerance
     */
     void reducedHessVec( Vector<Real> &Hv, const Vector<Real> &v, const Vector<Real> &p,
-                         const Vector<Real> &d, const Vector<Real> &x, Real &tol ) {
+                         const Vector<Real> &d, const Vector<Real> &x, Tolerance<Real> &tol ) {
       if ( con_->isActivated() ) {
         if (!isInitialized_) {
           primalV_ = x.clone();
@@ -333,7 +333,7 @@ namespace ROL {
                    tol  objective function tolerance
     */
     void reducedHessVec( Vector<Real> &Hv, const Vector<Real> &v, const Vector<Real> &p,
-                         const Vector<Real> &x, Real &tol ) {
+                         const Vector<Real> &x, Tolerance<Real> &tol ) {
       if ( con_->isActivated() ) {
         if (!isInitialized_) {
           primalV_ = x.clone();
@@ -374,7 +374,7 @@ namespace ROL {
                    tol  objective function tolerance
     */
     void reducedInvHessVec( Vector<Real> &Hv, const Vector<Real> &v, const Vector<Real> &p, 
-                            const Vector<Real> &d, const Vector<Real> &x, Real &tol ) {
+                            const Vector<Real> &d, const Vector<Real> &x, Tolerance<Real> &tol ) {
       if ( con_->isActivated() ) {
         if (!isInitialized_) {
           primalV_ = x.clone();
@@ -414,7 +414,7 @@ namespace ROL {
                    tol  objective function tolerance
     */
     void reducedInvHessVec( Vector<Real> &Hv, const Vector<Real> &v, const Vector<Real> &p, 
-                            const Vector<Real> &x, Real &tol ) {
+                            const Vector<Real> &x, Tolerance<Real> &tol ) {
       if ( con_->isActivated() ) {
         if (!isInitialized_) {
           primalV_ = x.clone();
@@ -455,7 +455,7 @@ namespace ROL {
                    tol  objective function tolerance
     */
     void reducedPrecond( Vector<Real> &Mv, const Vector<Real> &v, const Vector<Real> &p, 
-                         const Vector<Real> &d, const Vector<Real> &x, Real &tol ) {
+                         const Vector<Real> &d, const Vector<Real> &x, Tolerance<Real> &tol ) {
       if ( con_->isActivated() ) {
         if (!isInitialized_) {
           primalV_ = x.clone();
@@ -495,7 +495,7 @@ namespace ROL {
                    tol  objective function tolerance
     */
     void reducedPrecond( Vector<Real> &Mv, const Vector<Real> &v, const Vector<Real> &p, 
-                         const Vector<Real> &x, Real &tol ) {
+                         const Vector<Real> &x, Tolerance<Real> &tol ) {
       if ( con_->isActivated() ) {
         if (!isInitialized_) {
           primalV_ = x.clone();

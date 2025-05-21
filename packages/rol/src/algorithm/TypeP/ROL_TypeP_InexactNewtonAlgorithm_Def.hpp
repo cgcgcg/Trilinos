@@ -58,17 +58,17 @@ void InexactNewtonAlgorithm<Real>::initialize(Vector<Real>          &x,
                                               Vector<Real>          &px,
                                               std::ostream &outStream) {
   const Real one(1);
-  Real tol(std::sqrt(ROL_EPSILON<Real>()));
+  Tolerance<Real> tol(std::sqrt(ROL_EPSILON<Real>()));
   // Initialize data
   TypeP::Algorithm<Real>::initialize(x,g);
   // Update approximate gradient and approximate objective function.
-  Real ftol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> ftol = std::sqrt(ROL_EPSILON<Real>());
   if (initProx_) {
     state_->iterateVec->set(x);
     nobj.prox(x,*state_->iterateVec,one,tol); state_->nprox++;
   }
-  sobj.update(x,UpdateType::Initial,state_->iter);    
-  nobj.update(x,UpdateType::Initial,state_->iter);    
+  sobj.update(x,UpdateType::Initial,state_->iter);
+  nobj.update(x,UpdateType::Initial,state_->iter);
   state_->svalue = sobj.value(x,ftol); state_->nsval++;
   state_->nvalue = nobj.value(x,ftol); state_->nnval++;
   state_->value  = state_->svalue + state_->nvalue;
@@ -82,7 +82,7 @@ void InexactNewtonAlgorithm<Real>::initialize(Vector<Real>          &x,
 
 template<typename Real>
 void InexactNewtonAlgorithm<Real>::run( Vector<Real>          &x,
-                                        const Vector<Real>    &g, 
+                                        const Vector<Real>    &g,
                                         Objective<Real>       &sobj,
                                         Objective<Real>       &nobj,
                                         std::ostream          &outStream ) {
@@ -91,7 +91,7 @@ void InexactNewtonAlgorithm<Real>::run( Vector<Real>          &x,
   Ptr<Vector<Real>> s = x.clone(), gp = x.clone(), xs = x.clone(), px = x.clone();
   initialize(x,g,sobj,nobj,*gp,*px,outStream);
   Real strial(0), ntrial(0), ftrial(0), gs(0), Qk(0), rhoTmp(0);
-  Real tol(std::sqrt(ROL_EPSILON<Real>())), gtol(1);
+  Tolerance<Real> tol(std::sqrt(ROL_EPSILON<Real>())), gtol(1);
 
   Ptr<TypeP::Algorithm<Real>> algo;
   Ptr<NewtonObj>              qobj = makePtr<NewtonObj>(makePtrFromRef(sobj),x,g);
@@ -117,7 +117,7 @@ void InexactNewtonAlgorithm<Real>::run( Vector<Real>          &x,
     nhess_  += qobj->numHessVec();
     state_->nprox += staticPtrCast<const TypeP::AlgorithmState<Real>>(algo->getState())->nprox;
 
-    // Perform backtracking line search 
+    // Perform backtracking line search
     state_->searchSize = one;
     x.set(*state_->iterateVec);
     x.axpy(state_->searchSize,*s);

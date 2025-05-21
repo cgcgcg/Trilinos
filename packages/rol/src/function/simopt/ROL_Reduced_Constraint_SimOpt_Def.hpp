@@ -48,7 +48,7 @@
 namespace ROL {
 
 template<class Real>
-void Reduced_Constraint_SimOpt<Real>::solve_state_equation(const Vector<Real> &z, Real &tol) {
+void Reduced_Constraint_SimOpt<Real>::solve_state_equation(const Vector<Real> &z, Tolerance<Real> &tol) {
   if (!isUpdated_) {
     // Update equality constraint with new Opt variable.
     if (newUpdate_) conRed_->update_2(z,updateType_,updateIter_);
@@ -76,7 +76,7 @@ void Reduced_Constraint_SimOpt<Real>::solve_state_equation(const Vector<Real> &z
 }
 
 template<class Real>
-void Reduced_Constraint_SimOpt<Real>::solve_adjoint_equation(const Vector<Real> &w, const Vector<Real> &z, Real &tol) { 
+void Reduced_Constraint_SimOpt<Real>::solve_adjoint_equation(const Vector<Real> &w, const Vector<Real> &z, Tolerance<Real> &tol) { 
   // Check if adjoint has been computed.
   bool isComputed = storage_ ? adjointStore_->get(*adjoint_,Constraint<Real>::getParameter()) : false;
   // Solve adjoint equation if not done already.
@@ -93,7 +93,7 @@ void Reduced_Constraint_SimOpt<Real>::solve_adjoint_equation(const Vector<Real> 
 }
 
 template<class Real>
-void Reduced_Constraint_SimOpt<Real>::solve_state_sensitivity(const Vector<Real> &v, const Vector<Real> &z, Real &tol) {
+void Reduced_Constraint_SimOpt<Real>::solve_state_sensitivity(const Vector<Real> &v, const Vector<Real> &z, Tolerance<Real> &tol) {
   // Solve state sensitivity equation
   conRed_->applyJacobian_2(*dualadjoint_,v,*state_,z,tol);
   dualadjoint_->scale(static_cast<Real>(-1));
@@ -102,7 +102,7 @@ void Reduced_Constraint_SimOpt<Real>::solve_state_sensitivity(const Vector<Real>
 }
 
 template<class Real>
-void Reduced_Constraint_SimOpt<Real>::solve_adjoint_sensitivity(const Vector<Real> &w, const Vector<Real> &v, const Vector<Real> &z, Real &tol) {
+void Reduced_Constraint_SimOpt<Real>::solve_adjoint_sensitivity(const Vector<Real> &w, const Vector<Real> &v, const Vector<Real> &z, Tolerance<Real> &tol) {
   // Evaluate full hessVec in the direction (s,v)
   conVal_->applyAdjointHessian_11(*dualstate_,w,*state_sens_,*state_,z,tol);
   conVal_->applyAdjointHessian_21(*dualstate1_,w,v,*state_,z,tol);
@@ -256,7 +256,7 @@ void Reduced_Constraint_SimOpt<Real>::update( const Vector<Real> &z, UpdateType 
 }
 
 template<class Real>
-void Reduced_Constraint_SimOpt<Real>::value( Vector<Real> &c, const Vector<Real> &z, Real &tol ) {
+void Reduced_Constraint_SimOpt<Real>::value( Vector<Real> &c, const Vector<Real> &z, Tolerance<Real> &tol ) {
   nvalu_++;
   // Solve state equation
   solve_state_equation(z,tol);
@@ -266,7 +266,7 @@ void Reduced_Constraint_SimOpt<Real>::value( Vector<Real> &c, const Vector<Real>
 
 template<class Real>
 void Reduced_Constraint_SimOpt<Real>::applyJacobian( Vector<Real> &jv, const Vector<Real> &v,
-                    const Vector<Real> &z, Real &tol ) {
+                    const Vector<Real> &z, Tolerance<Real> &tol ) {
   njaco_++;
   // Solve state equation.
   solve_state_equation(z,tol);
@@ -281,7 +281,7 @@ void Reduced_Constraint_SimOpt<Real>::applyJacobian( Vector<Real> &jv, const Vec
 
 template<class Real>
 void Reduced_Constraint_SimOpt<Real>::applyAdjointJacobian( Vector<Real> &ajw, const Vector<Real> &w,
-                           const Vector<Real> &z, Real &tol ) {
+                           const Vector<Real> &z, Tolerance<Real> &tol ) {
   najac_++;
   // Solve state equation
   solve_state_equation(z,tol);
@@ -297,7 +297,7 @@ void Reduced_Constraint_SimOpt<Real>::applyAdjointJacobian( Vector<Real> &ajw, c
 template<class Real>
 void Reduced_Constraint_SimOpt<Real>::applyAdjointHessian( Vector<Real> &ahwv, const Vector<Real> &w,
                           const Vector<Real> &v, const Vector<Real> &z,
-                          Real &tol ) {
+                          Tolerance<Real> &tol ) {
   nhess_++;
   if ( useFDhessVec_ ) {
     Constraint<Real>::applyAdjointHessian(ahwv,w,v,z,tol);

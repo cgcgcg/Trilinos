@@ -49,8 +49,8 @@ private:
   using ObjectiveBase<Real,std::vector<Real>>::getStateSens;
   using ObjectiveBase<Real,std::vector<Real>>::solve_state_sensitivity;
 
-  void solve(int key, const Vector<Real> &z, Real &tol);
-  void solveSens(const Vector<Real> &v, const Vector<Real> &z, Real &tol);
+  void solve(int key, const Vector<Real> &z, Tolerance<Real> &tol);
+  void solveSens(const Vector<Real> &v, const Vector<Real> &z, Tolerance<Real> &tol);
 
 public:
   D_Objective( const Ptr<BilinearConstraint<Real>> &con0, // Objective Moment Operator
@@ -59,9 +59,9 @@ public:
                bool storage = true);
 
   void update(const Vector<Real> &z, UpdateType type, int iter = -1) override;
-  Real value( const Vector<Real> &z, Real &tol ) override;
-  void gradient( Vector<Real> &g, const Vector<Real> &z, Real &tol ) override;
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &z, Real &tol ) override;
+  Real value( const Vector<Real> &z, Tolerance<Real> &tol ) override;
+  void gradient( Vector<Real> &g, const Vector<Real> &z, Tolerance<Real> &tol ) override;
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &z, Tolerance<Real> &tol ) override;
 };
 
 } // END Het Namespace

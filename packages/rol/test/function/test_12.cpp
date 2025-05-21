@@ -8,7 +8,7 @@
 // @HEADER
 
 /*! \file  test_12.cpp
-    \brief Validate that the Householder Reflector implmentation 
+    \brief Validate that the Householder Reflector implmentation
            works correctly.
 */
 
@@ -19,10 +19,10 @@
 #include "ROL_Stream.hpp"
 #include "Teuchos_GlobalMPISession.hpp"
 
-template<class Real> 
+template<class Real>
 void printVector( const ROL::Vector<Real> &x, std::ostream &outStream ) {
 
-  ROL::Ptr<const std::vector<Real> > xp = 
+  ROL::Ptr<const std::vector<Real> > xp =
     dynamic_cast<const ROL::StdVector<Real>&>(x).getVector();
 
   outStream << "Standard Vector" << std::endl;
@@ -36,11 +36,11 @@ void printVector( const ROL::Vector<Real> &x, std::ostream &outStream ) {
 typedef double RealT;
 
 int main(int argc, char *argv[]) {
-  
+
   typedef ROL::Vector<RealT>    V;
   typedef ROL::StdVector<RealT> SV;
 
-   
+
 
   Teuchos::GlobalMPISession mpiSession(&argc, &argv);
 
@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
 
     int dim = 10;
 
-    RealT tol = std::sqrt(ROL::ROL_EPSILON<RealT>());  
+    ROL::Tolerance<RealT> tol = std::sqrt(ROL::ROL_EPSILON<RealT>());
 
     ROL::Ptr<V> v   = ROL::makePtr<SV>( ROL::makePtr<std::vector<RealT>>(dim) );
     ROL::Ptr<V> Hv  = v->clone();
@@ -77,15 +77,15 @@ int main(int argc, char *argv[]) {
     printVector(*v,*outStream);
 
     H.apply(*Hv, *v, tol);
-  
+
     printVector(*Hv,*outStream);
 
     H.apply(*HHv, *Hv, tol);
-  
+
     printVector(*HHv,*outStream);
 
   }
-  
+
   catch (std::logic_error& err) {
     *outStream << err.what() << "\n";
     errorFlag = -1000;
@@ -98,5 +98,3 @@ int main(int argc, char *argv[]) {
 
   return 0;
 }
-
-

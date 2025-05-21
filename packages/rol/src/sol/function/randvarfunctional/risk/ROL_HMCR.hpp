@@ -154,7 +154,7 @@ public:
   void updateValue(Objective<Real>         &obj,
                    const Vector<Real>      &x,
                    const std::vector<Real> &xstat,
-                   Real                    &tol) {
+                   Tolerance<Real>         &tol) {
     const Real rorder = static_cast<Real>(order_);
     // Expected value
     Real val = computeValue(obj,x,tol);
@@ -180,7 +180,7 @@ public:
   void updateGradient(Objective<Real>         &obj,
                       const Vector<Real>      &x,
                       const std::vector<Real> &xstat,
-                      Real                    &tol) {
+                      Tolerance<Real>         &tol) {
     const Real one(1);
     const Real rorder0 = static_cast<Real>(order_);
     const Real rorder1 = rorder0 - one;
@@ -234,7 +234,7 @@ public:
                      const std::vector<Real> &vstat,
                      const Vector<Real>      &x,
                      const std::vector<Real> &xstat,
-                     Real                    &tol) {
+                     Tolerance<Real>         &tol) {
     const Real one(1);
     const Real rorder0 = static_cast<Real>(order_);
     const Real rorder1 = rorder0-one;

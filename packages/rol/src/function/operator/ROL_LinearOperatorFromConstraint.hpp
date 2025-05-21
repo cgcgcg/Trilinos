@@ -41,12 +41,12 @@ public:
 
   virtual ~LinearOperatorFromConstraint() {}
 
-  virtual void apply( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  virtual void apply( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
     con_->applyJacobian(Hv,v,*x_,tol);
   }
 
   // Not implemented for generic equality constraint
-  virtual void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  virtual void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
     Hv.set(v);
   }
 

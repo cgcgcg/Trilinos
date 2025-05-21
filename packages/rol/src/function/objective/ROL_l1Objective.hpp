@@ -45,26 +45,26 @@ public:
     tmp_ = shift_->clone();
   }
   
-  Real value( const Vector<Real> &x, Real &tol ) {
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
     tmp_->set(x);
     tmp_->axpy(static_cast<Real>(-1),*shift_);
     tmp_->applyUnary(Elementwise::AbsoluteValue<Real>());
     return weights_->apply(*tmp_);
   }
 
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
     g.set(x);
     g.axpy(static_cast<Real>(-1),*shift_);
     g.applyUnary(Elementwise::Sign<Real>());
     g.applyBinary(Elementwise::Multiply<Real>(), *weights_);
   }
 
-  Real dirDeriv( const Vector<Real> &x, const Vector<Real> &d, Real &tol ) {
+  Real dirDeriv( const Vector<Real> &x, const Vector<Real> &d, Tolerance<Real> &tol ) {
     gradient(*tmp_, x, tol);
     return tmp_->apply(d);
   }
 
-  void prox( Vector<Real> &Pv, const Vector<Real> &v, Real t, Real &tol){
+  void prox( Vector<Real> &Pv, const Vector<Real> &v, Real t, Tolerance<Real> &tol){
     Pv.set(*shift_);
     Pv.axpy(static_cast<Real>(-1), v);
     Pv.scale(static_cast<Real>(1) / t);

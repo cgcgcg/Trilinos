@@ -16,31 +16,31 @@
 
 typedef double RealT;
 
-template<class Real> 
+template<class Real>
 class ObjectiveFunctionTest07_1 : public ROL::StdObjective<Real> {
 public:
-  Real value( const std::vector<Real> &x, Real &tol ) {
+  Real value( const std::vector<Real> &x, ROL::Tolerance<Real> &tol ) {
     Real half(0.5), quad(0);
     unsigned size = x.size();
     for ( unsigned i = 0; i < size; i++ ) {
-      quad += x[i]*x[i]; 
+      quad += x[i]*x[i];
     }
     return half*quad;
   }
 
-  void gradient( std::vector<Real> &g, const std::vector<Real> &x, Real &tol ) {
+  void gradient( std::vector<Real> &g, const std::vector<Real> &x, ROL::Tolerance<Real> &tol ) {
     g.assign(x.begin(),x.end());
   }
 
-  void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+  void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, ROL::Tolerance<Real> &tol ) {
     hv.assign(v.begin(),v.end());
   }
 };
 
-template<class Real> 
+template<class Real>
 class ObjectiveFunctionTest07_2 : public ROL::StdObjective<Real> {
 public:
-  Real value( const std::vector<Real> &x, Real &tol ) {
+  Real value( const std::vector<Real> &x, ROL::Tolerance<Real> &tol ) {
     Real lin(0);
     unsigned size = x.size();
     for ( unsigned i = 0; i < size; i++ ) {
@@ -49,28 +49,28 @@ public:
     return lin;
   }
 
-  void gradient( std::vector<Real> &g, const std::vector<Real> &x, Real &tol ) {
+  void gradient( std::vector<Real> &g, const std::vector<Real> &x, ROL::Tolerance<Real> &tol ) {
     g.assign(x.size(),1);
   }
 
-  void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+  void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, ROL::Tolerance<Real> &tol ) {
     hv.assign(x.size(),0);
   }
 };
 
-template<class Real> 
+template<class Real>
 class ObjectiveFunctionTest07_scalarize : public ROL::StdObjective<Real> {
 public:
-  Real value( const std::vector<Real> &x, Real &tol ) {
+  Real value( const std::vector<Real> &x, ROL::Tolerance<Real> &tol ) {
     return std::log(x[0]) * std::exp(x[1]);
   }
 
-  void gradient( std::vector<Real> &g, const std::vector<Real> &x, Real &tol ) {
+  void gradient( std::vector<Real> &g, const std::vector<Real> &x, ROL::Tolerance<Real> &tol ) {
     g[0] = std::exp(x[1])/x[0];
     g[1] = std::exp(x[1]) * std::log(x[0]);
   }
 
-  void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+  void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, ROL::Tolerance<Real> &tol ) {
     Real H11 = -std::exp(x[1])/(x[0]*x[0]);
     Real H12 = std::exp(x[1])/x[0];
     Real H21 = std::exp(x[1])/x[0];

@@ -32,23 +32,23 @@ namespace ZOO {
   public:
     Objective_Cubic() {}
 
-    Real value( const std::vector<Real> &x, Real &tol ) {
+    Real value( const std::vector<Real> &x, Tolerance<Real> &tol ) {
       return std::pow(x[0],3)+std::pow(x[1],3);
     }
 
-    void gradient( std::vector<Real> &g, const std::vector<Real> &x, Real &tol ) {
+    void gradient( std::vector<Real> &g, const std::vector<Real> &x, Tolerance<Real> &tol ) {
       const Real three(3);
       g[0] = three*std::pow(x[0],2);
       g[1] = three*std::pow(x[1],2);
     }
 #if USE_HESSVEC
-    void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+    void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Tolerance<Real> &tol ) {
       const Real six(6);
       hv[0] = six*x[0]*v[0];
       hv[1] = six*x[1]*v[1];
     }
 #endif
-    void invHessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+    void invHessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Tolerance<Real> &tol ) {
       const Real six(6);
       hv[0] = v[0]/(six*x[0]);
       hv[1] = v[1]/(six*x[1]);
@@ -60,22 +60,22 @@ namespace ZOO {
   public:
     Constraint_Cubic() {}
 
-    void value( std::vector<Real> &c, const std::vector<Real> &x, Real &tol ) {
+    void value( std::vector<Real> &c, const std::vector<Real> &x, Tolerance<Real> &tol ) {
       c[0] = std::pow(x[0],3) + x[1];
     }
 
-    void applyJacobian( std::vector<Real> &jv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+    void applyJacobian( std::vector<Real> &jv, const std::vector<Real> &v, const std::vector<Real> &x, Tolerance<Real> &tol ) {
       const Real three(3);
       jv[0] = three*std::pow(x[0],2)*v[0] + v[1];
     }
 
-    void applyAdjointJacobian( std::vector<Real> &ajv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+    void applyAdjointJacobian( std::vector<Real> &ajv, const std::vector<Real> &v, const std::vector<Real> &x, Tolerance<Real> &tol ) {
       const Real three(3);
       ajv[0] = three*std::pow(x[0],2)*v[0];
       ajv[1] = v[0];
     }
 #if USE_HESSVEC
-    void applyAdjointHessian( std::vector<Real> &ahuv, const std::vector<Real> &u, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+    void applyAdjointHessian( std::vector<Real> &ahuv, const std::vector<Real> &u, const std::vector<Real> &v, const std::vector<Real> &x, Tolerance<Real> &tol ) {
       const Real zero(0), six(6);
       ahuv[0] = six*x[0]*u[0]*v[0];
       ahuv[1] = zero;

@@ -31,29 +31,29 @@ void SlacklessObjective<Real>::update( const Vector<Real> &x, bool flag, int ite
 }
 
 template<typename Real> 
-Real SlacklessObjective<Real>::value( const Vector<Real> &x, Real &tol ) {
+Real SlacklessObjective<Real>::value( const Vector<Real> &x, Tolerance<Real> &tol ) {
   return obj_->value( *getOpt(x), tol );
 }
 
 template<typename Real> 
-Real SlacklessObjective<Real>::dirDeriv( const Vector<Real> &x, const Vector<Real> &d, Real &tol ) {
+Real SlacklessObjective<Real>::dirDeriv( const Vector<Real> &x, const Vector<Real> &d, Tolerance<Real> &tol ) {
   return obj_->dirDeriv(*getOpt(x),*getOpt(d),tol);
 }
 
 template<typename Real> 
-void SlacklessObjective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+void SlacklessObjective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
   zeroSlack(g);
   obj_->gradient(*getOpt(g),*getOpt(x),tol);
 }
 
 template<typename Real> 
-void SlacklessObjective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+void SlacklessObjective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
   zeroSlack(hv);
   obj_->hessVec(*getOpt(hv),*getOpt(v),*getOpt(x),tol);     
 }
 
 template<typename Real> 
-void SlacklessObjective<Real>::invHessVec( Vector<Real> &ihv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+void SlacklessObjective<Real>::invHessVec( Vector<Real> &ihv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
   obj_->invHessVec( *getOpt(ihv), *getOpt(v), *getOpt(x), tol );
   PartitionedVector<Real> &Pvp = dynamic_cast<PartitionedVector<Real>&>(ihv);
   const PartitionedVector<Real> &vp = dynamic_cast<const PartitionedVector<Real>&>(v);
@@ -64,7 +64,7 @@ void SlacklessObjective<Real>::invHessVec( Vector<Real> &ihv, const Vector<Real>
 }
 
 template<typename Real> 
-void SlacklessObjective<Real>::precond( Vector<Real> &Pv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+void SlacklessObjective<Real>::precond( Vector<Real> &Pv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
   obj_->precond( *getOpt(Pv), *getOpt(v), *getOpt(x), tol );
   PartitionedVector<Real> &Pvp = dynamic_cast<PartitionedVector<Real>&>(Pv);
   const PartitionedVector<Real> &vp = dynamic_cast<const PartitionedVector<Real>&>(v);

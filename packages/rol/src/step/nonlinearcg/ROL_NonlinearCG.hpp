@@ -18,10 +18,10 @@
             where \f$\alpha_k\f$ is a step length determined by a linesearch method
             and \f$\beta_k\f$ is the parameter which distinguishes various CG methods.
 
-            The standard notation is that \f$ y_k = g_{k+1}-g_k \$f, 
+            The standard notation is that \f$ y_k = g_{k+1}-g_k \$f,
             \f$ s_k = \alpha_k d_k = x_{k+1}-x_k \f$
 
-    Method                     | \f$\beta_k\f$                                  
+    Method                     | \f$\beta_k\f$
     ---------------------------|------------------------------------------------------
     Hestenes-Stiefel           | \f$ \frac{g_{k+1}^\top y_k}{d_k^\top y_k } \f$
     Fletcher-Reeves            | \f$ \frac{\|g_{k+1}\|^2}{\|g_k\|^2} \f$
@@ -31,8 +31,8 @@
     Liu-Storey                 | \f$ -\frac{g_k^\top y_{k-1} }{d_{k-1}^\top g_{k-1} \f$
     Dai-Yuan                   | \f$ \frac{\|g_{k+1}\|^2}{d_k^\top y_k} \f$
     Hager-Zhang                | \f$ \frac{g_{k+1}^\top y_k}{d_k^\top y_k} - 2 \frac{\|y_k\|^2}{d_k^\top y_k} \frac{g_{k+1}^\top d_k}{d_k^\top y_k} \f$
-    Oren-Luenberger            | \f$ \frac{g_{k+1}^\top y_k}{d_k^\top y_k} - \frac{\|y_k\|^2}{d_k^\top y_k} \frac{g_{k+1}^\top d_k}{d_k^\top y_k} \f$ 
-            
+    Oren-Luenberger            | \f$ \frac{g_{k+1}^\top y_k}{d_k^\top y_k} - \frac{\|y_k\|^2}{d_k^\top y_k} \frac{g_{k+1}^\top d_k}{d_k^\top y_k} \f$
+
 */
 
 #include "ROL_Types.hpp"
@@ -63,7 +63,7 @@ public:
 
   // Constructor
   NonlinearCG(ENonlinearCG type, int restart = 100) {
-    state_ = ROL::makePtr<NonlinearCGState<Real>>(); 
+    state_ = ROL::makePtr<NonlinearCGState<Real>>();
     state_->iter = 0;
     state_->grad.resize(1);
     state_->pstep.resize(1);
@@ -84,7 +84,7 @@ public:
     Real one(1);
     // Initialize vector storage
     if ( state_->iter == 0 ) {
-      if ( state_->nlcg_type != NONLINEARCG_FLETCHER_REEVES && 
+      if ( state_->nlcg_type != NONLINEARCG_FLETCHER_REEVES &&
            state_->nlcg_type != NONLINEARCG_FLETCHER_CONJDESC ) {
         y_ = g.clone();
       }
@@ -114,7 +114,7 @@ public:
           }
 
         case NONLINEARCG_DANIEL: {
-          Real htol(0);
+          Tolerance<Real> htol(0);
           obj.hessVec( *y_, *(state_->pstep[0]), x, htol );
           beta = - g.dot(*y_) / (state_->pstep[0])->dot(y_->dual());
           beta = std::max(beta, zero);
@@ -150,7 +150,7 @@ public:
           }
 
         case NONLINEARCG_HAGER_ZHANG: {
-          Real eta_0(1e-2), two(2); 
+          Real eta_0(1e-2), two(2);
           y_->set(g);
           y_->axpy(-one, *(state_->grad[0]));
           yd_->set(*y_);
@@ -178,7 +178,7 @@ public:
         default:
           ROL_TEST_FOR_EXCEPTION(!(isValidNonlinearCG(state_->nlcg_type)),
                           std::invalid_argument,
-                          ">>> ERROR (ROL_NonlinearCG.hpp): Invalid nonlinear CG type in the 'run' method!");  
+                          ">>> ERROR (ROL_NonlinearCG.hpp): Invalid nonlinear CG type in the 'run' method!");
       }
 
       s.axpy(beta, *(state_->pstep[0]));

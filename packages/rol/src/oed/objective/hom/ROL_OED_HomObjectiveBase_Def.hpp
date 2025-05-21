@@ -64,7 +64,7 @@ const Ptr<Vector<Real>> ObjectiveBase<Real,Key>::getStateSens() const {
 template<typename Real, typename Key>
 void ObjectiveBase<Real,Key>::solve_state_equation(const Key &param,
                                                    const Vector<Real> &z,
-                                                         Real &tol) { 
+                                                         Tolerance<Real> &tol) { 
   // Check if state has been computed.
   bool isComputed = storage_ ? stateStore_->get(*state_,param) : false;
   // Solve state equation if not done already.
@@ -87,7 +87,7 @@ void ObjectiveBase<Real,Key>::solve_state_equation(const Key &param,
 template<typename Real, typename Key>
 void ObjectiveBase<Real,Key>::solve_state_sensitivity(const Vector<Real> &v,
                              const Vector<Real> &z,
-                                   Real &tol) {
+                                   Tolerance<Real> &tol) {
   // Solve state sensitivity equation
   con_->applyJacobian_2(*res_,v,*state_,z,tol);
   res_->scale(static_cast<Real>(-1));

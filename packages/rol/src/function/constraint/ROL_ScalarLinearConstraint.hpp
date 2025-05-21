@@ -52,17 +52,17 @@ public:
   ScalarLinearConstraint(const Ptr<const Vector<Real>> &a,
                          const Real b);
 
-  void value(Vector<Real> &c, const Vector<Real> &x, Real &tol) override;
+  void value(Vector<Real> &c, const Vector<Real> &x, Tolerance<Real> &tol) override;
   void applyJacobian(Vector<Real> &jv, const Vector<Real> &v,
-               const Vector<Real> &x,  Real &tol) override;
+               const Vector<Real> &x,  Tolerance<Real> &tol) override;
   void applyAdjointJacobian(Vector<Real> &ajv, const Vector<Real> &v,
-                      const Vector<Real> &x,   Real &tol) override;
+                      const Vector<Real> &x,   Tolerance<Real> &tol) override;
   void applyAdjointHessian(Vector<Real> &ahuv, const Vector<Real> &u,
                      const Vector<Real> &v,    const Vector<Real> &x,
-                           Real &tol) override;
+                           Tolerance<Real> &tol) override;
   std::vector<Real> solveAugmentedSystem(Vector<Real> &v1, Vector<Real> &v2,
                                    const Vector<Real> &b1, const Vector<Real> &b2,
-                                   const Vector<Real> &x,  Real &tol) override;
+                                   const Vector<Real> &x,  Tolerance<Real> &tol) override;
 
 }; // class ScalarLinearConstraint
 

@@ -63,7 +63,7 @@ private:
     }
   }
 
-  void linear_solve(std::vector<Real> &u, std::vector<Real> &dl, std::vector<Real> &d, std::vector<Real> &du, 
+  void linear_solve(std::vector<Real> &u, std::vector<Real> &dl, std::vector<Real> &d, std::vector<Real> &du,
               const std::vector<Real> &r, const bool transpose = false) const {
     if ( r.size() == 1 ) {
       u.resize(1,r[0]/d[0]);
@@ -86,7 +86,7 @@ private:
       int nhrs = 1;
       lp.GTTRF(dim,&dl[0],&d[0],&du[0],&du2[0],&ipiv[0],&info);
       char trans = 'N';
-      if ( transpose ) { 
+      if ( transpose ) {
         trans = 'T';
       }
       lp.GTTRS(trans,dim,nhrs,&dl[0],&d[0],&du[0],&du2[0],&ipiv[0],&u[0],ldb,&info);
@@ -94,7 +94,7 @@ private:
   }
 
 public:
-  BurgersFEM(int nx = 128, Real nl = 1.0, Real cH1 = 1.0, Real cL2 = 1.0) 
+  BurgersFEM(int nx = 128, Real nl = 1.0, Real cH1 = 1.0, Real cL2 = 1.0)
     : nx_(nx), dx_(1.0/((Real)nx+1.0)), nl_(nl), cH1_(cH1), cL2_(cL2) {
     nu_ = 1.e-2;
     f_  = 0.0;
@@ -284,7 +284,7 @@ public:
   /*********************** PDE RESIDUAL AND SOLVE ****************************/
   /***************************************************************************/
   // Compute current PDE residual
-  void compute_residual(std::vector<Real> &r, const std::vector<Real> &u, 
+  void compute_residual(std::vector<Real> &r, const std::vector<Real> &u,
                   const std::vector<Real> &z) const {
     r.clear();
     r.resize(nx_,0.0);
@@ -672,10 +672,10 @@ private:
 
   typedef H1VectorPrimal<Real> PrimalStateVector;
   typedef H1VectorDual<Real> DualStateVector;
-  
+
   typedef L2VectorPrimal<Real> PrimalControlVector;
   typedef L2VectorDual<Real> DualControlVector;
-  
+
   typedef H1VectorDual<Real> PrimalConstraintVector;
   typedef H1VectorPrimal<Real> DualConstraintVector;
 
@@ -687,8 +687,8 @@ public:
                             const bool useHessian = true)
    : fem_(fem), useHessian_(useHessian) {}
 
-  void value(ROL::Vector<Real> &c, const ROL::Vector<Real> &u, 
-                  const ROL::Vector<Real> &z, Real &tol) {
+  void value(ROL::Vector<Real> &c, const ROL::Vector<Real> &u,
+                  const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     ROL::Ptr<std::vector<Real> > cp =
       dynamic_cast<PrimalConstraintVector&>(c).getVector();
     ROL::Ptr<const std::vector<Real> > up =
@@ -699,8 +699,8 @@ public:
     fem_->compute_residual(*cp,*up,*zp);
   }
 
-  void applyJacobian_1(ROL::Vector<Real> &jv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, 
-                       const ROL::Vector<Real> &z, Real &tol) {
+  void applyJacobian_1(ROL::Vector<Real> &jv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u,
+                       const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     ROL::Ptr<std::vector<Real> > jvp =
       dynamic_cast<PrimalConstraintVector&>(jv).getVector();
     ROL::Ptr<const std::vector<Real> > vp =
@@ -714,7 +714,7 @@ public:
   }
 
   void applyJacobian_2(ROL::Vector<Real> &jv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u,
-                       const ROL::Vector<Real> &z, Real &tol) {
+                       const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     ROL::Ptr<std::vector<Real> > jvp =
       dynamic_cast<PrimalConstraintVector&>(jv).getVector();
     ROL::Ptr<const std::vector<Real> > vp =
@@ -728,7 +728,7 @@ public:
   }
 
   void applyInverseJacobian_1(ROL::Vector<Real> &ijv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u,
-                              const ROL::Vector<Real> &z, Real &tol) {
+                              const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     ROL::Ptr<std::vector<Real> > ijvp =
       dynamic_cast<PrimalStateVector&>(ijv).getVector();
     ROL::Ptr<const std::vector<Real> > vp =
@@ -741,8 +741,8 @@ public:
     fem_->apply_inverse_pde_jacobian(*ijvp,*vp,*up,*zp);
   }
 
-  void applyAdjointJacobian_1(ROL::Vector<Real> &ajv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, 
-                              const ROL::Vector<Real> &z, Real &tol) {
+  void applyAdjointJacobian_1(ROL::Vector<Real> &ajv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u,
+                              const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     ROL::Ptr<std::vector<Real> > jvp =
       dynamic_cast<DualStateVector&>(ajv).getVector();
     ROL::Ptr<const std::vector<Real> > vp =
@@ -756,7 +756,7 @@ public:
   }
 
   void applyAdjointJacobian_2(ROL::Vector<Real> &jv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u,
-                              const ROL::Vector<Real> &z, Real &tol) {
+                              const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     ROL::Ptr<std::vector<Real> > jvp =
       dynamic_cast<DualControlVector&>(jv).getVector();
     ROL::Ptr<const std::vector<Real> > vp =
@@ -770,7 +770,7 @@ public:
   }
 
   void applyInverseAdjointJacobian_1(ROL::Vector<Real> &iajv, const ROL::Vector<Real> &v,
-                                     const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+                                     const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     ROL::Ptr<std::vector<Real> > iajvp =
       dynamic_cast<DualConstraintVector&>(iajv).getVector();
     ROL::Ptr<const std::vector<Real> > vp =
@@ -784,7 +784,7 @@ public:
   }
 
   void applyAdjointHessian_11(ROL::Vector<Real> &ahwv, const ROL::Vector<Real> &w, const ROL::Vector<Real> &v,
-                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     if ( useHessian_ ) {
       ROL::Ptr<std::vector<Real> > ahwvp =
         dynamic_cast<DualStateVector&>(ahwv).getVector();
@@ -803,9 +803,9 @@ public:
       ahwv.zero();
     }
   }
-  
+
   void applyAdjointHessian_12(ROL::Vector<Real> &ahwv, const ROL::Vector<Real> &w, const ROL::Vector<Real> &v,
-                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     if ( useHessian_ ) {
       ROL::Ptr<std::vector<Real> > ahwvp =
         dynamic_cast<DualControlVector&>(ahwv).getVector();
@@ -825,7 +825,7 @@ public:
     }
   }
   void applyAdjointHessian_21(ROL::Vector<Real> &ahwv, const ROL::Vector<Real> &w, const ROL::Vector<Real> &v,
-                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     if ( useHessian_ ) {
       ROL::Ptr<std::vector<Real> > ahwvp =
         dynamic_cast<DualStateVector&>(ahwv).getVector();
@@ -845,7 +845,7 @@ public:
     }
   }
   void applyAdjointHessian_22(ROL::Vector<Real> &ahwv, const ROL::Vector<Real> &w, const ROL::Vector<Real> &v,
-                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+                              const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     if ( useHessian_ ) {
       ROL::Ptr<std::vector<Real> > ahwvp =
         dynamic_cast<DualControlVector&>(ahwv).getVector();

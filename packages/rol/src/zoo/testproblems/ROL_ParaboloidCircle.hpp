@@ -56,7 +56,7 @@ namespace ZOO {
   public:
     Objective_ParaboloidCircle() {}
 
-    Real value( const Vector<Real> &x, Real &tol ) {
+    Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
  
       
       ROL::Ptr<const vector> xp = getVector<XPrim>(x); 
@@ -73,7 +73,7 @@ namespace ZOO {
       return val;
     }
 
-    void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+    void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
 
       
       ROL::Ptr<const vector> xp = getVector<XPrim>(x);
@@ -96,7 +96,7 @@ namespace ZOO {
       (*gp)[1] = two*x2;
     }
 
-    void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+    void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
 
       
       ROL::Ptr<const vector> xp = getVector<XPrim>(x);
@@ -153,7 +153,7 @@ namespace ZOO {
   public:
     Constraint_ParaboloidCircle() {}
 
-    void value( Vector<Real> &c, const Vector<Real> &x, Real &tol ) {
+    void value( Vector<Real> &c, const Vector<Real> &x, Tolerance<Real> &tol ) {
 
       
       ROL::Ptr<const vector> xp = getVector<XPrim>(x);
@@ -175,7 +175,7 @@ namespace ZOO {
       (*cp)[0] = (x1-two)*(x1-two) + x2*x2 - one;
     }
   
-    void applyJacobian( Vector<Real> &jv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+    void applyJacobian( Vector<Real> &jv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
 
       
       ROL::Ptr<const vector> xp = getVector<XPrim>(x);
@@ -204,7 +204,7 @@ namespace ZOO {
       (*jvp)[0] = two*(x1-two)*v1 + two*x2*v2;
     } //applyJacobian
 
-    void applyAdjointJacobian( Vector<Real> &ajv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+    void applyAdjointJacobian( Vector<Real> &ajv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
 
       
       ROL::Ptr<const vector> xp = getVector<XPrim>(x);
@@ -235,7 +235,7 @@ namespace ZOO {
 
     } //applyAdjointJacobian
 
-    void applyAdjointHessian( Vector<Real> &ahuv, const Vector<Real> &u, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+    void applyAdjointHessian( Vector<Real> &ahuv, const Vector<Real> &u, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
       
       bool useFD = true;
 

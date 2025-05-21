@@ -108,7 +108,7 @@ TrustRegionAlgorithm<Real>::TrustRegionAlgorithm(ParameterList &list,
 template<typename Real>
 void TrustRegionAlgorithm<Real>::initialize(Vector<Real>          &x,
                                             const Vector<Real>    &g,
-                                            Real                   ftol,
+                                            Tolerance<Real>       ftol,
                                             Objective<Real>       &sobj,
                                             Objective<Real>       &nobj,
                                             Vector<Real>          &px,
@@ -140,8 +140,8 @@ void TrustRegionAlgorithm<Real>::initialize(Vector<Real>          &x,
 }
 
 template<typename Real>
-Real TrustRegionAlgorithm<Real>::computeValue(Real inTol,
-                                              Real &outTol,
+Real TrustRegionAlgorithm<Real>::computeValue(Tolerance<Real> inTol,
+                                              Tolerance<Real> &outTol,
                                               Real pRed,
                                               Real &fold,
                                               int iter,
@@ -174,11 +174,11 @@ void TrustRegionAlgorithm<Real>::computeGradient(const Vector<Real> &x,
                                                  Objective<Real> &sobj,
                                                  Objective<Real> &nobj,
                                                  bool accept,
-                                                 Real &gtol,
+                                                 Tolerance<Real> &gtol,
                                                  Real &gnorm,
                                                  std::ostream &outStream) const {
   if ( useInexact_[1] ) {
-    Real gtol0 = scale0_*del;
+    Tolerance<Real> gtol0 = scale0_*del;
     if (accept) gtol  = gtol0 + static_cast<Real>(1);
     else        gtol0 = scale0_*std::min(gnorm,del);
     while ( gtol > gtol0 ) {
@@ -209,7 +209,7 @@ void TrustRegionAlgorithm<Real>::run(Vector<Real>          &x,
                                      std::ostream          &outStream ) {
   const Real zero(0), one(1);
   //Real tol0 = std::sqrt(ROL_EPSILON<Real>());
-  Real inTol = static_cast<Real>(0.1)*ROL_OVERFLOW<Real>(), outTol(inTol);
+  Tolerance<Real> inTol = static_cast<Real>(0.1)*ROL_OVERFLOW<Real>(), outTol(inTol);
   Real strial(0), ntrial(0), smodel(0), Ftrial(0), pRed(0), rho(1);
   // Initialize trust-region data
   std::vector<std::string> output;
@@ -356,7 +356,7 @@ Real TrustRegionAlgorithm<Real>::dcauchy(Vector<Real> &s,
                                          Vector<Real> &dwa1,
                                          std::ostream &outStream) {
   const Real half(0.5), sold(sval), nold(nval);
-  Real tol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
   bool interp = false;
   Real gs(0), snorm(0), Qk(0), pRed(0);
   // Compute s = P(x[0] - alpha g[0]) - x[0]
@@ -472,7 +472,7 @@ void TrustRegionAlgorithm<Real>::dspg2(Vector<Real>             &y,
   //       g = Current gradient
   const Real half(0.5), one(1), safeguard(1e2*ROL_EPSILON<Real>());
   const Real mprev(sval+nval);
-  Real tol(std::sqrt(ROL_EPSILON<Real>()));
+  Tolerance<Real> tol(std::sqrt(ROL_EPSILON<Real>()));
   Real coeff(1), alpha(1), alphaMax(1), lambda(1), lambdaTmp(1);
   Real gs(0), ss(0), gnorm(0), s0s0(0), ss0(0), sHs(0), snorm(0), nold(nval);
   pwa1.zero();
@@ -590,7 +590,7 @@ void TrustRegionAlgorithm<Real>::dspg(Vector<Real>             &y,
   //       g = Current gradient
   const Real half(0.5), one(1), safeguard(1e2*ROL_EPSILON<Real>());
   const Real mval(sval+nval);
-  Real tol(std::sqrt(ROL_EPSILON<Real>()));
+  Tolerance<Real> tol(std::sqrt(ROL_EPSILON<Real>()));
   Real mcomp(0), mval_min(0), sval_min(0), nval_min(0);
   Real alpha(1), coeff(1), lambda(1), lambdaTmp(1);
   Real snew(sval), nnew(nval), mnew(mval);
@@ -728,7 +728,8 @@ void TrustRegionAlgorithm<Real>::dprox(Vector<Real> &x,
   // Solve ||P(t*x0 + (1-t)*(x-x0))-x0|| = del using Brent's method
   const Real zero(0), half(0.5), one(1), two(2), three(3);
   const Real eps(ROL_EPSILON<Real>()), tol0(1e1*eps), fudge(1.0-1e-2*sqrt(eps));
-  Real f0(0), f1(0), fc(0), t0(0), t1(1), tc(0), d1(1), d2(1), tol(1);
+  Real f0(0), f1(0), fc(0), t0(0), t1(1), tc(0), d1(1), d2(1);
+  Tolerance<Real> tol(1);
   Real p(0), q(0), r(0), s(0), m(0);
   int cnt(state_->nprox);
   nobj.prox(y1, x, t, tol); state_->nprox++;
@@ -771,7 +772,7 @@ void TrustRegionAlgorithm<Real>::dprox(Vector<Real> &x,
       else          p = -p;
       s  = d1;
       d1 = d2;
-      if (two*p < three*m*q-std::abs(tol*q) && p < std::abs(half*s*q)) {
+      if (two*p < three*m*q-std::abs(tol.get()*q) && p < std::abs(half*s*q)) {
         d2 = p/q;
       }
       else {
@@ -780,8 +781,8 @@ void TrustRegionAlgorithm<Real>::dprox(Vector<Real> &x,
     }
     t0 = t1; f0 = f1; y0.set(y1);
     if (std::abs(d2) > tol) t1 += d2;
-    else if (m > zero)      t1 += tol;
-    else                    t1 -= tol;
+    else if (m > zero)      t1 += tol.get();
+    else                    t1 -= tol.get();
     pwa.set(x); pwa.scale(t1); pwa.axpy(one-t1,x0);
     nobj.prox(y1, pwa, t1*t, tol); state_->nprox++;
     pwa.set(y1); pwa.axpy(-one,x0);
@@ -818,8 +819,8 @@ void TrustRegionAlgorithm<Real>::dbls(Real &alpha, Real &nval, Real &pred,
                                       Real kappa, Real gs,
                                       Objective<Real> &nobj,
                                       Vector<Real> &pwa) {
-  Real tol(std::sqrt(ROL_EPSILON<Real>()));
-  const Real eps(1e-2*std::sqrt(ROL_EPSILON<Real>())), tol0(1e4*tol);
+  Tolerance<Real> tol(std::sqrt(ROL_EPSILON<Real>()));
+  const Real eps(1e-2*std::sqrt(ROL_EPSILON<Real>())), tol0(1e4*tol.get());
   const Real eps0(1e2*ROL_EPSILON<Real>());
   const unsigned maxit(50);
   const Real zero(0), half(0.5), one(1), two(2);
@@ -985,7 +986,8 @@ void TrustRegionAlgorithm<Real>::dncg(Vector<Real>             &y,
   //       dwa   = the Hessian applied to the step
   const Real zero(0), half(0.5), one(1), two(2);
   const Real del2(del*del);
-  Real tol(std::sqrt(ROL_EPSILON<Real>())), safeguard(tol);
+  Tolerance<Real> tol(std::sqrt(ROL_EPSILON<Real>()));
+  Real safeguard(tol.get());
   Real mold(sval+nval), nold(nval);
   Real snorm(0), snorm0(0), gnorm(0), gnorm0(0), gnorm2(0);
   Real alpha(1), beta(1), lambdaTmp(1), lambda(1), eta(etaNCG_);
@@ -1027,7 +1029,7 @@ void TrustRegionAlgorithm<Real>::dncg(Vector<Real>             &y,
     ds = s.dot(pwa3);
     alphaMax = (-ds + std::sqrt(ds*ds + ss*(del2 - snorm0*snorm0)))/ss;
     dbls(alpha,nold,pred,y,s,lam1,alphaMax,sHs,gs,nobj,pwa5);
-    
+
     //if (sHs <= safeguard) alpha = alphaMax;
     //else {
     //  pwa5.set(y); pwa5.axpy(alphaMax, s);
@@ -1046,7 +1048,7 @@ void TrustRegionAlgorithm<Real>::dncg(Vector<Real>             &y,
     pwa3.set(y); pwa3.axpy(-one,x);
     ss0   += alpha*(alpha*ss + two*ds);
     snorm0 = std::sqrt(ss0); // pwa3.norm();
-    
+
     if (snorm0 >= (one-safeguard)*del) { SPflag_ = 2; break; }
 
     // Update spectral step length

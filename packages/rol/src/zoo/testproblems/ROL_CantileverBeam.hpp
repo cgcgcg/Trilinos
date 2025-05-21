@@ -39,7 +39,7 @@ public:
     l_.clear(); l_.resize(nseg, len_/static_cast<Real>(nseg_));
   }
 
-  Real value( const std::vector<Real> &x, Real &tol ) {
+  Real value( const std::vector<Real> &x, Tolerance<Real> &tol ) {
     Real val(0);
     for (int i = 0; i < nseg_; ++i) {
       val += l_[i]*x[i]*x[i+nseg_];
@@ -47,14 +47,14 @@ public:
     return val;
   }
 
-  void gradient( std::vector<Real> &g, const std::vector<Real> &x, Real &tol ) {
+  void gradient( std::vector<Real> &g, const std::vector<Real> &x, Tolerance<Real> &tol ) {
     for (int i = 0; i < nseg_; ++i) {
       g[i]       = l_[i]*x[i+nseg_];
       g[i+nseg_] = l_[i]*x[i];
     }
   }  
 
-  void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+  void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Tolerance<Real> &tol ) {
     for (int i = 0; i < nseg_; ++i) {
       hv[i]       = l_[i]*v[i+nseg_];
       hv[i+nseg_] = l_[i]*v[i];
@@ -86,7 +86,7 @@ public:
     }
   }
 
-  void value( std::vector<Real> &c, const std::vector<Real> &x, Real &tol ) {
+  void value( std::vector<Real> &c, const std::vector<Real> &x, Tolerance<Real> &tol ) {
     const Real one(1), two(2), three(3), twelve(12), twenty(20);
     std::vector<Real> y1(nseg_), yp(nseg_);
     Real Inertia(0), sigma(0), sumy1(0), sumypl(0);
@@ -112,7 +112,7 @@ public:
   }
 
   void applyJacobian( std::vector<Real> &jv, const std::vector<Real> &v, 
-                      const std::vector<Real> &x, Real &tol ) {
+                      const std::vector<Real> &x, Tolerance<Real> &tol ) {
     const Real two(2), three(3), six(6), twelve(12), twenty(20);
     // const Real one(1); // Unused
     Real Inertia(0), dyN(0), sumW(0), sumH(0);
@@ -133,7 +133,7 @@ public:
   }
 
   void applyAdjointJacobian( std::vector<Real> &ajv, const std::vector<Real> &v, 
-                             const std::vector<Real> &x, Real &tol ) {
+                             const std::vector<Real> &x, Tolerance<Real> &tol ) {
     const Real two(2), three(3), six(6), twelve(12), twenty(20);
 //    const Real one(1);  // Unused
     Real Inertia(0), dyN(0);
@@ -154,7 +154,7 @@ public:
 
 //  void applyAdjointHessian( std::vector<Real> &ahuv, const std::vector<Real> &u,
 //                            const std::vector<Real> &v, const std::vector<Real> &x,
-//                            Real &tol ) {
+//                            Tolerance<Real> &tol ) {
 //  }
 
 }; // class Constraint_CantileverBeam

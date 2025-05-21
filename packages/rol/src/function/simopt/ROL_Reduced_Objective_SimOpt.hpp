@@ -151,23 +151,23 @@ public:
              \f$\widehat{J}(z) = J(u(z),z)\f$ where
              \f$u=u(z)\in\mathcal{U}\f$ solves \f$e(u,z) = 0\f$.
   */
-  Real value( const Vector<Real> &z, Real &tol ) override;
+  Real value( const Vector<Real> &z, Tolerance<Real> &tol ) override;
 
   /** \brief Given \f$z\in\mathcal{Z}\f$, evaluate the gradient of the objective function
              \f$\nabla\widehat{J}(z) = J_z(z) + c_z(u,z)^*\lambda\f$ where
              \f$\lambda=\lambda(u,z)\in\mathcal{C}^*\f$ solves
              \f$e_u(u,z)^*\lambda+J_u(u,z) = 0\f$.
   */
-  void gradient( Vector<Real> &g, const Vector<Real> &z, Real &tol ) override;
+  void gradient( Vector<Real> &g, const Vector<Real> &z, Tolerance<Real> &tol ) override;
 
   /** \brief Given \f$z\in\mathcal{Z}\f$, evaluate the Hessian of the objective function
              \f$\nabla^2\widehat{J}(z)\f$ in the direction \f$v\in\mathcal{Z}\f$.
   */
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &z, Real &tol ) override;
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &z, Tolerance<Real> &tol ) override;
 
   /** \brief Apply a reduced Hessian preconditioner.
   */
-  virtual void precond( Vector<Real> &Pv, const Vector<Real> &v, const Vector<Real> &z, Real &tol ) override;
+  virtual void precond( Vector<Real> &Pv, const Vector<Real> &v, const Vector<Real> &z, Tolerance<Real> &tol ) override;
 
   /** Write summary to stream.
   */
@@ -182,19 +182,19 @@ public:
   void setParameter(const std::vector<Real> &param) override;
 
 private:
-  void solve_state_equation(const Vector<Real> &z, Real &tol);
+  void solve_state_equation(const Vector<Real> &z, Tolerance<Real> &tol);
 
   /** \brief Given \f$(u,z)\in\mathcal{U}\times\mathcal{Z}\f$ which solves the state equation, solve
              the adjoint equation
              \f$c_u(u,z)^*\lambda + J_u(u,z) = 0\f$ for \f$\lambda=\lambda(u,z)\in\mathcal{C}^*\f$.
   */
-  void solve_adjoint_equation(const Vector<Real> &z, Real &tol);
+  void solve_adjoint_equation(const Vector<Real> &z, Tolerance<Real> &tol);
 
   /** \brief Given \f$(u,z)\in\mathcal{U}\times\mathcal{Z}\f$ which solves the state equation and
              a direction \f$v\in\mathcal{Z}\f$, solve the state senstivity equation
              \f$c_u(u,z)s + c_z(u,z)v = 0\f$ for \f$s=u_z(z)v\in\mathcal{U}\f$.
   */
-  void solve_state_sensitivity(const Vector<Real> &v, const Vector<Real> &z, Real &tol);
+  void solve_state_sensitivity(const Vector<Real> &v, const Vector<Real> &z, Tolerance<Real> &tol);
 
   /** \brief Given \f$(u,z)\in\mathcal{U}\times\mathcal{Z}\f$, the adjoint variable
              \f$\lambda\in\mathcal{C}^*\f$, and a direction \f$v\in\mathcal{Z}\f$, solve the
@@ -203,7 +203,7 @@ private:
                             + c_{zu}(u,z)(\cdot,v)^*\lambda = 0\f$
              for \f$p = \lambda_z(u(z),z)v\in\mathcal{C}^*\f$.
   */
-  void solve_adjoint_sensitivity(const Vector<Real> &v, const Vector<Real> &z, Real &tol);
+  void solve_adjoint_sensitivity(const Vector<Real> &v, const Vector<Real> &z, Tolerance<Real> &tol);
 
 }; // class Reduced_Objective_SimOpt
 

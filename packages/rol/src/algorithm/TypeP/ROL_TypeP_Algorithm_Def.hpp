@@ -49,7 +49,7 @@ void Algorithm<Real>::pgstep(Vector<Real>       &pgiter,
                              const Vector<Real> &x,
                              const Vector<Real> &dg,
                              Real                t,
-                             Real               &tol) const {
+                             Tolerance<Real>    &tol) const {
   pgstep.set(x);
   pgstep.axpy(-t,dg);
   nobj.prox(pgiter,pgstep,t,tol);
@@ -123,14 +123,14 @@ void Algorithm<Real>::writeOutput( std::ostream& os, bool write_header ) const {
     os << std::endl;
   }
   else {
-    os << "  "; 
-    os << std::setw(6)  << std::left << state_->iter;  
-    os << std::setw(15) << std::left << state_->value; 
-    os << std::setw(15) << std::left << state_->gnorm; 
-    os << std::setw(15) << std::left << state_->snorm; 
-    os << std::setw(10) << std::left << state_->nfval;              
-    os << std::setw(10) << std::left << state_->ngrad;              
-    os << std::setw(10) << std::left << state_->nprox; 
+    os << "  ";
+    os << std::setw(6)  << std::left << state_->iter;
+    os << std::setw(15) << std::left << state_->value;
+    os << std::setw(15) << std::left << state_->gnorm;
+    os << std::setw(15) << std::left << state_->snorm;
+    os << std::setw(10) << std::left << state_->nfval;
+    os << std::setw(10) << std::left << state_->ngrad;
+    os << std::setw(10) << std::left << state_->nprox;
     os << std::endl;
   }
   os.flags(osFlags);

@@ -29,20 +29,20 @@ template<class Real>
 class NullObjective : public ROL::Objective<Real> {
   typedef ROL::Vector<Real>  V;
 public:
-  Real value( const V &x, Real &tol ) {
+  Real value( const V &x, ROL::Tolerance<Real> &tol ) {
     return Real(0.0);
   }
-  void gradient( V &g, const V &x, Real &tol ) {
+  void gradient( V &g, const V &x, ROL::Tolerance<Real> &tol ) {
     g.zero();
   }
-  void hessVec( V &hv, const V &v, const V &x, Real &tol ) {
+  void hessVec( V &hv, const V &v, const V &x, ROL::Tolerance<Real> &tol ) {
     hv.zero();
   }
 };
 
 template<class Real>
 void printVector( const ROL::Vector<Real> &x, std::ostream &outStream ) {
-  ROL::Ptr<const std::vector<Real> > xp = 
+  ROL::Ptr<const std::vector<Real> > xp =
     dynamic_cast<const ROL::StdVector<Real>&>(x).getVector();
 
   for( size_t i=0; i<xp->size(); ++i ) {
@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
   int iprint = argc - 1;
   ROL::Ptr<std::ostream> outStream;
   ROL::nullstream bhs;
-  if( iprint > 0 ) 
+  if( iprint > 0 )
     outStream = ROL::makePtrFromRef(std::cout);
   else
     outStream = ROL::makePtrFromRef(bhs);
@@ -97,8 +97,8 @@ int main(int argc, char *argv[]) {
 
     int dim = 4;
     int numTestVectors = 19;
- 
-    ROL::Ptr<vector> x_ptr  = ROL::makePtr<vector>(dim, 0.0); 
+
+    ROL::Ptr<vector> x_ptr  = ROL::makePtr<vector>(dim, 0.0);
     ROL::Ptr<vector> d_ptr  = ROL::makePtr<vector>(dim, 0.0);
     ROL::Ptr<vector> v_ptr  = ROL::makePtr<vector>(dim, 0.0);
     ROL::Ptr<vector> l_ptr  = ROL::makePtr<vector>(dim, 0.0);
@@ -167,7 +167,7 @@ int main(int argc, char *argv[]) {
 
     *outStream << "\nChecking Objective value" << std::endl;
 
-    RealT tol = std::sqrt(ROL::ROL_EPSILON<RealT>());
+    ROL::Tolerance<RealT> tol = std::sqrt(ROL::ROL_EPSILON<RealT>());
     *outStream   << std::setw(16) << "x[i], i=0,1,2,3"
                  << std::setw(20) << "Computed Objective"
                  << std::setw(20) << "Exact Objective" << std::endl;

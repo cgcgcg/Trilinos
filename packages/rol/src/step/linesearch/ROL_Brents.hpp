@@ -22,7 +22,7 @@ namespace ROL {
 template<class Real>
 class Brents : public LineSearch<Real> {
 private:
-  Real tol_;
+  Tolerance<Real> tol_;
   int niter_;
   bool test_;
 

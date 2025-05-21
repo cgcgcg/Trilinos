@@ -47,18 +47,18 @@ public:
   LinearObjective(const Ptr<Vector<Real>>  &theta,
                   const Ptr<TraceSampler<Real>> &traceSampler);
 
-  Real value( const Vector<Real> &u, const Vector<Real> &z, Real &tol ) override;
-  void gradient_1( Vector<Real> &g, const Vector<Real> &u, const Vector<Real> &z, Real &tol ) override;
+  Real value( const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) override;
+  void gradient_1( Vector<Real> &g, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) override;
 
-  void gradient_2( Vector<Real> &g, const Vector<Real> &u, const Vector<Real> &z, Real &tol ) override;
+  void gradient_2( Vector<Real> &g, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) override;
 
-  void hessVec_11( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Real &tol ) override;
+  void hessVec_11( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) override;
 
-  void hessVec_12( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Real &tol ) override;
+  void hessVec_12( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) override;
 
-  void hessVec_21( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Real &tol ) override;
+  void hessVec_21( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) override;
 
-  void hessVec_22( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Real &tol ) override;
+  void hessVec_22( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) override;
 
 }; // class LinearObjective
 

@@ -18,8 +18,8 @@ namespace HS_005 {
 template<class Real>
 class Obj {
 public:
-  template<class ScalarT> 
-  ScalarT value( const std::vector<ScalarT> &x, Real &tol ) {
+  template<class ScalarT>
+  ScalarT value( const std::vector<ScalarT> &x, ROL::Tolerance<Real> &tol ) {
     ScalarT a = x[0]+x[1];
     ScalarT b = x[1]-x[0];
     return std::sin(a) + b*b - 1.5*x[0] + 2.5*x[1] + 1.0;
@@ -28,11 +28,11 @@ public:
 }
 
 
-template<class Real> 
+template<class Real>
 class Problem_005 : public ROL::NonlinearProgram<Real> {
 
 
-  
+
 
   typedef ROL::Vector<Real>             V;
   typedef ROL::Objective<Real>          OBJ;
@@ -50,7 +50,7 @@ public:
 
   int dimension_x() { return 2; }
 
-  const ROL::Ptr<OBJ> getObjective() { 
+  const ROL::Ptr<OBJ> getObjective() {
     return ROL::makePtr<ROL::Sacado_StdObjective<Real,HS_005::Obj>>();
   }
 
@@ -58,13 +58,13 @@ public:
     Real x[] = {0,0};
     return NP::createOptVector(x);
   };
-   
+
   bool initialGuessIsFeasible() { return true; }
-  
-  Real getInitialObjectiveValue() { 
+
+  Real getInitialObjectiveValue() {
     return Real(1.0);
   }
- 
+
   Real getSolutionObjectiveValue() {
     return Real(-std::sqrt(3.0)/2.0-pi/3.0);
   }
@@ -73,7 +73,7 @@ public:
     Real x[] = {-pi/3.0+0.5,-pi/3.0-0.5};
     return ROL::CreatePartitionedVector(NP::createOptVector(x));
   }
- 
+
 };
 
 } // namespace HS

@@ -19,7 +19,7 @@
 #include "ROL_Elementwise_Function.hpp"
 #include "ROL_Elementwise_Reduce.hpp"
 
-namespace ROL { 
+namespace ROL {
 
 template<class Real>
 class LinMore : public TrustRegion<Real> {
@@ -112,7 +112,7 @@ public:
             const Real              del,
             TrustRegionModel<Real> &model ) {
     const Real zero(0), half(0.5), one(1);
-    Real tol0 = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol0 = std::sqrt(ROL_EPSILON<Real>());
     Real gfnorm(0), gfnormf(0), tol(0), stol(0);
     int dim = s.dimension();
     // Compute Cauchy point (TRON notation: x_ = x[1])
@@ -244,14 +244,14 @@ private:
                 Vector<Real> &pwa) {
     const Real zero(0), one(1);
     bpmin = one; bpmax = zero;
-    Real lbpmin = one, lbpmax = zero, ubpmin = one, ubpmax = zero; 
+    Real lbpmin = one, lbpmax = zero, ubpmin = one, ubpmax = zero;
     // Compute lower break points
     if (model.getBoundConstraint()->isLowerActivated()) {
       pwa.set(x);
       pwa.axpy(-one,*model.getBoundConstraint()->getLowerBound());
       pwa.applyBinary(lbp_,s);
       if (pwa.norm() != zero) {
-        lbpmin = pwa.reduce(pmin_); 
+        lbpmin = pwa.reduce(pmin_);
         lbpmax = pwa.reduce(pmax_);
       }
     }
@@ -261,7 +261,7 @@ private:
       pwa.axpy(-one,x);
       pwa.applyBinary(ubp_,s);
       if (pwa.norm() != zero) {
-        ubpmin = pwa.reduce(pmin_); 
+        ubpmin = pwa.reduce(pmin_);
         ubpmax = pwa.reduce(pmax_);
       }
     }
@@ -296,7 +296,7 @@ private:
                Vector<Real> &pwa1, Vector<Real> &pwa2, Vector<Real> &dwa) {
     const Real half(0.5), one(1), mu0(0.01), interpf(0.1), extrapf(10);
     // const Real zero(0); // Unused
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
     bool interp = false;
     Real q(0), gs(0), bpmin(0), bpmax(0), snorm(0);
     // Compute minimal and maximal break points of x[0] - alpha g[0]
@@ -364,7 +364,7 @@ private:
                const Vector<Real> &g, TrustRegionModel<Real> &model,
                Vector<Real> &pwa, Vector<Real> &dwa) {
     const Real half(0.5), one(1), mu0(0.01), interpf(0.5);
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
     Real beta(1), snorm(0), q(0), gs(0), bpmin(0), bpmax(0);
     int nsteps = 0;
     // Compute break points of x+beta*s;
@@ -444,7 +444,7 @@ private:
               const Real tol, const Real stol, const int itermax,
               Vector<Real> &p, Vector<Real> &q, Vector<Real> &r,
               Vector<Real> &t) {
-    Real tol0 = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol0 = std::sqrt(ROL_EPSILON<Real>());
     const Real zero(0), one(1), two(2);
     Real rho(0), tnorm(0), rnorm(0), rnorm0(0), kappa(0), beta(0), sigma(0), alpha(0), rtr(0);
     Real sMs(0), pMp(0), sMp(0);
@@ -505,7 +505,7 @@ private:
     if (iter == itermax) {
       iflag = 1;
     }
-    if (iflag != 1) { 
+    if (iflag != 1) {
       iter++;
     }
     return w.norm();

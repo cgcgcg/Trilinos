@@ -95,7 +95,7 @@ public:
       isInitialized_ = true;
     }
 
-    Real itol  = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> itol  = std::sqrt(ROL_EPSILON<Real>());
 
     // Compute initial residual
     if(useInitialGuess_) {
@@ -164,7 +164,7 @@ public:
       // Apply Givens rotations
       for( int k=0; k<=iter-1; ++k ) {
         temp            =  (*cs_)(k)*(*H_)(k,iter) + (*sn_)(k)*(*H_)(k+1,iter);
-        (*H_)(k+1,iter) = -(*sn_)(k)*(*H_)(k,iter) + (*cs_)(k)*(*H_)(k+1,iter); 
+        (*H_)(k+1,iter) = -(*sn_)(k)*(*H_)(k,iter) + (*cs_)(k)*(*H_)(k+1,iter);
         (*H_)(k,iter)   = temp;
       }
 
@@ -241,4 +241,3 @@ public:
 } // namespace ROL
 
 #endif // ROL_GMRES_H
-

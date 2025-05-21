@@ -23,11 +23,11 @@ namespace ROL {
 template<class Real>
 class IdentityOperator : public LinearOperator<Real> {
 
-  void apply( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  void apply( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
     Hv.set(v); 
   }
 
-  void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
     Hv.set(v); 
   }
 

@@ -53,7 +53,7 @@ public:
     }
   }
 
-  Real value( const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
+  Real value( const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
     Real val(0);
     for (size_t i = 0; i < size_; ++i) {
       val += weights_[i]*obj_[i]->value(u,z,tol);
@@ -61,7 +61,7 @@ public:
     return val;
   }
 
-  void gradient_1( Vector<Real> &g, const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
+  void gradient_1( Vector<Real> &g, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
     if (!uinitialized_) {
       udual_ = g.clone();
       uinitialized_ = true;
@@ -73,7 +73,7 @@ public:
     }
   }
 
-  void gradient_2( Vector<Real> &g, const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
+  void gradient_2( Vector<Real> &g, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
     if (!zinitialized_) {
       zdual_ = g.clone();
       zinitialized_ = true;
@@ -85,7 +85,7 @@ public:
     }
   }
 
-  void hessVec_11( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
+  void hessVec_11( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
     if (!uinitialized_) {
       udual_ = hv.clone();
       uinitialized_ = true;
@@ -97,7 +97,7 @@ public:
     }
   }
 
-  void hessVec_12( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
+  void hessVec_12( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
     if (!uinitialized_) {
       udual_ = hv.clone();
       uinitialized_ = true;
@@ -109,7 +109,7 @@ public:
     }
   }
 
-  void hessVec_21( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
+  void hessVec_21( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
     if (!zinitialized_) {
       zdual_ = hv.clone();
       zinitialized_ = true;
@@ -121,7 +121,7 @@ public:
     }
   }
 
-  void hessVec_22( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
+  void hessVec_22( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
     if (!zinitialized_) {
       zdual_ = hv.clone();
       zinitialized_ = true;

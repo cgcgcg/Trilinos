@@ -22,12 +22,12 @@
 #include<iomanip>
 
 // Identity operator for preconditioner
-template<class Real> 
+template<class Real>
 class Identity : public ROL::LinearOperator<Real> {
   typedef ROL::Vector<Real> V;
 public:
-  void apply( V& Hv, const V& v, Real &tol ) const { 
-    Hv.set(v); 
+  void apply( V& Hv, const V& v, ROL::Tolerance<Real> &tol ) const {
+    Hv.set(v);
   }
 }; // class Identity
 
@@ -40,12 +40,12 @@ class TridiagonalToeplitzOperator : public ROL::LinearOperator<Real> {
   typedef ROL::Vector<Real>    V;
   typedef ROL::StdVector<Real> SV;
 
-  typedef typename vector::size_type uint; 
+  typedef typename vector::size_type uint;
 
 private:
 
   Real a_; // subdiagonal
-  Real b_; // diagonal 
+  Real b_; // diagonal
   Real c_; // superdiagonal
 
   ROL::LAPACK<int,Real> lapack_;
@@ -55,11 +55,11 @@ public:
   TridiagonalToeplitzOperator( Real &a, Real &b, Real &c ) : a_(a), b_(b), c_(c) {}
 
   // Tridiagonal multiplication
-  void apply( V &Hv, const V &v, Real &tol ) const {
- 
+  void apply( V &Hv, const V &v, ROL::Tolerance<Real> &tol ) const {
+
     SV &Hvs = dynamic_cast<SV&>(Hv);
     ROL::Ptr<vector> Hvp = Hvs.getVector();
- 
+
     const SV &vs = dynamic_cast<const SV&>(v);
     ROL::Ptr<const vector> vp = vs.getVector();
 
@@ -68,21 +68,21 @@ public:
     (*Hvp)[0] = b_*(*vp)[0] + c_*(*vp)[1];
 
     for(uint k=1; k<n-1; ++k) {
-      (*Hvp)[k]  = a_*(*vp)[k-1] + b_*(*vp)[k] + c_*(*vp)[k+1];  
-    } 
-  
+      (*Hvp)[k]  = a_*(*vp)[k-1] + b_*(*vp)[k] + c_*(*vp)[k+1];
+    }
+
     (*Hvp)[n-1] = a_*(*vp)[n-2] + b_*(*vp)[n-1];
 
   }
 
   // Tridiagonal solve - compare against GMRES
-  void applyInverse( V &Hv, const V &v, Real &tol ) const {
+  void applyInverse( V &Hv, const V &v, ROL::Tolerance<Real> &tol ) const {
 
-      
- 
+
+
     SV &Hvs = dynamic_cast<SV&>(Hv);
     ROL::Ptr<vector> Hvp = Hvs.getVector();
- 
+
     const SV &vs = dynamic_cast<const SV&>(v);
     ROL::Ptr<const vector> vp = vs.getVector();
 
@@ -95,11 +95,11 @@ public:
     vector d(n,b_);
     vector du(n-1,c_);
     vector du2(n-2,0.0);
- 
+
     std::vector<int> ipiv(n);
     int info;
 
-    Hv.set(v); // LAPACK will modify this in place    
+    Hv.set(v); // LAPACK will modify this in place
 
     // Do Tridiagonal LU factorization
     lapack_.GTTRF(n,&dl[0],&d[0],&du[0],&du2[0],&ipiv[0],&info);
@@ -118,7 +118,7 @@ typedef double RealT;
 int main(int argc, char *argv[]) {
 
   typedef std::vector<RealT>            vector;
-  typedef ROL::StdVector<RealT>         SV; 
+  typedef ROL::StdVector<RealT>         SV;
 
   typedef typename vector::size_type    uint;
 
@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
     ROL::ParameterList parlist;
     ROL::ParameterList &gList = parlist.sublist("General");
     ROL::ParameterList &kList = gList.sublist("Krylov");
-    
+
     kList.set("Type","MINRES");
     kList.set("Iteration Limit",20);
     kList.set("Absolute Tolerance",1.e-8);
@@ -157,13 +157,13 @@ int main(int argc, char *argv[]) {
     SV y(yp); // Solution using direct solve
     SV z(zp); // Solution using GMRES
 
-    SV b(bp); // Right-hand-side    
-    
+    SV b(bp); // Right-hand-side
+
     RealT left = -1.0;
-    RealT right = 1.0;    
+    RealT right = 1.0;
 
     ROL::RandomizeVector(x,left,right);
-   
+
     RealT sub   =  1.0;
     RealT diag  = -2.0;
     RealT super =  1.0;
@@ -171,8 +171,8 @@ int main(int argc, char *argv[]) {
     TridiagonalToeplitzOperator<RealT> T(sub,diag,super);
     Identity<RealT> I;
 
-    RealT tol = 0.0;
-      
+    ROL::Tolerance<RealT> tol = 0.0;
+
     T.apply(b,x,tol);
 
     T.applyInverse(y,b,tol);
@@ -184,17 +184,17 @@ int main(int argc, char *argv[]) {
     z.zero();
     krylov->run(z,T,b,I,iter,flag);
 
-    *outStream << std::setw(10) << "Exact"  
+    *outStream << std::setw(10) << "Exact"
                << std::setw(10) << "LAPACK"
                << std::setw(10) << "MINRES" << std::endl;
     *outStream << "---------------------------------" << std::endl;
 
     for(uint k=0;k<dim;++k) {
-      *outStream << std::setw(10) << (*xp)[k] << " " 
+      *outStream << std::setw(10) << (*xp)[k] << " "
                  << std::setw(10) << (*yp)[k] << " "
                  << std::setw(10) << (*zp)[k] << " " << std::endl;
-    }  
- 
+    }
+
     *outStream << "MINRES performed " << iter << " iterations." << std::endl;
 
     z.axpy(-1.0,x);
@@ -214,5 +214,5 @@ int main(int argc, char *argv[]) {
   else
     std::cout << "End Result: TEST PASSED\n";
 
-  return 0;   
+  return 0;
 }

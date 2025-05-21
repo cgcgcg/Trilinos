@@ -19,7 +19,7 @@
 */
 
 namespace ROL {
-namespace TypeP { 
+namespace TypeP {
 
 template<typename Real>
 struct AlgorithmState : public ROL::AlgorithmState<Real> {
@@ -40,15 +40,15 @@ struct AlgorithmState : public ROL::AlgorithmState<Real> {
   void reset() {
     ROL::AlgorithmState<Real>::reset();
     searchSize = static_cast<Real>(1);
-    svalue     = ROL_INF<Real>(); 
-    nvalue     = ROL_INF<Real>(); 
+    svalue     = ROL_INF<Real>();
+    nvalue     = ROL_INF<Real>();
     if (stepVec != nullPtr)
       stepVec->zero();
     if (gradientVec != nullPtr)
       gradientVec->zero();
     nprox = 0;
-    nsval = 0; 
-    nnval = 0; 
+    nsval = 0;
+    nnval = 0;
   }
 };
 
@@ -58,14 +58,14 @@ protected:
   const Ptr<CombinedStatusTest<Real>> status_;
   const Ptr<AlgorithmState<Real>>     state_;
 
-  void initialize(const Vector<Real> &x, const Vector<Real> &g); 
+  void initialize(const Vector<Real> &x, const Vector<Real> &g);
   void pgstep(Vector<Real>       &pgiter, // pgiter = Prox(x - t dg)
               Vector<Real>       &pgstep, // pgstep = pgiter - x
               Objective<Real>    &nobj,   // nobj   = nonsmooth objective
               const Vector<Real> &x,      // x      = current iterate
               const Vector<Real> &dg,     // dg     = dual of current gradient
               Real                t,      // t      = prox parameter
-              Real               &tol) const;
+              Tolerance<Real>    &tol) const;
 
 public:
 
@@ -97,7 +97,7 @@ public:
              where the user does not define the dual() method.
   */
   virtual void run( Vector<Real>       &x,
-                    const Vector<Real> &g, 
+                    const Vector<Real> &g,
                     Objective<Real>    &sobj,
                     Objective<Real>    &nobj,
                     std::ostream       &outStream = std::cout) = 0;

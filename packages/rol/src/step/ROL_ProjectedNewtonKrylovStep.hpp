@@ -41,12 +41,12 @@ private:
 
   ROL::Ptr<Vector<Real> > gp_;
   ROL::Ptr<Vector<Real> > d_;
- 
+
   int iterKrylov_; ///< Number of Krylov iterations (used for inexact Newton)
   int flagKrylov_; ///< Termination flag for Krylov method (used for inexact Newton)
   int verbosity_;  ///< Verbosity level
   const bool computeObj_;
- 
+
   bool useSecantPrecond_; ///< Whether or not a secant approximation is used for preconditioning inexact Newton
   bool useProjectedGrad_; ///< Whether or not to use to the projected gradient criticality measure
 
@@ -70,7 +70,7 @@ private:
       : obj_(obj), bnd_(bnd), x_(x), g_(g), eps_(eps) {
       v_ = x_->clone();
     }
-    void apply(Vector<Real> &Hv, const Vector<Real> &v, Real &tol) const {
+    void apply(Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol) const {
       v_->set(v);
       bnd_->pruneActive(*v_,*g_,*x_,eps_);
       obj_->hessVec(Hv,*v_,*x_,tol);
@@ -108,10 +108,10 @@ private:
       : secant_(secant), bnd_(bnd), x_(x), g_(g), eps_(eps), useSecant_(true) {
       v_ = x_->clone();
     }
-    void apply(Vector<Real> &Hv, const Vector<Real> &v, Real &tol) const {
-      Hv.set(v.dual()); 
+    void apply(Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol) const {
+      Hv.set(v.dual());
     }
-    void applyInverse(Vector<Real> &Hv, const Vector<Real> &v, Real &tol) const {
+    void applyInverse(Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol) const {
       v_->set(v);
       bnd_->pruneActive(*v_,*g_,*x_,eps_);
       if ( useSecant_ ) {
@@ -135,7 +135,7 @@ public:
 
   /** \brief Constructor.
 
-      Standard constructor to build a ProjectedNewtonKrylovStep object.  Algorithmic 
+      Standard constructor to build a ProjectedNewtonKrylovStep object.  Algorithmic
       specifications are passed in through a ROL::ParameterList.
 
       @param[in]     parlist    is a parameter list containing algorithmic specifications
@@ -164,8 +164,8 @@ public:
 
   /** \brief Constructor.
 
-      Constructor to build a ProjectedNewtonKrylovStep object with user-defined 
-      secant and Krylov objects.  Algorithmic specifications are passed in through 
+      Constructor to build a ProjectedNewtonKrylovStep object with user-defined
+      secant and Krylov objects.  Algorithmic specifications are passed in through
       a ROL::ParameterList.
 
       @param[in]     parlist    is a parameter list containing algorithmic specifications
@@ -250,7 +250,8 @@ public:
   void update( Vector<Real> &x, const Vector<Real> &s,
                Objective<Real> &obj, BoundConstraint<Real> &bnd,
                AlgorithmState<Real> &algo_state ) {
-    Real tol = std::sqrt(ROL_EPSILON<Real>()), one(1);
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
+    Real one(1);
     ROL::Ptr<StepState<Real> > step_state = Step<Real>::getState();
     step_state->SPiter = iterKrylov_;
     step_state->SPflag = flagKrylov_;

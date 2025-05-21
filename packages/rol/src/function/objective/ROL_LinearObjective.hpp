@@ -37,9 +37,9 @@ private:
 public:
   LinearObjective(const Ptr<const Vector<Real>> &cost);
 
-  Real value( const Vector<Real> &x, Real &tol ) override;
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) override;
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) override;
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) override;
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) override;
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) override;
 
 }; // class LinearObjective
 

@@ -89,7 +89,7 @@ public:
     obj_->update(x,flag,iter);
   }
 
-  Real value( const Vector<Real> &x, Real &tol ) {
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
     const Real half(0.5), one(1);
     Real val  = obj_->value(x,tol);
     Real wx   = x.dot(*w_);
@@ -99,7 +99,7 @@ public:
     return val + wx + half*penaltyParam_*xx;
   }
 
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
     obj_->gradient(g,x,tol);
     xprimal_->set(*w_);
     xprimal_->axpy(penaltyParam_,x);
@@ -107,7 +107,7 @@ public:
     g.plus(xprimal_->dual());
   }
 
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
     obj_->hessVec(hv,v,x,tol);
     hv.axpy(penaltyParam_,v.dual());
   }

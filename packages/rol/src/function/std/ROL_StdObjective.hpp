@@ -34,35 +34,35 @@ public:
 
   void update( const Vector<Real> &x, UpdateType type, int iter = -1 ) override;
 
-  virtual Real value( const std::vector<Real> &x, Real &tol ) = 0;
+  virtual Real value( const std::vector<Real> &x, Tolerance<Real> &tol ) = 0;
 
   using Objective<Real>::value;
-  Real value( const Vector<Real> &x, Real &tol ) override;
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) override;
 
-  virtual void gradient( std::vector<Real> &g, const std::vector<Real> &x, Real &tol );
+  virtual void gradient( std::vector<Real> &g, const std::vector<Real> &x, Tolerance<Real> &tol );
 
   using Objective<Real>::gradient;
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) override;
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) override;
 
-  virtual Real dirDeriv( const std::vector<Real> &x, const std::vector<Real> &d, Real &tol );
+  virtual Real dirDeriv( const std::vector<Real> &x, const std::vector<Real> &d, Tolerance<Real> &tol );
 
   using Objective<Real>::dirDeriv;
-  Real dirDeriv( const Vector<Real> &x, const Vector<Real> &d, Real &tol ) override;
+  Real dirDeriv( const Vector<Real> &x, const Vector<Real> &d, Tolerance<Real> &tol ) override;
 
-  virtual void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol );
+  virtual void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Tolerance<Real> &tol );
 
   using Objective<Real>::hessVec;
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) override;
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) override;
 
-  virtual void invHessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol );
+  virtual void invHessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Tolerance<Real> &tol );
 
   using Objective<Real>::invHessVec;
-  void invHessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) override;
+  void invHessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) override;
 
-  virtual void precond( std::vector<Real> &Pv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol );
+  virtual void precond( std::vector<Real> &Pv, const std::vector<Real> &v, const std::vector<Real> &x, Tolerance<Real> &tol );
 
   using Objective<Real>::precond;
-  void precond( Vector<Real> &Pv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) override;
+  void precond( Vector<Real> &Pv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) override;
 
 private:
   Real sgn(Real x) const;

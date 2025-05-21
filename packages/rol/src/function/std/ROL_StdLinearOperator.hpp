@@ -71,14 +71,14 @@ public:
 
   // Matrix multiplication
   using LinearOperator<Real>::apply;
-  void apply( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  void apply( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
         
     ROL::Ptr<vector> Hvp = dynamic_cast<SV&>(Hv).getVector();
     ROL::Ptr<const vector> vp = dynamic_cast<const SV&>(v).getVector();
     apply(*Hvp,*vp,tol);
   }
 
-  virtual void apply( std::vector<Real> &Hv, const std::vector<Real> &v, Real &tol ) const {
+  virtual void apply( std::vector<Real> &Hv, const std::vector<Real> &v, Tolerance<Real> &tol ) const {
     for( int i=0; i<N_; ++i ) {
       Hv[i] = Real(0);
       for( int j=0; j<N_; ++j ) {
@@ -89,14 +89,14 @@ public:
 
   // Matrix multiplication with transpose
   using LinearOperator<Real>::applyAdjoint;
-  void applyAdjoint( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  void applyAdjoint( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
         
     ROL::Ptr<vector> Hvp = dynamic_cast<SV&>(Hv).getVector();
     ROL::Ptr<const vector> vp = dynamic_cast<const SV&>(v).getVector();
     applyAdjoint(*Hvp,*vp,tol);
   }
 
-  virtual void applyAdjoint( std::vector<Real> &Hv, const std::vector<Real> &v, Real &tol ) const {
+  virtual void applyAdjoint( std::vector<Real> &Hv, const std::vector<Real> &v, Tolerance<Real> &tol ) const {
     for( int i=0; i<N_; ++i ) {
       Hv[i] = Real(0);
       for( int j=0; j<N_; ++j ) {
@@ -109,14 +109,14 @@ public:
   // Solve the system
 
   using LinearOperator<Real>::applyInverse;
-  void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const { 
+  void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const { 
     
     ROL::Ptr<vector> Hvp = dynamic_cast<SV&>(Hv).getVector();
     ROL::Ptr<const vector> vp = dynamic_cast<const SV&>(v).getVector();
     applyInverse(*Hvp,*vp,tol);
   }
 
-  virtual void applyInverse( std::vector<Real> &Hv, const std::vector<Real> &v, Real &tol ) const {
+  virtual void applyInverse( std::vector<Real> &Hv, const std::vector<Real> &v, Tolerance<Real> &tol ) const {
 
     const int LDA = N_;
     const int LDB = N_;
@@ -146,14 +146,14 @@ public:
   // Solve the system with transposed matrix
 
   using LinearOperator<Real>::applyAdjointInverse;
-  void applyAdjointInverse( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const { 
+  void applyAdjointInverse( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const { 
     
     ROL::Ptr<vector> Hvp = dynamic_cast<SV&>(Hv).getVector();
     ROL::Ptr<const vector> vp = dynamic_cast<const SV&>(v).getVector();
     applyAdjointInverse(*Hvp,*vp,tol);
   }
 
-  virtual void applyAdjointInverse( std::vector<Real> &Hv, const std::vector<Real> &v, Real &tol ) const {
+  virtual void applyAdjointInverse( std::vector<Real> &Hv, const std::vector<Real> &v, Tolerance<Real> &tol ) const {
 
     const int LDA = N_;
     const int LDB = N_;

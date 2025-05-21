@@ -75,7 +75,7 @@ void BrentsProjection<Real>::initialize(const Vector<Real>               &xprim,
   mul1_  = static_cast<Real>(0);
   dlam1_ = static_cast<Real>(2);
   // con.value(x) = xprim_->dot(x) + b_
-  Real tol(std::sqrt(ROL_EPSILON<Real>()));
+  Tolerance<Real> tol(std::sqrt(ROL_EPSILON<Real>()));
   xprim_->zero();
   con_->update(*xprim_,UpdateType::Temp);
   con_->value(*res_,*xprim_,tol);

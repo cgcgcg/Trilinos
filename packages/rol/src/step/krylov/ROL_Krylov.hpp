@@ -42,7 +42,7 @@ public:
 
   // Run Krylov Method
   virtual Real run( Vector<Real> &x, LinearOperator<Real> &A,
-              const Vector<Real> &b, LinearOperator<Real> &M, 
+              const Vector<Real> &b, LinearOperator<Real> &M,
                     int &iter, int &flag ) = 0;
 
   void resetAbsoluteTolerance(const Real absTol) {

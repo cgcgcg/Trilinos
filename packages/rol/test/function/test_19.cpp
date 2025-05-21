@@ -57,7 +57,7 @@ template<typename Real>
 class constraint1 : public ROL::Constraint_SimOpt<Real> {
 public:
   constraint1() {}
-  void value(ROL::Vector<Real> &c, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+  void value(ROL::Vector<Real> &c, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     assert(c.dimension()==1);
     assert(u.dimension()==1);
     assert(z.dimension()==2);
@@ -69,7 +69,7 @@ public:
     Real z2 = (*(zs.getVector()))[1];
     (*(cs.getVector()))[0] = std::exp(z1*u1)-z2*z2;
   }
-  void solve(ROL::Vector<Real> &c, ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+  void solve(ROL::Vector<Real> &c, ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     assert(c.dimension()==1);
     assert(u.dimension()==1);
     assert(z.dimension()==2);
@@ -80,7 +80,7 @@ public:
     (*(us.getVector()))[0] = static_cast<Real>(2)*std::log(std::abs(z2)) / z1;
     constraint1<Real>::value(c,u,z,tol);
   }
-  void applyJacobian_1(ROL::Vector<Real> &jv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+  void applyJacobian_1(ROL::Vector<Real> &jv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     assert(jv.dimension()==1);
     assert(v.dimension()==1);
     assert(u.dimension()==1);
@@ -94,7 +94,7 @@ public:
     Real z1 = (*(zs.getVector()))[0];
     (*(jvs.getVector()))[0] = z1*std::exp(z1*u1)*v1;
   }
-  void applyJacobian_2(ROL::Vector<Real> &jv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+  void applyJacobian_2(ROL::Vector<Real> &jv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     assert(jv.dimension()==1);
     assert(v.dimension()==2);
     assert(u.dimension()==1);
@@ -110,7 +110,7 @@ public:
     Real z2 = (*(zs.getVector()))[1];
     (*(jvs.getVector()))[0] = u1*std::exp(z1*u1)*v1 - static_cast<Real>(2)*z2*v2;
   }
-  void applyInverseJacobian_1(ROL::Vector<Real> &ijv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+  void applyInverseJacobian_1(ROL::Vector<Real> &ijv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     assert(ijv.dimension()==1);
     assert(v.dimension()==1);
     assert(u.dimension()==1);
@@ -124,10 +124,10 @@ public:
     Real z1 = (*(zs.getVector()))[0];
     (*(ijvs.getVector()))[0] = v1 / (z1*std::exp(z1*u1));
   }
-  void applyAdjointJacobian_1(ROL::Vector<Real> &ajv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+  void applyAdjointJacobian_1(ROL::Vector<Real> &ajv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     constraint1<Real>::applyJacobian_1(ajv,v,u,z,tol);
   }
-  void applyAdjointJacobian_2(ROL::Vector<Real> &ajv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+  void applyAdjointJacobian_2(ROL::Vector<Real> &ajv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     assert(ajv.dimension()==2);
     assert(v.dimension()==1);
     assert(u.dimension()==1);
@@ -143,10 +143,10 @@ public:
     (*(ajvs.getVector()))[0] = u1*std::exp(z1*u1)*v1;
     (*(ajvs.getVector()))[1] = -static_cast<Real>(2)*z2*v1;
   }
-  void applyInverseAdjointJacobian_1(ROL::Vector<Real> &iajv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+  void applyInverseAdjointJacobian_1(ROL::Vector<Real> &iajv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     constraint1<Real>::applyInverseJacobian_1(iajv,v,u,z,tol);
   }
-  void applyAdjointHessian_11(ROL::Vector<Real> &ahwv, const ROL::Vector<Real> &w, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+  void applyAdjointHessian_11(ROL::Vector<Real> &ahwv, const ROL::Vector<Real> &w, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     assert(ahwv.dimension()==1);
     assert(w.dimension()==1);
     assert(v.dimension()==1);
@@ -163,7 +163,7 @@ public:
     Real z1 = (*(zs.getVector()))[0];
     (*(ahwvs.getVector()))[0] = z1*z1*std::exp(z1*u1)*v1*w1;
   }
-  void applyAdjointHessian_12(ROL::Vector<Real> &ahwv, const ROL::Vector<Real> &w, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+  void applyAdjointHessian_12(ROL::Vector<Real> &ahwv, const ROL::Vector<Real> &w, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     assert(ahwv.dimension()==2);
     assert(w.dimension()==1);
     assert(v.dimension()==1);
@@ -181,7 +181,7 @@ public:
     (*(ahwvs.getVector()))[0] = std::exp(z1*u1)*(static_cast<Real>(1)+u1*z1)*v1*w1;
     (*(ahwvs.getVector()))[1] = static_cast<Real>(0);
   }
-  void applyAdjointHessian_21(ROL::Vector<Real> &ahwv, const ROL::Vector<Real> &w, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+  void applyAdjointHessian_21(ROL::Vector<Real> &ahwv, const ROL::Vector<Real> &w, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     assert(ahwv.dimension()==1);
     assert(w.dimension()==1);
     assert(v.dimension()==2);
@@ -198,7 +198,7 @@ public:
     Real z1 = (*(zs.getVector()))[0];
     (*(ahwvs.getVector()))[0] = std::exp(z1*u1)*(static_cast<Real>(1)+u1*z1)*v1*w1;
   }
-  void applyAdjointHessian_22(ROL::Vector<Real> &ahwv, const ROL::Vector<Real> &w, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+  void applyAdjointHessian_22(ROL::Vector<Real> &ahwv, const ROL::Vector<Real> &w, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     assert(ahwv.dimension()==2);
     assert(w.dimension()==1);
     assert(v.dimension()==2);
@@ -224,7 +224,7 @@ template<typename Real>
 class constraint2 : public ROL::Constraint_SimOpt<Real> {
 public:
   constraint2() {}
-  void value(ROL::Vector<Real> &c, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+  void value(ROL::Vector<Real> &c, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     assert(c.dimension()==3);
     assert(u.dimension()==1);
     assert(z.dimension()==2);
@@ -238,7 +238,7 @@ public:
     (*(cs.getVector()))[1] = (z1-z2)*u1;
     (*(cs.getVector()))[2] = u1*u1;
   }
-  void applyJacobian_1(ROL::Vector<Real> &jv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+  void applyJacobian_1(ROL::Vector<Real> &jv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     assert(jv.dimension()==3);
     assert(v.dimension()==1);
     assert(u.dimension()==1);
@@ -256,7 +256,7 @@ public:
     (*(jvs.getVector()))[1] = (z1-z2)*v1;
     (*(jvs.getVector()))[2] = two*u1*v1;
   }
-  void applyJacobian_2(ROL::Vector<Real> &jv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+  void applyJacobian_2(ROL::Vector<Real> &jv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     assert(jv.dimension()==3);
     assert(v.dimension()==2);
     assert(u.dimension()==1);
@@ -274,7 +274,7 @@ public:
     (*(jvs.getVector()))[1] = (v1-v2)*u1;
     (*(jvs.getVector()))[2] = static_cast<Real>(0);
   }
-  void applyAdjointJacobian_1(ROL::Vector<Real> &ajv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+  void applyAdjointJacobian_1(ROL::Vector<Real> &ajv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     assert(ajv.dimension()==1);
     assert(v.dimension()==3);
     assert(u.dimension()==1);
@@ -292,7 +292,7 @@ public:
     Real z2 = (*(zs.getVector()))[1];
     (*(ajvs.getVector()))[0] = z1*z2*v1 + (z1-z2)*v2 + two*u1*v3;
   }
-  void applyAdjointJacobian_2(ROL::Vector<Real> &ajv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+  void applyAdjointJacobian_2(ROL::Vector<Real> &ajv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     assert(ajv.dimension()==2);
     assert(v.dimension()==3);
     assert(u.dimension()==1);
@@ -309,7 +309,7 @@ public:
     (*(ajvs.getVector()))[0] = (z2*u1*v1 + u1*v2);
     (*(ajvs.getVector()))[1] = (z1*u1*v1 - u1*v2);
   }
-  void applyAdjointHessian_11(ROL::Vector<Real> &ahwv, const ROL::Vector<Real> &w, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+  void applyAdjointHessian_11(ROL::Vector<Real> &ahwv, const ROL::Vector<Real> &w, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     assert(ahwv.dimension()==1);
     assert(w.dimension()==3);
     assert(v.dimension()==1);
@@ -325,7 +325,7 @@ public:
     Real v1 = (*(vs.getVector()))[0];
     (*(ahwvs.getVector()))[0] = two*v1*w3;
   }
-  void applyAdjointHessian_12(ROL::Vector<Real> &ahwv, const ROL::Vector<Real> &w, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+  void applyAdjointHessian_12(ROL::Vector<Real> &ahwv, const ROL::Vector<Real> &w, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     assert(ahwv.dimension()==2);
     assert(w.dimension()==3);
     assert(v.dimension()==1);
@@ -344,7 +344,7 @@ public:
     (*(ahwvs.getVector()))[0] = (z2*v1*w1 + v1*w2);
     (*(ahwvs.getVector()))[1] = (z1*v1*w1 - v1*w2);
   }
-  void applyAdjointHessian_21(ROL::Vector<Real> &ahwv, const ROL::Vector<Real> &w, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+  void applyAdjointHessian_21(ROL::Vector<Real> &ahwv, const ROL::Vector<Real> &w, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     assert(ahwv.dimension()==1);
     assert(w.dimension()==3);
     assert(v.dimension()==2);
@@ -363,7 +363,7 @@ public:
     Real z2 = (*(zs.getVector()))[1];
     (*(ahwvs.getVector()))[0] = (v1*z2+z1*v2)*w1 + (v1-v2)*w2;
   }
-  void applyAdjointHessian_22(ROL::Vector<Real> &ahwv, const ROL::Vector<Real> &w, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol) {
+  void applyAdjointHessian_22(ROL::Vector<Real> &ahwv, const ROL::Vector<Real> &w, const ROL::Vector<Real> &v, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol) {
     assert(ahwv.dimension()==2);
     assert(w.dimension()==3);
     assert(v.dimension()==2);
@@ -434,7 +434,7 @@ int main(int argc, char *argv[]) {
     vz->randomize(static_cast<RealT>(-1),static_cast<RealT>(1));
     du->randomize(static_cast<RealT>(-1),static_cast<RealT>(1));
     dz->randomize(static_cast<RealT>(-1),static_cast<RealT>(1));
-    
+
     auto con1 = ROL::makePtr<constraint1<RealT>>();
     auto con2 = ROL::makePtr<constraint2<RealT>>();
     auto stateStore = ROL::makePtr<ROL::VectorController<RealT>>();
@@ -464,7 +464,7 @@ int main(int argc, char *argv[]) {
     rcon->checkAdjointConsistencyJacobian(*vc2,*vz,*z,true,*outStream);
     rcon->checkApplyJacobian(*z,*vz,*vc2,true,*outStream);
     rcon->checkApplyAdjointHessian(*z,*vc2,*vz,*dz,true,*outStream);
-  }   
+  }
   catch (std::logic_error& err) {
     *outStream << err.what() << "\n";
     errorFlag = -1000;
@@ -479,4 +479,3 @@ int main(int argc, char *argv[]) {
 
 
 }
-

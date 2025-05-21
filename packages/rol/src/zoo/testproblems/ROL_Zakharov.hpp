@@ -68,7 +68,7 @@ public:
   // Create using a ROL::Vector containing 1,2,3,...,n
   Objective_Zakharov(const ROL::Ptr<Vector<Real> > k) : k_(k) {}
 
-  Real value( const Vector<Real> &x, Real &tol ) {
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
 
       Real xdotx = x.dot(x); 
       Real kdotx = x.dot(*k_); 
@@ -78,7 +78,7 @@ public:
       return val;
   }
 
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
 
       Real kdotx = x.dot(*k_);
       Real coeff = 0.25*(2.0*kdotx+pow(kdotx,3.0));
@@ -88,7 +88,7 @@ public:
       g.axpy(coeff,*k_);
   }
 
-  Real dirDeriv( const Vector<Real> &x, const Vector<Real> &d, Real &tol ) {
+  Real dirDeriv( const Vector<Real> &x, const Vector<Real> &d, Tolerance<Real> &tol ) {
 
       Real kdotd = d.dot(*k_);
       Real kdotx = x.dot(*k_);
@@ -103,7 +103,7 @@ public:
   }
 
 #if USE_HESSVEC
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
 
       Real kdotx = x.dot(*k_);
       Real kdotv = v.dot(*k_);
@@ -114,7 +114,7 @@ public:
       hv.axpy(coeff,*k_);
   }
 #endif
-  void invHessVec( Vector<Real> &ihv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  void invHessVec( Vector<Real> &ihv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
   
       Real kdotv = v.dot(*k_);
       Real kdotx = x.dot(*k_);

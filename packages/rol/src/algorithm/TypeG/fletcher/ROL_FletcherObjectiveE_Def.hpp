@@ -33,7 +33,7 @@ FletcherObjectiveE<Real>::FletcherObjectiveE(const ROL::Ptr<Objective<Real>> &ob
 }
 
 template<typename Real>
-Real FletcherObjectiveE<Real>::value( const Vector<Real> &x, Real &tol ) {
+Real FletcherObjectiveE<Real>::value( const Vector<Real> &x, Tolerance<Real> &tol ) {
   Real val(0);
   int key(0);
   bool isComputed = fPhi_->get(val,key);
@@ -42,9 +42,9 @@ Real FletcherObjectiveE<Real>::value( const Vector<Real> &x, Real &tol ) {
   }
   else {
     // Reset tolerances
-    Real origTol = tol;
-    Real tol2 = origTol;
-    // Compute penalty function value 
+    Tolerance<Real> origTol = tol;
+    Tolerance<Real> tol2 = origTol;
+    // Compute penalty function value
     Real fval = FletcherObjectiveBase<Real>::objValue(x, tol2); tol2 = origTol;
     multSolverError_ = origTol / (static_cast<Real>(2) * std::max(static_cast<Real>(1), cnorm_));
     FletcherObjectiveBase<Real>::computeMultipliers(*cdual_, *gLdual_, x, *xdual_, *cprim_, multSolverError_);
@@ -60,7 +60,7 @@ Real FletcherObjectiveE<Real>::value( const Vector<Real> &x, Real &tol ) {
 }
 
 template<typename Real>
-void FletcherObjectiveE<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+void FletcherObjectiveE<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
   int key(0);
   bool isComputed = gPhi_->get(g,key);
   if( isComputed && gradSolveError_ <= tol) {
@@ -68,9 +68,9 @@ void FletcherObjectiveE<Real>::gradient( Vector<Real> &g, const Vector<Real> &x,
   }
   else {
     // Reset tolerances
-    Real origTol = tol;
-    Real tol2 = origTol;
-    // Compute penalty function gradient 
+    Tolerance<Real> origTol = tol;
+    Tolerance<Real> tol2 = origTol;
+    // Compute penalty function gradient
     gradSolveError_ = origTol / static_cast<Real>(2);
     FletcherObjectiveBase<Real>::computeMultipliers(*cdual_, *gLdual_, x, *xdual_, *cprim_, gradSolveError_);
     gL_->set(gLdual_->dual());
@@ -91,15 +91,15 @@ void FletcherObjectiveE<Real>::gradient( Vector<Real> &g, const Vector<Real> &x,
       con_->applyAdjointJacobian( *Tv_, *cprim_, x, tol2 ); tol2 = origTol;
       g.axpy( quadPenaltyParameter_, *Tv_ );
     }
-    gPhi_->set(g,key); 
+    gPhi_->set(g,key);
   }
 }
 
 template<typename Real>
-void FletcherObjectiveE<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+void FletcherObjectiveE<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
   // Reset tolerances
-  Real origTol = tol;
-  Real tol2 = origTol;
+  Tolerance<Real> origTol = tol;
+  Tolerance<Real> tol2 = origTol;
   int key(0);
   bool isComputed = y_->get(*cdual_,key);
   if( !isComputed || !useInexact_) {
@@ -149,7 +149,7 @@ void FletcherObjectiveE<Real>::solveAugmentedSystem(Vector<Real> &v1,
                                                     const Vector<Real> &b1,
                                                     const Vector<Real> &b2,
                                                     const Vector<Real> &x,
-                                                    Real &tol,
+                                                    Tolerance<Real> &tol,
                                                     bool refine) {
   // Ignore tol for now
   ROL::Ptr<LinearOperator<Real>>
@@ -161,7 +161,7 @@ void FletcherObjectiveE<Real>::solveAugmentedSystem(Vector<Real> &v1,
   bb_->zero();
   if( refine ) {
     // TODO: Make sure this tol is actually ok...
-    Real origTol = tol;
+    Tolerance<Real> origTol = tol;
     w1_->set(v1);
     w2_->set(v2);
     K->apply(*bb_, *ww_, tol); tol = origTol;
@@ -171,7 +171,7 @@ void FletcherObjectiveE<Real>::solveAugmentedSystem(Vector<Real> &v1,
   b2_->plus(b2);
 
   // If inexact, change tolerance
-  if( useInexact_ ) krylov_->resetAbsoluteTolerance(tol);
+  if( useInexact_ ) krylov_->resetAbsoluteTolerance(tol.get());
 
   //con_->solveAugmentedSystem(*v1_,*v2_,*b1_,*b2_,x,tol);
   flagKrylov_ = 0;

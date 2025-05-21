@@ -30,27 +30,27 @@ void SimConstraint<Real>::update( const Vector<Real> &u, UpdateType type, int it
 }
 
 template<typename Real>
-void SimConstraint<Real>::value(Vector<Real> &c,const Vector<Real> &u,Real &tol) {
+void SimConstraint<Real>::value(Vector<Real> &c,const Vector<Real> &u,Tolerance<Real> &tol) {
   con_->value(c,u,*z_,tol);
 }
 
 template<typename Real>
-void SimConstraint<Real>::applyJacobian(Vector<Real> &jv,const Vector<Real> &v,const Vector<Real> &u,Real &tol) {
+void SimConstraint<Real>::applyJacobian(Vector<Real> &jv,const Vector<Real> &v,const Vector<Real> &u,Tolerance<Real> &tol) {
   con_->applyJacobian_1(jv,v,u,*z_,tol);
 }
 
 template<typename Real>
-void SimConstraint<Real>::applyAdjointJacobian(Vector<Real> &ajv,const Vector<Real> &v,const Vector<Real> &u,Real &tol) {
+void SimConstraint<Real>::applyAdjointJacobian(Vector<Real> &ajv,const Vector<Real> &v,const Vector<Real> &u,Tolerance<Real> &tol) {
   con_->applyAdjointJacobian_1(ajv,v,u,*z_,tol);
 }
 
 template<typename Real>
-void SimConstraint<Real>::applyAdjointHessian(Vector<Real> &ahwv,const Vector<Real> &w,const Vector<Real> &v,const Vector<Real> &u,Real &tol) {
+void SimConstraint<Real>::applyAdjointHessian(Vector<Real> &ahwv,const Vector<Real> &w,const Vector<Real> &v,const Vector<Real> &u,Tolerance<Real> &tol) {
   con_->applyAdjointHessian_11(ahwv,w,v,u,*z_,tol);
 }
 
 template<typename Real>
-void SimConstraint<Real>::applyPreconditioner(Vector<Real> &pv,const Vector<Real> &v,const Vector<Real> &u,const Vector<Real> &g,Real &tol) {
+void SimConstraint<Real>::applyPreconditioner(Vector<Real> &pv,const Vector<Real> &v,const Vector<Real> &u,const Vector<Real> &g,Tolerance<Real> &tol) {
   if (!init_) {
     ijv_ = u.clone();
     init_ = true;

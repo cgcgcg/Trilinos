@@ -364,7 +364,7 @@ public:
   }
 
   /* OBJECTIVE FUNCTION DEFINITIONS */
-  Real value( const Vector<Real> &z, Real &tol ) {
+  Real value( const Vector<Real> &z, Tolerance<Real> &tol ) {
 
     
     
@@ -388,7 +388,7 @@ public:
     return 0.5*Mres->dot(res) + reg_value(z);
   } 
 
-  void gradient( Vector<Real> &g, const Vector<Real> &z, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &z, Tolerance<Real> &tol ) {
 
      
 
@@ -411,7 +411,7 @@ public:
     g.plus(g_reg);
   }
 #if USE_HESSVEC
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &z, Real &tol ) {
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &z, Tolerance<Real> &tol ) {
 
     
 
@@ -453,7 +453,7 @@ public:
   }
 #endif
 
-  void invHessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  void invHessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
 
     
     

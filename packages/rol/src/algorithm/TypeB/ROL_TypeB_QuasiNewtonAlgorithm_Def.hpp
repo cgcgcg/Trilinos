@@ -74,10 +74,10 @@ void QuasiNewtonAlgorithm<Real>::initialize(Vector<Real>          &x,
   // Initialize data
   TypeB::Algorithm<Real>::initialize(x,g);
   // Update approximate gradient and approximate objective function.
-  Real ftol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> ftol = std::sqrt(ROL_EPSILON<Real>());
   proj_->project(x,outStream); state_->nproj++;
   state_->iterateVec->set(x);
-  obj.update(x,UpdateType::Initial,state_->iter);    
+  obj.update(x,UpdateType::Initial,state_->iter);
   state_->value = obj.value(x,ftol); state_->nfval++;
   obj.gradient(*state_->gradientVec,x,ftol); state_->ngrad++;
   state_->stepVec->set(x);
@@ -90,7 +90,7 @@ void QuasiNewtonAlgorithm<Real>::initialize(Vector<Real>          &x,
 
 template<typename Real>
 void QuasiNewtonAlgorithm<Real>::run( Vector<Real>          &x,
-                                      const Vector<Real>    &g, 
+                                      const Vector<Real>    &g,
                                       Objective<Real>       &obj,
                                       BoundConstraint<Real> &bnd,
                                       std::ostream          &outStream ) {
@@ -98,7 +98,9 @@ void QuasiNewtonAlgorithm<Real>::run( Vector<Real>          &x,
   // Initialize trust-region data
   initialize(x,g,obj,bnd,outStream);
   Ptr<Vector<Real>> s = x.clone(), gp = x.clone(), gold = g.clone(), xs = x.clone();
-  Real ftrial(0), gs(0), alphaTmp(0), tol(std::sqrt(ROL_EPSILON<Real>())), gtol(1);
+  Real ftrial(0), gs(0), alphaTmp(0);
+  Tolerance<Real> tol(std::sqrt(ROL_EPSILON<Real>()));
+  Real gtol(1);
 
   Ptr<TypeB::Algorithm<Real>> algo;
   Ptr<PQNObjective<Real>> qobj = makePtr<PQNObjective<Real>>(secant_,x,g);
@@ -134,7 +136,7 @@ void QuasiNewtonAlgorithm<Real>::run( Vector<Real>          &x,
     spgIter_ = algo->getState()->iter;
     state_->nproj += staticPtrCast<const TypeB::AlgorithmState<Real>>(algo->getState())->nproj;
 
-    // Perform backtracking line search 
+    // Perform backtracking line search
     state_->searchSize = one;
     x.set(*state_->iterateVec);
     x.axpy(state_->searchSize,*s);

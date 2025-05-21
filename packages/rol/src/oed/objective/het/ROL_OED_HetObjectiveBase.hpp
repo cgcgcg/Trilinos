@@ -72,14 +72,14 @@ protected:
   const Ptr<Vector<Real>> getAdjointSens() const;
   void solve_state_equation(const Key &param,
                             const Vector<Real> &z,
-                                  Real &tol);
+                                  Tolerance<Real> &tol);
   void solve_adjoint_equation(const Key &param,
                               const Vector<Real> &z,
-                                    Real &tol);
+                                    Tolerance<Real> &tol);
   void solve_state_sensitivity(const Vector<Real> &v,
                                const Vector<Real> &z,
-                                     Real &tol);
-  void solve_adjoint_sensitivity(const Vector<Real> &v, const Vector<Real> &z, Real &tol);
+                                     Tolerance<Real> &tol);
+  void solve_adjoint_sensitivity(const Vector<Real> &v, const Vector<Real> &z, Tolerance<Real> &tol);
 
 public:
   ObjectiveBase();

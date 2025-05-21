@@ -18,7 +18,7 @@ void Factors<Real>::evaluateModel(Vector<Real> &g, const std::vector<Real> &para
   startTimer("evaluateModel");
   bool isComputed = storage_ ? g_storage_->get(g,param) : false;
   if (!isComputed) {
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
     model_->setParameter(param);
     model_->applyAdjointJacobian(g,*c_,*theta_,tol);
     if (storage_) g_storage_->set(g,param);
@@ -109,7 +109,7 @@ void Factors<Real>::apply(Vector<Real> &Fx, const Vector<Real> &x, int k) const 
     Fx.setScalar(apply(x,k));
   }
   else {
-    Real tol(std::sqrt(ROL_EPSILON<Real>()));
+    Tolerance<Real> tol(std::sqrt(ROL_EPSILON<Real>()));
     Fx.zero();
     model_->setParameter(sampler_->getMyPoint(k));
     model_->applyJacobian(Fx,x,*theta_,tol);
@@ -128,7 +128,7 @@ void Factors<Real>::applyProduct(Vector<Real> &Mx, const Vector<Real> &x, int k)
     Mx.scale(apply(x,k));
   }
   else {
-    Real tol(std::sqrt(ROL_EPSILON<Real>()));
+    Tolerance<Real> tol(std::sqrt(ROL_EPSILON<Real>()));
     Mx.zero(); obs_->zero();
     model_->setParameter(sampler_->getMyPoint(k));
     model_->applyJacobian(*obs_,x,*theta_,tol);
@@ -150,7 +150,7 @@ Real Factors<Real>::applyProduct2(const Vector<Real> &x, const Vector<Real> &y, 
     val = Fx * Fy;
   }
   else {
-    Real tol(std::sqrt(ROL_EPSILON<Real>()));
+    Tolerance<Real> tol(std::sqrt(ROL_EPSILON<Real>()));
     obs_->zero(); obs0_->zero();
     model_->setParameter(sampler_->getMyPoint(k));
     model_->applyJacobian(*obs_,x,*theta_,tol);

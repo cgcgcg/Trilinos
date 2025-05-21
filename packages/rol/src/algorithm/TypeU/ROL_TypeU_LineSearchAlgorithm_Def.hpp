@@ -33,15 +33,15 @@ LineSearchAlgorithm<Real>::LineSearchAlgorithm( ParameterList &parlist,
   ParameterList& Glist = parlist.sublist("General");
   std::string condType = Llist.sublist("Curvature Condition").get("Type","Strong Wolfe Conditions");
   econd_ = StringToECurvatureConditionU(condType);
-  acceptLastAlpha_ = Llist.get("Accept Last Alpha", false); 
+  acceptLastAlpha_ = Llist.get("Accept Last Alpha", false);
   verbosity_ = Glist.get("Output Level",0);
   printHeader_ = verbosity_ > 2;
   // Initialize Line Search
   if (lineSearch_ == nullPtr) {
-    lineSearchName_ = Llist.sublist("Line-Search Method").get("Type","Cubic Interpolation"); 
+    lineSearchName_ = Llist.sublist("Line-Search Method").get("Type","Cubic Interpolation");
     els_ = StringToELineSearchU(lineSearchName_);
     lineSearch_ = LineSearchUFactory<Real>(parlist);
-  } 
+  }
   else { // User-defined linesearch provided
     lineSearchName_ = Llist.sublist("Line-Search Method").get("User Defined Line Search Name","Unspecified User Defined Line Search");
   }
@@ -66,9 +66,9 @@ void LineSearchAlgorithm<Real>::initialize(const Vector<Real> &x,
   lineSearch_->initialize(x,g);
   desc_->initialize(x,g);
   // Update approximate gradient and approximate objective function.
-  Real ftol = std::sqrt(ROL_EPSILON<Real>());
-  obj.update(x,UpdateType::Initial,state_->iter);    
-  state_->value = obj.value(x,ftol); 
+  Tolerance<Real> ftol = std::sqrt(ROL_EPSILON<Real>());
+  obj.update(x,UpdateType::Initial,state_->iter);
+  state_->value = obj.value(x,ftol);
   state_->nfval++;
   obj.gradient(*state_->gradientVec,x,ftol);
   state_->ngrad++;
@@ -83,7 +83,8 @@ void LineSearchAlgorithm<Real>::run( Vector<Real>       &x,
                                      std::ostream       &outStream ) {
   const Real one(1);
   // Initialize trust-region data
-  Real ftrial(0), gs(0), tol(std::sqrt(ROL_EPSILON<Real>()));
+  Real ftrial(0), gs(0);
+  Tolerance<Real> tol(std::sqrt(ROL_EPSILON<Real>()));
   initialize(x,g,obj,outStream);
   state_->searchSize = one;
   Ptr<Vector<Real>> gprev = g.clone();

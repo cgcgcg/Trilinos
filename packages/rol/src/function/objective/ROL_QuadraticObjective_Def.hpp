@@ -21,7 +21,7 @@ QuadraticObjective<Real>::QuadraticObjective(const Ptr<const LinearOperator<Real
 }
 
 template<typename Real>
-Real QuadraticObjective<Real>::value( const Vector<Real> &x, Real &tol ) {
+Real QuadraticObjective<Real>::value( const Vector<Real> &x, Tolerance<Real> &tol ) {
   H_->apply(*tmp_,x,tol);
   tmp_->scale(static_cast<Real>(0.5));
   tmp_->plus(*g_);
@@ -30,18 +30,18 @@ Real QuadraticObjective<Real>::value( const Vector<Real> &x, Real &tol ) {
 }
 
 template<typename Real>
-void QuadraticObjective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+void QuadraticObjective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
   H_->apply(g,x,tol);
   g.plus(*g_);
 }
 
 template<typename Real>
-void QuadraticObjective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+void QuadraticObjective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
   H_->apply(hv,v,tol);
 }
 
 template<typename Real>
-void QuadraticObjective<Real>::invHessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+void QuadraticObjective<Real>::invHessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
   H_->applyInverse(hv,v,tol);
 }
 

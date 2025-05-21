@@ -54,7 +54,7 @@ protected:
   /***************************************************************************/
   /*********  BEGIN WRAPPERS FOR HESSIAN/PRECOND APPLICATION  ****************/
   /***************************************************************************/
-  void applyHessian(Vector<Real> &hv, const Vector<Real> &v, Real &tol) {
+  void applyHessian(Vector<Real> &hv, const Vector<Real> &v, Tolerance<Real> &tol) {
     if ( useSecantHessVec_ && secant_ != nullPtr ) {
       secant_->applyB(hv,v);
     }
@@ -63,7 +63,7 @@ protected:
     }
   }
 
-  void applyInvHessian(Vector<Real> &hv, const Vector<Real> &v, Real &tol) {
+  void applyInvHessian(Vector<Real> &hv, const Vector<Real> &v, Tolerance<Real> &tol) {
     if ( useSecantHessVec_ && secant_ != nullPtr ) {
       secant_->applyH(hv,v);
     }
@@ -72,7 +72,7 @@ protected:
     }
   }
 
-  void applyPrecond(Vector<Real> &Pv, const Vector<Real> &v, Real &tol) {
+  void applyPrecond(Vector<Real> &Pv, const Vector<Real> &v, Tolerance<Real> &tol) {
     if ( useSecantPrecond_  && secant_ != nullPtr ) {
       secant_->applyH(Pv,v);
     }
@@ -114,7 +114,7 @@ public:
   /***************************************************************************/
   /*********  BEGIN OBJECTIVE FUNCTION DEFINITIONS  **************************/
   /***************************************************************************/
-  virtual Real value( const Vector<Real> &s, Real &tol ) {
+  virtual Real value( const Vector<Real> &s, Tolerance<Real> &tol ) {
     initialize(s);
     applyHessian(*dual_,s,tol);
     dual_->scale(static_cast<Real>(0.5));
@@ -122,20 +122,20 @@ public:
     return dual_->dot(s.dual());
   }
 
-  virtual void gradient( Vector<Real> &g, const Vector<Real> &s, Real &tol ) {
+  virtual void gradient( Vector<Real> &g, const Vector<Real> &s, Tolerance<Real> &tol ) {
     applyHessian(g,s,tol);
     g.plus(*g_);
   }
 
-  virtual void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &s, Real &tol ) {
+  virtual void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &s, Tolerance<Real> &tol ) {
     applyHessian(hv,v,tol);
   }
 
-  virtual void invHessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &s, Real &tol ) {
+  virtual void invHessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &s, Tolerance<Real> &tol ) {
     applyInvHessian(hv,v,tol);
   }
 
-  virtual void precond( Vector<Real> &Pv, const Vector<Real> &v, const Vector<Real> &s, Real &tol ) {
+  virtual void precond( Vector<Real> &Pv, const Vector<Real> &v, const Vector<Real> &s, Tolerance<Real> &tol ) {
     applyPrecond(Pv,v,tol);
   }
   /***************************************************************************/

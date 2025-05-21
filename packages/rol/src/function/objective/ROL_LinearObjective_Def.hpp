@@ -19,17 +19,17 @@ LinearObjective<Real>::LinearObjective(const Ptr<const Vector<Real>> &cost) : co
 }
 
 template<typename Real>
-Real LinearObjective<Real>::value( const Vector<Real> &x, Real &tol ) {
+Real LinearObjective<Real>::value( const Vector<Real> &x, Tolerance<Real> &tol ) {
   return x.dot(*dual_cost_);
 }
 
 template<typename Real>
-void LinearObjective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+void LinearObjective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
   g.set(*cost_);
 }
 
 template<typename Real>
-void LinearObjective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+void LinearObjective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
   hv.zero();
 }
 

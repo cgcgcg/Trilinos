@@ -24,7 +24,7 @@ void ReducedLinearConstraint<Real>::setX(const Ptr<const Vector<Real>> &x) {
 }
 
 template<typename Real>
-void ReducedLinearConstraint<Real>::value(Vector<Real> &c, const Vector<Real> &x, Real &tol) {
+void ReducedLinearConstraint<Real>::value(Vector<Real> &c, const Vector<Real> &x, Tolerance<Real> &tol) {
   const Real zero(0);
   prim_->set(x);
   bnd_->pruneActive(*prim_,*x_,zero);
@@ -34,7 +34,7 @@ void ReducedLinearConstraint<Real>::value(Vector<Real> &c, const Vector<Real> &x
 template<typename Real>
 void ReducedLinearConstraint<Real>::applyJacobian(Vector<Real> &jv,
                                             const Vector<Real> &v,
-                                            const Vector<Real> &x, Real &tol) {
+                                            const Vector<Real> &x, Tolerance<Real> &tol) {
   const Real zero(0);
   prim_->set(v);
   bnd_->pruneActive(*prim_,*x_,zero);
@@ -44,7 +44,7 @@ void ReducedLinearConstraint<Real>::applyJacobian(Vector<Real> &jv,
 template<typename Real>
 void ReducedLinearConstraint<Real>::applyAdjointJacobian(Vector<Real> &jv,
                                                    const Vector<Real> &v,
-                                                   const Vector<Real> &x, Real &tol) {
+                                                   const Vector<Real> &x, Tolerance<Real> &tol) {
   const Real zero(0);
   con_->applyAdjointJacobian(jv,v,x,tol);
   bnd_->pruneActive(jv,*x_,zero);
@@ -54,7 +54,7 @@ template<typename Real>
 void ReducedLinearConstraint<Real>::applyAdjointHessian(Vector<Real> &ahuv,
                                                   const Vector<Real> &u,
                                                   const Vector<Real> &v,
-                                                  const Vector<Real> &x, Real &tol) {
+                                                  const Vector<Real> &x, Tolerance<Real> &tol) {
   ahuv.zero();
 }
 

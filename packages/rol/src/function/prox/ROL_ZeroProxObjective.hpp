@@ -18,11 +18,11 @@ template<typename Real>
 class ZeroProxObjective : public ProxObjective<Real> {
 public:
 
-  Real value(const Vector<Real> x, Real &tol) override {
+  Real value(const Vector<Real> x, Tolerance<Real> &tol) override {
     return static_cast<Real>(0);
   }
 
-  void gradient(Vector<Real> &g, const Vector<Real> &x, Real &tol) override {
+  void gradient(Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol) override {
     g.zero();
   }
 

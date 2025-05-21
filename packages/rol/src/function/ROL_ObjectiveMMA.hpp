@@ -48,7 +48,7 @@ private:
 
   Real fval_; // Original objective value
 
-  Real tol_;
+  Tolerance<Real> tol_;
 
 public:
 
@@ -97,7 +97,7 @@ public:
   /*
      \f[ F(x) \approx F(x^0) + \sum\limit_{i=1}^n \left( \frac{p_i}{U_i-x_i} + \frac{q_i}{x_i-L_i}\right) \f] 
   */
-  Real value( const Vector<Real> &x, Real &tol ) {
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
   
     Elementwise::ReductionSum<Real>    sum;
     Elementwise::DivideAndInvert<Real> divinv;
@@ -122,7 +122,7 @@ public:
   /*
      \f[ \frac{F(x)}{\partial x_j} =  \frac{p_j}{(U_j-x_j)^2} - \frac{q_j}({x_j-L_j)^2}\ \f] 
   */
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
 
     Elementwise::DivideAndInvert<Real> divinv;
     Elementwise::Power<Real>           square(2.0);
@@ -143,7 +143,7 @@ public:
 
   }
 
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
   
     Elementwise::DivideAndInvert<Real> divinv;
     Elementwise::Multiply<Real>        mult;
@@ -168,7 +168,7 @@ public:
 
   }
 
-  void invHessVec( Vector<Real> &h, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  void invHessVec( Vector<Real> &h, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
 
     Elementwise::DivideAndInvert<Real> divinv;
     Elementwise::Multiply<Real>        mult;

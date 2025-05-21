@@ -23,7 +23,7 @@
        \mathcal{R}(X) = \sup_{\vartheta\in\mathfrak{A}}
            \mathbb{E}[\vartheta X]
     \f]
-    where \f$\mathfrak{A}\f$ is called the ambiguity (or uncertainty) set and 
+    where \f$\mathfrak{A}\f$ is called the ambiguity (or uncertainty) set and
     is defined by a constraint on the Kullback-Leibler divergence, i.e.,
     \f[
        \mathfrak{A} = \{\vartheta\in\mathcal{X}^*\,:\,
@@ -117,7 +117,7 @@ public:
   void updateValue(Objective<Real>         &obj,
                    const Vector<Real>      &x,
                    const std::vector<Real> &xstat,
-                   Real                    &tol) {
+                   Tolerance<Real>         &tol) {
     Real val = computeValue(obj,x,tol);
     Real ev  = exponential(val,xstat[0]*eps_);
     val_    += weight_ * ev;
@@ -137,7 +137,7 @@ public:
   void updateGradient(Objective<Real>         &obj,
                       const Vector<Real>      &x,
                       const std::vector<Real> &xstat,
-                      Real                    &tol) {
+                      Tolerance<Real>         &tol) {
     Real val = computeValue(obj,x,tol);
     Real ev  = exponential(val,xstat[0]*eps_);
     val_    += weight_ * ev;
@@ -174,7 +174,7 @@ public:
                      const std::vector<Real> &vstat,
                      const Vector<Real>      &x,
                      const std::vector<Real> &xstat,
-                     Real                    &tol) {
+                     Tolerance<Real>         &tol) {
     Real val = computeValue(obj,x,tol);
     Real ev  = exponential(val,xstat[0]*eps_);
     Real gv  = computeGradVec(*dualVector_,obj,v,x,tol);

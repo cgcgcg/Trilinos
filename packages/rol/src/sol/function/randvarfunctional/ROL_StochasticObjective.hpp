@@ -164,7 +164,7 @@ public:
     }
   }
 
-  Real value( const Vector<Real> &x, Real &tol ) {
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
     Ptr<const Vector<Real>>      x0    = getConstVector(x);
     Ptr<const std::vector<Real>> xstat = getConstStat(x);
     rvf_->initialize(*x0);
@@ -177,7 +177,7 @@ public:
     return val;
   }
 
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
     g.zero();
     Ptr<const Vector<Real>>      x0    = getConstVector(x);
     Ptr<const std::vector<Real>> xstat = getConstStat(x);
@@ -192,7 +192,7 @@ public:
   }
 
   void hessVec( Vector<Real> &hv, const Vector<Real> &v,
-                const Vector<Real> &x, Real &tol ) {
+                const Vector<Real> &x, Tolerance<Real> &tol ) {
     hv.zero();
     Ptr<const Vector<Real>>      x0     = getConstVector(x);
     Ptr<const std::vector<Real>> xstat  = getConstStat(x);
@@ -209,7 +209,7 @@ public:
   }
 
   virtual void precond( Vector<Real> &Pv, const Vector<Real> &v,
-                  const Vector<Real> &x, Real &tol ) {
+                  const Vector<Real> &x, Tolerance<Real> &tol ) {
     Pv.set(v.dual());
   }
 };

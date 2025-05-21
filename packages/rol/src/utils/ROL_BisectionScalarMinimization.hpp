@@ -25,7 +25,7 @@ namespace ROL {
 template<class Real>
 class BisectionScalarMinimization : public ScalarMinimization<Real> {
 private:
-  Real tol_;
+  Tolerance<Real> tol_;
   int niter_;
 
 public:

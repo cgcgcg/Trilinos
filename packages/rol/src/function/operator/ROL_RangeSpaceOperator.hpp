@@ -47,20 +47,20 @@ public:
     x_->set(x);
   }
 
-  virtual void apply( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  virtual void apply( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
     b1_->zero(); b2_->set(v);
     con_->solveAugmentedSystem(Hv,*mul_,*b1_,*b2_,*x_,tol); // This assumes linearity
   }
 
-  void applyAdjoint( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  void applyAdjoint( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
     throw Exception::NotImplemented(">>> RangeSpaceOperator::applyAdjoint : Not Implemented!");
   }
 
-  void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
     throw Exception::NotImplemented(">>> RangeSpaceOperator::applyInverse : Not Implemented!");
   }
 
-  void applyAdjointInverse( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  void applyAdjointInverse( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
     throw Exception::NotImplemented(">>> RangeSpaceOperator::applyAdjointInverse : Not Implemented!");
   }
 

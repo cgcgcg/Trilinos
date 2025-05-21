@@ -19,7 +19,7 @@
 
 #include <deque>
 
-namespace ROL { 
+namespace ROL {
 
 template<typename Real>
 class SPGTrustRegion_U : public TrustRegion_U<Real> {
@@ -69,7 +69,8 @@ public:
               const Real                del,
               TrustRegionModel_U<Real> &model ) {
     const Real zero(0), half(0.5), one(1), two(2), eps(std::sqrt(ROL_EPSILON<Real>()));
-    Real tol(eps), alpha(1), sHs(0), alphaTmp(1), mmax(0), qmin(0), q(0);
+    Tolerance<Real> tol(eps);
+    Real alpha(1), sHs(0), alphaTmp(1), mmax(0), qmin(0), q(0);
     Real gnorm(0), ss(0), gs(0);
     std::deque<Real> mqueue; mqueue.push_back(0);
     gmod_->set(*model.getGradient());

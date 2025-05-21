@@ -217,7 +217,7 @@ void StdMomentOperator<Real>::applyInverse(Vector<Real> &Mx,
       for (int i = 0; i < nfactors; ++i) {
         maxSV = (maxSV < sval_[i] ? sval_[i] : maxSV);
       }
-      const Real tol = ROL_EPSILON<Real>()*static_cast<Real>(nfactors) * maxSV;
+      const Tolerance<Real> tol = ROL_EPSILON<Real>()*static_cast<Real>(nfactors) * maxSV;
       for (int i = 0; i < nfactors; ++i) {
         if (sval_[i] > tol) {
           Ux[i] /= sval_[i];

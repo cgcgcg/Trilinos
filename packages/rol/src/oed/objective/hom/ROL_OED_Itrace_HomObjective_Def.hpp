@@ -16,7 +16,7 @@ namespace Hom {
 
 template<typename Real>
 void Itrace_Objective<Real>::solveAdjointEquation(Vector<Real> &adjoint, const Vector<Real> &u,
-                          const Vector<Real> &z, int i, Real &tol) {
+                          const Vector<Real> &z, int i, Tolerance<Real> &tol) {
   bool isComputed = (storage_ ? adjointStore_->get(adjoint,i) : false);
   if (!isComputed) {
     getConstraint()->applyInverseJacobian_1(adjoint,*b_[i],u,z,tol);
@@ -66,7 +66,7 @@ void Itrace_Objective<Real>::update( const Vector<Real> &z,
 }
 
 template<typename Real>
-Real Itrace_Objective<Real>::value( const Vector<Real> &z, Real &tol ) {
+Real Itrace_Objective<Real>::value( const Vector<Real> &z, Tolerance<Real> &tol ) {
   const int dim = weight_.size();
   Real val(0);
   for (int i = 0; i < dim; ++i) {
@@ -81,7 +81,7 @@ Real Itrace_Objective<Real>::value( const Vector<Real> &z, Real &tol ) {
 }
 
 template<typename Real>
-void Itrace_Objective<Real>::gradient( Vector<Real> &g, const Vector<Real> &z, Real &tol ) {
+void Itrace_Objective<Real>::gradient( Vector<Real> &g, const Vector<Real> &z, Tolerance<Real> &tol ) {
   if (Xa_==nullPtr) Xa_ = z.clone();
   g.zero();
   const int dim = weight_.size();
@@ -99,7 +99,7 @@ void Itrace_Objective<Real>::gradient( Vector<Real> &g, const Vector<Real> &z, R
 }
 
 template<typename Real>
-void Itrace_Objective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &z, Real &tol ) {
+void Itrace_Objective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &z, Tolerance<Real> &tol ) {
   if (Xa_==nullPtr) Xa_ = z.clone();
   const int dim = weight_.size();
   hv.zero();

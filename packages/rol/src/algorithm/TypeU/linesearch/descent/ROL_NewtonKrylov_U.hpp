@@ -48,7 +48,7 @@ private:
   public:
     HessianNK(const Ptr<Objective<Real>> &obj,
               const Ptr<const Vector<Real>> &x) : obj_(obj), x_(x) {}
-    void apply(Vector<Real> &Hv, const Vector<Real> &v, Real &tol) const {
+    void apply(Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol) const {
       obj_->hessVec(Hv,v,*x_,tol);
     }
   };
@@ -60,10 +60,10 @@ private:
   public:
     PrecondNK(const Ptr<Objective<Real>> &obj,
               const Ptr<const Vector<Real>> &x) : obj_(obj), x_(x) {}
-    void apply(Vector<Real> &Hv, const Vector<Real> &v, Real &tol) const {
+    void apply(Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol) const {
       Hv.set(v.dual());
     }
-    void applyInverse(Vector<Real> &Hv, const Vector<Real> &v, Real &tol) const {
+    void applyInverse(Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol) const {
       obj_->precond(Hv,v,*x_,tol);
     }
   };

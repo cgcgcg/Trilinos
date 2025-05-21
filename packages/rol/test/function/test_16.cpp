@@ -23,13 +23,13 @@
 template<typename Real>
 class con2d : public ROL::StdConstraint<Real> {
 public:
-  void value(std::vector<Real> &c, const std::vector<Real> &x, Real &tol) {
+  void value(std::vector<Real> &c, const std::vector<Real> &x, ROL::Tolerance<Real> &tol) {
     c[0] = x[0]+x[1]-static_cast<Real>(1);
   }
-  void applyJacobian(std::vector<Real> &jv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol) {
+  void applyJacobian(std::vector<Real> &jv, const std::vector<Real> &v, const std::vector<Real> &x, ROL::Tolerance<Real> &tol) {
     jv[0] = v[0]+v[1];
   }
-  void applyAdjointJacobian(std::vector<Real> &ajv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol) {
+  void applyAdjointJacobian(std::vector<Real> &ajv, const std::vector<Real> &v, const std::vector<Real> &x, ROL::Tolerance<Real> &tol) {
     ajv[0] = v[0];
     ajv[1] = v[0];
   }
@@ -90,7 +90,7 @@ int main(int argc, char *argv[]) {
 
     ROL::Ptr<ROL::PolyhedralProjection<RealT>> pp0 = ROL::PolyhedralProjectionFactory<RealT>(x,x.dual(),bnd0,con,r,r.dual(),list);
     pp0->project(Px,*outStream);
- 
+
     ROL::Ptr<std::vector<RealT>> x0ptr = ROL::makePtr<std::vector<RealT>>(2);
     RealT k0 = std::max(zero,std::min(one,half*(one+(*yptr)[0]-(*yptr)[1])));
     (*x0ptr)[0] = k0;
@@ -119,7 +119,7 @@ int main(int argc, char *argv[]) {
     ROL::Ptr<std::vector<RealT>> dptr = ROL::makePtr<std::vector<RealT>>(2);
     (*dptr)[0] = static_cast<RealT>(1)+static_cast<RealT>(2)*static_cast<RealT>(rand())/static_cast<RealT>(RAND_MAX);
     (*dptr)[1] = static_cast<RealT>(1)+static_cast<RealT>(5)*static_cast<RealT>(rand())/static_cast<RealT>(RAND_MAX);
- 
+
     ROL::Ptr<std::vector<RealT>> x1ptr = ROL::makePtr<std::vector<RealT>>(2);
     RealT k1 = std::max(zero,std::min(one,((*dptr)[1]*(one-(*yptr)[1])+(*dptr)[0]*(*yptr)[0])/((*dptr)[0]+(*dptr)[1])));
     (*x1ptr)[0] = k1;
@@ -163,7 +163,7 @@ int main(int argc, char *argv[]) {
 
     errorFlag += (err > tol);
   }
-  
+
   catch (std::logic_error& err) {
     *outStream << err.what() << "\n";
     errorFlag = -1000;
@@ -176,4 +176,3 @@ int main(int argc, char *argv[]) {
 
   return 0;
 }
-

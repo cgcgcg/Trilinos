@@ -9,7 +9,7 @@
 
 /*! \file  test_11.cpp
     \brief Verify that the implementation of the Coleman-Li Trust-Region
-           model passes derivative checks 
+           model passes derivative checks
 */
 
 #include "ROL_ColemanLiModel.hpp"
@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
 
   typedef ROL::Vector<RealT>          V;
   typedef ROL::Objective<RealT>       OBJ;
-  typedef ROL::BoundConstraint<RealT> CON; 
+  typedef ROL::BoundConstraint<RealT> CON;
 
   Teuchos::GlobalMPISession mpiSession(&argc, &argv);
 
@@ -44,14 +44,14 @@ int main(int argc, char *argv[]) {
   ROL::nullstream oldFormatState;
   oldFormatState.copyfmt(std::cout);
 
-  RealT zero(0);
+  ROL::Tolerance<RealT> zero(0);
 
   ROL::Ptr<V>   x0;
   ROL::Ptr<V>   x;
   ROL::Ptr<V>   g;
   ROL::Ptr<OBJ> obj;
   ROL::Ptr<CON> con;
-  ROL::Ptr<OBJ> model;  
+  ROL::Ptr<OBJ> model;
 
   ROL::ZOO::getHS2<RealT> HS2;
   obj = HS2.getObjective();
@@ -80,5 +80,3 @@ int main(int argc, char *argv[]) {
 
   return 0;
 }
-
-

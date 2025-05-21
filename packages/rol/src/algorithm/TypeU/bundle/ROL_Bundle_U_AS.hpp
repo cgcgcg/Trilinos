@@ -35,7 +35,7 @@ private:
   std::set<unsigned> nworkingSet_;
 
   bool isInitialized_;
-  
+
 /***********************************************************************************************/
 /***************** BUNDLE MODIFICATION AND ACCESS ROUTINES *************************************/
 /***********************************************************************************************/
@@ -47,7 +47,7 @@ public:
 
   void initialize(const Vector<Real> &g);
 
-  unsigned solveDual(const Real t, const unsigned maxit = 1000, const Real tol = 1.e-8);
+  unsigned solveDual(const Real t, const unsigned maxit = 1000, const Tolerance<Real> tol = 1.e-8);
 
 /***********************************************************************************************/
 /***************** DUAL CUTTING PLANE PROBLEM ROUTINES *****************************************/
@@ -56,13 +56,13 @@ private:
   void initializeDualSolver(void);
 
   void computeLagMult(std::vector<Real> &lam, const Real mu, const std::vector<Real> &g) const;
- 
+
   bool isNonnegative(unsigned &ind, const std::vector<Real> &x) const;
 
   Real computeStepSize(unsigned &ind, const std::vector<Real> &x, const std::vector<Real> &p) const;
 
   unsigned solveEQPsubproblem(std::vector<Real> &s, Real &mu,
-                        const std::vector<Real> &g, const Real tol) const;
+                        const std::vector<Real> &g, Tolerance<Real> tol) const;
 
   void applyPreconditioner(std::vector<Real> &Px, const std::vector<Real> &x) const;
 
@@ -86,7 +86,7 @@ private:
 
   void applyMatrix(std::vector<Real> &Hx, const std::vector<Real> &x) const;
 
-  unsigned projectedCG(std::vector<Real> &x, Real &mu, const std::vector<Real> &b, const Real tol) const;
+  unsigned projectedCG(std::vector<Real> &x, Real &mu, const std::vector<Real> &b, Tolerance<Real> tol) const;
 
   Real dot(const std::vector<Real> &x, const std::vector<Real> &y) const;
 
@@ -98,7 +98,7 @@ private:
 
   void scale(std::vector<Real> &x, const Real a, const std::vector<Real> &y) const;
 
-  unsigned solveDual_arbitrary(const Real t, const unsigned maxit = 1000, const Real tol = 1.e-8);
+  unsigned solveDual_arbitrary(const Real t, const unsigned maxit = 1000, const Tolerance<Real> tol = 1.e-8);
 
   /************************************************************************/
   /********************** PROJECTION ONTO FEASIBLE SET ********************/

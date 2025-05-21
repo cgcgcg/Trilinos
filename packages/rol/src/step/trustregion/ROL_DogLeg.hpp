@@ -50,7 +50,7 @@ public:
             int                    &iter,
             const Real              del,
             TrustRegionModel<Real> &model ) {
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
     const Real zero(0), half(0.5), one(1), two(2);
     // Set s to be the (projected) gradient
     model.dualTransform(*Hp_,*model.getGradient());

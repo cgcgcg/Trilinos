@@ -39,7 +39,7 @@ public:
 
   /** \brief Constructor.
 
-      Standard constructor to build a ProjectedNewtonStep object.  Algorithmic 
+      Standard constructor to build a ProjectedNewtonStep object.  Algorithmic
       specifications are passed in through a ROL::ParameterList.
 
       @param[in]     parlist    is a parameter list containing algorithmic specifications
@@ -53,8 +53,8 @@ public:
     verbosity_ = parlist.sublist("General").get("Print Verbosity",0);
   }
 
-  void initialize( Vector<Real> &x, const Vector<Real> &s, const Vector<Real> &g, 
-                   Objective<Real> &obj, BoundConstraint<Real> &bnd, 
+  void initialize( Vector<Real> &x, const Vector<Real> &s, const Vector<Real> &g,
+                   Objective<Real> &obj, BoundConstraint<Real> &bnd,
                    AlgorithmState<Real> &algo_state ) {
     Step<Real>::initialize(x,s,g,obj,bnd,algo_state);
     gp_ = g.clone();
@@ -64,7 +64,8 @@ public:
   void compute( Vector<Real> &s, const Vector<Real> &x,
                 Objective<Real> &obj, BoundConstraint<Real> &bnd,
                 AlgorithmState<Real> &algo_state ) {
-    Real tol = std::sqrt(ROL_EPSILON<Real>()), one(1);
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
+    Real one(1);
     ROL::Ptr<StepState<Real> > step_state = Step<Real>::getState();
 
     // Compute projected Newton step
@@ -83,7 +84,8 @@ public:
   void update( Vector<Real> &x, const Vector<Real> &s,
                Objective<Real> &obj, BoundConstraint<Real> &bnd,
                AlgorithmState<Real> &algo_state ) {
-    Real tol = std::sqrt(ROL_EPSILON<Real>()), one(1);
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
+    Real one(1);
     ROL::Ptr<StepState<Real> > step_state = Step<Real>::getState();
 
     // Update iterate and store previous step

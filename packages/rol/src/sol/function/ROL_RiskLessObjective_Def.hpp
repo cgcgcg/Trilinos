@@ -30,14 +30,14 @@ void RiskLessObjective<Real>::update( const Vector<Real> &x, bool flag, int iter
 }
 
 template<typename Real>
-Real RiskLessObjective<Real>::value( const Vector<Real> &x, Real &tol ) {
+Real RiskLessObjective<Real>::value( const Vector<Real> &x, Tolerance<Real> &tol ) {
   Ptr<const Vector<Real>> x0
     = dynamic_cast<const RiskVector<Real>&>(x).getVector();
   return obj_->value(*x0,tol);
 }
 
 template<typename Real>
-void RiskLessObjective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+void RiskLessObjective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
   Ptr<Vector<Real>> g0
     = dynamic_cast<RiskVector<Real>&>(g).getVector();
   Ptr<const Vector<Real>> x0
@@ -47,7 +47,7 @@ void RiskLessObjective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, 
 
 template<typename Real>
 void RiskLessObjective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v,
-              const Vector<Real> &x, Real &tol ) {
+              const Vector<Real> &x, Tolerance<Real> &tol ) {
   Ptr<Vector<Real>> hv0
     = dynamic_cast<RiskVector<Real>&>(hv).getVector();
   Ptr<const Vector<Real>> v0
@@ -59,7 +59,7 @@ void RiskLessObjective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v,
 
 template<typename Real>
 void RiskLessObjective<Real>::precond( Vector<Real> &Pv, const Vector<Real> &v,
-              const Vector<Real> &x, Real &tol ) {
+              const Vector<Real> &x, Tolerance<Real> &tol ) {
   Ptr<Vector<Real>> Pv0
     = dynamic_cast<RiskVector<Real>&>(Pv).getVector();
   Ptr<const Vector<Real>> v0

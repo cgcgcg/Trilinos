@@ -19,12 +19,12 @@
 /*
    \class ROL::RieszPrimalVector
    \brief Abstract implementation of a primal vector corresponding to
-          an inner-product that involves the application of a linear 
+          an inner-product that involves the application of a linear
           operator
 
    \class ROL::RieszDualVector
    \brief Abstract implementation of a dual vector corresponding to
-          an inner-product that involves the application of a linear 
+          an inner-product that involves the application of a linear
           operator inverse
 
 */
@@ -51,38 +51,38 @@ private:
   const   ROL::Ptr<V>          v_;
   mutable ROL::Ptr<DualVector> dual_;
   const   ROL::Ptr<OP>         op_;
-  mutable Real            tol_;
+  mutable Tolerance<Real>      tol_;
 
   mutable bool isDualInitialized_;
 
   void initialize_dual( void ) const {
 
-    dual_ = ROL::makePtr<DualVector>(v_->clone(),op_,tol_);   
+    dual_ = ROL::makePtr<DualVector>(v_->clone(),op_,tol_);
     op_->apply(*(dual_->getVector()),*v_,tol_);
     isDualInitialized_ = true;
   }
 
 public:
 
-  RieszPrimalVector( const ROL::Ptr<V>  &v, 
+  RieszPrimalVector( const ROL::Ptr<V>  &v,
                      const ROL::Ptr<OP> &op,
-                     Real tol=std::sqrt(ROL_EPSILON<Real>()) ) : 
-    v_(v), op_(op), tol_(tol), isDualInitialized_(false) {  
-  }   
+                     Tolerance<Real> tol=std::sqrt(ROL_EPSILON<Real>()) ) :
+    v_(v), op_(op), tol_(tol), isDualInitialized_(false) {
+  }
 
   virtual ~RieszPrimalVector() {}
- 
+
   virtual Real dot( const V &x ) const {
     if( !isDualInitialized_ ) {
       initialize_dual();
     }
 
     const RieszPrimalVector &ex = dynamic_cast<const RieszPrimalVector&>(x);
-    return dual_->getVector()->dot(*(ex.getVector()));    
+    return dual_->getVector()->dot(*(ex.getVector()));
   }
 
   virtual ROL::Ptr<V> clone() const {
-    return ROL::makePtr<RieszPrimalVector>( v_->clone(), op_, tol_ );   
+    return ROL::makePtr<RieszPrimalVector>( v_->clone(), op_, tol_ );
   }
 
   virtual const V & dual() const {
@@ -99,10 +99,10 @@ public:
   void applyBinary( const Elementwise::BinaryFunction<Real> &f, const V &x ) {
     const RieszPrimalVector &ex = dynamic_cast<const RieszPrimalVector&>(x);
     v_->applyBinary(f,*(ex.getVector()));
-  } 
+  }
 
   Real reduce( const Elementwise::ReductionOp<Real> &r ) const {
-    return v_->reduce(r); 
+    return v_->reduce(r);
   }
 
   void setScalar( const Real C ) {
@@ -113,14 +113,14 @@ public:
     v_->randomize(l,u);
   }
 
-  ROL::Ptr<V> getVector( void ) { 
+  ROL::Ptr<V> getVector( void ) {
     return v_;
   }
 
   ROL::Ptr<const V> getVector( void ) const {
     return v_;
   }
-  
+
 }; // class RieszPrimalVector
 
 
@@ -137,38 +137,38 @@ private:
   const   ROL::Ptr<V>            v_;
   mutable ROL::Ptr<PrimalVector>  primal_;
   const   ROL::Ptr<OP>            op_;
-  mutable Real               tol_;
+  mutable Tolerance<Real>         tol_;
 
   mutable bool isPrimalInitialized_;
 
   void initialize_primal( void ) const {
 
-    primal_ = ROL::makePtr<PrimalVector>(v_->clone(),op_,tol_);   
+    primal_ = ROL::makePtr<PrimalVector>(v_->clone(),op_,tol_);
     op_->applyInverse(*(primal_->getVector()),*v_,tol_);
     isPrimalInitialized_ = true;
   }
 
 public:
 
-  RieszDualVector( const ROL::Ptr<V>  &v, 
+  RieszDualVector( const ROL::Ptr<V>  &v,
                    const ROL::Ptr<OP> &op,
-                   Real tol=std::sqrt(ROL_EPSILON<Real>()) ) : 
-    v_(v), op_(op), tol_(tol), isPrimalInitialized_(false) {  
-  }   
+                   Tolerance<Real> tol=std::sqrt(ROL_EPSILON<Real>()) ) :
+    v_(v), op_(op), tol_(tol), isPrimalInitialized_(false) {
+  }
 
   virtual ~RieszDualVector() {}
- 
+
   virtual Real dot( const V &x ) const {
     if( !isPrimalInitialized_ ) {
       initialize_primal();
     }
-   
+
  const RieszDualVector &ex = dynamic_cast<const RieszDualVector&>(x);
-    return primal_->getVector()->dot(*(ex.getVector()));    
+    return primal_->getVector()->dot(*(ex.getVector()));
   }
 
   virtual ROL::Ptr<V> clone() const {
-    return ROL::makePtr<RieszDualVector>( v_->clone(), op_, tol_ );   
+    return ROL::makePtr<RieszDualVector>( v_->clone(), op_, tol_ );
   }
 
   virtual const V & dual() const {
@@ -185,10 +185,10 @@ public:
   void applyBinary( const Elementwise::BinaryFunction<Real> &f, const V &x ) {
     const RieszDualVector &ex = dynamic_cast<const RieszDualVector&>(x);
     v_->applyBinary(f,*(ex.getVector()));
-  } 
+  }
 
   Real reduce( const Elementwise::ReductionOp<Real> &r ) const {
-    return v_->reduce(r); 
+    return v_->reduce(r);
   }
 
   void setScalar( const Real C ) {
@@ -199,14 +199,14 @@ public:
     v_->randomize(l,u);
   }
 
-  ROL::Ptr<V> getVector( void ) { 
+  ROL::Ptr<V> getVector( void ) {
     return v_;
   }
 
   ROL::Ptr<const V> getVector( void ) const {
     return v_;
   }
-  
+
 }; // class RieszDualVector
 
 

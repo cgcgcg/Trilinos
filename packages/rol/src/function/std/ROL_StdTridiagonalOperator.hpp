@@ -92,7 +92,7 @@ public:
   using StdLinearOperator<Real>::applyAdjointInverse;
 
  
-  virtual void apply( vector<Real> &Hv, const vector<Real> &v, Real &tol ) const {
+  virtual void apply( vector<Real> &Hv, const vector<Real> &v, Tolerance<Real> &tol ) const {
     Hv[0] = (*a_)[0]*v[0] + (*b_)[0]*v[1];
 
     for( int i=1; i<N_-1; ++i ) {
@@ -103,7 +103,7 @@ public:
 
   }
 
-  virtual void applyAdjoint( vector<Real> &Hv, const vector<Real> &v, Real &tol ) const {
+  virtual void applyAdjoint( vector<Real> &Hv, const vector<Real> &v, Tolerance<Real> &tol ) const {
     Hv[0] = (*a_)[0]*v[0] + (*c_)[0]*v[1];
 
     for( int i=1; i<N_-1; ++i ) {
@@ -113,7 +113,7 @@ public:
     Hv[N_-1] = (*a_)[N_-1]*v[N_-1] + (*b_)[N_-2]*v[N_-2];
   }
 
-  virtual void applyInverse( vector<Real> &Hv, const vector<Real> &v, Real &tol ) const {
+  virtual void applyInverse( vector<Real> &Hv, const vector<Real> &v, Tolerance<Real> &tol ) const {
     Hv = v;
     copy();
     int INFO;
@@ -121,7 +121,7 @@ public:
     lapack_.GTTRS('N',N_,1,&dl_[0],&d_[0],&du_[0],&du2_[0],&ipiv_[0],&Hv[0],N_,&INFO);
 }
 
-  virtual void applyAdjointInverse( vector<Real> &Hv, const vector<Real> &v, Real &tol ) const {
+  virtual void applyAdjointInverse( vector<Real> &Hv, const vector<Real> &v, Tolerance<Real> &tol ) const {
     Hv = v;
     copy();
     int INFO;

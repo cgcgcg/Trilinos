@@ -48,7 +48,7 @@ TrustRegionAlgorithm<Real>::TrustRegionAlgorithm( ParameterList &parlist,
   // Trust-Region Inexactness Parameters
   ParameterList &ilist = trlist.sublist("Inexact").sublist("Gradient");
   scale0_ = ilist.get("Tolerance Scaling",  static_cast<Real>(0.1));
-  scale1_ = ilist.get("Relative Tolerance", static_cast<Real>(2)); 
+  scale1_ = ilist.get("Relative Tolerance", static_cast<Real>(2));
   // Inexact Function Evaluation Information
   ParameterList &vlist = trlist.sublist("Inexact").sublist("Value");
   scale_       = vlist.get("Tolerance Scaling",                 static_cast<Real>(1.e-1));
@@ -58,7 +58,7 @@ TrustRegionAlgorithm<Real>::TrustRegionAlgorithm( ParameterList &parlist,
   forceFactor_ = vlist.get("Forcing Sequence Reduction Factor", static_cast<Real>(0.1));
   // Initialize Trust Region Subproblem Solver Object
   std::string solverName = trlist.get("Subproblem Solver", "Dogleg");
-  etr_       = StringToETrustRegionU(solverName);  
+  etr_       = StringToETrustRegionU(solverName);
   solver_    = TrustRegionUFactory<Real>(parlist);
   verbosity_ = glist.get("Output Level", 0);
   // Secant Information
@@ -85,9 +85,9 @@ void TrustRegionAlgorithm<Real>::initialize( const Vector<Real> &x,
   solver_->initialize(x,g);
   model_->initialize(x,g);
   // Update approximate gradient and approximate objective function.
-  Real ftol = static_cast<Real>(0.1)*ROL_OVERFLOW<Real>(); 
-  obj.update(x,UpdateType::Initial,state_->iter);    
-  state_->value = obj.value(x,ftol); 
+  Tolerance<Real> ftol = static_cast<Real>(0.1)*ROL_OVERFLOW<Real>();
+  obj.update(x,UpdateType::Initial,state_->iter);
+  state_->value = obj.value(x,ftol);
   state_->nfval++;
   state_->snorm = ROL_INF<Real>();
   state_->gnorm = ROL_INF<Real>();
@@ -112,7 +112,8 @@ Real TrustRegionAlgorithm<Real>::computeValue( const Vector<Real> &x,
                                                Objective<Real>    &obj,
                                                Real               pRed) {
   const Real one(1);
-  Real tol(std::sqrt(ROL_EPSILON<Real>())), fval(0);
+  Tolerance<Real> tol(std::sqrt(ROL_EPSILON<Real>()));
+  Real fval(0);
   if ( useInexact_[0] ) {
     if ( !(state_->iter%updateIter_) && (state_->iter != 0) ) {
       force_ *= forceFactor_;
@@ -155,7 +156,7 @@ void TrustRegionAlgorithm<Real>::computeGradient(const Vector<Real> &x,
 
 template<typename Real>
 void TrustRegionAlgorithm<Real>::run( Vector<Real>       &x,
-                                      const Vector<Real> &g, 
+                                      const Vector<Real> &g,
                                       Objective<Real>    &obj,
                                       std::ostream       &outStream ) {
   const Real zero(0);
@@ -245,7 +246,7 @@ void TrustRegionAlgorithm<Real>::writeHeader( std::ostream& os ) const {
     os << std::string(114,'-') << std::endl;
     os << "Trust-Region status output definitions" << std::endl << std::endl;
     os << "  iter    - Number of iterates (steps taken)" << std::endl;
-    os << "  value   - Objective function value" << std::endl; 
+    os << "  value   - Objective function value" << std::endl;
     os << "  gnorm   - Norm of the gradient" << std::endl;
     os << "  snorm   - Norm of the step (update to optimization vector)" << std::endl;
     os << "  delta   - Trust-Region radius" << std::endl;
@@ -264,7 +265,7 @@ void TrustRegionAlgorithm<Real>::writeHeader( std::ostream& os ) const {
       for( int flag = CG_FLAG_SUCCESS; flag != CG_FLAG_UNDEFINED; ++flag ) {
         os << "    " << NumberToString(flag) << " - "
              << ECGFlagToString(static_cast<ECGFlag>(flag)) << std::endl;
-      }            
+      }
     }
     else if( etr_ == TRUSTREGION_U_SPG ) {
       os << std::endl;

@@ -60,7 +60,7 @@ namespace ZOO {
       } 
     }
 
-    Real value( const Vector<Real> &x, Real &tol ) {
+    Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
       
       ROL::Ptr<const vector> ex = getVector(x); 
       Real prod = 1.0;
@@ -70,7 +70,7 @@ namespace ZOO {
       return 2.0 - prod/fact_;
     }
 
-    void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+    void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
       
       ROL::Ptr<const vector> ex = getVector(x);
       ROL::Ptr<vector> eg = getVector(g);
@@ -87,7 +87,7 @@ namespace ZOO {
       }
     }
 #if USE_HESSVEC
-    void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+    void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
 
       
       ROL::Ptr<const vector> ex = getVector(x);

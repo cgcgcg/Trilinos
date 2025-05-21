@@ -47,12 +47,12 @@ void Bundle_U<Real>::add(const Vector<Real> &g, const Real le, const Real dm) {
   dualVariables_[size_]       = zero;
   size_++;
 }
- 
+
 template<typename Real>
 Bundle_U<Real>::Bundle_U(const unsigned maxSize,
                          const Real coeff,
                          const Real omega,
-                         const unsigned remSize) 
+                         const unsigned remSize)
   : size_(0), maxSize_(maxSize), remSize_(remSize),
     coeff_(coeff), omega_(omega), isInitialized_(false) {
   Real zero(0);
@@ -104,12 +104,12 @@ template<typename Real>
 const Vector<Real> & Bundle_U<Real>::subgradient(const unsigned i) const {
   return *(subgradients_[i]);
 }
-  
+
 template<typename Real>
 const Real Bundle_U<Real>::getDualVariable(const unsigned i) const {
   return dualVariables_[i];
 }
-  
+
 template<typename Real>
 void Bundle_U<Real>::setDualVariable(const unsigned i, const Real val) {
   dualVariables_[i] = val;
@@ -210,7 +210,7 @@ void Bundle_U<Real>::update(const bool flag, const Real linErr, const Real distM
     distanceMeasures_[size_]    = zero;
   }
   else {
-    // Null step taken: 
+    // Null step taken:
     linearizationErrors_[size_] = linErr;
     distanceMeasures_[size_]    = distMeas;
   }
@@ -266,14 +266,14 @@ Real Bundle_U<Real>::evaluateObjective(std::vector<Real> &g, const std::vector<R
 }
 
 template<typename Real>
-unsigned Bundle_U<Real>::solveDual_dim1(const Real t, const unsigned maxit, const Real tol) {
+unsigned Bundle_U<Real>::solveDual_dim1(const Real t, const unsigned maxit, Tolerance<Real> tol) {
   setDualVariable(0,static_cast<Real>(1));
   //std::cout << "dim = " << Bundle<Real>::size() << "  iter = " << 0 << "  CONVERGED!\n";
   return 0;
 }
 
 template<typename Real>
-unsigned Bundle_U<Real>::solveDual_dim2(const Real t, const unsigned maxit, const Real tol) {
+unsigned Bundle_U<Real>::solveDual_dim2(const Real t, const unsigned maxit, Tolerance<Real> tol) {
   Real diffg  = gx_->dot(*gx_), zero(0), one(1), half(0.5);
   gx_->set(subgradient(0)); addGi(1,-one,*gx_);
   if ( std::abs(diffg) > ROL_EPSILON<Real>() ) {

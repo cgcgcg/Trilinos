@@ -40,7 +40,7 @@ private:
   using ObjectiveBase<Real,std::vector<Real>>::solve_state_sensitivity;
 
   void solveAdjointEquation(Vector<Real> &adjoint, const Vector<Real> &u,
-                            const Vector<Real> &z, int i, Real &tol);
+                            const Vector<Real> &z, int i, Tolerance<Real> &tol);
 
 public:
   Itrace_Objective( const Ptr<BilinearConstraint<Real>> &con,
@@ -53,9 +53,9 @@ public:
   void update( const Vector<Real> &z,
                UpdateType type,
                int iter = -1 ) override;
-  Real value( const Vector<Real> &z, Real &tol ) override;
-  void gradient( Vector<Real> &g, const Vector<Real> &z, Real &tol ) override;
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &z, Real &tol ) override; 
+  Real value( const Vector<Real> &z, Tolerance<Real> &tol ) override;
+  void gradient( Vector<Real> &g, const Vector<Real> &z, Tolerance<Real> &tol ) override;
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &z, Tolerance<Real> &tol ) override; 
 };
 
 } // END Hom Namespace

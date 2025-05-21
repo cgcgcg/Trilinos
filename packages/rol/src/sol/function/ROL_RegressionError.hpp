@@ -36,7 +36,7 @@ private:
 public:
   RegressionError(void) {}
 
-  Real value( const std::vector<Real> &x, Real &tol ) {
+  Real value( const std::vector<Real> &x, Tolerance<Real> &tol ) {
     checkSize(x);
     const std::vector<Real> data = Objective<Real>::getParameter();
     const unsigned dim = x.size();
@@ -45,7 +45,7 @@ public:
     return val;
   }
 
-  void gradient( std::vector<Real> &g, const std::vector<Real> &x, Real &tol ) {
+  void gradient( std::vector<Real> &g, const std::vector<Real> &x, Tolerance<Real> &tol ) {
     checkSize(g);
     const std::vector<Real> data = Objective<Real>::getParameter();
     const unsigned dim = g.size();
@@ -53,7 +53,7 @@ public:
     for (unsigned i = 1; i < dim; ++i) g[i] = -data[i];
   }
 
-  void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+  void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Tolerance<Real> &tol ) {
     checkSize(hv);
     hv.assign(hv.size(),static_cast<Real>(0));
   }

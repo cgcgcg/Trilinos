@@ -23,7 +23,7 @@ void QuadraticObjective<Real>::initialize(const Vector<Real> &x) {
 }
 
 template<typename Real>
-void QuadraticObjective<Real>::apply(const Vector<Real> &u, const Vector<Real> &z, Real &tol) {
+void QuadraticObjective<Real>::apply(const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol) {
   if (!isG_) {
     initialize(u);
     M_->applyJacobian_1(*g_,u,u,z,tol);
@@ -48,7 +48,7 @@ void QuadraticObjective<Real>::update( const Vector<Real> &u, const Vector<Real>
 }
 
 template<typename Real>
-Real QuadraticObjective<Real>::value( const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
+Real QuadraticObjective<Real>::value( const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
   startTimer("value");
   apply(u,z,tol);
   Real val = u.dot(g_->dual());
@@ -57,7 +57,7 @@ Real QuadraticObjective<Real>::value( const Vector<Real> &u, const Vector<Real> 
 }
 
 template<typename Real>
-void QuadraticObjective<Real>::gradient_1( Vector<Real> &g, const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
+void QuadraticObjective<Real>::gradient_1( Vector<Real> &g, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
   startTimer("gradient_1");
   apply(u,z,tol);
   g.set(*g_);
@@ -65,7 +65,7 @@ void QuadraticObjective<Real>::gradient_1( Vector<Real> &g, const Vector<Real> &
 }
 
 template<typename Real>
-void QuadraticObjective<Real>::gradient_2( Vector<Real> &g, const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
+void QuadraticObjective<Real>::gradient_2( Vector<Real> &g, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
   startTimer("gradient_2");
   M_->applyAdjointJacobian_2(g,u,u,z,tol);
   g.scale(static_cast<Real>(0.5));
@@ -73,28 +73,28 @@ void QuadraticObjective<Real>::gradient_2( Vector<Real> &g, const Vector<Real> &
 }
 
 template<typename Real>
-void QuadraticObjective<Real>::hessVec_11( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
+void QuadraticObjective<Real>::hessVec_11( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
   startTimer("hessVec_11");
   M_->applyJacobian_1(hv,v,u,z,tol);
   stopTimer("hessVec_11");
 }
 
 template<typename Real>
-void QuadraticObjective<Real>::hessVec_12( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
+void QuadraticObjective<Real>::hessVec_12( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
   startTimer("hessVec_12");
   M_->applyAdjointHessian_21(hv,u,v,u,z,tol);
   stopTimer("hessVec_12");
 }
 
 template<typename Real>
-void QuadraticObjective<Real>::hessVec_21( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
+void QuadraticObjective<Real>::hessVec_21( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
   startTimer("hessVec_21");
   M_->applyAdjointHessian_12(hv,u,v,u,z,tol);
   stopTimer("hessVec_21");
 }
 
 template<typename Real>
-void QuadraticObjective<Real>::hessVec_22( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
+void QuadraticObjective<Real>::hessVec_22( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
   startTimer("hessVec_22");
   hv.zero();
   stopTimer("hessVec_22");

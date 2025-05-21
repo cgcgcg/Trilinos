@@ -191,7 +191,7 @@ public:
       @param[in]          x   is the current iterate.
       @param[in]          tol is a tolerance for interior point penalty computation.
   */
-  Real value( const Vector<Real> &x, Real &tol ) {
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
 
     ModifiedLogarithm                mlog;
     Elementwise::ReductionSum<Real>  sum;
@@ -260,7 +260,7 @@ public:
       @param[in]          tol is a tolerance for inexact log barrier penalty computation.
   */
 
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
     // Compute gradient of objective function
     obj_->gradient(*g_,x,tol);
     ngval_++;
@@ -306,7 +306,7 @@ public:
       @param[in]          tol is a tolerance for inexact log barrier penalty computation.
   */
 
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
 
     ModifiedReciprocal mrec;
     Elementwise::Multiply<Real> mult;

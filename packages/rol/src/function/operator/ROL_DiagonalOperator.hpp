@@ -44,12 +44,12 @@ public:
     diag_->set(x);
   }
 
-  void apply( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  void apply( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
     Hv.set(v); 
     Hv.applyBinary( mult_, *diag_ );
   }
 
-  void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
     Hv.set(v); 
     Hv.applyBinary( div_, *diag_ );
   }

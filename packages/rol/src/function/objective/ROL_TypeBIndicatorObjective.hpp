@@ -29,7 +29,7 @@ private:
   const Ptr<PolyhedralProjection<Real>> proj_;
   const Ptr<Vector<Real>> res_;
   bool isInit_;
-  Real tol_;
+  Tolerance<Real> tol_;
  
 public:
 
@@ -53,7 +53,7 @@ public:
   void initialize(const Vector<Real> &x) {
     if (!isInit_) {
       auto xz = x.clone(); xz->zero();
-      Real tol(std::sqrt(ROL_EPSILON<Real>()));
+      Tolerance<Real> tol(std::sqrt(ROL_EPSILON<Real>()));
       tol_ = static_cast<Real>(1e-2)*tol;
       proj_->getLinearConstraint()->value(*res_,*xz,tol);
       Real rnorm = res_->norm();
@@ -62,7 +62,7 @@ public:
     }
   }
 
-  Real value( const Vector<Real> &x, Real &tol ) {
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
     initialize(x);
     const Real zero(0);
     bool isBndFeasible = proj_->getBoundConstraint()->isFeasible(x); 
@@ -74,7 +74,7 @@ public:
     return (isBndFeasible && isConFeasible) ? zero : ROL_INF<Real>();
   }
 
-  void prox( Vector<Real> &Pv, const Vector<Real> &v, Real t, Real &tol){
+  void prox( Vector<Real> &Pv, const Vector<Real> &v, Real t, Tolerance<Real> &tol){
     Pv.set(v); proj_->project(Pv);
   }
 }; // class TypeBIndicatorObjective

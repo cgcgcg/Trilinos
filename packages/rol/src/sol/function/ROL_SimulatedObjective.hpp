@@ -38,7 +38,7 @@ public:
 
 
   Real value(const Vector<Real> &x,
-             Real &tol) {
+             Tolerance<Real> &tol) {
     const Vector_SimOpt<Real> &uz = dynamic_cast<const Vector_SimOpt<Real>&>(x);
     ROL::Ptr<const Vector<Real> > uptr = uz.get_1();
     ROL::Ptr<const Vector<Real> > zptr = uz.get_2();
@@ -63,7 +63,7 @@ public:
  
   virtual void gradient(Vector<Real> &g,
                         const Vector<Real> &x,
-                        Real &tol) {
+                        Tolerance<Real> &tol) {
     g.zero();
     // split x
     const Vector_SimOpt<Real> &xuz = dynamic_cast<const Vector_SimOpt<Real>&>(x);
@@ -99,7 +99,7 @@ public:
   virtual void hessVec(Vector<Real> &hv,
                        const Vector<Real> &v,
                        const Vector<Real> &x,
-                       Real &tol) {
+                       Tolerance<Real> &tol) {
     hv.zero();
     // split x
     const Vector_SimOpt<Real> &xuz = dynamic_cast<const Vector_SimOpt<Real>&>(x);

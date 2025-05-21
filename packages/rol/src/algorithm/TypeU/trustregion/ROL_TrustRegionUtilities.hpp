@@ -15,10 +15,10 @@
 namespace ROL {
 namespace TRUtils {
 
-/** \enum  ROL::TRUtils::ETRFlag 
+/** \enum  ROL::TRUtils::ETRFlag
     \brief Enumation of flags used by trust-region solvers.
 
-    \arg SUCCESS        Actual and predicted reductions are positive 
+    \arg SUCCESS        Actual and predicted reductions are positive
     \arg POSPREDNEG     Reduction is positive, predicted negative (impossible)
     \arg NPOSPREDPOS    Reduction is nonpositive, predicted positive
     \arg NPOSPREDNEG    Reduction is nonpositive, predicted negative (impossible)
@@ -32,19 +32,19 @@ enum ETRFlag {
   NPOSPREDNEG,
   TRNAN,
   QMINSUFDEC,
-  UNDEFINED 
+  UNDEFINED
 };
 
 inline std::string ETRFlagToString(ETRFlag trf) {
   std::string retString;
   switch(trf) {
-    case SUCCESS:  
+    case SUCCESS:
       retString = "Both actual and predicted reductions are positive (success)";
       break;
-    case POSPREDNEG: 
+    case POSPREDNEG:
       retString = "Actual reduction is positive and predicted reduction is negative (impossible)";
       break;
-    case NPOSPREDPOS: 
+    case NPOSPREDPOS:
       retString = "Actual reduction is nonpositive and predicted reduction is positive";
       break;
     case NPOSPREDNEG:
@@ -57,7 +57,7 @@ inline std::string ETRFlagToString(ETRFlag trf) {
       retString = "Subproblem solution did not produce sufficient decrease";
       break;
     default:
-      retString = "INVALID ETRFlag";       
+      retString = "INVALID ETRFlag";
   }
   return retString;
 }
@@ -69,7 +69,7 @@ inline Real initialRadius(int &nfval,
                           Vector<Real> &Bg,
                           const Real fx,
                           const Real gnorm,
-                          const Real gtol,
+                          const Tolerance<Real> gtol,
                           Objective<Real> &obj,
                           TrustRegionModel_U<Real> &model,
                           const Real delMax,
@@ -78,7 +78,7 @@ inline Real initialRadius(int &nfval,
   const Real zero(0), half(0.5), one(1), two(2), three(3), six(6);
   const Real eps(ROL_EPSILON<Real>());
   Real del(ROL_INF<Real>());
-  Real htol = gtol;
+  Tolerance<Real> htol = gtol;
   Ptr<Vector<Real>> xcp = x.clone();
   model.setData(obj,x,g,htol);
   model.hessVec(Bg,g.dual(),x,htol);
@@ -91,12 +91,12 @@ inline Real initialRadius(int &nfval,
   Real gs = xcp->apply(g);
   xcp->plus(x);
   obj.update(*xcp,UpdateType::Temp);
-  Real ftol = static_cast<Real>(0.1)*ROL_OVERFLOW<Real>(); 
+  Tolerance<Real> ftol = static_cast<Real>(0.1)*ROL_OVERFLOW<Real>();
   Real fnew = obj.value(*xcp,ftol); // MUST DO SOMETHING HERE WITH FTOL
   nfval++;
   // Perform cubic interpolation to determine initial trust region radius
   Real a = fnew - fx - gs - half*alpha*alpha*gBg;
-  if ( std::abs(a) < eps ) { 
+  if ( std::abs(a) < eps ) {
     // a = 0 implies the objective is quadratic in the negative gradient direction
     del = std::min(alpha*gnorm,delMax);
   }

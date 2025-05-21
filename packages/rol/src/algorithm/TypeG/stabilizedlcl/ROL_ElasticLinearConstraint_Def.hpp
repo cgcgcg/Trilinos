@@ -27,7 +27,7 @@ template<typename Real>
 void ElasticLinearConstraint<Real>::update( const Vector<Real> &x, bool flag, int iter ) {}
 
 template<typename Real>
-void ElasticLinearConstraint<Real>::value(Vector<Real> &c, const Vector<Real> &x, Real &tol) {
+void ElasticLinearConstraint<Real>::value(Vector<Real> &c, const Vector<Real> &x, Tolerance<Real> &tol) {
   Ptr<const Vector<Real>> xs = dynamic_cast<const PartitionedVector<Real>&>(x).get(0);
   Ptr<const Vector<Real>> xu = dynamic_cast<const PartitionedVector<Real>&>(x).get(1);
   Ptr<const Vector<Real>> xv = dynamic_cast<const PartitionedVector<Real>&>(x).get(2);
@@ -39,7 +39,7 @@ void ElasticLinearConstraint<Real>::value(Vector<Real> &c, const Vector<Real> &x
 }
 
 template<typename Real>
-void ElasticLinearConstraint<Real>::applyJacobian(Vector<Real> &jv, const Vector<Real> &v, const Vector<Real> &x, Real &tol) {
+void ElasticLinearConstraint<Real>::applyJacobian(Vector<Real> &jv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol) {
   Ptr<const Vector<Real>> vs = dynamic_cast<const PartitionedVector<Real>&>(v).get(0);
   Ptr<const Vector<Real>> vu = dynamic_cast<const PartitionedVector<Real>&>(v).get(1);
   Ptr<const Vector<Real>> vv = dynamic_cast<const PartitionedVector<Real>&>(v).get(2);
@@ -49,7 +49,7 @@ void ElasticLinearConstraint<Real>::applyJacobian(Vector<Real> &jv, const Vector
 }
 
 template<typename Real>
-void ElasticLinearConstraint<Real>::applyAdjointJacobian(Vector<Real> &ajv, const Vector<Real> &v, const Vector<Real> &x, Real &tol) {
+void ElasticLinearConstraint<Real>::applyAdjointJacobian(Vector<Real> &ajv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol) {
   Ptr<Vector<Real>> as = dynamic_cast<PartitionedVector<Real>&>(ajv).get(0);
   Ptr<Vector<Real>> au = dynamic_cast<PartitionedVector<Real>&>(ajv).get(1);
   Ptr<Vector<Real>> av = dynamic_cast<PartitionedVector<Real>&>(ajv).get(2);
@@ -59,7 +59,7 @@ void ElasticLinearConstraint<Real>::applyAdjointJacobian(Vector<Real> &ajv, cons
 }
 
 template<typename Real>
-void ElasticLinearConstraint<Real>::applyAdjointJacobian(Vector<Real> &ajv, const Vector<Real> &v, const Vector<Real> &x, const Vector<Real> &dualv, Real &tol) {
+void ElasticLinearConstraint<Real>::applyAdjointJacobian(Vector<Real> &ajv, const Vector<Real> &v, const Vector<Real> &x, const Vector<Real> &dualv, Tolerance<Real> &tol) {
   Ptr<Vector<Real>> as = dynamic_cast<PartitionedVector<Real>&>(ajv).get(0);
   Ptr<Vector<Real>> au = dynamic_cast<PartitionedVector<Real>&>(ajv).get(1);
   Ptr<Vector<Real>> av = dynamic_cast<PartitionedVector<Real>&>(ajv).get(2);
@@ -69,14 +69,14 @@ void ElasticLinearConstraint<Real>::applyAdjointJacobian(Vector<Real> &ajv, cons
 }
 
 template<typename Real>
-void ElasticLinearConstraint<Real>::applyAdjointHessian(Vector<Real> &ahuv, const Vector<Real> &u, const Vector<Real> &v, const Vector<Real> &x, Real &tol) {
+void ElasticLinearConstraint<Real>::applyAdjointHessian(Vector<Real> &ahuv, const Vector<Real> &u, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol) {
   ahuv.zero();
 }
 
 template<typename Real>
 void ElasticLinearConstraint<Real>::setAnchor(const Ptr<const Vector<Real>> &x) {
   x_->set(*x);
-  Real tol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
   con_->value(*c_,*x_,tol);
 }
 

@@ -18,7 +18,7 @@ void ConstraintAssembler<Real>::initializeSlackVariable(const Ptr<Constraint<Rea
                                                          const Ptr<Vector<Real>>          &s,
                                                          const Ptr<Vector<Real>>          &x) const {
   // Set slack variable to s = proj(c(x))
-  Real tol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
   con->value(*s,*x,tol);
   cbnd->project(*s);
 }

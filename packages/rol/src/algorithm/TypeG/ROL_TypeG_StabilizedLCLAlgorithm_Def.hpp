@@ -38,14 +38,14 @@ StabilizedLCLAlgorithm<Real>::StabilizedLCLAlgorithm( ParameterList &list, const
   optIncreaseExponent_ = sublist.get("Optimality Tolerance Increase Exponent", one);
   optDecreaseExponent_ = sublist.get("Optimality Tolerance Decrease Exponent", one);
   optToleranceInitial_ = sublist.get("Initial Optimality Tolerance",           one);
-  // Feasibility tolerance update    
+  // Feasibility tolerance update
   feasIncreaseExponent_ = sublist.get("Feasibility Tolerance Increase Exponent", p9);
   feasDecreaseExponent_ = sublist.get("Feasibility Tolerance Decrease Exponent", p1);
   feasToleranceInitial_ = sublist.get("Initial Feasibility Tolerance",           one);
   // Subproblem information
   maxit_         = sublist.get("Subproblem Iteration Limit",              1000);
   subStep_       = sublist.get("Subproblem Step Type",                    "Trust Region");
-  HessianApprox_ = sublist.get("Level of Hessian Approximation",          0); 
+  HessianApprox_ = sublist.get("Level of Hessian Approximation",          0);
   list_.sublist("Step").set("Type",subStep_);
   list_.sublist("Status Test").set("Iteration Limit",maxit_);
   // Verbosity setting
@@ -80,7 +80,7 @@ void StabilizedLCLAlgorithm<Real>::initialize( Vector<Real>           &x,
   proj_->project(x,outStream);
 
   const Real one(1), TOL(1.e-2);
-  Real tol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
   TypeG::Algorithm<Real>::initialize(x,g,l,c);
 
   // Initialize the algorithm state
@@ -186,7 +186,8 @@ void StabilizedLCLAlgorithm<Real>::run( Vector<Real>          &x,
                                         const Vector<Real>    &eres,
                                         std::ostream          &outStream ) {
   const Real one(1), oem2(1e-2);
-  Real tol(std::sqrt(ROL_EPSILON<Real>())), cnorm(0), lnorm;;
+  Tolerance<Real> tol(std::sqrt(ROL_EPSILON<Real>()));
+  Real cnorm(0), lnorm;
   // Initialize augmented Lagrangian data
   ElasticObjective<Real> alobj(makePtrFromRef(obj),makePtrFromRef(econ),
                                state_->searchSize,sigma_,g,eres,emul,
@@ -220,10 +221,10 @@ void StabilizedLCLAlgorithm<Real>::run( Vector<Real>          &x,
   elc.addLinearConstraint("ElasticLinearConstraint",lcon,l,c);
   elc.setProjectionAlgorithm(ppa_list);
   elc.finalize(false,verbosity_>2,outStream);
- 
+
   // Initialize subproblem algorithm
   Ptr<TypeB::Algorithm<Real>> algo;
-  
+
   // Output
   if (verbosity_ > 0) writeOutput(outStream,true);
 

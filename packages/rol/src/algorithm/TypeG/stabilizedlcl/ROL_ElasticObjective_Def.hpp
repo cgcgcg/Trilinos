@@ -57,7 +57,7 @@ void ElasticObjective<Real>::setScaling(const Real fscale, const Real cscale) {
 }
 
 template<typename Real>
-Real ElasticObjective<Real>::value( const Vector<Real> &x, Real &tol ) {
+Real ElasticObjective<Real>::value( const Vector<Real> &x, Tolerance<Real> &tol ) {
   Ptr<const Vector<Real>> xs = dynamic_cast<const PartitionedVector<Real>&>(x).get(0);
   Ptr<const Vector<Real>> xu = dynamic_cast<const PartitionedVector<Real>&>(x).get(1);
   Ptr<const Vector<Real>> xv = dynamic_cast<const PartitionedVector<Real>&>(x).get(2);
@@ -68,7 +68,7 @@ Real ElasticObjective<Real>::value( const Vector<Real> &x, Real &tol ) {
 }
 
 template<typename Real>
-void ElasticObjective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+void ElasticObjective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
   Ptr<Vector<Real>> gs = dynamic_cast<PartitionedVector<Real>&>(g).get(0);
   Ptr<Vector<Real>> gu = dynamic_cast<PartitionedVector<Real>&>(g).get(1);
   Ptr<Vector<Real>> gv = dynamic_cast<PartitionedVector<Real>&>(g).get(2);
@@ -79,7 +79,7 @@ void ElasticObjective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, R
 }
 
 template<typename Real>
-void ElasticObjective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+void ElasticObjective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
   Ptr<Vector<Real>> hvs = dynamic_cast<PartitionedVector<Real>&>(hv).get(0);
   Ptr<Vector<Real>> hvu = dynamic_cast<PartitionedVector<Real>&>(hv).get(1);
   Ptr<Vector<Real>> hvv = dynamic_cast<PartitionedVector<Real>&>(hv).get(2);
@@ -91,17 +91,17 @@ void ElasticObjective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, c
 }
 
 template<typename Real>
-Real ElasticObjective<Real>::getObjectiveValue(const Vector<Real> &x, Real &tol) {
+Real ElasticObjective<Real>::getObjectiveValue(const Vector<Real> &x, Tolerance<Real> &tol) {
   return alobj_->getObjectiveValue(x,tol);
 }
 
 template<typename Real>
-const Ptr<const Vector<Real>> ElasticObjective<Real>::getObjectiveGradient(const Vector<Real> &x, Real &tol) {
+const Ptr<const Vector<Real>> ElasticObjective<Real>::getObjectiveGradient(const Vector<Real> &x, Tolerance<Real> &tol) {
   return alobj_->getObjectiveGradient(x,tol);
 }
 
 template<typename Real>
-const Ptr<const Vector<Real>> ElasticObjective<Real>::getConstraintVec(const Vector<Real> &x, Real &tol) {
+const Ptr<const Vector<Real>> ElasticObjective<Real>::getConstraintVec(const Vector<Real> &x, Tolerance<Real> &tol) {
   return alobj_->getConstraintVec(x,tol);
 }
 

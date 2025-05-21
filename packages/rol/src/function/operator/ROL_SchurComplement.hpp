@@ -84,19 +84,19 @@ public:
   U_ = ROL::makePtr<UPPER>(B_);
   L_ = ROL::makePtr<LOWER>(C_);
 
-  void applyLower( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) { 
+  void applyLower( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) { 
     L_->apply(Hv,v,tol);
   }
 
-  void applyLowerInverse( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) { 
+  void applyLowerInverse( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) { 
     L_->applyInverse(Hv,v,tol);
   }
 
-  void applyUpper( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) { 
+  void applyUpper( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) { 
     U_->apply(Hv,v,tol);
   }
 
-  void applyUpperInverse( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) { 
+  void applyUpperInverse( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) { 
     U_->applyInverse(Hv,v,tol);
   }
 
@@ -104,7 +104,7 @@ public:
     return ROL::makePtr<BlockOperator2Determinant<Real>>(A_,B_,C_,D_,scratch1_);
   }
 
-  void solve2( Vector<Real> &Hv2, const Vector<Real> &v2, Real &tol ) {
+  void solve2( Vector<Real> &Hv2, const Vector<Real> &v2, Tolerance<Real> &tol ) {
     D_->applyInverse(Hv2,v2,tol);
   }
 

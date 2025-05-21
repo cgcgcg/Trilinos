@@ -111,7 +111,7 @@ public:
   */
   MeanVarianceFromTarget( const std::vector<Real> &target,
                           const std::vector<Real> &order,
-                          const std::vector<Real> &coeff, 
+                          const std::vector<Real> &coeff,
                           const ROL::Ptr<PositiveFunction<Real> > &pf )
     : RandVarFunctional<Real>(), positiveFunction_(pf) {
     target_.clear(); order_.clear(); coeff_.clear();
@@ -127,7 +127,7 @@ public:
     checkInputs();
     NumMoments_ = order_.size();
   }
-  
+
   /** \brief Constructor.
 
       @param[in]     parlist is a parameter list specifying inputs
@@ -165,11 +165,11 @@ public:
     checkInputs();
     NumMoments_ = order_.size();
   }
-  
+
   void updateValue(Objective<Real>         &obj,
                    const Vector<Real>      &x,
                    const std::vector<Real> &xstat,
-                   Real                    &tol) {
+                   Tolerance<Real>         &tol) {
     Real diff(0), pf0(0);
     Real val = computeValue(obj,x,tol);
     val_    += weight_ * val;
@@ -183,7 +183,7 @@ public:
   void updateGradient(Objective<Real>         &obj,
                       const Vector<Real>      &x,
                       const std::vector<Real> &xstat,
-                      Real                    &tol) {
+                      Tolerance<Real>         &tol) {
     Real diff(0), pf0(0), pf1(0), c(1), one(1);
     Real val = computeValue(obj,x,tol);
     for ( uint p = 0; p < NumMoments_; p++ ) {
@@ -201,7 +201,7 @@ public:
                      const std::vector<Real> &vstat,
                      const Vector<Real>      &x,
                      const std::vector<Real> &xstat,
-                     Real                    &tol) {
+                     Tolerance<Real>         &tol) {
     Real diff(0), pf0(0), pf1(0), pf2(0), p1(0), p2(0), ch(1), cg(0), one(1), two(2);
     Real val = computeValue(obj,x,tol);
     Real gv  = computeGradVec(*dualVector_,obj,v,x,tol);

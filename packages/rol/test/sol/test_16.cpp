@@ -33,17 +33,17 @@ typedef double RealT;
 template<typename Real>
 class LossEx16 : public ROL::StdObjective<Real> {
 public:
-  Real value( const std::vector<Real> &x, Real &tol ) {
+  Real value( const std::vector<Real> &x, ROL::Tolerance<Real> &tol ) {
     std::vector<Real> p = ROL::StdObjective<Real>::getParameter();
     return std::inner_product(x.begin(),x.end(),p.begin(),static_cast<Real>(0));
   }
 
-  void gradient( std::vector<Real> &g, const std::vector<Real> &x, Real &tol ) {
+  void gradient( std::vector<Real> &g, const std::vector<Real> &x, ROL::Tolerance<Real> &tol ) {
     std::vector<Real> p = ROL::StdObjective<Real>::getParameter();
     g.assign(p.begin(),p.end());
   }
 
-  void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+  void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, ROL::Tolerance<Real> &tol ) {
     std::fill(hv.begin(),hv.end(),static_cast<Real>(0));
   }
 };
@@ -51,19 +51,19 @@ public:
 template<typename Real>
 class BudgetEx16 : public ROL::StdConstraint<Real> {
 public:
-  void value( std::vector<Real> &c, const std::vector<Real> &x, Real &tol ) {
+  void value( std::vector<Real> &c, const std::vector<Real> &x, ROL::Tolerance<Real> &tol ) {
     c[0] = std::accumulate(x.begin(),x.end(),static_cast<Real>(0)) - static_cast<Real>(1);
   }
 
-  void applyJacobian( std::vector<Real> &jv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+  void applyJacobian( std::vector<Real> &jv, const std::vector<Real> &v, const std::vector<Real> &x, ROL::Tolerance<Real> &tol ) {
     jv[0] = std::accumulate(v.begin(),v.end(),static_cast<Real>(0));
   }
 
-  void applyAdjointJacobian( std::vector<Real> &ajv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+  void applyAdjointJacobian( std::vector<Real> &ajv, const std::vector<Real> &v, const std::vector<Real> &x, ROL::Tolerance<Real> &tol ) {
     std::fill(ajv.begin(),ajv.end(),v[0]);
   }
 
-  void applyAdjointHessian( std::vector<Real> &ahuv, const std::vector<Real> &u, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+  void applyAdjointHessian( std::vector<Real> &ahuv, const std::vector<Real> &u, const std::vector<Real> &v, const std::vector<Real> &x, ROL::Tolerance<Real> &tol ) {
     std::fill(ahuv.begin(),ahuv.end(),static_cast<Real>(0));
   }
 };
@@ -102,7 +102,7 @@ int main(int argc, char* argv[]) {
     /**********************************************************************************************/
     // Get ROL parameterlist
     std::string filename = "input_16.xml";
-    
+
     auto parlist = ROL::getParametersFromXmlFile( filename );
     ROL::ParameterList list = *parlist;
     list.sublist("General").set("Output Level",print ? 1 : 0);

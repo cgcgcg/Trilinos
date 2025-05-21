@@ -17,9 +17,9 @@ namespace ROL {
 template<typename Real>
 class Objective_FSsolver : public Objective<Real> {
 public:
-  Real value( const Vector<Real> &u, Real &tol ) override;
-  void gradient( Vector<Real> &g, const Vector<Real> &u, Real &tol ) override;
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, Real &tol ) override;
+  Real value( const Vector<Real> &u, Tolerance<Real> &tol ) override;
+  void gradient( Vector<Real> &g, const Vector<Real> &u, Tolerance<Real> &tol ) override;
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, Tolerance<Real> &tol ) override;
 
 }; // class Objective_FSsolver
 

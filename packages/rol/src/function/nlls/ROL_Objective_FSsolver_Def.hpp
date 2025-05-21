@@ -13,17 +13,17 @@
 namespace ROL {
 
 template<typename Real>
-Real Objective_FSsolver<Real>::value( const Vector<Real> &u, Real &tol ) {
+Real Objective_FSsolver<Real>::value( const Vector<Real> &u, Tolerance<Real> &tol ) {
   return static_cast<Real>(0.5)*u.dot(u);
 }
 
 template<typename Real>
-void Objective_FSsolver<Real>::gradient( Vector<Real> &g, const Vector<Real> &u, Real &tol ) {
+void Objective_FSsolver<Real>::gradient( Vector<Real> &g, const Vector<Real> &u, Tolerance<Real> &tol ) {
   g.set(u.dual());
 }
 
 template<typename Real>
-void Objective_FSsolver<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, Real &tol ) {
+void Objective_FSsolver<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, Tolerance<Real> &tol ) {
   hv.set(v.dual());
 }
 

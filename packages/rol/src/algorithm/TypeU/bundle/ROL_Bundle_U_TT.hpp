@@ -11,7 +11,7 @@
 #define ROL_BUNDLE_U_TT_H
 
 #include "ROL_Bundle_U.hpp"
-#include "ROL_LAPACK.hpp" 
+#include "ROL_LAPACK.hpp"
 #include "ROL_LinearAlgebra.hpp"
 #include <vector>
 
@@ -25,7 +25,7 @@ namespace ROL {
 
 template<typename Real>
 class Bundle_U_TT : public Bundle_U<Real> {
-private: 
+private:
   LAPACK<int, Real> lapack_; // TT
 
   int QPStatus_;           // QP solver status
@@ -73,8 +73,8 @@ public:
               const Real coeff = 0.0,
               const Real omega = 2.0,
               const unsigned remSize = 2);
-  
-  unsigned solveDual(const Real t, const unsigned maxit = 1000, const Real tol = 1.e-8);
+
+  unsigned solveDual(const Real t, const unsigned maxit = 1000, const Tolerance<Real> tol = 1.e-8);
 
 /***********************************************************************************************/
 /****************** DUAL CUTTING PLANE SUBPROBLEM ROUTINES *************************************/
@@ -88,17 +88,17 @@ private:
 
   void addSubgradToBase(unsigned ind, Real delta);
 
-  void deleteSubgradFromBase(unsigned ind, Real tol);
-  
+  void deleteSubgradFromBase(unsigned ind, Tolerance<Real> tol);
+
   // TT: solving triangular system for TT algorithm
   void solveSystem(int size, char tran, LA::Matrix<Real> &L, LA::Vector<Real> &v);
 
   // TT: check that inequality constraints are satisfied for dual variables
-  bool isFeasible(LA::Vector<Real> &v, const Real &tol);
+  bool isFeasible(LA::Vector<Real> &v, const Tolerance<Real> &tol);
 
-  unsigned solveDual_TT(const Real t, const unsigned maxit = 1000, const Real tol = 1.e-8);
+  unsigned solveDual_TT(const Real t, const unsigned maxit = 1000, const Tolerance<Real> tol = 1.e-8);
 
-  unsigned solveDual_arbitrary(const Real t, const unsigned maxit = 1000, const Real tol = 1.e-8);
+  unsigned solveDual_arbitrary(const Real t, const unsigned maxit = 1000, const Tolerance<Real> tol = 1.e-8);
 
 }; // class Bundle_TT
 
@@ -107,4 +107,3 @@ private:
 #include "ROL_Bundle_U_TT_Def.hpp"
 
 #endif
-

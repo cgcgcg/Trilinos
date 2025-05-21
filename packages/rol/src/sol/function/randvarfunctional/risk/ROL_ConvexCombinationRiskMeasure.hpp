@@ -139,7 +139,7 @@ public:
     for (uint i = 0; i < size_; ++i) {
       risk_[i]->resetStorage(type);
     }
-    
+
   }
 
   void initialize(const Vector<Real> &x) {
@@ -152,7 +152,7 @@ public:
   void updateValue(Objective<Real>         &obj,
                    const Vector<Real>      &x,
                    const std::vector<Real> &xstat,
-                   Real                    &tol) {
+                   Tolerance<Real>         &tol) {
     std::vector<Real> statx;
     int offset(0);
     for (uint i = 0; i < size_; ++i) {
@@ -185,7 +185,7 @@ public:
   void updateGradient(Objective<Real>         &obj,
                       const Vector<Real>      &x,
                       const std::vector<Real> &xstat,
-                      Real                    &tol) {
+                      Tolerance<Real>         &tol) {
     std::vector<Real> statx;
     int offset(0);
     for (uint i = 0; i < size_; ++i) {
@@ -227,7 +227,7 @@ public:
                      const std::vector<Real> &vstat,
                      const Vector<Real>      &x,
                      const std::vector<Real> &xstat,
-                     Real                    &tol) {
+                     Tolerance<Real>         &tol) {
     std::vector<Real> statx, statv;
     int offset(0);
     for (uint i = 0; i < size_; ++i) {

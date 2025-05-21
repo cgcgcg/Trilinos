@@ -82,7 +82,7 @@ private:
   Real force_;
   int updateIter_;
   Real forceFactor_;
-  Real gtol_;
+  Tolerance<Real> gtol_;
 
   mutable int nhess_;  ///< Number of Hessian applications
   unsigned verbosity_; ///< Output level (default: 0)
@@ -97,7 +97,7 @@ public:
 
   using TypeB::Algorithm<Real>::run;
   void run( Vector<Real>          &x,
-            const Vector<Real>    &g, 
+            const Vector<Real>    &g,
             Objective<Real>       &obj,
             BoundConstraint<Real> &bnd,
             std::ostream          &outStream = std::cout) override;
@@ -111,13 +111,13 @@ public:
 private:
   void initialize(Vector<Real>          &x,
                   const Vector<Real>    &g,
-                  Real                   ftol,
+                  Tolerance<Real>       ftol,
                   Objective<Real>       &obj,
                   BoundConstraint<Real> &bnd,
                   std::ostream &outStream = std::cout);
 
-  Real computeValue(Real inTol,
-                    Real &outTol,
+  Real computeValue(Tolerance<Real> inTol,
+                    Tolerance<Real> &outTol,
                     Real pRed,
                     Real &fold,
                     int iter,
@@ -131,7 +131,7 @@ private:
                        Real del,
                        Objective<Real> &obj,
                        bool accept,
-                       Real &gtol,
+                       Tolerance<Real> &gtol,
                        Real &gnorm,
                        std::ostream &outStream = std::cout) const;
 

@@ -93,7 +93,7 @@ public:
                                                                       parlist);
     rAugLagSimOpt_ = ROL::makePtr<Reduced_Objective_SimOpt<Real>>(augLagSimOpt_,redCon,state,control,adjoint);
     rAugLagSimOpt_->update(*control);
-    Real tol = 1e-8;
+    Tolerance<Real> tol = 1e-8;
     rAugLagSimOpt_->value(*control,tol);
   }
 
@@ -101,16 +101,16 @@ public:
     rAugLagSimOpt_->update(x,flag,iter);
   }
 
-  Real value( const Vector<Real> &x, Real &tol ) {
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
     return rAugLagSimOpt_->value(x,tol);
   }
 
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
     ngval_++;
     rAugLagSimOpt_->gradient(g,x,tol);
   }
 
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
     rAugLagSimOpt_->hessVec(hv,v,x,tol);
   }
 

@@ -30,19 +30,19 @@ void ObjectiveFromConstraint<Real>::update( const Vector<Real> &x, bool flag, in
 }
 
 template<typename Real>
-Real ObjectiveFromConstraint<Real>::value( const Vector<Real> &x, Real &tol ) {
+Real ObjectiveFromConstraint<Real>::value( const Vector<Real> &x, Tolerance<Real> &tol ) {
   con_->value(*c_,x,tol);
   //return l_->dot(c_->dual());  
   return l_->apply(*c_);  
 }
 
 template<typename Real>
-void ObjectiveFromConstraint<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+void ObjectiveFromConstraint<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
   con_->applyAdjointJacobian(g,*l_,x,tol);
 }
 
 template<typename Real>
-void ObjectiveFromConstraint<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+void ObjectiveFromConstraint<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
   con_->applyAdjointHessian(hv,*l_,v,x,tol);
 }
 

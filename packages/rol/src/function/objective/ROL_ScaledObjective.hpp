@@ -26,11 +26,11 @@ public:
 
   void update(const Vector<Real> &x, UpdateType type, int iter = -1) override;
   void setParameter(const std::vector<Real> &param) override;
-  Real value( const Vector<Real> &x, Real &tol ) override;
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) override;
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) override;
-  void invHessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) override;
-  void precond( Vector<Real> &Pv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) override;
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) override;
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) override;
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) override;
+  void invHessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) override;
+  void precond( Vector<Real> &Pv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) override;
 
 }; // class ScaledObjective
 

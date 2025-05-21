@@ -34,18 +34,18 @@ namespace ZOO {
 template<class Real>
 class Objective_HS9 : public StdObjective<Real> {
 public:
-  Real value( const std::vector<Real> &x, Real &tol ) {
+  Real value( const std::vector<Real> &x, Tolerance<Real> &tol ) {
     const Real pi(M_PI), c12(12), c16(16);
     return std::sin(x[0]*pi/c12)*std::cos(x[1]*pi/c16);
   }
 
-  void gradient( std::vector<Real> &g, const std::vector<Real> &x, Real &tol ) {
+  void gradient( std::vector<Real> &g, const std::vector<Real> &x, Tolerance<Real> &tol ) {
     const Real pi(M_PI), c12(12), c16(16);
     g[0] =  pi/c12*std::cos(x[0]*pi/c12)*std::cos(x[1]*pi/c16);
     g[1] = -pi/c16*std::sin(x[0]*pi/c12)*std::sin(x[1]*pi/c16);
   }
 
-  void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+  void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Tolerance<Real> &tol ) {
     const Real pi(M_PI), c12(12), c16(16);
     Real h11 = -pi/c12*pi/c12*std::sin(x[0]*pi/c12)*std::cos(x[1]*pi/c16);
     Real h12 = -pi/c12*pi/c16*std::cos(x[0]*pi/c12)*std::sin(x[1]*pi/c16);
@@ -60,19 +60,19 @@ class Constraint_HS9 : public StdConstraint<Real> {
 public:
   Constraint_HS9(void) {}
  
-  void value( std::vector<Real> &c, const std::vector<Real> &x, Real &tol ) {
+  void value( std::vector<Real> &c, const std::vector<Real> &x, Tolerance<Real> &tol ) {
     const Real c3(3), c4(4);
     c[0] = c4*x[0] - c3*x[1];
   }  
 
   void applyJacobian(std::vector<Real> &jv, const std::vector<Real> &v,
-                     const std::vector<Real> &x, Real &tol) {
+                     const std::vector<Real> &x, Tolerance<Real> &tol) {
     const Real c3(3), c4(4);
     jv[0] = c4*v[0] - c3*v[1];
   }
 
   void applyAdjointJacobian( std::vector<Real> &ajv, const std::vector<Real> &v,
-                             const std::vector<Real> &x, Real &tol ) {
+                             const std::vector<Real> &x, Tolerance<Real> &tol ) {
     const Real c3(3), c4(4);
     ajv[0] =  c4*v[0];
     ajv[1] = -c3*v[0];
@@ -80,7 +80,7 @@ public:
 
   void applyAdjointHessian(std::vector<Real> &ahuv, const std::vector<Real> &u,
                            const std::vector<Real> &v, const std::vector<Real> &x,
-                           Real &tol) {
+                           Tolerance<Real> &tol) {
     ahuv.assign(ahuv.size(),static_cast<Real>(0));
   }
 

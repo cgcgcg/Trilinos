@@ -38,9 +38,9 @@ public:
 
   void update( const Vector<Real> &x, UpdateType type, int iter = -1 ) override;
   void update( const Vector<Real> &x, bool flag = true, int iter = -1 ) override;
-  Real value( const Vector<Real> &x, Real &tol ) override;
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) override;
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) override;
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) override;
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) override;
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) override;
 
 // Definitions for parametrized (stochastic) objective functions
 public:
@@ -48,9 +48,9 @@ public:
 
 private:
   void initialize(const Vector<Real> &x);
-  void computeValue(const Vector<Real> &x, Real &tol);
-  void computeGradient(const Vector<Real> &x, Real &tol);
-  void computeHessVec(const Vector<Real> &v, const Vector<Real> &x, Real &tol);
+  void computeValue(const Vector<Real> &x, Tolerance<Real> &tol);
+  void computeGradient(const Vector<Real> &x, Tolerance<Real> &tol);
+  void computeHessVec(const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol);
 };
 
 } // namespace ROL

@@ -25,7 +25,7 @@ LowerBoundToConstraint<Real>::LowerBoundToConstraint(const Vector<Real> &lo) {
 }
 
 template<typename Real>
-void LowerBoundToConstraint<Real>::value(Vector<Real> &c, const Vector<Real> &x, Real &tol) {
+void LowerBoundToConstraint<Real>::value(Vector<Real> &c, const Vector<Real> &x, Tolerance<Real> &tol) {
   const Real one(1);
   c.set(x);
   c.axpy(-one,*lo_);
@@ -35,7 +35,7 @@ template<typename Real>
 void LowerBoundToConstraint<Real>::applyJacobian(Vector<Real> &jv,
                                                  const Vector<Real> &v,
                                                  const Vector<Real> &x,
-                                                 Real &tol) {
+                                                 Tolerance<Real> &tol) {
   jv.set(v);
 }
 
@@ -43,7 +43,7 @@ template<typename Real>
 void LowerBoundToConstraint<Real>::applyAdjointJacobian(Vector<Real> &ajv,
                                                         const Vector<Real> &v,
                                                         const Vector<Real> &x,
-                                                        Real &tol) {
+                                                        Tolerance<Real> &tol) {
   ajv.set(v);
 }
 
@@ -52,7 +52,7 @@ void LowerBoundToConstraint<Real>::applyAdjointHessian(Vector<Real> &ahuv,
                                                        const Vector<Real> &u,
                                                        const Vector<Real> &v,
                                                        const Vector<Real> &x,
-                                                       Real &tol) {
+                                                       Tolerance<Real> &tol) {
   ahuv.zero();
 }
 

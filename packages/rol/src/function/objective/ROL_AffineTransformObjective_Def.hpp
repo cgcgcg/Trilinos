@@ -62,18 +62,18 @@ void AffineTransformObjective<Real>::update( const Vector<Real> &x, bool flag, i
 }
 
 template<typename Real>
-Real AffineTransformObjective<Real>::value( const Vector<Real> &x, Real &tol ) {
+Real AffineTransformObjective<Real>::value( const Vector<Real> &x, Tolerance<Real> &tol ) {
   return obj_->value(*transform(x),tol); 
 }
 
 template<typename Real>
-void AffineTransformObjective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+void AffineTransformObjective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
   obj_->gradient(*dual_,*transform(x),tol);
   acon_->applyAdjointJacobian(g,*dual_,x,tol);
 }
 
 template<typename Real>
-void AffineTransformObjective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+void AffineTransformObjective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
   acon_->applyJacobian(*Av_,v,x,tol);
   obj_->hessVec(*dual_,*Av_,*transform(x),tol);
   acon_->applyAdjointJacobian(hv,*dual_,x,tol);
@@ -89,7 +89,7 @@ template<typename Real>
 Ptr<const Vector<Real>> AffineTransformObjective<Real>::transform(const Vector<Real> &x) {
   bool isApplied = storage_->get(*primal_,Objective<Real>::getParameter());
   if (!isApplied) {
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
     acon_->value(*primal_,x,tol);
     storage_->set(*primal_,Objective<Real>::getParameter());
   }

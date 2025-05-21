@@ -62,7 +62,7 @@ private:
     void update(const Vector<Real> &x, UpdateType type, int iter) {
       isHessApplied_ = false;
     }
-    Real value(const Vector<Real> &x, Real &tol) {
+    Real value(const Vector<Real> &x, Tolerance<Real> &tol) {
       const Real half(0.5), one(1);
       pwa_->set(x); pwa_->axpy(-one,*x_);
       if (!isHessApplied_) {
@@ -74,7 +74,7 @@ private:
       dwa_->plus(*g_);
       return dwa_->apply(*pwa_);
     }
-    void gradient(Vector<Real> &g, const Vector<Real> &x, Real &tol) {
+    void gradient(Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol) {
       const Real one(1);
       if (!isHessApplied_) {
         pwa_->set(x); pwa_->axpy(-one,*x_);
@@ -84,7 +84,7 @@ private:
       g.set(*Hx_);
       g.plus(*g_);
     }
-    void hessVec(Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol) {
+    void hessVec(Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol) {
       obj_->hessVec(hv,v,*x_,tol); nhess_++;
     }
     int numHessVec(bool reset = true) {

@@ -49,7 +49,7 @@ LinMoreAlgorithm<Real>::LinMoreAlgorithm(ParameterList &list,
   redlim_    = lmlist.sublist("Cauchy Point").get("Maximum Number of Reduction Steps", 10);
   explim_    = lmlist.sublist("Cauchy Point").get("Maximum Number of Expansion Steps", 10);
   alpha_     = lmlist.sublist("Cauchy Point").get("Initial Step Size",                 1.0);
-  normAlpha_ = lmlist.sublist("Cauchy Point").get("Normalize Initial Step Size",       false); 
+  normAlpha_ = lmlist.sublist("Cauchy Point").get("Normalize Initial Step Size",       false);
   interpf_   = lmlist.sublist("Cauchy Point").get("Reduction Rate",                    0.1);
   extrapf_   = lmlist.sublist("Cauchy Point").get("Expansion Rate",                    10.0);
   qtol_      = lmlist.sublist("Cauchy Point").get("Decrease Tolerance",                1e-8);
@@ -64,7 +64,7 @@ LinMoreAlgorithm<Real>::LinMoreAlgorithm(ParameterList &list,
   // Trust-Region Inexactness Parameters
   ParameterList &ilist = trlist.sublist("Inexact").sublist("Gradient");
   scale0_ = ilist.get("Tolerance Scaling",  static_cast<Real>(0.1));
-  scale1_ = ilist.get("Relative Tolerance", static_cast<Real>(2)); 
+  scale1_ = ilist.get("Relative Tolerance", static_cast<Real>(2));
   // Inexact Function Evaluation Information
   ParameterList &vlist = trlist.sublist("Inexact").sublist("Value");
   scale_       = vlist.get("Tolerance Scaling",                 static_cast<Real>(1.e-1));
@@ -105,11 +105,11 @@ void LinMoreAlgorithm<Real>::initialize(Vector<Real>          &x,
   TypeB::Algorithm<Real>::initialize(x,g);
   nhess_ = 0;
   // Update approximate gradient and approximate objective function.
-  Real ftol = static_cast<Real>(0.1)*ROL_OVERFLOW<Real>(); 
+  Tolerance<Real> ftol = static_cast<Real>(0.1)*ROL_OVERFLOW<Real>();
   proj_->project(x,outStream); state_->nproj++;
   state_->iterateVec->set(x);
   obj.update(x,UpdateType::Initial,state_->iter);
-  state_->value = obj.value(x,ftol); 
+  state_->value = obj.value(x,ftol);
   state_->nfval++;
   //obj.gradient(*state_->gradientVec,x,ftol);
   computeGradient(x,*state_->gradientVec,*state_->stepVec,state_->searchSize,obj,true,gtol_,state_->gnorm,outStream);
@@ -136,8 +136,8 @@ void LinMoreAlgorithm<Real>::initialize(Vector<Real>          &x,
 }
 
 template<typename Real>
-Real LinMoreAlgorithm<Real>::computeValue(Real inTol,
-                                          Real &outTol,
+Real LinMoreAlgorithm<Real>::computeValue(Tolerance<Real> inTol,
+                                          Tolerance<Real> &outTol,
                                           Real pRed,
                                           Real &fold,
                                           int iter,
@@ -165,7 +165,7 @@ void LinMoreAlgorithm<Real>::computeGradient(const Vector<Real> &x,
                                              Real del,
                                              Objective<Real> &obj,
                                              bool accept,
-                                             Real &gtol,
+                                             Tolerance<Real> &gtol,
                                              Real &gnorm,
                                              std::ostream &outStream) const {
   if ( useInexact_[1] ) {
@@ -245,13 +245,13 @@ void LinMoreAlgorithm<Real>::computeGradient(const Vector<Real> &x,
 
 template<typename Real>
 void LinMoreAlgorithm<Real>::run(Vector<Real>          &x,
-                                 const Vector<Real>    &g, 
+                                 const Vector<Real>    &g,
                                  Objective<Real>       &obj,
                                  BoundConstraint<Real> &bnd,
                                  std::ostream          &outStream ) {
   const Real zero(0);
-  Real tol0 = std::sqrt(ROL_EPSILON<Real>());
-  Real inTol = static_cast<Real>(0.1)*ROL_OVERFLOW<Real>(), outTol(inTol);
+  Tolerance<Real> tol0 = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> inTol = static_cast<Real>(0.1)*ROL_OVERFLOW<Real>(), outTol(inTol);
   Real gfnorm(0), gfnormf(0), tol(0), stol(0), snorm(0);
   Real ftrial(0), pRed(0), rho(1), q(0), delta(0);
   int flagCG(0), iterCG(0), maxit(0);
@@ -465,7 +465,7 @@ Real LinMoreAlgorithm<Real>::dcauchy(Vector<Real> &s,
                                      Vector<Real> &dwa, Vector<Real> &dwa1,
                                      std::ostream &outStream) {
   const Real half(0.5);
-  Real tol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
   bool interp = false;
   Real gs(0), snorm(0);
   // Compute s = P(x[0] - alpha g[0])
@@ -551,7 +551,7 @@ Real LinMoreAlgorithm<Real>::dprsrch(Vector<Real> &x, Vector<Real> &s,
                                      Vector<Real> &pwa, Vector<Real> &dwa,
                                      std::ostream &outStream) {
   const Real zero(0.0), half(0.5);
-  Real tol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
   Real beta(1), snorm(0), gs(0);
   int nsteps = 0;
   // Reduce beta until sufficient decrease is satisfied
@@ -618,7 +618,7 @@ Real LinMoreAlgorithm<Real>::dtrpcg(Vector<Real> &w, int &iflag, int &iter,
   // q = hessian applied to step p (dual)
   // t = gradient (dual)
   // r = preconditioned gradient (primal)
-  Real tol0 = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> tol0 = std::sqrt(ROL_EPSILON<Real>());
   const Real zero(0), one(1), two(2);
   Real rho(0), kappa(0), beta(0), sigma(0), alpha(0);
   Real rtr(0), tnorm(0), sMs(0), pMp(0), sMp(0);
@@ -679,7 +679,7 @@ Real LinMoreAlgorithm<Real>::dtrpcg(Vector<Real> &w, int &iflag, int &iter,
   if (iter == itermax) {
     iflag = 1;
   }
-  if (iflag != 1) { 
+  if (iflag != 1) {
     iter++;
   }
   return std::sqrt(sMs); // w.norm();
@@ -691,7 +691,7 @@ void LinMoreAlgorithm<Real>::applyFreeHessian(Vector<Real> &hv,
                                               const Vector<Real> &x,
                                               TrustRegionModel_U<Real> &model,
                                               BoundConstraint<Real> &bnd,
-                                              Real &tol,
+                                              Tolerance<Real> &tol,
                                               Vector<Real> &pwa) const {
   const Real zero(0);
   pwa.set(v);
@@ -712,7 +712,7 @@ void LinMoreAlgorithm<Real>::applyFreePrecond(Vector<Real> &hv,
                                               const Vector<Real> &x,
                                               TrustRegionModel_U<Real> &model,
                                               BoundConstraint<Real> &bnd,
-                                              Real &tol,
+                                              Tolerance<Real> &tol,
                                               Vector<Real> &dwa,
                                               Vector<Real> &pwa) const {
   if (!hasEcon_) {
@@ -743,7 +743,7 @@ void LinMoreAlgorithm<Real>::writeHeader( std::ostream& os ) const {
     os << std::string(114,'-') << std::endl;
     os << " Lin-More trust-region method status output definitions" << std::endl << std::endl;
     os << "  iter    - Number of iterates (steps taken)" << std::endl;
-    os << "  value   - Objective function value" << std::endl; 
+    os << "  value   - Objective function value" << std::endl;
     os << "  gnorm   - Norm of the gradient" << std::endl;
     os << "  snorm   - Norm of the step (update to optimization vector)" << std::endl;
     os << "  delta   - Trust-Region radius" << std::endl;

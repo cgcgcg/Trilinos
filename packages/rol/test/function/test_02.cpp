@@ -17,11 +17,12 @@
 #include "ROL_ObjectiveFromBoundConstraint.hpp"
 
 #include "ROL_Stream.hpp"
+#include "ROL_Types.hpp"
 #include "Teuchos_GlobalMPISession.hpp"
 #include "ROL_ParameterList.hpp"
 
 
-typedef double RealT; 
+typedef double RealT;
 
 int main(int argc, char *argv[]) {
 
@@ -80,7 +81,7 @@ int main(int argc, char *argv[]) {
 
 
 
-    SV x(x_ptr); 
+    SV x(x_ptr);
     SV g(g_ptr);
     SV v(v_ptr);
     SV hv(hv_ptr);
@@ -98,12 +99,12 @@ int main(int argc, char *argv[]) {
     ROL::Ptr<SV> xdwell2 = ROL::makePtr<SV>(xdwell2_ptr);
 
     ROL::Ptr<V> lo = ROL::makePtr<SV>(l_ptr);
-    ROL::Ptr<V> up = ROL::makePtr<SV>(u_ptr);  
+    ROL::Ptr<V> up = ROL::makePtr<SV>(u_ptr);
 
     for(uint i=0; i<dim; ++i) {
       RealT t = static_cast<RealT>(i)/static_cast<RealT>(dim-1);
       (*x_ptr)[i] = xmin*(1-t) + xmax*t;
-    }    
+    }
 
     // Create bound constraint
     ROL::Bounds<RealT>  bc(lo,up);
@@ -120,7 +121,7 @@ int main(int argc, char *argv[]) {
     ROL::ObjectiveFromBoundConstraint<RealT> quadObj(bc,quadList);
     ROL::ObjectiveFromBoundConstraint<RealT> dwellObj(bc,dwellList);
 
-    RealT tol = 0.0;
+    ROL::Tolerance<RealT> tol = 0.0;
 
 
     logObj.value(x,tol);
@@ -153,34 +154,34 @@ int main(int argc, char *argv[]) {
     xdwell2->set(*ROL::staticPtrCast<SV>(dwellObj.getBarrierVector()));
 
 
-    *outStream   << std::setw(14) << "x" 
-                 << std::setw(14) << "log" 
-                 << std::setw(14) << "D(log)" 
-                 << std::setw(14) << "D2(log)" 
-                 << std::setw(14) << "quad" 
-                 << std::setw(14) << "D(quad)" 
-                 << std::setw(14) << "D2(quad)" 
-                 << std::setw(14) << "dwell" 
-                 << std::setw(14) << "D(dwell)" 
-                 << std::setw(14) << "D2(dwell)" 
+    *outStream   << std::setw(14) << "x"
+                 << std::setw(14) << "log"
+                 << std::setw(14) << "D(log)"
+                 << std::setw(14) << "D2(log)"
+                 << std::setw(14) << "quad"
+                 << std::setw(14) << "D(quad)"
+                 << std::setw(14) << "D2(quad)"
+                 << std::setw(14) << "dwell"
+                 << std::setw(14) << "D(dwell)"
+                 << std::setw(14) << "D2(dwell)"
                  << std::endl;
     *outStream   << std::string(140,'-') << std::endl;
 
     for(uint i=0; i<dim; ++i) {
-      *outStream << std::setw(14) << (*x_ptr)[i] 
-                 << std::setw(14) << (*xlog0_ptr)[i] 
+      *outStream << std::setw(14) << (*x_ptr)[i]
+                 << std::setw(14) << (*xlog0_ptr)[i]
                  << std::setw(14) << (*xlog1_ptr)[i]
-                 << std::setw(14) << (*xlog2_ptr)[i] 
-                 << std::setw(14) << (*xquad0_ptr)[i] 
-                 << std::setw(14) << (*xquad1_ptr)[i] 
-                 << std::setw(14) << (*xquad2_ptr)[i] 
-                 << std::setw(14) << (*xdwell0_ptr)[i] 
-                 << std::setw(14) << (*xdwell1_ptr)[i] 
-                 << std::setw(14) << (*xdwell2_ptr)[i] 
+                 << std::setw(14) << (*xlog2_ptr)[i]
+                 << std::setw(14) << (*xquad0_ptr)[i]
+                 << std::setw(14) << (*xquad1_ptr)[i]
+                 << std::setw(14) << (*xquad2_ptr)[i]
+                 << std::setw(14) << (*xdwell0_ptr)[i]
+                 << std::setw(14) << (*xdwell1_ptr)[i]
+                 << std::setw(14) << (*xdwell2_ptr)[i]
                  << std::endl;
-    }    
+    }
 
-  
+
     ROL::RandomizeVector( x,  1.2, 1.8 );
     ROL::RandomizeVector( v, -0.1, 0.1 );
 
@@ -202,12 +203,12 @@ int main(int argc, char *argv[]) {
     *outStream << "Test of double well penalty objective" << std::endl;
     dwellObj.checkGradient(x,v,true,*outStream);    *outStream << std::endl;
     dwellObj.checkHessVec(x,v,true,*outStream);     *outStream << std::endl;
-    
 
 
 
 
-  }   
+
+  }
   catch (std::logic_error& err) {
     *outStream << err.what() << "\n";
     errorFlag = -1000;
@@ -222,4 +223,3 @@ int main(int argc, char *argv[]) {
 
 
 }
-

@@ -35,7 +35,7 @@ private:
   std::set<unsigned> nworkingSet_;
 
   bool isInitialized_;
-  
+
 /***********************************************************************************************/
 /***************** BUNDLE MODIFICATION AND ACCESS ROUTINES *************************************/
 /***********************************************************************************************/
@@ -43,7 +43,7 @@ public:
   Bundle_AS(const unsigned maxSize = 10,
             const Real coeff = 0.0,
             const Real omega = 2.0,
-            const unsigned remSize = 2) 
+            const unsigned remSize = 2)
     : Bundle<Real>(maxSize,coeff,omega,remSize), isInitialized_(false) {}
 
   void initialize(const Vector<Real> &g) {
@@ -58,7 +58,7 @@ public:
     }
   }
 
-  unsigned solveDual(const Real t, const unsigned maxit = 1000, const Real tol = 1.e-8) {
+  unsigned solveDual(const Real t, const unsigned maxit = 1000, const Tolerance<Real> tol = 1.e-8) {
     unsigned iter = 0;
     if (Bundle<Real>::size() == 1) {
       iter = Bundle<Real>::solveDual_dim1(t,maxit,tol);
@@ -116,7 +116,7 @@ private:
       lam.clear();
     }
   }
- 
+
   bool isNonnegative(unsigned &ind, const std::vector<Real> &x) const {
     bool flag = true;
     unsigned n = workingSet_.size(); ind = Bundle<Real>::size();
@@ -151,7 +151,7 @@ private:
   }
 
   unsigned solveEQPsubproblem(std::vector<Real> &s, Real &mu,
-                        const std::vector<Real> &g, const Real tol) const {
+                        const std::vector<Real> &g, const Tolerance<Real> tol) const {
     // Build reduced QP information
     Real zero(0);
     unsigned n = nworkingSet_.size(), cnt = 0;
@@ -220,7 +220,7 @@ private:
     Real eHe(0), sum(0), one(1), zero(0);
     Real errX(0), tmpX(0), yX(0), errE(0), tmpE(0), yE(0);
     std::vector<Real> gg(dim,zero);
-    typename std::set<unsigned>::iterator it = nworkingSet_.begin(); 
+    typename std::set<unsigned>::iterator it = nworkingSet_.begin();
     for (unsigned i = 0; i < dim; ++i) {
       gg[i] = one/std::abs(Bundle<Real>::GiGj(*it,*it)); it++;
       // Compute sum of inv(D)x using Kahan's aggregated sum
@@ -258,7 +258,7 @@ private:
     // Forward substitution
     std::vector<Real> x1(dim,0), e1(dim,0),gg(dim,0);
     typename std::set<unsigned>::iterator it, jt;
-    it = nworkingSet_.begin(); 
+    it = nworkingSet_.begin();
     for (int i = 0; i < dim; ++i) {
       gx_->zero(); ge_->zero(); jt = nworkingSet_.begin();
       for (int j = 0; j < i; ++j) {
@@ -348,7 +348,7 @@ private:
     Real one(1);
     gx_->zero(); eG_->zero();
     unsigned n = nworkingSet_.size();
-    typename std::set<unsigned>::iterator it = nworkingSet_.begin(); 
+    typename std::set<unsigned>::iterator it = nworkingSet_.begin();
     for (unsigned i = 0; i < n; ++i) {
       // Compute Gx using Kahan's compensated sum
       //gx_->axpy(x[i],Bundle<Real>::subgradient(*it));
@@ -365,7 +365,7 @@ private:
     }
   }
 
-  unsigned projectedCG(std::vector<Real> &x, Real &mu, const std::vector<Real> &b, const Real tol) const {
+  unsigned projectedCG(std::vector<Real> &x, Real &mu, const std::vector<Real> &b, const Tolerance<Real> tol) const {
     Real one(1), zero(0);
     unsigned n = nworkingSet_.size();
     std::vector<Real> r(n,0), r0(n,0), g(n,0), d(n,0), Ad(n,0);
@@ -379,7 +379,7 @@ private:
     // Get search direction
     scale(d,-one,g);
     Real alpha(0), kappa(0), beta(0), TOL(1.e-2);
-    Real CGtol = std::min(tol,TOL*rg);
+    Real CGtol = std::min(tol.get(),TOL*rg);
     unsigned cnt = 0;
     while (rg > CGtol && cnt < 2*n+1) {
       applyMatrix(Ad,d);
@@ -449,7 +449,7 @@ private:
     }
   }
 
-  unsigned solveDual_arbitrary(const Real t, const unsigned maxit = 1000, const Real tol = 1.e-8) {
+  unsigned solveDual_arbitrary(const Real t, const unsigned maxit = 1000, const Tolerance<Real> tol = 1.e-8) {
     initializeDualSolver();
     bool nonneg = false;
     unsigned ind = 0, i = 0, CGiter = 0;

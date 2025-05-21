@@ -22,7 +22,7 @@ namespace ROL {
 template<class Real>
 class Bisection : public LineSearch<Real> {
 private:
-  Real tol_;
+  Tolerance<Real> tol_;
   ROL::Ptr<Vector<Real> > xnew_; 
   ROL::Ptr<LineSearch<Real> > btls_;
 
@@ -47,7 +47,7 @@ public:
   void run( Real &alpha, Real &fval, int &ls_neval, int &ls_ngrad,
             const Real &gs, const Vector<Real> &s, const Vector<Real> &x, 
             Objective<Real> &obj, BoundConstraint<Real> &con ) {
-    Real tol = std::sqrt(ROL_EPSILON<Real>()), half(0.5);
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>()), half(0.5);
     ls_neval = 0;
     ls_ngrad = 0;
     // Get initial line search parameter

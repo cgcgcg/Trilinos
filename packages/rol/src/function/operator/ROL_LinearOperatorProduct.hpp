@@ -57,14 +57,14 @@ public:
     }
   }
 
-  virtual void apply( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const { 
+  virtual void apply( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const { 
      Hv.set(v);   
      for( size_type i=0; i<ops_->size(); ++i ) {
       (*ops_)[i]->apply(Hv,Hv,tol);
     }
   }
 
-  virtual void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  virtual void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
     Hv.set(v);
      for( size_type i=ops_->size()-1; i>=0; --i ) {
       (*ops_)[i]->applyInverse(Hv,Hv,tol);

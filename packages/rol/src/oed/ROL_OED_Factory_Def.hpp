@@ -242,7 +242,7 @@ void Factory<Real>::setDesign(const Vector<Real> &p) {
 
 template<typename Real>
 int Factory<Real>::loadDesign(const std::string &file, int dim, int n) {
-  const Real tol(std::sqrt(ROL_EPSILON<Real>()));
+  const Tolerance<Real> tol(std::sqrt(ROL_EPSILON<Real>()));
   std::fstream input;
   input.open(file.c_str(), std::ios::in);
   if (!input.is_open()) {
@@ -327,7 +327,7 @@ void Factory<Real>::printPredictionVariance(const Ptr<SampleGenerator<Real>> &sa
     Ptr<QuadraticObjective<Real>> qobj = makePtr<QuadraticObjective<Real>>(cov0);
     obj = makePtr<Het::I_Objective<Real>>(cov1,qobj,theta_,useStorage_);
   }
-  Real tol(1e-8);
+  Tolerance<Real> tol(1e-8);
   obj->update(*p_);
   int myRank = sampler->batchID();
   std::stringstream filename;
@@ -645,7 +645,7 @@ template<typename Real>
 void Factory<Real>::computeObjectiveScaling(const Ptr<Objective<Real>> &obj) {
   if (useScale_ && objScale_ <= static_cast<Real>(0)) {
     const Real one(1);
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
     Ptr<Vector<Real>> pu = p_->clone();
     Ptr<Vector<Real>> gu = p_->dual().clone();
     pu->setScalar(one/static_cast<Real>(p_->dimension()));

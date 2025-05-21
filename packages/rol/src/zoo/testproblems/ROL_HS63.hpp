@@ -32,19 +32,19 @@ namespace ZOO {
 template<class Real>
 class Objective_HS63 : public StdObjective<Real> {
 public:
-  Real value( const std::vector<Real> &x, Real &tol ) {
+  Real value( const std::vector<Real> &x, Tolerance<Real> &tol ) {
     const Real c1(1000), c2(2);
     return c1 - x[0]*x[0] - c2*x[1]*x[1] - x[2]*x[2] - x[0]*x[1] - x[0]*x[2];
   }
 
-  void gradient( std::vector<Real> &g, const std::vector<Real> &x, Real &tol ) {
+  void gradient( std::vector<Real> &g, const std::vector<Real> &x, Tolerance<Real> &tol ) {
     const Real c2(2);
     g[0] = -c2*x[0]-x[1]-x[2];
     g[1] = -c2*c2*x[1]-x[0];
     g[2] = -c2*x[2]-x[0];
   }
 
-  void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+  void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Tolerance<Real> &tol ) {
     const Real c2(2);
     hv[0] = -c2*v[0]-v[1]-v[2];
     hv[1] = -c2*c2*v[1]-v[0];
@@ -55,19 +55,19 @@ public:
 template<class Real>
 class Constraint_HS63a : public StdConstraint<Real> {
 public:
-  void value( std::vector<Real> &c, const std::vector<Real> &x, Real &tol ) {
+  void value( std::vector<Real> &c, const std::vector<Real> &x, Tolerance<Real> &tol ) {
     const Real c1(8), c2(14), c3(7), c4(56);
     c[0] = c1*x[0] + c2*x[1] + c3*x[2] - c4;
   }
 
   void applyJacobian(std::vector<Real> &jv, const std::vector<Real> &v,
-                     const std::vector<Real> &x, Real &tol) {
+                     const std::vector<Real> &x, Tolerance<Real> &tol) {
     const Real c1(8), c2(14), c3(7);
     jv[0] = c1*v[0] + c2*v[1] + c3*v[2];
   }
 
   void applyAdjointJacobian( std::vector<Real> &ajv, const std::vector<Real> &v,
-                             const std::vector<Real> &x, Real &tol ) {
+                             const std::vector<Real> &x, Tolerance<Real> &tol ) {
     const Real c1(8), c2(14), c3(7);
     ajv[0] = c1*v[0];
     ajv[1] = c2*v[0];
@@ -76,7 +76,7 @@ public:
 
   void applyAdjointHessian(std::vector<Real> &ahuv, const std::vector<Real> &u,
                            const std::vector<Real> &v, const std::vector<Real> &x,
-                           Real &tol) {
+                           Tolerance<Real> &tol) {
     ahuv.assign(ahuv.size(),static_cast<Real>(0));
   }
 };
@@ -84,19 +84,19 @@ public:
 template<class Real>
 class Constraint_HS63b : public StdConstraint<Real> {
 public:
-  void value( std::vector<Real> &c, const std::vector<Real> &x, Real &tol ) {
+  void value( std::vector<Real> &c, const std::vector<Real> &x, Tolerance<Real> &tol ) {
     const Real c1(25);
     c[0] = x[0]*x[0] + x[1]*x[1] + x[2]*x[2] - c1;
   }
 
   void applyJacobian(std::vector<Real> &jv, const std::vector<Real> &v,
-                     const std::vector<Real> &x, Real &tol) {
+                     const std::vector<Real> &x, Tolerance<Real> &tol) {
     const Real c1(2);
     jv[0] = c1*(x[0]*v[0] + x[1]*v[1] + x[2]*v[2]);
   }
 
   void applyAdjointJacobian( std::vector<Real> &ajv, const std::vector<Real> &v,
-                             const std::vector<Real> &x, Real &tol ) {
+                             const std::vector<Real> &x, Tolerance<Real> &tol ) {
     const Real c1(2);
     ajv[0] = c1*x[0]*v[0];
     ajv[1] = c1*x[1]*v[0];
@@ -105,7 +105,7 @@ public:
 
   void applyAdjointHessian(std::vector<Real> &ahuv, const std::vector<Real> &u,
                            const std::vector<Real> &v, const std::vector<Real> &x,
-                           Real &tol) {
+                           Tolerance<Real> &tol) {
     const Real c1(2);
     ahuv[0] = c1*v[0]*u[0];
     ahuv[1] = c1*v[1]*u[0];

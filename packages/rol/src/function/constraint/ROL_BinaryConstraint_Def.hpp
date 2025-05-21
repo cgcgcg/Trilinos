@@ -26,7 +26,7 @@ BinaryConstraint<Real>::BinaryConstraint( const ROL::Ptr<const BoundConstraint<R
     BinaryConstraint( bnd->getLowerBound(), bnd->getUpperBound(), gamma ) {}
 
 template<typename Real>
-void BinaryConstraint<Real>::value(Vector<Real> &c, const Vector<Real> &x, Real &tol) {
+void BinaryConstraint<Real>::value(Vector<Real> &c, const Vector<Real> &x, Tolerance<Real> &tol) {
   const Real one(1);
   c.set( x );
   c.axpy( -one, *lo_ ); // c = x-l
@@ -37,7 +37,7 @@ void BinaryConstraint<Real>::value(Vector<Real> &c, const Vector<Real> &x, Real 
 }
 
 template<typename Real>
-void BinaryConstraint<Real>::applyJacobian(Vector<Real> &jv, const Vector<Real> &v, const Vector<Real> &x, Real &tol) {
+void BinaryConstraint<Real>::applyJacobian(Vector<Real> &jv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol) {
   const Real one(1);
   jv.set( x );
   jv.axpy( -one, *lo_ );
@@ -49,12 +49,12 @@ void BinaryConstraint<Real>::applyJacobian(Vector<Real> &jv, const Vector<Real> 
 }
 
 template<typename Real>
-void BinaryConstraint<Real>::applyAdjointJacobian(Vector<Real> &ajv, const Vector<Real> &v, const Vector<Real> &x, Real &tol) {
+void BinaryConstraint<Real>::applyAdjointJacobian(Vector<Real> &ajv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol) {
   applyJacobian(ajv,v,x,tol); 
 }
 
 template<typename Real>
-void BinaryConstraint<Real>::applyAdjointHessian(Vector<Real> &ahuv, const Vector<Real> &u, const Vector<Real> &v, const Vector<Real> &x, Real &tol) {
+void BinaryConstraint<Real>::applyAdjointHessian(Vector<Real> &ahuv, const Vector<Real> &u, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol) {
   const Real one(1);
   ahuv.set( x );
   ahuv.axpy( -one, *lo_ );

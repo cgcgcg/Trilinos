@@ -77,7 +77,7 @@ public:
     barrier_->update(x,flag,iter);
   }
 
-  Real value( const Vector<Real> &x, Real &tol ) {
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
     // Compute original objective value and bound penalty value
     fval_ = obj_->value(x,tol);
     Real val  = fval_;
@@ -92,7 +92,7 @@ public:
     return fval_;
   }
 
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
     // Compute gradient of objective and bound penalty
     obj_->gradient(g,x,tol);
     barrier_->gradient(*scratch_,x,tol);
@@ -113,7 +113,7 @@ public:
   }
 
   void hessVec( Vector<Real> &hv, const Vector<Real> &v,
-                 const Vector<Real> &x, Real &tol ) {
+                 const Vector<Real> &x, Tolerance<Real> &tol ) {
     // Compute hessvec of objective and bound penalty
     obj_->hessVec(hv, v, x, tol);
     barrier_->hessVec(*scratch_,v,x,tol);

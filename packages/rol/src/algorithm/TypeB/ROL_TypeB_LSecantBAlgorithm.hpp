@@ -155,7 +155,7 @@ private:
                        const Vector<Real> &x,
                        Secant<Real> &secant,
                        BoundConstraint<Real> &bnd,
-                       Real &tol,
+                       Tolerance<Real> &tol,
                        Vector<Real> &pwa) const;
 
   void applyFreePrecond(Vector<Real> &hv,
@@ -163,7 +163,7 @@ private:
                         const Vector<Real> &x,
                         Secant<Real> &secant,
                         BoundConstraint<Real> &bnd,
-                        Real &tol,
+                        Tolerance<Real> &tol,
                         Vector<Real> &dwa,
                         Vector<Real> &pwa) const;
 

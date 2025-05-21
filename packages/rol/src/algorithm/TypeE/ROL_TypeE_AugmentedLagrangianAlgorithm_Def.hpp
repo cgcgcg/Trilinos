@@ -73,7 +73,7 @@ void AugmentedLagrangianAlgorithm<Real>::initialize( Vector<Real>               
                                                      Constraint<Real>                   &con,
                                                      std::ostream                       &outStream ) {
   const Real one(1), TOL(1.e-2);
-  Real tol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
   TypeE::Algorithm<Real>::initialize(x,g,l,c);
 
   // Initialize the algorithm state
@@ -154,7 +154,7 @@ void AugmentedLagrangianAlgorithm<Real>::run( Vector<Real>       &x,
                                               const Vector<Real> &eres,
                                               std::ostream       &outStream ) {
   const Real one(1), oem2(1e-2);
-  Real tol(std::sqrt(ROL_EPSILON<Real>()));
+  Tolerance<Real> tol(std::sqrt(ROL_EPSILON<Real>()));
   // Initialize augmented Lagrangian data
   AugmentedLagrangianObjective<Real> alobj(makePtrFromRef(obj),makePtrFromRef(econ),
                                            state_->searchSize,g,eres,emul,

@@ -22,24 +22,24 @@
 
 typedef double RealT;
 
-template<class Real> 
+template<class Real>
 class ParametrizedObjectiveEx1 : public ROL::Objective<Real> {
 public:
-  Real value( const ROL::Vector<Real> &x, Real &tol ) {
-    ROL::Ptr<const std::vector<Real> > ex = 
+  Real value( const ROL::Vector<Real> &x, ROL::Tolerance<Real> &tol ) {
+    ROL::Ptr<const std::vector<Real> > ex =
       dynamic_cast<const ROL::StdVector<Real>&>(x).getVector();
     Real quad = 0.0, lin = 0.0;
     std::vector<Real> p = this->getParameter();
     unsigned size = ex->size();
     for ( unsigned i = 0; i < size; i++ ) {
-      quad += (*ex)[i]*(*ex)[i]; 
+      quad += (*ex)[i]*(*ex)[i];
       lin  += (*ex)[i]*p[i+1];
     }
     return std::exp(p[0])*quad + lin + p[size+1];
   }
 
-  void gradient( ROL::Vector<Real> &g, const ROL::Vector<Real> &x, Real &tol ) {
-    ROL::Ptr<const std::vector<Real> > ex = 
+  void gradient( ROL::Vector<Real> &g, const ROL::Vector<Real> &x, ROL::Tolerance<Real> &tol ) {
+    ROL::Ptr<const std::vector<Real> > ex =
       dynamic_cast<const ROL::StdVector<Real>&>(x).getVector();
     ROL::Ptr<std::vector<Real> > eg =
       dynamic_cast<ROL::StdVector<Real>&>(g).getVector();
@@ -50,18 +50,18 @@ public:
     }
   }
 
-  void hessVec( ROL::Vector<Real> &hv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &x, Real &tol ) {
-    ROL::Ptr<const std::vector<Real> > ex = 
+  void hessVec( ROL::Vector<Real> &hv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &x, ROL::Tolerance<Real> &tol ) {
+    ROL::Ptr<const std::vector<Real> > ex =
       dynamic_cast<const ROL::StdVector<Real>&>(x).getVector();
-    ROL::Ptr<const std::vector<Real> > ev = 
+    ROL::Ptr<const std::vector<Real> > ev =
       dynamic_cast<const ROL::StdVector<Real>&>(v).getVector();
     ROL::Ptr<std::vector<Real> > ehv =
       dynamic_cast<ROL::StdVector<Real>&>(hv).getVector();
     std::vector<Real> p = this->getParameter();
     unsigned size = ex->size();
     for ( unsigned i = 0; i < size; i++ ) {
-      (*ehv)[i] = 2.0*std::exp(p[0])*(*ev)[i]; 
-    } 
+      (*ehv)[i] = 2.0*std::exp(p[0])*(*ev)[i];
+    }
   }
 };
 
@@ -122,7 +122,7 @@ int main(int argc, char* argv[]) {
     ROL::Ptr<ROL::Vector<RealT>> d      = ROL::makePtr<ROL::StdVector<RealT>>(d_ptr);
     setRandomVector(*d_ptr);
     // Build samplers
-    int nSamp = 1000;  
+    int nSamp = 1000;
     unsigned sdim = dim + 2;
     std::vector<RealT> tmp(2,0.); tmp[0] = -1.; tmp[1] = 1.;
     std::vector<std::vector<RealT> > bounds(sdim,tmp);
@@ -136,7 +136,7 @@ int main(int argc, char* argv[]) {
     // Build bound constraints
     std::vector<RealT> l(dim,0.0);
     std::vector<RealT> u(dim,1.0);
-    ROL::Ptr<ROL::BoundConstraint<RealT> > bnd = 
+    ROL::Ptr<ROL::BoundConstraint<RealT> > bnd =
       ROL::makePtr<ROL::StdBoundConstraint<RealT>>(l,u);
     bnd->deactivate();
     // Test parametrized objective functions

@@ -77,7 +77,7 @@ private:
               const Ptr<const Vector<Real>> &x,
               const Real delta) : con_(con), x_(x), delta_(delta) {}
 
-    void apply(Vector<Real> &Hv, const Vector<Real> &v, Real &tol) const {
+    void apply(Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol) const {
       PartitionedVector<Real> &Hvp = dynamic_cast<PartitionedVector<Real>&>(Hv);
       const PartitionedVector<Real> &vp = dynamic_cast<const PartitionedVector<Real>&>(v);
 
@@ -99,10 +99,10 @@ private:
                      const Ptr<const Vector<Real>> x,
                      const Ptr<const Vector<Real>> g) : con_(con), x_(x), g_(g) {}
 
-    void apply(Vector<Real> &Hv, const Vector<Real> &v, Real &tol) const {
+    void apply(Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol) const {
       Hv.set(v.dual());
     }
-    void applyInverse(Vector<Real> &Hv, const Vector<Real> &v, Real &tol) const {
+    void applyInverse(Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol) const {
       PartitionedVector<Real> &Hvp = dynamic_cast<PartitionedVector<Real>&>(Hv);
       const PartitionedVector<Real> &vp = dynamic_cast<const PartitionedVector<Real>&>(v);
 
@@ -120,13 +120,13 @@ public:
                      const Vector<Real> &cdual,
                      ROL::ParameterList &parlist);
 
-  Real value( const Vector<Real> &x, Real &tol ) override;
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) override;
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) override;
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) override;
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) override;
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) override;
 
 protected:
 
-  void solveAugmentedSystem(Vector<Real> &v1, Vector<Real> &v2, const Vector<Real> &b1, const Vector<Real> &b2, const Vector<Real> &x, Real &tol, bool refine = false) override;
+  void solveAugmentedSystem(Vector<Real> &v1, Vector<Real> &v2, const Vector<Real> &b1, const Vector<Real> &b2, const Vector<Real> &x, Tolerance<Real> &tol, bool refine = false) override;
 
 }; // class FletcherObjectiveE
 

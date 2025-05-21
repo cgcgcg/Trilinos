@@ -30,7 +30,7 @@ private:
   using Obj = DynamicObjective<Real>;
 
   Obj& obj_;
-  Real tol_;
+  Tolerance<Real> tol_;
   TimeStamp<Real> ts_;
 
 public:

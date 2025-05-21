@@ -50,8 +50,8 @@ protected:
 
   Real cnorm_;                 // norm of constraint violation
 
-  Real multSolverError_;        // Error from augmented system solve in value()
-  Real gradSolveError_;         // Error from augmented system solve in gradient()
+  Tolerance<Real> multSolverError_;        // Error from augmented system solve in value()
+  Tolerance<Real> gradSolveError_;         // Error from augmented system solve in gradient()
 
   // For Augmented system solves
   Ptr<Krylov<Real>> krylov_;
@@ -82,11 +82,11 @@ public:
   void reset(Real sigma, Real delta);
 
 protected:
-  Real objValue(const Vector<Real>& x, Real &tol);
-  void objGrad(Vector<Real> &g, const Vector<Real>& x, Real &tol);
-  void conValue(Vector<Real> &c, const Vector<Real>&x, Real &tol);
-  void computeMultipliers(Vector<Real> &y, Vector<Real> &gL, const Vector<Real> &x, Vector<Real> &g, Vector<Real> &c, Real tol);
-  virtual void solveAugmentedSystem(Vector<Real> &v1, Vector<Real> &v2, const Vector<Real> &b1, const Vector<Real> &b2, const Vector<Real> &x, Real &multSolverError_, bool refine) = 0;
+  Real objValue(const Vector<Real>& x, Tolerance<Real> &tol);
+  void objGrad(Vector<Real> &g, const Vector<Real>& x, Tolerance<Real> &tol);
+  void conValue(Vector<Real> &c, const Vector<Real>&x, Tolerance<Real> &tol);
+  void computeMultipliers(Vector<Real> &y, Vector<Real> &gL, const Vector<Real> &x, Vector<Real> &g, Vector<Real> &c, Tolerance<Real> tol);
+  virtual void solveAugmentedSystem(Vector<Real> &v1, Vector<Real> &v2, const Vector<Real> &b1, const Vector<Real> &b2, const Vector<Real> &x, Tolerance<Real> &multSolverError_, bool refine) = 0;
 
 }; // class FletcherObjectiveBase
 

@@ -24,7 +24,7 @@
        \mathcal{R}(X) = \sup_{\vartheta\in\mathfrak{A}}
            \mathbb{E}[\vartheta X]
     \f]
-    where \f$\mathfrak{A}\f$ is called the ambiguity (or uncertainty) set and 
+    where \f$\mathfrak{A}\f$ is called the ambiguity (or uncertainty) set and
     is defined by a constraint on the F-divergence, i.e.,
     \f[
        \mathfrak{A} = \{\vartheta\in\mathcal{X}^*\,:\,
@@ -129,7 +129,7 @@ public:
   virtual Real Fdual(Real x, int deriv = 0) const = 0;
 
   bool check(std::ostream &outStream = std::cout) const {
-    const Real tol(std::sqrt(ROL_EPSILON<Real>()));
+    const Tolerance<Real> tol(std::sqrt(ROL_EPSILON<Real>()));
     bool flag = true;
 
     Real x  = static_cast<Real>(rand())/static_cast<Real>(RAND_MAX);
@@ -153,7 +153,7 @@ public:
     outStream << "t       = " << t                << std::endl;
     outStream << "F(x)    = " << fp               << std::endl;
     outStream << "F*(t)   = " << fd               << std::endl;
-    outStream << "Is Valid? " << (std::abs(fp+fd - x*t)<=tol) << std::endl; 
+    outStream << "Is Valid? " << (std::abs(fp+fd - x*t)<=tol) << std::endl;
     flag = (std::abs(fp+fd - x*t)<=tol) ? flag : false;
 
     t  = static_cast<Real>(rand())/static_cast<Real>(RAND_MAX);
@@ -165,7 +165,7 @@ public:
     outStream << "t       = " << t                << std::endl;
     outStream << "F(x)    = " << fp               << std::endl;
     outStream << "F*(t)   = " << fd               << std::endl;
-    outStream << "Is Valid? " << (std::abs(fp+fd - x*t)<=tol) << std::endl; 
+    outStream << "Is Valid? " << (std::abs(fp+fd - x*t)<=tol) << std::endl;
     flag = (std::abs(fp+fd - x*t)<=tol) ? flag : false;
 
     return flag;
@@ -180,7 +180,7 @@ public:
   void updateValue(Objective<Real>         &obj,
                    const Vector<Real>      &x,
                    const std::vector<Real> &xstat,
-                   Real                    &tol) {
+                   Tolerance<Real>         &tol) {
     Real val  = computeValue(obj,x,tol);
     Real xlam = xstat[0];
     Real xmu  = xstat[1];
@@ -202,7 +202,7 @@ public:
   void updateGradient(Objective<Real>         &obj,
                       const Vector<Real>      &x,
                       const std::vector<Real> &xstat,
-                      Real                    &tol) {
+                      Tolerance<Real>         &tol) {
     Real val  = computeValue(obj,x,tol);
     Real xlam = xstat[0];
     Real xmu  = xstat[1];
@@ -242,7 +242,7 @@ public:
                      const std::vector<Real> &vstat,
                      const Vector<Real>      &x,
                      const std::vector<Real> &xstat,
-                     Real                    &tol) {
+                     Tolerance<Real>         &tol) {
     Real val  = computeValue(obj,x,tol);
     Real xlam = xstat[0];
     Real xmu  = xstat[1];

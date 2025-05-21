@@ -66,7 +66,7 @@ public:
   
                       
 
-  void apply( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  void apply( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
 
     Real xdoty = x_->dot(*y_);
     Real xnorm = x_->norm();
@@ -84,7 +84,7 @@ public:
     Hv.axpy(beta,*u_);
   }
 
-  void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
     apply(Hv,v,tol); 
   }
 

@@ -23,13 +23,13 @@
 template<typename Real>
 class con2d : public ROL::StdConstraint<Real> {
 public:
-  void value(std::vector<Real> &c, const std::vector<Real> &x, Real &tol) {
+  void value(std::vector<Real> &c, const std::vector<Real> &x, ROL::Tolerance<Real> &tol) {
     c[0] = x[0]+x[1];
   }
-  void applyJacobian(std::vector<Real> &jv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol) {
+  void applyJacobian(std::vector<Real> &jv, const std::vector<Real> &v, const std::vector<Real> &x, ROL::Tolerance<Real> &tol) {
     jv[0] = v[0]+v[1];
   }
-  void applyAdjointJacobian(std::vector<Real> &ajv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol) {
+  void applyAdjointJacobian(std::vector<Real> &ajv, const std::vector<Real> &v, const std::vector<Real> &x, ROL::Tolerance<Real> &tol) {
     ajv[0] = v[0];
     ajv[1] = v[0];
   }
@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
   int errorFlag = 0;
 
   try {
-    RealT tol = std::sqrt(ROL::ROL_EPSILON<RealT>());
+    ROL::Tolerance<RealT> tol = std::sqrt(ROL::ROL_EPSILON<RealT>());
     RealT err(0);
     ROL::Ptr<con2d<RealT>> con = ROL::makePtr<con2d<RealT>>();
 
@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
 
     ROL::NullSpaceOperator<RealT> ns0(con,x,r);
     ns0.apply(Px,x,tol);
- 
+
     ROL::Ptr<std::vector<RealT>> x0ptr = ROL::makePtr<std::vector<RealT>>(2);
     (*x0ptr)[0] = ((*yptr)[0]-(*yptr)[1])/static_cast<RealT>(2);
     (*x0ptr)[1] = -(*x0ptr)[0];
@@ -103,7 +103,7 @@ int main(int argc, char *argv[]) {
     ROL::Ptr<std::vector<RealT>> dptr = ROL::makePtr<std::vector<RealT>>(2);
     (*dptr)[0] = static_cast<RealT>(1)+static_cast<RealT>(2)*static_cast<RealT>(rand())/static_cast<RealT>(RAND_MAX);
     (*dptr)[1] = static_cast<RealT>(1)+static_cast<RealT>(5)*static_cast<RealT>(rand())/static_cast<RealT>(RAND_MAX);
- 
+
     ROL::Ptr<std::vector<RealT>> x1ptr = ROL::makePtr<std::vector<RealT>>(2);
     (*x1ptr)[0] = ((*dptr)[0]*(*yptr)[0]-(*dptr)[1]*(*yptr)[1])/((*dptr)[0]+(*dptr)[1]);
     (*x1ptr)[1] = -(*x1ptr)[0];
@@ -140,7 +140,7 @@ int main(int argc, char *argv[]) {
 
     errorFlag += (err > tol);
   }
-  
+
   catch (std::logic_error& err) {
     *outStream << err.what() << "\n";
     errorFlag = -1000;
@@ -153,4 +153,3 @@ int main(int argc, char *argv[]) {
 
   return 0;
 }
-

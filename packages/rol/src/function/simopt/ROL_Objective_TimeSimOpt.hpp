@@ -128,11 +128,11 @@ public:
 
   virtual void hessVec_11_old( Vector<Real> &hv, const Vector<Real> &v_old, 
                                const Vector<Real> &u_old,  const Vector<Real>& u_new,
-                               const Vector<Real> &z, Real &tol ) {}
+                               const Vector<Real> &z, Tolerance<Real> &tol ) {}
 
   virtual void hessVec_11_new( Vector<Real> &hv, const Vector<Real> &v_new, 
                                const Vector<Real> &u_old,  const Vector<Real>& u_new,
-                               const Vector<Real> &z, Real &tol ) {}
+                               const Vector<Real> &z, Tolerance<Real> &tol ) {}
      
   // Functions from SimOpt that are overriden
   ///////////////////////////////////////////////////////////////////////////////////////////////////

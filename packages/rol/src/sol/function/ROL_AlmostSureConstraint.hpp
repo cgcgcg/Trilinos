@@ -43,7 +43,7 @@ public:
 
   void value(Vector<Real> &c,
              const Vector<Real> &x,
-             Real &tol) {
+             Tolerance<Real> &tol) {
     c.zero();
     SimulatedVector<Real> &pc = dynamic_cast<SimulatedVector<Real>&>(c);
 
@@ -59,7 +59,7 @@ public:
   void applyJacobian(Vector<Real> &jv,
                      const Vector<Real> &v,
                      const Vector<Real> &x,
-                     Real &tol) {
+                     Tolerance<Real> &tol) {
     jv.zero();
     SimulatedVector<Real> &pjv = dynamic_cast<SimulatedVector<Real>&>(jv);
 
@@ -75,7 +75,7 @@ public:
   void applyAdjointJacobian(Vector<Real> &ajv,
                             const Vector<Real> &v,
                             const Vector<Real> &x,
-                            Real &tol) {
+                            Tolerance<Real> &tol) {
     ajv.zero();
     if (!isInitialized_) {
       scratch1_ = ajv.clone();
@@ -100,7 +100,7 @@ public:
                            const Vector<Real> &u,
                            const Vector<Real> &v,
                            const Vector<Real> &x,
-                           Real &tol) {
+                           Tolerance<Real> &tol) {
     ahuv.zero();
     if (!isInitialized_) {
       scratch1_ = ahuv.clone();
@@ -125,7 +125,7 @@ public:
                            const Vector<Real> &v,
                            const Vector<Real> &x,
                            const Vector<Real> &g,
-                           Real &tol) {
+                           Tolerance<Real> &tol) {
     Pv.zero();
     SimulatedVector<Real> &ppv = dynamic_cast<SimulatedVector<Real>&>(Pv);
     const SimulatedVector<Real> &pv = dynamic_cast<const SimulatedVector<Real>&>(v);

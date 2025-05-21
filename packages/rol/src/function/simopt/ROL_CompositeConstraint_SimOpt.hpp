@@ -70,37 +70,37 @@ public:
   void update_1(const Vector<Real> &u, UpdateType type, int iter = -1) override;
   void update_2(const Vector<Real> &z, UpdateType type, int iter = -1) override;
   void solve_update(const Vector<Real> &u, const Vector<Real> &z, UpdateType type, int iter = -1) override;
-  void value(Vector<Real> &c, const Vector<Real> &u, const Vector<Real> &z, Real &tol) override;
-  void solve(Vector<Real> &c, Vector<Real> &u, const Vector<Real> &z, Real &tol) override;
+  void value(Vector<Real> &c, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol) override;
+  void solve(Vector<Real> &c, Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol) override;
   void applyJacobian_1(Vector<Real> &jv, const Vector<Real> &v, const Vector<Real> &u,
-                       const Vector<Real> &z, Real &tol) override;
+                       const Vector<Real> &z, Tolerance<Real> &tol) override;
   void applyJacobian_2(Vector<Real> &jv, const Vector<Real> &v, const Vector<Real> &u,
-                       const Vector<Real> &z, Real &tol) override; 
+                       const Vector<Real> &z, Tolerance<Real> &tol) override; 
   void applyInverseJacobian_1(Vector<Real> &ijv, const Vector<Real> &v, const Vector<Real> &u,
-                              const Vector<Real> &z, Real &tol) override;
+                              const Vector<Real> &z, Tolerance<Real> &tol) override;
   void applyAdjointJacobian_1(Vector<Real> &ajv, const Vector<Real> &v, const Vector<Real> &u,
-                              const Vector<Real> &z, Real &tol) override;
+                              const Vector<Real> &z, Tolerance<Real> &tol) override;
   void applyAdjointJacobian_2(Vector<Real> &ajv, const Vector<Real> &v, const Vector<Real> &u,
-                              const Vector<Real> &z, Real &tol) override;
+                              const Vector<Real> &z, Tolerance<Real> &tol) override;
   void applyInverseAdjointJacobian_1(Vector<Real> &ijv, const Vector<Real> &v, const Vector<Real> &u,
-                                     const Vector<Real> &z, Real &tol) override;
+                                     const Vector<Real> &z, Tolerance<Real> &tol) override;
   void applyAdjointHessian_11(Vector<Real> &ahwv, const Vector<Real> &w, const Vector<Real> &v,
-                              const Vector<Real> &u, const Vector<Real> &z, Real &tol) override;
+                              const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol) override;
   void applyAdjointHessian_12(Vector<Real> &ahwv, const Vector<Real> &w, const Vector<Real> &v,
-                              const Vector<Real> &u, const Vector<Real> &z, Real &tol) override;
+                              const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol) override;
   void applyAdjointHessian_21(Vector<Real> &ahwv, const Vector<Real> &w, const Vector<Real> &v,
-                              const Vector<Real> &u, const Vector<Real> &z, Real &tol) override;
+                              const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol) override;
   void applyAdjointHessian_22(Vector<Real> &ahwv, const Vector<Real> &w, const Vector<Real> &v,
-                              const Vector<Real> &u, const Vector<Real> &z, Real &tol) override;
+                              const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol) override;
 
 // Definitions for parametrized (stochastic) equality constraints
 public:
   void setParameter(const std::vector<Real> &param) override;
 
 private:
-  void solveConRed(Vector<Real> &Sz, const Vector<Real> &z, Real &tol);
-  void applySens(Vector<Real> &jv, const Vector<Real> &v, const Vector<Real> &Sz, const Vector<Real> &z, Real &tol);
-  void applyAdjointSens(Vector<Real> &ajv, const Vector<Real> &v, const Vector<Real> &Sz, const Vector<Real> &z, Real &tol);
+  void solveConRed(Vector<Real> &Sz, const Vector<Real> &z, Tolerance<Real> &tol);
+  void applySens(Vector<Real> &jv, const Vector<Real> &v, const Vector<Real> &Sz, const Vector<Real> &z, Tolerance<Real> &tol);
+  void applyAdjointSens(Vector<Real> &ajv, const Vector<Real> &v, const Vector<Real> &Sz, const Vector<Real> &z, Tolerance<Real> &tol);
 }; // class CompositeConstraint_SimOpt
 
 } // namespace ROL

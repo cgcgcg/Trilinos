@@ -47,7 +47,7 @@ public:
     x_->set(dom);
     dim_ = ran.dimension();
     if (dim_==1 && !useAugSys_) {
-      Real tol = std::sqrt(ROL_EPSILON<Real>());
+      Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
       b1_     = dom.dual().clone();
       b1dual_ = dom.clone();
       b2_     = ran.dual().clone(); b2_->setScalar(1.0);
@@ -70,14 +70,14 @@ public:
   virtual void update( const Vector<Real> &x, bool flag = true, int iter = -1 ) {
     x_->set(x);
     if (dim_==1 && !useAugSys_) {
-      Real tol = std::sqrt(ROL_EPSILON<Real>());
+      Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
       con_->applyAdjointJacobian(*b1_,*b2_,x,tol);
       b1dual_->set(b1_->dual());
       b1sqr_ = b1_->dot(*b1_);
     }
   }
 
-  virtual void apply( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  virtual void apply( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
     if (dim_==1 && !useAugSys_) {
       Real dot = v.dot(*b1dual_);
       Hv.set(v);
@@ -89,15 +89,15 @@ public:
     }
   }
 
-  void applyAdjoint( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  void applyAdjoint( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
     apply(Hv,v,tol);
   }
 
-  void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
     throw Exception::NotImplemented(">>> NullSpaceOperator::applyInverse : Not Implemented!");
   }
 
-  void applyAdjointInverse( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  void applyAdjointInverse( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
     throw Exception::NotImplemented(">>> NullSpaceOperator::applyAdjointInverse : Not Implemented!");
   }
 

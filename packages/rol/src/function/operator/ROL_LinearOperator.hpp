@@ -55,7 +55,7 @@ public:
       @param[in]          v   is the input vector.
       @param[in]          tol is a tolerance for inexact linear operator application.
   */
-  virtual void apply( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const = 0;
+  virtual void apply( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const = 0;
 
   /** \brief Apply inverse of linear operator.
 
@@ -64,7 +64,7 @@ public:
       @param[in]          v   is the input vector.
       @param[in]          tol is a tolerance for inexact linear operator application.
   */
-  virtual void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  virtual void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
     Hv.set(v);
   }
 
@@ -77,7 +77,7 @@ public:
       @param[in]          v   is the input vector.
       @param[in]          tol is a tolerance for inexact linear operator application.
   */
-  virtual void applyAdjoint( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  virtual void applyAdjoint( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
     apply(Hv,v,tol);
   }
 
@@ -90,7 +90,7 @@ public:
       @param[in]          tol is a tolerance for inexact linear operator application. 
 
   */
-  virtual void applyAdjointInverse( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  virtual void applyAdjointInverse( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
     applyInverse(Hv,v,tol);
   }
 

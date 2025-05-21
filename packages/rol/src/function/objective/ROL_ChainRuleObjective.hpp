@@ -42,16 +42,16 @@ public:
   ChainRuleObjective( const Ptr<Objective<Real>>&  obj,
                       const Ptr<Constraint<Real>>& con,
                       const Vector<Real>& x,
-                      const Vector<Real>& l ) 
-  : obj_(obj), con_(con), g_(l.clone()), y_(l.dual().clone()), Jv_(l.dual().clone()), 
+                      const Vector<Real>& l )
+  : obj_(obj), con_(con), g_(l.clone()), y_(l.dual().clone()), Jv_(l.dual().clone()),
     HJv_(l.clone()), JtHJv_(x.dual().clone()), tol_(0) {}
 
   virtual ~ChainRuleObjective() = default;
 
-    /** \brief Update objective function. 
+    /** \brief Update objective function.
 
-      This function updates the objective function at new iterations. 
-      @param[in]          x      is the new iterate. 
+      This function updates the objective function at new iterations.
+      @param[in]          x      is the new iterate.
       @param[in]          type   is the type of update requested.
       @param[in]          iter   is the outer algorithm iterations count.
   */
@@ -61,10 +61,10 @@ public:
     obj_->update(*y_,type,iter);
   }
 
-  /** \brief Update objective function. 
+  /** \brief Update objective function.
 
-      This function updates the objective function at new iterations. 
-      @param[in]          x      is the new iterate. 
+      This function updates the objective function at new iterations.
+      @param[in]          x      is the new iterate.
       @param[in]          flag   is true if the iterate has changed.
       @param[in]          iter   is the outer algorithm iterations count.
   */
@@ -80,7 +80,7 @@ public:
       @param[in]          x   is the current iterate.
       @param[in]          tol is a tolerance for inexact objective function computation.
   */
-  virtual Real value( const Vector<Real> &x, Real &tol ) {
+  virtual Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
     con_->value(*y_,x,tol);
     return obj_->value(*y_,tol);
   }
@@ -93,8 +93,8 @@ public:
       @param[in]          tol is a tolerance for inexact objective function computation.
 
     */
-  virtual void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
-    con_->value(*y_,x,tol); 
+  virtual void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
+    con_->value(*y_,x,tol);
     obj_->gradient(*g_,*y_,tol);
     con_->applyAdjointJacobian(g,*g_,x,tol);
   }
@@ -107,7 +107,7 @@ public:
       @param[in]          x   is the current iterate.
       @param[in]          tol is a tolerance for inexact objective function computation.
   */
-  virtual void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  virtual void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
     con_->value(*y_,x,tol);
     obj_->gradient(*g_,*y_,tol);
     con_->applyJacobian(*Jv_,v,x,tol);
@@ -121,8 +121,8 @@ private:
 
   const Ptr<Objective<Real>>  obj_;
   const Ptr<Constraint<Real>> con_;
-  Ptr<Vector<Real>>           g_, y_, Jv_, HJv_, JtHJv_;    
-  Real                        tol_;
+  Ptr<Vector<Real>>           g_, y_, Jv_, HJv_, JtHJv_;
+  Tolerance<Real>             tol_;
 
 }; // class ChainRuleObjective
 

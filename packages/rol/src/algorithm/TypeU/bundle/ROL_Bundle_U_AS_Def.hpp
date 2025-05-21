@@ -16,7 +16,7 @@ template<typename Real>
 Bundle_U_AS<Real>::Bundle_U_AS(const unsigned maxSize,
             const Real coeff,
             const Real omega,
-            const unsigned remSize) 
+            const unsigned remSize)
   : Bundle_U<Real>(maxSize,coeff,omega,remSize), isInitialized_(false) {}
 
 template<typename Real>
@@ -33,7 +33,7 @@ void Bundle_U_AS<Real>::initialize(const Vector<Real> &g) {
 }
 
 template<typename Real>
-unsigned Bundle_U_AS<Real>::solveDual(const Real t, const unsigned maxit, const Real tol) {
+unsigned Bundle_U_AS<Real>::solveDual(const Real t, const unsigned maxit, Tolerance<Real> tol) {
   unsigned iter = 0;
   if (Bundle_U<Real>::size() == 1) {
     iter = Bundle_U<Real>::solveDual_dim1(t,maxit,tol);
@@ -90,7 +90,7 @@ void Bundle_U_AS<Real>::computeLagMult(std::vector<Real> &lam, const Real mu, co
     lam.clear();
   }
 }
- 
+
 template<typename Real>
 bool Bundle_U_AS<Real>::isNonnegative(unsigned &ind, const std::vector<Real> &x) const {
   bool flag = true;
@@ -131,7 +131,7 @@ Real Bundle_U_AS<Real>::computeStepSize(unsigned &ind, const std::vector<Real> &
 
 template<typename Real>
 unsigned Bundle_U_AS<Real>::solveEQPsubproblem(std::vector<Real> &s, Real &mu,
-                      const std::vector<Real> &g, const Real tol) const {
+                      const std::vector<Real> &g, Tolerance<Real> tol) const {
   // Build reduced QP information
   const Real zero(0);
   unsigned n = nworkingSet_.size(), cnt = 0;
@@ -206,7 +206,7 @@ void Bundle_U_AS<Real>::applyPreconditioner_Jacobi(std::vector<Real> &Px, const 
   Real eHe(0), sum(0);
   Real errX(0), tmpX(0), yX(0), errE(0), tmpE(0), yE(0);
   std::vector<Real> gg(dim,zero);
-  typename std::set<unsigned>::iterator it = nworkingSet_.begin(); 
+  typename std::set<unsigned>::iterator it = nworkingSet_.begin();
   for (unsigned i = 0; i < dim; ++i) {
     gg[i] = one/std::abs(Bundle_U<Real>::GiGj(*it,*it)); it++;
     // Compute sum of inv(D)x using Kahan's aggregated sum
@@ -246,7 +246,7 @@ void Bundle_U_AS<Real>::applyPreconditioner_SymGS(std::vector<Real> &Px, const s
   // Forward substitution
   std::vector<Real> x1(dim,0), e1(dim,0),gg(dim,0);
   typename std::set<unsigned>::iterator it, jt;
-  it = nworkingSet_.begin(); 
+  it = nworkingSet_.begin();
   for (int i = 0; i < dim; ++i) {
     gx_->zero(); ge_->zero(); jt = nworkingSet_.begin();
     for (int j = 0; j < i; ++j) {
@@ -340,7 +340,7 @@ void Bundle_U_AS<Real>::applyMatrix(std::vector<Real> &Hx, const std::vector<Rea
   const Real one(1);
   gx_->zero(); eG_->zero();
   unsigned n = nworkingSet_.size();
-  typename std::set<unsigned>::iterator it = nworkingSet_.begin(); 
+  typename std::set<unsigned>::iterator it = nworkingSet_.begin();
   for (unsigned i = 0; i < n; ++i) {
     // Compute Gx using Kahan's compensated sum
     //gx_->axpy(x[i],Bundle_U<Real>::subgradient(*it));
@@ -358,7 +358,7 @@ void Bundle_U_AS<Real>::applyMatrix(std::vector<Real> &Hx, const std::vector<Rea
 }
 
 template<typename Real>
-unsigned Bundle_U_AS<Real>::projectedCG(std::vector<Real> &x, Real &mu, const std::vector<Real> &b, const Real tol) const {
+unsigned Bundle_U_AS<Real>::projectedCG(std::vector<Real> &x, Real &mu, const std::vector<Real> &b, Tolerance<Real> tol) const {
   const Real one(1), zero(0);
   unsigned n = nworkingSet_.size();
   std::vector<Real> r(n,0), r0(n,0), g(n,0), d(n,0), Ad(n,0);
@@ -372,7 +372,7 @@ unsigned Bundle_U_AS<Real>::projectedCG(std::vector<Real> &x, Real &mu, const st
   // Get search direction
   scale(d,-one,g);
   Real alpha(0), kappa(0), beta(0), TOL(1.e-2);
-  Real CGtol = std::min(tol,TOL*rg);
+  Real CGtol = std::min(tol.get(),TOL*rg);
   unsigned cnt = 0;
   while (rg > CGtol && cnt < 2*n+1) {
     applyMatrix(Ad,d);
@@ -448,7 +448,7 @@ void Bundle_U_AS<Real>::scale(std::vector<Real> &x, const Real a, const std::vec
 }
 
 template<typename Real>
-unsigned Bundle_U_AS<Real>::solveDual_arbitrary(const Real t, const unsigned maxit, const Real tol) {
+unsigned Bundle_U_AS<Real>::solveDual_arbitrary(const Real t, const unsigned maxit, Tolerance<Real> tol) {
   const Real zero(0), one(1);
   initializeDualSolver();
   bool nonneg = false;

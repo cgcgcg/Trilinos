@@ -34,15 +34,15 @@ public:
                               const Ptr<const Vector<Real>> &x)
     : con_(con), x_(x) {}
 
-  void apply( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  void apply( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
     throw Exception::NotImplemented(">>> AugmentedSystemPrecOperator::apply : Not Implemented!");
   }
 
-  void applyAdjoint( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  void applyAdjoint( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
     throw Exception::NotImplemented(">>> AugmentedSystemPrecOperator::applyAdjoint : Not Implemented!");
   }
 
-  void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
     Real zero(0);
     PartitionedVector<Real>      &Hvp = dynamic_cast<PartitionedVector<Real>&>(Hv);
     const PartitionedVector<Real> &vp = dynamic_cast<const PartitionedVector<Real>&>(v);
@@ -52,7 +52,7 @@ public:
     con_->applyPreconditioner(*(Hvp.get(1)),*(vp.get(1)),*x_,*x_, zero);
   }
 
-  void applyAdjointInverse( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  void applyAdjointInverse( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
     applyInverse(Hv,v,tol);
   }
 

@@ -45,18 +45,18 @@ namespace ZOO {
   public:
     Objective_CylinderHead() {}
 
-    Real value( const std::vector<Real> &x, Real &tol ) {
+    Real value( const std::vector<Real> &x, Tolerance<Real> &tol ) {
       const Real w0(1e5), h0(250);
       return -(horsepower(x[0],0)/h0 + warranty(x[1],0)/w0);
     }
 
-    void gradient( std::vector<Real> &g, const std::vector<Real> &x, Real &tol ) {
+    void gradient( std::vector<Real> &g, const std::vector<Real> &x, Tolerance<Real> &tol ) {
       const Real w0(1e5), h0(250);
       g[0] = -horsepower(x[0],1)/h0;
       g[1] = -warranty(x[1],1)/w0;
     }
 #if USE_HESSVEC
-    void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+    void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Tolerance<Real> &tol ) {
       const Real w0(1e5), h0(250);
       hv[0] = -horsepower(x[0],2)/h0 * v[0];
       hv[1] = -warranty(x[1],2)/w0 * v[1];
@@ -96,27 +96,27 @@ namespace ZOO {
   public:
     Constraint_CylinderHead() {}
 
-    void value( std::vector<Real> &c, const std::vector<Real> &x, Real &tol ) {
+    void value( std::vector<Real> &c, const std::vector<Real> &x, Tolerance<Real> &tol ) {
       const Real one(1), two(2), sixty(60), syield(3000), w0(1e5);
       c[0] = two*smax(twall(x[0],0),0)/syield - one;
       c[1] = one - warranty(x[1],0)/w0;
       c[2] = tcycle(x[1],0)/sixty - one;
     }
 
-    void applyJacobian( std::vector<Real> &jv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+    void applyJacobian( std::vector<Real> &jv, const std::vector<Real> &v, const std::vector<Real> &x, Tolerance<Real> &tol ) {
       const Real two(2), sixty(60), syield(3000), w0(1e5);
       jv[0] = two*smax(twall(x[0],0),1)/syield * twall(x[0],1) * v[0];
       jv[1] = -warranty(x[1],1)/w0 * v[1];
       jv[2] = tcycle(x[1],1)/sixty * v[1];
     }
 
-    void applyAdjointJacobian( std::vector<Real> &ajv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+    void applyAdjointJacobian( std::vector<Real> &ajv, const std::vector<Real> &v, const std::vector<Real> &x, Tolerance<Real> &tol ) {
       const Real two(2), sixty(60), syield(3000), w0(1e5);
       ajv[0] = two*smax(twall(x[0],0),1)/syield * twall(x[0],1) * v[0];
       ajv[1] = -warranty(x[1],1)/w0 * v[1] + tcycle(x[1],1)/sixty * v[2];
     }
 #if USE_HESSVEC
-    void applyAdjointHessian( std::vector<Real> &ahuv, const std::vector<Real> &u, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+    void applyAdjointHessian( std::vector<Real> &ahuv, const std::vector<Real> &u, const std::vector<Real> &v, const std::vector<Real> &x, Tolerance<Real> &tol ) {
       const Real two(2), sixty(60), syield(3000), w0(1e5);
       Real tw = twall(x[0],0);
       ahuv[0] = two*(smax(tw,2) * twall(x[0],1) * twall(x[0],1)

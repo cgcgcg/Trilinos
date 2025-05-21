@@ -36,7 +36,7 @@ public:
                           const Real                     delta = 0.0)
     : con_(con), x_(x), delta_(delta) {}
 
-  void apply( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  void apply( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
     PartitionedVector<Real>      &Hvp = dynamic_cast<PartitionedVector<Real>&>(Hv);
     const PartitionedVector<Real> &vp = dynamic_cast<const PartitionedVector<Real>&>(v);
 
@@ -52,15 +52,15 @@ public:
     }
   }
 
-  void applyAdjoint( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  void applyAdjoint( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
     apply(Hv,v,tol);
   }
 
-  void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
     throw Exception::NotImplemented(">>> AugmentedSystemOperator::applyInverse : Not implemented!");
   }
 
-  void applyAdjointInverse( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+  void applyAdjointInverse( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
     throw Exception::NotImplemented(">>> AugmentedSystemOperator::applyAdjointInverse : Not implemented!");
   }
 

@@ -26,7 +26,7 @@ private:
   Real mu_;
   Real epsilon_;
   Ptr<const Vector<Real>> xbar_;
-  Real tol_;
+  Tolerance<Real> tol_;
   Ptr<Vector<Real>> x_;
 
 public:

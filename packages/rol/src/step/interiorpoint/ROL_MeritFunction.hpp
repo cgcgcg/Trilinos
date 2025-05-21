@@ -111,7 +111,7 @@ public:
   }
 
 
-  Real value( const V &x, Real &tol ) {
+  Real value( const V &x, Tolerance<Real> &tol ) {
 
     const PV &xpv = dynamic_cast<const PV&>(x);
     xopt_  = xpv.get(OPT);
@@ -137,7 +137,7 @@ public:
   }
 
 
-  Real dirDeriv( const V &x, const V &d, Real tol ) {
+  Real dirDeriv( const V &x, const V &d, Tolerance<Real> tol ) {
    
     const PV &xpv = dynamic_cast<const PV&>(x);
     xopt_  = xpv.get(OPT);

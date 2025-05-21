@@ -25,7 +25,7 @@ class Objective_SimOpt_CheckInterface {
 private:
   using V = Vector<Real>;
   Objective_SimOpt<Real>& obj_;
-  Real tol_;
+  Tolerance<Real> tol_;
 
 public:
 

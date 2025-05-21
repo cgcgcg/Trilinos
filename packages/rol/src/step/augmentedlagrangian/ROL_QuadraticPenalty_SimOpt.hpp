@@ -80,7 +80,7 @@ private:
   // Flags to recompute quantities
   bool isConstraintComputed_;
 
-  void evaluateConstraint(const Vector<Real> &u, const Vector<Real> &z, Real &tol) {
+  void evaluateConstraint(const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol) {
     if ( !isConstraintComputed_ ) {
       // Evaluate constraint
       con_->value(*conValue_,u,z,tol); ncval_++;
@@ -113,7 +113,7 @@ public:
     isConstraintComputed_ = ( flag ? false : isConstraintComputed_ );
   }
 
-  virtual Real value( const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
+  virtual Real value( const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
     // Evaluate constraint
     evaluateConstraint(u,z,tol);
     // Apply Lagrange multiplier to constraint
@@ -132,7 +132,7 @@ public:
     return val;
   }
 
-  virtual void gradient_1( Vector<Real> &g, const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
+  virtual void gradient_1( Vector<Real> &g, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
     // Evaluate constraint
     evaluateConstraint(u,z,tol);
     // Compute gradient of Augmented Lagrangian
@@ -147,7 +147,7 @@ public:
     con_->applyAdjointJacobian_1(g,*primalMultiplierVector_,u,z,tol);
   }
 
-  virtual void gradient_2( Vector<Real> &g, const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
+  virtual void gradient_2( Vector<Real> &g, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
     // Evaluate constraint
     evaluateConstraint(u,z,tol);
     // Compute gradient of Augmented Lagrangian
@@ -163,7 +163,7 @@ public:
   }
 
   virtual void hessVec_11( Vector<Real> &hv, const Vector<Real> &v,
-                     const Vector<Real> &u,  const Vector<Real> &z, Real &tol ) {
+                     const Vector<Real> &u,  const Vector<Real> &z, Tolerance<Real> &tol ) {
     // Apply objective Hessian to a vector
     if (HessianApprox_ < 2) {
       con_->applyJacobian_1(*primalConVector_,v,u,z,tol);
@@ -194,7 +194,7 @@ public:
   }
 
   virtual void hessVec_12( Vector<Real> &hv, const Vector<Real> &v,
-                     const Vector<Real> &u,  const Vector<Real> &z, Real &tol ) {
+                     const Vector<Real> &u,  const Vector<Real> &z, Tolerance<Real> &tol ) {
     // Apply objective Hessian to a vector
     if (HessianApprox_ < 2) {
       con_->applyJacobian_2(*primalConVector_,v,u,z,tol);
@@ -225,7 +225,7 @@ public:
   }
 
   virtual void hessVec_21( Vector<Real> &hv, const Vector<Real> &v,
-                     const Vector<Real> &u,  const Vector<Real> &z, Real &tol ) {
+                     const Vector<Real> &u,  const Vector<Real> &z, Tolerance<Real> &tol ) {
     // Apply objective Hessian to a vector
     if (HessianApprox_ < 2) {
       con_->applyJacobian_1(*primalConVector_,v,u,z,tol);
@@ -256,7 +256,7 @@ public:
   }
 
   virtual void hessVec_22( Vector<Real> &hv, const Vector<Real> &v,
-                     const Vector<Real> &u,  const Vector<Real> &z, Real &tol ) {
+                     const Vector<Real> &u,  const Vector<Real> &z, Tolerance<Real> &tol ) {
     // Apply objective Hessian to a vector
     if (HessianApprox_ < 2) {
       con_->applyJacobian_2(*primalConVector_,v,u,z,tol);
@@ -288,7 +288,7 @@ public:
 
   // Return constraint value
   virtual void getConstraintVec(Vector<Real> &c, const Vector<Real> &u, const Vector<Real> &z) {
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
     // Evaluate constraint
     evaluateConstraint(u,z,tol);
     c.set(*conValue_);

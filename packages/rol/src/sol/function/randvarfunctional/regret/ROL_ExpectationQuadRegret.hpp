@@ -83,7 +83,7 @@ public:
   void updateValue(Objective<Real>         &obj,
                    const Vector<Real>      &x,
                    const std::vector<Real> &xstat,
-                   Real                    &tol) {
+                   Tolerance<Real>         &tol) {
     Real val = computeValue(obj,x,tol);
     val_ += weight_ * eq_->regret(val,0);
   }
@@ -91,7 +91,7 @@ public:
   void updateGradient(Objective<Real>         &obj,
                       const Vector<Real>      &x,
                       const std::vector<Real> &xstat,
-                      Real                    &tol) {
+                      Tolerance<Real>         &tol) {
     Real val = computeValue(obj,x,tol);
     Real r   = eq_->regret(val,1);
     if (std::abs(r) >= ROL_EPSILON<Real>()) {
@@ -105,7 +105,7 @@ public:
                      const std::vector<Real> &vstat,
                      const Vector<Real>      &x,
                      const std::vector<Real> &xstat,
-                     Real                    &tol) {
+                     Tolerance<Real>         &tol) {
     Real val = computeValue(obj,x,tol);
     Real r1  = eq_->regret(val,1);
     Real r2  = eq_->regret(val,2);

@@ -37,7 +37,7 @@ private:
 public:
   Minimax1(void) {}
 
-  Real value(const Vector<Real> &x, Real &tol) {
+  Real value(const Vector<Real> &x, Tolerance<Real> &tol) {
     Ptr<const vector> xp = getVector(x);
     Real f1 = std::pow((*xp)[0],2.0) + std::pow((*xp)[1],4.0);
     Real f2 = std::pow(2.0-(*xp)[0],2.0) + std::pow(2.0-(*xp)[1],2.0);
@@ -45,7 +45,7 @@ public:
     return std::max(f1,std::max(f2,f3));
   }
 
-  void gradient(Vector<Real> &g, const Vector<Real> &x, Real &tol) {
+  void gradient(Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol) {
     Ptr<const vector> xp = getVector(x);
     Ptr<vector> gp = getVector(g);
     Real f1 = std::pow((*xp)[0],2.0) + std::pow((*xp)[1],4.0);

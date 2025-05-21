@@ -59,7 +59,7 @@ private:
   Real              scale1_;     ///< Scale for inexact gradient computation.
   Real scale_, omega_, force_, forceFactor_;
   int updateIter_;
-  Real gtol_;
+  Tolerance<Real> gtol_;
 
   // VERBOSITY SETTING
   int verbosity_;    ///< Print additional information to screen if > 0.
@@ -76,14 +76,14 @@ public:
 
   using Algorithm<Real>::run;
   void run( Vector<Real>       &x,
-            const Vector<Real> &g, 
+            const Vector<Real> &g,
             Objective<Real>    &obj,
             std::ostream       &outStream = std::cout) override;
 
   void writeHeader( std::ostream& os ) const override;
 
   void writeName( std::ostream& os ) const override;
-  
+
   void writeOutput( std::ostream& os, const bool print_header = false ) const override;
 
 private:
@@ -99,9 +99,9 @@ private:
       \f[
          \|g_k-\nabla J(x_k)\|_{\mathcal{X}} \le \kappa_1\min\{\,\|g_k\|_{\mathcal{X}},\,\Delta_k\,\},
       \f]
-      is satisfied.  This function works under the assumption that the gradient function returns 
-      a gradient approximation which satisfies the error tolerance prescribed by the tol input 
-      parameter.  
+      is satisfied.  This function works under the assumption that the gradient function returns
+      a gradient approximation which satisfies the error tolerance prescribed by the tol input
+      parameter.
       @param[in]      x          is the current optimization variable.
       @param[in]      obj        is the objective function.
   */

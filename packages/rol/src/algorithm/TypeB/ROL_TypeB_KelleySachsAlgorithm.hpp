@@ -153,7 +153,7 @@ private:
                        Real eps,
                        TrustRegionModel_U<Real> &model,
                        BoundConstraint<Real> &bnd,
-                       Real &tol,
+                       Tolerance<Real> &tol,
                        Vector<Real> &pwa,
                        Vector<Real> &dwa) const;
 
@@ -164,7 +164,7 @@ private:
                          Real eps,
                         TrustRegionModel_U<Real> &model,
                         BoundConstraint<Real> &bnd,
-                        Real &tol,
+                        Tolerance<Real> &tol,
                         Vector<Real> &pwa,
                         Vector<Real> &dwa) const;
 

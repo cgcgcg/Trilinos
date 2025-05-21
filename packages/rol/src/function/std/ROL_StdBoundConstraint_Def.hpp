@@ -80,7 +80,7 @@ void StdBoundConstraint<Real>::projectInterior( Vector<Real> &x ) {
     Ptr<std::vector<Real>> ex =
         dynamic_cast<StdVector<Real>&>(x).getVector();
     const Real eps = feasTol_;
-    const Real tol = 100.0*ROL_EPSILON<Real>();
+    const Tolerance<Real> tol = 100.0*ROL_EPSILON<Real>();
     const Real one(1);
     if ( BoundConstraint<Real>::isLowerActivated() ) {
       for ( int i = 0; i < dim_; ++i ) {

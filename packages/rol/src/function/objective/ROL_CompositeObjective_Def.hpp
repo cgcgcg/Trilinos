@@ -48,13 +48,13 @@ void CompositeObjective<Real>::update( const Vector<Real> &x, bool flag, int ite
 }
 
 template<typename Real>
-Real CompositeObjective<Real>::value( const Vector<Real> &x, Real &tol ) {
+Real CompositeObjective<Real>::value( const Vector<Real> &x, Tolerance<Real> &tol ) {
   computeValue(x,tol);
   return std_obj_->value(*obj_value_vec_,tol);
 }
 
 template<typename Real>
-void CompositeObjective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+void CompositeObjective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
   g.zero();
   computeGradient(x,tol);
   int size = obj_vec_.size();
@@ -64,7 +64,7 @@ void CompositeObjective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x,
 }
 
 template<typename Real>
-void CompositeObjective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+void CompositeObjective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
   hv.zero();
   computeHessVec(v,x,tol);
   int size = obj_vec_.size();
@@ -101,7 +101,7 @@ void CompositeObjective<Real>::initialize(const Vector<Real> &x) {
 }
 
 template<typename Real>
-void CompositeObjective<Real>::computeValue(const Vector<Real> &x, Real &tol) {
+void CompositeObjective<Real>::computeValue(const Vector<Real> &x, Tolerance<Real> &tol) {
   initialize(x);
   if (!isValueComputed_) {
     int size = obj_vec_.size();
@@ -113,7 +113,7 @@ void CompositeObjective<Real>::computeValue(const Vector<Real> &x, Real &tol) {
 }
 
 template<typename Real>
-void CompositeObjective<Real>::computeGradient(const Vector<Real> &x, Real &tol) {
+void CompositeObjective<Real>::computeGradient(const Vector<Real> &x, Tolerance<Real> &tol) {
   computeValue(x,tol);
   if (!isGradientComputed_) {
     std_obj_->gradient(*(obj_grad_vec_),*(obj_value_vec_),tol);
@@ -126,7 +126,7 @@ void CompositeObjective<Real>::computeGradient(const Vector<Real> &x, Real &tol)
 }
 
 template<typename Real>
-void CompositeObjective<Real>::computeHessVec(const Vector<Real> &v, const Vector<Real> &x, Real &tol) {
+void CompositeObjective<Real>::computeHessVec(const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol) {
   computeGradient(x,tol);
   int size = obj_vec_.size();
   for (int i = 0; i < size; ++i) {

@@ -121,7 +121,7 @@ public:
     isGradient2Computed_ = (flag ? false : isGradient2Computed_);
   }
 
-  virtual Real value( const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
+  virtual Real value( const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
     // Compute objective function value
     if ( !isValueComputed_ ) {
       fval_ = obj_->value(u,z,tol); nfval_++;
@@ -137,7 +137,7 @@ public:
     return val + pval;
   }
 
-  virtual void gradient_1( Vector<Real> &g, const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
+  virtual void gradient_1( Vector<Real> &g, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
     // Compute objective function gradient
     if ( !isGradient1Computed_ ) {
       obj_->gradient_1(*gradient1_,u,z,tol); ngval_++;
@@ -153,7 +153,7 @@ public:
     g.plus(*dualSimVector_);
   }
 
-  virtual void gradient_2( Vector<Real> &g, const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
+  virtual void gradient_2( Vector<Real> &g, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
     // Compute objective function gradient
     if ( !isGradient2Computed_ ) {
       obj_->gradient_2(*gradient2_,u,z,tol); ngval_++;
@@ -170,7 +170,7 @@ public:
   }
 
   virtual void hessVec_11( Vector<Real> &hv, const Vector<Real> &v,
-                     const Vector<Real> &u,  const Vector<Real> &z, Real &tol ) {
+                     const Vector<Real> &u,  const Vector<Real> &z, Tolerance<Real> &tol ) {
     // Apply objective Hessian to a vector
     obj_->hessVec_11(hv,v,u,z,tol);
     // Apply penalty Hessian to a vector
@@ -183,7 +183,7 @@ public:
   }
 
   virtual void hessVec_12( Vector<Real> &hv, const Vector<Real> &v,
-                     const Vector<Real> &u,  const Vector<Real> &z, Real &tol ) {
+                     const Vector<Real> &u,  const Vector<Real> &z, Tolerance<Real> &tol ) {
     // Apply objective Hessian to a vector
     obj_->hessVec_12(hv,v,u,z,tol);
     // Apply penalty Hessian to a vector
@@ -196,7 +196,7 @@ public:
   }
 
   virtual void hessVec_21( Vector<Real> &hv, const Vector<Real> &v,
-                     const Vector<Real> &u,  const Vector<Real> &z, Real &tol ) {
+                     const Vector<Real> &u,  const Vector<Real> &z, Tolerance<Real> &tol ) {
     // Apply objective Hessian to a vector
     obj_->hessVec_21(hv,v,u,z,tol);
     // Apply penalty Hessian to a vector
@@ -209,7 +209,7 @@ public:
   }
 
   virtual void hessVec_22( Vector<Real> &hv, const Vector<Real> &v,
-                     const Vector<Real> &u,  const Vector<Real> &z, Real &tol ) {
+                     const Vector<Real> &u,  const Vector<Real> &z, Tolerance<Real> &tol ) {
     // Apply objective Hessian to a vector
     obj_->hessVec_22(hv,v,u,z,tol);
     // Apply penalty Hessian to a vector
@@ -223,7 +223,7 @@ public:
 
   // Return objective function value
   virtual Real getObjectiveValue(const Vector<Real> &u, const Vector<Real> &z) {
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
     // Evaluate objective function value
     if ( !isValueComputed_ ) {
       fval_ = obj_->value(u,z,tol); nfval_++;

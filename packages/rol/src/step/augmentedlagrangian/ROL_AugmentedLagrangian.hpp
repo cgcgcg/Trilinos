@@ -165,7 +165,7 @@ public:
     pen_->setScaling(cscale);
   }
 
-  virtual Real value( const Vector<Real> &x, Real &tol ) {
+  virtual Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
     // Compute objective function value
     if ( !isValueComputed_ ) {
       fval_ = obj_->value(x,tol); nfval_++;
@@ -181,7 +181,7 @@ public:
     return val + pval;
   }
 
-  virtual void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+  virtual void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
     // Compute objective function gradient
     if ( !isGradientComputed_ ) {
       obj_->gradient(*gradient_,x,tol); ngval_++;
@@ -198,7 +198,7 @@ public:
     g.plus(*dualOptVector_);
   }
 
-  virtual void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  virtual void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
     // Apply objective Hessian to a vector
     obj_->hessVec(hv,v,x,tol);
     hv.scale(fscale_);
@@ -213,7 +213,7 @@ public:
 
   // Return objective function value
   virtual Real getObjectiveValue(const Vector<Real> &x) {
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
     // Evaluate objective function value
     if ( !isValueComputed_ ) {
       fval_ = obj_->value(x,tol); nfval_++;
@@ -223,7 +223,7 @@ public:
   }
 
   const Ptr<const Vector<Real>> getObjectiveGradient(const Vector<Real> &x) {
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
     // Compute objective function gradient
     if ( !isGradientComputed_ ) {
       obj_->gradient(*gradient_,x,tol); ngval_++;

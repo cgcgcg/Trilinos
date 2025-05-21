@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
     /*************************************************************************/
     RealT rnorm(0), cnorm(0);
     ROL::ParameterList list;
-    RealT tol = std::sqrt(ROL::ROL_EPSILON<RealT>());
+    ROL::Tolerance<RealT> tol = std::sqrt(ROL::ROL_EPSILON<RealT>());
     list.sublist("SimOpt").sublist("Solve").set("Output Iteration History",print);
     list.sublist("SimOpt").sublist("Solve").set("Step Tolerance",ROL::ROL_EPSILON<RealT>());
     // Newton

@@ -112,14 +112,14 @@ int testRandomInputs(int numPoints, RealT tol,
       }
 
     void value(ROL::Vector<RealT>& c, const ROL::Vector<RealT>& x,
-               RealT& tol) override {
+               ROL::Tolerance<RealT>& tol) override {
       boundsBC_.applyInverseScalingFunction(c, v_, x, g_);
       c.applyUnary( ROL::Elementwise::Reciprocal<RealT>());
       c.applyBinary(ROL::Elementwise::Multiply<RealT>(), g_);
     }
 
     void applyJacobian(ROL::Vector<RealT>& jv, const ROL::Vector<RealT>& v,
-                       const ROL::Vector<RealT>& x, RealT& tol) override {
+                       const ROL::Vector<RealT>& x, ROL::Tolerance<RealT>& tol) override {
       boundsBC_.applyScalingFunctionJacobian(jv, v, x, g_);
     }
   } testWrapper(boundsBC, g);

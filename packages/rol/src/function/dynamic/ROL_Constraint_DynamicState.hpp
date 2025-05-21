@@ -33,20 +33,20 @@ public:
                           const Ptr<const TimeStamp<Real>>   &ts)
     : con_(con), uo_(uo), z_(z), ts_(ts), isInit_(false) {}
 
-  void value(Vector<Real> &c,const Vector<Real> &u,Real &tol) {
+  void value(Vector<Real> &c,const Vector<Real> &u,Tolerance<Real> &tol) {
     con_->value(c,*uo_,u,*z_,*ts_);
   }
 
-  void applyJacobian(Vector<Real> &jv,const Vector<Real> &v,const Vector<Real> &u,Real &tol) {
+  void applyJacobian(Vector<Real> &jv,const Vector<Real> &v,const Vector<Real> &u,Tolerance<Real> &tol) {
     con_->applyJacobian_un(jv,v,*uo_,u,*z_,*ts_);
   }
 
   using Constraint<Real>::applyAdjointJacobian;
-  void applyAdjointJacobian(Vector<Real> &ajv,const Vector<Real> &v,const Vector<Real> &u,Real &tol) {
+  void applyAdjointJacobian(Vector<Real> &ajv,const Vector<Real> &v,const Vector<Real> &u,Tolerance<Real> &tol) {
     con_->applyAdjointJacobian_un(ajv,v,*uo_,u,*z_,*ts_);
   }
 
-  void applyAdjointHessian(Vector<Real> &ahwv,const Vector<Real> &w,const Vector<Real> &v,const Vector<Real> &u,Real &tol) {
+  void applyAdjointHessian(Vector<Real> &ahwv,const Vector<Real> &w,const Vector<Real> &v,const Vector<Real> &u,Tolerance<Real> &tol) {
     con_->applyAdjointHessian_un_un(ahwv,w,v,*uo_,u,*z_,*ts_);
   }
 
@@ -55,7 +55,7 @@ public:
     con_->update(*uo_,u,*z_,*ts_);
   }
 
-  void applyPreconditioner(Vector<Real> &pv,const Vector<Real> &v,const Vector<Real> &u,const Vector<Real> &g,Real &tol) {
+  void applyPreconditioner(Vector<Real> &pv,const Vector<Real> &v,const Vector<Real> &u,const Vector<Real> &g,Tolerance<Real> &tol) {
     if (!isInit_) {
       ijv_ = u.clone();
       isInit_ = true;

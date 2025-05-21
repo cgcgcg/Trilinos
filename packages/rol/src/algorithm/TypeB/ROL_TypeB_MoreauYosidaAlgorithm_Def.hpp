@@ -82,7 +82,7 @@ void MoreauYosidaAlgorithm<Real>::updateState(const Vector<Real>          &x,
                                               Vector<Real>                &pwa,
                                               std::ostream                &outStream) {
   const Real one(1);
-  Real zerotol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> zerotol = std::sqrt(ROL_EPSILON<Real>());
   // Update objective and constraint.
   if (state_->iter == 0) {
     myobj.update(x,UpdateType::Initial,state_->iter);

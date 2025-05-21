@@ -24,30 +24,30 @@ void ScaledObjective<Real>::setParameter(const std::vector<Real> &param) {
 }
 
 template<typename Real>
-Real ScaledObjective<Real>::value( const Vector<Real> &x, Real &tol ) {
+Real ScaledObjective<Real>::value( const Vector<Real> &x, Tolerance<Real> &tol ) {
   return scale_ * obj_->value(x,tol);
 }
 
 template<typename Real>
-void ScaledObjective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+void ScaledObjective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
   obj_->gradient(g,x,tol);
   g.scale(scale_);
 }
 
 template<typename Real>
-void ScaledObjective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+void ScaledObjective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
   obj_->hessVec(hv,v,x,tol);
   hv.scale(scale_);
 }
 
 template<typename Real>
-void ScaledObjective<Real>::invHessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+void ScaledObjective<Real>::invHessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
   obj_->invHessVec(hv,v,x,tol);
   hv.scale(static_cast<Real>(1)/scale_);
 }
 
 template<typename Real>
-void ScaledObjective<Real>::precond( Vector<Real> &Pv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+void ScaledObjective<Real>::precond( Vector<Real> &Pv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
   obj_->precond(Pv,v,x,tol);
   Pv.scale(static_cast<Real>(1)/scale_);
 }

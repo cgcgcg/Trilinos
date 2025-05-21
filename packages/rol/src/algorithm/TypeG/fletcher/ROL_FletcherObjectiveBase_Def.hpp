@@ -53,7 +53,7 @@ FletcherObjectiveBase<Real>::FletcherObjectiveBase(const Ptr<Objective<Real>> &o
   HessianApprox_         = sublist.get("Level of Hessian Approximation",           0);
   quadPenaltyParameter_  = sublist.get("Quadratic Penalty Parameter",              Real(0));
   useInexact_            = sublist.get("Inexact Solves",                           false);
-  
+
   ROL::ParameterList krylovList;
   Real atol = static_cast<Real>(1e-12);
   Real rtol = static_cast<Real>(1e-2);
@@ -80,7 +80,7 @@ void FletcherObjectiveBase<Real>::update( const Vector<Real> &x, UpdateType type
 template<typename Real>
 Ptr<const Vector<Real>> FletcherObjectiveBase<Real>::getLagrangianGradient(const Vector<Real>& x) {
   // TODO: Figure out reasonable tolerance
-  Real tol = static_cast<Real>(1e-12);
+  Tolerance<Real> tol = static_cast<Real>(1e-12);
   computeMultipliers(*cdual_, *gLdual_, x, *xdual_, *cprim_, tol);
   gL_->set(gLdual_->dual());
   return gL_;
@@ -88,15 +88,15 @@ Ptr<const Vector<Real>> FletcherObjectiveBase<Real>::getLagrangianGradient(const
 
 template<typename Real>
 Ptr<const Vector<Real>> FletcherObjectiveBase<Real>::getConstraintVec(const Vector<Real>& x) {
-  Real tol = std::sqrt(ROL_EPSILON<Real>());
-  conValue(*cprim_, x, tol);  
+  Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
+  conValue(*cprim_, x, tol);
   return cprim_;
 }
 
 template<typename Real>
 Ptr<const Vector<Real>> FletcherObjectiveBase<Real>::getMultiplierVec(const Vector<Real>& x) {
   // TODO: Figure out reasonable tolerance
-  Real tol = static_cast<Real>(1e-12);
+  Tolerance<Real> tol = static_cast<Real>(1e-12);
   computeMultipliers(*cdual_, *gLdual_, x, *xdual_, *cprim_, tol);
   return cdual_;
 }
@@ -104,26 +104,26 @@ Ptr<const Vector<Real>> FletcherObjectiveBase<Real>::getMultiplierVec(const Vect
 template<typename Real>
 Ptr<const Vector<Real>> FletcherObjectiveBase<Real>::getGradient(const Vector<Real>& x) {
   // TODO: Figure out reasonable tolerance
-  Real tol = static_cast<Real>(1e-12);
+  Tolerance<Real> tol = static_cast<Real>(1e-12);
   this->gradient(*xdual_, x, tol);
   return xdual_;
 }
 
 template<typename Real>
 Real FletcherObjectiveBase<Real>::getObjectiveValue(const Vector<Real>& x) {
-  Real tol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
   return objValue(x, tol);
 }
 
 template<typename Real>
 int FletcherObjectiveBase<Real>::getNumberFunctionEvaluations() const {
   return nfval_;
-} 
+}
 
 template<typename Real>
 int FletcherObjectiveBase<Real>::getNumberGradientEvaluations() const {
   return ngval_;
-} 
+}
 
 template<typename Real>
 int FletcherObjectiveBase<Real>::getNumberConstraintEvaluations() const {
@@ -139,7 +139,7 @@ void FletcherObjectiveBase<Real>::reset(Real sigma, Real delta) {
 }
 
 template<typename Real>
-Real FletcherObjectiveBase<Real>::objValue(const Vector<Real>& x, Real &tol) {
+Real FletcherObjectiveBase<Real>::objValue(const Vector<Real>& x, Tolerance<Real> &tol) {
   Real val(0);
   int key(0);
   bool isComputed = fval_->get(val,key);
@@ -151,7 +151,7 @@ Real FletcherObjectiveBase<Real>::objValue(const Vector<Real>& x, Real &tol) {
 }
 
 template<typename Real>
-void FletcherObjectiveBase<Real>::objGrad(Vector<Real> &g, const Vector<Real>& x, Real &tol) {
+void FletcherObjectiveBase<Real>::objGrad(Vector<Real> &g, const Vector<Real>& x, Tolerance<Real> &tol) {
   int key(0);
   bool isComputed = g_->get(g,key);
   if( !isComputed ) {
@@ -161,7 +161,7 @@ void FletcherObjectiveBase<Real>::objGrad(Vector<Real> &g, const Vector<Real>& x
 }
 
 template<typename Real>
-void FletcherObjectiveBase<Real>::conValue(Vector<Real> &c, const Vector<Real>&x, Real &tol) {
+void FletcherObjectiveBase<Real>::conValue(Vector<Real> &c, const Vector<Real>&x, Tolerance<Real> &tol) {
   int key(0);
   bool isComputed = c_->get(c,key);
   if( !isComputed ) {
@@ -171,12 +171,12 @@ void FletcherObjectiveBase<Real>::conValue(Vector<Real> &c, const Vector<Real>&x
 }
 
 template<typename Real>
-void FletcherObjectiveBase<Real>::computeMultipliers(Vector<Real> &y, Vector<Real> &gL, const Vector<Real> &x, Vector<Real> &g, Vector<Real> &c, Real tol) {
+void FletcherObjectiveBase<Real>::computeMultipliers(Vector<Real> &y, Vector<Real> &gL, const Vector<Real> &x, Vector<Real> &g, Vector<Real> &c, Tolerance<Real> tol) {
   int key(0);
   bool isComputed = y_->get(y,key);
   if (isComputed && multSolverError_ <= tol) return;
   if (!isComputed) {
-    Real tol2 = tol;
+    Tolerance<Real> tol2 = tol;
     objGrad(g, x, tol2); tol2 = tol;
     conValue(c, x, tol2);
     scaledc_->set(c); scaledc_->scale(sigma_);

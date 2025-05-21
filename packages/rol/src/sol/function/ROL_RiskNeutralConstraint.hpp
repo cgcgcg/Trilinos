@@ -51,7 +51,7 @@ public:
     con_->update(x,type,iter);
   }
 
-  void value(Vector<Real> &c, const Vector<Real> &x, Real &tol ) {
+  void value(Vector<Real> &c, const Vector<Real> &x, Tolerance<Real> &tol ) {
     init(c,x);
     conVec_->zero();
     for ( int i = 0; i < xsampler_->numMySamples(); ++i ) {
@@ -63,7 +63,7 @@ public:
     cbman_->sumAll(*conVec_,c);
   }
 
-  void applyJacobian(Vector<Real> &jv, const Vector<Real> &v, const Vector<Real> &x, Real &tol) {
+  void applyJacobian(Vector<Real> &jv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol) {
     init(jv,x);
     conVec_->zero();
     for ( int i = 0; i < xsampler_->numMySamples(); ++i ) {
@@ -75,7 +75,7 @@ public:
     cbman_->sumAll(*conVec_,jv);
   }
 
-  void applyAdjointJacobian(Vector<Real> &ajv, const Vector<Real> &v, const Vector<Real> &x, Real &tol) {
+  void applyAdjointJacobian(Vector<Real> &ajv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol) {
     init(v.dual(),x);
     optVec_->zero();
     for ( int i = 0; i < xsampler_->numMySamples(); ++i ) {
@@ -87,7 +87,7 @@ public:
     xsampler_->sumAll(*optVec_,ajv);
   }
 
-  void applyAdjointHessian(Vector<Real> &ahuv, const Vector<Real> &u, const Vector<Real> &v, const Vector<Real> &x, Real &tol) {
+  void applyAdjointHessian(Vector<Real> &ahuv, const Vector<Real> &u, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol) {
     init(u.dual(),x);
     optVec_->zero();
     for ( int i = 0; i < xsampler_->numMySamples(); ++i ) {

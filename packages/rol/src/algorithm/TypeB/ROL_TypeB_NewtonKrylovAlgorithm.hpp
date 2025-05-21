@@ -70,7 +70,7 @@ private:
                const Ptr<Vector<Real>>          &pwa)
       : obj_(obj), bnd_(bnd), x_(x), g_(g), eps_(eps),
         secant_(secant), useSecant_(useSecant), v_(pwa) {}
-    void apply(Vector<Real> &Hv, const Vector<Real> &v, Real &tol) const {
+    void apply(Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol) const {
       v_->set(v);
       bnd_->pruneActive(*v_,g_->dual(),*x_,eps_);
       if (!useSecant_) obj_->hessVec(Hv,*v_,*x_,tol);
@@ -105,10 +105,10 @@ private:
                const Ptr<Vector<Real>>          &pwa)
       : obj_(obj), bnd_(bnd), x_(x), g_(g), eps_(eps),
         secant_(secant), useSecant_(useSecant), v_(pwa) {}
-    void apply(Vector<Real> &Hv, const Vector<Real> &v, Real &tol) const {
+    void apply(Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol) const {
       Hv.set(v.dual()); 
     }
-    void applyInverse(Vector<Real> &Hv, const Vector<Real> &v, Real &tol) const {
+    void applyInverse(Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol) const {
       v_->set(v.dual());
       bnd_->pruneActive(*v_,g_->dual(),*x_,eps_);
       if ( useSecant_ ) secant_->applyH(Hv,v_->dual());

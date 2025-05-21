@@ -34,14 +34,14 @@ private:
   bool isGradientComputed_;
   Ptr<Vector<Real>> g_;
 
-  void getValue(const Vector<Real> &x, Real &tol) {
+  void getValue(const Vector<Real> &x, Tolerance<Real> &tol) {
     if (!isValueComputed_) {
       val_ = obj_->value(x,tol);
       isValueComputed_ = true;
     }
   }
 
-  void getGradient(const Vector<Real> &x, Real &tol) {
+  void getGradient(const Vector<Real> &x, Tolerance<Real> &tol) {
     if (!isGradientInitialized_) {
       g_ = x.dual().clone();
       isGradientInitialized_ = true;
@@ -89,7 +89,7 @@ public:
     isGradientComputed_ = false;
   }
 
-  Real value( const Vector<Real> &x, Real &tol ) {
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
     getValue(x,tol);
     Real prob = smoothHeaviside(val_-threshold_,0);
     if (std::abs(prob) > ROL_EPSILON<Real>()) {
@@ -98,7 +98,7 @@ public:
     return static_cast<Real>(0);
   }
 
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
     getValue(x,tol);
     Real prob = smoothHeaviside(val_-threshold_,1);
     if (std::abs(prob) > ROL_EPSILON<Real>()) {
@@ -110,7 +110,7 @@ public:
     }
   }
 
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
     getValue(x,tol);
     Real prob1 = smoothHeaviside(val_-threshold_,1);
     Real prob2 = smoothHeaviside(val_-threshold_,2);

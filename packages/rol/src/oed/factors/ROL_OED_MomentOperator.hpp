@@ -107,7 +107,7 @@ private:
     void setProbabilityVector(const ProbabilityVector<Real> &p) {
       p_ = makePtrFromRef(p);
     }
-    void apply(Vector<Real> &Mx, const Vector<Real> &x, Real &tol) const {
+    void apply(Vector<Real> &Mx, const Vector<Real> &x, Tolerance<Real> &tol) const {
       int nsamples = factors_->numMySamples();
       sum_->zero();
       for (int i = 0; i < nsamples; ++i) {
@@ -125,10 +125,10 @@ private:
   };
   class precond : public LinearOperator<Real> {
   public:
-    void apply(Vector<Real> &Hv, const Vector<Real> &v, Real &tol) const {
+    void apply(Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol) const {
       Hv.set(v.dual());
     }
-    void applyInverse(Vector<Real> &Hv, const Vector<Real> &v, Real &tol) const {
+    void applyInverse(Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol) const {
       Hv.set(v.dual());
     }
   };

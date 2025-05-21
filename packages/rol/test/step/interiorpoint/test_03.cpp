@@ -24,21 +24,21 @@
 
 #include <iomanip>
 
-/*! \file test_03.cpp 
+/*! \file test_03.cpp
     \brief Verify that the symmetrized version of a primal dual
-           system is indeed symmetric and that the solution to 
+           system is indeed symmetric and that the solution to
            the unsymmetrized version satisfies the symmetrized version.
- 
+
            Note: CG will almost certainly fail with exit flag 2 (negative
            eigenvalues)
 */
 
 
-template<class Real> 
+template<class Real>
 void printVector( const ROL::Vector<Real> &x, std::ostream &outStream ) {
 
   try {
-    ROL::Ptr<const std::vector<Real> > xp = 
+    ROL::Ptr<const std::vector<Real> > xp =
       dynamic_cast<const ROL::StdVector<Real>&>(x).getVector();
 
     outStream << "Standard Vector" << std::endl;
@@ -48,7 +48,7 @@ void printVector( const ROL::Vector<Real> &x, std::ostream &outStream ) {
   }
   catch( const std::bad_cast& e ) {
     outStream << "Partitioned Vector" << std::endl;
-    
+
     typedef ROL::PartitionedVector<Real>    PV;
     typedef typename PV::size_type          size_type;
 
@@ -62,26 +62,26 @@ void printVector( const ROL::Vector<Real> &x, std::ostream &outStream ) {
   }
 }
 
-template<class Real> 
+template<class Real>
 void printMatrix( const std::vector<ROL::Ptr<ROL::Vector<Real> > > &A,
                   const std::vector<ROL::Ptr<ROL::Vector<Real> > > &I,
                   std::ostream &outStream ) {
   typedef typename std::vector<Real>::size_type uint;
   uint dim = A.size();
-   
+
   for( uint i=0; i<dim; ++i ) {
     for( uint j=0; j<dim; ++j ) {
-      outStream << std::setw(6) << A[j]->dot(*(I[i])); 
+      outStream << std::setw(6) << A[j]->dot(*(I[i]));
     }
     outStream << std::endl;
   }
 }
 
 
-template<class Real> 
+template<class Real>
 class IdentityOperator : public ROL::LinearOperator<Real> {
 public:
-  void apply( ROL::Vector<Real> &Hv, const ROL::Vector<Real> &v, Real &tol ) const {
+  void apply( ROL::Vector<Real> &Hv, const ROL::Vector<Real> &v, ROL::Tolerance<Real> &tol ) const {
     Hv.set(v);
   }
 }; // IdentityOperator
@@ -90,7 +90,7 @@ public:
 typedef double RealT;
 
 int main(int argc, char *argv[]) {
- 
+
 //  typedef std::vector<RealT>                             vector;
 
   typedef ROL::ParameterList                           PL;
@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
   typedef ROL::BoundConstraint<RealT>                      BND;
   typedef ROL::OptimizationProblem<RealT>                  OPT;
   typedef ROL::NonlinearProgram<RealT>                     NLP;
-  typedef ROL::LinearOperator<RealT>                       LOP;  
+  typedef ROL::LinearOperator<RealT>                       LOP;
   typedef ROL::LinearOperatorFromConstraint<RealT>         LOPEC;
   typedef ROL::Krylov<RealT>                               KRYLOV;
 
@@ -110,25 +110,25 @@ int main(int argc, char *argv[]) {
   typedef ROL::InteriorPointPenalty<RealT>                 PENALTY;
   typedef ROL::PrimalDualInteriorPointResidual<RealT>      RESIDUAL;
 
-   
+
 
   Teuchos::GlobalMPISession mpiSession(&argc, &argv);
 
   int iprint = argc - 1;
   ROL::Ptr<std::ostream> outStream;
   ROL::nullstream bhs;
-  if( iprint > 0 ) 
+  if( iprint > 0 )
     outStream = ROL::makePtrFromRef(std::cout);
   else
     outStream = ROL::makePtrFromRef(bhs);
 
   int errorFlag = 0;
-   
+
   try {
 
     RealT mu = 0.1;
 
-    RealT tol = std::sqrt(ROL::ROL_EPSILON<RealT>());
+    ROL::Tolerance<RealT> tol = std::sqrt(ROL::ROL_EPSILON<RealT>());
 
     PL parlist;
 
@@ -136,17 +136,17 @@ int main(int argc, char *argv[]) {
     PL &lblist = iplist.sublist("Barrier Objective");
 
     lblist.set("Use Linear Damping", true);         // Not used in this test
-    lblist.set("Linear Damping Coefficient",1.e-4); // Not used in this test 
+    lblist.set("Linear Damping Coefficient",1.e-4); // Not used in this test
     lblist.set("Initial Barrier Parameter", mu);
 
     PL &krylist = parlist.sublist("General").sublist("Krylov");
-   
+
     krylist.set("Absolute Tolerance", 1.e-6);
     krylist.set("Relative Tolerance", 1.e-6);
     krylist.set("Iteration Limit", 50);
 
-    // Create a Conjugate Gradients solver 
-    krylist.set("Type","Conjugate Gradients"); 
+    // Create a Conjugate Gradients solver
+    krylist.set("Type","Conjugate Gradients");
     ROL::Ptr<KRYLOV> cg = ROL::KrylovFactory<RealT>(parlist);
     HS::ProblemFactory<RealT> problemFactory;
 
@@ -154,7 +154,7 @@ int main(int argc, char *argv[]) {
     // a mixture of finite and infinite bounds
     ROL::Ptr<NLP> nlp = problemFactory.getProblem(16);
     ROL::Ptr<OPT> opt = nlp->getOptimizationProblem();
- 
+
     ROL::Ptr<V>   x   = opt->getSolutionVector();
     ROL::Ptr<V>   l   = opt->getMultiplierVector();
     ROL::Ptr<V>   zl  = x->clone(); zl->zero();
@@ -168,7 +168,7 @@ int main(int argc, char *argv[]) {
     // implementation.
     (*ROL::dynamicPtrCast<ROL::StdVector<RealT> >(x_pv->get(1))->getVector())[0] = 1.0;
 
-    ROL::Ptr<V>   sol = CreatePartitionedVector(x,l,zl,zu);   
+    ROL::Ptr<V>   sol = CreatePartitionedVector(x,l,zl,zu);
 
     std::vector< ROL::Ptr<V> > I;
     std::vector< ROL::Ptr<V> > J;
@@ -186,7 +186,7 @@ int main(int argc, char *argv[]) {
 
     ROL::Ptr<V>   gmres_sol = sol->clone();   gmres_sol->set(*sol);
     ROL::Ptr<V>   cg_sol = sol->clone();      cg_sol->set(*sol);
- 
+
     IdentityOperator<RealT> identity;
 
     RandomizeVector(*u,-1.0,1.0);
@@ -197,7 +197,7 @@ int main(int argc, char *argv[]) {
     ROL::Ptr<BND> bnd = opt->getBoundConstraint();
 
     PENALTY penalty(obj,bnd,parlist);
- 
+
     ROL::Ptr<const V> maskL = penalty.getLowerMask();
     ROL::Ptr<const V> maskU = penalty.getUpperMask();
 
@@ -229,7 +229,7 @@ int main(int argc, char *argv[]) {
     *outStream << "Nonsymmetric Jacobian" << std::endl;
     printMatrix(J,I,*outStream);
 
-   // Solve the system 
+   // Solve the system
     gmres->run( *gmres_sol, *lop, *rhs, identity, gmres_iter, gmres_flag );
 
     errorFlag += gmres_flag;
@@ -257,7 +257,7 @@ int main(int argc, char *argv[]) {
     symres->applyJacobian(*ju,*u,*sol,tol);
     *outStream << "Symmetry check |u.dot(jv)-v.dot(ju)| = "
                << std::abs(u->dot(*jv)-v->dot(*ju)) << std::endl;
- 
+
     cg->run( *cg_sol, *symlop, *symrhs, identity, cg_iter, cg_flag );
 
     *outStream << "CG terminated after " << cg_iter << " iterations "
@@ -287,4 +287,3 @@ int main(int argc, char *argv[]) {
 
   return 0;
 }
-

@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
   int errorFlag = 0;
 
   try {
-    RealT tol = std::sqrt(ROL::ROL_EPSILON<RealT>());
+    ROL::Tolerance<RealT> tol = std::sqrt(ROL::ROL_EPSILON<RealT>());
     RealT cnorm(0);
     ROL::Ptr<ROL::Vector<RealT>>     sol, mul, x, lam, l, u, c;
     ROL::Ptr<ROL::Objective<RealT>>  obj;
@@ -290,7 +290,7 @@ int main(int argc, char *argv[]) {
     errorFlag += !bnd->isFeasible(*x);
     errorFlag += (cnorm > tol);
   }
-  
+
   catch (std::logic_error& err) {
     *outStream << err.what() << "\n";
     errorFlag = -1000;
@@ -303,4 +303,3 @@ int main(int argc, char *argv[]) {
 
   return 0;
 }
-

@@ -15,7 +15,7 @@ namespace OED {
 namespace Het {
 
 template<typename Real>
-void D_Objective<Real>::solve(int key, const Vector<Real> &z, Real &tol) { 
+void D_Objective<Real>::solve(int key, const Vector<Real> &z, Tolerance<Real> &tol) { 
   // Solve state equation if not done already.
   if (!ustore_->get(*u_,key)) {
     con0_->setParameter({static_cast<Real>(key)});
@@ -25,7 +25,7 @@ void D_Objective<Real>::solve(int key, const Vector<Real> &z, Real &tol) {
 }
 
 template<typename Real>
-void D_Objective<Real>::solveSens(const Vector<Real> &v, const Vector<Real> &z, Real &tol) {
+void D_Objective<Real>::solveSens(const Vector<Real> &v, const Vector<Real> &z, Tolerance<Real> &tol) {
   con0_->applyJacobian_2(*g_,v,*u_,z,tol);
   g_->scale(static_cast<Real>(-1));
   con0_->applyInverseJacobian_1(*u_,*g_,*u_,z,tol);
@@ -55,7 +55,7 @@ void D_Objective<Real>::update(const Vector<Real> &z, UpdateType type, int iter)
 }
 
 template<typename Real>
-Real D_Objective<Real>::value( const Vector<Real> &z, Real &tol ) {
+Real D_Objective<Real>::value( const Vector<Real> &z, Tolerance<Real> &tol ) {
   if (!isDetComputed_) {
     det0_ = con0_->logDeterminant(z);
     det1_ = ObjectiveBase<Real,std::vector<Real>>::getConstraint()->logDeterminant(z);
@@ -65,7 +65,7 @@ Real D_Objective<Real>::value( const Vector<Real> &z, Real &tol ) {
 }
 
 template<typename Real>
-void D_Objective<Real>::gradient( Vector<Real> &g, const Vector<Real> &z, Real &tol ) {
+void D_Objective<Real>::gradient( Vector<Real> &g, const Vector<Real> &z, Tolerance<Real> &tol ) {
   if (p_ == nullPtr) p_ = g.clone();
   g.zero();
   for (int i = 0; i < dim_; ++i) {
@@ -84,7 +84,7 @@ void D_Objective<Real>::gradient( Vector<Real> &g, const Vector<Real> &z, Real &
 }
 
 template<typename Real>
-void D_Objective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &z, Real &tol ) {
+void D_Objective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &z, Tolerance<Real> &tol ) {
   if (p_ == nullPtr) p_ = hv.clone();
   hv.zero();
   for (int i = 0; i < dim_; ++i) {

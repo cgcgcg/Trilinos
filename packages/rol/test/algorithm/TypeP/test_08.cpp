@@ -75,19 +75,19 @@ public:
     }
   }
 
-  Real value(const std::vector<Real> &x, Real &tol) {
+  Real value(const std::vector<Real> &x, ROL::Tolerance<Real> &tol) {
     Real val(0);
     for (int i = 0; i < dim_; ++i)
       val += static_cast<Real>(0.5)*a_[i]*x[i]*x[i] + b_[i]*x[i];
     return val;
   }
 
-  void gradient(std::vector<Real> &g, const std::vector<Real> &x, Real &tol) {
+  void gradient(std::vector<Real> &g, const std::vector<Real> &x, ROL::Tolerance<Real> &tol) {
     for (int i = 0; i < dim_; ++i)
       g[i] = a_[i]*x[i] + b_[i];
   }
 
-  void hessVec(std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol) {
+  void hessVec(std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, ROL::Tolerance<Real> &tol) {
     for (int i = 0; i < dim_; ++i)
       hv[i] = a_[i]*v[i];
   }
@@ -130,8 +130,8 @@ int main(int argc, char *argv[]) {
     ROL::Ptr<ROL::StdVector<RealT>>        sol, wts, y;
     ROL::Ptr<QuadraticTypeP_Test01<RealT>> sobj;
     ROL::Ptr<ROL::l1Objective<RealT>>      nobj;
-		
-		
+
+
     ROL::Ptr<ROL::TypeP::TrustRegionAlgorithm<RealT>> algo;
     std::vector<RealT> data;
     RealT err(0);
@@ -165,15 +165,15 @@ int main(int argc, char *argv[]) {
     sobj->checkHessVec(*xd,*yd,true,*outStream);
     sobj->checkHessSym(*xd,*yd,*zd,true,*outStream);
 
-    list.sublist("Step").sublist("Trust Region").sublist("TRN").sublist("Solver").set("Subproblem Solver", "SPG");  
+    list.sublist("Step").sublist("Trust Region").sublist("TRN").sublist("Solver").set("Subproblem Solver", "SPG");
     sol->zero();
-    auto problem = ROL::makePtr<ROL::Problem<RealT>>(sobj, sol); // check 
+    auto problem = ROL::makePtr<ROL::Problem<RealT>>(sobj, sol); // check
     problem->addProximableObjective(nobj);
-    problem->finalize(false, true, *outStream); 
-    ROL::Solver<RealT> solverspg(problem, list); 	
+    problem->finalize(false, true, *outStream);
+    ROL::Solver<RealT> solverspg(problem, list);
 
     auto begin = std::chrono::high_resolution_clock::now();
-    solverspg.solve(*outStream); 
+    solverspg.solve(*outStream);
     auto end   = std::chrono::high_resolution_clock::now();
     *outStream << "  Optimization Time: " << std::chrono::duration_cast<std::chrono::microseconds>(end-begin).count() << " microseconds" << std::endl;
 
@@ -193,9 +193,9 @@ int main(int argc, char *argv[]) {
     *outStream << "  Max Relative Error = " << err/xmax << std::endl;
     errorFlag += (err > tol ? 1 : 0);
 
-    list.sublist("Step").sublist("Trust Region").sublist("TRN").sublist("Solver").set("Subproblem Solver", "Simplified SPG");  
+    list.sublist("Step").sublist("Trust Region").sublist("TRN").sublist("Solver").set("Subproblem Solver", "Simplified SPG");
     sol->zero();
-    ROL::Solver<RealT> solverspg2(problem, list); 	
+    ROL::Solver<RealT> solverspg2(problem, list);
     begin = std::chrono::high_resolution_clock::now();
     solverspg2.solve(*outStream);
     end   = std::chrono::high_resolution_clock::now();
@@ -217,9 +217,9 @@ int main(int argc, char *argv[]) {
     *outStream << "  Max Relative Error = " << err/xmax << std::endl;
     errorFlag += (err > tol ? 1 : 0);
 
-    list.sublist("Step").sublist("Trust Region").sublist("TRN").sublist("Solver").set("Subproblem Solver", "NCG");  
+    list.sublist("Step").sublist("Trust Region").sublist("TRN").sublist("Solver").set("Subproblem Solver", "NCG");
     sol->zero();
-    ROL::Solver<RealT> solverncg(problem, list); 	
+    ROL::Solver<RealT> solverncg(problem, list);
     begin = std::chrono::high_resolution_clock::now();
     solverncg.solve(*outStream);
     end   = std::chrono::high_resolution_clock::now();

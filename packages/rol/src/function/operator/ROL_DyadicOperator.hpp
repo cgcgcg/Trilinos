@@ -36,12 +36,12 @@ public:
   DyadicOperator( const ROL::Ptr<const V> &x,
                   const ROL::Ptr<const V> &y ) : x_(x), y_(y) {}
 
-  void apply( V &Hv, const V &v, Real &tol ) const {
+  void apply( V &Hv, const V &v, Tolerance<Real> &tol ) const {
     Hv.set(*x_);
     Hv.scale(v.dot(*y_));  
   }
     
-  void applyInverse( V &Hv, const V &v, Real &tol ) const {
+  void applyInverse( V &Hv, const V &v, Tolerance<Real> &tol ) const {
 
     ROL_TEST_FOR_EXCEPTION( true , std::logic_error, 
                                 ">>> ERROR (ROL_DyadicOperator, applyInverse): "

@@ -25,13 +25,13 @@ void StdObjective<Real>::update( const Vector<Real> &x, UpdateType type, int ite
 }
 
 template<typename Real>
-Real StdObjective<Real>::value( const Vector<Real> &x, Real &tol ) {
+Real StdObjective<Real>::value( const Vector<Real> &x, Tolerance<Real> &tol ) {
   const StdVector<Real> xs = dynamic_cast<const StdVector<Real>&>(x);
   return value(*(xs.getVector()),tol);
 }
 
 template<typename Real>
-void StdObjective<Real>::gradient( std::vector<Real> &g, const std::vector<Real> &x, Real &tol ) {
+void StdObjective<Real>::gradient( std::vector<Real> &g, const std::vector<Real> &x, Tolerance<Real> &tol ) {
   const unsigned size = x.size();
   std::vector<Real> y; y.assign(x.begin(),x.end());
   const Real cbrteps = std::cbrt(ROL::ROL_EPSILON<Real>()), one(1);
@@ -50,20 +50,20 @@ void StdObjective<Real>::gradient( std::vector<Real> &g, const std::vector<Real>
 }
 
 template<typename Real>
-void StdObjective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+void StdObjective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
   StdVector<Real> gs = dynamic_cast<StdVector<Real>&>(g);
   const StdVector<Real> xs = dynamic_cast<const StdVector<Real>&>(x);
   gradient(*(gs.getVector()),*(xs.getVector()),tol);
 }
 
 template<typename Real>
-Real StdObjective<Real>::dirDeriv( const std::vector<Real> &x, const std::vector<Real> &d, Real &tol ) {
+Real StdObjective<Real>::dirDeriv( const std::vector<Real> &x, const std::vector<Real> &d, Tolerance<Real> &tol ) {
   ROL_TEST_FOR_EXCEPTION(true, std::invalid_argument,
     ">>> ERROR (ROL::StdObjective): dirDeriv not implemented!");
 }
 
 template<typename Real>
-Real StdObjective<Real>::dirDeriv( const Vector<Real> &x, const Vector<Real> &d, Real &tol ) {
+Real StdObjective<Real>::dirDeriv( const Vector<Real> &x, const Vector<Real> &d, Tolerance<Real> &tol ) {
   const StdVector<Real> xs = dynamic_cast<const StdVector<Real>&>(x);
   const StdVector<Real> ds = dynamic_cast<const StdVector<Real>&>(d);
   try {
@@ -75,13 +75,13 @@ Real StdObjective<Real>::dirDeriv( const Vector<Real> &x, const Vector<Real> &d,
 }
 
 template<typename Real>
-void StdObjective<Real>::hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+void StdObjective<Real>::hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Tolerance<Real> &tol ) {
   ROL_TEST_FOR_EXCEPTION(true, std::invalid_argument,
     ">>> ERROR (ROL::StdObjective): hessVec not implemented!");
 }
 
 template<typename Real>
-void StdObjective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+void StdObjective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
   try {
     StdVector<Real> hvs = dynamic_cast<StdVector<Real>&>(hv);
     const StdVector<Real> vs = dynamic_cast<const StdVector<Real>&>(v);
@@ -94,13 +94,13 @@ void StdObjective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const
 }
 
 template<typename Real>
-void StdObjective<Real>::invHessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+void StdObjective<Real>::invHessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Tolerance<Real> &tol ) {
   ROL_TEST_FOR_EXCEPTION(true, std::invalid_argument,
     ">>> ERROR (ROL::StdObjective): invHessVec not implemented!");
 }
 
 template<typename Real>
-void StdObjective<Real>::invHessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+void StdObjective<Real>::invHessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
   StdVector<Real> hvs = dynamic_cast<StdVector<Real>&>(hv);
   const StdVector<Real> vs = dynamic_cast<const StdVector<Real>&>(v);
   const StdVector<Real> xs = dynamic_cast<const StdVector<Real>&>(x);
@@ -108,12 +108,12 @@ void StdObjective<Real>::invHessVec( Vector<Real> &hv, const Vector<Real> &v, co
 }
 
 template<typename Real>
-void StdObjective<Real>::precond( std::vector<Real> &Pv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+void StdObjective<Real>::precond( std::vector<Real> &Pv, const std::vector<Real> &v, const std::vector<Real> &x, Tolerance<Real> &tol ) {
   Pv.assign(v.begin(),v.end());
 }
 
 template<typename Real>
-void StdObjective<Real>::precond( Vector<Real> &Pv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+void StdObjective<Real>::precond( Vector<Real> &Pv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
   StdVector<Real> Pvs = dynamic_cast<StdVector<Real>&>(Pv);
   const StdVector<Real> vs = dynamic_cast<const StdVector<Real>&>(v);
   const StdVector<Real> xs = dynamic_cast<const StdVector<Real>&>(x);

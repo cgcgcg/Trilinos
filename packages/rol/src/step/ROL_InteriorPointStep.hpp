@@ -38,7 +38,7 @@ typedef Constraint_Partitioned<Real>            IPCON;
 private:
 
   ROL::Ptr<StatusTest<Real> >       status_;
-  ROL::Ptr<Step<Real> >             step_;  
+  ROL::Ptr<Step<Real> >             step_;
   ROL::Ptr<Algorithm<Real> >        algo_;
   ROL::Ptr<BoundConstraint<Real> >  bnd_;
   ROL::ParameterList                parlist_;
@@ -51,7 +51,7 @@ private:
 
   Real mu_;      // Barrier parameter
   Real mumin_;   // Minimal value of barrier parameter
-  Real mumax_;   // Maximal value of barrier parameter 
+  Real mumax_;   // Maximal value of barrier parameter
   Real rho_;     // Barrier parameter reduction factor
 
   // For the subproblem
@@ -66,7 +66,7 @@ private:
   std::string stepname_;
 
 public:
- 
+
   using Step<Real>::initialize;
   using Step<Real>::compute;
   using Step<Real>::update;
@@ -74,10 +74,10 @@ public:
   ~InteriorPointStep() {}
 
   InteriorPointStep(ROL::ParameterList &parlist) :
-    Step<Real>(), 
-    status_(ROL::nullPtr), 
+    Step<Real>(),
+    status_(ROL::nullPtr),
     step_(ROL::nullPtr),
-    algo_(ROL::nullPtr), 
+    algo_(ROL::nullPtr),
     parlist_(parlist),
     x_(ROL::nullPtr),
     g_(ROL::nullPtr),
@@ -88,7 +88,7 @@ public:
     stepname_("Composite Step") {
 
     using ROL::ParameterList;
-    
+
     verbosity_ = parlist.sublist("General").get("Print Verbosity",0);
 
     // List of general Interior Point parameters
@@ -113,11 +113,11 @@ public:
     stepType_ = StringToEStep(stepname_);
   }
 
-  /** \brief Initialize step with equality constraint 
+  /** \brief Initialize step with equality constraint
    */
-  void initialize( Vector<Real> &x, const Vector<Real> &g, 
+  void initialize( Vector<Real> &x, const Vector<Real> &g,
                    Vector<Real> &l, const Vector<Real> &c,
-                   Objective<Real> &obj, Constraint<Real> &con, 
+                   Objective<Real> &obj, Constraint<Real> &con,
                    AlgorithmState<Real> &algo_state ) {
     hasEquality_ = true;
 
@@ -144,7 +144,7 @@ public:
     algo_state.ncval = 0;
     algo_state.ngrad = 0;
 
-    Real zerotol = 0.0;
+    Tolerance<Real> zerotol = 0.0;
     obj.update(x,true,algo_state.iter);
     algo_state.value = obj.value(x,zerotol);
 
@@ -156,23 +156,23 @@ public:
 
     algo_state.nfval += ipobj.getNumberFunctionEvaluations();
     algo_state.ngrad += ipobj.getNumberGradientEvaluations();
-    algo_state.ncval += ipcon.getNumberConstraintEvaluations(); 
+    algo_state.ncval += ipcon.getNumberConstraintEvaluations();
 
   }
 
 
-  
+
   void initialize( Vector<Real> &x, const Vector<Real> &g, Vector<Real> &l, const Vector<Real> &c,
-                   Objective<Real> &obj, Constraint<Real> &con, BoundConstraint<Real> &bnd, 
+                   Objective<Real> &obj, Constraint<Real> &con, BoundConstraint<Real> &bnd,
                    AlgorithmState<Real> &algo_state ) {
     bnd.projectInterior(x);
     initialize(x,g,l,c,obj,con,algo_state);
   }
 
 
-  /** \brief Initialize step with no equality constraint 
+  /** \brief Initialize step with no equality constraint
    */
-  void initialize( Vector<Real> &x, const Vector<Real> &g, 
+  void initialize( Vector<Real> &x, const Vector<Real> &g,
                    Objective<Real> &obj, BoundConstraint<Real> &bnd,
                    AlgorithmState<Real> &algo_state ) {
     bnd.projectInterior(x);
@@ -193,7 +193,7 @@ public:
     algo_state.ncval = 0;
     algo_state.ngrad = 0;
 
-    Real zerotol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> zerotol = std::sqrt(ROL_EPSILON<Real>());
     obj.update(x,true,algo_state.iter);
     algo_state.value = obj.value(x,zerotol);
 
@@ -217,14 +217,14 @@ public:
                 const Vector<Real>   &x,
                 const Vector<Real>   &l,
                 Objective<Real>      &obj,
-                Constraint<Real>     &con, 
+                Constraint<Real>     &con,
                 AlgorithmState<Real> &algo_state ) {
     // Grab interior point objective and constraint
     //auto& ipobj = dynamic_cast<IPOBJ&>(obj);
     //auto& ipcon = dynamic_cast<IPCON&>(con);
 
     Real one(1);
-    // Create the algorithm 
+    // Create the algorithm
     Ptr<Objective<Real>> penObj;
     if (stepType_ == STEP_AUGMENTEDLAGRANGIAN) {
       Ptr<Objective<Real>>  raw_obj = makePtrFromRef(obj);
@@ -262,10 +262,10 @@ public:
                 const Vector<Real>    &x,
                 const Vector<Real>    &l,
                 Objective<Real>       &obj,
-                Constraint<Real>      &con, 
+                Constraint<Real>      &con,
                 BoundConstraint<Real> &bnd,
                 AlgorithmState<Real>  &algo_state ) {
-    compute(s,x,l,obj,con,algo_state); 
+    compute(s,x,l,obj,con,algo_state);
   }
 
   // Bound constrained
@@ -277,7 +277,7 @@ public:
     // Grab interior point objective and constraint
     auto& ipobj = dynamic_cast<IPOBJ&>(obj);
 
-    // Create the algorithm 
+    // Create the algorithm
     if (stepType_ == STEP_BUNDLE) {
       status_ = makePtr<BundleStatusTest<Real>>(parlist_);
       step_   = makePtr<BundleStep<Real>>(parlist_);
@@ -308,7 +308,7 @@ public:
   void update( Vector<Real>         &x,
                Vector<Real>         &l,
                const Vector<Real>   &s,
-               Objective<Real>      &obj, 
+               Objective<Real>      &obj,
                Constraint<Real>     &con,
                AlgorithmState<Real> &algo_state ) {
     // Grab interior point objective and constraint
@@ -323,7 +323,7 @@ public:
 
     ROL::Ptr<StepState<Real> > state = Step<Real>::getState();
     state->SPiter = subproblemIter_;
- 
+
     // Update optimization vector
     x.plus(s);
 
@@ -332,7 +332,7 @@ public:
     algo_state.snorm = s.norm();
     algo_state.iter++;
 
-    Real zerotol = 0.0;
+    Tolerance<Real> zerotol = 0.0;
 
     algo_state.value = ipobj.value(x,zerotol);
     algo_state.value = ipobj.getObjectiveValue();
@@ -344,7 +344,7 @@ public:
     state->gradientVec->set(*g_);
 
     ipcon.applyAdjointJacobian(*g_,*l_,x,zerotol);
-    state->gradientVec->plus(*g_);    
+    state->gradientVec->plus(*g_);
 
     algo_state.gnorm = g_->norm();
     algo_state.cnorm = state->constraintVec->norm();
@@ -353,7 +353,7 @@ public:
     algo_state.nfval += ipobj.getNumberFunctionEvaluations();
     algo_state.ngrad += ipobj.getNumberGradientEvaluations();
     algo_state.ncval += ipcon.getNumberConstraintEvaluations();
-    
+
   }
 
   void update( Vector<Real>          &x,
@@ -363,7 +363,7 @@ public:
                Constraint<Real>      &con,
                BoundConstraint<Real> &bnd,
                AlgorithmState<Real>  &algo_state ) {
-    update(x,l,s,obj,con,algo_state); 
+    update(x,l,s,obj,con,algo_state);
 
     ROL::Ptr<StepState<Real> > state = Step<Real>::getState();
     x_->set(x);
@@ -375,7 +375,7 @@ public:
 
   void update( Vector<Real>          &x,
                const Vector<Real>    &s,
-               Objective<Real>       &obj, 
+               Objective<Real>       &obj,
                BoundConstraint<Real> &bnd,
                AlgorithmState<Real>  &algo_state ) {
     // Grab interior point objective
@@ -388,7 +388,7 @@ public:
     }
 
     ROL::Ptr<StepState<Real> > state = Step<Real>::getState();
- 
+
     // Update optimization vector
     x.plus(s);
 
@@ -397,7 +397,7 @@ public:
     algo_state.snorm = s.norm();
     algo_state.iter++;
 
-    Real zerotol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> zerotol = std::sqrt(ROL_EPSILON<Real>());
 
     algo_state.value = ipobj.value(x,zerotol);
     algo_state.value = ipobj.getObjectiveValue();
@@ -426,7 +426,7 @@ public:
 
       hist << std::string(116,'-') << "\n";
       hist << "Interior Point status output definitions\n\n";
-   
+
       hist << "  IPiter  - Number of interior point steps taken\n";
       hist << "  SPiter  - Number of subproblem solver iterations\n";
       hist << "  penalty - Penalty parameter multiplying the barrier objective\n";
@@ -442,7 +442,7 @@ public:
       hist << "  #fval   - Number of objective function evaluations\n";
       hist << "  #grad   - Number of gradient evaluations\n";
       if (hasEquality_) {
-        hist << "  #cval   - Number of composite constraint evaluations\n"; 
+        hist << "  #cval   - Number of composite constraint evaluations\n";
       }
       hist << std::string(116,'-') << "\n";
     }
@@ -520,7 +520,7 @@ public:
       }
       hist << "\n";
     }
-    return hist.str(); 
+    return hist.str();
   }
 
 }; // class InteriorPointStep

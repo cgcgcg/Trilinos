@@ -84,7 +84,7 @@ void Bounds<Real>::projectInterior( Vector<Real> &x ) {
       LowerFeasible(const Real eps, const Real diff)
         : eps_(eps), diff_(diff) {}
       Real apply( const Real &xc, const Real &yc ) const {
-        const Real tol = static_cast<Real>(100)*ROL_EPSILON<Real>();
+        const Tolerance<Real> tol = static_cast<Real>(100)*ROL_EPSILON<Real>();
         const Real one(1);
         Real val = ((yc <-tol) ? yc*(one-eps_)
                  : ((yc > tol) ? yc*(one+eps_)
@@ -105,7 +105,7 @@ void Bounds<Real>::projectInterior( Vector<Real> &x ) {
       UpperFeasible(const Real eps, const Real diff)
         : eps_(eps), diff_(diff) {}
       Real apply( const Real &xc, const Real &yc ) const {
-        const Real tol = static_cast<Real>(100)*ROL_EPSILON<Real>();
+        const Tolerance<Real> tol = static_cast<Real>(100)*ROL_EPSILON<Real>();
         const Real one(1);
         Real val = ((yc <-tol) ? yc*(one+eps_)
                  : ((yc > tol) ? yc*(one-eps_)

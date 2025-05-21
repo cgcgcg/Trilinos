@@ -16,7 +16,7 @@ namespace Het {
 
 template<typename Real>
 void Itrace_Objective<Real>::solveStateEquation(Vector<Real> &state, const Vector<Real> &u,
-                        const Vector<Real> &z, int i, Real &tol) {
+                        const Vector<Real> &z, int i, Tolerance<Real> &tol) {
   bool isComputed = (storage_ ? stateStore_->get(state,i) : false);
   if (!isComputed) {
     getConstraint()->applyInverseJacobian_1(state,*b_[i],u,z,tol);
@@ -28,7 +28,7 @@ template<typename Real>
 void Itrace_Objective<Real>::solveAdjointEquation(Vector<Real> &adjoint, const Vector<Real> &state,
                           const Vector<Real> &u, const Vector<Real> &z,
                           VectorController<Real,int> &store,
-                          int i, Real &tol) {
+                          int i, Tolerance<Real> &tol) {
   bool isComputed = (storage_ ? store.get(adjoint,i) : false);
   if (!isComputed) {
     M_->applyJacobian_1(*rhs_,state,u,z,tol);
@@ -40,7 +40,7 @@ void Itrace_Objective<Real>::solveAdjointEquation(Vector<Real> &adjoint, const V
 template<typename Real>
 void Itrace_Objective<Real>::solveStateSensitivityEquation(Vector<Real> &sens,
                              const Vector<Real> &v, const Vector<Real> &u,
-                             const Vector<Real> &z, Real &tol) {
+                             const Vector<Real> &z, Tolerance<Real> &tol) {
   getConstraint()->applyJacobian_2(*rhs_,v,u,z,tol);
   getConstraint()->applyInverseJacobian_1(sens,*rhs_,u,z,tol);
 }
@@ -49,7 +49,7 @@ template<typename Real>
 void Itrace_Objective<Real>::solveAdjointSensitivityEquation(Vector<Real> &sens,
                                const Vector<Real> &v,
                                const Vector<Real> &p, const Vector<Real> &s,
-                               const Vector<Real> &u, const Vector<Real> &z, Real &tol) {
+                               const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol) {
   M_->applyJacobian_1(*rhs_,s,u,z,tol);
   M_->applyJacobian_2(*rhs1_,v,u,z,tol);
   rhs_->axpy(static_cast<Real>(-1),*rhs1_);
@@ -108,7 +108,7 @@ void Itrace_Objective<Real>::update( const Vector<Real> &z,
 }
 
 template<typename Real>
-Real Itrace_Objective<Real>::value( const Vector<Real> &z, Real &tol ) {
+Real Itrace_Objective<Real>::value( const Vector<Real> &z, Tolerance<Real> &tol ) {
   const int dim = weight_.size();
   Real val(0);
   for (int i = 0; i < dim; ++i) {
@@ -125,7 +125,7 @@ Real Itrace_Objective<Real>::value( const Vector<Real> &z, Real &tol ) {
 }
 
 template<typename Real>
-void Itrace_Objective<Real>::gradient( Vector<Real> &g, const Vector<Real> &z, Real &tol ) {
+void Itrace_Objective<Real>::gradient( Vector<Real> &g, const Vector<Real> &z, Tolerance<Real> &tol ) {
   if (Xa_==nullPtr) Xa_ = z.clone();
   g.zero();
   const int dim = weight_.size();
@@ -149,7 +149,7 @@ void Itrace_Objective<Real>::gradient( Vector<Real> &g, const Vector<Real> &z, R
 }
 
 template<typename Real>
-void Itrace_Objective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &z, Real &tol ) {
+void Itrace_Objective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &z, Tolerance<Real> &tol ) {
   if (Xa_==nullPtr) Xa_ = z.clone();
   const int dim = weight_.size();
   hv.zero();

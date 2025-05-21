@@ -129,7 +129,7 @@ public:
   /***************************************************************************/
   /*********  BEGIN OBJECTIVE FUNCTION DEFINITIONS  **************************/
   /***************************************************************************/
-  Real value( const Vector<Real> &s, Real &tol ) {
+  Real value( const Vector<Real> &s, Tolerance<Real> &tol ) {
     hessVec(*dual_,s,s,tol);
     dual_->scale(static_cast<Real>(0.5));
     // Remove active components of gradient
@@ -140,7 +140,7 @@ public:
     return dual_->dot(s.dual());
   }
 
-  void gradient( Vector<Real> &g, const Vector<Real> &s, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &s, Tolerance<Real> &tol ) {
     // Apply (reduced) hessian to direction s
     hessVec(g,s,s,tol);
     // Remove active components of gradient
@@ -150,7 +150,7 @@ public:
     g.plus(prim_->dual());
   }
 
-  void hessVec( Vector<Real> &Hv, const Vector<Real> &v, const Vector<Real> &s, Real &tol ) {
+  void hessVec( Vector<Real> &Hv, const Vector<Real> &v, const Vector<Real> &s, Tolerance<Real> &tol ) {
     // Set vnew to v
     prim_->set(v);
     // Remove elements of vnew corresponding to binding set
@@ -169,7 +169,7 @@ public:
     Hv.plus(*dual_);
   }
 
-  void invHessVec( Vector<Real> &Hv, const Vector<Real> &v, const Vector<Real> &s, Real &tol ) {
+  void invHessVec( Vector<Real> &Hv, const Vector<Real> &v, const Vector<Real> &s, Tolerance<Real> &tol ) {
     // Set vnew to v
     dual_->set(v);
     // Remove elements of vnew corresponding to binding set
@@ -188,7 +188,7 @@ public:
     Hv.plus(*prim_);
   }
 
-  void precond( Vector<Real> &Mv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  void precond( Vector<Real> &Mv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
     // Set vnew to v
     dual_->set(v);
     // Remove elements of vnew corresponding to binding set

@@ -74,18 +74,18 @@ public:
                    const int HessianApprox);
 
   void update( const Vector<Real> &x, UpdateType type, int iter = -1 ) override;
-  Real value( const Vector<Real> &x, Real &tol ) override;
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) override;
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) override;
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) override;
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) override;
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) override;
 
   // Set problem data scalings
   void setScaling(const Real fscale = 1.0, const Real cscale = 1.0);
   // Return objective function value
-  Real getObjectiveValue(const Vector<Real> &x, Real &tol);
+  Real getObjectiveValue(const Vector<Real> &x, Tolerance<Real> &tol);
   // Compute objective function gradient
-  const Ptr<const Vector<Real>> getObjectiveGradient(const Vector<Real> &x, Real &tol);
+  const Ptr<const Vector<Real>> getObjectiveGradient(const Vector<Real> &x, Tolerance<Real> &tol);
   // Return constraint value
-  const Ptr<const Vector<Real>> getConstraintVec(const Vector<Real> &x, Real &tol);
+  const Ptr<const Vector<Real>> getConstraintVec(const Vector<Real> &x, Tolerance<Real> &tol);
   // Return total number of constraint evaluations
   int getNumberConstraintEvaluations(void) const;
   // Return total number of objective evaluations

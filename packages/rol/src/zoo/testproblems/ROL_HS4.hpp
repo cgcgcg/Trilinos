@@ -51,14 +51,14 @@ namespace ZOO {
   public:
     Objective_HS4(void) {}
 
-    Real value( const Vector<Real> &x, Real &tol ) {
+    Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
       
       ROL::Ptr<const vector> ex = getVector(x);    
 
       return 1.0/3.0 * std::pow((*ex)[0] + 1.0,3.0) + (*ex)[1];
     }
 
-    void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+    void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
       
       ROL::Ptr<const vector> ex = getVector(x);
       ROL::Ptr<vector> eg = getVector(g);
@@ -67,7 +67,7 @@ namespace ZOO {
       (*eg)[1] = 1.0;
     }
 #if USE_HESSVEC
-    void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+    void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
       
       ROL::Ptr<const vector> ex = getVector(x);
       ROL::Ptr<const vector> ev = getVector(v);

@@ -31,22 +31,22 @@ void MeanValueConstraint<Real>::update( const Vector<Real> &x, UpdateType type, 
 }
 
 template<typename Real>
-void MeanValueConstraint<Real>::value(Vector<Real> &c, const Vector<Real> &x, Real &tol ) {
+void MeanValueConstraint<Real>::value(Vector<Real> &c, const Vector<Real> &x, Tolerance<Real> &tol ) {
   con_->value(c,x,tol);
 }
 
 template<typename Real>
-void MeanValueConstraint<Real>::applyJacobian(Vector<Real> &jv, const Vector<Real> &v, const Vector<Real> &x, Real &tol) {
+void MeanValueConstraint<Real>::applyJacobian(Vector<Real> &jv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol) {
   con_->applyJacobian(jv,v,x,tol);
 }
 
 template<typename Real>
-void MeanValueConstraint<Real>::applyAdjointJacobian(Vector<Real> &ajv, const Vector<Real> &v, const Vector<Real> &x, Real &tol) {
+void MeanValueConstraint<Real>::applyAdjointJacobian(Vector<Real> &ajv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol) {
   con_->applyAdjointJacobian(ajv,v,x,tol);
 }
 
 template<typename Real>
-void MeanValueConstraint<Real>::applyAdjointHessian(Vector<Real> &ahuv, const Vector<Real> &u, const Vector<Real> &v, const Vector<Real> &x, Real &tol) {
+void MeanValueConstraint<Real>::applyAdjointHessian(Vector<Real> &ahuv, const Vector<Real> &u, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol) {
   con_->applyAdjointHessian(ahuv,u,v,x,tol);
 }
 

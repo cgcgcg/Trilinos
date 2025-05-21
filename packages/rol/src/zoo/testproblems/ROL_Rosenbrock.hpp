@@ -55,7 +55,7 @@ private:
 public:
   Objective_Rosenbrock(Real alpha = 100.0) : alpha_(alpha), const1_(100.0), const2_(20.0) {}
 
-  Real value( const Vector<Real> &x, Real &tol ) {
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
 
     
     ROL::Ptr<const vector> xp = getVector<XPrim>(x);
@@ -74,7 +74,7 @@ public:
     return val;
   }
 
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
 
     
     ROL::Ptr<const vector> xp = getVector<XPrim>(x);
@@ -93,7 +93,7 @@ public:
     }
   }
 #if USE_HESSVEC
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
 
     
     ROL::Ptr<const vector> xp = getVector<XPrim>(x);
@@ -111,7 +111,7 @@ public:
     }
   }
 #endif
-  void invHessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  void invHessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
   
      
   

@@ -143,7 +143,7 @@ public:
     cscale_ = cscale;
   }
 
-  Real value( const Vector<Real> &x, Real &tol ) {
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
     // Compute objective function value
     Real val = getObjectiveValue(x,tol);
     val *= fscale_;
@@ -158,7 +158,7 @@ public:
     return val;
   }
 
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
     // Compute objective function gradient
     g.set(*getObjectiveGradient(x,tol));
     g.scale(fscale_);
@@ -171,7 +171,7 @@ public:
     if ( scaleLagrangian_ ) g.scale(static_cast<Real>(1)/penaltyParameter_);
   }
 
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
     // Apply objective Hessian to a vector
     obj_->hessVec(hv,v,x,tol);
     hv.scale(fscale_);
@@ -200,7 +200,7 @@ public:
   }
 
   // Return objective function value
-  Real getObjectiveValue(const Vector<Real> &x, Real &tol) {
+  Real getObjectiveValue(const Vector<Real> &x, Tolerance<Real> &tol) {
     Real val(0);
     int key(0);
     bool isComputed = fval_->get(val,key);
@@ -212,7 +212,7 @@ public:
   }
 
   // Compute objective function gradient
-  const Ptr<const Vector<Real>> getObjectiveGradient(const Vector<Real> &x, Real &tol) {
+  const Ptr<const Vector<Real>> getObjectiveGradient(const Vector<Real> &x, Tolerance<Real> &tol) {
     int key(0);
     if (!gradient_->isComputed(key)) {
       if (gradient_->isNull(key)) gradient_->allocate(*dualOptVector_,key);
@@ -222,7 +222,7 @@ public:
   }
 
   // Return constraint value
-  const Ptr<const Vector<Real>> getConstraintVec(const Vector<Real> &x, Real &tol) {
+  const Ptr<const Vector<Real>> getConstraintVec(const Vector<Real> &x, Tolerance<Real> &tol) {
     int key(0);
     if (!conValue_->isComputed(key)) {
       if (conValue_->isNull(key)) conValue_->allocate(*primConVector_,key);

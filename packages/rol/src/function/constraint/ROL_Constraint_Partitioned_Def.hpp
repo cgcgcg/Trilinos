@@ -58,7 +58,7 @@ void Constraint_Partitioned<Real>::update( const Vector<Real> &x, bool flag, int
 }
 
 template<typename Real>
-void Constraint_Partitioned<Real>::value( Vector<Real> &c, const Vector<Real> &x, Real &tol ) {
+void Constraint_Partitioned<Real>::value( Vector<Real> &c, const Vector<Real> &x, Tolerance<Real> &tol ) {
   PartitionedVector<Real> &cpv
     = dynamic_cast<PartitionedVector<Real>&>(c);
 
@@ -78,7 +78,7 @@ template<typename Real>
 void Constraint_Partitioned<Real>::applyJacobian( Vector<Real> &jv,
                                             const Vector<Real> &v,
                                             const Vector<Real> &x,
-                                                  Real &tol ) {
+                                                  Tolerance<Real> &tol ) {
   PartitionedVector<Real> &jvpv
     = dynamic_cast<PartitionedVector<Real>&>(jv);
 
@@ -97,7 +97,7 @@ template<typename Real>
 void Constraint_Partitioned<Real>::applyAdjointJacobian( Vector<Real> &ajv,
                                                    const Vector<Real> &v,
                                                    const Vector<Real> &x,
-                                                         Real &tol ) {
+                                                         Tolerance<Real> &tol ) {
   if (!initialized_) {
     scratch_ = getOpt(ajv).clone();
     initialized_ = true;
@@ -126,7 +126,7 @@ void Constraint_Partitioned<Real>::applyAdjointHessian( Vector<Real> &ahuv,
                                                   const Vector<Real> &u,
                                                   const Vector<Real> &v,
                                                   const Vector<Real> &x,
-                                                        Real &tol ) {
+                                                        Tolerance<Real> &tol ) {
   if (!initialized_) {
     scratch_ = getOpt(ahuv).clone();
     initialized_ = true;
@@ -155,7 +155,7 @@ void Constraint_Partitioned<Real>::applyPreconditioner(Vector<Real> &pv,
                                                  const Vector<Real> &v,
                                                  const Vector<Real> &x,
                                                  const Vector<Real> &g,
-                                                       Real &tol) {
+                                                       Tolerance<Real> &tol) {
   PartitionedVector<Real> &pvpv
     = dynamic_cast<PartitionedVector<Real>&>(pv);
   const PartitionedVector<Real> &vpv

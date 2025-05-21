@@ -25,8 +25,8 @@ SpectralGradientAlgorithm<Real>::SpectralGradientAlgorithm(ParameterList &list) 
   ParameterList &lslist = list.sublist("Step").sublist("Spectral Gradient");
   maxit_        = lslist.get("Function Evaluation Limit",                        20);
   lambda_       = lslist.get("Initial Spectral Step Size",                     -1.0);
-  lambdaMin_    = lslist.get("Minimum Spectral Step Size",                     1e-8); 
-  lambdaMax_    = lslist.get("Maximum Spectral Step Size",                      1e8); 
+  lambdaMin_    = lslist.get("Minimum Spectral Step Size",                     1e-8);
+  lambdaMax_    = lslist.get("Maximum Spectral Step Size",                      1e8);
   sigma1_       = lslist.get("Lower Step Size Safeguard",                       0.1);
   sigma2_       = lslist.get("Upper Step Size Safeguard",                       0.9);
   rhodec_       = lslist.get("Backtracking Rate",                               0.5);
@@ -48,7 +48,7 @@ void SpectralGradientAlgorithm<Real>::initialize(Vector<Real>          &x,
   // Initialize data
   TypeB::Algorithm<Real>::initialize(x,g);
   // Update approximate gradient and approximate objective function.
-  Real ftol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> ftol = std::sqrt(ROL_EPSILON<Real>());
   proj_->project(x,outStream); state_->nproj++;
   obj.update(x,UpdateType::Initial,state_->iter);
   state_->value = obj.value(x,ftol); state_->nfval++;
@@ -65,7 +65,7 @@ void SpectralGradientAlgorithm<Real>::initialize(Vector<Real>          &x,
 
 template<typename Real>
 void SpectralGradientAlgorithm<Real>::run( Vector<Real>          &x,
-                                           const Vector<Real>    &g, 
+                                           const Vector<Real>    &g,
                                            Objective<Real>       &obj,
                                            BoundConstraint<Real> &bnd,
                                            std::ostream          &outStream ) {
@@ -74,7 +74,8 @@ void SpectralGradientAlgorithm<Real>::run( Vector<Real>          &x,
   initialize(x,g,obj,bnd,outStream);
   Ptr<Vector<Real>> s = x.clone(), y = g.clone(), xmin = x.clone();
   Real ftrial(0), fmax(0), gs(0), alpha(1), alphaTmp(1), fmin(0);
-  Real ys(0), ss(0), tol(std::sqrt(ROL_EPSILON<Real>()));
+  Real ys(0), ss(0);
+  Tolerance<Real> tol(std::sqrt(ROL_EPSILON<Real>()));
   int ls_nfval = 0;
   std::deque<Real> fqueue; fqueue.push_back(state_->value);
 

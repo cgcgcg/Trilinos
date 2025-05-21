@@ -82,7 +82,7 @@ public:
   void updateValue(Objective<Real>         &obj,
                    const Vector<Real>      &x,
                    const std::vector<Real> &xstat,
-                   Real                    &tol) {
+                   Tolerance<Real>         &tol) {
     Real val = computeValue(obj,x,tol);
     val_    += weight_ * std::exp(coeff_*val);
   }
@@ -98,7 +98,7 @@ public:
   void updateGradient(Objective<Real>         &obj,
                       const Vector<Real>      &x,
                       const std::vector<Real> &xstat,
-                      Real                    &tol) {
+                      Tolerance<Real>         &tol) {
     Real val = computeValue(obj,x,tol);
     Real ev  = std::exp(coeff_*val);
     val_    += weight_ * ev;
@@ -122,7 +122,7 @@ public:
                      const std::vector<Real> &vstat,
                      const Vector<Real>      &x,
                      const std::vector<Real> &xstat,
-                     Real                    &tol) {
+                     Tolerance<Real>         &tol) {
     Real val = computeValue(obj,x,tol);
     Real ev  = std::exp(coeff_*val);
     val_    += weight_ * ev;

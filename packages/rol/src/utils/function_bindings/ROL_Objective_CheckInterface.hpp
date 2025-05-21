@@ -24,7 +24,7 @@ class Objective_CheckInterface {
 private:
   using V = Vector<Real>;
   Objective<Real>& obj_;
-  Real tol_;
+  Tolerance<Real> tol_;
 
 public:
 

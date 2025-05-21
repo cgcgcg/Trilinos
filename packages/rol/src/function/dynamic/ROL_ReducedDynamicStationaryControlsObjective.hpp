@@ -76,7 +76,7 @@ public:
   }
 
   Real
-  value(const Vector<Real> &x, Real &tol) override
+  value(const Vector<Real> &x, Tolerance<Real> &tol) override
   {
     if (hook_ != nullPtr)
       hook_->preValue(x);
@@ -89,7 +89,7 @@ public:
   }
 
   void
-  gradient(Vector<Real> &g, const Vector<Real> &x, Real &tol) override
+  gradient(Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol) override
   {
     if (hook_ != nullPtr)
       hook_->preGradient(x);
@@ -104,7 +104,7 @@ public:
   }
 
   void
-  hessVec(Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol) override
+  hessVec(Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol) override
   {
     for (size_type i = 0; i < Nt_; ++i)
     {

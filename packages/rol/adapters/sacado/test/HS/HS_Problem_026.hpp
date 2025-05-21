@@ -15,11 +15,11 @@
 namespace HS {
 
 namespace HS_026 {
-template<class Real> 
+template<class Real>
 class Obj {
 public:
   template<class ScalarT>
-  ScalarT value( const std::vector<ScalarT> &x, Real &tol ) {
+  ScalarT value( const std::vector<ScalarT> &x, ROL::Tolerance<Real> &tol ) {
     ScalarT a = x[0]-x[1];
     ScalarT b = x[1]-x[2];
     return a*a + b*b*b*b;
@@ -29,21 +29,21 @@ public:
 template<class Real>
 class EqCon {
 public:
-  template<class ScalarT> 
+  template<class ScalarT>
   void value( std::vector<ScalarT> &c,
               const std::vector<ScalarT> &x,
-              Real &tol ) {
+              ROL::Tolerance<Real> &tol ) {
     ScalarT a = 1.0+x[1];
-    c[0] = a*a*x[0] + std::pow(x[2],4)-3.0;    
+    c[0] = a*a*x[0] + std::pow(x[2],4)-3.0;
   }
 };
 }
 
 
-template<class Real> 
+template<class Real>
 class Problem_026 : public ROL::NonlinearProgram<Real> {
 
-  
+
 
   typedef ROL::NonlinearProgram<Real>   NP;
   typedef ROL::Vector<Real>             V;
@@ -59,7 +59,7 @@ public:
   int dimension_x()  { return 3; }
   int dimension_ce() { return 1; }
 
-  const ROL::Ptr<OBJ> getObjective() { 
+  const ROL::Ptr<OBJ> getObjective() {
     return ROL::makePtr<ROL::Sacado_StdObjective<Real,HS_026::Obj>>();
   }
 
@@ -71,13 +71,13 @@ public:
     Real x[] = {-2.6,2.0,2.0};
     return NP::createOptVector(x);
   };
-   
+
   bool initialGuessIsFeasible() { return true; }
-  
-  Real getInitialObjectiveValue() { 
+
+  Real getInitialObjectiveValue() {
     return Real(21.16);
   }
- 
+
   Real getSolutionObjectiveValue() {
     return Real(0);
   }
@@ -91,7 +91,7 @@ public:
     return ROL::CreatePartitionedVector(NP::createOptVector(x1),
                                         NP::createOptVector(x2));
   }
- 
+
 };
 
 } // namespace HS

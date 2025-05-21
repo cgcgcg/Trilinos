@@ -33,7 +33,7 @@ void L1Penalty<Real>::sumAll(Real *input, Real *output, int size, const Vector<R
 }
 
 template<typename Real>
-Real L1Penalty<Real>::value( const Vector<Real> &x, Real &tol ) {
+Real L1Penalty<Real>::value( const Vector<Real> &x, Tolerance<Real> &tol ) {
   startTimer("value");
   const std::vector<Real> &xdata = getConstData(x);
   Real mval(0), gval(0); 
@@ -44,14 +44,14 @@ Real L1Penalty<Real>::value( const Vector<Real> &x, Real &tol ) {
 }
 
 template<typename Real>
-void L1Penalty<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+void L1Penalty<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
   startTimer("gradient");
   g.setScalar(static_cast<Real>(1));
   stopTimer("gradient");
 }
 
 template<typename Real>
-void L1Penalty<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+void L1Penalty<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
   startTimer("hessVec");
   hv.zero();
   stopTimer("hessVec");

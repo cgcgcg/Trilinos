@@ -43,7 +43,7 @@ void iPianoAlgorithm<Real>::initialize(Vector<Real>       &x,
                                                  Vector<Real>       &px,
                                                  Vector<Real>       &dg,
                                                  std::ostream       &outStream) {
-  Real ftol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> ftol = std::sqrt(ROL_EPSILON<Real>());
   // Initialize data
   TypeP::Algorithm<Real>::initialize(x,g);
   // Update approximate gradient and approximate objective function.
@@ -65,7 +65,7 @@ void iPianoAlgorithm<Real>::initialize(Vector<Real>       &x,
 
 template<typename Real>
 void iPianoAlgorithm<Real>::run( Vector<Real>       &x,
-                                           const Vector<Real> &g, 
+                                           const Vector<Real> &g,
                                            Objective<Real>    &sobj,
                                            Objective<Real>    &nobj,
                                            std::ostream       &outStream ) {
@@ -74,7 +74,7 @@ void iPianoAlgorithm<Real>::run( Vector<Real>       &x,
   Ptr<Vector<Real>> sP = x.clone(), xP = x.clone(), dg = x.clone(), xold = x.clone();
   initialize(x,g,sobj,nobj,*sP,*dg,outStream);
   Real strial(0), strialP(0), snormP(0), LP(0), alphaP(0), betaP(0), gs(0), b(0);
-  Real tol(std::sqrt(ROL_EPSILON<Real>()));
+  Tolerance<Real> tol(std::sqrt(ROL_EPSILON<Real>()));
   bool accept(true);
 
   xold->set(x);
@@ -221,7 +221,7 @@ void iPianoAlgorithm<Real>::writeHeader( std::ostream& os ) const {
     os << "  #sval    - Cumulative number of times the smooth objective function was evaluated" << std::endl;
     os << "  #nval    - Cumulative number of times the nonsmooth objective function was evaluated" << std::endl;
     os << "  #grad    - Cumulative number of times the gradient was computed" << std::endl;
-    os << "  #prox    - Cumulative number of times the proximal operator was computed" << std::endl; 
+    os << "  #prox    - Cumulative number of times the proximal operator was computed" << std::endl;
     os << std::string(109,'-') << std::endl;
   }
 
@@ -236,7 +236,7 @@ void iPianoAlgorithm<Real>::writeHeader( std::ostream& os ) const {
   os << std::setw(10) << std::left << "#sval";
   os << std::setw(10) << std::left << "#nval";
   os << std::setw(10) << std::left << "#grad";
-  os << std::setw(10) << std::left << "#nprox"; 
+  os << std::setw(10) << std::left << "#nprox";
   os << std::endl;
   os.flags(osFlags);
 }
@@ -266,7 +266,7 @@ void iPianoAlgorithm<Real>::writeOutput( std::ostream& os, bool write_header ) c
     os << std::setw(10) << std::left << state_->nsval;
     os << std::setw(10) << std::left << state_->nnval;
     os << std::setw(10) << std::left << state_->ngrad;
-    os << std::setw(10) << std::left << state_->nprox; 
+    os << std::setw(10) << std::left << state_->nprox;
     os << std::endl;
   }
   else {
@@ -281,7 +281,7 @@ void iPianoAlgorithm<Real>::writeOutput( std::ostream& os, bool write_header ) c
     os << std::setw(10) << std::left << state_->nsval;
     os << std::setw(10) << std::left << state_->nnval;
     os << std::setw(10) << std::left << state_->ngrad;
-    os << std::setw(10) << std::left << state_->nprox; 
+    os << std::setw(10) << std::left << state_->nprox;
     os << std::endl;
   }
   os.flags(osFlags);

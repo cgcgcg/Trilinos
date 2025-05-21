@@ -34,12 +34,12 @@ public:
  
   void update( const Vector<Real> &x, UpdateType type, int iter = -1 ) override;
   void update( const Vector<Real> &x, bool flag = true, int iter = -1 ) override;
-  Real value( const Vector<Real> &x, Real &tol ) override;
-  Real dirDeriv( const Vector<Real> &x, const Vector<Real> &d, Real &tol ) override;
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) override;
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) override;
-  void invHessVec( Vector<Real> &ihv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) override;
-  void precond( Vector<Real> &Pv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) override;
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) override;
+  Real dirDeriv( const Vector<Real> &x, const Vector<Real> &d, Tolerance<Real> &tol ) override;
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) override;
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) override;
+  void invHessVec( Vector<Real> &ihv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) override;
+  void precond( Vector<Real> &Pv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) override;
 
 // Definitions for parametrized (stochastic) objective functions
 public:

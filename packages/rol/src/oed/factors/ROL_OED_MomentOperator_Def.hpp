@@ -43,7 +43,7 @@ void MomentOperator<Real>::sumAll(const Vector<Real> &p, Real* input, Real* outp
 
 template<typename Real>
 void MomentOperator<Real>::applyPerturbation(Vector<Real> &Px, const Vector<Real> &x) const {
-  Real tol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
   pOp_->apply(Px,x,tol);
 }
 /***************************************************************************/

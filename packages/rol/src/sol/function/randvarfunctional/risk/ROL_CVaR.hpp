@@ -113,7 +113,7 @@ public:
   void updateValue(Objective<Real>         &obj,
                    const Vector<Real>      &x,
                    const std::vector<Real> &xstat,
-                   Real                    &tol) {
+                   Tolerance<Real>         &tol) {
     Real one(1);
     Real val = computeValue(obj,x,tol);
     Real pf  = plusFunction_->evaluate(val-xstat[0],0);
@@ -123,7 +123,7 @@ public:
   void updateGradient(Objective<Real>         &obj,
                       const Vector<Real>      &x,
                       const std::vector<Real> &xstat,
-                      Real                    &tol) {
+                      Tolerance<Real>         &tol) {
     Real one(1);
     Real val = computeValue(obj,x,tol);
     Real pf  = plusFunction_->evaluate(val-xstat[0],1);
@@ -140,7 +140,7 @@ public:
                      const std::vector<Real> &vstat,
                      const Vector<Real>      &x,
                      const std::vector<Real> &xstat,
-                     Real                    &tol) {
+                     Tolerance<Real>         &tol) {
     Real one(1);
     Real val = computeValue(obj,x,tol);
     Real pf1 = plusFunction_->evaluate(val-xstat[0],1);

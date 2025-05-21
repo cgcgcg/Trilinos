@@ -21,7 +21,7 @@ namespace ROL {
 template<typename Real>
 class PathBasedTargetLevel_U : public LineSearch_U<Real> {
 private:
-  Ptr<Vector<Real>> xnew_; 
+  Ptr<Vector<Real>> xnew_;
 
   Real min_value_;
   Real rec_value_;
@@ -32,7 +32,7 @@ private:
 
 public:
 
-  PathBasedTargetLevel_U( ParameterList &parlist ) 
+  PathBasedTargetLevel_U( ParameterList &parlist )
     : LineSearch_U<Real>(parlist),
       min_value_(ROL_OVERFLOW<Real>()),
       rec_value_(ROL_OVERFLOW<Real>()),  target_(0.0), sigma_(0.0) {
@@ -48,9 +48,10 @@ public:
 
   // Run Iteration scaled line search
   void run( Real &alpha, Real &fval, int &ls_neval, int &ls_ngrad,
-            const Real &gs, const Vector<Real> &s, const Vector<Real> &x, 
+            const Real &gs, const Vector<Real> &s, const Vector<Real> &x,
             Objective<Real> &obj ) override {
-    Real tol = std::sqrt(ROL_EPSILON<Real>()), zero(0), half(0.5);
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
+    Real zero(0), half(0.5);
     ls_neval = 0;
     ls_ngrad = 0;
     // Update target objective value
@@ -59,7 +60,7 @@ public:
     }
     target_ = rec_value_ - half*delta_;
     if ( fval < target_ ) {
-      rec_value_ = min_value_; 
+      rec_value_ = min_value_;
       sigma_ = zero;
     }
     else {
@@ -78,7 +79,7 @@ public:
     obj.update(*xnew_,UpdateType::Trial);
     fval = obj.value(*xnew_,tol);
     ls_neval++;
-    // Update sigma 
+    // Update sigma
     sigma_ += alpha*std::sqrt(std::abs(gs));
   }
 }; // class ROL::PathBasedTargetValue_U

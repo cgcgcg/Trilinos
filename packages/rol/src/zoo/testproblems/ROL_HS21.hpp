@@ -27,18 +27,18 @@ namespace ZOO {
 template<class Real>
 class Objective_HS21 : public StdObjective<Real> {
 public:
-  Real value( const std::vector<Real> &x, Real &tol ) {
+  Real value( const std::vector<Real> &x, Tolerance<Real> &tol ) {
     const Real c1(0.1), c2(100);
     return c1*x[0]*x[0] + x[1]*x[1] - c2;
   }
 
-  void gradient( std::vector<Real> &g, const std::vector<Real> &x, Real &tol ) {
+  void gradient( std::vector<Real> &g, const std::vector<Real> &x, Tolerance<Real> &tol ) {
     const Real two(2), c1(0.1);
     g[0] = two*c1*x[0];
     g[1] = two*x[1];
   }
 
-  void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+  void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Tolerance<Real> &tol ) {
     const Real two(2), c1(0.1);
     hv[0] = two*c1*v[0];
     hv[1] = two*v[1];
@@ -48,26 +48,26 @@ public:
 template<class Real>
 class Constraint_HS21 : public StdConstraint<Real> {
 public:
-  void value( std::vector<Real> &c, const std::vector<Real> &x, Real &tol ) {
+  void value( std::vector<Real> &c, const std::vector<Real> &x, Tolerance<Real> &tol ) {
     const Real c1(10);
     c[0] = c1*x[0] - x[1] - c1;
   }
 
   void applyJacobian( std::vector<Real> &jv, const std::vector<Real> &v,
-                      const std::vector<Real> &x, Real &tol ) {
+                      const std::vector<Real> &x, Tolerance<Real> &tol ) {
     const Real c1(10);
     jv[0] = c1*v[0] - v[1];
   }
 
   void applyAdjointJacobian( std::vector<Real> &ajv, const std::vector<Real> &v,
-                             const std::vector<Real> &x, Real &tol ) {
+                             const std::vector<Real> &x, Tolerance<Real> &tol ) {
     const Real c1(10);
     ajv[0] = c1*v[0];
     ajv[1] = -v[0];
   }
  
   void applyAdjointHessian( std::vector<Real> &ahuv, const std::vector<Real> &u,
-                            const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+                            const std::vector<Real> &v, const std::vector<Real> &x, Tolerance<Real> &tol ) {
     ahuv.assign(ahuv.size(),static_cast<Real>(0));
   }
 }; // class Constraint_HS21

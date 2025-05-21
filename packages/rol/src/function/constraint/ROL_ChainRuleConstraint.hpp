@@ -109,7 +109,7 @@ private:
   Ptr<Vector<Real>> aJol_;      // Outer adjoint Jacobian applied to outer dual constaint space vector
   Ptr<Vector<Real>> HiaJol_;    // Inner Hessian applied to dual optimization space vector
   Ptr<Vector<Real>> HolJiv_;    // Outer Hessian applied to inner constaint space vector
-  Real tol_;
+  Tolerance<Real> tol_;
 }; // class ChainRuleConstraint
 
 } // namespace ROL

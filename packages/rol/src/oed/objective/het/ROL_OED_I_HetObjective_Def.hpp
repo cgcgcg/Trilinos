@@ -26,7 +26,7 @@ I_Objective<Real>::I_Objective( const Ptr<BilinearConstraint<Real>>   &con,
 }
 
 template<typename Real>
-Real I_Objective<Real>::value( const Vector<Real> &z, Real &tol ) {
+Real I_Objective<Real>::value( const Vector<Real> &z, Tolerance<Real> &tol ) {
   std::vector<Real> param = ObjectiveBase<Real,std::vector<Real>>::getParameter();
   // Solve state equation
   solve_state_equation(param,z,tol);
@@ -36,7 +36,7 @@ Real I_Objective<Real>::value( const Vector<Real> &z, Real &tol ) {
 }
 
 template<typename Real>
-void I_Objective<Real>::gradient( Vector<Real> &g, const Vector<Real> &z, Real &tol ) {
+void I_Objective<Real>::gradient( Vector<Real> &g, const Vector<Real> &z, Tolerance<Real> &tol ) {
   if (dp_==nullPtr) dp_ = g.clone();
   std::vector<Real> param = ObjectiveBase<Real,std::vector<Real>>::getParameter();
   // Solve state equation
@@ -52,7 +52,7 @@ void I_Objective<Real>::gradient( Vector<Real> &g, const Vector<Real> &z, Real &
 }
 
 template<typename Real>
-void I_Objective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &z, Real &tol ) {
+void I_Objective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &z, Tolerance<Real> &tol ) {
   if (dp_==nullPtr) dp_ = hv.clone();
   std::vector<Real> param = ObjectiveBase<Real,std::vector<Real>>::getParameter();
   // Solve state equation

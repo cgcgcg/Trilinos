@@ -66,19 +66,19 @@ public:
     con_->update(x,flag,iter);
   }
 
-  void value(Vector<Real> &c, const Vector<Real> &x, Real &tol) {
+  void value(Vector<Real> &c, const Vector<Real> &x, Tolerance<Real> &tol) {
     con_->value(c,x,tol);
   }
 
-  void applyJacobian(Vector<Real> &jv, const Vector<Real> &v, const Vector<Real> &x, Real &tol) {
+  void applyJacobian(Vector<Real> &jv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol) {
     con_->applyJacobian(jv,v,x,tol);
   }
 
-  void applyAdjointJacobian(Vector<Real> &ajv, const Vector<Real> &v, const Vector<Real> &x, Real &tol) {
+  void applyAdjointJacobian(Vector<Real> &ajv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol) {
     con_->applyAdjointJacobian(ajv,v,x,tol);
   }
 
-  void applyAdjointHessian(Vector<Real> &ahuv, const Vector<Real> &u, const Vector<Real> &v, const Vector<Real> &x, Real &tol) {
+  void applyAdjointHessian(Vector<Real> &ahuv, const Vector<Real> &u, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol) {
     con_->applyAdjointHessian(ahuv,u,v,x,tol);
   }
 

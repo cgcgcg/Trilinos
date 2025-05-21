@@ -42,7 +42,7 @@
 
 namespace ROL {
 
-template<typename Real> 
+template<typename Real>
 class ReducedDynamicObjective : public Objective<Real> {
   using size_type = typename std::vector<Real>::size_type;
 private:
@@ -71,7 +71,7 @@ private:
   const bool                         syncHessRank_;
   const bool                         sumRankUpdate_;
   const bool                         useDefaultRankUpdate_;
-  const Real                         a_, b_;                    
+  const Real                         a_, b_;
   const Real                         maxTol_;
   // Vector storage for intermediate computations.
   std::vector<Ptr<Vector<Real>>>     uhist_;             // State history.
@@ -217,9 +217,9 @@ public:
     return ROL::PartitionedVector<Real>::create(x, Nt_);
   }
 
-  size_type getStateRank() const { return rankState_; } 
-  size_type getAdjointRank() const { return rankAdjoint_; } 
-  size_type getStateSensitivityRank() const { return rankStateSens_; } 
+  size_type getStateRank() const { return rankState_; }
+  size_type getAdjointRank() const { return rankAdjoint_; }
+  size_type getStateSensitivityRank() const { return rankStateSens_; }
 
   void update( const Vector<Real> &x, bool flag = true, int iter = -1 ) {
     if (useSketch_) {
@@ -349,7 +349,7 @@ public:
     }
   }
 
-  Real value( const Vector<Real> &x, Real &tol ) {
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
     if (!isValueComputed_) {
       int eflag(0);
       const Real one(1);
@@ -390,7 +390,7 @@ public:
     return val_;
   }
 
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
     int eflag(0);
     PartitionedVector<Real>       &gp = partition(g);
     gp.get(0)->zero(); // zero for the nonexistant zeroth control interval
@@ -402,14 +402,14 @@ public:
     solveState(x);
     if (useSketch_ && useInexact_) {
       if (stream_ != nullPtr) {
-        *stream_ << std::string(80,'=') << std::endl; 
+        *stream_ << std::string(80,'=') << std::endl;
         *stream_ << "  ROL::ReducedDynamicObjective::gradient" << std::endl;
       }
-      tol = updateSketch(x,tol);
+      tol = updateSketch(x,tol.get());
       if (stream_ != nullPtr) {
         *stream_ << "    State Rank for Gradient Computation: " << rankState_ << std::endl;
-        *stream_ << "    Residual Norm:                       " << tol << std::endl;
-        *stream_ << std::string(80,'=') << std::endl; 
+        *stream_ << "    Residual Norm:                       " << tol.get() << std::endl;
+        *stream_ << std::string(80,'=') << std::endl;
       }
     }
     // Recover state from sketch
@@ -485,7 +485,7 @@ public:
     isAdjointComputed_ = true;
   }
 
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
     int eflag(0);
     if (useHessian_) {
       // Must first solve the state and adjoint equations
@@ -678,7 +678,7 @@ private:
         con_->update_uo(*uhist_[index-1], timeStamp_[k]);
         con_->update_z(*xp.get(k), timeStamp_[k]);
         con_->solve(*cprimal_, *uhist_[index-1], *uhist_[index], *xp.get(k), timeStamp_[k]);
-        cnorm = std::max(cnorm,cprimal_->norm()); 
+        cnorm = std::max(cnorm,cprimal_->norm());
         // Sketch state
         if (useSketch_) {
           eflag = stateSketch_->advance(one, *uhist_[1], static_cast<int>(k)-1, one);
@@ -723,7 +723,7 @@ private:
         *stream_ << "      *** Residual Norm:                 " << err << std::endl;
       }
       if (err > tol0) {
-        rankState_ = (sumRankUpdate_ ? rankState_ + updateFactor_ : rankState_ * updateFactor_); 
+        rankState_ = (sumRankUpdate_ ? rankState_ + updateFactor_ : rankState_ * updateFactor_);
         if (!useDefaultRankUpdate_)
           rankState_ = std::max(rankState_,static_cast<size_type>(std::ceil((b_-std::log(tol0))/a_)));
         //Real a(0.1838), b(3.1451); // Navier-Stokes
@@ -792,7 +792,7 @@ private:
       if (useSketch_) {
         uhist_[1]->set(*uhist_[0]);
         eflag = stateSketch_->reconstruct(*uhist_[0],static_cast<int>(Nt_)-3);
-        throwError(eflag,"reconstruct","solveAdjoint",672); 
+        throwError(eflag,"reconstruct","solveAdjoint",672);
       }
       // Update dynamic constraint and objective
       con_->update(*uhist_[uindex-1], *uhist_[uindex], *xp.get(Nt_-1), timeStamp_[Nt_-1]);
@@ -819,7 +819,7 @@ private:
           }
           else {
             eflag = stateSketch_->reconstruct(*uhist_[0],static_cast<int>(k)-2);
-            throwError(eflag,"reconstruct","solveAdjoint",699); 
+            throwError(eflag,"reconstruct","solveAdjoint",699);
           }
         }
         uindex = (useSketch_ ? 1 : k);

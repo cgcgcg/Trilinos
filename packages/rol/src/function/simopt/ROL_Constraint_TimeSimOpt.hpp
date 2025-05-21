@@ -162,76 +162,76 @@ public:
                      const Vector<Real> &u_old,
                      const Vector<Real> &u_new,
                      const Vector<Real> &z,
-                     Real &tol) = 0;
+                     Tolerance<Real> &tol) = 0;
 
   virtual void solve(Vector<Real> &c,
                      const Vector<Real> &u_old,
                      Vector<Real> &u_new,
                      const Vector<Real> &z,
-                     Real &tol) = 0;
+                     Tolerance<Real> &tol) = 0;
 
   virtual void applyJacobian_1_old(Vector<Real> &jv,
                                    const Vector<Real> &v_old,
                                    const Vector<Real> &u_old, const Vector<Real> &u_new,
                                    const Vector<Real> &z,
-                                   Real &tol) = 0;
+                                   Tolerance<Real> &tol) = 0;
 
   virtual void applyJacobian_1_new(Vector<Real> &jv,
                                    const Vector<Real> &v_new,
                                    const Vector<Real> &u_old, const Vector<Real> &u_new,
                                    const Vector<Real> &z,
-                                   Real &tol) = 0;
+                                   Tolerance<Real> &tol) = 0;
 
   virtual void applyInverseJacobian_1_new(Vector<Real> &ijv,
                                           const Vector<Real> &v_new,
                                           const Vector<Real> &u_old, const Vector<Real> &u_new,
                                           const Vector<Real> &z,
-                                          Real &tol) = 0;
+                                          Tolerance<Real> &tol) = 0;
 
 
   virtual void applyJacobian_2(Vector<Real> &jv,
                                const Vector<Real> &v,
                                const Vector<Real> &u_old, const Vector<Real> &u_new,
                                const Vector<Real> &z,
-                               Real &tol) = 0;
+                               Tolerance<Real> &tol) = 0;
 
   virtual void applyAdjointJacobian_1_old(Vector<Real> &ajv_old,
                                       const Vector<Real> &dualv,
                                       const Vector<Real> &u_old, const Vector<Real> &u_new,
                                       const Vector<Real> &z,
-                                      Real &tol) = 0;
+                                      Tolerance<Real> &tol) = 0;
 
   virtual void applyAdjointJacobian_1_new(Vector<Real> &ajv_new,
                                       const Vector<Real> &dualv,
                                       const Vector<Real> &u_old, const Vector<Real> &u_new,
                                       const Vector<Real> &z,
-                                      Real &tol) = 0;
+                                      Tolerance<Real> &tol) = 0;
 
   virtual void applyInverseAdjointJacobian_1_new(Vector<Real> &iajv,
                                                  const Vector<Real> &v_new,
                                                  const Vector<Real> &u_old, const Vector<Real> &u_new,
                                                  const Vector<Real> &z,
-                                                 Real &tol) = 0;
+                                                 Tolerance<Real> &tol) = 0;
 
   virtual void applyAdjointJacobian_2_time(Vector<Real> &ajv,
                                       const Vector<Real> &dualv,
                                       const Vector<Real> &u_old, const Vector<Real> &u_new,
                                       const Vector<Real> &z,
-                                      Real &tol) = 0;
+                                      Tolerance<Real> &tol) = 0;
 
   virtual void applyAdjointHessian_11_old(Vector<Real> &ahwv_old,
                                           const Vector<Real> &w,
                                           const Vector<Real> &v_new,
                                           const Vector<Real> &u_old, const Vector<Real> &u_new,
                                           const Vector<Real> &z,
-                                          Real &tol) = 0;
+                                          Tolerance<Real> &tol) = 0;
 
   virtual void applyAdjointHessian_11_new(Vector<Real> &ahwv_new,
                                           const Vector<Real> &w,
                                           const Vector<Real> &v_new,
                                           const Vector<Real> &u_old, const Vector<Real> &u_new,
                                           const Vector<Real> &z,
-                                          Real &tol) = 0;
+                                          Tolerance<Real> &tol) = 0;
 
   // Functions from SimOpt that are overriden
   ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -248,7 +248,7 @@ public:
   virtual void value(Vector<Real> &c,
                      const Vector<Real> &u,
                      const Vector<Real> &z,
-                     Real &tol) override {
+                     Tolerance<Real> &tol) override {
 
     value(c,
           getOldVector(u),
@@ -260,7 +260,7 @@ public:
   virtual void solve(Vector<Real> &c,
                      Vector<Real> &u, 
                      const Vector<Real> &z,
-                     Real &tol) override {
+                     Tolerance<Real> &tol) override {
     solve(c,
           getOldVector(u),
           getNewVector(u),
@@ -272,7 +272,7 @@ public:
                                const Vector<Real> &v,
                                const Vector<Real> &u,
                                const Vector<Real> &z,
-                               Real &tol) override {
+                               Tolerance<Real> &tol) override {
     const Vector<Real> & v_old = getOldVector(v);
     const Vector<Real> & v_new = getNewVector(v);
     const Vector<Real> & u_old = getOldVector(u);
@@ -299,7 +299,7 @@ public:
                                const Vector<Real> &v,
                                const Vector<Real> &u,
                                const Vector<Real> &z,
-                               Real &tol) override { 
+                               Tolerance<Real> &tol) override { 
     const Vector<Real> & u_old = getOldVector(u);
     const Vector<Real> & u_new = getNewVector(u);
 
@@ -314,7 +314,7 @@ public:
                                       const Vector<Real> &v,
                                       const Vector<Real> &u,
                                       const Vector<Real> &z,
-                                      Real &tol) override final {
+                                      Tolerance<Real> &tol) override final {
     ROL_TEST_FOR_EXCEPTION(true, std::logic_error,
       "The method applyInverseJacobian_1 is used but not implemented!\n");
   }
@@ -323,7 +323,7 @@ public:
                                       const Vector<Real> &v,
                                       const Vector<Real> &u,
                                       const Vector<Real> &z,
-                                      Real &tol) override {
+                                      Tolerance<Real> &tol) override {
     Vector<Real> & ajv_old = getOldVector(ajv);
     Vector<Real> & ajv_new = getNewVector(ajv);
     const Vector<Real> & u_old = getOldVector(u);
@@ -337,7 +337,7 @@ public:
                                       const Vector<Real> &v,
                                       const Vector<Real> &u,
                                       const Vector<Real> &z,
-                                      Real &tol) override {
+                                      Tolerance<Real> &tol) override {
     const Vector<Real> & u_old = getOldVector(u);
     const Vector<Real> & u_new = getNewVector(u);
     
@@ -348,7 +348,7 @@ public:
                                              const Vector<Real> &v,
                                              const Vector<Real> &u,
                                              const Vector<Real> &z,
-                                             Real &tol) override final {
+                                             Tolerance<Real> &tol) override final {
     ROL_TEST_FOR_EXCEPTION(true, std::logic_error,
       "The method applyInverseAdjointJacobian_1 is used but not implemented!\n");
   };
@@ -375,7 +375,7 @@ public:
                                       const Vector<Real> &v,
                                       const Vector<Real> &u,
                                       const Vector<Real> &z,
-                                      Real &tol) override
+                                      Tolerance<Real> &tol) override
   {
     Vector<Real> & ahwv_old = getOldVector(ahwv);
     Vector<Real> & ahwv_new = getNewVector(ahwv);
@@ -413,7 +413,7 @@ public:
                                       const Vector<Real> &v,
                                       const Vector<Real> &u,
                                       const Vector<Real> &z,
-                                      Real &tol) override
+                                      Tolerance<Real> &tol) override
   {
     ahwv.zero();
   }
@@ -440,7 +440,7 @@ public:
                                       const Vector<Real> &v, 
                                       const Vector<Real> &u, 
                                       const Vector<Real> &z, 
-                                      Real &tol) override { 
+                                      Tolerance<Real> &tol) override { 
     ahwv.zero();
   }
 
@@ -466,7 +466,7 @@ public:
                                       const Vector<Real> &v,
                                       const Vector<Real> &u,
                                       const Vector<Real> &z,
-                                      Real &tol) override {
+                                      Tolerance<Real> &tol) override {
     ahwv.zero();
   }
 
@@ -477,7 +477,7 @@ public:
                           const bool printToStream = true,
                           std::ostream & outStream = std::cout) override {
     // Solve constraint for u. 
-    Real tol = ROL_EPSILON<Real>();
+    Tolerance<Real> tol = ROL_EPSILON<Real>();
     ROL::Ptr<ROL::Vector<Real> > r = workspace_.clone(c);
     ROL::Ptr<ROL::Vector<Real> > s = workspace_.clone(u);
     s->set(u);
@@ -508,7 +508,7 @@ public:
                                            const ROL::Vector<Real> &v_new,
                                            const bool printToStream = true,
                                            std::ostream & outStream = std::cout) {
-     Real tol = ROL_EPSILON<Real>();
+     Tolerance<Real> tol = ROL_EPSILON<Real>();
      auto Jv   = workspace_.clone(c);
      update( u_new, u_old, z );
      applyJacobian_1_new( *Jv, v_new, u_old, u_new, z, tol );
@@ -539,7 +539,7 @@ public:
                                                   const ROL::Vector<Real> &v_new,
                                                   const bool printToStream = true,
                                                   std::ostream & outStream = std::cout) {
-     Real tol = ROL_EPSILON<Real>();
+     Tolerance<Real> tol = ROL_EPSILON<Real>();
      auto Jv   = workspace_.clone(c);
      update( u_new, u_old, z );
      applyAdjointJacobian_1_new( *Jv, v_new, u_old, u_new, z, tol );
@@ -598,7 +598,7 @@ public:
     using Finite_Difference_Arrays::shifts;
     using Finite_Difference_Arrays::weights;
  
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
  
     int numSteps = steps.size();
     int numVals = 4;

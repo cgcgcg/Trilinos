@@ -23,28 +23,28 @@ template<typename Real>
 void LinearConstraint<Real>::update( const Vector<Real> &x, bool flag, int iter ) {}
 
 template<typename Real>
-void LinearConstraint<Real>::value(Vector<Real> &c, const Vector<Real> &x, Real &tol) {
+void LinearConstraint<Real>::value(Vector<Real> &c, const Vector<Real> &x, Tolerance<Real> &tol) {
   A_->apply(c,x,tol);
   c.plus(*b_);
 }
 
 template<typename Real>
-void LinearConstraint<Real>::applyJacobian(Vector<Real> &jv, const Vector<Real> &v, const Vector<Real> &x, Real &tol) {
+void LinearConstraint<Real>::applyJacobian(Vector<Real> &jv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol) {
   A_->apply(jv,v,tol);
 }
 
 template<typename Real>
-void LinearConstraint<Real>::applyAdjointJacobian(Vector<Real> &ajv, const Vector<Real> &v, const Vector<Real> &x, Real &tol) {
+void LinearConstraint<Real>::applyAdjointJacobian(Vector<Real> &ajv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol) {
   A_->applyAdjoint(ajv,v,tol);
 }
 
 template<typename Real>
-void LinearConstraint<Real>::applyAdjointJacobian(Vector<Real> &ajv, const Vector<Real> &v, const Vector<Real> &x, const Vector<Real> &dualv, Real &tol) {
+void LinearConstraint<Real>::applyAdjointJacobian(Vector<Real> &ajv, const Vector<Real> &v, const Vector<Real> &x, const Vector<Real> &dualv, Tolerance<Real> &tol) {
   A_->applyAdjoint(ajv,v,tol);
 }
 
 template<typename Real>
-void LinearConstraint<Real>::applyAdjointHessian(Vector<Real> &ahuv, const Vector<Real> &u, const Vector<Real> &v, const Vector<Real> &x, Real &tol) {
+void LinearConstraint<Real>::applyAdjointHessian(Vector<Real> &ahuv, const Vector<Real> &u, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol) {
   ahuv.zero();
 }
 

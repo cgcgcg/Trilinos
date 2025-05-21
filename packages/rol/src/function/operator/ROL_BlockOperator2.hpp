@@ -54,12 +54,12 @@ public:
   }
 
 
-  void apply( V &Hv, const V &v, Real &tol ) const {
+  void apply( V &Hv, const V &v, Tolerance<Real> &tol ) const {
     bkop_->apply(Hv,v,tol);  
   }
 
 
-  void applyInverse( V &Hv, const V &v, Real &tol ) const {
+  void applyInverse( V &Hv, const V &v, Tolerance<Real> &tol ) const {
 
     ROL_TEST_FOR_EXCEPTION( true , std::logic_error, 
                                 ">>> ERROR (ROL_BlockOperator2, applyInverse): "

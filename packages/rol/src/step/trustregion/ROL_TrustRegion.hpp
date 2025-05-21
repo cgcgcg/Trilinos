@@ -38,7 +38,7 @@ private:
 
   std::vector<bool> useInexact_;
 
-  Real ftol_old_;
+  Tolerance<Real> ftol_old_;
 
   Real scale_, omega_, force_, forceFactor_;
   int updateIter_, cnt_;
@@ -117,14 +117,15 @@ public:
                        Objective<Real>        &obj,
                        BoundConstraint<Real>  &bnd,
                        TrustRegionModel<Real> &model ) {
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
     const Real one(1), zero(0);
 
     /***************************************************************************************************/
     // BEGIN INEXACT OBJECTIVE FUNCTION COMPUTATION
     /***************************************************************************************************/
     // Update inexact objective function
-    Real fold1 = fold, ftol = tol; // TOL(1.e-2);
+    Real fold1 = fold;
+    Tolerance<Real> ftol = tol; // TOL(1.e-2);
     if ( useInexact_[0] ) {
       if ( !(cnt_%updateIter_) && (cnt_ != 0) ) {
         force_ *= forceFactor_;
@@ -285,7 +286,7 @@ public:
     }
     else if ((rho >= eta0_ && flagTR != TRUSTREGION_FLAG_NPOSPREDNEG) ||
              (flagTR == TRUSTREGION_FLAG_POSPREDNEG)) { // Step Accepted
-      // Perform line search (smoothing) to ensure decrease 
+      // Perform line search (smoothing) to ensure decrease
       if ( bnd.isActivated() && TRmodel_ == TRUSTREGION_MODEL_KELLEYSACHS ) {
         // Compute new gradient
         xtmp_->set(x); xtmp_->plus(s);
@@ -305,7 +306,7 @@ public:
         // Perform smoothing
         int cnt = 0;
         alpha = alpha_init_;
-        while ( (ftmp-fnew) >= mu_*aRed ) { 
+        while ( (ftmp-fnew) >= mu_*aRed ) {
           prim_->set(*xtmp_);
           prim_->axpy(-alpha/alpha_init_,dual_->dual());
           bnd.project(*prim_);

@@ -24,14 +24,14 @@ template<typename Real>
 class Constraint_CheckInterface {
 private:
   Constraint<Real>& con_;
-  Real tol_;
+  Tolerance<Real> tol_;
 
 public:
   using V = Vector<Real>;
 
-  Constraint_CheckInterface( Constraint<Real>& con ) : 
+  Constraint_CheckInterface( Constraint<Real>& con ) :
     con_(con), tol_(sqrt(ROL_EPSILON<Real>())) {}
-   
+
   f_update_t<Real> update() {
     return std::bind( (void(Constraint<Real>::*)(const Vector<Real>&,bool,int))&Constraint<Real>::update, &con_, ph::_1, true, 0 );
   }
@@ -48,8 +48,8 @@ public:
   // Provide a vector in the dual constraint space
   f_dderiv_t<Real> adjointJacobian( ) {
     return std::bind( static_cast<void (Constraint<Real>::*)
-                              ( V&, const V&, const V&, Real& )>
-               (&Constraint<Real>::applyAdjointJacobian), 
+                              ( V&, const V&, const V&, Tolerance<Real>& )>
+               (&Constraint<Real>::applyAdjointJacobian),
                 &con_, ph::_1, ph::_2, ph::_3, tol_);
   }
 
@@ -60,7 +60,7 @@ public:
 
 }; // Constraint_CheckInterface
 
-} // namespace details 
+} // namespace details
 
 using details::Constraint_CheckInterface;
 
@@ -75,4 +75,3 @@ Constraint_CheckInterface<Real> make_check( Constraint<Real>& con ) {
 
 
 #endif // ROL_CONSTRAINT_CHECKINTERFACE_HPP
-

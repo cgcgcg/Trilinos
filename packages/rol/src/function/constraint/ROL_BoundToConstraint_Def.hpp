@@ -27,7 +27,7 @@ BoundToConstraint<Real>::BoundToConstraint(const Vector<Real> &lo, const Vector<
 }
 
 template<typename Real>
-void BoundToConstraint<Real>::value(Vector<Real> &c, const Vector<Real> &x, Real &tol) {
+void BoundToConstraint<Real>::value(Vector<Real> &c, const Vector<Real> &x, Tolerance<Real> &tol) {
   Vector<Real> &c0 = *(dynamic_cast<PartitionedVector<Real>&>(c).get(0));
   Vector<Real> &c1 = *(dynamic_cast<PartitionedVector<Real>&>(c).get(1));
   lo_->value(c0,x,tol);
@@ -36,7 +36,7 @@ void BoundToConstraint<Real>::value(Vector<Real> &c, const Vector<Real> &x, Real
 
 template<typename Real>
 void BoundToConstraint<Real>::applyJacobian(Vector<Real> &jv,
-                   const Vector<Real> &v, const Vector<Real> &x, Real &tol) {
+                   const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol) {
   Vector<Real> &jv0 = *(dynamic_cast<PartitionedVector<Real>&>(jv).get(0));
   Vector<Real> &jv1 = *(dynamic_cast<PartitionedVector<Real>&>(jv).get(1));
   lo_->applyJacobian(jv0,v,x,tol);
@@ -45,7 +45,7 @@ void BoundToConstraint<Real>::applyJacobian(Vector<Real> &jv,
 
 template<typename Real>
 void BoundToConstraint<Real>::applyAdjointJacobian(Vector<Real> &ajv,
-                   const Vector<Real> &v, const Vector<Real> &x, Real &tol) {
+                   const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol) {
   const Vector<Real> &v0 = *(dynamic_cast<const PartitionedVector<Real>&>(v).get(0));
   const Vector<Real> &v1 = *(dynamic_cast<const PartitionedVector<Real>&>(v).get(1));
   lo_->applyAdjointJacobian(ajv,v0,x,tol);
@@ -56,7 +56,7 @@ void BoundToConstraint<Real>::applyAdjointJacobian(Vector<Real> &ajv,
 template<typename Real>
 void BoundToConstraint<Real>::applyAdjointHessian(Vector<Real> &ahuv,
                    const Vector<Real> &u, const Vector<Real> &v,
-                   const Vector<Real> &x, Real &tol) {
+                   const Vector<Real> &x, Tolerance<Real> &tol) {
   ahuv.zero();
 }
 

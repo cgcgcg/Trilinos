@@ -78,7 +78,7 @@ const Ptr<Vector<Real>> ObjectiveBase<Real,Key>::getAdjointSens() const {
 template<typename Real, typename Key>
 void ObjectiveBase<Real,Key>::solve_state_equation(const Key &param,
                           const Vector<Real> &z,
-                                Real &tol) { 
+                                Tolerance<Real> &tol) { 
   // Check if state has been computed.
   bool isComputed = storage_ ? stateStore_->get(*state_,param) : false;
   // Solve state equation if not done already.
@@ -103,7 +103,7 @@ void ObjectiveBase<Real,Key>::solve_state_equation(const Key &param,
 template<typename Real, typename Key>
 void ObjectiveBase<Real,Key>::solve_adjoint_equation(const Key &param,
                             const Vector<Real> &z,
-                                  Real &tol) { 
+                                  Tolerance<Real> &tol) { 
   // Check if adjoint has been computed.
   bool isComputed = false;
   if (storage_) {
@@ -128,7 +128,7 @@ void ObjectiveBase<Real,Key>::solve_adjoint_equation(const Key &param,
 template<typename Real, typename Key>
 void ObjectiveBase<Real,Key>::solve_state_sensitivity(const Vector<Real> &v,
                              const Vector<Real> &z,
-                                   Real &tol) {
+                                   Tolerance<Real> &tol) {
   // Solve state sensitivity equation
   con_->applyJacobian_2(*res_,v,*state_,z,tol);
   res_->scale(static_cast<Real>(-1));
@@ -136,7 +136,7 @@ void ObjectiveBase<Real,Key>::solve_state_sensitivity(const Vector<Real> &v,
 }
 
 template<typename Real, typename Key>
-void ObjectiveBase<Real,Key>::solve_adjoint_sensitivity(const Vector<Real> &v, const Vector<Real> &z, Real &tol) {
+void ObjectiveBase<Real,Key>::solve_adjoint_sensitivity(const Vector<Real> &v, const Vector<Real> &z, Tolerance<Real> &tol) {
   // Evaluate full hessVec in the direction (s,v)
   obj_->hessVec_11(*dualstate_,*state_sens_,*state_,z,tol);
   obj_->hessVec_12(*dualstate1_,v,*state_,z,tol);

@@ -129,7 +129,7 @@ public:
     }
   }
 
-  virtual unsigned solveDual(const Real t, const unsigned maxit = 1000, const Real tol = 1.e-8) = 0;
+  virtual unsigned solveDual(const Real t, const unsigned maxit = 1000, const Tolerance<Real> tol = 1.e-8) = 0;
 
   const Real linearizationError(const unsigned i) const {
     return linearizationErrors_[i];
@@ -290,13 +290,13 @@ protected:
     return val;
   }
 
-  unsigned solveDual_dim1(const Real t, const unsigned maxit = 1000, const Real tol = 1.e-8) {
+  unsigned solveDual_dim1(const Real t, const unsigned maxit = 1000, const Tolerance<Real> tol = 1.e-8) {
     setDualVariable(0,static_cast<Real>(1));
     //std::cout << "dim = " << Bundle<Real>::size() << "  iter = " << 0 << "  CONVERGED!\n";
     return 0;
   }
 
-  unsigned solveDual_dim2(const Real t, const unsigned maxit = 1000, const Real tol = 1.e-8) {
+  unsigned solveDual_dim2(const Real t, const unsigned maxit = 1000, const Tolerance<Real> tol = 1.e-8) {
     Real diffg  = gx_->dot(*gx_), zero(0), one(1), half(0.5);
     gx_->set(subgradient(0)); addGi(1,-one,*gx_);
     if ( std::abs(diffg) > ROL_EPSILON<Real>() ) {

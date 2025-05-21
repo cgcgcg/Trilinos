@@ -30,13 +30,13 @@
 
     To describe the generalized Moreau-Yosida penalty method, we consider the
     following abstract setting.  Suppose \f$\mathcal{X}\f$ is a Hilbert space
-    of functions mapping \f$\Xi\f$ to \f$\mathbb{R}\f$.  For example, 
-    \f$\Xi\subset\mathbb{R}^n\f$ and \f$\mathcal{X}=L^2(\Xi)\f$ or 
+    of functions mapping \f$\Xi\f$ to \f$\mathbb{R}\f$.  For example,
+    \f$\Xi\subset\mathbb{R}^n\f$ and \f$\mathcal{X}=L^2(\Xi)\f$ or
     \f$\Xi = \{1,\ldots,n\}\f$ and \f$\mathcal{X}=\mathbb{R}^n\f$. We assume
-    \f$ f:\mathcal{X}\to\mathbb{R}\f$ is twice-continuously Fr&eacute;chet 
-    differentiable and \f$a,\,b\in\mathcal{X}\f$ with \f$a\le b\f$ almost 
+    \f$ f:\mathcal{X}\to\mathbb{R}\f$ is twice-continuously Fr&eacute;chet
+    differentiable and \f$a,\,b\in\mathcal{X}\f$ with \f$a\le b\f$ almost
     everywhere in \f$\Xi\f$.  Note that the generalized Moreau-Yosida penalty
-    method will also work with secant approximations of the Hessian. 
+    method will also work with secant approximations of the Hessian.
 
     The generalized Moreau-Yosida penalty method is a proveably convergent
     algorithm for convex optimization problems and may not converge for general
@@ -96,9 +96,9 @@ private:
   ROL::Ptr<StatusTest<Real>>      status_;
   ROL::Ptr<Step<Real>>            step_;
   ROL::Ptr<Algorithm<Real>>       algo_;
-  ROL::Ptr<Vector<Real>>          x_; 
-  ROL::Ptr<Vector<Real>>          g_; 
-  ROL::Ptr<Vector<Real>>          l_; 
+  ROL::Ptr<Vector<Real>>          x_;
+  ROL::Ptr<Vector<Real>>          g_;
+  ROL::Ptr<Vector<Real>>          l_;
   ROL::Ptr<BoundConstraint<Real>> bnd_;
 
   Real compViolation_;
@@ -120,7 +120,7 @@ private:
                    AlgorithmState<Real> &algo_state) {
     MoreauYosidaPenalty<Real> &myPen
       = dynamic_cast<MoreauYosidaPenalty<Real>&>(obj);
-    Real zerotol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> zerotol = std::sqrt(ROL_EPSILON<Real>());
     ROL::Ptr<StepState<Real> > state = Step<Real>::getState();
     // Update objective and constraint.
     myPen.update(x,true,algo_state.iter);
@@ -148,7 +148,7 @@ private:
                    AlgorithmState<Real> &algo_state) {
     MoreauYosidaPenalty<Real> &myPen
       = dynamic_cast<MoreauYosidaPenalty<Real>&>(obj);
-    Real zerotol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> zerotol = std::sqrt(ROL_EPSILON<Real>());
     ROL::Ptr<StepState<Real> > state = Step<Real>::getState();
     // Update objective and constraint.
     myPen.update(x,true,algo_state.iter);
@@ -254,8 +254,8 @@ public:
   /** \brief Compute step (equality and bound constraints).
   */
   void compute( Vector<Real> &s, const Vector<Real> &x, const Vector<Real> &l,
-                Objective<Real> &obj, Constraint<Real> &con, 
-                BoundConstraint<Real> &bnd, 
+                Objective<Real> &obj, Constraint<Real> &con,
+                BoundConstraint<Real> &bnd,
                 AlgorithmState<Real> &algo_state ) {
     //MoreauYosidaPenalty<Real> &myPen
     //  = dynamic_cast<MoreauYosidaPenalty<Real>&>(obj);

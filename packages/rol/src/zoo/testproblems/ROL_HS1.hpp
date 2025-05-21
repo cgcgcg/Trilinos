@@ -34,13 +34,13 @@ class Objective_HS1 : public Objective<Real> {
 public:
   Objective_HS1(void) {}
 
-  Real value( const Vector<Real> &x, Real &tol ) {
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
     Ptr<const std::vector<Real> > ex
       = dynamic_cast<const StdVector<Real>&>(x).getVector();
     return 100.0 * std::pow((*ex)[1] - std::pow((*ex)[0],2.0),2.0) + std::pow(1.0-(*ex)[0],2.0);
   }
 
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
     Ptr<std::vector<Real> > eg
       = dynamic_cast<StdVector<Real>&>(g).getVector();
     Ptr<const std::vector<Real> > ex
@@ -50,7 +50,7 @@ public:
     (*eg)[1] = 2.0 * 100.0 * ((*ex)[1] - std::pow((*ex)[0],2.0)); 
   }
 #if USE_HESSVEC
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
     Ptr<std::vector<Real> > ehv
       = dynamic_cast<StdVector<Real>&>(hv).getVector();
     Ptr<const std::vector<Real> > ev
@@ -67,7 +67,7 @@ public:
     (*ehv)[1] = h21 * (*ev)[0] + h22 * (*ev)[1];
   } 
 #endif
-  void invHessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  void invHessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
     Ptr<std::vector<Real> > ehv
       = dynamic_cast<StdVector<Real>&>(hv).getVector();
     Ptr<const std::vector<Real> > ev

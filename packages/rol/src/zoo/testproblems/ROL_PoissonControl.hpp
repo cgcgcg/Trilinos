@@ -108,7 +108,7 @@ public:
     return val;
   }
 
-  Real value( const Vector<Real> &z, Real &tol ) {
+  Real value( const Vector<Real> &z, Tolerance<Real> &tol ) {
 
     
     
@@ -151,7 +151,7 @@ public:
     return val;
  }
 
-  void gradient( Vector<Real> &g, const Vector<Real> &z, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &z, Tolerance<Real> &tol ) {
 
     
     
@@ -201,7 +201,7 @@ public:
     }
   }
 #if USE_HESSVEC
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &z, Real &tol ) {
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &z, Tolerance<Real> &tol ) {
 
     
     

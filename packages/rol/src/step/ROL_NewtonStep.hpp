@@ -36,7 +36,7 @@ public:
 
   /** \brief Constructor.
 
-      Standard constructor to build a NewtonStep object.  Algorithmic 
+      Standard constructor to build a NewtonStep object.  Algorithmic
       specifications are passed in through a ROL::ParameterList.
 
       @param[in]     parlist    is a parameter list containing algorithmic specifications
@@ -51,7 +51,8 @@ public:
                 Objective<Real> &obj, BoundConstraint<Real> &bnd,
                 AlgorithmState<Real> &algo_state ) {
     ROL::Ptr<StepState<Real> > step_state = Step<Real>::getState();
-    Real tol = std::sqrt(ROL_EPSILON<Real>()), one(1);
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
+    Real one(1);
 
     // Compute unconstrained step
     obj.invHessVec(s,*(step_state->gradientVec),x,tol);
@@ -60,7 +61,7 @@ public:
 
   void update( Vector<Real> &x, const Vector<Real> &s, Objective<Real> &obj, BoundConstraint<Real> &con,
                AlgorithmState<Real> &algo_state ) {
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
     ROL::Ptr<StepState<Real> > step_state = Step<Real>::getState();
 
     // Update iterate

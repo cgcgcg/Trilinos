@@ -24,7 +24,7 @@ namespace ROL {
 template<class Real>
 class GoldenSectionScalarMinimization : public ScalarMinimization<Real> {
 private:
-  Real tol_;
+  Tolerance<Real> tol_;
   int niter_;
 
 public:

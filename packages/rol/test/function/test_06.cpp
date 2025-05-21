@@ -15,21 +15,21 @@
 
 typedef double RealT;
 
-template<class Real> 
+template<class Real>
 class ObjectiveFunctionTest06 : public ROL::StdObjective<Real> {
 public:
-  Real value( const std::vector<Real> &x, Real &tol ) {
+  Real value( const std::vector<Real> &x, ROL::Tolerance<Real> &tol ) {
     Real quad(0), lin(0);
     unsigned size = x.size();
     std::vector<Real> p(size+2,1);
     for ( unsigned i = 0; i < size; i++ ) {
-      quad += x[i]*x[i]; 
+      quad += x[i]*x[i];
       lin  += x[i]*p[i+1];
     }
     return std::exp(p[0])*quad + lin + p[size+1];
   }
 
-  void gradient( std::vector<Real> &g, const std::vector<Real> &x, Real &tol ) {
+  void gradient( std::vector<Real> &g, const std::vector<Real> &x, ROL::Tolerance<Real> &tol ) {
     unsigned size = x.size();
     std::vector<Real> p(size+2,1);
     const Real two(2);
@@ -38,13 +38,13 @@ public:
     }
   }
 
-  void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+  void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, ROL::Tolerance<Real> &tol ) {
     unsigned size = x.size();
     std::vector<Real> p(size+2,1);
     const Real two(2);
     for ( unsigned i = 0; i < size; i++ ) {
-      hv[i] = two*std::exp(p[0])*v[i]; 
-    } 
+      hv[i] = two*std::exp(p[0])*v[i];
+    }
   }
 };
 

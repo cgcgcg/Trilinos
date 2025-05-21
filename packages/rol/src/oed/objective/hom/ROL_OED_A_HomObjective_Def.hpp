@@ -35,7 +35,7 @@ A_Objective<Real>::A_Objective( const Ptr<BilinearConstraint<Real>> &con,
 }
 
 template<typename Real>
-Real A_Objective<Real>::value( const Vector<Real> &z, Real &tol ) {
+Real A_Objective<Real>::value( const Vector<Real> &z, Tolerance<Real> &tol ) {
   const int dim = weight_.size();
   Real val(0);
   for (int i = 0; i < dim; ++i) {
@@ -50,7 +50,7 @@ Real A_Objective<Real>::value( const Vector<Real> &z, Real &tol ) {
 }
 
 template<typename Real>
-void A_Objective<Real>::gradient( Vector<Real> &g, const Vector<Real> &z, Real &tol ) {
+void A_Objective<Real>::gradient( Vector<Real> &g, const Vector<Real> &z, Tolerance<Real> &tol ) {
   initialize(z);
   const int dim = weight_.size();
   g.zero();
@@ -66,7 +66,7 @@ void A_Objective<Real>::gradient( Vector<Real> &g, const Vector<Real> &z, Real &
 }
 
 template<typename Real>
-void A_Objective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &z, Real &tol ) {
+void A_Objective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &z, Tolerance<Real> &tol ) {
   initialize(z);
   const int dim = weight_.size();
   hv.zero();

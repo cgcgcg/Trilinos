@@ -39,19 +39,19 @@ public:
     }
   }
 
-  Real value(const std::vector<Real> &x, Real &tol) {
+  Real value(const std::vector<Real> &x, ROL::Tolerance<Real> &tol) {
     Real val(0);
     for (int i = 0; i < dim_; ++i)
       val += static_cast<Real>(0.5)*a_[i]*x[i]*x[i] + b_[i]*x[i];
     return val;
   }
 
-  void gradient(std::vector<Real> &g, const std::vector<Real> &x, Real &tol) {
+  void gradient(std::vector<Real> &g, const std::vector<Real> &x, ROL::Tolerance<Real> &tol) {
     for (int i = 0; i < dim_; ++i)
       g[i] = a_[i]*x[i] + b_[i];
   }
 
-  void hessVec(std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol) {
+  void hessVec(std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, ROL::Tolerance<Real> &tol) {
     for (int i = 0; i < dim_; ++i)
       hv[i] = a_[i]*v[i];
   }
@@ -127,7 +127,7 @@ int main(int argc, char *argv[]) {
     sobj->checkHessVec(*xd,*yd,true,*outStream);
     sobj->checkHessSym(*xd,*yd,*zd,true,*outStream);
 
-    list.sublist("Step").sublist("Trust Region").sublist("TRN").sublist("Solver").set("Subproblem Solver", "SPG");  
+    list.sublist("Step").sublist("Trust Region").sublist("TRN").sublist("Solver").set("Subproblem Solver", "SPG");
     sol->zero();
     algo = ROL::makePtr<ROL::TypeP::TrustRegionAlgorithm<RealT>>(list);
     auto begin = std::chrono::high_resolution_clock::now();
@@ -151,7 +151,7 @@ int main(int argc, char *argv[]) {
     *outStream << "  Max Relative Error = " << err/xmax << std::endl;
     errorFlag += (err > tol ? 1 : 0);
 
-    list.sublist("Step").sublist("Trust Region").sublist("TRN").sublist("Solver").set("Subproblem Solver", "Simplified SPG");  
+    list.sublist("Step").sublist("Trust Region").sublist("TRN").sublist("Solver").set("Subproblem Solver", "Simplified SPG");
     sol->zero();
     algo = ROL::makePtr<ROL::TypeP::TrustRegionAlgorithm<RealT>>(list);
     begin = std::chrono::high_resolution_clock::now();
@@ -175,7 +175,7 @@ int main(int argc, char *argv[]) {
     *outStream << "  Max Relative Error = " << err/xmax << std::endl;
     errorFlag += (err > tol ? 1 : 0);
 
-    list.sublist("Step").sublist("Trust Region").sublist("TRN").sublist("Solver").set("Subproblem Solver", "NCG");  
+    list.sublist("Step").sublist("Trust Region").sublist("TRN").sublist("Solver").set("Subproblem Solver", "NCG");
     sol->zero();
     algo = ROL::makePtr<ROL::TypeP::TrustRegionAlgorithm<RealT>>(list);
     begin = std::chrono::high_resolution_clock::now();

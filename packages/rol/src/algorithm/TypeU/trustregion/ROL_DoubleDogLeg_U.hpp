@@ -41,7 +41,7 @@ public:
               int                      &iter,
               const Real                del,
               TrustRegionModel_U<Real> &model ) {
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
     const Real one(1), zero(0), half(0.5), p2(0.2), p8(0.8), two(2);
     // Set s to be the (projected) gradient
     s.set(model.getGradient()->dual());

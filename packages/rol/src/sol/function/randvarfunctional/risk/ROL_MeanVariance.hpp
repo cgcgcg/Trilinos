@@ -123,7 +123,7 @@ public:
       with an arbitrary number of variances.
   */
   MeanVariance( const std::vector<Real> &order,
-                const std::vector<Real> &coeff, 
+                const std::vector<Real> &coeff,
                 const Ptr<PositiveFunction<Real> > &pf )
     : RandVarFunctional<Real>(), positiveFunction_(pf) {
     order_.clear(); coeff_.clear();
@@ -185,11 +185,11 @@ public:
     hessvecs_ = hessvec_storage;
     RandVarFunctional<Real>::setHessVecStorage(gradvecs_,hessvecs_);
   }
-  
+
   void updateValue(Objective<Real>         &obj,
                    const Vector<Real>      &x,
                    const std::vector<Real> &xstat,
-                   Real                    &tol) {
+                   Tolerance<Real>         &tol) {
     Real val = computeValue(obj,x,tol);
     val_    += weight_ * val;
   }
@@ -219,7 +219,7 @@ public:
   void updateGradient(Objective<Real>         &obj,
                       const Vector<Real>      &x,
                       const std::vector<Real> &xstat,
-                      Real                    &tol) {
+                      Tolerance<Real>         &tol) {
     Real val = computeValue(obj,x,tol);
     val_ += weight_ * val;
     computeGradient(*dualVector_,obj,x,tol);
@@ -264,7 +264,7 @@ public:
                      const std::vector<Real> &vstat,
                      const Vector<Real>      &x,
                      const std::vector<Real> &xstat,
-                     Real                    &tol) {
+                     Tolerance<Real>         &tol) {
     Real val = computeValue(obj,x,tol);
     val_    += weight_ * val;
     Real gv  = computeGradVec(*dualVector_,obj,v,x,tol);

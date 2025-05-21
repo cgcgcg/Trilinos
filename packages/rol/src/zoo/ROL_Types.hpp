@@ -57,6 +57,136 @@ namespace ROL {
   inline Real ROL_EPSILON(void) { return std::abs(ROL::ScalarTraits<Real>::eps()); }
   //static const Real ROL_EPSILON<Real>() = std::abs(ROL::ScalarTraits<Real>::eps());
 
+#define BUILD_FOR_PYROL = 1
+
+#ifndef BUILD_FOR_PYROL
+  // Use for C++ ROL
+  template <class Real>
+  using Tolerance = Real;
+#else
+  // Use for pyrol
+  template <class Real>
+  class Tolerance {
+  public:
+    Tolerance(Real tol) {
+      tol_ = tol;
+    }
+
+    Tolerance() {
+      tol_ = 0.0;
+    }
+
+    Real get() const {
+      return tol_;
+    }
+
+    void operator=(double tol) {
+      tol_ = tol;
+    }
+
+  private:
+    double tol_;
+  };
+
+  template <class Real>
+  bool operator>(Real a, Tolerance<Real> b) {
+    return a>b.get();
+  }
+
+  template <class Real>
+  bool operator>(Tolerance<Real> a, Real b) {
+    return a.get()>b;
+  }
+
+  template <class Real>
+  bool operator>(Tolerance<Real> a, Tolerance<Real> b) {
+    return a.get()>b.get();
+  }
+
+  template <class Real>
+  bool operator<(Tolerance<Real> a, Real b) {
+    return a.get()<b;
+  }
+
+  template <class Real>
+  bool operator<(Real a, Tolerance<Real> b) {
+    return a<b.get();
+  }
+
+  template <class Real>
+  bool operator<(Tolerance<Real> a, Tolerance<Real> b) {
+    return a.get()<b.get();
+  }
+
+  template <class Real>
+  bool operator<=(double a, Tolerance<Real> b) {
+    return a <= b.get();
+  }
+
+  template <class Real>
+  bool operator<=(Tolerance<Real> a, Tolerance<Real> b) {
+    return a.get() <= b.get();
+  }
+
+  template <class Real>
+  Tolerance<Real> operator-(Tolerance<Real> a) {
+    return Tolerance<Real>(-a.get());
+  }
+
+  template <class Real>
+  Tolerance<Real> operator*(Real a, Tolerance<Real> b) {
+    return Tolerance<Real>(a * b.get());
+  }
+
+  template <class Real>
+  Tolerance<Real> operator*(Tolerance<Real> a, Real b) {
+    return Tolerance<Real>(a.get() * b);
+  }
+
+  template <class Real>
+  Tolerance<Real> operator*(Tolerance<Real> a, Tolerance<Real> b) {
+    return Tolerance<Real>(a.get() * b.get());
+  }
+
+  template <class Real>
+  Tolerance<Real> operator*(Tolerance<Real> a, unsigned int b) {
+    return Tolerance<Real>(a.get() * b);
+  }
+
+  template <class Real>
+  void operator*=(Tolerance<Real> a, Real b) {
+    a = a.get() * b;
+  }
+
+  template <class Real>
+  void operator/=(Tolerance<Real> a, Real b) {
+    a = a.get() / b;
+  }
+
+  template <class Real>
+  Tolerance<Real> operator/(Tolerance<Real> a, Real b) {
+    return Tolerance<Real>(a.get() / b);
+  }
+
+  template <class Real>
+  Tolerance<Real> operator+(Tolerance<Real> a, Real b) {
+    return Tolerance<Real>(a.get() + b);
+  }
+
+  template <class Real>
+  void operator+=(Tolerance<Real> a, Real b) {
+    a = a.get() + b;
+  }
+
+  template <class Real>
+  void operator+=(Tolerance<Real> a, Tolerance<Real> b) {
+    a = a.get() + b.get();
+  }
+
+
+
+#endif
+
   /** \brief  Tolerance for various equality tests.
    */
   template<class Real>
@@ -125,16 +255,16 @@ namespace ROL {
     ROL::Ptr<Vector<Real> > minIterVec;
     EExitStatus statusFlag;
 
-    AlgorithmState(void) : iter(0), minIter(0), nfval(0), ngrad(0), value(0), minValue(0), 
+    AlgorithmState(void) : iter(0), minIter(0), nfval(0), ngrad(0), value(0), minValue(0),
       gnorm(std::numeric_limits<Real>::max()),
       cnorm(std::numeric_limits<Real>::max()),
-      snorm(std::numeric_limits<Real>::max()), 
+      snorm(std::numeric_limits<Real>::max()),
       aggregateGradientNorm(std::numeric_limits<Real>::max()),
       aggregateModelError(std::numeric_limits<Real>::max()),
       flag(false),
       iterateVec(ROL::nullPtr), lagmultVec(ROL::nullPtr), minIterVec(ROL::nullPtr),
       statusFlag(EXITSTATUS_LAST) {}
-    
+
     virtual ~AlgorithmState() {}
 
     void reset(void) {
@@ -281,7 +411,7 @@ namespace ROL {
         break;
       case TYPE_P:    comp = ( (s == STEP_LINESEARCH) ||
                                (s == STEP_TRUSTREGION));
-        break; 
+        break;
       case TYPE_B:    comp = ( (s == STEP_LINESEARCH)  ||
                                (s == STEP_TRUSTREGION) ||
                                (s == STEP_MOREAUYOSIDAPENALTY) ||
@@ -319,10 +449,10 @@ namespace ROL {
     }
     return retString;
   }
-  
- 
+
+
   /** \brief  Verifies validity of a TrustRegion enum.
-    
+
       \param  tr  [in]  - enum of the TrustRegion
       \return 1 if the argument is a valid TrustRegion; 0 otherwise.
     */
@@ -333,7 +463,7 @@ namespace ROL {
             (ls == STEP_LINESEARCH) ||
             (ls == STEP_MOREAUYOSIDAPENALTY) ||
             (ls == STEP_PRIMALDUALACTIVESET) ||
-            (ls == STEP_TRUSTREGION) || 
+            (ls == STEP_TRUSTREGION) ||
             (ls == STEP_INTERIORPOINT) ||
 	    (ls == STEP_FLETCHER) ) ;
   }
@@ -374,7 +504,7 @@ namespace ROL {
       \arg    STEEPEST        describe
       \arg    NONLINEARCG     describe
       \arg    SECANT          describe
-      \arg    NEWTON          describe 
+      \arg    NEWTON          describe
       \arg    NEWTONKRYLOV    describe
       \arg    SECANTPRECOND   describe
    */
@@ -402,7 +532,7 @@ namespace ROL {
   }
 
   /** \brief  Verifies validity of a Secant enum.
-    
+
       \param  tr  [in]  - enum of the Secant
       \return 1 if the argument is a valid Secant; 0 otherwise.
     */
@@ -444,13 +574,13 @@ namespace ROL {
     }
     return DESCENT_SECANT;
   }
-  
+
   /** \enum   ROL::ESecant
       \brief  Enumeration of secant update algorithms.
 
       \arg    LBFGS           describe
       \arg    LDFP            describe
-      \arg    LSR1            describe 
+      \arg    LSR1            describe
       \arg    BARZILAIBORWEIN describe
    */
   enum ESecant{
@@ -475,9 +605,9 @@ namespace ROL {
     }
     return retString;
   }
-  
+
   /** \brief  Verifies validity of a Secant enum.
-    
+
       \param  tr  [in]  - enum of the Secant
       \return 1 if the argument is a valid Secant; 0 otherwise.
     */
@@ -519,7 +649,7 @@ namespace ROL {
     }
     return SECANT_LBFGS;
   }
-  
+
   /** \enum   ROL::ENonlinearCG
       \brief  Enumeration of nonlinear CG algorithms.
 
@@ -531,7 +661,7 @@ namespace ROL {
       \arg    LIU_STOREY         \f$ -\frac{g_k^\top y_{k-1} }{d_{k-1}^\top g_{k-1}} \f$
       \arg    DAI_YUAN           \f$ \frac{\|g_{k+1}\|^2}{d_k^\top y_k} \f$
       \arg    HAGER_ZHANG        \f$ \frac{g_{k+1}^\top y_k}{d_k^\top y_k} - 2 \frac{\|y_k\|^2}{d_k^\top y_k} \frac{g_{k+1}^\top d_k}{d_k^\top y_k} \f$
-      \arg    OREN_LUENBERGER    \f$ \frac{g_{k+1}^\top y_k}{d_k^\top y_k} - \frac{\|y_k\|^2}{d_k^\top y_k} \frac{g_{k+1}^\top d_k}{d_k^\top y_k} \f$ 
+      \arg    OREN_LUENBERGER    \f$ \frac{g_{k+1}^\top y_k}{d_k^\top y_k} - \frac{\|y_k\|^2}{d_k^\top y_k} \frac{g_{k+1}^\top d_k}{d_k^\top y_k} \f$
    */
   enum ENonlinearCG{
     NONLINEARCG_HESTENES_STIEFEL = 0,
@@ -565,9 +695,9 @@ namespace ROL {
     }
     return retString;
   }
-  
+
   /** \brief  Verifies validity of a NonlinearCG enum.
-    
+
       \param  tr  [in]  - enum of the NonlinearCG
       \return 1 if the argument is a valid NonlinearCG; 0 otherwise.
     */
@@ -614,7 +744,7 @@ namespace ROL {
     }
     return NONLINEARCG_HESTENES_STIEFEL;
   }
-  
+
   /** \enum   ROL::ELineSearch
       \brief  Enumeration of line-search types.
 
@@ -653,9 +783,9 @@ namespace ROL {
     }
     return retString;
   }
-  
+
   /** \brief  Verifies validity of a LineSearch enum.
-    
+
       \param  ls  [in]  - enum of the linesearch
       \return 1 if the argument is a valid linesearch; 0 otherwise.
     */
@@ -732,9 +862,9 @@ namespace ROL {
     }
     return retString;
   }
-  
+
   /** \brief  Verifies validity of a CurvatureCondition enum.
-    
+
       \param  ls  [in]  - enum of the Curvature Conditions
       \return 1 if the argument is a valid curvature condition; 0 otherwise.
     */
@@ -778,7 +908,7 @@ namespace ROL {
     return CURVATURECONDITION_WOLFE;
   }
 
-  /** \enum  ROL::ECGFlag 
+  /** \enum  ROL::ECGFlag
       \brief Enumation of flags used by conjugate gradient methods.
 
     \arg CG_FLAG_SUCCESS     Residual Tolerance Met
@@ -794,7 +924,7 @@ namespace ROL {
     CG_FLAG_NEGCURVE,
     CG_FLAG_TRRADEX,
     CG_FLAG_ZERORHS,
-    CG_FLAG_UNDEFINED 
+    CG_FLAG_UNDEFINED
   };
 
 
@@ -810,14 +940,14 @@ namespace ROL {
       case CG_FLAG_NEGCURVE:
         retString = "Negative curvature detected";
         break;
-      case CG_FLAG_TRRADEX:   
+      case CG_FLAG_TRRADEX:
         retString = "Trust-Region radius exceeded";
         break;
       case CG_FLAG_ZERORHS:
         retString = "Initial right hand side is zero";
         break;
       default:
-        retString = "INVALID ECGFlag";  
+        retString = "INVALID ECGFlag";
     }
     return retString;
   }
@@ -827,14 +957,14 @@ namespace ROL {
   // For use in gradient and Hessian checks
   namespace Finite_Difference_Arrays {
 
-    // Finite difference steps in axpy form    
+    // Finite difference steps in axpy form
     const int shifts[4][4] = { {  1,  0,  0, 0 },  // First order
                                { -1,  2,  0, 0 },  // Second order
                                { -1,  2,  1, 0 },  // Third order
                                { -1, -1,  3, 1 }   // Fourth order
                              };
 
-      // Finite difference weights     
+      // Finite difference weights
      const double weights[4][5] = { { -1.0,          1.0, 0.0,      0.0,      0.0      },  // First order
                                     {  0.0,     -1.0/2.0, 1.0/2.0,  0.0,      0.0      },  // Second order
                                     { -1.0/2.0, -1.0/3.0, 1.0,     -1.0/6.0,  0.0      },  // Third order
@@ -857,7 +987,7 @@ template<class Real>
 struct TypeCaster<Real, std::complex<Real> > {
   static Real ElementToReal( const std::complex<Real> &val ) {
     return val.real();
-  } 
+  }
 };
 
 // Fully specialize for double,float
@@ -888,7 +1018,7 @@ public:
 
 
 }; // class NotImplemented
- 
+
 
 #if __cplusplus >= 201402L // using C++14
 
@@ -912,7 +1042,7 @@ using enable_if_t = typename std::enable_if<B,T>::type;
 
 
 /*! \mainpage %ROL Documentation (Development Version)
- 
+
   \image html rol.png "Rapid Optimization Library" width=1in
   \image latex rol.pdf "Rapid Optimization Library" width=1in
 
@@ -922,9 +1052,9 @@ using enable_if_t = typename std::enable_if<B,T>::type;
   optimization.
   It is used for the solution of optimal design, optimal control and
   inverse problems in large-scale engineering applications.
-  Other uses include mesh optimization and image processing. 
+  Other uses include mesh optimization and image processing.
 
- 
+
   \section overview_sec Overview
 
   %ROL aims to combine flexibility, efficiency and robustness.  Key features:
@@ -960,7 +1090,7 @@ using enable_if_t = typename std::enable_if<B,T>::type;
 
   \subsection vector_qs_sec Step 1: Implement linear algebra / vector interface.
   --- or try one of the provided implementations, such as ROL::StdVector in rol/vector.
-  
+
   ~~~{.hpp}
       ROL::Vector
   ~~~
@@ -1086,7 +1216,7 @@ using enable_if_t = typename std::enable_if<B,T>::type;
 /** @defgroup extensions_group Algorithmic Extensions
  *  \brief ROL's algorithmic extensions.
  */
-  
+
 /** @defgroup stochastic_group Stochastic Optimization
  *  @ingroup extensions_group
  *  \brief ROL's stochastic optimization capability.
@@ -1095,7 +1225,7 @@ using enable_if_t = typename std::enable_if<B,T>::type;
 /** @defgroup risk_group Risk Measures
  *  @ingroup stochastic_group
  * \brief ROL's risk measure implementations.
-*/ 
+*/
 
 /** @defgroup dynamic_group Dynamic functions
  *  @ingroup interface_group
@@ -1105,7 +1235,7 @@ using enable_if_t = typename std::enable_if<B,T>::type;
 /** @defgroup examples_group Examples
  *  \brief ROL's examples
  *  <ul>
- *  <li><b>Unconstrained Examples</b>   
+ *  <li><b>Unconstrained Examples</b>
  *  <ol>
  *  <li>\link rol/example/rosenbrock/example_01.cpp Minimizing the Rosenbrock function\endlink</li>
  *  <li>\link rol/example/zakharov/example_01.cpp Minimizing the Zakharov function\endlink</li>
@@ -1122,11 +1252,11 @@ using enable_if_t = typename std::enable_if<B,T>::type;
  *  <li>\link rol/example/gross-pitaevskii/example_01.hpp Minimizing the Gross-Pitaevskii functional \endlink</li>
  *  <li>\link rol/example/gross-pitaevskii/example_02.hpp Gross-Pitaevskii functional with \f$H^1\f$ gradient \endlink</li>
  *  </ol>
- *  <li><b>Examples using Third Party Libraries</b></li> 
+ *  <li><b>Examples using Third Party Libraries</b></li>
  *  <ol>
- *  <li>\link rol/example/json/example_01.cpp Using a JSON file to provide ROL with parameters\endlink</li> 
+ *  <li>\link rol/example/json/example_01.cpp Using a JSON file to provide ROL with parameters\endlink</li>
  *  </ol>
- *  </ul> 
-*/  
+ *  </ul>
+*/
 
 #endif

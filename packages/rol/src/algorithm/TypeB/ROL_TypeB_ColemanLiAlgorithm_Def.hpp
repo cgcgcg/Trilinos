@@ -80,7 +80,7 @@ void ColemanLiAlgorithm<Real>::initialize(Vector<Real>          &x,
   TypeB::Algorithm<Real>::initialize(x,g);
   nhess_ = 0;
   // Update approximate gradient and approximate objective function.
-  Real ftol = static_cast<Real>(0.1)*ROL_OVERFLOW<Real>();
+  Tolerance<Real> ftol = static_cast<Real>(0.1)*ROL_OVERFLOW<Real>();
   proj_->getBoundConstraint()->projectInterior(x); state_->nproj++;
   state_->iterateVec->set(x);
   obj.update(x,UpdateType::Initial,state_->iter);
@@ -115,8 +115,9 @@ void ColemanLiAlgorithm<Real>::run(Vector<Real>          &x,
                                    BoundConstraint<Real> &bnd,
                                    std::ostream          &outStream ) {
   const Real zero(0), one(1), half(0.5);
-  Real tol0 = std::sqrt(ROL_EPSILON<Real>());
-  Real tol(0), stol(0), snorm(0);
+  Tolerance<Real> tol0 = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> tol(0), stol(0);
+  Real snorm(0);
   Real ftrial(0), pRed(0), rho(1), alpha(1);
   // Initialize trust-region data
   initialize(x,g,obj,bnd,outStream);
@@ -269,7 +270,7 @@ Real ColemanLiAlgorithm<Real>::dtrpcg(Vector<Real> &w, int &iflag, int &iter,
                                 const Vector<Real> &gdual,
                                 const Real del, TrustRegionModel_U<Real> &model,
                                 BoundConstraint<Real> &bnd,
-                                const Real tol, const Real stol,
+                                Tolerance<Real> tol, Tolerance<Real> stol,
                                 Vector<Real> &p, Vector<Real> &q, Vector<Real> &r,
                                 Vector<Real> &t, Vector<Real> &pwa1,
                                 Vector<Real> &pwa2, Vector<Real> &dwa,
@@ -278,7 +279,7 @@ Real ColemanLiAlgorithm<Real>::dtrpcg(Vector<Real> &w, int &iflag, int &iter,
   // q = hessian applied to step p (dual)
   // t = gradient (dual)
   // r = preconditioned gradient (primal)
-  Real tol0 = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> tol0 = std::sqrt(ROL_EPSILON<Real>());
   const Real zero(0), one(1), two(2);
   Real rho(0), kappa(0), beta(0), sigma(0), alpha(0);
   Real rtr(0), tnorm(0), sMs(0), pMp(0), sMp(0);
@@ -363,7 +364,7 @@ void ColemanLiAlgorithm<Real>::applyHessian(Vector<Real> &hv,
                                             const Vector<Real> &g,
                                             TrustRegionModel_U<Real> &model,
                                             BoundConstraint<Real> &bnd,
-                                            Real &tol,
+                                            Tolerance<Real> &tol,
                                             Vector<Real> &pwa1,
                                             Vector<Real> &pwa2) const {
   model.hessVec(hv,v,x,tol); nhess_++;
@@ -378,7 +379,7 @@ void ColemanLiAlgorithm<Real>::applyPrecond(Vector<Real> &hv,
                                             const Vector<Real> &g,
                                             TrustRegionModel_U<Real> &model,
                                             BoundConstraint<Real> &bnd,
-                                            Real &tol,
+                                            Tolerance<Real> &tol,
                                             Vector<Real> &dwa,
                                             Vector<Real> &pwa) const {
   model.precond(hv,v,x,tol);

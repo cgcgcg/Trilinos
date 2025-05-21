@@ -28,12 +28,12 @@ public:
     x_->set(x);
   }
 
-  Real value(const Vector<Real> x, Real &tol) override {
+  Real value(const Vector<Real> x, Tolerance<Real> &tol) override {
     xtmp_->set(*x_); xtmp_->plus(x);
     return prox_->(*xtmp_,tol);
   }
 
-  void gradient(Vector<Real> &g, const Vector<Real> &x, Real &tol) override {
+  void gradient(Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol) override {
     xtmp_->set(*x_); xtmp_->plus(x);
     prox_->gradient(g,*xtmp_,tol); 
   }

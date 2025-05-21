@@ -37,13 +37,13 @@ public:
                         bool useScale = true,
                         Real scale = Real(-1));
 
-  void value(Vector<Real> &c,const Vector<Real> &x,Real &tol) override;
+  void value(Vector<Real> &c,const Vector<Real> &x,Tolerance<Real> &tol) override;
   void applyJacobian(Vector<Real> &jv,const Vector<Real> &v,
-                     const Vector<Real> &x,Real &tol) override;
+                     const Vector<Real> &x,Tolerance<Real> &tol) override;
   void applyAdjointJacobian(Vector<Real> &ajv,const Vector<Real> &v,
-                            const Vector<Real> &x,Real &tol) override;
+                            const Vector<Real> &x,Tolerance<Real> &tol) override;
   void applyAdjointHessian(Vector<Real> &ahuv,const Vector<Real> &u,
-                           const Vector<Real> &v,const Vector<Real> &x,Real &tol) override;
+                           const Vector<Real> &v,const Vector<Real> &x,Tolerance<Real> &tol) override;
 };
 
 } // End OED Namespace

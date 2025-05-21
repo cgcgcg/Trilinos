@@ -70,11 +70,11 @@ void KelleySachsAlgorithm<Real>::initialize(Vector<Real>          &x,
   TypeB::Algorithm<Real>::initialize(x,g);
   nhess_ = 0;
   // Update approximate gradient and approximate objective function.
-  Real ftol = static_cast<Real>(0.1)*ROL_OVERFLOW<Real>(); 
+  Tolerance<Real> ftol = static_cast<Real>(0.1)*ROL_OVERFLOW<Real>();
   bnd.project(x);
   state_->iterateVec->set(x);
   obj.update(x,UpdateType::Initial,state_->iter);
-  state_->value = obj.value(x,ftol); 
+  state_->value = obj.value(x,ftol);
   state_->nfval++;
   obj.gradient(*state_->gradientVec,x,ftol);
   state_->ngrad++;
@@ -92,12 +92,12 @@ void KelleySachsAlgorithm<Real>::initialize(Vector<Real>          &x,
 
 template<typename Real>
 void KelleySachsAlgorithm<Real>::run(Vector<Real>          &x,
-                                     const Vector<Real>    &g, 
+                                     const Vector<Real>    &g,
                                      Objective<Real>       &obj,
                                      BoundConstraint<Real> &bnd,
                                      std::ostream          &outStream ) {
   const Real one(1), xeps(ROL_EPSILON<Real>());
-  Real ftol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> ftol = std::sqrt(ROL_EPSILON<Real>());
   Real gfnorm(0), gfnormf(0), tol(0), stol(0), eps(0);
   Real ftrial(0), fnew(0), pRed(0), rho(1), alpha(1), lambda(1);
   int cnt(0);
@@ -313,7 +313,7 @@ Real KelleySachsAlgorithm<Real>::trpcg(Vector<Real> &w, int &iflag, int &iter,
   // q = hessian applied to step p (dual)
   // t = gradient (dual)
   // r = preconditioned gradient (primal)
-  Real ftol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> ftol = std::sqrt(ROL_EPSILON<Real>());
   const Real zero(0), half(0.5), one(1), two(2);
   Real rho(0), kappa(0), beta(0), sigma(0), alpha(0), pRed(0);
   Real rtr(0), tnorm(0), rnorm0(0), sMs(0), pMp(0), sMp(0);
@@ -382,7 +382,7 @@ Real KelleySachsAlgorithm<Real>::trpcg(Vector<Real> &w, int &iflag, int &iter,
   if (iflag > 1) {
     pRed += sigma*(rho-half*sigma*kappa);
   }
-  if (iflag != 1) { 
+  if (iflag != 1) {
     iter++;
   }
   return pRed;
@@ -396,7 +396,7 @@ void KelleySachsAlgorithm<Real>::applyFreeHessian(Vector<Real> &hv,
                                                   Real eps,
                                                   TrustRegionModel_U<Real> &model,
                                                   BoundConstraint<Real> &bnd,
-                                                  Real &tol,
+                                                  Tolerance<Real> &tol,
                                                   Vector<Real> &pwa,
                                                   Vector<Real> &dwa) const {
   const Real xeps(ROL_EPSILON<Real>());
@@ -428,7 +428,7 @@ void KelleySachsAlgorithm<Real>::applyFreePrecond(Vector<Real> &hv,
                                                   Real eps,
                                                   TrustRegionModel_U<Real> &model,
                                                   BoundConstraint<Real> &bnd,
-                                                  Real &tol,
+                                                  Tolerance<Real> &tol,
                                                   Vector<Real> &pwa,
                                                   Vector<Real> &dwa) const {
   const Real xeps(ROL_EPSILON<Real>());
@@ -458,7 +458,7 @@ void KelleySachsAlgorithm<Real>::writeHeader( std::ostream& os ) const {
     os << std::string(114,'-') << std::endl;
     os << " Kelley-Sachs trust-region method status output definitions" << std::endl << std::endl;
     os << "  iter    - Number of iterates (steps taken)" << std::endl;
-    os << "  value   - Objective function value" << std::endl; 
+    os << "  value   - Objective function value" << std::endl;
     os << "  gnorm   - Norm of the gradient" << std::endl;
     os << "  snorm   - Norm of the step (update to optimization vector)" << std::endl;
     os << "  delta   - Trust-Region radius" << std::endl;
@@ -477,7 +477,7 @@ void KelleySachsAlgorithm<Real>::writeHeader( std::ostream& os ) const {
     for( int flag = CG_FLAG_SUCCESS; flag != CG_FLAG_UNDEFINED; ++flag ) {
       os << "    " << NumberToString(flag) << " - "
            << ECGFlagToString(static_cast<ECGFlag>(flag)) << std::endl;
-    }            
+    }
     os << std::string(114,'-') << std::endl;
   }
   os << "  ";
@@ -550,7 +550,7 @@ void KelleySachsAlgorithm<Real>::writeOutput( std::ostream& os, bool write_heade
 // ORIGINAL KELLEY-SACHS ALGORITHM
 //template<typename Real>
 //std::vector<std::string> KelleySachsAlgorithm<Real>::run(Vector<Real>          &x,
-//                                                         const Vector<Real>    &g, 
+//                                                         const Vector<Real>    &g,
 //                                                         Objective<Real>       &obj,
 //                                                         BoundConstraint<Real> &bnd,
 //                                                         std::ostream          &outStream ) {

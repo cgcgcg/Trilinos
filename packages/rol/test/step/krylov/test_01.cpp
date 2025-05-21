@@ -27,7 +27,7 @@ template<class Real>
 class Identity : public ROL::LinearOperator<Real> {
   typedef ROL::Vector<Real> V;
 public:
-  void apply( V& Hv, const V& v, Real &tol ) const {
+  void apply( V& Hv, const V& v, ROL::Tolerance<Real> &tol ) const {
     Hv.set(v);
   }
 }; // class Identity
@@ -56,13 +56,13 @@ public:
   TridiagonalToeplitzOperator( Real &a, Real &b, Real &c ) : a_(a), b_(b), c_(c) {}
 
   // Tridiagonal multiplication
-  void apply( V &Hv, const V &v, Real &tol ) const {
+  void apply( V &Hv, const V &v, ROL::Tolerance<Real> &tol ) const {
 
 
 
     SV &Hvs = dynamic_cast<SV&>(Hv);
     ROL::Ptr<vector> Hvp = Hvs.getVector();
- 
+
     const SV &vs = dynamic_cast<const SV&>(v);
     ROL::Ptr<const vector> vp = vs.getVector();
 
@@ -79,13 +79,13 @@ public:
   }
 
   // Tridiagonal solve - compare against GMRES
-  void applyInverse( V &Hv, const V &v, Real &tol ) const {
+  void applyInverse( V &Hv, const V &v, ROL::Tolerance<Real> &tol ) const {
 
 
 
     SV &Hvs = dynamic_cast<SV&>(Hv);
     ROL::Ptr<vector> Hvp = Hvs.getVector();
- 
+
     const SV &vs = dynamic_cast<const SV&>(v);
     ROL::Ptr<const vector> vp = vs.getVector();
 
@@ -177,7 +177,7 @@ int main(int argc, char *argv[]) {
     TridiagonalToeplitzOperator<RealT> T(sub,diag,super);
     Identity<RealT> I;
 
-    RealT tol = 0.0;
+    ROL::Tolerance<RealT> tol = 0.0;
 
     T.apply(b,x,tol);
 

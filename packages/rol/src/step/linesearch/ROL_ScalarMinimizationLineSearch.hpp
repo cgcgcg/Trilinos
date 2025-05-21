@@ -22,12 +22,12 @@
 #include "ROL_ScalarFunction.hpp"
 #include "ROL_Bracketing.hpp"
 
-namespace ROL { 
+namespace ROL {
 
 template<class Real>
 class ScalarMinimizationLineSearch : public LineSearch<Real> {
 private:
-  ROL::Ptr<Vector<Real> >             xnew_; 
+  ROL::Ptr<Vector<Real> >             xnew_;
   ROL::Ptr<Vector<Real> >             g_;
   ROL::Ptr<ScalarMinimization<Real> > sm_;
   ROL::Ptr<Bracketing<Real> >         br_;
@@ -47,7 +47,7 @@ private:
     const ROL::Ptr<const Vector<Real> > s_;
     const ROL::Ptr<Objective<Real> > obj_;
     const ROL::Ptr<BoundConstraint<Real> > con_;
-    Real ftol_;
+    Tolerance<Real> ftol_;
     void updateIterate(Real alpha) {
       xnew_->set(*x_);
       xnew_->axpy(alpha,*s_);
@@ -73,7 +73,7 @@ private:
       updateIterate(alpha);
       obj_->update(*xnew_);
       obj_->gradient(*g_,*xnew_,ftol_);
-      return s_->dot(g_->dual()); 
+      return s_->dot(g_->dual());
     }
   };
 
@@ -138,7 +138,7 @@ private:
 
 public:
   // Constructor
-  ScalarMinimizationLineSearch( ROL::ParameterList &parlist, 
+  ScalarMinimizationLineSearch( ROL::ParameterList &parlist,
     const ROL::Ptr<ScalarMinimization<Real> > &sm = ROL::nullPtr,
     const ROL::Ptr<Bracketing<Real> > &br = ROL::nullPtr,
     const ROL::Ptr<ScalarFunction<Real> > &sf  = ROL::nullPtr )
@@ -155,7 +155,7 @@ public:
     }
     // Get ScalarMinimization Method
     std::string type = list.get("Type","Brent's");
-    Real tol         = list.sublist(type).get("Tolerance",oem10);
+    Tolerance<Real> tol         = list.sublist(type).get("Tolerance",oem10);
     int niter        = list.sublist(type).get("Iteration Limit",1000);
     ROL::ParameterList plist;
     plist.sublist("Scalar Minimization").set("Type",type);
@@ -184,7 +184,7 @@ public:
 
     sf_ = sf;
 
-    
+
     // Status test for line search
     std::string condName = list0.sublist("Curvature Condition").get("Type","Strong Wolfe Conditions");
     econd_ = StringToECurvatureCondition(condName);
@@ -217,7 +217,7 @@ public:
 
   // Find the minimum of phi(alpha) = f(x + alpha*s) using Brent's method
   void run( Real &alpha, Real &fval, int &ls_neval, int &ls_ngrad,
-            const Real &gs, const Vector<Real> &s, const Vector<Real> &x, 
+            const Real &gs, const Vector<Real> &s, const Vector<Real> &x,
             Objective<Real> &obj, BoundConstraint<Real> &con ) {
     ls_neval = 0; ls_ngrad = 0;
 
@@ -247,7 +247,7 @@ public:
     int nfval = 0, ngrad = 0;
     Real A(0),      fA = fval;
     Real B = alpha, fB = phi->value(B);
-    br_->run(alpha,fval,A,fA,B,fB,nfval,ngrad,*phi,*test); 
+    br_->run(alpha,fval,A,fA,B,fB,nfval,ngrad,*phi,*test);
     B = alpha;
     ls_neval += nfval; ls_ngrad += ngrad;
 
@@ -256,7 +256,7 @@ public:
     sm_->run(fval, alpha, nfval, ngrad, *phi, A, B, *test);
     ls_neval += nfval; ls_ngrad += ngrad;
 
-    LineSearch<Real>::setNextInitialAlpha(alpha); 
+    LineSearch<Real>::setNextInitialAlpha(alpha);
   }
 };
 

@@ -58,7 +58,7 @@ private:
   public:
     HessianNK(const ROL::Ptr<Objective<Real> > &obj,
               const ROL::Ptr<Vector<Real> > &x) : obj_(obj), x_(x) {}
-    void apply(Vector<Real> &Hv, const Vector<Real> &v, Real &tol) const {
+    void apply(Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol) const {
       obj_->hessVec(Hv,v,*x_,tol);
     } 
   };
@@ -70,10 +70,10 @@ private:
   public:
     PrecondNK(const ROL::Ptr<Objective<Real> > &obj,
               const ROL::Ptr<Vector<Real> > &x) : obj_(obj), x_(x) {}
-    void apply(Vector<Real> &Hv, const Vector<Real> &v, Real &tol) const {
+    void apply(Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol) const {
       Hv.set(v.dual());
     }
-    void applyInverse(Vector<Real> &Hv, const Vector<Real> &v, Real &tol) const {
+    void applyInverse(Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol) const {
       obj_->precond(Hv,v,*x_,tol);
     }
   };
@@ -198,7 +198,7 @@ public:
   void update( Vector<Real> &x, const Vector<Real> &s,
                Objective<Real> &obj, BoundConstraint<Real> &bnd,
                AlgorithmState<Real> &algo_state ) {
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
     ROL::Ptr<StepState<Real> > step_state = Step<Real>::getState();
     step_state->SPiter = iterKrylov_;
     step_state->SPflag = flagKrylov_;

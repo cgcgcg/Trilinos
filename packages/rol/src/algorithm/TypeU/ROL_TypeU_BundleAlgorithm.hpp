@@ -41,7 +41,7 @@ private:
 
   // Algorithmic parameters
   Real T_;
-  Real tol_;
+  Tolerance<Real> tol_;
   Real m1_;
   Real m2_;
   Real m3_;

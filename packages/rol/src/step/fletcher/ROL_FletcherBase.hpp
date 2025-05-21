@@ -56,8 +56,8 @@ protected:
   bool isObjGradComputed_;
   bool isConValueComputed_;
 
-  Real multSolverError_;         // Error from augmented system solve in value()
-  Real gradSolveError_;          // Error from augmented system solve in gradient()
+  Tolerance<Real> multSolverError_;         // Error from augmented system solve in value()
+  Tolerance<Real> gradSolveError_;          // Error from augmented system solve in gradient()
 
   Real delta_;                  // regularization parameter
 
@@ -77,21 +77,21 @@ protected:
   Ptr<Vector<Real> > w2_;
   Ptr<PartitionedVector<Real> > ww_;
 
-  void objValue(const Vector<Real>& x, Real &tol) {
+  void objValue(const Vector<Real>& x, Tolerance<Real> &tol) {
     if( !isObjValueComputed_ ) {
       fval_ = obj_->value(x,tol); nfval_++;
       isObjValueComputed_ = true;
     }
   }
 
-  void objGrad(const Vector<Real>& x, Real &tol) {
+  void objGrad(const Vector<Real>& x, Tolerance<Real> &tol) {
     if( !isObjGradComputed_ ) {
       obj_->gradient(*g_, x, tol); ngval_++;
       isObjGradComputed_ = true;
-    }    
+    }
   }
 
-  void conValue(const Vector<Real>&x, Real &tol) {
+  void conValue(const Vector<Real>&x, Tolerance<Real> &tol) {
     if( !isConValueComputed_ ) {
       con_->value(*c_,x,tol); ncval_++;
       scaledc_->set(*c_);
@@ -100,12 +100,12 @@ protected:
     }
   }
 
-  virtual void computeMultipliers(const Vector<Real>& x, Real tol) {}
+  virtual void computeMultipliers(const Vector<Real>& x, Tolerance<Real> tol) {}
 
 public:
   FletcherBase(const ROL::Ptr<Objective<Real> > &obj,
                const ROL::Ptr<Constraint<Real> > &con)
-  : obj_(obj), con_(con), nfval_(0), ngval_(0), ncval_(0), fPhi_(0), 
+  : obj_(obj), con_(con), nfval_(0), ngval_(0), ncval_(0), fPhi_(0),
     isValueComputed_(false), isGradientComputed_(false),
     isMultiplierComputed_(false), isObjValueComputed_(false),
     isObjGradComputed_(false), isConValueComputed_(false),
@@ -116,22 +116,22 @@ public:
   const Ptr<Vector<Real>> getLagrangianGradient(const Vector<Real>& x) {
     // TODO: Figure out reasonable tolerance
     if( !isMultiplierComputed_ ) {
-      Real tol = static_cast<Real>(1e-12);
+      Tolerance<Real> tol = static_cast<Real>(1e-12);
       computeMultipliers(x, tol);
     }
     return gL_;
   }
 
   const Ptr<Vector<Real>> getConstraintVec(const Vector<Real>& x) {
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
-    conValue(x, tol);  
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
+    conValue(x, tol);
     return c_;
   }
 
   const Ptr<Vector<Real>> getMultiplierVec(const Vector<Real>& x) {
     // TODO: Figure out reasonable tolerance
     if( !isMultiplierComputed_ ) {
-      Real tol = static_cast<Real>(1e-12);
+      Tolerance<Real> tol = static_cast<Real>(1e-12);
       computeMultipliers(x, tol);
     }
     return y_;
@@ -140,14 +140,14 @@ public:
   const Ptr<Vector<Real>> getGradient(const Vector<Real>& x) {
     if( !isGradientComputed_ ) {
       // TODO: Figure out reasonable tolerance
-      Real tol = static_cast<Real>(1e-12);
+      Tolerance<Real> tol = static_cast<Real>(1e-12);
       this->gradient(*gPhi_, x, tol);
     }
     return gPhi_;
   }
 
   Real getObjectiveValue(const Vector<Real>& x) {
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
     objValue(x, tol);
 
     return fval_;
@@ -155,11 +155,11 @@ public:
 
   int getNumberFunctionEvaluations() const {
     return nfval_;
-  } 
+  }
 
   int getNumberGradientEvaluations() const {
     return ngval_;
-  } 
+  }
 
   int getNumberConstraintEvaluations() const {
     return ncval_;

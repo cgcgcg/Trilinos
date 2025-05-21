@@ -132,7 +132,7 @@ public:
      
   }
 
-  void initialize( const V &x0, const V &b, const LO &A, Real &tol ) {
+  void initialize( const V &x0, const V &b, const LO &A, Tolerance<Real> &tol ) {
     allocate();
     reset(x0,b,A,tol);
 
@@ -148,7 +148,7 @@ public:
     Q_[0]->scale(1.0/beta_[0]);
   }
 
-  void reset( const V &x0, const V &b, const LO &A, Real &tol ) {
+  void reset( const V &x0, const V &b, const LO &A, Tolerance<Real> &tol ) {
     k_ = 0;
     max_beta_ = 0;
     Q_[0]->set(b);
@@ -159,7 +159,7 @@ public:
     Q_[0]->scale(1.0/beta_[0]);     
   }
 
-  FLAG_ITERATE iterate( const OP &A, Real &tol ) {
+  FLAG_ITERATE iterate( const OP &A, Tolerance<Real> &tol ) {
 
     if( k_ == maxit_ ) {
       return ITERATE_MAX_REACHED;

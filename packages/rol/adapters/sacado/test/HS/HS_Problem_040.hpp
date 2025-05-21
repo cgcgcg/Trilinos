@@ -15,11 +15,11 @@
 namespace HS {
 
 namespace HS_040 {
-template<class Real> 
+template<class Real>
 class Obj {
 public:
   template<class ScalarT>
-  ScalarT value( const std::vector<ScalarT> &x, Real &tol ) {
+  ScalarT value( const std::vector<ScalarT> &x, ROL::Tolerance<Real> &tol ) {
     return -x[0]*x[1]*x[2]*x[3];
   }
 };
@@ -27,11 +27,11 @@ public:
 template<class Real>
 class EqCon {
 public:
-  template<class ScalarT> 
+  template<class ScalarT>
   void value( std::vector<ScalarT> &c,
               const std::vector<ScalarT> &x,
-              Real &tol ) {
-    c[0] = x[0]*x[0]*x[0] + x[1]*x[1] - 1.0;    
+              ROL::Tolerance<Real> &tol ) {
+    c[0] = x[0]*x[0]*x[0] + x[1]*x[1] - 1.0;
     c[1] = x[0]*x[0]*x[3] - x[2];
     c[2] = x[3]*x[3]      - x[1];
   }
@@ -39,10 +39,10 @@ public:
 } // HS_040
 
 
-template<class Real> 
+template<class Real>
 class Problem_040 : public ROL::NonlinearProgram<Real> {
 
-  
+
 
   typedef ROL::NonlinearProgram<Real>   NP;
   typedef ROL::Vector<Real>             V;
@@ -58,7 +58,7 @@ public:
   int dimension_x()  { return 4; }
   int dimension_ce() { return 3; }
 
-  const ROL::Ptr<OBJ> getObjective() { 
+  const ROL::Ptr<OBJ> getObjective() {
     return ROL::makePtr<ROL::Sacado_StdObjective<Real,HS_040::Obj>>();
   }
 
@@ -70,13 +70,13 @@ public:
     Real x[] = {0.8,0.8,0.8,0.8};
     return NP::createOptVector(x);
   };
-   
+
   bool initialGuessIsFeasible() { return false; }
-  
-  Real getInitialObjectiveValue() { 
+
+  Real getInitialObjectiveValue() {
     return Real(-0.4096);
   }
- 
+
   Real getSolutionObjectiveValue() {
     return Real(-0.25);
   }
@@ -88,10 +88,10 @@ public:
     Real x1[] = {std::pow(2.0,a),std::pow(2.0,2*b),-std::pow(2.0,c),-std::pow(2.0,b)};
     Real x2[] = {std::pow(2.0,a),std::pow(2.0,2*b), std::pow(2.0,c), std::pow(2.0,b)};
 
-    return ROL::CreatePartitionedVector(NP::createOptVector(x1), 
+    return ROL::CreatePartitionedVector(NP::createOptVector(x1),
                                         NP::createOptVector(x2));
   }
- 
+
 };
 
 } // namespace HS

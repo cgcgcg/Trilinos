@@ -90,10 +90,10 @@ void NewtonKrylovAlgorithm<Real>::initialize(Vector<Real>          &x,
   // Initialize data
   TypeB::Algorithm<Real>::initialize(x,g);
   // Update approximate gradient and approximate objective function.
-  Real ftol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> ftol = std::sqrt(ROL_EPSILON<Real>());
   proj_->project(x,outStream);
   state_->iterateVec->set(x);
-  obj.update(x,UpdateType::Initial,state_->iter);    
+  obj.update(x,UpdateType::Initial,state_->iter);
   state_->value = obj.value(x,ftol); state_->nfval++;
   obj.gradient(*state_->gradientVec,x,ftol); state_->ngrad++;
   state_->stepVec->set(x);
@@ -108,7 +108,7 @@ void NewtonKrylovAlgorithm<Real>::initialize(Vector<Real>          &x,
 
 template<typename Real>
 void NewtonKrylovAlgorithm<Real>::run( Vector<Real>          &x,
-                                       const Vector<Real>    &g, 
+                                       const Vector<Real>    &g,
                                        Objective<Real>       &obj,
                                        BoundConstraint<Real> &bnd,
                                        std::ostream          &outStream ) {
@@ -117,7 +117,8 @@ void NewtonKrylovAlgorithm<Real>::run( Vector<Real>          &x,
   initialize(x,g,obj,bnd,outStream);
   Ptr<Vector<Real>> s = x.clone(), gp = x.clone(), gold = g.clone();
   Ptr<Vector<Real>> pwa = x.clone(), pwa1 = x.clone();
-  Real ftrial(0), gs(0), tol(std::sqrt(ROL_EPSILON<Real>()));
+  Real ftrial(0), gs(0);
+  Tolerance<Real> tol(std::sqrt(ROL_EPSILON<Real>()));
 
   Ptr<LinearOperator<Real>> hessian, precond;
 
@@ -139,7 +140,7 @@ void NewtonKrylovAlgorithm<Real>::run( Vector<Real>          &x,
     if (flagKrylov_ == 2 && iterKrylov_ <= 1) {
       s->set(*gp);
     }
-    // Perform backtracking line search 
+    // Perform backtracking line search
     if (!usePrevAlpha_) state_->searchSize = alpha0_;
     x.set(*state_->iterateVec);
     x.axpy(-state_->searchSize,*s);
@@ -257,7 +258,7 @@ void NewtonKrylovAlgorithm<Real>::writeHeader( std::ostream& os ) const {
     for( int flag = CG_FLAG_SUCCESS; flag != CG_FLAG_UNDEFINED; ++flag ) {
       os << "    " << NumberToString(flag) << " - "
            << ECGFlagToString(static_cast<ECGFlag>(flag)) << std::endl;
-    }            
+    }
     os << std::string(114,'-') << std::endl;
   }
 

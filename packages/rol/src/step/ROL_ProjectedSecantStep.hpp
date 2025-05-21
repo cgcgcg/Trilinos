@@ -42,14 +42,14 @@ public:
 
   /** \brief Constructor.
 
-      Standard constructor to build a ProjectedSecantStep object.  Algorithmic 
+      Standard constructor to build a ProjectedSecantStep object.  Algorithmic
       specifications are passed in through a ROL::ParameterList.
 
       @param[in]     parlist    is a parameter list containing algorithmic specifications
       @param[in]     secant     is a user-defined secant object
   */
   ProjectedSecantStep( ROL::ParameterList &parlist,
-                       const ROL::Ptr<Secant<Real> > &secant = ROL::nullPtr, 
+                       const ROL::Ptr<Secant<Real> > &secant = ROL::nullPtr,
                        const bool computeObj = true )
     : Step<Real>(), secant_(secant), d_(ROL::nullPtr), gp_(ROL::nullPtr),
       verbosity_(0), computeObj_(computeObj), useProjectedGrad_(false) {
@@ -65,8 +65,8 @@ public:
     }
   }
 
-  void initialize( Vector<Real> &x, const Vector<Real> &s, const Vector<Real> &g, 
-                   Objective<Real> &obj, BoundConstraint<Real> &bnd, 
+  void initialize( Vector<Real> &x, const Vector<Real> &s, const Vector<Real> &g,
+                   Objective<Real> &obj, BoundConstraint<Real> &bnd,
                    AlgorithmState<Real> &algo_state ) {
     Step<Real>::initialize(x,s,g,obj,bnd,algo_state);
     d_  = s.clone();
@@ -95,7 +95,8 @@ public:
   void update( Vector<Real> &x, const Vector<Real> &s,
                Objective<Real> &obj, BoundConstraint<Real> &bnd,
                AlgorithmState<Real> &algo_state ) {
-    Real tol = std::sqrt(ROL_EPSILON<Real>()), one(1);
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
+    Real one(1);
     ROL::Ptr<StepState<Real> > step_state = Step<Real>::getState();
 
     // Update iterate and store previous step

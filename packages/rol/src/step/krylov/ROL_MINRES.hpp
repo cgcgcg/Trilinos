@@ -19,7 +19,7 @@ namespace ROL {
 
   /** \class ROL::MINRES
     \brief Implements the MINRES algorithm for solving symmetric indefinite
-    systems 
+    systems
    */
 
 
@@ -35,12 +35,12 @@ private:
 
   // Givens rotation matrix elements
   Real resnorm_;
-  int maxiter_;  
+  int maxiter_;
   bool useInexact_;
   std::array<Real,4> H_;
   std::array<Real,2> rhs_;
 
-  VectorCloneMap<Real> clones_;      
+  VectorCloneMap<Real> clones_;
 
   void givens( Real& c, Real& s, Real& r, Real a, Real b ) const {
 
@@ -81,7 +81,7 @@ public:
   // Note: Preconditioner is not implemented
   virtual Real run( V &x, OP &A, const V &b, OP &M, int &iter, int &flag ) override {
 
-    auto v_prev = clones_( x, "v_prev" );  v_prev->zero(); 
+    auto v_prev = clones_( x, "v_prev" );  v_prev->zero();
     auto v_curr = clones_( x, "v_curr" );  v_curr->set(b);
     auto v_next = clones_( x, "v_next" );  v_next->zero();
     auto w_prev = clones_( x, "w_prev" );  w_prev->zero();
@@ -90,9 +90,9 @@ public:
 
     Real c_prev{0}, s_prev{0}, c_curr{0}, s_curr{0}, c_next{0}, s_next{0};
 
-    resnorm_ = v_curr->norm();    
+    resnorm_ = v_curr->norm();
     Real rtol = std::min(Krylov<Real>::getAbsoluteTolerance(),Krylov<Real>::getRelativeTolerance()*resnorm_);
-    Real itol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> itol = std::sqrt(ROL_EPSILON<Real>());
 
     for( auto &e: H_ ) e = 0;
 
@@ -109,7 +109,7 @@ public:
 
       A.apply( *v_next, *v_curr, itol );
 
-      if( iter>0 ) v_next->axpy(-H_[1],*v_prev);    
+      if( iter>0 ) v_next->axpy(-H_[1],*v_prev);
 
       H_[2] = v_next->dot(*v_curr);
 
@@ -119,11 +119,11 @@ public:
 
       v_next->scale(1.0/H_[3]);
 
-      // Rotation on H_[0] and H_[1]. 
+      // Rotation on H_[0] and H_[1].
       if( iter>1 ) {
         H_[0]  = s_prev*H_[1];
         H_[1] *= c_prev;
-      }     
+      }
 
       // Rotation on H_[1] and H_[2]
       if( iter>0 ) {
@@ -146,10 +146,10 @@ public:
 
       x.axpy( rhs_[0], *w_next );
 
-      v_prev->set( *v_curr ); 
-      v_curr->set( *v_next ); 
-      w_prev->set( *w_curr ); 
-      w_curr->set( *w_next ); 
+      v_prev->set( *v_curr );
+      v_curr->set( *v_next );
+      w_prev->set( *w_curr );
+      w_curr->set( *w_next );
 
       c_prev = c_curr;
       c_curr = c_next;
@@ -182,4 +182,3 @@ using details::MINRES;
 
 
 #endif // ROL_MINRES_HPP
-

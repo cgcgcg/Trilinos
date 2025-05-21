@@ -45,7 +45,7 @@ Real Bundle_U_TT<Real>::sgn(const Real x) const {
 }
 
 template<typename Real>
-unsigned Bundle_U_TT<Real>::solveDual(const Real t, const unsigned maxit, const Real tol) {
+unsigned Bundle_U_TT<Real>::solveDual(const Real t, const unsigned maxit, Tolerance<Real> tol) {
   unsigned iter = 0;
   if (Bundle_U<Real>::size() == 1) {
     iter = Bundle_U<Real>::solveDual_dim1(t,maxit,tol);
@@ -141,7 +141,7 @@ void Bundle_U_TT<Real>::addSubgradToBase(unsigned ind, Real delta) {
 }
 
 template<typename Real>
-void Bundle_U_TT<Real>::deleteSubgradFromBase(unsigned ind, Real tol){
+void Bundle_U_TT<Real>::deleteSubgradFromBase(unsigned ind, Tolerance<Real> tol){
   const Real zero(0), one(1);
   // update L, currSize, base_, z1, z2, dependent, dualVariables_, kappa
   if (ind >= currSize_-dependent_){
@@ -383,7 +383,7 @@ void Bundle_U_TT<Real>::solveSystem(int size, char tran, LA::Matrix<Real> &L, LA
 }
 
 template<typename Real>
-bool Bundle_U_TT<Real>::isFeasible(LA::Vector<Real> &v, const Real &tol){
+bool Bundle_U_TT<Real>::isFeasible(LA::Vector<Real> &v, const Tolerance<Real> &tol){
   bool feas = true;
   for(int i=0;i<v.numRows();i++){
     if(v[i]<-tol){
@@ -394,7 +394,7 @@ bool Bundle_U_TT<Real>::isFeasible(LA::Vector<Real> &v, const Real &tol){
 }
 
 template<typename Real>
-unsigned Bundle_U_TT<Real>::solveDual_TT(const Real t, const unsigned maxit, const Real tol) {
+unsigned Bundle_U_TT<Real>::solveDual_TT(const Real t, const unsigned maxit, Tolerance<Real> tol) {
   const Real zero(0), half(0.5), one(1);
   Real z1z2(0), z1z1(0);
   QPStatus_ = 1; // normal status
@@ -463,7 +463,7 @@ unsigned Bundle_U_TT<Real>::solveDual_TT(const Real t, const unsigned maxit, con
             lh_[i] = tmp;
           }
           // Test for singularity
-          if (std::abs(lhz1_-one) <= tol*kappa_){
+          if (std::abs(lhz1_-one) <= tol.get()*kappa_){
             // tempv is an infinite direction
             tempv_ = lh_;
             solveSystem(currSize_-1,'T',LBprime,tempv_);
@@ -509,7 +509,7 @@ unsigned Bundle_U_TT<Real>::solveDual_TT(const Real t, const unsigned maxit, con
             lj_[i] = tmp1;
             lh_[i] = tmp2;
           }
-          if(std::abs(ljz1_-one) <= tol*kappa_){
+          if(std::abs(ljz1_-one) <= tol.get()*kappa_){
             // tempv is an infinite direction
             tempv_ = lj_;
             solveSystem(currSize_-2,'T',LBprime,tempv_);
@@ -566,7 +566,7 @@ unsigned Bundle_U_TT<Real>::solveDual_TT(const Real t, const unsigned maxit, con
 
       if(!optimal_){
         // take a step in direction tempv (possibly infinite)
-        Real myeps = tol*currSize_;
+        Real myeps = tol.get()*currSize_;
         Real step  = ROL_INF<Real>();
         for (unsigned h=0; h<currSize_; ++h){
           if ( (tempv_[h] < -myeps) && (-Bundle_U<Real>::getDualVariable(base_[h])/tempv_[h] < step) )
@@ -629,7 +629,7 @@ unsigned Bundle_U_TT<Real>::solveDual_TT(const Real t, const unsigned maxit, con
     // -- test for strict decrease -- //
     // if item didn't provide decrease, move it to taboo list ...
     if( ( entering_ < maxind_ ) && ( objval_ < ROL_INF<Real>() ) ){
-      if( newobjval >= objval_ - std::max( tol*std::abs(objval_), ROL_EPSILON<Real>() ) ){
+      if( newobjval >= objval_ - std::max( tol.get()*std::abs(objval_), ROL_EPSILON<Real>() ) ){
         taboo_.push_back(entering_);
       }
     }
@@ -638,7 +638,7 @@ unsigned Bundle_U_TT<Real>::solveDual_TT(const Real t, const unsigned maxit, con
     objval_ = newobjval;
 
     // if sufficient decrease obtained
-    if ( objval_ + std::max( tol*std::abs(objval_), ROL_EPSILON<Real>() ) <= minobjval_ ){
+    if ( objval_ + std::max( tol.get()*std::abs(objval_), ROL_EPSILON<Real>() ) <= minobjval_ ){
       taboo_.clear(); // reset taboo list
       minobjval_ = objval_;
     }
@@ -648,7 +648,7 @@ unsigned Bundle_U_TT<Real>::solveDual_TT(const Real t, const unsigned maxit, con
       break;
 
     entering_  = maxind_;
-    Real minro = - std::max( tol*currSize_*std::abs(objval_), ROL_EPSILON<Real>() );
+    Real minro = - std::max( tol.get()*currSize_*std::abs(objval_), ROL_EPSILON<Real>() );
 #if ( ! FIRST_VIOLATED )
     Real diff  = ROL_NINF<Real>(), olddiff = ROL_NINF<Real>();
 #endif
@@ -730,7 +730,7 @@ unsigned Bundle_U_TT<Real>::solveDual_TT(const Real t, const unsigned maxit, con
         L_(currSize_-1,i) = lh_[i];
       }
 
-      Real deltaeps = tol*kappa_*std::max(one,lh_.dot(lh_));
+      Real deltaeps = tol.get()*kappa_*std::max(one,lh_.dot(lh_));
       if ( delta > deltaeps ){ // new row is independent
         // add subgradient to the base
         unsigned ind = currSize_-1;
@@ -747,7 +747,7 @@ unsigned Bundle_U_TT<Real>::solveDual_TT(const Real t, const unsigned maxit, con
       }
     } // end if(entering_ < maxind_)
     else{ // no dual constraint violated
-      if( objval_ - std::max( tol*std::abs( objval_ ), ROL_EPSILON<Real>() ) > minobjval_ ){ // check if f is as good as minf
+      if( objval_ - std::max( tol.get()*std::abs( objval_ ), ROL_EPSILON<Real>() ) > minobjval_ ){ // check if f is as good as minf
         QPStatus_ = -3; // loop
         return iter;
       }
@@ -762,8 +762,8 @@ unsigned Bundle_U_TT<Real>::solveDual_TT(const Real t, const unsigned maxit, con
 }// end solveDual_TT()
 
 template<typename Real>
-unsigned Bundle_U_TT<Real>::solveDual_arbitrary(const Real t, const unsigned maxit, const Real tol) {
-  Real mytol = tol;
+unsigned Bundle_U_TT<Real>::solveDual_arbitrary(const Real t, const unsigned maxit, Tolerance<Real> tol) {
+  Tolerance<Real> mytol = tol;
   unsigned outermaxit = 20;
   bool increase = false, decrease = false;
   unsigned iter = 0;
@@ -794,4 +794,3 @@ unsigned Bundle_U_TT<Real>::solveDual_arbitrary(const Real t, const unsigned max
 } // namespace ROL
 
 #endif
-

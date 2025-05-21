@@ -26,8 +26,8 @@ private:
   }
 public:
 
-  template<class ScalarT> 
-  ScalarT value( const std::vector<ScalarT> &x, Real &tol ) {
+  template<class ScalarT>
+  ScalarT value( const std::vector<ScalarT> &x, ROL::Tolerance<Real> &tol ) {
     ScalarT a=0;
     for(int i=1;i<100;++i) {
       ScalarT b = f(i,x);
@@ -38,10 +38,10 @@ public:
 };
 }
 
-template<class Real> 
+template<class Real>
 class Problem_025 : public ROL::NonlinearProgram<Real> {
- 
-  
+
+
 
   typedef ROL::NonlinearProgram<Real>    NP;
   typedef ROL::Vector<Real>              V;
@@ -63,7 +63,7 @@ public:
 
   int dimension_x() { return 3; }
 
-  const ROL::Ptr<OBJ> getObjective() { 
+  const ROL::Ptr<OBJ> getObjective() {
     return ROL::makePtr<ROL::Sacado_StdObjective<Real,HS_025::Obj>>();
   }
 
@@ -71,13 +71,13 @@ public:
     Real x[] = {100,12.5,1.5};
     return NP::createOptVector(x);
   };
-   
+
   bool initialGuessIsFeasible() { return true; }
-  
-  Real getInitialObjectiveValue() { 
+
+  Real getInitialObjectiveValue() {
     return Real(32.835);
   }
- 
+
   Real getSolutionObjectiveValue() {
     return Real(0);
   }
@@ -86,7 +86,7 @@ public:
     const Real x[] = {50.0,25.0,1.5};
     return ROL::CreatePartitionedVector(NP::createOptVector(x));
   }
- 
+
 };
 
 }

@@ -25,7 +25,7 @@ namespace ROL {
 template<class Real>
 class BrentsScalarMinimization : public ScalarMinimization<Real> {
 private:
-  Real tol_;
+  Tolerance<Real> tol_;
   int niter_;
 
 public:
@@ -57,7 +57,7 @@ public:
     bool deriv = false;
     for (int i = 0; i < niter_; i++) {
       m = half*(a+b);
-      tol = eps*std::abs(x) + tol_; t2 = two*tol;
+      tol = eps*std::abs(x) + tol_.get(); t2 = two*tol;
       // Check stopping criterion
       if (std::abs(x-m) <= t2 - half*(b-a) || test.check(x,fx,gx,nfval,ngrad,deriv)) {
         break;

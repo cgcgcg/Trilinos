@@ -77,7 +77,7 @@ public:
     : Objective<Real>(), dist_(dist), bman_(bman), scale_(scale),
       sqrt2_(std::sqrt(2.)), sqrtpi_(std::sqrt(ROL::ScalarTraits<Real>::pi())) {}
 
-  Real value( const Vector<Real> &x, Real &tol ) {
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
     const SROMVector<Real> &ex = dynamic_cast<const SROMVector<Real>&>(x);
     const int dimension  = ex.getDimension();
     const int numSamples = ex.getNumSamples();
@@ -93,7 +93,7 @@ public:
     return 0.5*sum;
   }
 
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
     SROMVector<Real> &eg = dynamic_cast<SROMVector<Real>&>(g);
     const SROMVector<Real> &ex = dynamic_cast<const SROMVector<Real>&>(x);
     const int dimension  = ex.getDimension();
@@ -122,7 +122,7 @@ public:
     }
   }
 
-//  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+//  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
 //  }
 }; // class LinearCombinationObjective
 

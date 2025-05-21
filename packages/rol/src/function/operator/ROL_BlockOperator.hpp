@@ -41,7 +41,7 @@ public:
   BlockOperator() {}
   BlockOperator( const ROL::Ptr<OpVec> &blocks ) : blocks_(blocks) {}
   
-  virtual void apply( V &Hv, const V &v, Real &tol ) const {
+  virtual void apply( V &Hv, const V &v, Tolerance<Real> &tol ) const {
  
     // Downcast to Partitioned Vectors
     PV &Hv_part = dynamic_cast<PV&>(Hv);

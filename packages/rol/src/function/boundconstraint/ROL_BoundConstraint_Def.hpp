@@ -97,7 +97,7 @@ const Ptr<const Vector<Real>> BoundConstraint<Real>::getUpperBound( void ) const
 template<typename Real>
 bool BoundConstraint<Real>::isFeasible( const Vector<Real> &v ) { 
   if (isActivated()) {
-    const Real tol(static_cast<Real>(1e-2)*std::sqrt(ROL_EPSILON<Real>()));
+    const Tolerance<Real> tol(static_cast<Real>(1e-2)*std::sqrt(ROL_EPSILON<Real>()));
     Ptr<Vector<Real>> Pv = v.clone();
     Pv->set(v);
     project(*Pv);

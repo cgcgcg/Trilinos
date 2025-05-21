@@ -28,7 +28,7 @@ public:
 
   void compute( Vector<Real> &s, Real &snorm, Real &sdotg, int &iter, int &flag,
           const Vector<Real> &x, const Vector<Real> &g, Objective<Real> &obj) override {
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
     // Compute unconstrained step
     obj.invHessVec(s,g,x,tol);
     //sdotg = -s.dot(g.dual());

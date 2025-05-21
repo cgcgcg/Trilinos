@@ -50,7 +50,7 @@ public:
                            const Ptr<V>& s,     const Ptr<const V>& a ) :
     obj_( obj ), x_( x ),  a_( a ), g_( x_->dual().clone() ), s_( s ),
     Hs_( x->dual().clone() ) {
-    Real tol = sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = sqrt(ROL_EPSILON<Real>());
     gamma_ = 1.0-a_->dot(*s_);
     f_ = obj_->value( *x_, tol );
     obj_->gradient( *g_,*x,tol );
@@ -58,7 +58,7 @@ public:
   }
 
   virtual void update( const V& s, bool flag=true, int iter=-1 ) override {
-    Real tol = sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = sqrt(ROL_EPSILON<Real>());
     s_->set(s);
     gamma_ = 1.0-a_->dot(*s_);
     obj_->hessVec( *Hs_, *s_, *x_, tol );
@@ -68,7 +68,7 @@ public:
     return f_ + ( g_->dot(*s_) + 0.5*sHs_/gamma_ )/gamma_;
   }
 
-  virtual void gradient( V &g, const V &s, Real &tol ) override {
+  virtual void gradient( V &g, const V &s, Tolerance<Real> &tol ) override {
 
     g.set( *g_ );         // g0
     g.scale( gamma_ );    // gamma*g0
@@ -82,7 +82,7 @@ public:
 
   }
 
-  virtual void hessVec( V &hv, const V &v, const V &s, Real &tol ) override {
+  virtual void hessVec( V &hv, const V &v, const V &s, Tolerance<Real> &tol ) override {
 
     auto u = workspace_.copy(v);
       
@@ -106,7 +106,7 @@ public:
     hv.scale(std::pow(gamma_,2));
   }
 
-  virtual void precond( V& Pv, const V& v, const V& s, Real &tol ) override {
+  virtual void precond( V& Pv, const V& v, const V& s, Tolerance<Real> &tol ) override {
 
     auto u = workspace_.copy(v);
       

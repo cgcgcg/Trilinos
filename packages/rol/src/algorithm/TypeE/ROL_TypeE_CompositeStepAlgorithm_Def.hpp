@@ -86,7 +86,7 @@ void CompositeStepAlgorithm<Real>::computeTrial(Vector<Real>       &s,
                                                 Constraint<Real>   &con,
                                                 std::ostream       &os) {
 
-  Real zerotol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> zerotol = std::sqrt(ROL_EPSILON<Real>());
   Real f = 0.0;
   ROL::Ptr<Vector<Real> > n   = xvec_->clone();
   ROL::Ptr<Vector<Real> > c   = cvec_->clone();
@@ -137,7 +137,7 @@ void CompositeStepAlgorithm<Real>::computeLagrangeMultiplier(Vector<Real>       
                                                              std::ostream       &os) {
 
   Real one(1);
-  Real zerotol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> zerotol = std::sqrt(ROL_EPSILON<Real>());
   std::vector<Real> augiters;
 
   if (infoLM_) {
@@ -164,7 +164,7 @@ void CompositeStepAlgorithm<Real>::computeLagrangeMultiplier(Vector<Real>       
 
   /* Compute linear solver tolerance. */
   Real b1norm  = b1->norm();
-  Real tol = setTolOSS(lmhtol_*b1norm);
+  Tolerance<Real> tol = setTolOSS(lmhtol_*b1norm);
 
   /* Solve augmented system. */
   augiters = con.solveAugmentedSystem(*v1, *v2, *b1, *b2, x, tol);
@@ -195,7 +195,7 @@ void CompositeStepAlgorithm<Real>::computeQuasinormalStep(Vector<Real>       &n,
 
   Real zero(0);
   Real one(1);
-  Real zerotol = std::sqrt(ROL_EPSILON<Real>()); //zero;
+  Tolerance<Real> zerotol = std::sqrt(ROL_EPSILON<Real>()); //zero;
   std::vector<Real> augiters;
 
   /* Compute Cauchy step nCP. */
@@ -233,7 +233,7 @@ void CompositeStepAlgorithm<Real>::computeQuasinormalStep(Vector<Real>       &n,
   // Compute tolerance for linear solver.
   con.applyJacobian(*ctemp, *nCP, x, zerotol);
   ctemp->plus(c);
-  Real tol = setTolOSS(qntol_*ctemp->norm());
+  Tolerance<Real> tol = setTolOSS(qntol_*ctemp->norm());
   // Form right-hand side.
   ctemp->scale(-one);
   nCPdual->set(nCP->dual());
@@ -305,7 +305,7 @@ void CompositeStepAlgorithm<Real>::solveTangentialSubproblem(Vector<Real>       
                            // the null space projector is good
   Real zero(0);
   Real one(1);
-  Real zerotol =  std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> zerotol =  std::sqrt(ROL_EPSILON<Real>());
   std::vector<Real> augiters;
   iterCG_ = 1;
   flagCG_ = 0;
@@ -374,7 +374,7 @@ void CompositeStepAlgorithm<Real>::solveTangentialSubproblem(Vector<Real>       
     // Compute (inexact) projection W*r.
     if (iterCG_ == 1) {
       // Solve augmented system.
-      Real tol = setTolOSS(pgtol_);
+      Tolerance<Real> tol = setTolOSS(pgtol_);
       augiters = con.solveAugmentedSystem(*Wr, *ltemp, *r, *czero, x, tol);
       totalCallLS_++;
       totalIterLS_ = totalIterLS_ + augiters.size();
@@ -408,7 +408,7 @@ void CompositeStepAlgorithm<Real>::solveTangentialSubproblem(Vector<Real>       
     }
     else {
       // Solve augmented system.
-      Real tol = setTolOSS(projtol_);
+      Tolerance<Real> tol = setTolOSS(projtol_);
       augiters = con.solveAugmentedSystem(*Wr, *ltemp, *r, *czero, x, tol);
       totalCallLS_++;
       totalIterLS_ = totalIterLS_ + augiters.size();
@@ -645,7 +645,7 @@ void CompositeStepAlgorithm<Real>::accept(Vector<Real> &s, Vector<Real> &n, Vect
   Real one       =  1.0;
   Real two       =  2.0;
   Real half      =  one/two;
-  Real zerotol   =  std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> zerotol   =  std::sqrt(ROL_EPSILON<Real>());
   std::vector<Real> augiters;
 
   Real pred          = zero;
@@ -724,7 +724,7 @@ void CompositeStepAlgorithm<Real>::accept(Vector<Real> &s, Vector<Real> &n, Vect
         }
       }
       // Solve augmented system.
-      Real tol = setTolOSS(tangtol);
+      Tolerance<Real> tol = setTolOSS(tangtol);
       // change augiters = con.solveAugmentedSystem(t, *ltemp, *t_orig, *czero, x, tol);
       t_dual->set(t_orig->dual());
       augiters = con.solveAugmentedSystem(t, *ltemp, *t_dual, *czero, x, tol);
@@ -927,7 +927,7 @@ void CompositeStepAlgorithm<Real>::updateRadius(Vector<Real>       &x,
   Real zp9(0.9);
   Real zp8(0.8);
   Real em12(1e-12);
-  Real zerotol = std::sqrt(ROL_EPSILON<Real>()); //zero;
+  Tolerance<Real> zerotol = std::sqrt(ROL_EPSILON<Real>()); //zero;
   Real ratio(zero);
 
   Ptr<Vector<Real> > g   = gvec_->clone();
@@ -991,7 +991,7 @@ void CompositeStepAlgorithm<Real>::initialize(Vector<Real>       &x,
                                               Objective<Real>    &obj,
                                               Constraint<Real>   &con,
                                               std::ostream       &os) {
-  Real zerotol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> zerotol = std::sqrt(ROL_EPSILON<Real>());
   TypeE::Algorithm<Real>::initialize(x,g,l,c);
 
   // Initialize the algorithm state.

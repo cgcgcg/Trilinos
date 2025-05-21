@@ -73,7 +73,7 @@ private:
   // Flags to recompute quantities
   bool isConstraintComputed_;
 
-  void evaluateConstraint(const Vector<Real> &x, Real &tol) {
+  void evaluateConstraint(const Vector<Real> &x, Tolerance<Real> &tol) {
     if ( !isConstraintComputed_ ) {
       // Evaluate constraint
       con_->value(*conValue_,x,tol); ncval_++;
@@ -108,7 +108,7 @@ public:
     isConstraintComputed_ = ((flag || (!flag && iter < 0)) ? false : isConstraintComputed_);
   }
 
-  virtual Real value( const Vector<Real> &x, Real &tol ) {
+  virtual Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
     // Evaluate constraint
     evaluateConstraint(x,tol);
     // Apply Lagrange multiplier to constraint
@@ -127,7 +127,7 @@ public:
     return val;
   }
 
-  virtual void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+  virtual void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
     // Evaluate constraint
     evaluateConstraint(x,tol);
     // Compute gradient of Augmented Lagrangian
@@ -143,7 +143,7 @@ public:
     con_->applyAdjointJacobian(g,*primalMultiplierVector_,x,tol);
   }
 
-  virtual void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  virtual void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
     // Apply objective Hessian to a vector
     if (HessianApprox_ < 3) {
       con_->update(x);
@@ -193,7 +193,7 @@ public:
 
   // Return constraint value
   virtual void getConstraintVec(Vector<Real> &c, const Vector<Real> &x) {
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
     // Evaluate constraint
     evaluateConstraint(x,tol);
     c.set(*conValue_);

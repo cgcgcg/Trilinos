@@ -25,7 +25,7 @@ UpperBoundToConstraint<Real>::UpperBoundToConstraint(const Vector<Real> &up) {
 }
 
 template<typename Real>
-void UpperBoundToConstraint<Real>::value(Vector<Real> &c, const Vector<Real> &x, Real &tol) {
+void UpperBoundToConstraint<Real>::value(Vector<Real> &c, const Vector<Real> &x, Tolerance<Real> &tol) {
   const Real one(1);
   c.set(*up_);
   c.axpy(-one,x);
@@ -35,7 +35,7 @@ template<typename Real>
 void UpperBoundToConstraint<Real>::applyJacobian(Vector<Real> &jv,
                                                  const Vector<Real> &v,
                                                  const Vector<Real> &x,
-                                                 Real &tol) {
+                                                 Tolerance<Real> &tol) {
   const Real one(1);
   jv.set(v);
   jv.scale(-one);
@@ -45,7 +45,7 @@ template<typename Real>
 void UpperBoundToConstraint<Real>::applyAdjointJacobian(Vector<Real> &ajv,
                                                         const Vector<Real> &v,
                                                         const Vector<Real> &x,
-                                                        Real &tol) {
+                                                        Tolerance<Real> &tol) {
   const Real one(1);
   ajv.set(v);
   ajv.scale(-one);
@@ -56,7 +56,7 @@ void UpperBoundToConstraint<Real>::applyAdjointHessian(Vector<Real> &ahuv,
                                                        const Vector<Real> &u,
                                                        const Vector<Real> &v,
                                                        const Vector<Real> &x,
-                                                       Real &tol) {
+                                                       Tolerance<Real> &tol) {
   ahuv.zero();
 }
 

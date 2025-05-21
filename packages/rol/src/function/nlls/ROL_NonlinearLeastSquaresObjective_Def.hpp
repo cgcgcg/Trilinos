@@ -25,7 +25,7 @@ NonlinearLeastSquaresObjective<Real>::NonlinearLeastSquaresObjective(const Ptr<C
 
 template<typename Real>
 void NonlinearLeastSquaresObjective<Real>::update( const Vector<Real> &x, UpdateType type, int iter ) {
-  Real tol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
   con_->update(x,type,iter);
   con_->value(*c1_,x,tol);
   c1dual_->set(c1_->dual());
@@ -33,25 +33,25 @@ void NonlinearLeastSquaresObjective<Real>::update( const Vector<Real> &x, Update
 
 template<typename Real>
 void NonlinearLeastSquaresObjective<Real>::update( const Vector<Real> &x, bool flag, int iter ) {
-  Real tol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
   con_->update(x,flag,iter);
   con_->value(*c1_,x,tol);
   c1dual_->set(c1_->dual());
 }
 
 template<typename Real>
-Real NonlinearLeastSquaresObjective<Real>::value( const Vector<Real> &x, Real &tol ) {
+Real NonlinearLeastSquaresObjective<Real>::value( const Vector<Real> &x, Tolerance<Real> &tol ) {
   Real half(0.5);
   return half*(c1_->dot(*c1_));
 }
 
 template<typename Real>
-void NonlinearLeastSquaresObjective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+void NonlinearLeastSquaresObjective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
   con_->applyAdjointJacobian(g,*c1dual_,x,tol);
 }
 
 template<typename Real>
-void NonlinearLeastSquaresObjective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+void NonlinearLeastSquaresObjective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
   con_->applyJacobian(*c2_,v,x,tol);
   con_->applyAdjointJacobian(hv,c2_->dual(),x,tol);
   if ( !GaussNewtonHessian_ ) {
@@ -61,7 +61,7 @@ void NonlinearLeastSquaresObjective<Real>::hessVec( Vector<Real> &hv, const Vect
 }
 
 template<typename Real>
-void NonlinearLeastSquaresObjective<Real>::precond( Vector<Real> &Pv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+void NonlinearLeastSquaresObjective<Real>::precond( Vector<Real> &Pv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
   con_->applyPreconditioner(Pv,v,x,x.dual(),tol);
 }
 

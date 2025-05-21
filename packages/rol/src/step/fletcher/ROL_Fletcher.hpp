@@ -100,7 +100,7 @@ private:
               const Ptr<const Vector<Real> > &x,
               const Real delta) : con_(con), x_(x), delta_(delta) {}
 
-    void apply(Vector<Real> &Hv, const Vector<Real> &v, Real &tol) const {
+    void apply(Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol) const {
       PartitionedVector<Real> &Hvp = dynamic_cast<PartitionedVector<Real>&>(Hv);
       const PartitionedVector<Real> &vp = dynamic_cast<const PartitionedVector<Real>&>(v);
 
@@ -120,17 +120,17 @@ private:
     AugSystemPrecond(const Ptr<Constraint<Real> > con,
                      const Ptr<const Vector<Real> > x) : con_(con), x_(x) {}
 
-    void apply(Vector<Real> &Hv, const Vector<Real> &v, Real &tol) const {
+    void apply(Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol) const {
       Hv.set(v.dual());
     }
-    void applyInverse(Vector<Real> &Hv, const Vector<Real> &v, Real &tol) const {
-      Real zero(0);
+    void applyInverse(Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol) const {
+      Tolerance<Real> zero(0);
       PartitionedVector<Real> &Hvp = dynamic_cast<PartitionedVector<Real>&>(Hv);
       const PartitionedVector<Real> &vp = dynamic_cast<const PartitionedVector<Real>&>(v);
 
       Hvp.set(0, *(vp.get(0)));
       // Second x should be dual, but unused?
-      con_->applyPreconditioner(*(Hvp.get(1)),*(vp.get(1)),*x_,*x_, zero); 
+      con_->applyPreconditioner(*(Hvp.get(1)),*(vp.get(1)),*x_,*x_, zero);
     }
   };
 
@@ -180,7 +180,7 @@ public:
       delta_ = sublist.get("Regularization Parameter", 0.0);
 
       useInexact_ = sublist.get("Inexact Solves", false);
-      
+
       ROL::ParameterList krylovList;
       Real atol = static_cast<Real>(1e-12);
       Real rtol = static_cast<Real>(1e-2);
@@ -202,7 +202,7 @@ public:
     isConValueComputed_ = (flag ? false : isConValueComputed_);
   }
 
-  Real value( const Vector<Real> &x, Real &tol ) {
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
     if( isValueComputed_ && multSolverError_*cnorm_ <= tol) {
       tol = multSolverError_*cnorm_;
       return fPhi_;
@@ -211,11 +211,11 @@ public:
     Real zero(0);
 
     // Reset tolerances
-    Real origTol = tol;
-    Real tol2 = origTol;
+    Tolerance<Real> origTol = tol;
+    Tolerance<Real> tol2 = origTol;
 
     FletcherBase<Real>::objValue(x, tol2); tol2 = origTol;
-    multSolverError_ = origTol / (static_cast<Real>(2) * std::max(static_cast<Real>(1), cnorm_));
+    multSolverError_ = origTol.get() / (static_cast<Real>(2) * std::max(static_cast<Real>(1), cnorm_));
     computeMultipliers(x, multSolverError_);
     tol =  multSolverError_*cnorm_;
 
@@ -230,7 +230,7 @@ public:
     return fPhi_;
   }
 
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
     if( isGradientComputed_ && gradSolveError_ <= tol) {
       tol = gradSolveError_;
       g.set(*gPhi_);
@@ -240,10 +240,10 @@ public:
     Real zero(0);
 
     // Reset tolerances
-    Real origTol = tol;
-    Real tol2 = origTol;
+    Tolerance<Real> origTol = tol;
+    Tolerance<Real> tol2 = origTol;
 
-    gradSolveError_ = origTol / static_cast<Real>(2);
+    gradSolveError_ = origTol.get() / static_cast<Real>(2);
     computeMultipliers(x, gradSolveError_);
 
     bool refine = isGradientComputed_;
@@ -273,12 +273,12 @@ public:
     isGradientComputed_ = true;
   }
 
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
     Real zero(0);
 
     // Reset tolerances
-    Real origTol = tol;
-    Real tol2 = origTol;
+    Tolerance<Real> origTol = tol;
+    Tolerance<Real> tol2 = origTol;
 
     if( !isMultiplierComputed_ || !useInexact_) {
       // hessVec tol is always set to ~1e-8. So if inexact linear system solves are used, then
@@ -325,7 +325,7 @@ public:
                             const Vector<Real> &b1,
                             const Vector<Real> &b2,
                             const Vector<Real> &x,
-                            Real &tol,
+                            Tolerance<Real> &tol,
                             bool refine = false) {
     // Ignore tol for now
     ROL::Ptr<LinearOperator<Real> > K
@@ -338,7 +338,7 @@ public:
 
     if( refine ) {
       // TODO: Make sure this tol is actually ok...
-      Real origTol = tol;
+      Tolerance<Real> origTol = tol;
       w1_->set(v1);
       w2_->set(v2);
       K->apply(*vv_, *ww_, tol); tol = origTol;
@@ -352,7 +352,7 @@ public:
 
     // If inexact, change tolerance
     if( useInexact_ ) {
-      krylov_->resetAbsoluteTolerance(tol);
+      krylov_->resetAbsoluteTolerance(tol.get());
     }
 
     flagKrylov_ = 0;
@@ -367,13 +367,13 @@ public:
     }
   }
 
-  void computeMultipliers(const Vector<Real>& x, const Real tol) {
+  void computeMultipliers(const Vector<Real>& x, Tolerance<Real> tol) {
     if( isMultiplierComputed_ && multSolverError_ <= tol) {
       return;
     }
 
     if( !isMultiplierComputed_ ) {
-      Real tol2 = tol;
+      Tolerance<Real> tol2 = tol;
       FletcherBase<Real>::objGrad(x, tol2); tol2 = tol;
       FletcherBase<Real>::conValue(x, tol2);
       cnorm_ = c_->norm();

@@ -77,7 +77,7 @@ private:
                const Ptr<Vector<Real>>          &xprim,
                const Real                        alpha = 1e-4)
         : con_(con), bnd_(bnd), y_(y), xdual_(xdual), xprim_(xprim), alpha_(alpha) {}
-      void apply(Vector<Real> &Jx, const Vector<Real> &x, Real &tol) const {
+      void apply(Vector<Real> &Jx, const Vector<Real> &x, Tolerance<Real> &tol) const {
         con_->applyAdjointJacobian(*xdual_,x.dual(),*y_,tol);
         xprim_->set(xdual_->dual());
         bnd_->pruneActive(*xprim_,*y_);
@@ -92,12 +92,12 @@ private:
     const Real alpha_;
   public:
     Precond(Real alpha = 1e-4) : alpha_(alpha) {}
-    void apply( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+    void apply( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
       const Real one(1);
       Hv.set(v.dual());
       Hv.scale(one+alpha_);
     }
-    void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Real &tol ) const {
+    void applyInverse( Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol ) const {
       const Real one(1);
       Hv.set(v.dual());
       Hv.scale(one/(one+alpha_));

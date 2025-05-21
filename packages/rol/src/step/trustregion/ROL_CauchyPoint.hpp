@@ -88,7 +88,7 @@ private:
                         int &iter,
                         const Real del,
                         TrustRegionModel<Real> &model) {
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
     // Set step to (projected) gradient
     model.dualTransform(*Hp_,*model.getGradient());
     s.set(Hp_->dual());
@@ -119,7 +119,7 @@ private:
 //                      const Vector<Real>     &x,
 //                      TrustRegionModel<Real> &model,
 //                      BoundConstraint<Real>  &bnd) {
-//    Real tol = std::sqrt(ROL_EPSILON<Real>()),
+//    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>()),
 //    const Real zero(0), half(0.5), oe4(1.e4), two(2);
 //    // Parameters
 //    Real mu0(1.e-2), mu1(1), beta1(0), beta2(0);
@@ -198,7 +198,7 @@ private:
 //
 //  void cauchypoint_CGT( Vector<Real> &s, Real &snorm, Real &del, int &iflag, int &iter, const Vector<Real> &x,
 //                        const Vector<Real> &grad, const Real &gnorm, ProjectedObjective<Real> &pObj ) {
-//    Real tol = std::sqrt(ROL_EPSILON<Real>()), one(1), half(0.5), two(2);
+//    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>()), one(1), half(0.5), two(2);
 //    bool tmax_flag = true;
 //    int maxit      = 20;
 //    Real t         = del/gnorm;

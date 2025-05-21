@@ -42,12 +42,12 @@ class Objective_HS39 : public Objective<Real> {
 
 public:
 
-  Real value( const Vector<Real> &x, Real &tol ) {
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
     ROL::Ptr<const vector> xp = dynamic_cast<const SV&>(x).getVector();
     return -(*xp)[0];
   }
 
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
     ROL::Ptr<const vector> xp = dynamic_cast<const SV&>(x).getVector();
     ROL::Ptr<vector> gp = dynamic_cast<SV&>(g).getVector();
 
@@ -58,7 +58,7 @@ public:
 
   }
 
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
     hv.zero();  
   } 
 };
@@ -73,7 +73,7 @@ class Constraint_HS39a : public Constraint<Real> {
 public:
   Constraint_HS39a(void) {}
  
-  void value( Vector<Real> &c, const Vector<Real> &x, Real &tol ) {
+  void value( Vector<Real> &c, const Vector<Real> &x, Tolerance<Real> &tol ) {
 
     ROL::Ptr<vector> cp = dynamic_cast<SV&>(c).getVector();
     ROL::Ptr<const vector> xp = dynamic_cast<const SV&>(x).getVector();
@@ -82,7 +82,7 @@ public:
   }  
 
   void applyJacobian(Vector<Real> &jv, const Vector<Real> &v,
-                     const Vector<Real> &x, Real &tol) {
+                     const Vector<Real> &x, Tolerance<Real> &tol) {
 
     ROL::Ptr<vector> jvp = dynamic_cast<SV&>(jv).getVector();
     ROL::Ptr<const vector> vp = dynamic_cast<const SV&>(v).getVector();
@@ -93,7 +93,7 @@ public:
   }
 
   void applyAdjointJacobian( Vector<Real> &ajv, const Vector<Real> &v,
-                             const Vector<Real> &x, Real &tol ) {
+                             const Vector<Real> &x, Tolerance<Real> &tol ) {
 
     ROL::Ptr<vector> ajvp = dynamic_cast<SV&>(ajv).getVector();
     ROL::Ptr<const vector> vp = dynamic_cast<const SV&>(v).getVector();
@@ -107,7 +107,7 @@ public:
 
   void applyAdjointHessian(Vector<Real> &ahuv, const Vector<Real> &u,
                            const Vector<Real> &v, const Vector<Real> &x,
-                           Real &tol) {
+                           Tolerance<Real> &tol) {
 
     ROL::Ptr<vector> ahuvp = dynamic_cast<SV&>(ahuv).getVector();
     ROL::Ptr<const vector> up = dynamic_cast<const SV&>(u).getVector();
@@ -134,7 +134,7 @@ class Constraint_HS39b : public Constraint<Real> {
 public:
   Constraint_HS39b(void) {}
  
-  void value( Vector<Real> &c, const Vector<Real> &x, Real &tol ) {
+  void value( Vector<Real> &c, const Vector<Real> &x, Tolerance<Real> &tol ) {
     ROL::Ptr<vector> cp = dynamic_cast<SV&>(c).getVector();
     ROL::Ptr<const vector> xp = dynamic_cast<const SV&>(x).getVector();
 
@@ -142,7 +142,7 @@ public:
   }  
 
   void applyJacobian(Vector<Real> &jv, const Vector<Real> &v,
-                     const Vector<Real> &x, Real &tol) {
+                     const Vector<Real> &x, Tolerance<Real> &tol) {
 
     ROL::Ptr<vector> jvp = dynamic_cast<SV&>(jv).getVector();
     ROL::Ptr<const vector> vp = dynamic_cast<const SV&>(v).getVector();
@@ -153,7 +153,7 @@ public:
   }
 
   void applyAdjointJacobian( Vector<Real> &ajv, const Vector<Real> &v,
-                             const Vector<Real> &x, Real &tol ) {
+                             const Vector<Real> &x, Tolerance<Real> &tol ) {
 
     ROL::Ptr<vector> ajvp = dynamic_cast<SV&>(ajv).getVector();
     ROL::Ptr<const vector> vp = dynamic_cast<const SV&>(v).getVector();
@@ -167,7 +167,7 @@ public:
 
   void applyAdjointHessian(Vector<Real> &ahuv, const Vector<Real> &u,
                            const Vector<Real> &v, const Vector<Real> &x,
-                           Real &tol) {
+                           Tolerance<Real> &tol) {
 
     ROL::Ptr<vector> ahuvp = dynamic_cast<SV&>(ahuv).getVector();
     ROL::Ptr<const vector> up = dynamic_cast<const SV&>(u).getVector();

@@ -64,7 +64,7 @@ LinearObjective<Real>::LinearObjective(const Ptr<Vector<Real>>  &theta,
     traceSampler_(traceSampler), type_("A"), g_(theta->dual().clone()) {}
 
 template<typename Real>
-Real LinearObjective<Real>::value( const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
+Real LinearObjective<Real>::value( const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
   startTimer("value");
   computeG(*g_);
   Real val = g_->apply(u);
@@ -73,7 +73,7 @@ Real LinearObjective<Real>::value( const Vector<Real> &u, const Vector<Real> &z,
 }
 
 template<typename Real>
-void LinearObjective<Real>::gradient_1( Vector<Real> &g, const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
+void LinearObjective<Real>::gradient_1( Vector<Real> &g, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
   startTimer("gradient_1");
   computeG(*g_);
   g.set(*g_);
@@ -81,35 +81,35 @@ void LinearObjective<Real>::gradient_1( Vector<Real> &g, const Vector<Real> &u, 
 }
 
 template<typename Real>
-void LinearObjective<Real>::gradient_2( Vector<Real> &g, const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
+void LinearObjective<Real>::gradient_2( Vector<Real> &g, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
   startTimer("gradient_2");
   g.zero();
   stopTimer("gradient_2");
 }
 
 template<typename Real>
-void LinearObjective<Real>::hessVec_11( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
+void LinearObjective<Real>::hessVec_11( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
   startTimer("hessVec_11");
   hv.zero();
   stopTimer("hessVec_11");
 }
 
 template<typename Real>
-void LinearObjective<Real>::hessVec_12( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
+void LinearObjective<Real>::hessVec_12( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
   startTimer("hessVec_12");
   hv.zero();
   stopTimer("hessVec_12");
 }
 
 template<typename Real>
-void LinearObjective<Real>::hessVec_21( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
+void LinearObjective<Real>::hessVec_21( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
   startTimer("hessVec_21");
   hv.zero();
   stopTimer("hessVec_21");
 }
 
 template<typename Real>
-void LinearObjective<Real>::hessVec_22( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
+void LinearObjective<Real>::hessVec_22( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
   startTimer("hessVec_22");
   hv.zero();
   stopTimer("hessVec_22");

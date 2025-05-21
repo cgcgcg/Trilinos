@@ -27,7 +27,7 @@ Problem<Real>::Problem( const Ptr<Objective<Real>> &obj,
     con_(nullPtr), mul_(nullPtr), res_(nullPtr), proj_(nullPtr),
     problemType_(TYPE_U) {
   INPUT_obj_   = obj;
-  INPUT_nobj_  = nullPtr; 
+  INPUT_nobj_  = nullPtr;
   INPUT_xprim_ = x;
   INPUT_bnd_   = nullPtr;
   INPUT_con_.clear();
@@ -199,7 +199,7 @@ void Problem<Real>::finalize(bool lumpConstraints, bool printToStream, std::ostr
     bool hasLinearEquality      = hasLinearEquality_;
     bool hasInequality          = hasInequality_;
     bool hasLinearInequality    = hasLinearInequality_;
-    bool hasProximableObjective = hasProximableObjective_; 
+    bool hasProximableObjective = hasProximableObjective_;
     con.insert(INPUT_con_.begin(),INPUT_con_.end());
     if (lumpConstraints) {
       con.insert(INPUT_linear_con_.begin(),INPUT_linear_con_.end());
@@ -213,12 +213,12 @@ void Problem<Real>::finalize(bool lumpConstraints, bool printToStream, std::ostr
     }
     // Transform optimization problem
     //std::cout << hasBounds_ << "  " << hasEquality << "  " << hasInequality << "  " << hasLinearEquality << "  " << hasLinearInequality << std::endl;
-    nobj_            = nullPtr; 
+    nobj_            = nullPtr;
     if (hasProximableObjective){
       if (!hasEquality && !hasInequality && !hasBounds_ && !hasLinearEquality && !hasLinearInequality){
         problemType_ = TYPE_P;
         obj_         = INPUT_obj_;
-        nobj_        = INPUT_nobj_; 
+        nobj_        = INPUT_nobj_;
         xprim_       = INPUT_xprim_;
         xdual_       = INPUT_xdual_;
         bnd_         = nullPtr;
@@ -230,7 +230,7 @@ void Problem<Real>::finalize(bool lumpConstraints, bool printToStream, std::ostr
        throw Exception::NotImplemented(">>> ROL::TypeP - with constraints is not supported");
      }
     }
-    else {    
+    else {
       if (!hasLinearEquality && !hasLinearInequality) {
         proj_ = nullPtr;
         if (!hasEquality && !hasInequality && !hasBounds_ ) {
@@ -360,9 +360,9 @@ void Problem<Real>::finalize(bool lumpConstraints, bool printToStream, std::ostr
       outStream << std::endl;
       outStream << "  ROL::Problem::finalize" << std::endl;
       outStream << "    Problem Summary:" << std::endl;
-      outStream << "      Has Proximable Objective? .......... " << (hasProximableObjective ? "yes" : "no") << std::endl; 
+      outStream << "      Has Proximable Objective? .......... " << (hasProximableObjective ? "yes" : "no") << std::endl;
       outStream << "      Has Bound Constraint? .............. " << (hasBounds_ ? "yes" : "no") << std::endl;
-      outStream << "      Has Equality Constraint? ........... " << (hasEquality ? "yes" : "no") << std::endl; 
+      outStream << "      Has Equality Constraint? ........... " << (hasEquality ? "yes" : "no") << std::endl;
       if (hasEquality) {
         int cnt = 0;
 	for (auto it = con.begin(); it != con.end(); ++it) {
@@ -377,9 +377,9 @@ void Problem<Real>::finalize(bool lumpConstraints, bool printToStream, std::ostr
             outStream << it->first << std::endl;
 	  }
 	}
-        outStream << "        Total: ........................... " << cnt_econ_+(lumpConstraints ? cnt_linear_econ_ : 0) << std::endl; 
+        outStream << "        Total: ........................... " << cnt_econ_+(lumpConstraints ? cnt_linear_econ_ : 0) << std::endl;
       }
-      outStream << "      Has Inequality Constraint? ......... " << (hasInequality ? "yes" : "no") << std::endl; 
+      outStream << "      Has Inequality Constraint? ......... " << (hasInequality ? "yes" : "no") << std::endl;
       if (hasInequality) {
         int cnt = 0;
 	for (auto it = con.begin(); it != con.end(); ++it) {
@@ -394,7 +394,7 @@ void Problem<Real>::finalize(bool lumpConstraints, bool printToStream, std::ostr
             outStream << it->first << std::endl;
 	  }
 	}
-        outStream << "        Total: ........................... " << cnt_icon_+(lumpConstraints ? cnt_linear_icon_ : 0) << std::endl; 
+        outStream << "        Total: ........................... " << cnt_icon_+(lumpConstraints ? cnt_linear_icon_ : 0) << std::endl;
       }
       if (!lumpConstraints) {
         outStream << "      Has Linear Equality Constraint? .... " << (hasLinearEquality ? "yes" : "no") << std::endl;
@@ -412,7 +412,7 @@ void Problem<Real>::finalize(bool lumpConstraints, bool printToStream, std::ostr
               outStream << it->first << std::endl;
 	    }
 	  }
-          outStream << "        Total: ........................... " << cnt_linear_econ_ << std::endl; 
+          outStream << "        Total: ........................... " << cnt_linear_econ_ << std::endl;
         }
         outStream << "      Has Linear Inequality Constraint? .. " << (hasLinearInequality ? "yes" : "no") << std::endl;
         if (hasLinearInequality) {
@@ -429,7 +429,7 @@ void Problem<Real>::finalize(bool lumpConstraints, bool printToStream, std::ostr
               outStream << it->first << std::endl;
 	    }
 	  }
-          outStream << "        Total: ........................... " << cnt_linear_icon_ << std::endl; 
+          outStream << "        Total: ........................... " << cnt_linear_icon_ << std::endl;
         }
       }
       outStream << std::endl;
@@ -453,8 +453,8 @@ const Ptr<Objective<Real>>& Problem<Real>::getObjective() {
 
 template<typename Real>
 const Ptr<Objective<Real>>& Problem<Real>::getProximableObjective(){
-  finalize(); 
-  return nobj_; 
+  finalize();
+  return nobj_;
 }
 
 template<typename Real>
@@ -514,7 +514,8 @@ Real Problem<Real>::checkLinearity(bool printToStream, std::ostream &outStream) 
     outStream << "  ROL::Problem::checkLinearity" << std::endl;
   }
   const Real one(1), two(2), eps(1e-2*std::sqrt(ROL_EPSILON<Real>()));
-  Real tol(std::sqrt(ROL_EPSILON<Real>())), cnorm(0), err(0), maxerr(0);
+  Tolerance<Real> tol(std::sqrt(ROL_EPSILON<Real>()));
+  Real cnorm(0), err(0), maxerr(0);
   Ptr<Vector<Real>> x  = INPUT_xprim_->clone(); x->randomize(-one,one);
   Ptr<Vector<Real>> y  = INPUT_xprim_->clone(); y->randomize(-one,one);
   Ptr<Vector<Real>> z  = INPUT_xprim_->clone(); z->zero();
@@ -573,7 +574,7 @@ void Problem<Real>::checkVectors(bool printToStream, std::ostream &outStream) co
     outStream << std::endl << "  Check dual optimization space vector" << std::endl;
   }
   INPUT_xdual_->checkVector(*x,*y,printToStream,outStream);
-  
+
   // Check constraint space vectors
   for (auto it = INPUT_con_.begin(); it != INPUT_con_.end(); ++it) {
     // Primal constraint space vector
@@ -592,7 +593,7 @@ void Problem<Real>::checkVectors(bool printToStream, std::ostream &outStream) co
     }
     it->second.multiplier->checkVector(*x,*y,printToStream,outStream);
   }
-  
+
   // Check constraint space vectors
   for (auto it = INPUT_linear_con_.begin(); it != INPUT_linear_con_.end(); ++it) {
     // Primal constraint space vector
@@ -628,7 +629,7 @@ void Problem<Real>::checkDerivatives(bool printToStream, std::ostream &outStream
   INPUT_obj_->checkGradient(*x,*g,*d,printToStream,outStream);
   INPUT_obj_->checkHessVec(*x,*g,*d,printToStream,outStream);
   INPUT_obj_->checkHessSym(*x,*g,*d,*v,printToStream,outStream);
-  //TODO: Proximable Objective Check 
+  //TODO: Proximable Objective Check
   // Constraint check
   for (auto it = INPUT_con_.begin(); it != INPUT_con_.end(); ++it) {
     c = it->second.residual->clone();   c->randomize(-scale,scale);
@@ -639,7 +640,7 @@ void Problem<Real>::checkDerivatives(bool printToStream, std::ostream &outStream
     it->second.constraint->checkAdjointConsistencyJacobian(*w,*v,*x,printToStream,outStream);
     it->second.constraint->checkApplyAdjointHessian(*x,*w,*v,*g,printToStream,outStream);
   }
-  
+
   // Linear constraint check
   for (auto it = INPUT_linear_con_.begin(); it != INPUT_linear_con_.end(); ++it) {
     c = it->second.residual->clone();   c->randomize(-scale,scale);
@@ -659,7 +660,7 @@ void Problem<Real>::check(bool printToStream, std::ostream &outStream, const Ptr
     checkLinearity(printToStream,outStream);
   checkDerivatives(printToStream,outStream,x0,scale);
 // if (hasProximableObjective)
-// checkProximableObjective(printToStream, outStream); 
+// checkProximableObjective(printToStream, outStream);
 }
 
 template<typename Real>

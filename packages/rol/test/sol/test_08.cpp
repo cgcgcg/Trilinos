@@ -27,8 +27,8 @@ typedef double RealT;
 template<class Real>
 class ParametrizedObjectiveEx8 : public ROL::Objective<Real> {
 public:
-  Real value( const ROL::Vector<Real> &x, Real &tol ) {
-    ROL::Ptr<const std::vector<Real>> ex = 
+  Real value( const ROL::Vector<Real> &x, ROL::Tolerance<Real> &tol ) {
+    ROL::Ptr<const std::vector<Real>> ex =
       dynamic_cast<const ROL::StdVector<Real>&>(x).getVector();
     Real quad = 0.0, lin = 0.0;
     std::vector<Real> p = this->getParameter();
@@ -40,8 +40,8 @@ public:
     return std::exp(p[0])*quad + lin + p[size+1];
   }
 
-  void gradient( ROL::Vector<Real> &g, const ROL::Vector<Real> &x, Real &tol ) {
-    ROL::Ptr<const std::vector<Real>> ex = 
+  void gradient( ROL::Vector<Real> &g, const ROL::Vector<Real> &x, ROL::Tolerance<Real> &tol ) {
+    ROL::Ptr<const std::vector<Real>> ex =
       dynamic_cast<const ROL::StdVector<Real>&>(x).getVector();
     ROL::Ptr<std::vector<Real>> eg =
       dynamic_cast<ROL::StdVector<Real>&>(g).getVector();
@@ -52,10 +52,10 @@ public:
     }
   }
 
-  void hessVec( ROL::Vector<Real> &hv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &x, Real &tol ) {
-    ROL::Ptr<const std::vector<Real>> ex = 
+  void hessVec( ROL::Vector<Real> &hv, const ROL::Vector<Real> &v, const ROL::Vector<Real> &x, ROL::Tolerance<Real> &tol ) {
+    ROL::Ptr<const std::vector<Real>> ex =
       dynamic_cast<const ROL::StdVector<Real>&>(x).getVector();
-    ROL::Ptr<const std::vector<Real>> ev = 
+    ROL::Ptr<const std::vector<Real>> ev =
       dynamic_cast<const ROL::StdVector<Real>&>(v).getVector();
     ROL::Ptr<std::vector<Real>> ehv =
       dynamic_cast<ROL::StdVector<Real>&>(hv).getVector();
@@ -86,7 +86,7 @@ RealT setUpAndSolve(ROL::ParameterList                    & list,
   ROL::Solver<RealT> solver(newprob,list);
   solver.solve(outStream);
   ROL::Ptr<ROL::Objective<RealT>> robj = opt.getObjective();
-  RealT tol(1.e-8);
+  ROL::Tolerance<RealT> tol(1.e-8);
   return robj->value(*(opt.getSolutionVector()),tol);
 }
 
@@ -129,7 +129,7 @@ int main(int argc, char* argv[]) {
     /**********************************************************************************************/
     // Get ROL parameterlist
     std::string filename = "input_08.xml";
-    
+
     auto parlist = ROL::getParametersFromXmlFile( filename );
     ROL::ParameterList list = *parlist;
     list.sublist("General").set("Output Level",print ? 1 : 0);
@@ -162,7 +162,7 @@ int main(int argc, char* argv[]) {
     // Build bound constraints
     std::vector<RealT> l(dim,0.0);
     std::vector<RealT> u(dim,1.0);
-    ROL::Ptr<ROL::BoundConstraint<RealT>> bnd = 
+    ROL::Ptr<ROL::BoundConstraint<RealT>> bnd =
       ROL::makePtr<ROL::StdBoundConstraint<RealT>>(l,u);
     bnd->deactivate();
     // Test parametrized objective functions
@@ -177,7 +177,7 @@ int main(int argc, char* argv[]) {
     diff->zero(); xp->zero();
     std::vector<RealT> error(20), norm(20), obj(20), objErr(20);
     *outStream << "\nSUPER QUANTILE QUADRANGLE RISK MEASURE\n";
-    list.sublist("SOL").set("Type","Risk Averse"); 
+    list.sublist("SOL").set("Type","Risk Averse");
     list.sublist("SOL").sublist("Risk Measure").set("Name","Second Order CVaR");
     for (int i = 0; i < 20; ++i) {
       list.sublist("SOL").sublist("Risk Measure").sublist("Second Order CVaR").set("Number of Quadrature Points",i+1);

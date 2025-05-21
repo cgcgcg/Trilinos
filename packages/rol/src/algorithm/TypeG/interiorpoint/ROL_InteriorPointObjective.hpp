@@ -166,7 +166,7 @@ public:
     initialize(x,g);
   }
 
-  Real getObjectiveValue(const Vector<Real> &x, Real &tol) {
+  Real getObjectiveValue(const Vector<Real> &x, Tolerance<Real> &tol) {
     int key(0);
     Real val(0);
     bool isComputed = fval_->get(val,key);
@@ -177,7 +177,7 @@ public:
     return val;
   }
 
-  const Ptr<const Vector<Real>> getObjectiveGradient(const Vector<Real> &x, Real &tol) {
+  const Ptr<const Vector<Real>> getObjectiveGradient(const Vector<Real> &x, Tolerance<Real> &tol) {
     int key(0);
     if (!gradient_->isComputed(key)) {
       if (gradient_->isNull(key)) gradient_->allocate(x.dual(),key);
@@ -204,7 +204,7 @@ public:
     gradient_->objectiveUpdate(type);
   }
 
-  Real value( const Vector<Real> &x, Real &tol ) {
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
     const Real zero(0), one(1);
     Real linearTerm = zero;
     // Compute the unpenalized objective value
@@ -237,7 +237,7 @@ public:
     return fval;
   }
 
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
     const Real one(1);
     // Compute gradient of objective function
     g.set(*getObjectiveGradient(x,tol));
@@ -264,7 +264,7 @@ public:
     }
   }
 
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
     const Real one(1), two(2);
     // Evaluate objective hessian
     obj_->hessVec(hv,v,x,tol);

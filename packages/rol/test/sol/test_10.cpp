@@ -33,7 +33,7 @@ private:
 public:
   ObjectiveEx10(const Real alpha = 1e-4) : alpha_(alpha) {}
 
-  Real value( const std::vector<Real> &x, Real &tol ) {
+  Real value( const std::vector<Real> &x, ROL::Tolerance<Real> &tol ) {
     unsigned size = x.size();
     Real val(0);
     for ( unsigned i = 0; i < size; i++ ) {
@@ -42,21 +42,21 @@ public:
     return val;
   }
 
-  void gradient( std::vector<Real> &g, const std::vector<Real> &x, Real &tol ) {
+  void gradient( std::vector<Real> &g, const std::vector<Real> &x, ROL::Tolerance<Real> &tol ) {
     unsigned size = g.size();
     for ( unsigned i = 0; i < size; i++ ) {
       g[i] = alpha_*x[i] + static_cast<Real>(1);
     }
   }
 
-  void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+  void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, ROL::Tolerance<Real> &tol ) {
     unsigned size = hv.size();
     for ( unsigned i = 0; i < size; i++ ) {
       hv[i] = alpha_*v[i];
     }
   }
 
-  void precond( std::vector<Real> &pv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+  void precond( std::vector<Real> &pv, const std::vector<Real> &v, const std::vector<Real> &x, ROL::Tolerance<Real> &tol ) {
     unsigned size = pv.size();
     for ( unsigned i = 0; i < size; i++ ) {
       pv[i] = v[i]/alpha_;
@@ -74,7 +74,7 @@ public:
 
   void value( std::vector<Real> &c,
               const std::vector<Real> &x,
-              Real &tol ) {
+              ROL::Tolerance<Real> &tol ) {
     unsigned size = c.size();
     const std::vector<Real> param = ROL::Constraint<Real>::getParameter();
     for ( unsigned i = 0; i < size; ++i ) {
@@ -85,7 +85,7 @@ public:
   void applyJacobian( std::vector<Real> &jv,
                       const std::vector<Real> &v,
                       const std::vector<Real> &x,
-                      Real &tol ) {
+                      ROL::Tolerance<Real> &tol ) {
     unsigned size = jv.size();
     const std::vector<Real> param = ROL::Constraint<Real>::getParameter();
     for ( unsigned i = 0; i < size; ++i ) {
@@ -96,7 +96,7 @@ public:
    void applyAdjointJacobian( std::vector<Real> &ajv,
                               const std::vector<Real> &v,
                               const std::vector<Real> &x,
-                              Real &tol ) {
+                              ROL::Tolerance<Real> &tol ) {
     unsigned size = ajv.size();
     const std::vector<Real> param = ROL::Constraint<Real>::getParameter();
     for ( unsigned i = 0; i < size; ++i ) {
@@ -108,7 +108,7 @@ public:
                             const std::vector<Real> &u,
                             const std::vector<Real> &v,
                             const std::vector<Real> &x,
-                            Real &tol ) {
+                            ROL::Tolerance<Real> &tol ) {
     unsigned size = ahuv.size();
     for ( unsigned i = 0; i < size; ++i ) {
       ahuv[i] = static_cast<Real>(0);
@@ -119,7 +119,7 @@ public:
                             const std::vector<Real> &v,
                             const std::vector<Real> &x,
                             const std::vector<Real> &g,
-                            Real &tol ) {
+                            ROL::Tolerance<Real> &tol ) {
     unsigned size = pv.size();
     const std::vector<Real> param = ROL::Constraint<Real>::getParameter();
     for ( unsigned i = 0; i < size; ++i ) {
@@ -145,7 +145,7 @@ Real setUpAndSolve(ROL::ParameterList                    &list,
   ROL::OptimizationSolver<Real> optSolver(optProblem, list);
   optSolver.solve(outStream);
   ROL::Ptr<ROL::Objective<Real> > robj = optProblem.getObjective();
-  Real tol(1.e-8);
+  ROL::Tolerance<Real> tol(1.e-8);
   return robj->value(*(optProblem.getSolutionVector()),tol);
 }
 
@@ -181,7 +181,7 @@ int main(int argc, char* argv[]) {
     /**********************************************************************************************/
     // Get ROL parameterlist
     std::string filename = "input_10.xml";
-    
+
     auto parlist = ROL::getParametersFromXmlFile( filename );
     ROL::ParameterList list = *parlist;
     /**********************************************************************************************/

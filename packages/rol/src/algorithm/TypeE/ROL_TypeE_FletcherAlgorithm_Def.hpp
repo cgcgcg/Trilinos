@@ -51,7 +51,7 @@ void FletcherAlgorithm<Real>::initialize( Vector<Real>             &x,
                                           FletcherObjectiveE<Real> &fobj,
                                           Constraint<Real>         &con,
                                           std::ostream             &outStream ) {
-  Real tol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
   TypeE::Algorithm<Real>::initialize(x,g,l,c);
 
   // Initialize the algorithm state
@@ -89,7 +89,7 @@ void FletcherAlgorithm<Real>::run( Vector<Real>       &x,
                                    std::ostream       &outStream ) {
   // Initialize Fletcher penalty data
   const Real one(1);
-  Real tol(std::sqrt(ROL_EPSILON<Real>()));
+  Tolerance<Real> tol(std::sqrt(ROL_EPSILON<Real>()));
   Ptr<Vector<Real>> dwa_ = g.clone();
   FletcherObjectiveE<Real> fobj(makePtrFromRef(obj),makePtrFromRef(econ),x,g,eres,emul,list_);
   initialize(x,g,emul,eres,fobj,econ,outStream);

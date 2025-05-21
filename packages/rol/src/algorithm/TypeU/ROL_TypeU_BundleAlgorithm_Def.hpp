@@ -84,7 +84,7 @@ void BundleAlgorithm<Real>::initialize( const Vector<Real> &x,
     lineSearch_->initialize(x,g);
   }
   // Update objective function, get value and gradient
-  Real tol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
   obj.update(x,UpdateType::Initial,state_->iter);
   state_->value = obj.value(x,tol);
   state_->nfval++;
@@ -101,7 +101,7 @@ void BundleAlgorithm<Real>::run( Vector<Real>       &x,
                                  std::ostream       &outStream ) {
   const Real zero(0), two(2), half(0.5);
   // Initialize trust-region data
-  Real tol(std::sqrt(ROL_EPSILON<Real>()));
+  Tolerance<Real> tol(std::sqrt(ROL_EPSILON<Real>()));
   initialize(x,g,obj,outStream);
   Ptr<Vector<Real>> y = x.clone();
   Ptr<Vector<Real>> aggSubGradNew = g.clone();

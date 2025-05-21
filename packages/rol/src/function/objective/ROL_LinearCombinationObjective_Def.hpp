@@ -41,7 +41,7 @@ void LinearCombinationObjective<Real>::update(const Vector<Real> &x, bool flag, 
 }
 
 template<typename Real>
-Real LinearCombinationObjective<Real>::value( const Vector<Real> &x, Real &tol ) {
+Real LinearCombinationObjective<Real>::value( const Vector<Real> &x, Tolerance<Real> &tol ) {
   Real val(0);
   for (size_t i = 0; i < size_; i++) {
     val += weights_[i]*obj_[i]->value(x,tol);
@@ -50,7 +50,7 @@ Real LinearCombinationObjective<Real>::value( const Vector<Real> &x, Real &tol )
 }
 
 template<typename Real>
-void LinearCombinationObjective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+void LinearCombinationObjective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
   if (!initialized_) {
     xdual_ = g.clone();
     initialized_ = true;
@@ -63,7 +63,7 @@ void LinearCombinationObjective<Real>::gradient( Vector<Real> &g, const Vector<R
 }
 
 template<typename Real>
-void LinearCombinationObjective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+void LinearCombinationObjective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
   if (!initialized_) {
     xdual_ = hv.clone();
     initialized_ = true;

@@ -35,7 +35,7 @@ private:
   ROL::Ptr<Vector<Real> > cvec_;
   ROL::Ptr<Vector<Real> > lvec_;
 
-  // Diagnostic return flags for subalgorithms. 
+  // Diagnostic return flags for subalgorithms.
   int flagCG_;
   int flagAC_;
   int iterCG_;
@@ -109,7 +109,7 @@ private:
 public:
   using Step<Real>::initialize;
   using Step<Real>::compute;
-  using Step<Real>::update;  
+  using Step<Real>::update;
 
   virtual ~CompositeStep() {}
 
@@ -124,7 +124,7 @@ public:
     //maxiterOSS_  = steplist.sublist("Optimality System Solver").get("Iteration Limit", 50);
     tolOSS_      = steplist.sublist("Optimality System Solver").get("Nominal Relative Tolerance", 1e-8);
     tolOSSfixed_ = steplist.sublist("Optimality System Solver").get("Fix Tolerance", true);
- 
+
     maxiterCG_   = steplist.sublist("Tangential Subproblem Solver").get("Iteration Limit", 20);
     tolCG_       = steplist.sublist("Tangential Subproblem Solver").get("Relative Tolerance", 1e-2);
     Delta_       = steplist.get("Initial Radius", 1e2);
@@ -148,7 +148,7 @@ public:
     tnorm_   = 0.0;
 
     infoALL_  = false;
-    if (outLvl > 0) { 
+    if (outLvl > 0) {
       infoALL_ = true;
     }
     infoQN_  = false;
@@ -193,7 +193,7 @@ public:
     algo_state.ncval = 0;
     algo_state.ngrad = 0;
 
-    Real zerotol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> zerotol = std::sqrt(ROL_EPSILON<Real>());
 
     // Update objective and constraint.
     obj.update(x,true,algo_state.iter);
@@ -219,7 +219,7 @@ public:
                 Objective<Real> &obj, Constraint<Real> &con,
                 AlgorithmState<Real> &algo_state ) {
     //ROL::Ptr<StepState<Real> > step_state = Step<Real>::getState();
-    Real zerotol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> zerotol = std::sqrt(ROL_EPSILON<Real>());
     Real f = 0.0;
     ROL::Ptr<Vector<Real> > n   = xvec_->clone();
     ROL::Ptr<Vector<Real> > c   = cvec_->clone();
@@ -276,7 +276,7 @@ public:
     Real zp9(0.9);
     Real zp8(0.8);
     Real em12(1e-12);
-    Real zerotol = std::sqrt(ROL_EPSILON<Real>());//zero;
+    Tolerance<Real> zerotol = std::sqrt(ROL_EPSILON<Real>());//zero;
     Real ratio(zero);
 
     ROL::Ptr<Vector<Real> > g   = gvec_->clone();
@@ -434,7 +434,7 @@ public:
   void computeLagrangeMultiplier(Vector<Real> &l, const Vector<Real> &x, const Vector<Real> &gf, Constraint<Real> &con) {
 
     Real one(1);
-    Real zerotol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> zerotol = std::sqrt(ROL_EPSILON<Real>());
     std::vector<Real> augiters;
 
     if (infoLM_) {
@@ -461,7 +461,7 @@ public:
 
     /* Compute linear solver tolerance. */
     Real b1norm  = b1->norm();
-    Real tol = setTolOSS(lmhtol_*b1norm);
+    Tolerance<Real> tol = setTolOSS(lmhtol_*b1norm);
 
     /* Solve augmented system. */
     augiters = con.solveAugmentedSystem(*v1, *v2, *b1, *b2, x, tol);
@@ -508,7 +508,7 @@ public:
 
     Real zero(0);
     Real one(1);
-    Real zerotol = std::sqrt(ROL_EPSILON<Real>()); //zero;
+    Tolerance<Real> zerotol = std::sqrt(ROL_EPSILON<Real>()); //zero;
     std::vector<Real> augiters;
 
     /* Compute Cauchy step nCP. */
@@ -546,7 +546,7 @@ public:
     // Compute tolerance for linear solver.
     con.applyJacobian(*ctemp, *nCP, x, zerotol);
     ctemp->plus(c);
-    Real tol = setTolOSS(qntol_*ctemp->norm());
+    Tolerance<Real> tol = setTolOSS(qntol_*ctemp->norm());
     // Form right-hand side.
     ctemp->scale(-one);
     nCPdual->set(nCP->dual());
@@ -622,7 +622,7 @@ public:
                              // the null space projector is good
     Real zero(0);
     Real one(1);
-    Real zerotol =  std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> zerotol =  std::sqrt(ROL_EPSILON<Real>());
     std::vector<Real> augiters;
     iterCG_ = 1;
     flagCG_ = 0;
@@ -691,7 +691,7 @@ public:
       // Compute (inexact) projection W*r.
       if (iterCG_ == 1) {
         // Solve augmented system.
-        Real tol = setTolOSS(pgtol_);
+        Tolerance<Real> tol = setTolOSS(pgtol_);
         augiters = con.solveAugmentedSystem(*Wr, *ltemp, *r, *czero, x, tol);
         totalCallLS_++;
         totalIterLS_ = totalIterLS_ + augiters.size();
@@ -725,7 +725,7 @@ public:
       }
       else {
         // Solve augmented system.
-        Real tol = setTolOSS(projtol_);
+        Tolerance<Real> tol = setTolOSS(projtol_);
         augiters = con.solveAugmentedSystem(*Wr, *ltemp, *r, *czero, x, tol);
         totalCallLS_++;
         totalIterLS_ = totalIterLS_ + augiters.size();
@@ -963,7 +963,7 @@ public:
     Real one       =  1.0;
     Real two       =  2.0;
     Real half      =  one/two;
-    Real zerotol   =  std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> zerotol   =  std::sqrt(ROL_EPSILON<Real>());
     std::vector<Real> augiters;
 
     Real pred          = zero;
@@ -1042,7 +1042,7 @@ public:
           }
         }
         // Solve augmented system.
-        Real tol = setTolOSS(tangtol);
+        Tolerance<Real> tol = setTolOSS(tangtol);
         // change augiters = con.solveAugmentedSystem(t, *ltemp, *t_orig, *czero, x, tol);
         t_dual->set(t_orig->dual());
         augiters = con.solveAugmentedSystem(t, *ltemp, *t_dual, *czero, x, tol);

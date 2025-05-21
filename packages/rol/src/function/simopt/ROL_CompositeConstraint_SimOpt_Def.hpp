@@ -88,7 +88,7 @@ template<typename Real>
 void CompositeConstraint_SimOpt<Real>::solve_update(const Vector<Real> &u,
                                                     const Vector<Real> &z,
                                                     UpdateType type, int iter) {
-  Real ctol(std::sqrt(ROL_EPSILON<Real>()));
+  Tolerance<Real> ctol(std::sqrt(ROL_EPSILON<Real>()));
   solveConRed(*Sz_, z, ctol);
   conVal_->solve_update(u,*Sz_,type,iter);
 }
@@ -97,7 +97,7 @@ template<typename Real>
 void CompositeConstraint_SimOpt<Real>::value(Vector<Real> &c,
                                              const Vector<Real> &u,
                                              const Vector<Real> &z,
-                                             Real &tol) {
+                                             Tolerance<Real> &tol) {
   solveConRed(*Sz_, z, tol);
   conVal_->value(c, u, *Sz_, tol);
 }
@@ -106,7 +106,7 @@ template<typename Real>
 void CompositeConstraint_SimOpt<Real>::solve(Vector<Real> &c,
                                              Vector<Real> &u,
                                              const Vector<Real> &z,
-                                             Real &tol) {
+                                             Tolerance<Real> &tol) {
   solveConRed(*Sz_, z, tol);
   conVal_->solve(c, u, *Sz_, tol);
 }
@@ -116,7 +116,7 @@ void CompositeConstraint_SimOpt<Real>::applyJacobian_1(Vector<Real> &jv,
                                                        const Vector<Real> &v,
                                                        const Vector<Real> &u,
                                                        const Vector<Real> &z,
-                                                       Real &tol) {
+                                                       Tolerance<Real> &tol) {
   solveConRed(*Sz_, z, tol);
   conVal_->applyJacobian_1(jv, v, u, *Sz_, tol);
 }
@@ -126,7 +126,7 @@ void CompositeConstraint_SimOpt<Real>::applyJacobian_2(Vector<Real> &jv,
                                                        const Vector<Real> &v,
                                                        const Vector<Real> &u,
                                                        const Vector<Real> &z,
-                                                       Real &tol) { 
+                                                       Tolerance<Real> &tol) {
   solveConRed(*Sz_, z, tol);
   applySens(*primZ_, v, *Sz_, z, tol);
   conVal_->applyJacobian_2(jv, *primZ_, u, *Sz_, tol);
@@ -137,7 +137,7 @@ void CompositeConstraint_SimOpt<Real>::applyInverseJacobian_1(Vector<Real> &ijv,
                                                               const Vector<Real> &v,
                                                               const Vector<Real> &u,
                                                               const Vector<Real> &z,
-                                                              Real &tol) {
+                                                              Tolerance<Real> &tol) {
   solveConRed(*Sz_, z, tol);
   conVal_->applyInverseJacobian_1(ijv, v, u, *Sz_, tol);
 }
@@ -147,7 +147,7 @@ void CompositeConstraint_SimOpt<Real>::applyAdjointJacobian_1(Vector<Real> &ajv,
                                                               const Vector<Real> &v,
                                                               const Vector<Real> &u,
                                                               const Vector<Real> &z,
-                                                              Real &tol) {
+                                                              Tolerance<Real> &tol) {
   solveConRed(*Sz_, z, tol);
   conVal_->applyAdjointJacobian_1(ajv, v, u, *Sz_, tol);
 }
@@ -157,7 +157,7 @@ void CompositeConstraint_SimOpt<Real>::applyAdjointJacobian_2(Vector<Real> &ajv,
                                                               const Vector<Real> &v,
                                                               const Vector<Real> &u,
                                                               const Vector<Real> &z,
-                                                              Real &tol) {
+                                                              Tolerance<Real> &tol) {
   solveConRed(*Sz_, z, tol);
   conVal_->applyAdjointJacobian_2(*dualZ_, v, u, *Sz_, tol);
   applyAdjointSens(ajv, *dualZ_, *Sz_, z, tol);
@@ -168,7 +168,7 @@ void CompositeConstraint_SimOpt<Real>::applyInverseAdjointJacobian_1(Vector<Real
                                                                      const Vector<Real> &v,
                                                                      const Vector<Real> &u,
                                                                      const Vector<Real> &z,
-                                                                     Real &tol) {
+                                                                     Tolerance<Real> &tol) {
   solveConRed(*Sz_, z, tol);
   conVal_->applyInverseAdjointJacobian_1(ijv, v, u, *Sz_, tol);
 }
@@ -179,7 +179,7 @@ void CompositeConstraint_SimOpt<Real>::applyAdjointHessian_11(Vector<Real> &ahwv
                                                               const Vector<Real> &v,
                                                               const Vector<Real> &u,
                                                               const Vector<Real> &z,
-                                                              Real &tol) {
+                                                              Tolerance<Real> &tol) {
   solveConRed(*Sz_, z, tol);
   conVal_->applyAdjointHessian_11(ahwv, w, v, u, *Sz_, tol);
 }
@@ -190,7 +190,7 @@ void CompositeConstraint_SimOpt<Real>::applyAdjointHessian_12(Vector<Real> &ahwv
                                                               const Vector<Real> &v,
                                                               const Vector<Real> &u,
                                                               const Vector<Real> &z,
-                                                              Real &tol) {
+                                                              Tolerance<Real> &tol) {
   solveConRed(*Sz_, z, tol);
   conVal_->applyAdjointHessian_12(*dualZ_, w, v, u, *Sz_, tol);
   applyAdjointSens(ahwv, *dualZ_, *Sz_, z, tol);
@@ -202,7 +202,7 @@ void CompositeConstraint_SimOpt<Real>::applyAdjointHessian_21(Vector<Real> &ahwv
                                                               const Vector<Real> &v,
                                                               const Vector<Real> &u,
                                                               const Vector<Real> &z,
-                                                              Real &tol) {
+                                                              Tolerance<Real> &tol) {
   solveConRed(*Sz_, z, tol);
   applySens(*primZ_, v, *Sz_, z, tol);
   conVal_->applyAdjointHessian_21(ahwv, w, *primZ_, u, *Sz_, tol);
@@ -214,7 +214,7 @@ void CompositeConstraint_SimOpt<Real>::applyAdjointHessian_22(Vector<Real> &ahwv
                                                               const Vector<Real> &v,
                                                               const Vector<Real> &u,
                                                               const Vector<Real> &z,
-                                                              Real &tol) {
+                                                              Tolerance<Real> &tol) {
   ahwv.zero();
   solveConRed(*Sz_, z, tol);
   applySens(*primZ_, v, *Sz_, z, tol);
@@ -228,11 +228,11 @@ void CompositeConstraint_SimOpt<Real>::applyAdjointHessian_22(Vector<Real> &ahwv
 
   conRed_->applyAdjointHessian_11(*dualZ1_, *dualRed_, *primZ_, *Sz_, z, tol);
   conRed_->applyAdjointHessian_21(*dualZ_, *dualRed_, v, *Sz_, z, tol);
-  dualZ1_->plus(*dualZ_); 
+  dualZ1_->plus(*dualZ_);
   dualZ1_->scale(static_cast<Real>(-1));
-  
+
   conVal_->applyAdjointHessian_22(*dualZ_, w, *primZ_, u, *Sz_, tol);
-  dualZ1_->plus(*dualZ_); 
+  dualZ1_->plus(*dualZ_);
 
   applyAdjointSens(*dualZ_, *dualZ1_, *Sz_, z, tol);
   ahwv.plus(*dualZ_);
@@ -250,7 +250,7 @@ void CompositeConstraint_SimOpt<Real>::setParameter(const std::vector<Real> &par
 template<typename Real>
 void CompositeConstraint_SimOpt<Real>::solveConRed(Vector<Real> &Sz,
                                                    const Vector<Real> &z,
-                                                   Real &tol) {
+                                                   Tolerance<Real> &tol) {
   std::vector<Real> param = Constraint_SimOpt<Real>::getParameter();
   // Check if state has been computed.
   bool isComputed = false;
@@ -277,7 +277,7 @@ void CompositeConstraint_SimOpt<Real>::applySens(Vector<Real> &jv,
                                                  const Vector<Real> &v,
                                                  const Vector<Real> &Sz,
                                                  const Vector<Real> &z,
-                                                 Real &tol) { 
+                                                 Tolerance<Real> &tol) {
   // Solve linearization of reducible constraint in direction v
   conRed_->applyJacobian_2(*primRed_, v, Sz, z, tol);
   conRed_->applyInverseJacobian_1(jv, *primRed_, Sz, z, tol);
@@ -289,7 +289,7 @@ void CompositeConstraint_SimOpt<Real>::applyAdjointSens(Vector<Real> &ajv,
                                                         const Vector<Real> &v,
                                                         const Vector<Real> &Sz,
                                                         const Vector<Real> &z,
-                                                        Real &tol) {
+                                                        Tolerance<Real> &tol) {
   // Solve adjoint of linearized reducible constraint
   conRed_->applyInverseAdjointJacobian_1(*dualRed_, v, Sz, z, tol);
   conRed_->applyAdjointJacobian_2(ajv, *dualRed_, Sz, z, tol);

@@ -42,7 +42,7 @@ DouglasRachfordProjection<Real>::DouglasRachfordProjection(const Vector<Real>   
   p_   = xprim.clone();
   z_   = xdual.clone();
   if (dim_ == 1) {
-    Real tol(std::sqrt(ROL_EPSILON<Real>()));
+    Tolerance<Real> tol(std::sqrt(ROL_EPSILON<Real>()));
     xprim_->zero();
     con_->update(*xprim_,UpdateType::Temp);
     con_->value(*res_,*xprim_,tol);
@@ -91,7 +91,7 @@ Real DouglasRachfordProjection<Real>::residual_1d(const Vector<Real> &x) const {
 
 template<typename Real>
 void DouglasRachfordProjection<Real>::residual_nd(Vector<Real> &r, const Vector<Real> &y) const {
-  Real tol(std::sqrt(ROL_EPSILON<Real>()));
+  Tolerance<Real> tol(std::sqrt(ROL_EPSILON<Real>()));
   con_->update(y,UpdateType::Temp);
   con_->value(r,y,tol);
 }
@@ -111,7 +111,7 @@ void DouglasRachfordProjection<Real>::project_con(Vector<Real> &x, const Vector<
     x.axpy(lam,*xprim_);
   }
   else {
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
     residual_nd(*res_,y);
     con_->solveAugmentedSystem(x,*mul_,*z_,*res_,y,tol);
     x.scale(static_cast<Real>(-1));

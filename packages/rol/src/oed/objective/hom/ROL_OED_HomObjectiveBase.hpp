@@ -72,10 +72,10 @@ protected:
   const Ptr<Vector<Real>> getStateSens() const;
   void solve_state_equation(const Key &param,
                             const Vector<Real> &z,
-                                  Real &tol);
+                                  Tolerance<Real> &tol);
   void solve_state_sensitivity(const Vector<Real> &v,
                                const Vector<Real> &z,
-                                     Real &tol);
+                                     Tolerance<Real> &tol);
 
 public:
   ObjectiveBase();

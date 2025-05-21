@@ -42,7 +42,7 @@ public:
   BlockOperator2UnitLower( ROL::Ptr<OP> &C ) : C_(C) {}
   }
 
-  void apply( V &Hv, const V &v, Real &tol ) const {
+  void apply( V &Hv, const V &v, Tolerance<Real> &tol ) const {
     
 
     PV &Hv_pv = dynamic_cast<PV&>(Hv);
@@ -59,7 +59,7 @@ public:
   }
 
 
-  void applyInverse( V &Hv, const V &v Real &tol ) const {
+  void applyInverse( V &Hv, const V &v Tolerance<Real> &tol ) const {
     
 
     PV &Hv_pv = dynamic_cast<PV&>(Hv);

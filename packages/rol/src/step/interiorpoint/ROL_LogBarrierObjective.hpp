@@ -26,7 +26,7 @@ public:
     
 
   /* \brief Objective value J(x) = \f$-\sum_i \log(x_i) \f$ */
-  Real value( const Vector<Real> &x, Real &tol ) {
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
 
     ROL::Ptr<Vector<Real> > logx = x.clone();
     logx->set(x);
@@ -43,7 +43,7 @@ public:
   }  
 
   /* \brief gradient g_i = \f$ 1/x_i \f$ */
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
     
     g.set(x);
      
@@ -53,7 +53,7 @@ public:
     g.scale(-1.0);
   }
 
-  Real dirDeriv( const Vector<Real> &x, const Vector<Real> &d, Real &tol ) {
+  Real dirDeriv( const Vector<Real> &x, const Vector<Real> &d, Tolerance<Real> &tol ) {
  
     ROL::Ptr<Vector<Real> > dbyx = d.clone();
     dbyx->set(x);
@@ -71,7 +71,7 @@ public:
     return -dbyx->reduce(sum);
   }
 
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
     hv.set(v);
     
     struct HessianApply : public Elementwise::BinaryFunction<Real> {

@@ -8,10 +8,10 @@
 // @HEADER
 
 /*! \file  test_03.cpp
-    \brief Test action of a BlockOperator on a PartitionedVector 
-    \details Apply a \f$ 2\times 2\f$ block operator \f$H\$ to a partitioned vector 
+    \brief Test action of a BlockOperator on a PartitionedVector
+    \details Apply a \f$ 2\times 2\f$ block operator \f$H\$ to a partitioned vector
              \f$ x = \begin{pmatrix} x_1 & x_2 \end{pmatrix} \f$ where
-             \f[ H=\begin{pmatrix} A & B \\ 0 & C \f] 
+             \f[ H=\begin{pmatrix} A & B \\ 0 & C \f]
 
 */
 
@@ -37,14 +37,14 @@ void print_vector( const ROL::Vector<Real> &x ) {
 
   const PV eb = dynamic_cast<const PV&>(x);
   size_type n = eb.numVectors();
-    
+
   for(size_type k=0; k<n; ++k) {
     std::cout << "[subvector " << k << "]" << std::endl;
    auto vec = eb.get(k);
    auto vp  = ROL::dynamicPtrCast<const SV>(vec)->getVector();
    for(size_type i=0;i<vp->size();++i) {
       std::cout << (*vp)[i] << std::endl;
-    }  
+    }
   }
 }
 
@@ -73,8 +73,8 @@ int main(int argc, char *argv[]) {
 
   ROL::Ptr<std::ostream> outStream;
   ROL::nullstream bhs; // no output
- 
-  if( iprint>0 ) 
+
+  if( iprint>0 )
     outStream = ROL::makePtrFromRef(std::cout);
   else
     outStream = ROL::makePtrFromRef(bhs);
@@ -86,10 +86,10 @@ int main(int argc, char *argv[]) {
   try {
 
     uint dim   = 3;  // Number of elements in each subvector (could be different)
- 
+
     ROL::Ptr<vector> x1_ptr = ROL::makePtr<vector>(dim,1.0);
     ROL::Ptr<vector> x2_ptr = ROL::makePtr<vector>(dim,2.0);
- 
+
     ROL::Ptr<vector> y1_ptr = ROL::makePtr<vector>(dim,0.0);
     ROL::Ptr<vector> y2_ptr = ROL::makePtr<vector>(dim,0.0);
 
@@ -103,7 +103,7 @@ int main(int argc, char *argv[]) {
     ROL::Ptr<V> y2 = ROL::makePtr<SV>( y2_ptr);
 
     ROL::Ptr<V> z1 = ROL::makePtr<SV>( z1_ptr);
-    ROL::Ptr<V> z2 = ROL::makePtr<SV>( z2_ptr); 
+    ROL::Ptr<V> z2 = ROL::makePtr<SV>( z2_ptr);
 
     ROL::Ptr<V> x = ROL::CreatePartitionedVector( x1, x2 );
     ROL::Ptr<V> y = ROL::CreatePartitionedVector( y1, y2 );
@@ -121,24 +121,24 @@ int main(int argc, char *argv[]) {
     (*d1_ptr)[1] = 5.0;   (*d2_ptr)[1] = 2.0;
     (*d1_ptr)[2] = 4.0;   (*d2_ptr)[2] = 1.0;
 
-    (*z1_ptr)[0] = 6.0;   (*z2_ptr)[0] = 6.0;    
+    (*z1_ptr)[0] = 6.0;   (*z2_ptr)[0] = 6.0;
     (*z1_ptr)[1] = 11.0;  (*z2_ptr)[1] = 4.0;
     (*z1_ptr)[2] = 4.0;   (*z2_ptr)[2] = 2.0;
 
-    (*u_ptr)[1] = 1.0;    
+    (*u_ptr)[1] = 1.0;
 
     ROL::Ptr<V> d1 = ROL::makePtr<SV>(d1_ptr);
     ROL::Ptr<V> d2 = ROL::makePtr<SV>(d2_ptr);
     ROL::Ptr<V> u  = ROL::makePtr<SV>(u_ptr);
     ROL::Ptr<V> v  = ROL::makePtr<SV>(v_ptr);
-    
+
     ROL::Ptr<LinOp> D1 = ROL::makePtr<DiagOp>(*d1);
     ROL::Ptr<LinOp> NO = ROL::makePtr<NullOp>();
     ROL::Ptr<LinOp> UV = ROL::makePtr<DyadOp>(u,v);
     ROL::Ptr<LinOp> D2 = ROL::makePtr<DiagOp>(*d2);
 
-   
-    RealT tol = 0.0;
+
+    ROL::Tolerance<RealT> tol = 0.0;
 
     D1->apply(*x1,*x1,tol);
     D1->applyInverse(*x1,*x1,tol);
@@ -146,7 +146,7 @@ int main(int argc, char *argv[]) {
     ROL::BlockOperator2<RealT> bkop(D1,NO,UV,D2);
 
 
-    bkop.apply(*y,*x,tol);  
+    bkop.apply(*y,*x,tol);
 
     z->axpy(-1.0,*y);
 
@@ -163,7 +163,6 @@ int main(int argc, char *argv[]) {
     std::cout << "End Result: TEST FAILED\n";
   else
     std::cout << "End Result: TEST PASSED\n";
-  
-  return 0; 
-}
 
+  return 0;
+}

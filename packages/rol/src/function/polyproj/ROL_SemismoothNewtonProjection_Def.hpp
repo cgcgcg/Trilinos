@@ -46,7 +46,7 @@ SemismoothNewtonProjection<Real>::SemismoothNewtonProjection(const Vector<Real> 
   xnew_  = xprim.clone();
   lnew_  = mul.clone();
   dlam_  = mul.clone();
-  
+
   ParameterList list;
   list.sublist("General").sublist("Krylov").set("Type",               "Conjugate Gradients");
   list.sublist("General").sublist("Krylov").set("Absolute Tolerance", 1e-6);
@@ -105,9 +105,9 @@ SemismoothNewtonProjection<Real>::SemismoothNewtonProjection(const Vector<Real> 
   lstype_    = ppl.sublist("Semismooth Newton").get("Line Search Type",                   DEFAULT_lstype_);
   verbosity_ = list.sublist("General").get("Output Level",                                DEFAULT_verbosity_);
   useproj_   = ppl.sublist("Semismooth Newton").get("Project onto Separating Hyperplane", DEFAULT_useproj_);
-  
+
   ParameterList klist;
-  
+
   klist.sublist("General").sublist("Krylov") = ppl.sublist("Semismooth Newton").sublist("Krylov");
   klist.sublist("General").set("Inexact Hessian-Times-A-Vector", false);
   krylov_ = KrylovFactory<Real>(klist);
@@ -127,7 +127,7 @@ void SemismoothNewtonProjection<Real>::project(Vector<Real> &x, std::ostream &st
 
 template<typename Real>
 Real SemismoothNewtonProjection<Real>::residual(Vector<Real> &r, const Vector<Real> &y) const {
-  Real tol(std::sqrt(ROL_EPSILON<Real>()));
+  Tolerance<Real> tol(std::sqrt(ROL_EPSILON<Real>()));
   con_->update(y,UpdateType::Temp);
   con_->value(r,y,tol);
   return r.norm();
@@ -150,7 +150,7 @@ template<typename Real>
 void SemismoothNewtonProjection<Real>::update_primal(Vector<Real>       &y,
                                                      const Vector<Real> &x,
                                                      const Vector<Real> &lam) const {
-  Real tol(std::sqrt(ROL_EPSILON<Real>()));
+  Tolerance<Real> tol(std::sqrt(ROL_EPSILON<Real>()));
   y.set(x);
   con_->update(x,UpdateType::Temp);
   con_->applyAdjointJacobian(*xdual_,lam,x,tol);

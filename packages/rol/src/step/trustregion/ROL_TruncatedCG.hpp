@@ -65,7 +65,7 @@ public:
             int                    &iter,
             const Real              del,
             TrustRegionModel<Real> &model ) {
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
     const Real zero(0), one(1), two(2), half(0.5);
     // Initialize step
     s.zero(); s_->zero();
@@ -149,7 +149,7 @@ public:
 #if 0
   void truncatedCG_proj( Vector<Real> &s, Real &snorm, Real &del, int &iflag, int &iter, const Vector<Real> &x,
                          const Vector<Real> &grad, const Real &gnorm, ProjectedObjective<Real> &pObj ) {
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
 
     const Real gtol = std::min(tol1_,tol2_*gnorm);
 

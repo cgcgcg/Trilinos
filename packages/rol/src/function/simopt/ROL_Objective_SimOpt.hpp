@@ -25,9 +25,9 @@ template <class Real>
 class Objective_SimOpt : public Objective<Real> {
 public:
 
-  /** \brief Update objective function.  
-                u is an iterate, 
-                z is an iterate, 
+  /** \brief Update objective function.
+                u is an iterate,
+                z is an iterate,
                 flag = true if the iterate has changed,
                 iter is the outer algorithm iterations count.
   */
@@ -50,9 +50,9 @@ public:
 
   /** \brief Compute value.
   */
-  virtual Real value( const Vector<Real> &u, const Vector<Real> &z, Real &tol ) = 0;
+  virtual Real value( const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) = 0;
 
-  Real value( const Vector<Real> &x, Real &tol ) {
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
     const ROL::Vector_SimOpt<Real> &xs = dynamic_cast<const ROL::Vector_SimOpt<Real>&>(
       dynamic_cast<const ROL::Vector<Real>&>(x));
     return this->value(*(xs.get_1()),*(xs.get_2()),tol);
@@ -61,8 +61,8 @@ public:
 
   /** \brief Compute gradient with respect to first component.
   */
-  virtual void gradient_1( Vector<Real> &g, const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
-    Real ftol  = std::sqrt(ROL_EPSILON<Real>());
+  virtual void gradient_1( Vector<Real> &g, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
+    ROL::Tolerance<Real> ftol  = std::sqrt(ROL_EPSILON<Real>());
     Real h     = 0.0;
     this->update(u,z,UpdateType::Temp);
     Real v     = this->value(u,z,ftol);
@@ -70,7 +70,7 @@ public:
     ROL::Ptr<Vector<Real> > unew = u.clone();
     g.zero();
     for (int i = 0; i < g.dimension(); i++) {
-      h = u.dot(*u.basis(i))*tol;
+      h = u.dot(*u.basis(i))*tol.get();
       unew->set(u);
       unew->axpy(h,*(u.basis(i)));
       this->update(*unew,z,UpdateType::Temp);
@@ -81,8 +81,8 @@ public:
   }
   /** \brief Compute gradient with respect to second component.
   */
-  virtual void gradient_2( Vector<Real> &g, const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
-    Real ftol  = std::sqrt(ROL_EPSILON<Real>());
+  virtual void gradient_2( Vector<Real> &g, const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
+    ROL::Tolerance<Real> ftol  = std::sqrt(ROL_EPSILON<Real>());
     Real h     = 0.0;
     this->update(u,z,UpdateType::Temp);
     Real v     = this->value(u,z,ftol);
@@ -90,7 +90,7 @@ public:
     ROL::Ptr<Vector<Real> > znew = z.clone();
     g.zero();
     for (int i = 0; i < g.dimension(); i++) {
-      h = z.dot(*z.basis(i))*tol;
+      h = z.dot(*z.basis(i))*tol.get();
       znew->set(z);
       znew->axpy(h,*(z.basis(i)));
       this->update(u,*znew,UpdateType::Temp);
@@ -100,7 +100,7 @@ public:
     this->update(u,z,UpdateType::Temp);
   }
 
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
     ROL::Vector_SimOpt<Real> &gs = dynamic_cast<ROL::Vector_SimOpt<Real>&>(
       dynamic_cast<ROL::Vector<Real>&>(g));
     const ROL::Vector_SimOpt<Real> &xs = dynamic_cast<const ROL::Vector_SimOpt<Real>&>(
@@ -116,13 +116,13 @@ public:
 
   /** \brief Apply Hessian approximation to vector.
   */
-  virtual void hessVec_11( Vector<Real> &hv, const Vector<Real> &v, 
-                     const Vector<Real> &u,  const Vector<Real> &z, Real &tol ) {
-    Real gtol = std::sqrt(ROL_EPSILON<Real>());
+  virtual void hessVec_11( Vector<Real> &hv, const Vector<Real> &v,
+                     const Vector<Real> &u,  const Vector<Real> &z, Tolerance<Real> &tol ) {
+    Tolerance<Real> gtol = std::sqrt(ROL_EPSILON<Real>());
     // Compute step length
-    Real h = tol;
+    Real h = tol.get();
     if (v.norm() > std::sqrt(ROL_EPSILON<Real>())) {
-      h = std::max(1.0,u.norm()/v.norm())*tol;
+      h = std::max(1.0,u.norm()/v.norm())*tol.get();
     }
     // Evaluate gradient of first component at (u+hv,z)
     ROL::Ptr<Vector<Real> > unew = u.clone();
@@ -140,13 +140,13 @@ public:
     hv.scale(1.0/h);
   }
 
-  virtual void hessVec_12( Vector<Real> &hv, const Vector<Real> &v, 
-                           const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
-    Real gtol = std::sqrt(ROL_EPSILON<Real>());
+  virtual void hessVec_12( Vector<Real> &hv, const Vector<Real> &v,
+                           const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
+    Tolerance<Real> gtol = std::sqrt(ROL_EPSILON<Real>());
     // Compute step length
-    Real h = tol;
+    Real h = tol.get();
     if (v.norm() > std::sqrt(ROL_EPSILON<Real>())) {
-      h = std::max(1.0,u.norm()/v.norm())*tol;
+      h = std::max(1.0,u.norm()/v.norm())*tol.get();
     }
     // Evaluate gradient of first component at (u,z+hv)
     ROL::Ptr<Vector<Real> > znew = z.clone();
@@ -164,13 +164,13 @@ public:
     hv.scale(1.0/h);
   }
 
-  virtual void hessVec_21( Vector<Real> &hv, const Vector<Real> &v, 
-                           const Vector<Real> &u, const Vector<Real> &z, Real &tol ) {
-    Real gtol = std::sqrt(ROL_EPSILON<Real>());
+  virtual void hessVec_21( Vector<Real> &hv, const Vector<Real> &v,
+                           const Vector<Real> &u, const Vector<Real> &z, Tolerance<Real> &tol ) {
+    Tolerance<Real> gtol = std::sqrt(ROL_EPSILON<Real>());
     // Compute step length
-    Real h = tol;
+    Real h = tol.get();
     if (v.norm() > std::sqrt(ROL_EPSILON<Real>())) {
-      h = std::max(1.0,u.norm()/v.norm())*tol;
+      h = std::max(1.0,u.norm()/v.norm())*tol.get();
     }
     // Evaluate gradient of first component at (u+hv,z)
     ROL::Ptr<Vector<Real> > unew = u.clone();
@@ -188,13 +188,13 @@ public:
     hv.scale(1.0/h);
   }
 
-  virtual void hessVec_22( Vector<Real> &hv, const Vector<Real> &v, 
-                     const Vector<Real> &u,  const Vector<Real> &z, Real &tol ) {
-    Real gtol = std::sqrt(ROL_EPSILON<Real>());
+  virtual void hessVec_22( Vector<Real> &hv, const Vector<Real> &v,
+                     const Vector<Real> &u,  const Vector<Real> &z, Tolerance<Real> &tol ) {
+    Tolerance<Real> gtol = std::sqrt(ROL_EPSILON<Real>());
     // Compute step length
-    Real h = tol;
+    Real h = tol.get();
     if (v.norm() > std::sqrt(ROL_EPSILON<Real>())) {
-      h = std::max(1.0,u.norm()/v.norm())*tol;
+      h = std::max(1.0,u.norm()/v.norm())*tol.get();
     }
     // Evaluate gradient of first component at (u,z+hv)
     ROL::Ptr<Vector<Real> > znew = z.clone();
@@ -212,7 +212,7 @@ public:
     hv.scale(1.0/h);
   }
 
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
     ROL::Vector_SimOpt<Real> &hvs = dynamic_cast<ROL::Vector_SimOpt<Real>&>(
       dynamic_cast<ROL::Vector<Real>&>(hv));
     const ROL::Vector_SimOpt<Real> &vs = dynamic_cast<const ROL::Vector_SimOpt<Real>&>(
@@ -255,7 +255,7 @@ public:
     for(int i=0;i<numSteps;++i) {
       steps[i] = pow(10,-i);
     }
-  
+
     return checkGradient_1(u,z,g,d,steps,printToStream,outStream,order);
   } // checkGradient_1
 
@@ -267,62 +267,62 @@ public:
                                                    const bool printToStream,
                                                    std::ostream & outStream,
                                                    const int order ) {
-    ROL_TEST_FOR_EXCEPTION( order<1 || order>4, std::invalid_argument, 
+    ROL_TEST_FOR_EXCEPTION( order<1 || order>4, std::invalid_argument,
                                 "Error: finite difference order must be 1,2,3, or 4" );
-  
+
     using Finite_Difference_Arrays::shifts;
     using Finite_Difference_Arrays::weights;
-  
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
-  
+
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
+
     int numSteps = steps.size();
     int numVals = 4;
     std::vector<Real> tmp(numVals);
     std::vector<std::vector<Real> > gCheck(numSteps, tmp);
-  
+
     // Save the format state of the original outStream.
     ROL::nullstream oldFormatState;
     oldFormatState.copyfmt(outStream);
-  
+
     // Evaluate objective value at x.
     this->update(u,z,UpdateType::Temp);
     Real val = this->value(u,z,tol);
-  
+
     // Compute gradient at x.
     ROL::Ptr<Vector<Real> > gtmp = g.clone();
     this->gradient_1(*gtmp, u, z, tol);
     //Real dtg = d.dot(gtmp->dual());
     Real dtg = d.apply(*gtmp);
-  
+
     // Temporary vectors.
     ROL::Ptr<Vector<Real> > unew = u.clone();
-  
+
     for (int i=0; i<numSteps; i++) {
-  
+
       Real eta = steps[i];
-  
+
       unew->set(u);
-  
+
       // Compute gradient, finite-difference gradient, and absolute error.
       gCheck[i][0] = eta;
       gCheck[i][1] = dtg;
-  
+
       gCheck[i][2] = weights[order-1][0] * val;
-  
+
       for(int j=0; j<order; ++j) {
         // Evaluate at x <- x+eta*c_i*d.
         unew->axpy(eta*shifts[order-1][j], d);
-  
-        // Only evaluate at shifts where the weight is nonzero  
+
+        // Only evaluate at shifts where the weight is nonzero
         if( weights[order-1][j+1] != 0 ) {
           this->update(*unew,z,UpdateType::Temp);
           gCheck[i][2] += weights[order-1][j+1] * this->value(*unew,z,tol);
         }
       }
       gCheck[i][2] /= eta;
-  
+
       gCheck[i][3] = std::abs(gCheck[i][2] - gCheck[i][1]);
-  
+
       if (printToStream) {
         if (i==0) {
           outStream << std::right
@@ -344,12 +344,12 @@ public:
                   << std::setw(20) << gCheck[i][3]
                   << "\n";
       }
-  
+
     }
-  
+
     // Reset format state of outStream.
     outStream.copyfmt(oldFormatState);
-  
+
     return gCheck;
   } // checkGradient_1
 
@@ -376,7 +376,7 @@ public:
     for(int i=0;i<numSteps;++i) {
       steps[i] = pow(10,-i);
     }
-  
+
     return checkGradient_2(u,z,g,d,steps,printToStream,outStream,order);
   } // checkGradient_2
 
@@ -388,62 +388,62 @@ public:
                                                    const bool printToStream,
                                                    std::ostream & outStream,
                                                    const int order ) {
-    ROL_TEST_FOR_EXCEPTION( order<1 || order>4, std::invalid_argument, 
+    ROL_TEST_FOR_EXCEPTION( order<1 || order>4, std::invalid_argument,
                                 "Error: finite difference order must be 1,2,3, or 4" );
-  
+
     using Finite_Difference_Arrays::shifts;
     using Finite_Difference_Arrays::weights;
-  
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
-  
+
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
+
     int numSteps = steps.size();
     int numVals = 4;
     std::vector<Real> tmp(numVals);
     std::vector<std::vector<Real> > gCheck(numSteps, tmp);
-  
+
     // Save the format state of the original outStream.
     ROL::nullstream oldFormatState;
     oldFormatState.copyfmt(outStream);
-  
+
     // Evaluate objective value at x.
     this->update(u,z,UpdateType::Temp);
     Real val = this->value(u,z,tol);
-  
+
     // Compute gradient at x.
     ROL::Ptr<Vector<Real> > gtmp = g.clone();
     this->gradient_2(*gtmp, u, z, tol);
     //Real dtg = d.dot(gtmp->dual());
     Real dtg = d.apply(*gtmp);
-  
+
     // Temporary vectors.
     ROL::Ptr<Vector<Real> > znew = z.clone();
-  
+
     for (int i=0; i<numSteps; i++) {
-  
+
       Real eta = steps[i];
-  
+
       znew->set(z);
-  
+
       // Compute gradient, finite-difference gradient, and absolute error.
       gCheck[i][0] = eta;
       gCheck[i][1] = dtg;
-  
+
       gCheck[i][2] = weights[order-1][0] * val;
-  
+
       for(int j=0; j<order; ++j) {
         // Evaluate at x <- x+eta*c_i*d.
         znew->axpy(eta*shifts[order-1][j], d);
-  
-        // Only evaluate at shifts where the weight is nonzero  
+
+        // Only evaluate at shifts where the weight is nonzero
         if( weights[order-1][j+1] != 0 ) {
           this->update(u,*znew,UpdateType::Temp);
           gCheck[i][2] += weights[order-1][j+1] * this->value(u,*znew,tol);
         }
       }
       gCheck[i][2] /= eta;
-  
+
       gCheck[i][3] = std::abs(gCheck[i][2] - gCheck[i][1]);
-  
+
       if (printToStream) {
         if (i==0) {
           outStream << std::right
@@ -465,12 +465,12 @@ public:
                   << std::setw(20) << gCheck[i][3]
                   << "\n";
       }
-  
+
     }
-  
+
     // Reset format state of outStream.
     outStream.copyfmt(oldFormatState);
-  
+
     return gCheck;
   } // checkGradient_2
 
@@ -511,7 +511,7 @@ public:
     for(int i=0;i<numSteps;++i) {
       steps[i] = pow(10,-i);
     }
-  
+
     return checkHessVec_11(u,z,hv,v,steps,printToStream,outStream,order);
   } // checkHessVec_11
 
@@ -524,73 +524,73 @@ public:
                                                    const bool printToStream,
                                                    std::ostream & outStream,
                                                    const int order ) {
-  
+
     ROL_TEST_FOR_EXCEPTION( order<1 || order>4, std::invalid_argument,
                                 "Error: finite difference order must be 1,2,3, or 4" );
-  
+
     using Finite_Difference_Arrays::shifts;
     using Finite_Difference_Arrays::weights;
-  
-  
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
-  
+
+
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
+
     int numSteps = steps.size();
     int numVals = 4;
     std::vector<Real> tmp(numVals);
     std::vector<std::vector<Real> > hvCheck(numSteps, tmp);
-  
+
     // Save the format state of the original outStream.
     ROL::nullstream oldFormatState;
     oldFormatState.copyfmt(outStream);
-  
+
     // Compute gradient at x.
     ROL::Ptr<Vector<Real> > g = hv.clone();
     this->update(u,z,UpdateType::Temp);
     this->gradient_1(*g, u, z, tol);
-  
+
     // Compute (Hessian at x) times (vector v).
     ROL::Ptr<Vector<Real> > Hv = hv.clone();
     this->hessVec_11(*Hv, v, u, z, tol);
     Real normHv = Hv->norm();
-  
+
     // Temporary vectors.
     ROL::Ptr<Vector<Real> > gdif = hv.clone();
     ROL::Ptr<Vector<Real> > gnew = hv.clone();
     ROL::Ptr<Vector<Real> > unew = u.clone();
-  
+
     for (int i=0; i<numSteps; i++) {
-  
+
       Real eta = steps[i];
-  
+
       // Evaluate objective value at x+eta*d.
       unew->set(u);
-  
+
       gdif->set(*g);
       gdif->scale(weights[order-1][0]);
-  
+
       for(int j=0; j<order; ++j) {
-  
+
           // Evaluate at x <- x+eta*c_i*d.
           unew->axpy(eta*shifts[order-1][j], v);
-  
-          // Only evaluate at shifts where the weight is nonzero  
+
+          // Only evaluate at shifts where the weight is nonzero
           if( weights[order-1][j+1] != 0 ) {
               this->update(*unew,z,UpdateType::Temp);
               this->gradient_1(*gnew, *unew, z, tol);
               gdif->axpy(weights[order-1][j+1],*gnew);
           }
-  
+
       }
-  
+
       gdif->scale(1.0/eta);
-  
+
       // Compute norms of hessvec, finite-difference hessvec, and error.
       hvCheck[i][0] = eta;
       hvCheck[i][1] = normHv;
       hvCheck[i][2] = gdif->norm();
       gdif->axpy(-1.0, *Hv);
       hvCheck[i][3] = gdif->norm();
-  
+
       if (printToStream) {
         if (i==0) {
         outStream << std::right
@@ -612,12 +612,12 @@ public:
                   << std::setw(20) << hvCheck[i][3]
                   << "\n";
       }
-  
+
     }
-  
+
     // Reset format state of outStream.
     outStream.copyfmt(oldFormatState);
-  
+
     return hvCheck;
   } // checkHessVec_11
 
@@ -655,7 +655,7 @@ public:
     for(int i=0;i<numSteps;++i) {
       steps[i] = pow(10,-i);
     }
-  
+
     return checkHessVec_12(u,z,hv,v,steps,printToStream,outStream,order);
   } // checkHessVec_12
 
@@ -668,73 +668,73 @@ public:
                                                    const bool printToStream,
                                                    std::ostream & outStream,
                                                    const int order ) {
-  
+
     ROL_TEST_FOR_EXCEPTION( order<1 || order>4, std::invalid_argument,
                                 "Error: finite difference order must be 1,2,3, or 4" );
-  
+
     using Finite_Difference_Arrays::shifts;
     using Finite_Difference_Arrays::weights;
-  
-  
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
-  
+
+
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
+
     int numSteps = steps.size();
     int numVals = 4;
     std::vector<Real> tmp(numVals);
     std::vector<std::vector<Real> > hvCheck(numSteps, tmp);
-  
+
     // Save the format state of the original outStream.
     ROL::nullstream oldFormatState;
     oldFormatState.copyfmt(outStream);
-  
+
     // Compute gradient at x.
     ROL::Ptr<Vector<Real> > g = hv.clone();
     this->update(u,z,UpdateType::Temp);
     this->gradient_1(*g, u, z, tol);
-  
+
     // Compute (Hessian at x) times (vector v).
     ROL::Ptr<Vector<Real> > Hv = hv.clone();
     this->hessVec_12(*Hv, v, u, z, tol);
     Real normHv = Hv->norm();
-  
+
     // Temporary vectors.
     ROL::Ptr<Vector<Real> > gdif = hv.clone();
     ROL::Ptr<Vector<Real> > gnew = hv.clone();
     ROL::Ptr<Vector<Real> > znew = z.clone();
-  
+
     for (int i=0; i<numSteps; i++) {
-  
+
       Real eta = steps[i];
-  
+
       // Evaluate objective value at x+eta*d.
       znew->set(z);
-  
+
       gdif->set(*g);
       gdif->scale(weights[order-1][0]);
-  
+
       for(int j=0; j<order; ++j) {
-  
+
           // Evaluate at x <- x+eta*c_i*d.
           znew->axpy(eta*shifts[order-1][j], v);
-  
-          // Only evaluate at shifts where the weight is nonzero  
+
+          // Only evaluate at shifts where the weight is nonzero
           if( weights[order-1][j+1] != 0 ) {
               this->update(u,*znew,UpdateType::Temp);
               this->gradient_1(*gnew, u, *znew, tol);
               gdif->axpy(weights[order-1][j+1],*gnew);
           }
-  
+
       }
-  
+
       gdif->scale(1.0/eta);
-  
+
       // Compute norms of hessvec, finite-difference hessvec, and error.
       hvCheck[i][0] = eta;
       hvCheck[i][1] = normHv;
       hvCheck[i][2] = gdif->norm();
       gdif->axpy(-1.0, *Hv);
       hvCheck[i][3] = gdif->norm();
-  
+
       if (printToStream) {
         if (i==0) {
         outStream << std::right
@@ -756,12 +756,12 @@ public:
                   << std::setw(20) << hvCheck[i][3]
                   << "\n";
       }
-  
+
     }
-  
+
     // Reset format state of outStream.
     outStream.copyfmt(oldFormatState);
-  
+
     return hvCheck;
   } // checkHessVec_12
 
@@ -802,7 +802,7 @@ public:
     for(int i=0;i<numSteps;++i) {
       steps[i] = pow(10,-i);
     }
-  
+
     return checkHessVec_21(u,z,hv,v,steps,printToStream,outStream,order);
   } // checkHessVec_21
 
@@ -815,73 +815,73 @@ public:
                                                    const bool printToStream,
                                                    std::ostream & outStream,
                                                    const int order ) {
-  
+
     ROL_TEST_FOR_EXCEPTION( order<1 || order>4, std::invalid_argument,
                                 "Error: finite difference order must be 1,2,3, or 4" );
-  
+
     using Finite_Difference_Arrays::shifts;
     using Finite_Difference_Arrays::weights;
-  
-  
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
-  
+
+
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
+
     int numSteps = steps.size();
     int numVals = 4;
     std::vector<Real> tmp(numVals);
     std::vector<std::vector<Real> > hvCheck(numSteps, tmp);
-  
+
     // Save the format state of the original outStream.
     ROL::nullstream oldFormatState;
     oldFormatState.copyfmt(outStream);
-  
+
     // Compute gradient at x.
     ROL::Ptr<Vector<Real> > g = hv.clone();
     this->update(u,z,UpdateType::Temp);
     this->gradient_2(*g, u, z, tol);
-  
+
     // Compute (Hessian at x) times (vector v).
     ROL::Ptr<Vector<Real> > Hv = hv.clone();
     this->hessVec_21(*Hv, v, u, z, tol);
     Real normHv = Hv->norm();
-  
+
     // Temporary vectors.
     ROL::Ptr<Vector<Real> > gdif = hv.clone();
     ROL::Ptr<Vector<Real> > gnew = hv.clone();
     ROL::Ptr<Vector<Real> > unew = u.clone();
-  
+
     for (int i=0; i<numSteps; i++) {
-  
+
       Real eta = steps[i];
-  
+
       // Evaluate objective value at x+eta*d.
       unew->set(u);
-  
+
       gdif->set(*g);
       gdif->scale(weights[order-1][0]);
-  
+
       for(int j=0; j<order; ++j) {
-  
+
           // Evaluate at x <- x+eta*c_i*d.
           unew->axpy(eta*shifts[order-1][j], v);
-  
-          // Only evaluate at shifts where the weight is nonzero  
+
+          // Only evaluate at shifts where the weight is nonzero
           if( weights[order-1][j+1] != 0 ) {
               this->update(*unew,z,UpdateType::Temp);
               this->gradient_2(*gnew, *unew, z, tol);
               gdif->axpy(weights[order-1][j+1],*gnew);
           }
-  
+
       }
-  
+
       gdif->scale(1.0/eta);
-  
+
       // Compute norms of hessvec, finite-difference hessvec, and error.
       hvCheck[i][0] = eta;
       hvCheck[i][1] = normHv;
       hvCheck[i][2] = gdif->norm();
       gdif->axpy(-1.0, *Hv);
       hvCheck[i][3] = gdif->norm();
-  
+
       if (printToStream) {
         if (i==0) {
         outStream << std::right
@@ -903,12 +903,12 @@ public:
                   << std::setw(20) << hvCheck[i][3]
                   << "\n";
       }
-  
+
     }
-  
+
     // Reset format state of outStream.
     outStream.copyfmt(oldFormatState);
-  
+
     return hvCheck;
   } // checkHessVec_21
 
@@ -949,7 +949,7 @@ public:
     for(int i=0;i<numSteps;++i) {
       steps[i] = pow(10,-i);
     }
-  
+
     return checkHessVec_22(u,z,hv,v,steps,printToStream,outStream,order);
   } // checkHessVec_22
 
@@ -962,73 +962,73 @@ public:
                                                    const bool printToStream,
                                                    std::ostream & outStream,
                                                    const int order ) {
-  
+
     ROL_TEST_FOR_EXCEPTION( order<1 || order>4, std::invalid_argument,
                                 "Error: finite difference order must be 1,2,3, or 4" );
-  
+
     using Finite_Difference_Arrays::shifts;
     using Finite_Difference_Arrays::weights;
-  
-  
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
-  
+
+
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
+
     int numSteps = steps.size();
     int numVals = 4;
     std::vector<Real> tmp(numVals);
     std::vector<std::vector<Real> > hvCheck(numSteps, tmp);
-  
+
     // Save the format state of the original outStream.
     ROL::nullstream oldFormatState;
     oldFormatState.copyfmt(outStream);
-  
+
     // Compute gradient at x.
     ROL::Ptr<Vector<Real> > g = hv.clone();
     this->update(u,z,UpdateType::Temp);
     this->gradient_2(*g, u, z, tol);
-  
+
     // Compute (Hessian at x) times (vector v).
     ROL::Ptr<Vector<Real> > Hv = hv.clone();
     this->hessVec_22(*Hv, v, u, z, tol);
     Real normHv = Hv->norm();
-  
+
     // Temporary vectors.
     ROL::Ptr<Vector<Real> > gdif = hv.clone();
     ROL::Ptr<Vector<Real> > gnew = hv.clone();
     ROL::Ptr<Vector<Real> > znew = z.clone();
-  
+
     for (int i=0; i<numSteps; i++) {
-  
+
       Real eta = steps[i];
-  
+
       // Evaluate objective value at x+eta*d.
       znew->set(z);
-  
+
       gdif->set(*g);
       gdif->scale(weights[order-1][0]);
-  
+
       for(int j=0; j<order; ++j) {
-  
+
           // Evaluate at x <- x+eta*c_i*d.
           znew->axpy(eta*shifts[order-1][j], v);
-  
-          // Only evaluate at shifts where the weight is nonzero  
+
+          // Only evaluate at shifts where the weight is nonzero
           if( weights[order-1][j+1] != 0 ) {
               this->update(u,*znew,UpdateType::Temp);
               this->gradient_2(*gnew, u, *znew, tol);
               gdif->axpy(weights[order-1][j+1],*gnew);
           }
-  
+
       }
-  
+
       gdif->scale(1.0/eta);
-  
+
       // Compute norms of hessvec, finite-difference hessvec, and error.
       hvCheck[i][0] = eta;
       hvCheck[i][1] = normHv;
       hvCheck[i][2] = gdif->norm();
       gdif->axpy(-1.0, *Hv);
       hvCheck[i][3] = gdif->norm();
-  
+
       if (printToStream) {
         if (i==0) {
         outStream << std::right
@@ -1050,12 +1050,12 @@ public:
                   << std::setw(20) << hvCheck[i][3]
                   << "\n";
       }
-  
+
     }
-  
+
     // Reset format state of outStream.
     outStream.copyfmt(oldFormatState);
-  
+
     return hvCheck;
   } // checkHessVec_22
 

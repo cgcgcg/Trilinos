@@ -149,7 +149,7 @@ void Reduced_Objective_SimOpt<Real>::update( const Vector<Real> &z, UpdateType t
 }
 
 template<typename Real>
-Real Reduced_Objective_SimOpt<Real>::value( const Vector<Real> &z, Real &tol ) {
+Real Reduced_Objective_SimOpt<Real>::value( const Vector<Real> &z, Tolerance<Real> &tol ) {
   nvalu_++;
   // Solve state equation
   solve_state_equation(z,tol);
@@ -158,7 +158,7 @@ Real Reduced_Objective_SimOpt<Real>::value( const Vector<Real> &z, Real &tol ) {
 }
 
 template<typename Real>
-void Reduced_Objective_SimOpt<Real>::gradient( Vector<Real> &g, const Vector<Real> &z, Real &tol ) {
+void Reduced_Objective_SimOpt<Real>::gradient( Vector<Real> &g, const Vector<Real> &z, Tolerance<Real> &tol ) {
   ngrad_++;
   // Solve state equation
   solve_state_equation(z,tol);
@@ -172,7 +172,7 @@ void Reduced_Objective_SimOpt<Real>::gradient( Vector<Real> &g, const Vector<Rea
 }
 
 template<typename Real>
-void Reduced_Objective_SimOpt<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &z, Real &tol ) {
+void Reduced_Objective_SimOpt<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &z, Tolerance<Real> &tol ) {
   nhess_++;
   if ( useFDhessVec_ ) {
     Objective<Real>::hessVec(hv,v,z,tol);
@@ -200,7 +200,7 @@ void Reduced_Objective_SimOpt<Real>::hessVec( Vector<Real> &hv, const Vector<Rea
 }
 
 template<typename Real>
-void Reduced_Objective_SimOpt<Real>::precond( Vector<Real> &Pv, const Vector<Real> &v, const Vector<Real> &z, Real &tol ) {
+void Reduced_Objective_SimOpt<Real>::precond( Vector<Real> &Pv, const Vector<Real> &v, const Vector<Real> &z, Tolerance<Real> &tol ) {
   nprec_++;
   Pv.set(v.dual());
 }
@@ -265,7 +265,7 @@ void Reduced_Objective_SimOpt<Real>::reset() {
 }
 
 template<typename Real>
-void Reduced_Objective_SimOpt<Real>::solve_state_equation(const Vector<Real> &z, Real &tol) {
+void Reduced_Objective_SimOpt<Real>::solve_state_equation(const Vector<Real> &z, Tolerance<Real> &tol) {
   if (!isUpdated_) {
     // Update equality constraint with new Opt variable.
     if (newUpdate_) con_->update_2(z,updateType_,updateIter_);
@@ -293,7 +293,7 @@ void Reduced_Objective_SimOpt<Real>::solve_state_equation(const Vector<Real> &z,
 }
 
 template<typename Real>
-void Reduced_Objective_SimOpt<Real>::solve_adjoint_equation(const Vector<Real> &z, Real &tol) {
+void Reduced_Objective_SimOpt<Real>::solve_adjoint_equation(const Vector<Real> &z, Tolerance<Real> &tol) {
   // Check if adjoint has been computed.
   bool isComputed = storage_ ? adjointStore_->get(*adjoint_,Objective<Real>::getParameter()) : false;
   // Solve adjoint equation if not done already.
@@ -310,7 +310,7 @@ void Reduced_Objective_SimOpt<Real>::solve_adjoint_equation(const Vector<Real> &
 }
 
 template<typename Real>
-void Reduced_Objective_SimOpt<Real>::solve_state_sensitivity(const Vector<Real> &v, const Vector<Real> &z, Real &tol) {
+void Reduced_Objective_SimOpt<Real>::solve_state_sensitivity(const Vector<Real> &v, const Vector<Real> &z, Tolerance<Real> &tol) {
   // Solve state sensitivity equation
   con_->applyJacobian_2(*dualadjoint_,v,*state_,z,tol);
   dualadjoint_->scale(static_cast<Real>(-1));
@@ -319,7 +319,7 @@ void Reduced_Objective_SimOpt<Real>::solve_state_sensitivity(const Vector<Real> 
 }
 
 template<typename Real>
-void Reduced_Objective_SimOpt<Real>::solve_adjoint_sensitivity(const Vector<Real> &v, const Vector<Real> &z, Real &tol) {
+void Reduced_Objective_SimOpt<Real>::solve_adjoint_sensitivity(const Vector<Real> &v, const Vector<Real> &z, Tolerance<Real> &tol) {
   // Evaluate full hessVec in the direction (s,v)
   obj_->hessVec_11(*dualstate_,*state_sens_,*state_,z,tol);
   obj_->hessVec_12(*dualstate1_,v,*state_,z,tol);

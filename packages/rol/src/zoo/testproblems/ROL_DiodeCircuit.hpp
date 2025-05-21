@@ -184,7 +184,7 @@ public:
     
     ---
    */
-  Real value(const Vector<Real> &S, Real &tol){
+  Real value(const Vector<Real> &S, Tolerance<Real> &tol){
       
     ROL::Ptr<const vector> Sp = getVector(S);
     uint n = Imeas_->size();
@@ -202,7 +202,7 @@ public:
   }
     
   //! Compute the gradient of the reduced objective function either using adjoint or using sensitivities
-  void gradient(Vector<Real> &g, const Vector<Real> &S, Real &tol){
+  void gradient(Vector<Real> &g, const Vector<Real> &S, Tolerance<Real> &tol){
 
       
     ROL::Ptr<vector> gp = getVector(g);
@@ -266,7 +266,7 @@ public:
 
     ---
    */
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &S, Real &tol ){
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &S, Tolerance<Real> &tol ){
 
           
 
@@ -386,7 +386,7 @@ public:
     Real Is = 0.0;
     Real Rs = 0.0;
     Real val = 0.0;
-    Real tol = 1.e-16;
+    Tolerance<Real> tol = 1.e-16;
     int n = (Is_up-Is_lo)/Is_step + 1;
     int m = (Rs_up-Rs_lo)/Rs_step + 1;
     for ( int i = 0; i < n; i++ ) {

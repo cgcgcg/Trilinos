@@ -128,7 +128,7 @@ private:
   ROL::Ptr<StatusTest<Real>>      status_;
   ROL::Ptr<Step<Real>>            step_;
   ROL::Ptr<Algorithm<Real>>       algo_;
-  ROL::Ptr<Vector<Real>>          x_; 
+  ROL::Ptr<Vector<Real>>          x_;
   ROL::Ptr<BoundConstraint<Real>> bnd_;
 
   ROL::ParameterList parlist_;
@@ -169,7 +169,8 @@ private:
                        BoundConstraint<Real> &bnd) {
     AugmentedLagrangian<Real> &augLag
       = dynamic_cast<AugmentedLagrangian<Real>&>(obj);
-    Real gnorm = 0., tol = std::sqrt(ROL_EPSILON<Real>());
+    Real gnorm = 0.;
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
     augLag.gradient(g,x,tol);
     if ( scaleLagrangian_ ) {
       g.scale(mu);
@@ -213,7 +214,7 @@ public:
     optIncreaseExponent_ = sublist.get("Optimality Tolerance Update Exponent",    one);
     optDecreaseExponent_ = sublist.get("Optimality Tolerance Decrease Exponent",  one);
     optToleranceInitial_ = sublist.get("Initial Optimality Tolerance",            one);
-    // Feasibility tolerance update    
+    // Feasibility tolerance update
     feasIncreaseExponent_ = sublist.get("Feasibility Tolerance Update Exponent",   p1);
     feasDecreaseExponent_ = sublist.get("Feasibility Tolerance Decrease Exponent", p9);
     feasToleranceInitial_ = sublist.get("Initial Feasibility Tolerance",           one);
@@ -274,7 +275,7 @@ public:
     if (useDefaultScaling_) {
       fscale_ = one/std::max(one,augLag.getObjectiveGradient(x)->norm());
       try {
-        Real tol = std::sqrt(ROL_EPSILON<Real>());
+        Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
         Ptr<Vector<Real>> ji = x.clone();
         Real maxji(0), normji(0);
         for (int i = 0; i < c.dimension(); ++i) {
@@ -323,7 +324,7 @@ public:
   /** \brief Compute step (equality constraint).
   */
   void compute( Vector<Real> &s, const Vector<Real> &x, const Vector<Real> &l,
-                Objective<Real> &obj, Constraint<Real> &con, 
+                Objective<Real> &obj, Constraint<Real> &con,
                 AlgorithmState<Real> &algo_state ) {
     compute(s,x,l,obj,con,*bnd_,algo_state);
   }
@@ -331,7 +332,7 @@ public:
   /** \brief Compute step (equality and bound constraints).
   */
   void compute( Vector<Real> &s, const Vector<Real> &x, const Vector<Real> &l,
-                Objective<Real> &obj, Constraint<Real> &con, 
+                Objective<Real> &obj, Constraint<Real> &con,
                 BoundConstraint<Real> &bnd, AlgorithmState<Real> &algo_state ) {
     Real one(1);
     //AugmentedLagrangian<Real> &augLag
@@ -372,7 +373,7 @@ public:
       penObj = ROL::makePtr<InteriorPoint::PenalizedObjective<Real>>(raw_obj,bnd_,x,parlist_);
     }
     else {
-      throw Exception::NotImplemented(">>> ROL::AugmentedLagrangianStep: Incompatible substep type!"); 
+      throw Exception::NotImplemented(">>> ROL::AugmentedLagrangianStep: Incompatible substep type!");
     }
     algo_ = makePtr<Algorithm<Real>>(step_,status_,false);
     //algo_ = ROL::makePtr<Algorithm<Real>>(subStep_,parlist_,false);

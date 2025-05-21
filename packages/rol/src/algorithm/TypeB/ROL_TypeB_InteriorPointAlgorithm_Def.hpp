@@ -80,7 +80,7 @@ void InteriorPointAlgorithm<Real>::updateState(const Vector<Real>           &x,
                                                Vector<Real>                 &pwa,
                                                std::ostream                 &outStream) {
   const Real one(1);
-  Real zerotol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> zerotol = std::sqrt(ROL_EPSILON<Real>());
   // Update objective and constraint
   if (state_-> iter == 0) {
     ipobj.update(x,UpdateType::Initial,state_->iter);
@@ -105,7 +105,7 @@ void InteriorPointAlgorithm<Real>::updateState(const Vector<Real>           &x,
 
 template<typename Real>
 void InteriorPointAlgorithm<Real>::run( Vector<Real>          &x,
-                                        const Vector<Real>    &g, 
+                                        const Vector<Real>    &g,
                                         Objective<Real>       &obj,
                                         BoundConstraint<Real> &bnd,
                                         std::ostream          &outStream ) {

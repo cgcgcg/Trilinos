@@ -44,7 +44,7 @@ Ptr<const Vector<Real>> ReduceLinearConstraint<Real>::getFeasibleVector(void) co
 
 template<typename Real>
 void ReduceLinearConstraint<Real>::project(Vector<Real> &x, const Vector<Real> &y) const {
-  Real tol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
   nsop_->apply(x,y,tol);
 }
 
@@ -55,11 +55,11 @@ void ReduceLinearConstraint<Real>::project(const Ptr<Vector<Real>> &x, const Ptr
 
 template<typename Real>
 void ReduceLinearConstraint<Real>::feasible(const Ptr<const Vector<Real>> &c) {
-  Real tol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
   Ptr<Vector<Real>> ran = c->clone();
   lcon_->value(*ran,*x_,tol);
   Real cnorm = ran->norm();
-  if ( cnorm > static_cast<Real>(1e-4)*tol ) {
+  if ( cnorm > static_cast<Real>(1e-4)*tol.get() ) {
     RangeSpaceOperator<Real> rsop(lcon_,x_,c);
     Ptr<Vector<Real>> xzero = x_->clone(); xzero->zero();
     lcon_->value(*ran,*xzero,tol);

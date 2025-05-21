@@ -42,7 +42,7 @@ private:
 
 public:
   
-  Real value( const Vector<Real> &x, Real &tol ) {
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
     Ptr<const vector> xp = getVector(x);
 
     Real term1 = (*xp)[0]+3*(*xp)[1]+(*xp)[2];
@@ -50,7 +50,7 @@ public:
     return term1*term1 + 4*term2*term2;
   }
 
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
     Ptr<vector> gp = getVector(g);
     Ptr<const vector> xp = getVector(x);
 
@@ -59,7 +59,7 @@ public:
     (*gp)[2] =  2*(*xp)[0] +  6*(*xp)[1] + 2*(*xp)[2];
   }
 
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
     Ptr<vector> hvp = getVector(hv);
     Ptr<const vector> vp = getVector(v);
 
@@ -91,7 +91,7 @@ private:
 public:
   EqualityConstraint_HS32() {}
 
-  void value( Vector<Real> &c, const Vector<Real> &x, Real &tol ) {
+  void value( Vector<Real> &c, const Vector<Real> &x, Tolerance<Real> &tol ) {
     const Real one(1);
     Ptr<vector> cp = getVector(c);
     Ptr<const vector> xp = getVector(x);
@@ -100,7 +100,7 @@ public:
   }
 
   void applyJacobian( Vector<Real> &jv, const Vector<Real> &v,
-                      const Vector<Real> &x, Real &tol ) {
+                      const Vector<Real> &x, Tolerance<Real> &tol ) {
     Ptr<vector> jvp = getVector(jv);
     Ptr<const vector> vp = getVector(v);
 
@@ -108,7 +108,7 @@ public:
   } 
 
   void applyAdjointJacobian( Vector<Real> &ajv, const Vector<Real> &v,
-                             const Vector<Real> &x, Real &tol ) {
+                             const Vector<Real> &x, Tolerance<Real> &tol ) {
     Ptr<vector> ajvp = getVector(ajv);
     Ptr<const vector> vp = getVector(v);
      
@@ -118,7 +118,7 @@ public:
   }
 
   void applyAdjointHessian( Vector<Real> &ahuv, const Vector<Real> &u,
-                            const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+                            const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
     ahuv.zero();
   }
 
@@ -144,7 +144,7 @@ private:
 public:
   InequalityConstraint_HS32(void) {}
 
-  void value( Vector<Real> &c, const Vector<Real> &x, Real &tol ) {
+  void value( Vector<Real> &c, const Vector<Real> &x, Tolerance<Real> &tol ) {
     const Real three(3), four(4), six(6);
     Ptr<vector> cp = getVector(c);
     Ptr<const vector> xp = getVector(x);
@@ -153,7 +153,7 @@ public:
   }
  
   void applyJacobian( Vector<Real> &jv, const Vector<Real> &v, 
-                      const Vector<Real> &x, Real &tol ) {
+                      const Vector<Real> &x, Tolerance<Real> &tol ) {
     const Real three(3), four(4), six(6);
     Ptr<vector> jvp = getVector(jv);
     Ptr<const vector> vp = getVector(v);
@@ -163,7 +163,7 @@ public:
   }
    
   void applyAdjointJacobian( Vector<Real> &ajv, const Vector<Real> &v,
-                             const Vector<Real> &x, Real &tol ) {
+                             const Vector<Real> &x, Tolerance<Real> &tol ) {
     const Real three(3), four(4), six(6);
     Ptr<vector> ajvp = getVector(ajv);
     Ptr<const vector> vp = getVector(v); 
@@ -175,7 +175,7 @@ public:
   }
 
   void applyAdjointHessian( Vector<Real> &ahuv, const Vector<Real> &u,
-                            const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+                            const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
     const Real zero(0), six(6);
     Ptr<vector> ahuvp = getVector(ahuv); 
     Ptr<const vector> up = getVector(u);

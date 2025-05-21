@@ -25,11 +25,11 @@ public:
 
   void update(const Vector<Real> &x, UpdateType type, int iter = -1) override;
   void update(const Vector<Real> &x, bool flag = true, int iter = -1) override;
-  void value(Vector<Real> &c, const Vector<Real> &x, Real &tol) override;
-  void applyJacobian(Vector<Real> &jv, const Vector<Real> &v, const Vector<Real> &x, Real &tol) override;
+  void value(Vector<Real> &c, const Vector<Real> &x, Tolerance<Real> &tol) override;
+  void applyJacobian(Vector<Real> &jv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol) override;
   using Constraint<Real>::applyAdjointJacobian;
-  void applyAdjointJacobian(Vector<Real> &ajv, const Vector<Real> &v, const Vector<Real> &x, Real &tol) override;
-  void applyAdjointHessian(Vector<Real> &ahuv, const Vector<Real> &u, const Vector<Real> &v, const Vector<Real> &x, Real &tol) override;
+  void applyAdjointJacobian(Vector<Real> &ajv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol) override;
+  void applyAdjointHessian(Vector<Real> &ahuv, const Vector<Real> &u, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol) override;
 
 public:
   void setParameter(const std::vector<Real> &param) override;

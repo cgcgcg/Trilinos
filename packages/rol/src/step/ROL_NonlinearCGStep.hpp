@@ -82,7 +82,7 @@ public:
 
   void update( Vector<Real> &x, const Vector<Real> &s, Objective<Real> &obj, BoundConstraint<Real> &con,
                AlgorithmState<Real> &algo_state ) {
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
     ROL::Ptr<StepState<Real> > step_state = Step<Real>::getState();
 
     // Update iterate

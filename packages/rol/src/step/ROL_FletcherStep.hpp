@@ -269,7 +269,7 @@ public:
 
     if( modified ) {
       // Penalty function has been changed somehow, need to recompute
-      Real tol = static_cast<Real>(1e-12);
+      Tolerance<Real> tol = static_cast<Real>(1e-12);
       tr_algo_state_.value = fletcher.value(x, tol);
       fletcher.gradient(*g_, x, tol);
 

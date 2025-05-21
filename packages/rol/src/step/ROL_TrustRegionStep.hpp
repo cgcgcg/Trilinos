@@ -22,22 +22,22 @@
     \brief Provides the interface to compute optimization steps
            with trust regions.
 
-    Suppose \f$\mathcal{X}\f$ is a Hilbert space of 
-    functions mapping \f$\Xi\f$ to \f$\mathbb{R}\f$.  For example, 
-    \f$\Xi\subset\mathbb{R}^n\f$ and \f$\mathcal{X}=L^2(\Xi)\f$ or 
-    \f$\Xi = \{1,\ldots,n\}\f$ and \f$\mathcal{X}=\mathbb{R}^n\f$. We 
-    assume \f$f:\mathcal{X}\to\mathbb{R}\f$ is twice-continuously Fr&eacute;chet 
-    differentiable and \f$a,\,b\in\mathcal{X}\f$ with \f$a\le b\f$ almost 
-    everywhere in \f$\Xi\f$.  Note that these trust-region algorithms will also work 
-    with secant approximations of the Hessian. 
+    Suppose \f$\mathcal{X}\f$ is a Hilbert space of
+    functions mapping \f$\Xi\f$ to \f$\mathbb{R}\f$.  For example,
+    \f$\Xi\subset\mathbb{R}^n\f$ and \f$\mathcal{X}=L^2(\Xi)\f$ or
+    \f$\Xi = \{1,\ldots,n\}\f$ and \f$\mathcal{X}=\mathbb{R}^n\f$. We
+    assume \f$f:\mathcal{X}\to\mathbb{R}\f$ is twice-continuously Fr&eacute;chet
+    differentiable and \f$a,\,b\in\mathcal{X}\f$ with \f$a\le b\f$ almost
+    everywhere in \f$\Xi\f$.  Note that these trust-region algorithms will also work
+    with secant approximations of the Hessian.
     This step applies to unconstrained and bound constrained optimization problems,
     \f[
         \min_x\quad f(x) \qquad\text{and}\qquad \min_x\quad f(x)\quad\text{s.t.}\quad a\le x\le b,
     \f]
-    respectively.  
+    respectively.
 
     For unconstrained problems, given the \f$k\f$-th iterate \f$x_k\f$ the trial step
-    \f$s_k\f$ is computed by approximately solving the trust-region subproblem 
+    \f$s_k\f$ is computed by approximately solving the trust-region subproblem
     \f[
        \min_{s} \frac{1}{2}\langle B_k s, s\rangle_{\mathcal{X}} + \langle g_k,s\rangle_{\mathcal{X}}
            \quad\text{s.t.}\quad \|s\|_{\mathcal{X}} \le \Delta_k
@@ -51,22 +51,22 @@
           \frac{\|g_k\|_{\mathcal{X}}}{1+\|B_k\|_{L(\mathcal{X},\mathcal{X}})}\,\right\}
     \f]
     for some \f$\kappa_0>0\f$ independent of \f$k\f$.
-    ROL's trust-region algorithm allows for both inexact objective function and gradient evaluation.  
+    ROL's trust-region algorithm allows for both inexact objective function and gradient evaluation.
     The user must ensure that the inexact objective function, \f$f_k\f$ satisfies
     \f[
-       |(f(x_k+s_k)-f_k(x_k+s_k)) - (f(x_k)-f_k(x_k))| \le 
+       |(f(x_k+s_k)-f_k(x_k+s_k)) - (f(x_k)-f_k(x_k))| \le
         \eta_1 \min\{\,-\frac{1}{2}\langle B_k s, s\rangle_{\mathcal{X}} - \langle g_k,s\rangle_{\mathcal{X}},
                        \,r_k\,\}
     \f]
-    where \f$\eta_1\f$ is the step acceptance threshold and \f$r_k\f$ is a user-defined forcing sequence of 
+    where \f$\eta_1\f$ is the step acceptance threshold and \f$r_k\f$ is a user-defined forcing sequence of
     positive numbers converging to zero.  The inexact gradient, \f$g_k\f$, must satisfy
     \f[
        \|g_k-\nabla J(x_k)\|_{\mathcal{X}} \le \kappa_1\min\{\,\|g_k\|_{\mathcal{X}},\,\Delta_k\,\}
     \f]
     where \f$\kappa_1 > 0\f$ is independent of \f$k\f$.
 
-    For bound constrained problems, ROL employs projected Newton-type methods.  
-    For these methods, ROL requires the notion of an active set of an iterate \f$x_k\f$, 
+    For bound constrained problems, ROL employs projected Newton-type methods.
+    For these methods, ROL requires the notion of an active set of an iterate \f$x_k\f$,
     \f[
        \mathcal{A}_k = \{\, \xi\in\Xi\,:\,x_k(\xi) = a(\xi)\,\}\cap
                        \{\, \xi\in\Xi\,:\,x_k(\xi) = b(\xi)\,\}.
@@ -76,15 +76,15 @@
        \mathcal{B}_k = \{\, \xi\in\Xi\,:\,x_k(\xi) = a(\xi) \;\text{and}\; -g_k(\xi) < 0 \,\}\cap
                        \{\, \xi\in\Xi\,:\,x_k(\xi) = b(\xi) \;\text{and}\; -g_k(\xi) > 0 \,\}.
     \f]
-    The binding set contains the values of \f$\xi\in\Xi\f$ such that if \f$x_k(\xi)\f$ is on a 
-    bound, then \f$(x_k+s_k)(\xi)\f$ will violate bound.  Using these definitions, ROL 
-    prunes the variables in the binding set and runs a standard trust-region subproblem solver on the 
-    free variables.  ROL then must perform a projected search to ensure the fraction of Cauchy decrease 
+    The binding set contains the values of \f$\xi\in\Xi\f$ such that if \f$x_k(\xi)\f$ is on a
+    bound, then \f$(x_k+s_k)(\xi)\f$ will violate bound.  Using these definitions, ROL
+    prunes the variables in the binding set and runs a standard trust-region subproblem solver on the
+    free variables.  ROL then must perform a projected search to ensure the fraction of Cauchy decrease
     condition is satisfied.
 
-    TrustRegionStep implements a number of algorithms for both bound constrained and unconstrained 
-    optimization.  These algorithms are: Cauchy Point, Dogleg, Double Dogleg, and Truncated CG.  
-    Each of these methods can be run using a secant approximation of the Hessian. 
+    TrustRegionStep implements a number of algorithms for both bound constrained and unconstrained
+    optimization.  These algorithms are: Cauchy Point, Dogleg, Double Dogleg, and Truncated CG.
+    Each of these methods can be run using a secant approximation of the Hessian.
     These methods are chosen through the ETrustRegion enum.
 */
 
@@ -115,7 +115,7 @@ private:
   Ptr<Secant<Real>> secant_;                     ///< Container for secant approximation.
   ESecant                     esec_;             ///< Secant type.
   bool                        useSecantHessVec_; ///< Flag whether to use a secant Hessian.
-  bool                        useSecantPrecond_; ///< Flag whether to use a secant preconditioner. 
+  bool                        useSecantPrecond_; ///< Flag whether to use a secant preconditioner.
 
   // BOUND CONSTRAINED PARAMETERS
   Real scaleEps_;         ///< Scaling for epsilon-active sets.
@@ -165,10 +165,10 @@ private:
     // Trust-Region Inexactness Parameters
     ROL::ParameterList &ilist = list.sublist("Inexact").sublist("Gradient");
     scale0_ = ilist.get("Tolerance Scaling",  static_cast<Real>(0.1));
-    scale1_ = ilist.get("Relative Tolerance", static_cast<Real>(2)); 
+    scale1_ = ilist.get("Relative Tolerance", static_cast<Real>(2));
     // Initialize Trust Region Subproblem Solver Object
     std::string solverName = list.get("Subproblem Solver", "Dogleg");
-    etr_              = StringToETrustRegion(solverName);  
+    etr_              = StringToETrustRegion(solverName);
     std::string modelName = list.get("Subproblem Model", "Kelley-Sachs");
     TRmodel_          = StringToETrustRegionModel(modelName);
     useProjectedGrad_ = glist.get("Projected Gradient Criticality Measure", false);
@@ -193,15 +193,15 @@ private:
       \f[
          \|g_k-\nabla J(x_k)\|_{\mathcal{X}} \le \kappa_1\min\{\,\|g_k\|_{\mathcal{X}},\,\Delta_k\,\},
       \f]
-      is satisfied.  This function works under the assumption that the gradient function returns 
-      a gradient approximation which satisfies the error tolerance prescribed by the tol input 
-      parameter.  
+      is satisfied.  This function works under the assumption that the gradient function returns
+      a gradient approximation which satisfies the error tolerance prescribed by the tol input
+      parameter.
       @param[in]      x          is the current optimization variable.
       @param[in]      obj        is the objective function.
       @param[in]      bnd        is the bound constraint.
       @param[in,out]  algo_state is the algorithm state.
   */
-  void updateGradient( Vector<Real> &x, Objective<Real> &obj, BoundConstraint<Real> &bnd, 
+  void updateGradient( Vector<Real> &x, Objective<Real> &obj, BoundConstraint<Real> &bnd,
                        AlgorithmState<Real> &algo_state ) {
     Ptr<StepState<Real>> state = Step<Real>::getState();
     if ( useInexact_[1] ) {
@@ -218,9 +218,9 @@ private:
       //  gtol1 = c*std::min(algo_state.gnorm,state->searchSize);
       //}
       //algo_state.ngrad++;
-      Real gtol1  = scale0_*state->searchSize;
+      Tolerance<Real> gtol1  = scale0_*state->searchSize;
       //Real gtol1  = scale0_*std::min(algo_state.gnorm,state->searchSize);
-      Real gtol0  = gtol1 + one;
+      Tolerance<Real> gtol0  = gtol1 + one;
       while ( gtol0 > gtol1 ) {
         obj.gradient(*(state->gradientVec),x,gtol1);
         algo_state.gnorm = computeCriticalityMeasure(*(state->gradientVec),x,bnd);
@@ -230,7 +230,7 @@ private:
       algo_state.ngrad++;
     }
     else {
-      Real gtol = std::sqrt(ROL_EPSILON<Real>());
+      Tolerance<Real> gtol = std::sqrt(ROL_EPSILON<Real>());
       obj.gradient(*(state->gradientVec),x,gtol);
       algo_state.ngrad++;
       algo_state.gnorm = computeCriticalityMeasure(*(state->gradientVec),x,bnd);
@@ -239,7 +239,7 @@ private:
 
   /** \brief Compute the criticality measure.
 
-      This function computes either the norm of the gradient projected onto the tangent cone or 
+      This function computes either the norm of the gradient projected onto the tangent cone or
       the norm of \f$x_k - P_{[a,b]}(x_k-g_k)\f$.
        @param[in]       g     is the current gradient.
        @param[in]       x     is the current iterate.
@@ -276,7 +276,7 @@ public:
 
   /** \brief Constructor.
 
-      Standard constructor to build a TrustRegionStep object.  Algorithmic 
+      Standard constructor to build a TrustRegionStep object.  Algorithmic
       specifications are passed in through a ROL::ParameterList.
 
       @param[in]     parlist    is a parameter list containing algorithmic specifications
@@ -308,14 +308,14 @@ public:
 
   /** \brief Constructor.
 
-      Constructor to build a TrustRegionStep object with a user-defined 
-      secant object.  Algorithmic specifications are passed in through 
+      Constructor to build a TrustRegionStep object with a user-defined
+      secant object.  Algorithmic specifications are passed in through
       a ROL::ParameterList.
 
       @param[in]     secant     is a user-defined secant object
       @param[in]     parlist    is a parameter list containing algorithmic specifications
   */
-  TrustRegionStep( ROL::Ptr<Secant<Real> > &secant, ROL::ParameterList &parlist ) 
+  TrustRegionStep( ROL::Ptr<Secant<Real> > &secant, ROL::ParameterList &parlist )
     : Step<Real>(),
       xnew_(nullPtr), xold_(nullPtr), gp_(nullPtr),
       trustRegion_(nullPtr), model_(nullPtr),
@@ -351,8 +351,8 @@ public:
       @param[in]     bnd         is the bound constraint.
       @param[in]     algo_state  is the algorithm state.
   */
-  void initialize( Vector<Real> &x, const Vector<Real> &s, const Vector<Real> &g, 
-                   Objective<Real> &obj, BoundConstraint<Real> &bnd, 
+  void initialize( Vector<Real> &x, const Vector<Real> &s, const Vector<Real> &g,
+                   Objective<Real> &obj, BoundConstraint<Real> &bnd,
                    AlgorithmState<Real> &algo_state ) {
     if (!isValidTrustRegionSubproblem(etr_,TRmodel_,bnd.isActivated())) {
       throw Exception::NotImplemented(">>> ROL::TrustRegionStep : Invalid Trust Region Solver and Model pair!");
@@ -363,8 +363,8 @@ public:
 
     trustRegion_->initialize(x,s,g);
 
-    Real htol = std::sqrt(ROL_EPSILON<Real>());
-    Real ftol = p1*ROL_OVERFLOW<Real>(); 
+    Tolerance<Real> htol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> ftol = p1*ROL_OVERFLOW<Real>();
 
     step_state->descentVec  = s.clone();
     step_state->gradientVec = g.clone();
@@ -383,9 +383,9 @@ public:
     gp_ = g.clone();
 
     // Update approximate gradient and approximate objective function.
-    obj.update(x,true,algo_state.iter);    
+    obj.update(x,true,algo_state.iter);
     algo_state.snorm = oe10;
-    algo_state.value = obj.value(x,ftol); 
+    algo_state.value = obj.value(x,ftol);
     algo_state.nfval++;
     algo_state.gnorm = ROL_INF<Real>();
     updateGradient(x,obj,bnd,algo_state);
@@ -421,7 +421,7 @@ public:
       }
       // Evaluate the objective function at the Cauchy point
       Ptr<Vector<Real>> cp = s.clone();
-      cp->set((step_state->gradientVec)->dual()); 
+      cp->set((step_state->gradientVec)->dual());
       cp->scale(-alpha);
       Ptr<Vector<Real>> xcp = x.clone();
       xcp->set(x);
@@ -435,7 +435,7 @@ public:
       // Perform cubic interpolation to determine initial trust region radius
       Real gs = cp->dot((step_state->gradientVec)->dual());
       Real a  = fnew - algo_state.value - gs - half*alpha*alpha*gBg;
-      if ( std::abs(a) < ROL_EPSILON<Real>() ) { 
+      if ( std::abs(a) < ROL_EPSILON<Real>() ) {
         // a = 0 implies the objective is quadratic in the negative gradient direction
         step_state->searchSize = std::min(alpha*algo_state.gnorm,delMax_);
       }
@@ -465,7 +465,7 @@ public:
       obj.update(x,true,algo_state.iter);
     }
     // Build trust-region model
-    if (bnd.isActivated()) { 
+    if (bnd.isActivated()) {
       if ( TRmodel_ == TRUSTREGION_MODEL_KELLEYSACHS ) {
         model_ = makePtr<KelleySachsModel<Real>>(obj,
                                                  bnd,
@@ -486,7 +486,7 @@ public:
                                                secant_,
                                                useSecantPrecond_,
                                                useSecantHessVec_);
-      } 
+      }
       else if ( TRmodel_ == TRUSTREGION_MODEL_LINMORE ) {
         model_ = makePtr<LinMoreModel<Real>>(obj,
                                              bnd,
@@ -514,8 +514,8 @@ public:
 
   /** \brief Compute step.
 
-      Computes a trial step, \f$s_k\f$ by solving the trust-region subproblem.  
-      The trust-region subproblem solver is defined by the enum ETrustRegion.  
+      Computes a trial step, \f$s_k\f$ by solving the trust-region subproblem.
+      The trust-region subproblem solver is defined by the enum ETrustRegion.
       @param[out]      s          is the computed trial step
       @param[in]       x          is the current iterate
       @param[in]       obj        is the objective function
@@ -523,7 +523,7 @@ public:
       @param[in]       algo_state contains the current state of the algorithm
   */
   void compute( Vector<Real> &s, const Vector<Real> &x,
-                Objective<Real> &obj, BoundConstraint<Real> &bnd, 
+                Objective<Real> &obj, BoundConstraint<Real> &bnd,
                 AlgorithmState<Real> &algo_state ) {
     // Get step state
     Ptr<StepState<Real>> step_state = Step<Real>::getState();
@@ -547,7 +547,7 @@ public:
 
   /** \brief Update step, if successful.
 
-      Given a trial step, \f$s_k\f$, this function updates \f$x_{k+1}=x_k+s_k\f$. 
+      Given a trial step, \f$s_k\f$, this function updates \f$x_{k+1}=x_k+s_k\f$.
       This function also updates the secant approximation.
 
       @param[in,out]   x          is the updated iterate
@@ -585,8 +585,8 @@ public:
     state->SPflag = SPflag_;
     // If step is accepted ...
     // Compute new gradient and update secant storage
-    if ( TRflag_ == TRUSTREGION_FLAG_SUCCESS || 
-         TRflag_ == TRUSTREGION_FLAG_POSPREDNEG ) {  
+    if ( TRflag_ == TRUSTREGION_FLAG_SUCCESS ||
+         TRflag_ == TRUSTREGION_FLAG_POSPREDNEG ) {
       // Store previous gradient for secant update
       if ( useSecantHessVec_ || useSecantPrecond_ ) {
         gp_->set(*(state->gradientVec));
@@ -625,27 +625,27 @@ public:
     std::stringstream hist;
 
     if(verbosity_>0) {
-      hist << std::string(114,'-') << "\n"; 
+      hist << std::string(114,'-') << "\n";
 
       hist << "Trust-Region status output definitions\n\n";
-       
-      hist << "  iter    - Number of iterates (steps taken) \n";        
-      hist << "  value   - Objective function value \n";        
+
+      hist << "  iter    - Number of iterates (steps taken) \n";
+      hist << "  value   - Objective function value \n";
       hist << "  gnorm   - Norm of the gradient\n";
-      hist << "  snorm   - Norm of the step (update to optimization vector)\n";  
+      hist << "  snorm   - Norm of the step (update to optimization vector)\n";
       hist << "  delta   - Trust-Region radius\n";
       hist << "  #fval   - Number of times the objective function was evaluated\n";
       hist << "  #grad   - Number of times the gradient was computed\n";
-      
-        
-      
+
+
+
       hist << "\n";
       hist << "  tr_flag - Trust-Region flag" << "\n";
       for( int flag = TRUSTREGION_FLAG_SUCCESS; flag != TRUSTREGION_FLAG_UNDEFINED; ++flag ) {
-        hist << "    " << NumberToString(flag) << " - " 
+        hist << "    " << NumberToString(flag) << " - "
              << ETrustRegionFlagToString(static_cast<ETrustRegionFlag>(flag)) << "\n";
-          
-      } 
+
+      }
 
       if( etr_ == TRUSTREGION_TRUNCATEDCG ) {
         hist << "\n";
@@ -653,11 +653,11 @@ public:
         hist << "  flagGC - Trust-Region Truncated CG flag" << "\n";
         for( int flag = CG_FLAG_SUCCESS; flag != CG_FLAG_UNDEFINED; ++flag ) {
           hist << "    " << NumberToString(flag) << " - "
-               << ECGFlagToString(static_cast<ECGFlag>(flag)) << "\n"; 
-        }            
+               << ECGFlagToString(static_cast<ECGFlag>(flag)) << "\n";
+        }
       }
 
-      hist << std::string(114,'-') << "\n"; 
+      hist << std::string(114,'-') << "\n";
     }
 
     hist << "  ";
@@ -727,20 +727,20 @@ public:
       hist << std::setw(6)  << std::left << algo_state.iter;
       hist << std::setw(15) << std::left << algo_state.value;
       hist << std::setw(15) << std::left << algo_state.gnorm;
-      hist << std::setw(15) << std::left << " "; 
-      hist << std::setw(15) << std::left << step_state->searchSize; 
+      hist << std::setw(15) << std::left << " ";
+      hist << std::setw(15) << std::left << step_state->searchSize;
       hist << "\n";
     }
     else {
-      hist << "  "; 
-      hist << std::setw(6)  << std::left << algo_state.iter;  
-      hist << std::setw(15) << std::left << algo_state.value; 
-      hist << std::setw(15) << std::left << algo_state.gnorm; 
-      hist << std::setw(15) << std::left << algo_state.snorm; 
-      hist << std::setw(15) << std::left << step_state->searchSize; 
-      hist << std::setw(10) << std::left << algo_state.nfval;              
-      hist << std::setw(10) << std::left << algo_state.ngrad;              
-      hist << std::setw(10) << std::left << TRflag_;              
+      hist << "  ";
+      hist << std::setw(6)  << std::left << algo_state.iter;
+      hist << std::setw(15) << std::left << algo_state.value;
+      hist << std::setw(15) << std::left << algo_state.gnorm;
+      hist << std::setw(15) << std::left << algo_state.snorm;
+      hist << std::setw(15) << std::left << step_state->searchSize;
+      hist << std::setw(10) << std::left << algo_state.nfval;
+      hist << std::setw(10) << std::left << algo_state.ngrad;
+      hist << std::setw(10) << std::left << TRflag_;
       if ( etr_ == TRUSTREGION_TRUNCATEDCG || etr_ == TRUSTREGION_LINMORE ) {
         hist << std::setw(10) << std::left << SPiter_;
         hist << std::setw(10) << std::left << SPflag_;

@@ -26,23 +26,23 @@ void SlacklessConstraint<Real>::update( const Vector<Real> &x, bool flag, int it
 }
 
 template<typename Real> 
-void SlacklessConstraint<Real>::value(Vector<Real> &c, const Vector<Real> &x, Real &tol ) {
+void SlacklessConstraint<Real>::value(Vector<Real> &c, const Vector<Real> &x, Tolerance<Real> &tol ) {
   con_->value( c, *getOpt(x), tol );
 }
 
 template<typename Real> 
-void SlacklessConstraint<Real>::applyJacobian( Vector<Real> &jv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+void SlacklessConstraint<Real>::applyJacobian( Vector<Real> &jv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
   con_->applyJacobian( jv, *getOpt(v), *getOpt(x), tol );
 }
 
 template<typename Real> 
-void SlacklessConstraint<Real>::applyAdjointJacobian( Vector<Real> &ajv, const Vector<Real> &v, const Vector<Real> &x, const Vector<Real> &dualv, Real &tol ) {
+void SlacklessConstraint<Real>::applyAdjointJacobian( Vector<Real> &ajv, const Vector<Real> &v, const Vector<Real> &x, const Vector<Real> &dualv, Tolerance<Real> &tol ) {
   zeroSlack(ajv);
   con_->applyAdjointJacobian( *getOpt(ajv), v, *getOpt(x), dualv, tol );
 }
 
 template<typename Real> 
-void SlacklessConstraint<Real>::applyAdjointHessian( Vector<Real> &ahuv, const Vector<Real> &u, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+void SlacklessConstraint<Real>::applyAdjointHessian( Vector<Real> &ahuv, const Vector<Real> &u, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
   zeroSlack(ahuv);
   con_->applyAdjointHessian( *getOpt(ahuv), u, *getOpt(v), *getOpt(x), tol );     
 }

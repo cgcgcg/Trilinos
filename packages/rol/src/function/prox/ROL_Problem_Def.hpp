@@ -500,7 +500,7 @@ Real Problem<Real>::checkLinearity(bool printToStream, std::ostream &outStream) 
     outStream << "  ROL::Problem::checkLinearity" << std::endl;
   }
   const Real one(1), two(2), eps(1e-2*std::sqrt(ROL_EPSILON<Real>()));
-  Real tol(std::sqrt(ROL_EPSILON<Real>())), cnorm(0), err(0), maxerr(0);
+  Tolerance<Real> tol(std::sqrt(ROL_EPSILON<Real>())), cnorm(0), err(0), maxerr(0);
   Ptr<Vector<Real>> x  = INPUT_xprim_->clone(); x->randomize(-one,one);
   Ptr<Vector<Real>> y  = INPUT_xprim_->clone(); y->randomize(-one,one);
   Ptr<Vector<Real>> z  = INPUT_xprim_->clone(); z->zero();

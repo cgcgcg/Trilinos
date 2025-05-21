@@ -30,12 +30,12 @@ public:
 
   void update( const Vector<Real> &u, bool flag = true, int iter = -1 ) override;
   void update( const Vector<Real> &u, UpdateType type, int iter = -1 ) override;
-  void value(Vector<Real> &c,const Vector<Real> &u,Real &tol) override;
-  void applyJacobian(Vector<Real> &jv,const Vector<Real> &v,const Vector<Real> &u,Real &tol) override;
+  void value(Vector<Real> &c,const Vector<Real> &u,Tolerance<Real> &tol) override;
+  void applyJacobian(Vector<Real> &jv,const Vector<Real> &v,const Vector<Real> &u,Tolerance<Real> &tol) override;
   using Constraint<Real>::applyAdjointJacobian;
-  void applyAdjointJacobian(Vector<Real> &ajv,const Vector<Real> &v,const Vector<Real> &u,Real &tol) override;
-  void applyAdjointHessian(Vector<Real> &ahwv,const Vector<Real> &w,const Vector<Real> &v,const Vector<Real> &u,Real &tol) override;
-  void applyPreconditioner(Vector<Real> &pv,const Vector<Real> &v,const Vector<Real> &u,const Vector<Real> &g,Real &tol) override;
+  void applyAdjointJacobian(Vector<Real> &ajv,const Vector<Real> &v,const Vector<Real> &u,Tolerance<Real> &tol) override;
+  void applyAdjointHessian(Vector<Real> &ahwv,const Vector<Real> &w,const Vector<Real> &v,const Vector<Real> &u,Tolerance<Real> &tol) override;
+  void applyPreconditioner(Vector<Real> &pv,const Vector<Real> &v,const Vector<Real> &u,const Vector<Real> &g,Tolerance<Real> &tol) override;
 
   // Definitions for parametrized (stochastic) equality constraints
   void setParameter(const std::vector<Real> &param) override;

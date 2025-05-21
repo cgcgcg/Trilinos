@@ -34,19 +34,19 @@ namespace ZOO {
 template<class Real>
 class Objective_HS28 : public StdObjective<Real> {
 public:
-  Real value( const std::vector<Real> &x, Real &tol ) {
+  Real value( const std::vector<Real> &x, Tolerance<Real> &tol ) {
     const Real two(2);
     return std::pow(x[0]+x[1],two) + std::pow(x[1]+x[2],two);
   }
 
-  void gradient( std::vector<Real> &g, const std::vector<Real> &x, Real &tol ) {
+  void gradient( std::vector<Real> &g, const std::vector<Real> &x, Tolerance<Real> &tol ) {
     const Real two(2);
     g[0] = two*(x[0]+x[1]);
     g[1] = two*(x[0]+x[1]) + two*(x[1]+x[2]);
     g[2] = two*(x[1]+x[2]);
   }
 
-  void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+  void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Tolerance<Real> &tol ) {
     const Real two(2);
     hv[0] = two*v[0] + two*v[1];
     hv[1] = two*v[0] + two*two*v[1] + two*v[2];
@@ -59,19 +59,19 @@ class Constraint_HS28 : public StdConstraint<Real> {
 public:
   Constraint_HS28(void) {}
  
-  void value( std::vector<Real> &c, const std::vector<Real> &x, Real &tol ) {
+  void value( std::vector<Real> &c, const std::vector<Real> &x, Tolerance<Real> &tol ) {
     const Real c1(1), c2(2), c3(3);
     c[0] = c1*x[0]+c2*x[1]+c3*x[2]-c1;
   }  
 
   void applyJacobian(std::vector<Real> &jv, const std::vector<Real> &v,
-                     const std::vector<Real> &x, Real &tol) {
+                     const std::vector<Real> &x, Tolerance<Real> &tol) {
     const Real c1(1), c2(2), c3(3);
     jv[0] = c1*v[0]+c2*v[1]+c3*v[2];
   }
 
   void applyAdjointJacobian( std::vector<Real> &ajv, const std::vector<Real> &v,
-                             const std::vector<Real> &x, Real &tol ) {
+                             const std::vector<Real> &x, Tolerance<Real> &tol ) {
     const Real c1(1), c2(2), c3(3);
     ajv[0] = c1*v[0];
     ajv[1] = c2*v[0];
@@ -80,7 +80,7 @@ public:
 
   void applyAdjointHessian(std::vector<Real> &ahuv, const std::vector<Real> &u,
                            const std::vector<Real> &v, const std::vector<Real> &x,
-                           Real &tol) {
+                           Tolerance<Real> &tol) {
     ahuv.assign(ahuv.size(),static_cast<Real>(0));
   }
 

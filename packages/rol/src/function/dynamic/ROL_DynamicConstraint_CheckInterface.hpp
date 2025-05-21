@@ -25,7 +25,7 @@ private:
   using Con = DynamicConstraint<Real>;
 
   Con& con_;
-  Real tol_;
+  Tolerance<Real> tol_;
   TimeStamp<Real> ts_;
 
 public:

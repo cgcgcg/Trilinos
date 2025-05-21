@@ -27,7 +27,7 @@ namespace ROL {
 template<typename Real>
 class ScalarMinimizationLineSearch_U : public LineSearch_U<Real> {
 private:
-  Ptr<Vector<Real>>             xnew_; 
+  Ptr<Vector<Real>>             xnew_;
   Ptr<Vector<Real>>             g_;
   Ptr<ScalarMinimization<Real>> sm_;
   Ptr<Bracketing<Real>>         br_;
@@ -46,7 +46,8 @@ private:
     const Ptr<Vector<Real>> xnew_;
     const Ptr<const Vector<Real>> x_, s_;
     const Ptr<Objective<Real>> obj_;
-    Real ftol_, alpha_, val_;
+    Tolerance<Real> ftol_;
+    Real  alpha_, val_;
     bool FDdirDeriv_;
   public:
     Phi(const Ptr<Vector<Real>> &xnew,
@@ -68,7 +69,7 @@ private:
       return val_;
     }
     Real deriv(const Real alpha) {
-      Real tol = std::sqrt(ROL_EPSILON<Real>());
+      Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
       Real val(0);
       xnew_->set(*x_); xnew_->axpy(alpha,*s_);
       if (FDdirDeriv_) {
@@ -154,7 +155,7 @@ private:
 
 public:
   // Constructor
-  ScalarMinimizationLineSearch_U( ParameterList &parlist, 
+  ScalarMinimizationLineSearch_U( ParameterList &parlist,
     const Ptr<ScalarMinimization<Real>> &sm = nullPtr,
     const Ptr<Bracketing<Real>>         &br = nullPtr,
     const Ptr<ScalarFunction<Real>>     &sf = nullPtr )
@@ -172,7 +173,7 @@ public:
     }
     // Get ScalarMinimization Method
     std::string type = list.get("Type","Brent's");
-    Real tol         = list.sublist(type).get("Tolerance",oem10);
+    Tolerance<Real> tol         = list.sublist(type).get("Tolerance",oem10);
     int niter        = list.sublist(type).get("Iteration Limit",1000);
     ROL::ParameterList plist;
     plist.sublist("Scalar Minimization").set("Type",type);
@@ -230,7 +231,7 @@ public:
 
   // Find the minimum of phi(alpha) = f(x + alpha*s) using Brent's method
   void run( Real &alpha, Real &fval, int &ls_neval, int &ls_ngrad,
-            const Real &gs, const Vector<Real> &s, const Vector<Real> &x, 
+            const Real &gs, const Vector<Real> &s, const Vector<Real> &x,
             Objective<Real> &obj ) override {
     ls_neval = 0; ls_ngrad = 0;
 
@@ -257,7 +258,7 @@ public:
     int nfval = 0, ngrad = 0;
     Real A(0),      fA = fval;
     Real B = alpha, fB = phi->value(B);
-    br_->run(alpha,fval,A,fA,B,fB,nfval,ngrad,*phi,*test); 
+    br_->run(alpha,fval,A,fA,B,fB,nfval,ngrad,*phi,*test);
     B = alpha;
     ls_neval += nfval; ls_ngrad += ngrad;
 
@@ -266,7 +267,7 @@ public:
     sm_->run(fval, alpha, nfval, ngrad, *phi, A, B, *test);
     ls_neval += nfval; ls_ngrad += ngrad;
 
-    setNextInitialAlpha(alpha); 
+    setNextInitialAlpha(alpha);
   }
 }; // class ROL::ScalarMinimization_U
 

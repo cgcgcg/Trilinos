@@ -236,7 +236,7 @@ public:
     return val;
   }
 
-  Real getObjectiveValue(const Vector<Real> &x, Real &tol) {
+  Real getObjectiveValue(const Vector<Real> &x, Tolerance<Real> &tol) {
     int key(0);
     Real val(0);
     bool isComputed = fval_->get(val,key);
@@ -247,7 +247,7 @@ public:
     return val;
   }
 
-  void getObjectiveGradient(Vector<Real> &g, const Vector<Real> &x, Real &tol) {
+  void getObjectiveGradient(Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol) {
     int key(0);
     bool isComputed = gradient_->get(g,key);
     if (!isComputed) {
@@ -285,7 +285,7 @@ public:
       @param[in]          x   is the current iterate.
       @param[in]          tol is a tolerance for inexact Moreau-Yosida penalty computation.
   */
-  Real value( const Vector<Real> &x, Real &tol ) {
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
     // Compute objective function value
     Real fval = getObjectiveValue(x,tol);
     // Add value of the Moreau-Yosida penalty
@@ -304,7 +304,7 @@ public:
       @param[in]          x   is the current iterate.
       @param[in]          tol is a tolerance for inexact Moreau-Yosida penalty computation.
   */
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
     // Compute gradient of objective function
     getObjectiveGradient(g,x,tol);
     // Add gradient of the Moreau-Yosida penalty
@@ -323,7 +323,7 @@ public:
       @param[in]          x   is the current iterate.
       @param[in]          tol is a tolerance for inexact Moreau-Yosida penalty computation.
   */
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
     // Apply objective Hessian to a vector
     obj_->hessVec(hv,v,x,tol);
     // Add Hessian of the Moreau-Yosida penalty

@@ -8,7 +8,7 @@
 // @HEADER
 
 /*! \file  test_07.cpp
-    \brief Validate that the proximal gradient algorithm reverts to 
+    \brief Validate that the proximal gradient algorithm reverts to
            linesearch gradient descent when the nonsmooth term is zero.
 */
 
@@ -40,19 +40,19 @@ public:
     }
   }
 
-  Real value(const std::vector<Real> &x, Real &tol) {
+  Real value(const std::vector<Real> &x, ROL::Tolerance<Real> &tol) {
     Real val(0);
     for (int i = 0; i < dim_; ++i)
       val += static_cast<Real>(0.5)*a_[i]*x[i]*x[i] + b_[i]*x[i];
     return val;
   }
 
-  void gradient(std::vector<Real> &g, const std::vector<Real> &x, Real &tol) {
+  void gradient(std::vector<Real> &g, const std::vector<Real> &x, ROL::Tolerance<Real> &tol) {
     for (int i = 0; i < dim_; ++i)
       g[i] = a_[i]*x[i] + b_[i];
   }
 
-  void hessVec(std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol) {
+  void hessVec(std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, ROL::Tolerance<Real> &tol) {
     for (int i = 0; i < dim_; ++i)
       hv[i] = a_[i]*v[i];
   }
@@ -96,7 +96,7 @@ int main(int argc, char *argv[]) {
     list.sublist("Status Test").set("Constraint Tolerance",1e-8);
     list.sublist("Status Test").set("Step Tolerance",1e-12);
     list.sublist("Status Test").set("Iteration Limit", 10000);
- 
+
     int dim = 5;
     ROL::Ptr<ROL::StdVector<RealT>>        sol, wts, y;
     ROL::Ptr<QuadraticTypeP_Test01<RealT>> sobj;

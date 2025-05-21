@@ -33,7 +33,7 @@ void D_Objective<Real>::update(const Vector<Real> &z, UpdateType type, int iter)
 }
 
 template<typename Real>
-Real D_Objective<Real>::value( const Vector<Real> &z, Real &tol ) {
+Real D_Objective<Real>::value( const Vector<Real> &z, Tolerance<Real> &tol ) {
   if (!isDetComputed_) {
     det_ = getConstraint()->logDeterminant(z);
     isDetComputed_ = true;
@@ -42,7 +42,7 @@ Real D_Objective<Real>::value( const Vector<Real> &z, Real &tol ) {
 }
 
 template<typename Real>
-void D_Objective<Real>::gradient( Vector<Real> &g, const Vector<Real> &z, Real &tol ) {
+void D_Objective<Real>::gradient( Vector<Real> &g, const Vector<Real> &z, Tolerance<Real> &tol ) {
   if (p_ == nullPtr) p_ = g.clone();
   g.zero();
   for (int i = 0; i < dim_; ++i) {
@@ -57,7 +57,7 @@ void D_Objective<Real>::gradient( Vector<Real> &g, const Vector<Real> &z, Real &
 }
 
 template<typename Real>
-void D_Objective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &z, Real &tol ) {
+void D_Objective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &z, Tolerance<Real> &tol ) {
   if (p_ == nullPtr) p_ = hv.clone();
   hv.zero();
   for (int i = 0; i < dim_; ++i) {

@@ -81,7 +81,7 @@ public:
 
   using TypeB::Algorithm<Real>::run;
   void run( Vector<Real>          &x,
-            const Vector<Real>    &g, 
+            const Vector<Real>    &g,
             Objective<Real>       &obj,
             BoundConstraint<Real> &bnd,
             std::ostream          &outStream = std::cout) override;
@@ -143,7 +143,7 @@ private:
   Real dtrpcg(Vector<Real> &w, int &iflag, int &iter,
               const Vector<Real> &g, const Vector<Real> &x, const Vector<Real> &gdual,
               const Real del, TrustRegionModel_U<Real> &model, BoundConstraint<Real> &bnd,
-              const Real tol, const Real stol,
+              Tolerance<Real> tol, const Tolerance<Real> stol,
               Vector<Real> &p, Vector<Real> &q, Vector<Real> &r,
               Vector<Real> &t, Vector<Real> &pwa1, Vector<Real> &pwa2,
               Vector<Real> &dwa,
@@ -162,7 +162,7 @@ private:
                    const Vector<Real> &g,
                    TrustRegionModel_U<Real> &model,
                    BoundConstraint<Real> &bnd,
-                   Real &tol,
+                   Tolerance<Real> &tol,
                    Vector<Real> &pwa1,
                    Vector<Real> &pwa2) const;
 
@@ -172,7 +172,7 @@ private:
                     const Vector<Real> &g,
                     TrustRegionModel_U<Real> &model,
                     BoundConstraint<Real> &bnd,
-                    Real &tol,
+                    Tolerance<Real> &tol,
                     Vector<Real> &dwa,
                     Vector<Real> &pwa) const;
 

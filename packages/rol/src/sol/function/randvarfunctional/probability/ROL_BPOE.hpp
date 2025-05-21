@@ -12,7 +12,7 @@
 
 #include "ROL_RandVarFunctional.hpp"
 
-/** @ingroup stochastic_group 
+/** @ingroup stochastic_group
     \class ROL::BPOE
     \brief Provides the implementation of the buffered probability of exceedance.
 
@@ -81,7 +81,7 @@ public:
   void updateValue(Objective<Real>         &obj,
                    const Vector<Real>      &x,
                    const std::vector<Real> &xstat,
-                   Real                    &tol) {
+                   Tolerance<Real>         &tol) {
     const Real zero(0), one(1);
     Real val = computeValue(obj,x,tol);
     Real bp  = xstat[0]*(val-threshold_)+one;
@@ -102,7 +102,7 @@ public:
   void updateGradient(Objective<Real>         &obj,
                       const Vector<Real>      &x,
                       const std::vector<Real> &xstat,
-                      Real                    &tol) {
+                      Tolerance<Real>         &tol) {
     const Real zero(0), one(1), two(2);
     Real val = computeValue(obj,x,tol);
     Real bp  = xstat[0]*(val-threshold_)+one;
@@ -142,7 +142,7 @@ public:
                      const std::vector<Real> &vstat,
                      const Vector<Real>      &x,
                      const std::vector<Real> &xstat,
-                     Real                    &tol) {
+                     Tolerance<Real>         &tol) {
     const Real zero(0), one(1), two(2), three(3);
     Real val = computeValue(obj,x,tol);
     Real bp  = xstat[0]*(val-threshold_)+one;
@@ -158,7 +158,7 @@ public:
       hvec_[0] += weight_ * pvalp0;
       hvec_[1] += weight_ * pvalp1 * (val-threshold_);
       hvec_[2] += weight_ * pvalp2 * (val-threshold_) * (val-threshold_);
-      hvec_[3] += weight_ * pvalp1 * gv; 
+      hvec_[3] += weight_ * pvalp1 * gv;
       hvec_[4] += weight_ * pvalp2 * (val-threshold_) * gv;
       g_->axpy(weight_ * pvalp1, *dualVector_);
       dualVec1_->axpy(weight_ * pvalp2 * (val-threshold_), *dualVector_);

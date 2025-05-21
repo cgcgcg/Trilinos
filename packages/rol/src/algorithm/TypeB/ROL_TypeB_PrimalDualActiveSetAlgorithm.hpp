@@ -35,7 +35,7 @@ private:
   int totalKrylov_; ///< Total number of Krylov iterations per PDAS iteration
   int iterKrylov_;  ///< Number of Krylov iterations (used for inexact Newton)
   int flagKrylov_;  ///< Termination flag for Krylov method (used for inexact Newton)
- 
+
   bool useSecantHessVec_; ///< Whether or not to use to a secant approximation as the Hessian
   bool useSecantPrecond_; ///< Whether or not to use a secant approximation to precondition inexact Newton
 
@@ -45,8 +45,8 @@ private:
   Real stol_;         ///< PDAS minimum step size stopping tolerance (default: 1e-8)
   Real gtol_;         ///< PDAS gradient stopping tolerance (default: 1e-6)
   Real scale_;        ///< Scale for dual variables in the active set, \f$c\f$ (default: 1)
-  Real neps_;         ///< \f$\epsilon\f$-active set parameter 
-  Real itol_;         ///< Inexact Krylov tolerance
+  Real neps_;         ///< \f$\epsilon\f$-active set parameter
+  Tolerance<Real> itol_;         ///< Inexact Krylov tolerance
   Real atolKrylov_;   ///< Absolute tolerance for Krylov solve (default: 1e-4)
   Real rtolKrylov_;   ///< Relative tolerance for Krylov solve (default: 1e-2)
   int maxitKrylov_;   ///< Maximum number of Krylov iterations (default: 100)
@@ -77,7 +77,7 @@ private:
                 const Ptr<Vector<Real>>          &pwa)
       : obj_(obj), bnd_(bnd), x_(x), xlam_(xlam), eps_(eps),
         secant_(secant), useSecant_(useSecant), pwa_(pwa) {}
-    void apply(Vector<Real> &Hv, const Vector<Real> &v, Real &tol) const {
+    void apply(Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol) const {
       pwa_->set(v);
       bnd_->pruneActive(*pwa_,*xlam_,eps_);
       if (!useSecant_) obj_->hessVec(Hv,*pwa_,*x_,tol);
@@ -107,10 +107,10 @@ private:
                 const Ptr<Vector<Real>>          &dwa)
       : obj_(obj), bnd_(bnd), x_(x), xlam_(xlam), eps_(eps),
         secant_(secant), useSecant_(useSecant), dwa_(dwa) {}
-    void apply(Vector<Real> &Hv, const Vector<Real> &v, Real &tol) const {
-      Hv.set(v.dual()); 
+    void apply(Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol) const {
+      Hv.set(v.dual());
     }
-    void applyInverse(Vector<Real> &Hv, const Vector<Real> &v, Real &tol) const {
+    void applyInverse(Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol) const {
       dwa_->set(v);
       bnd_->pruneActive(*dwa_,*xlam_,eps_);
       if ( useSecant_ ) secant_->applyH(Hv,*dwa_);
@@ -146,7 +146,7 @@ private:
                      const Ptr<Vector<Real>>          &dwa)
       : obj_(obj), bnd_(bnd), con_(con), x_(x), xlam_(xlam), eps_(eps),
         secant_(secant), useSecant_(useSecant), pwa_(pwa), dwa_(dwa) {}
-    void apply(Vector<Real> &Hv, const Vector<Real> &v, Real &tol) const {
+    void apply(Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol) const {
       PartitionedVector<Real> &Hvp = dynamic_cast<PartitionedVector<Real>&>(Hv);
       const PartitionedVector<Real> &vp = dynamic_cast<const PartitionedVector<Real>&>(v);
       pwa_->set(*vp.get(0));
@@ -181,10 +181,10 @@ private:
                      const Ptr<Vector<Real>>          &dwa)
       : obj_(obj), bnd_(bnd), x_(x), xlam_(xlam), eps_(eps),
         secant_(secant), useSecant_(useSecant), dwa_(dwa) {}
-    void apply(Vector<Real> &Hv, const Vector<Real> &v, Real &tol) const {
-      Hv.set(v.dual()); 
+    void apply(Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol) const {
+      Hv.set(v.dual());
     }
-    void applyInverse(Vector<Real> &Hv, const Vector<Real> &v, Real &tol) const {
+    void applyInverse(Vector<Real> &Hv, const Vector<Real> &v, Tolerance<Real> &tol) const {
       PartitionedVector<Real> &Hvp = dynamic_cast<PartitionedVector<Real>&>(Hv);
       const PartitionedVector<Real> &vp = dynamic_cast<const PartitionedVector<Real>&>(v);
       dwa_->set(*vp.get(0));
@@ -207,7 +207,7 @@ private:
                   const Vector<Real>    &g,
                   Objective<Real>       &obj,
                   BoundConstraint<Real> &bnd,
-                  std::ostream &outStream = std::cout); 
+                  std::ostream &outStream = std::cout);
 
 public:
 
@@ -215,7 +215,7 @@ public:
 
   using TypeB::Algorithm<Real>::run;
   void run( Vector<Real>          &x,
-            const Vector<Real>    &g, 
+            const Vector<Real>    &g,
             Objective<Real>       &obj,
             BoundConstraint<Real> &bnd,
             std::ostream          &outStream = std::cout) override;

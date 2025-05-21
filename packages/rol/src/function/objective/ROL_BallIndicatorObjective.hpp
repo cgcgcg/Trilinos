@@ -33,14 +33,14 @@ public:
   BallIndicatorObjective(const Ptr<Vector<Real>> &x, Real rad)
     : x_(x), pwa_(x->clone()), rad_(rad) {}
 
-  Real value( const Vector<Real> &x, Real &tol ) {
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
     const Real zero(0), one(1);
     pwa_->set(x); pwa_->axpy(-one,*x_);
     Real norm = pwa_->norm();
     return (norm <= rad_) ? zero : ROL_INF<Real>();
   }
 
-  void prox( Vector<Real> &Pv, const Vector<Real> &v, Real t, Real &tol){
+  void prox( Vector<Real> &Pv, const Vector<Real> &v, Real t, Tolerance<Real> &tol){
     pwa_->set(v); pwa_->axpy(-one,*x_);
     Real norm = pwa_->norm();
     if(norm <= rad_) {

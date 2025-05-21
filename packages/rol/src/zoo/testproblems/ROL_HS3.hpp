@@ -51,14 +51,14 @@ namespace ZOO {
   public:
     Objective_HS3(void) {}
 
-    Real value( const Vector<Real> &x, Real &tol ) {
+    Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
      
       
       ROL::Ptr<const vector> ex = getVector(x);
       return (*ex)[1] + 1.e-5 * std::pow((*ex)[1] - (*ex)[0],2.0);
     }
 
-    void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+    void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
     
       
       ROL::Ptr<const vector> ex = getVector(x);
@@ -67,7 +67,7 @@ namespace ZOO {
       (*eg)[1] = 1.0 + 1.e-5 * 2.0 * ((*ex)[1] - (*ex)[0]);
     }
 #if USE_HESSVEC
-    void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+    void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
 
       
       ROL::Ptr<const vector> ex = getVector(x);
@@ -82,7 +82,7 @@ namespace ZOO {
       (*ehv)[1] = h21 * (*ev)[0] + h22 * (*ev)[1];
     } 
 #endif
-    void invHessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+    void invHessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
 
       
       ROL::Ptr<const vector> ex = getVector(x);

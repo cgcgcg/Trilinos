@@ -23,7 +23,7 @@ GradientAlgorithm<Real>::GradientAlgorithm(ParameterList &list) {
   ParameterList &lslist = list.sublist("Step").sublist("Line Search");
   maxit_        = lslist.get("Function Evaluation Limit",                        20);
   alpha0_       = lslist.get("Initial Step Size",                               1.0);
-  normAlpha_    = lslist.get("Normalize Initial Step Size",                   false); 
+  normAlpha_    = lslist.get("Normalize Initial Step Size",                   false);
   alpha0bnd_    = lslist.get("Lower Bound for Initial Step Size",              1e-4);
   useralpha_    = lslist.get("User Defined Initial Step Size",                false);
   usePrevAlpha_ = lslist.get("Use Previous Step Length as Initial Guess",     false);
@@ -49,10 +49,10 @@ void GradientAlgorithm<Real>::initialize(Vector<Real>          &x,
   // Initialize data
   TypeB::Algorithm<Real>::initialize(x,g);
   // Update approximate gradient and approximate objective function.
-  Real ftol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> ftol = std::sqrt(ROL_EPSILON<Real>());
   proj_->project(x,outStream);
   obj.update(x,UpdateType::Initial,state_->iter);
-  state_->value = obj.value(x,ftol); 
+  state_->value = obj.value(x,ftol);
   state_->nfval++;
   obj.gradient(*state_->gradientVec,x,ftol);
   state_->ngrad++;
@@ -90,7 +90,7 @@ void GradientAlgorithm<Real>::initialize(Vector<Real>          &x,
 
 template<typename Real>
 void GradientAlgorithm<Real>::run( Vector<Real>          &x,
-                                   const Vector<Real>    &g, 
+                                   const Vector<Real>    &g,
                                    Objective<Real>       &obj,
                                    BoundConstraint<Real> &bnd,
                                    std::ostream          &outStream ) {
@@ -98,7 +98,8 @@ void GradientAlgorithm<Real>::run( Vector<Real>          &x,
   // Initialize trust-region data
   initialize(x,g,obj,bnd,outStream);
   Ptr<Vector<Real>> s = x.clone();
-  Real ftrial(0), gs(0), ftrialP(0), alphaP(0), tol(std::sqrt(ROL_EPSILON<Real>()));
+  Real ftrial(0), gs(0), ftrialP(0), alphaP(0);
+  Tolerance<Real> tol(std::sqrt(ROL_EPSILON<Real>()));
   int ls_nfval = 0;
   bool incAlpha = false, accept = true;
 
@@ -109,7 +110,7 @@ void GradientAlgorithm<Real>::run( Vector<Real>          &x,
   state_->stepVec->set(state_->gradientVec->dual());
   while (status_->check(*state_)) {
     accept = true;
-    // Perform backtracking line search 
+    // Perform backtracking line search
     if (!usePrevAlpha_ && !useAdapt_) state_->searchSize = alpha0_;
     state_->iterateVec->set(x);
     state_->iterateVec->axpy(-state_->searchSize,*state_->stepVec);

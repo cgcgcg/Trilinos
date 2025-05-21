@@ -30,24 +30,24 @@ void MeanValueObjective<Real>::update( const Vector<Real> &x, bool flag, int ite
 }
 
 template<typename Real>
-Real MeanValueObjective<Real>::value( const Vector<Real> &x, Real &tol ) {
+Real MeanValueObjective<Real>::value( const Vector<Real> &x, Tolerance<Real> &tol ) {
   return obj_->value(x,tol);
 }
 
 template<typename Real>
-void MeanValueObjective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+void MeanValueObjective<Real>::gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
   obj_->gradient(g,x,tol);
 }
 
 template<typename Real>
 void MeanValueObjective<Real>::hessVec( Vector<Real> &hv, const Vector<Real> &v,
-        const Vector<Real> &x, Real &tol ) {
+        const Vector<Real> &x, Tolerance<Real> &tol ) {
   obj_->hessVec(hv,v,x,tol);
 }
 
 template<typename Real>
 void MeanValueObjective<Real>::precond( Vector<Real> &Pv, const Vector<Real> &v,
-                      const Vector<Real> &x, Real &tol ) {
+                      const Vector<Real> &x, Tolerance<Real> &tol ) {
   obj_->precond(Pv,v,x,tol);
 }
 

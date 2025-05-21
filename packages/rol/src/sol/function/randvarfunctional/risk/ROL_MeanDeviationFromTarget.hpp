@@ -48,8 +48,8 @@ private:
   std::vector<Real> coeff_;
   uint NumMoments_;
 
-  std::vector<Real> pval_; 
-  std::vector<Real> pgv_; 
+  std::vector<Real> pval_;
+  std::vector<Real> pgv_;
 
   std::vector<Ptr<Vector<Real> > > pg0_;
   std::vector<Ptr<Vector<Real> > > pg_;
@@ -132,7 +132,7 @@ public:
   */
   MeanDeviationFromTarget( const std::vector<Real> &target,
                            const std::vector<Real> &order,
-                           const std::vector<Real> &coeff, 
+                           const std::vector<Real> &coeff,
                            const Ptr<PositiveFunction<Real> > &pf )
     : RandVarFunctional<Real>(), positiveFunction_(pf), firstResetMDT_(true) {
     target_.clear(); order_.clear(); coeff_.clear();
@@ -206,11 +206,11 @@ public:
       pval_[p] = zero; pgv_[p] = zero;
     }
   }
-  
+
   void updateValue(Objective<Real>         &obj,
                    const Vector<Real>      &x,
                    const std::vector<Real> &xstat,
-                   Real                    &tol) {
+                   Tolerance<Real>         &tol) {
     Real diff(0), pf0(0);
     Real val = computeValue(obj,x,tol);
     val_    += weight_ * val;
@@ -238,7 +238,7 @@ public:
   void updateGradient(Objective<Real>         &obj,
                       const Vector<Real>      &x,
                       const std::vector<Real> &xstat,
-                      Real                    &tol) {
+                      Tolerance<Real>         &tol) {
     Real diff(0), pf0(0), pf1(0), c(0), one(1);
     Real val = computeValue(obj,x,tol);
     computeGradient(*dualVector_,obj,x,tol);
@@ -276,7 +276,7 @@ public:
                      const std::vector<Real> &vstat,
                      const Vector<Real>      &x,
                      const std::vector<Real> &xstat,
-                     Real                    &tol) {
+                     Tolerance<Real>         &tol) {
     const Real one(1), two(2);
     Real diff(0), pf0(0), pf1(0), pf2(0), p0(0), p1(0), p2(0), c(0);
     Real val = computeValue(obj,x,tol);

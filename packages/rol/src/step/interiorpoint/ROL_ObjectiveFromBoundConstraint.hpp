@@ -121,7 +121,7 @@ public:
   }
 
 
-  Real value( const Vector<Real> &x, Real &tol ) {
+  Real value( const Vector<Real> &x, Tolerance<Real> &tol ) {
     const Real zero(0), one(1), two(2);
 
     ROL::Ptr<UnaryFunction> func;
@@ -203,7 +203,7 @@ public:
 
   }
 
-  void gradient( Vector<Real> &g, const Vector<Real> &x, Real &tol ) {
+  void gradient( Vector<Real> &g, const Vector<Real> &x, Tolerance<Real> &tol ) {
     const Real zero(0), one(1), two(2);
 
     a_->zero(); b_->zero();
@@ -285,7 +285,7 @@ public:
 
   }
 
-  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+  void hessVec( Vector<Real> &hv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
     const Real one(1), two(2), eight(8);
 
     switch(btype_) {

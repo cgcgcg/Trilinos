@@ -106,7 +106,7 @@ public:
     }
   }
 
-  virtual void hessVec_12( V& hv, const V& v, const V&u, const V&z, Real &tol ) override {
+  virtual void hessVec_12( V& hv, const V& v, const V&u, const V&z, Tolerance<Real> &tol ) override {
 
     auto& hvp = partition(hv);
     auto& vp  = partition(v);
@@ -122,7 +122,7 @@ public:
     }
   }
  
-  virtual void hessVec_21( V&hv, const V&v, const V&u, const V&z, Real &tol ) override {
+  virtual void hessVec_21( V&hv, const V&v, const V&u, const V&z, Tolerance<Real> &tol ) override {
 
     auto& hvp = partition(hv);
     auto& vp  = partition(v);
@@ -138,7 +138,7 @@ public:
     }
   }
 
-  virtual void hessVec_22( V&hv, const V&v, const V&u,  const V&z, Real &tol ) override {
+  virtual void hessVec_22( V&hv, const V&v, const V&u,  const V&z, Tolerance<Real> &tol ) override {
 
     auto& hvp = partition(hv);
     auto& vp  = partition(v);

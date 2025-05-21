@@ -49,28 +49,28 @@ public:
                      const Ptr<TraceSampler<Real>>   &traceSampler = nullPtr);
 
   void update_2(const Vector<Real> &z, UpdateType type, int iter = -1 ) override;
-  void value(Vector<Real> &c,const Vector<Real> &u,const Vector<Real> &z,Real &tol) override;
-  void solve(Vector<Real> &c,Vector<Real> &u,const Vector<Real> &z,Real &tol) override;
+  void value(Vector<Real> &c,const Vector<Real> &u,const Vector<Real> &z,Tolerance<Real> &tol) override;
+  void solve(Vector<Real> &c,Vector<Real> &u,const Vector<Real> &z,Tolerance<Real> &tol) override;
   void applyJacobian_1(Vector<Real> &jv,const Vector<Real> &v,const Vector<Real> &u,
-                       const Vector<Real> &z,Real &tol) override;
+                       const Vector<Real> &z,Tolerance<Real> &tol) override;
   void applyJacobian_2(Vector<Real> &jv,const Vector<Real> &v,const Vector<Real> &u,
-                       const Vector<Real> &z,Real &tol) override;
+                       const Vector<Real> &z,Tolerance<Real> &tol) override;
   void applyInverseJacobian_1(Vector<Real> &ijv,const Vector<Real> &v,
-                              const Vector<Real> &u,const Vector<Real> &z,Real &tol) override;
+                              const Vector<Real> &u,const Vector<Real> &z,Tolerance<Real> &tol) override;
   void applyAdjointJacobian_1(Vector<Real> &ajv,const Vector<Real> &v,
-                              const Vector<Real> &u,const Vector<Real> &z,Real &tol) override;
+                              const Vector<Real> &u,const Vector<Real> &z,Tolerance<Real> &tol) override;
   void applyAdjointJacobian_2(Vector<Real> &ajv,const Vector<Real> &v,
-                              const Vector<Real> &u,const Vector<Real> &z,Real &tol) override;
+                              const Vector<Real> &u,const Vector<Real> &z,Tolerance<Real> &tol) override;
   void applyInverseAdjointJacobian_1(Vector<Real> &iajv,const Vector<Real> &v,
-                                     const Vector<Real> &u,const Vector<Real> &z,Real &tol) override;
+                                     const Vector<Real> &u,const Vector<Real> &z,Tolerance<Real> &tol) override;
   void applyAdjointHessian_11(Vector<Real> &ahwv,const Vector<Real> &w,const Vector<Real> &v,
-                              const Vector<Real> &u,const Vector<Real> &z,Real &tol) override;
+                              const Vector<Real> &u,const Vector<Real> &z,Tolerance<Real> &tol) override;
   void applyAdjointHessian_12(Vector<Real> &ahwv,const Vector<Real> &w,const Vector<Real> &v,
-                              const Vector<Real> &u,const Vector<Real> &z,Real &tol) override;
+                              const Vector<Real> &u,const Vector<Real> &z,Tolerance<Real> &tol) override;
   void applyAdjointHessian_21(Vector<Real> &ahwv,const Vector<Real> &w,const Vector<Real> &v,
-                              const Vector<Real> &u,const Vector<Real> &z,Real &tol) override;
+                              const Vector<Real> &u,const Vector<Real> &z,Tolerance<Real> &tol) override;
   void applyAdjointHessian_22(Vector<Real> &ahwv,const Vector<Real> &w,const Vector<Real> &v,
-                              const Vector<Real> &u,const Vector<Real> &z,Real &tol) override;
+                              const Vector<Real> &u,const Vector<Real> &z,Tolerance<Real> &tol) override;
 
   void getFactor(Vector<Real> &F, int k) const;
   void getFactor(Vector<Real> &F, const std::vector<Real> &param) const;

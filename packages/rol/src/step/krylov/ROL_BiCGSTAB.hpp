@@ -78,7 +78,7 @@ public:
 
     Real rho(1), rho1(1), alpha(1), beta(0), omega(1);
     Real rnorm = b.norm();
-    Real itol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> itol = std::sqrt(ROL_EPSILON<Real>());
     const Real rtol = std::min(Krylov<Real>::getAbsoluteTolerance(),Krylov<Real>::getRelativeTolerance()*rnorm);
     if (rnorm <= rtol) return rnorm;
 
@@ -102,7 +102,7 @@ public:
         itol = rtol/((Real)Krylov<Real>::getMaximumIteration() * rnorm);
       M.applyInverse(*y_, *p_, itol);
       A.apply(*v_, *y_, itol);
-      
+
       alpha = rho1 / v_->dot(*r1_);
       h_->set(x);
       h_->axpy(alpha,*y_);

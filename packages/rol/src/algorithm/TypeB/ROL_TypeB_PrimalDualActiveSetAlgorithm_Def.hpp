@@ -78,7 +78,7 @@ void PrimalDualActiveSetAlgorithm<Real>::initialize(Vector<Real>          &x,
   const Real one(1);
   TypeB::Algorithm<Real>::initialize(x,g);
   // Update approximate gradient and approximate objective function.
-  Real ftol = std::sqrt(ROL_EPSILON<Real>());
+  Tolerance<Real> ftol = std::sqrt(ROL_EPSILON<Real>());
   proj_->project(x,outStream);
   state_->iterateVec->set(x);
   obj.update(x,UpdateType::Initial,state_->iter);
@@ -94,7 +94,7 @@ void PrimalDualActiveSetAlgorithm<Real>::initialize(Vector<Real>          &x,
 
 template<typename Real>
 void PrimalDualActiveSetAlgorithm<Real>::run( Vector<Real>          &x,
-                                              const Vector<Real>    &g, 
+                                              const Vector<Real>    &g,
                                               Objective<Real>       &obj,
                                               BoundConstraint<Real> &bnd,
                                               std::ostream          &outStream ) {
@@ -112,7 +112,8 @@ void PrimalDualActiveSetAlgorithm<Real>::run( Vector<Real>          &x,
   }
   lambda->set(state_->gradientVec->dual());
   lambda->scale(-one);
-  Real xnorm(0), snorm(0), rnorm(0), tol(std::sqrt(ROL_EPSILON<Real>()));
+  Real xnorm(0), snorm(0), rnorm(0);
+  Tolerance<Real> tol(std::sqrt(ROL_EPSILON<Real>()));
 
   Ptr<LinearOperator<Real>> hessian, precond;
 
@@ -136,7 +137,7 @@ void PrimalDualActiveSetAlgorithm<Real>::run( Vector<Real>          &x,
       // PROJECT x ONTO PRIMAL DUAL FEASIBLE SET
       /********************************************************************/
       As->zero();                                // As   = 0
-   
+
       xtmp->set(*bnd.getUpperBound());           // xtmp = u
       xtmp->axpy(-one,*state_->iterateVec);      // xtmp = u - x
       bnd.pruneUpperInactive(*xtmp,*xlam,neps_); // xtmp = A(u - x)
@@ -164,7 +165,7 @@ void PrimalDualActiveSetAlgorithm<Real>::run( Vector<Real>          &x,
       gtmp->scale(-one);                      // gtmp = -(g + H*As + ...)
       bnd.pruneActive(*gtmp,*xlam,neps_);     // gtmp = -I(g + H*As + ...)
       /********************************************************************/
-      // SOLVE REDUCED NEWTON SYSTEM 
+      // SOLVE REDUCED NEWTON SYSTEM
       /********************************************************************/
       if (hasPoly_) {
         rnorm = std::sqrt(gtmp->dot(*gtmp)+b->dot(*b));
@@ -197,7 +198,7 @@ void PrimalDualActiveSetAlgorithm<Real>::run( Vector<Real>          &x,
       }
       state_->stepVec->plus(*As);                          // s = Is + As
       /********************************************************************/
-      // UPDATE STEP AND MULTIPLIER 
+      // UPDATE STEP AND MULTIPLIER
       /********************************************************************/
       x.set(*state_->iterateVec);
       x.plus(*state_->stepVec);
@@ -216,7 +217,7 @@ void PrimalDualActiveSetAlgorithm<Real>::run( Vector<Real>          &x,
       gtmp->plus(*state_->gradientVec);
       gtmp->scale(-one);
       lambda->set(gtmp->dual());
-      // Compute criticality measure  
+      // Compute criticality measure
       xtmp->set(x);
       xtmp->plus(*lambda);
       bnd.project(*xtmp);
@@ -247,7 +248,7 @@ void PrimalDualActiveSetAlgorithm<Real>::run( Vector<Real>          &x,
     state_->snorm = snorm;
     obj.update(x,UpdateType::Accept,state_->iter);
     state_->value = obj.value(x,tol); state_->nfval++;
-    
+
     if ( secant_ != nullPtr ) {
       gtmp->set(*state_->gradientVec);
     }
@@ -295,7 +296,7 @@ void PrimalDualActiveSetAlgorithm<Real>::writeHeader( std::ostream& os ) const {
       for( int flag = CG_FLAG_SUCCESS; flag != CG_FLAG_UNDEFINED; ++flag ) {
         os << "    " << NumberToString(flag) << " - "
              << ECGFlagToString(static_cast<ECGFlag>(flag)) << std::endl;
-      }            
+      }
     }
     os << "  feasible - Is iterate feasible?" << std::endl;
     os << std::string(114,'-') << std::endl;

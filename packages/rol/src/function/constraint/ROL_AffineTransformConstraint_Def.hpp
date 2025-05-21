@@ -62,24 +62,24 @@ void AffineTransformConstraint<Real>::update( const Vector<Real> &x, bool flag, 
 }
 
 template<typename Real>
-void AffineTransformConstraint<Real>::value( Vector<Real> &c, const Vector<Real> &x, Real &tol ) {
+void AffineTransformConstraint<Real>::value( Vector<Real> &c, const Vector<Real> &x, Tolerance<Real> &tol ) {
   con_->value(c,*transform(x),tol); 
 }
 
 template<typename Real>
-void AffineTransformConstraint<Real>::applyJacobian( Vector<Real> &jv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+void AffineTransformConstraint<Real>::applyJacobian( Vector<Real> &jv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
   acon_->applyJacobian(*Av_,v,x,tol);
   con_->applyJacobian(jv,*Av_,*transform(x),tol);
 }
 
 template<typename Real>
-void AffineTransformConstraint<Real>::applyAdjointJacobian( Vector<Real> &ajv, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+void AffineTransformConstraint<Real>::applyAdjointJacobian( Vector<Real> &ajv, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
   con_->applyAdjointJacobian(*dual_,v,*transform(x),tol);
   acon_->applyAdjointJacobian(ajv,*dual_,x,tol);
 }
 
 template<typename Real>
-void AffineTransformConstraint<Real>::applyAdjointHessian( Vector<Real> &ahuv, const Vector<Real> &u, const Vector<Real> &v, const Vector<Real> &x, Real &tol ) {
+void AffineTransformConstraint<Real>::applyAdjointHessian( Vector<Real> &ahuv, const Vector<Real> &u, const Vector<Real> &v, const Vector<Real> &x, Tolerance<Real> &tol ) {
   acon_->applyJacobian(*Av_,v,x,tol);
   con_->applyAdjointHessian(*dual_,u,*Av_,*transform(x),tol);
   acon_->applyAdjointJacobian(ahuv,*dual_,x,tol);
@@ -89,7 +89,7 @@ template<typename Real>
 Ptr<const Vector<Real>> AffineTransformConstraint<Real>::transform(const Vector<Real> &x) {
   bool isApplied = storage_->get(*primal_,Constraint<Real>::getParameter());
   if (!isApplied) {
-    Real tol = std::sqrt(ROL_EPSILON<Real>());
+    Tolerance<Real> tol = std::sqrt(ROL_EPSILON<Real>());
     acon_->value(*primal_,x,tol);
     storage_->set(*primal_,Constraint<Real>::getParameter());
   }

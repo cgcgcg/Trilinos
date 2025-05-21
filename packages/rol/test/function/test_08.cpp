@@ -17,10 +17,10 @@
 
 typedef double RealT;
 
-template<class Real> 
+template<class Real>
 class ObjectiveFunctionTest08_1 : public ROL::Objective_SimOpt<Real> {
 public:
-  Real value( const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol ) {
+  Real value( const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol ) {
     ROL::Ptr<const std::vector<Real> > up
       = dynamic_cast<const ROL::StdVector<Real>&>(u).getVector();
     ROL::Ptr<const std::vector<Real> > zp
@@ -28,16 +28,16 @@ public:
     Real half(0.5), quadu(0), quadz(0);
     unsigned usize = up->size();
     for ( unsigned i = 0; i < usize; i++ ) {
-      quadu += (*up)[i]*(*up)[i]; 
+      quadu += (*up)[i]*(*up)[i];
     }
     unsigned zsize = zp->size();
     for ( unsigned i = 0; i < zsize; i++ ) {
-      quadz += (*zp)[i]*(*zp)[i]; 
+      quadz += (*zp)[i]*(*zp)[i];
     }
     return half*(quadu + quadz);
   }
 
-  void gradient_1( ROL::Vector<Real> &g, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol ) {
+  void gradient_1( ROL::Vector<Real> &g, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol ) {
     ROL::Ptr<std::vector<Real> > gp
       = dynamic_cast<ROL::StdVector<Real>&>(g).getVector();
     ROL::Ptr<const std::vector<Real> > up
@@ -45,7 +45,7 @@ public:
     gp->assign(up->begin(),up->end());
   }
 
-  void gradient_2( ROL::Vector<Real> &g, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol ) {
+  void gradient_2( ROL::Vector<Real> &g, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol ) {
     ROL::Ptr<std::vector<Real> > gp
       = dynamic_cast<ROL::StdVector<Real>&>(g).getVector();
     ROL::Ptr<const std::vector<Real> > zp
@@ -54,7 +54,7 @@ public:
   }
 
   void hessVec_11( ROL::Vector<Real> &hv, const ROL::Vector<Real> &v,
-                   const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol ) {
+                   const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol ) {
     ROL::Ptr<std::vector<Real> > hvp
       = dynamic_cast<ROL::StdVector<Real>&>(hv).getVector();
     ROL::Ptr<const std::vector<Real> > vp
@@ -63,17 +63,17 @@ public:
   }
 
   void hessVec_12( ROL::Vector<Real> &hv, const ROL::Vector<Real> &v,
-                   const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol ) {
+                   const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol ) {
     hv.zero();
   }
 
   void hessVec_21( ROL::Vector<Real> &hv, const ROL::Vector<Real> &v,
-                   const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol ) {
+                   const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol ) {
     hv.zero();
   }
 
   void hessVec_22( ROL::Vector<Real> &hv, const ROL::Vector<Real> &v,
-                   const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol ) {
+                   const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol ) {
     ROL::Ptr<std::vector<Real> > hvp
       = dynamic_cast<ROL::StdVector<Real>&>(hv).getVector();
     ROL::Ptr<const std::vector<Real> > vp
@@ -82,10 +82,10 @@ public:
   }
 };
 
-template<class Real> 
+template<class Real>
 class ObjectiveFunctionTest08_2 : public ROL::Objective_SimOpt<Real> {
 public:
-  Real value( const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol ) {
+  Real value( const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol ) {
     ROL::Ptr<const std::vector<Real> > up
       = dynamic_cast<const ROL::StdVector<Real>&>(u).getVector();
     ROL::Ptr<const std::vector<Real> > zp
@@ -102,7 +102,7 @@ public:
     return linu + linz;
   }
 
-  void gradient_1( ROL::Vector<Real> &g, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol ) {
+  void gradient_1( ROL::Vector<Real> &g, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol ) {
     ROL::Ptr<std::vector<Real> > gp
       = dynamic_cast<ROL::StdVector<Real>&>(g).getVector();
     ROL::Ptr<const std::vector<Real> > up
@@ -110,7 +110,7 @@ public:
     gp->assign(up->size(),1);
   }
 
-  void gradient_2( ROL::Vector<Real> &g, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol ) {
+  void gradient_2( ROL::Vector<Real> &g, const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol ) {
     ROL::Ptr<std::vector<Real> > gp
       = dynamic_cast<ROL::StdVector<Real>&>(g).getVector();
     ROL::Ptr<const std::vector<Real> > zp
@@ -119,39 +119,39 @@ public:
   }
 
   void hessVec_11( ROL::Vector<Real> &hv, const ROL::Vector<Real> &v,
-                   const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol ) {
+                   const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol ) {
     hv.zero();
   }
 
   void hessVec_12( ROL::Vector<Real> &hv, const ROL::Vector<Real> &v,
-                   const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol ) {
+                   const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol ) {
     hv.zero();
   }
 
   void hessVec_21( ROL::Vector<Real> &hv, const ROL::Vector<Real> &v,
-                   const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol ) {
+                   const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol ) {
     hv.zero();
   }
 
   void hessVec_22( ROL::Vector<Real> &hv, const ROL::Vector<Real> &v,
-                   const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, Real &tol ) {
+                   const ROL::Vector<Real> &u, const ROL::Vector<Real> &z, ROL::Tolerance<Real> &tol ) {
     hv.zero();
   }
 };
 
-template<class Real> 
+template<class Real>
 class ObjectiveFunctionTest08_scalarize : public ROL::StdObjective<Real> {
 public:
-  Real value( const std::vector<Real> &x, Real &tol ) {
+  Real value( const std::vector<Real> &x, ROL::Tolerance<Real> &tol ) {
     return std::log(x[0]) * std::exp(x[1]);
   }
 
-  void gradient( std::vector<Real> &g, const std::vector<Real> &x, Real &tol ) {
+  void gradient( std::vector<Real> &g, const std::vector<Real> &x, ROL::Tolerance<Real> &tol ) {
     g[0] = std::exp(x[1])/x[0];
     g[1] = std::exp(x[1]) * std::log(x[0]);
   }
 
-  void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, Real &tol ) {
+  void hessVec( std::vector<Real> &hv, const std::vector<Real> &v, const std::vector<Real> &x, ROL::Tolerance<Real> &tol ) {
     Real H11 = -std::exp(x[1])/(x[0]*x[0]);
     Real H12 = std::exp(x[1])/x[0];
     Real H21 = std::exp(x[1])/x[0];
