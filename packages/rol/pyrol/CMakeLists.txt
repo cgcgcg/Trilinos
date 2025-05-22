@@ -27,6 +27,8 @@ TRIBITS_ADD_OPTION_AND_DEFINE(PYROL_BINDER_USE_ONE_FILE
   "Enable the use of one file by Binder."
   OFF )
 
+SET(PYROL_BINDER_NUM_FILES "150" CACHE STRING "Maxinum number of generated files by binder.")
+
 TRIBITS_ADD_OPTION_AND_DEFINE(PYROL_BINDER_CMAKE_ERROR
   PYROL_CMAKE_ERROR
   "Stop the configuration if Binder fails."
