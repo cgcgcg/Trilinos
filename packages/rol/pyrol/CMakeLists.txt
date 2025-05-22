@@ -1,7 +1,20 @@
 # -*- cmake -*-
 
+###################################################################################################
+# binder
+
+SET(POTENTIAL_BINDER_BIN "$ENV{BINDER_ROOT}/bin")
+
+###################################################################################################
+# pybind11
+
+find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+find_package(pybind11 REQUIRED)
+
+###################################################################################################
+
 IF(NOT BUILD_SHARED_LIBS)
-  MESSAGE(FATAL_ERROR "PyROL can only be built with shared libraries. Building of shared libraries is currently set to OFF. To enable shared libraries please set the cache variable \"BUILD_SHARED_LIBS\" to ON")
+  MESSAGE(WARNING "PyTrilinos2 can be built with static linking, but might require building with position-independent code. If you encounter build errors please add \"-fPIC\" to CMAKE_C_FLAGS, CMAKE_C_FLAGS and CMAKE_Fortran_FLAGS.")
 ENDIF()
 
 # Set the package version number
@@ -403,8 +416,6 @@ EXECUTE_PROCESS(COMMAND
   OUTPUT_STRIP_TRAILING_WHITESPACE
   )
 MESSAGE(STATUS "pybind11 CMake path: ${pybind11_DIR}")
-
-find_package(pybind11 REQUIRED)
 
 EXECUTE_PROCESS(COMMAND
   ${Python3_EXECUTABLE} -c "import mpi4py; print(mpi4py.get_include())"
