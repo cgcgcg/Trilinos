@@ -8,5 +8,6 @@ FILE(COPY unsupported DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 INCLUDE(PythonTest)
 
-FILE(COPY test_tolerance.py DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+FILE(COPY test_tolerance.py test_tolerance2.py DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 PYTHON_ADD_TEST(test_tolerance)
+PYTHON_ADD_TEST(test_tolerance2)
