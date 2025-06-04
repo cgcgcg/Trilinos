@@ -7,3 +7,11 @@ INCLUDE(PythonTest)
 
 PYTHON_ADD_TEST(test_tolerance)
 PYTHON_ADD_TEST(test_tolerance2)
+
+
+TRIBITS_ADD_EXECUTABLE_AND_TEST(
+  tolerance2
+  SOURCES test_tolerance.cpp
+  NUM_MPI_PROCS 1
+  PASS_REGULAR_EXPRESSION "TEST PASSED"
+  )
