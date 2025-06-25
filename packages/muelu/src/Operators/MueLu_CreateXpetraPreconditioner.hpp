@@ -82,7 +82,7 @@ CreateXpetraPreconditioner(Teuchos::RCP<Xpetra::Operator<Scalar, LocalOrdinal, G
     tm = Teuchos::TimeMonitor::getNewTimer(timerName);
     tm->start();
 
-    MueLu::KokkosTuningInterface KokkosTuner(op->getMap()->getComm());
+    MueLu::KokkosTuningInterface KokkosTuner(op->getDomainMap()->getComm());
     KokkosTuner.SetParameterList(paramList);
     KokkosTuner.SetMueLuParameters(paramList);
     tm->stop();
@@ -113,7 +113,6 @@ CreateXpetraPreconditioner(Teuchos::RCP<Xpetra::Operator<Scalar, LocalOrdinal, G
 
   // Set fine level operator
   auto mat = rcp_dynamic_cast<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>(op);
-  std::cout << "HERE " << mat << std::endl;
   if (!mat.is_null())
     H->GetLevel(0)->Set("A", mat);
   else
