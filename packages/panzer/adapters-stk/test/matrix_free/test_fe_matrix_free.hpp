@@ -467,10 +467,13 @@ int feAssemblyHex(int argc, char *argv[]) {
     = Teuchos::rcp_dynamic_cast<const Teuchos::MpiComm<int> >(Teuchos::DefaultComm<int>::getComm());
 
   //output stream/file
-  Teuchos::RCP<Teuchos::FancyOStream> outStream;
+  Teuchos::RCP<Teuchos::FancyOStream> outStream = getFancyOStream(Teuchos::rcpFromRef(std::cout));
   Teuchos::RCP<Teuchos::StackedTimer> stacked_timer;
   std::string timingsFile = "";
   std::string test_name = "Matrix-free driver";
+
+  stacked_timer = Teuchos::rcp(new Teuchos::StackedTimer("Matrix-free driver"));;
+  Teuchos::TimeMonitor::setStackedTimer(stacked_timer);
 
   try {
 
@@ -519,10 +522,7 @@ int feAssemblyHex(int argc, char *argv[]) {
     *outStream << "DeviceSpace::  "; DeviceType().print_configuration(*outStream, false);
     *outStream << "HostSpace::    "; HostSpaceType().print_configuration(*outStream, false);
     *outStream << "\n";
-
-    stacked_timer = Teuchos::rcp(new Teuchos::StackedTimer("Matrix-free driver"));;
     stacked_timer->setVerboseOstream(outStream);
-    Teuchos::TimeMonitor::setStackedTimer(stacked_timer);
 
     Teuchos::RCP<Teuchos::ParameterList> strat_params = Teuchos::rcp(new Teuchos::ParameterList("Stratimikos parameters"));
     Teuchos::updateParametersFromXmlFileAndBroadcast(stratFileName, strat_params.ptr(), *comm);
