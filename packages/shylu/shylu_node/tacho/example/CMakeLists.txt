@@ -24,6 +24,7 @@ TRIBITS_ADD_EXECUTABLE(
   NOEXESUFFIX
   NOEXEPREFIX
   SOURCES Tacho_ExampleDriver_double.cpp
+  CATEGORIES BASIC PERFORMANCE
   COMM serial mpi
 )
 TRIBITS_ADD_EXECUTABLE(
@@ -80,3 +81,16 @@ TRIBITS_COPY_FILES_TO_BINARY_DIR(Tacho_SimpleSparseTest_File
         NOEXEPREFIX
 )
 
+
+#
+# Performance Test
+#
+TRIBITS_ADD_TEST(
+  Tacho_ExampleDriverDouble.x
+  ARGS "--method=chol --variant=3"
+  NAME "Tacho_ExampleDriverDouble_Chol_v0"
+  NOEXESUFFIX
+  NOEXEPREFIX
+  NUM_MPI_PROCS 1
+  CATEGORIES PERFORMANCE
+)

@@ -7,6 +7,7 @@
 #include <stk_mesh/base/Ngp.hpp>
 #include <stk_mesh/base/NgpMesh.hpp>
 #include <stk_mesh/base/BulkData.hpp>
+#include "stk_mesh/base/NgpForEachEntity.hpp"
 
 namespace ngp_field_test_utils {
 
@@ -89,7 +90,7 @@ inline void set_field_data_on_host(const stk::mesh::BulkData& stkMesh,
 {
   const stk::mesh::FieldBase* coordField = stkMesh.mesh_meta_data().coordinate_field();
   stk::mesh::for_each_entity_run(stkMesh, stkField.entity_rank(), selector,
-    [&](const stk::mesh::BulkData& bulk, const stk::mesh::Entity entity) {
+    [&](const stk::mesh::BulkData& /*bulk*/, const stk::mesh::Entity entity) {
       double* entityCoords = static_cast<double*>(stk::mesh::field_data(*coordField, entity));
       auto expectedValues = func(entityCoords);
       const int numComponents = stk::mesh::field_scalars_per_entity(stkField, entity);
@@ -109,7 +110,7 @@ inline void check_field_data_on_host_func(const stk::mesh::BulkData& stkMesh,
 {
   const stk::mesh::FieldBase* coordField = stkMesh.mesh_meta_data().coordinate_field();
   stk::mesh::for_each_entity_run(stkMesh, stkField.entity_rank(), selector,
-    [&](const stk::mesh::BulkData& bulk, const stk::mesh::Entity entity) {
+    [&](const stk::mesh::BulkData& /*bulk*/, const stk::mesh::Entity entity) {
       double* entityCoords = static_cast<double*>(stk::mesh::field_data(*coordField, entity));
       auto expectedValues = func(entityCoords);
 

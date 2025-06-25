@@ -65,8 +65,8 @@ void XpetraOperator<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   TEUCHOS_TEST_FOR_EXCEPTION(mode != Teuchos::NO_TRANS, std::logic_error, "MueLu::XpetraOperator does not support applying the adjoint operator");
   try {
 #ifdef HAVE_MUELU_DEBUG
-    typedef Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node> Matrix;
-    RCP<Matrix> A = Hierarchy_->GetLevel(0)->template Get<RCP<Matrix> >("A");
+    using Operator  = Xpetra::Operator<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
+    RCP<Operator> A = Hierarchy_->GetLevel(0)->template Get<RCP<Operator> >("A");
 
     // X is supposed to live in the range map of the operator (const rhs = B)
     RCP<Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node> > Xop =
