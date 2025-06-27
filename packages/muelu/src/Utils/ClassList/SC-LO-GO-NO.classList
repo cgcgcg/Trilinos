@@ -21,7 +21,7 @@ ClassicalMapFactory
 ClassicalPFactory
 CloneRepartitionInterface
 CoalesceDropFactory
-CoalesceDropFactory_kokkos
+CoalesceDropFactory_kokkos - #if defined(HAVE_MUELU_DEPRECATED_CODE)
 CoarseMapFactory
 CoarseningVisualizationFactory
 CombinePFactory
@@ -40,7 +40,7 @@ FacadeSimple
 FactoryFactory
 FactoryManager
 FakeSmootherPrototype
-FilteredAFactory
+FilteredAFactory - #if defined(HAVE_MUELU_DEPRECATED_CODE)
 FineLevelInputDataFactory
 GeneralGeometricPFactory
 GenericRFactory

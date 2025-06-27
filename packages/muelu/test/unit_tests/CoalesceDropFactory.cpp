@@ -14,7 +14,6 @@
 #include <MueLu_InitialBlockNumberFactory.hpp>
 #include <MueLu_AmalgamationFactory.hpp>
 #include <MueLu_CoalesceDropFactory.hpp>
-#include <MueLu_PreDropFunctionConstVal.hpp>
 #include <MueLu_LWGraph.hpp>
 
 // Galeri
@@ -42,7 +41,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, Build, Scalar, LocalOrdin
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<const Teuchos::Comm<int> > comm = Parameters::getDefaultComm();
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
 
   Level fineLevel;
   TestHelpers::TestFactory<SC, LO, GO, NO>::createSingleLevelHierarchy(fineLevel);
@@ -57,8 +56,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, Build, Scalar, LocalOrdin
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &coalesceDropFact);
+  auto graph                  = graph_d->copyToHost();
+  LO myDofsPerNode            = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 
   const RCP<const Map> myImportMap = graph->GetImportMap();  // < note that the ImportMap is built from the column map of the matrix A WITHOUT dropping!
@@ -75,38 +75,6 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, Build, Scalar, LocalOrdin
   TEST_EQUALITY(myDomainMap->getGlobalNumElements(), 36);
 }  // Build
 
-// TODO remove this
-TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, PreDrop, Scalar, LocalOrdinal, GlobalOrdinal, Node) {
-#include <MueLu_UseShortNames.hpp>
-  MUELU_TESTING_SET_OSTREAM;
-  MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
-  out << "version: " << MueLu::Version() << std::endl;
-
-  Level fineLevel;
-  TestHelpers::TestFactory<SC, LO, GO, NO>::createSingleLevelHierarchy(fineLevel);
-
-  RCP<Matrix> A = TestHelpers::TestFactory<SC, LO, GO, NO>::Build1DPoisson(3);
-  fineLevel.Set("A", A);
-  A->describe(out, Teuchos::VERB_EXTREME);
-
-  CoalesceDropFactory dropFact = CoalesceDropFactory();
-  dropFact.SetVerbLevel(MueLu::Extreme);
-  dropFact.SetPreDropFunction(rcp(new PreDropFunctionConstVal(0.00001)));
-
-  fineLevel.Request("Graph", &dropFact);
-
-  dropFact.Build(fineLevel);
-
-  fineLevel.print(out);
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &dropFact);
-
-  std::cout << graph->GetDomainMap()->getGlobalNumElements() << std::endl;
-  graph->print(out, MueLu::Debug);
-
-  //    TEST_EQUALITY(1 == 0, true);
-
-}  // PreDrop
-
 TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationBasic, Scalar, LocalOrdinal, GlobalOrdinal, Node) {
   // unit test for block size 3.
   // lightweight wrap = false
@@ -115,7 +83,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationBasic, Scalar
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<const Teuchos::Comm<int> > comm = Parameters::getDefaultComm();
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
 
   Level fineLevel;
   TestHelpers::TestFactory<SC, LO, GO, NO>::createSingleLevelHierarchy(fineLevel);
@@ -135,8 +103,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationBasic, Scalar
   dropFact.Build(fineLevel);
 
   fineLevel.print(out);
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &dropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &dropFact);
+  RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &dropFact);
+  auto graph                  = graph_d->copyToHost();
+  LO myDofsPerNode            = fineLevel.Get<LO>("DofsPerNode", &dropFact);
   TEST_EQUALITY(Teuchos::as<int>(graph->GetDomainMap()->getGlobalNumElements()) == comm->getSize(), true);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == blockSize, true);
   bool bCorrectGraph = false;
@@ -193,7 +162,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationStrided, Scal
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<const Teuchos::Comm<int> > comm = Parameters::getDefaultComm();
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
 
   Level fineLevel;
   TestHelpers::TestFactory<SC, LO, GO, NO>::createSingleLevelHierarchy(fineLevel);
@@ -206,7 +175,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationStrided, Scal
   stridingInfo.push_back(Teuchos::as<size_t>(blockSize));
   LocalOrdinal stridedBlockId = -1;
 
-  RCP<const Xpetra::StridedMap<LocalOrdinal, GlobalOrdinal, Node> > stridedRangeMap = Xpetra::StridedMapFactory<LocalOrdinal, GlobalOrdinal, Node>::Build(
+  RCP<const Xpetra::StridedMap<LocalOrdinal, GlobalOrdinal, Node>> stridedRangeMap = Xpetra::StridedMapFactory<LocalOrdinal, GlobalOrdinal, Node>::Build(
       A->getRangeMap(),
       stridingInfo,
       stridedBlockId,
@@ -231,8 +200,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationStrided, Scal
 
   dropFact.Build(fineLevel);
   fineLevel.print(out);
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &dropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &dropFact);
+  RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &dropFact);
+  auto graph                  = graph_d->copyToHost();
+  LO myDofsPerNode            = fineLevel.Get<LO>("DofsPerNode", &dropFact);
   TEST_EQUALITY(Teuchos::as<int>(graph->GetDomainMap()->getGlobalNumElements()) == comm->getSize(), true);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == blockSize, true);
   bool bCorrectGraph = false;
@@ -289,8 +259,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationStrided2, Sca
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<const Teuchos::Comm<int> > comm = Parameters::getDefaultComm();
-  Xpetra::UnderlyingLib lib           = TestHelpers::Parameters::getLib();
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
+  Xpetra::UnderlyingLib lib          = TestHelpers::Parameters::getLib();
 
   // create strided map information
   std::vector<size_t> stridingInfo;
@@ -309,7 +279,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationStrided2, Sca
   Level fineLevel;
   TestHelpers::TestFactory<SC, LO, GO, NO>::createSingleLevelHierarchy(fineLevel);
 
-  RCP<const Xpetra::StridedMap<LocalOrdinal, GlobalOrdinal, Node> > stridedRangeMap = Xpetra::StridedMapFactory<LocalOrdinal, GlobalOrdinal, Node>::Build(
+  RCP<const Xpetra::StridedMap<LocalOrdinal, GlobalOrdinal, Node>> stridedRangeMap = Xpetra::StridedMapFactory<LocalOrdinal, GlobalOrdinal, Node>::Build(
       mtx->getRangeMap(),
       stridingInfo,
       stridedBlockId,
@@ -335,7 +305,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationStrided2, Sca
   dropFact.Build(fineLevel);
 
   fineLevel.print(out);
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &dropFact);
+  RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &dropFact);
+  auto graph                  = graph_d->copyToHost();
 
   LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &dropFact);
   TEST_EQUALITY(Teuchos::as<int>(graph->GetDomainMap()->getGlobalNumElements()) == comm->getSize(), true);
@@ -394,8 +365,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationStridedOffset
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<const Teuchos::Comm<int> > comm = Parameters::getDefaultComm();
-  Xpetra::UnderlyingLib lib           = TestHelpers::Parameters::getLib();
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
+  Xpetra::UnderlyingLib lib          = TestHelpers::Parameters::getLib();
 
   // create strided map information
   std::vector<size_t> stridingInfo;
@@ -441,7 +412,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationStridedOffset
   dropFact.Build(fineLevel);
 
   fineLevel.print(out);
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &dropFact);
+  RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &dropFact);
+  auto graph                  = graph_d->copyToHost();
 
   LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &dropFact);
   TEST_EQUALITY(Teuchos::as<int>(graph->GetDomainMap()->getGlobalNumElements()) == comm->getSize(), true);
@@ -500,8 +472,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationLightweight, 
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<const Teuchos::Comm<int> > comm = Parameters::getDefaultComm();
-  Xpetra::UnderlyingLib lib           = TestHelpers::Parameters::getLib();
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
+  Xpetra::UnderlyingLib lib          = TestHelpers::Parameters::getLib();
 
   Level fineLevel;
   TestHelpers::TestFactory<SC, LO, GO, NO>::createSingleLevelHierarchy(fineLevel);
@@ -521,8 +493,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationLightweight, 
 
   dropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &dropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &dropFact);
+  RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &dropFact);
+  auto graph                  = graph_d->copyToHost();
+  LO myDofsPerNode            = fineLevel.Get<LO>("DofsPerNode", &dropFact);
   TEST_EQUALITY(Teuchos::as<int>(graph->GetDomainMap()->getGlobalNumElements()) == comm->getSize(), true);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == blockSize, true);
   bool bCorrectGraph = false;
@@ -580,8 +553,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationLightweightDr
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<const Teuchos::Comm<int> > comm = Parameters::getDefaultComm();
-  Xpetra::UnderlyingLib lib           = TestHelpers::Parameters::getLib();
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
+  Xpetra::UnderlyingLib lib          = TestHelpers::Parameters::getLib();
 
   Level fineLevel;
   TestHelpers::TestFactory<SC, LO, GO, NO>::createSingleLevelHierarchy(fineLevel);
@@ -600,8 +573,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationLightweightDr
 
   dropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &dropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &dropFact);
+  RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &dropFact);
+  auto graph                  = graph_d->copyToHost();
+  LO myDofsPerNode            = fineLevel.Get<LO>("DofsPerNode", &dropFact);
   TEST_EQUALITY(Teuchos::as<int>(graph->GetDomainMap()->getGlobalNumElements()) == 3 * comm->getSize(), true);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
   bool bCorrectGraph = false;
@@ -639,7 +613,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationStridedLW, Sc
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<const Teuchos::Comm<int> > comm = Parameters::getDefaultComm();
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
 
   Level fineLevel;
   TestHelpers::TestFactory<SC, LO, GO, NO>::createSingleLevelHierarchy(fineLevel);
@@ -653,7 +627,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationStridedLW, Sc
   stridingInfo.push_back(Teuchos::as<size_t>(blockSize));
   LocalOrdinal stridedBlockId = -1;
 
-  RCP<const Xpetra::StridedMap<LocalOrdinal, GlobalOrdinal, Node> > stridedRangeMap = Xpetra::StridedMapFactory<LocalOrdinal, GlobalOrdinal, Node>::Build(
+  RCP<const Xpetra::StridedMap<LocalOrdinal, GlobalOrdinal, Node>> stridedRangeMap = Xpetra::StridedMapFactory<LocalOrdinal, GlobalOrdinal, Node>::Build(
       A->getRangeMap(),
       stridingInfo,
       stridedBlockId,
@@ -679,8 +653,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationStridedLW, Sc
   dropFact.Build(fineLevel);
 
   fineLevel.print(out);
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &dropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &dropFact);
+  RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &dropFact);
+  auto graph                  = graph_d->copyToHost();
+  LO myDofsPerNode            = fineLevel.Get<LO>("DofsPerNode", &dropFact);
   TEST_EQUALITY(Teuchos::as<int>(graph->GetDomainMap()->getGlobalNumElements()) == comm->getSize(), true);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == blockSize, true);
   bool bCorrectGraph = false;
@@ -737,8 +712,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationStrided2LW, S
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<const Teuchos::Comm<int> > comm = Parameters::getDefaultComm();
-  Xpetra::UnderlyingLib lib           = TestHelpers::Parameters::getLib();
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
+  Xpetra::UnderlyingLib lib          = TestHelpers::Parameters::getLib();
 
   // create strided map information
   std::vector<size_t> stridingInfo;
@@ -759,7 +734,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationStrided2LW, S
   Level fineLevel;
   TestHelpers::TestFactory<SC, LO, GO, NO>::createSingleLevelHierarchy(fineLevel);
 
-  RCP<const Xpetra::StridedMap<LocalOrdinal, GlobalOrdinal, Node> > stridedRangeMap = Xpetra::StridedMapFactory<LocalOrdinal, GlobalOrdinal, Node>::Build(
+  RCP<const Xpetra::StridedMap<LocalOrdinal, GlobalOrdinal, Node>> stridedRangeMap = Xpetra::StridedMapFactory<LocalOrdinal, GlobalOrdinal, Node>::Build(
       mtx->getRangeMap(),
       stridingInfo,
       stridedBlockId,
@@ -784,7 +759,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationStrided2LW, S
   dropFact.Build(fineLevel);
 
   fineLevel.print(out);
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &dropFact);
+  RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &dropFact);
+  auto graph                  = graph_d->copyToHost();
 
   LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &dropFact);
   TEST_EQUALITY(Teuchos::as<int>(graph->GetDomainMap()->getGlobalNumElements()) == comm->getSize(), true);
@@ -843,8 +819,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationStridedOffset
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<const Teuchos::Comm<int> > comm = Parameters::getDefaultComm();
-  Xpetra::UnderlyingLib lib           = TestHelpers::Parameters::getLib();
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
+  Xpetra::UnderlyingLib lib          = TestHelpers::Parameters::getLib();
 
   // create strided map information
   std::vector<size_t> stridingInfo;
@@ -891,7 +867,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationStridedOffset
   dropFact.Build(fineLevel);
 
   fineLevel.print(out);
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &dropFact);
+  RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &dropFact);
+  auto graph                  = graph_d->copyToHost();
 
   LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &dropFact);
   TEST_EQUALITY(Teuchos::as<int>(graph->GetDomainMap()->getGlobalNumElements()) == comm->getSize(), true);
@@ -942,8 +919,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationDroppingLW, S
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<const Teuchos::Comm<int> > comm = Parameters::getDefaultComm();
-  Xpetra::UnderlyingLib lib           = TestHelpers::Parameters::getLib();
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
+  Xpetra::UnderlyingLib lib          = TestHelpers::Parameters::getLib();
 
   Level fineLevel;
   TestHelpers::TestFactory<SC, LO, GO, NO>::createSingleLevelHierarchy(fineLevel);
@@ -963,7 +940,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationDroppingLW, S
   dropFact.Build(fineLevel);
 
   fineLevel.print(out);
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &dropFact);
+  RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &dropFact);
+  auto graph                  = graph_d->copyToHost();
 
   LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &dropFact);
   TEST_EQUALITY(Teuchos::as<int>(graph->GetDomainMap()->getGlobalNumElements()) == comm->getSize(), true);
@@ -1005,8 +983,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationStridedOffset
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<const Teuchos::Comm<int> > comm = Parameters::getDefaultComm();
-  Xpetra::UnderlyingLib lib           = TestHelpers::Parameters::getLib();
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
+  Xpetra::UnderlyingLib lib          = TestHelpers::Parameters::getLib();
 
   // create strided map information
   std::vector<size_t> stridingInfo;
@@ -1053,7 +1031,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AmalgamationStridedOffset
   dropFact.Build(fineLevel);
 
   fineLevel.print(out);
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &dropFact);
+  RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &dropFact);
+  auto graph                  = graph_d->copyToHost();
 
   LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &dropFact);
   TEST_EQUALITY(Teuchos::as<int>(graph->GetDomainMap()->getGlobalNumElements()) == comm->getSize(), true);
@@ -1103,7 +1082,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, DistanceLaplacian, Scalar
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<const Teuchos::Comm<int> > comm = Parameters::getDefaultComm();
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
 
   Level fineLevel;
   TestHelpers::TestFactory<SC, LO, GO, NO>::createSingleLevelHierarchy(fineLevel);
@@ -1130,8 +1109,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, DistanceLaplacian, Scalar
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &coalesceDropFact);
+  auto graph                  = graph_d->copyToHost();
+  LO myDofsPerNode            = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 
   const RCP<const Map> myImportMap = graph->GetImportMap();  // < note that the ImportMap is built from the column map of the matrix A WITHOUT dropping!
@@ -1161,7 +1141,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, DistanceLaplacianScaledCu
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<const Teuchos::Comm<int> > comm = Parameters::getDefaultComm();
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
 
   Level fineLevel;
   TestHelpers::TestFactory<SC, LO, GO, NO>::createSingleLevelHierarchy(fineLevel);
@@ -1195,8 +1175,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, DistanceLaplacianScaledCu
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &coalesceDropFact);
+  auto graph                  = graph_d->copyToHost();
+  LO myDofsPerNode            = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 
   const RCP<const Map> myImportMap = graph->GetImportMap();  // < note that the ImportMap is built from the column map of the matrix A WITHOUT dropping!
@@ -1226,7 +1207,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, DistanceLaplacianUnscaled
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<const Teuchos::Comm<int> > comm = Parameters::getDefaultComm();
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
 
   Level fineLevel;
   TestHelpers::TestFactory<SC, LO, GO, NO>::createSingleLevelHierarchy(fineLevel);
@@ -1261,8 +1242,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, DistanceLaplacianUnscaled
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &coalesceDropFact);
+  auto graph                  = graph_d->copyToHost();
+  LO myDofsPerNode            = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 
   const RCP<const Map> myImportMap = graph->GetImportMap();  // < note that the ImportMap is built from the column map of the matrix A WITHOUT dropping!
@@ -1292,7 +1274,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, DistanceLaplacianCutSym, 
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<const Teuchos::Comm<int> > comm = Parameters::getDefaultComm();
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
 
   Level fineLevel;
   TestHelpers::TestFactory<SC, LO, GO, NO>::createSingleLevelHierarchy(fineLevel);
@@ -1327,8 +1309,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, DistanceLaplacianCutSym, 
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &coalesceDropFact);
+  auto graph                  = graph_d->copyToHost();
+  LO myDofsPerNode            = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 
   const RCP<const Map> myImportMap = graph->GetImportMap();  // < note that the ImportMap is built from the column map of the matrix A WITHOUT dropping!
@@ -1360,7 +1343,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, ClassicalScaledCut, Scala
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<const Teuchos::Comm<int> > comm = Parameters::getDefaultComm();
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
 
   Level fineLevel;
   TestHelpers::TestFactory<SC, LO, GO, NO>::createSingleLevelHierarchy(fineLevel);
@@ -1413,8 +1396,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, ClassicalScaledCut, Scala
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &coalesceDropFact);
+  auto graph                  = graph_d->copyToHost();
+  LO myDofsPerNode            = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 
   const RCP<const Map> myImportMap = graph->GetImportMap();  // < note that the ImportMap is built from the column map of the matrix A WITHOUT dropping!
@@ -1478,7 +1462,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, ClassicalUnScaledCut, Sca
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<const Teuchos::Comm<int> > comm = Parameters::getDefaultComm();
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
 
   Level fineLevel;
   TestHelpers::TestFactory<SC, LO, GO, NO>::createSingleLevelHierarchy(fineLevel);
@@ -1531,8 +1515,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, ClassicalUnScaledCut, Sca
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &coalesceDropFact);
+  auto graph                  = graph_d->copyToHost();
+  LO myDofsPerNode            = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 
   const RCP<const Map> myImportMap = graph->GetImportMap();  // < note that the ImportMap is built from the column map of the matrix A WITHOUT dropping!
@@ -1584,7 +1569,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, ClassicalUnScaledCut, Sca
   }
 }  // ClassicalUnScaledCut
 
-TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, SignaledClassical, Scalar, LocalOrdinal, GlobalOrdinal, Node) {
+TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, SignedClassical, Scalar, LocalOrdinal, GlobalOrdinal, Node) {
 #include <MueLu_UseShortNames.hpp>
   typedef Teuchos::ScalarTraits<SC> STS;
   typedef typename STS::magnitudeType real_type;
@@ -1594,7 +1579,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, SignaledClassical, Scalar
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<const Teuchos::Comm<int> > comm = Parameters::getDefaultComm();
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
 
   Level fineLevel;
   TestHelpers::TestFactory<SC, LO, GO, NO>::createSingleLevelHierarchy(fineLevel);
@@ -1621,8 +1606,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, SignaledClassical, Scalar
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &coalesceDropFact);
+  auto graph                  = graph_d->copyToHost();
+  LO myDofsPerNode            = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 
   const RCP<const Map> myImportMap = graph->GetImportMap();  // < note that the ImportMap is built from the column map of the matrix A WITHOUT dropping!
@@ -1638,11 +1624,11 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, SignaledClassical, Scalar
   TEST_EQUALITY(myDomainMap->getMinLocalIndex(), 0);
   TEST_EQUALITY(myDomainMap->getGlobalNumElements(), 36);
 
-  TEST_EQUALITY(graph->GetGlobalNumEdges(), 36);
+  TEST_EQUALITY(graph->GetGlobalNumEdges(), 106);
 
-}  // SignaledClassical
+}  // SignedClassical
 
-TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, SignaledScaledCutClassical, Scalar, LocalOrdinal, GlobalOrdinal, Node) {
+TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, SignedScaledCutClassical, Scalar, LocalOrdinal, GlobalOrdinal, Node) {
 #include <MueLu_UseShortNames.hpp>
   typedef Teuchos::ScalarTraits<SC> STS;
   typedef typename STS::magnitudeType real_type;
@@ -1652,7 +1638,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, SignaledScaledCutClassica
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<const Teuchos::Comm<int> > comm = Parameters::getDefaultComm();
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
 
   Level fineLevel;
   TestHelpers::TestFactory<SC, LO, GO, NO>::createSingleLevelHierarchy(fineLevel);
@@ -1678,30 +1664,29 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, SignaledScaledCutClassica
   fineLevel.Request("Graph", &coalesceDropFact);
   fineLevel.Request("DofsPerNode", &coalesceDropFact);
 
-  TEST_THROW(coalesceDropFact.Build(fineLevel), MueLu::Exceptions::RuntimeError);
+  RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &coalesceDropFact);
+  auto graph                  = graph_d->copyToHost();
+  LO myDofsPerNode            = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 
-  //    RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  //    LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
-  //    TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
+  const RCP<const Map> myImportMap = graph->GetImportMap();  // < note that the ImportMap is built from the column map of the matrix A WITHOUT dropping!
+  const RCP<const Map> myDomainMap = graph->GetDomainMap();
 
-  //    const RCP<const Map> myImportMap = graph->GetImportMap(); // < note that the ImportMap is built from the column map of the matrix A WITHOUT dropping!
-  //    const RCP<const Map> myDomainMap = graph->GetDomainMap();
+  TEST_EQUALITY(myImportMap->getMaxAllGlobalIndex(), 35);
+  TEST_EQUALITY(myImportMap->getMinAllGlobalIndex(), 0);
+  TEST_EQUALITY(myImportMap->getMinLocalIndex(), 0);
+  TEST_EQUALITY(myImportMap->getGlobalNumElements(), Teuchos::as<size_t>(36 + (comm->getSize() - 1) * 2));
 
-  //    TEST_EQUALITY(myImportMap->getMaxAllGlobalIndex(), 35);
-  //    TEST_EQUALITY(myImportMap->getMinAllGlobalIndex(), 0);
-  //    TEST_EQUALITY(myImportMap->getMinLocalIndex(),0);
-  //    TEST_EQUALITY(myImportMap->getGlobalNumElements(),Teuchos::as<size_t>(36 + (comm->getSize()-1)*2));
+  TEST_EQUALITY(myDomainMap->getMaxAllGlobalIndex(), 35);
+  TEST_EQUALITY(myDomainMap->getMinAllGlobalIndex(), 0);
+  TEST_EQUALITY(myDomainMap->getMinLocalIndex(), 0);
+  TEST_EQUALITY(myDomainMap->getGlobalNumElements(), 36);
 
-  //    TEST_EQUALITY(myDomainMap->getMaxAllGlobalIndex(), 35);
-  //    TEST_EQUALITY(myDomainMap->getMinAllGlobalIndex(), 0);
-  //    TEST_EQUALITY(myDomainMap->getMinLocalIndex(),0);
-  //    TEST_EQUALITY(myDomainMap->getGlobalNumElements(),36);
+  TEST_EQUALITY(graph->GetGlobalNumEdges(), 106);
 
-  //    TEST_EQUALITY(graph->GetGlobalNumEdges(),36);
+}  // SignedScaledCutClassical
 
-}  // SignaledScaledCutClassical
-
-TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, SignaledUnscaledCutClassical, Scalar, LocalOrdinal, GlobalOrdinal, Node) {
+TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, SignedUnscaledCutClassical, Scalar, LocalOrdinal, GlobalOrdinal, Node) {
 #include <MueLu_UseShortNames.hpp>
   typedef Teuchos::ScalarTraits<SC> STS;
   typedef typename STS::magnitudeType real_type;
@@ -1711,7 +1696,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, SignaledUnscaledCutClassi
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<const Teuchos::Comm<int> > comm = Parameters::getDefaultComm();
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
 
   Level fineLevel;
   TestHelpers::TestFactory<SC, LO, GO, NO>::createSingleLevelHierarchy(fineLevel);
@@ -1737,28 +1722,27 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, SignaledUnscaledCutClassi
   fineLevel.Request("Graph", &coalesceDropFact);
   fineLevel.Request("DofsPerNode", &coalesceDropFact);
 
-  TEST_THROW(coalesceDropFact.Build(fineLevel), MueLu::Exceptions::RuntimeError);
+  RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &coalesceDropFact);
+  auto graph                  = graph_d->copyToHost();
+  LO myDofsPerNode            = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 
-  //    RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  //    LO myDofsPerNode = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
-  //    TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
+  const RCP<const Map> myImportMap = graph->GetImportMap();  // < note that the ImportMap is built from the column map of the matrix A WITHOUT dropping!
+  const RCP<const Map> myDomainMap = graph->GetDomainMap();
 
-  //    const RCP<const Map> myImportMap = graph->GetImportMap(); // < note that the ImportMap is built from the column map of the matrix A WITHOUT dropping!
-  //    const RCP<const Map> myDomainMap = graph->GetDomainMap();
+  TEST_EQUALITY(myImportMap->getMaxAllGlobalIndex(), 35);
+  TEST_EQUALITY(myImportMap->getMinAllGlobalIndex(), 0);
+  TEST_EQUALITY(myImportMap->getMinLocalIndex(), 0);
+  TEST_EQUALITY(myImportMap->getGlobalNumElements(), Teuchos::as<size_t>(36 + (comm->getSize() - 1) * 2));
 
-  //    TEST_EQUALITY(myImportMap->getMaxAllGlobalIndex(), 35);
-  //    TEST_EQUALITY(myImportMap->getMinAllGlobalIndex(), 0);
-  //    TEST_EQUALITY(myImportMap->getMinLocalIndex(),0);
-  //    TEST_EQUALITY(myImportMap->getGlobalNumElements(),Teuchos::as<size_t>(36 + (comm->getSize()-1)*2));
+  TEST_EQUALITY(myDomainMap->getMaxAllGlobalIndex(), 35);
+  TEST_EQUALITY(myDomainMap->getMinAllGlobalIndex(), 0);
+  TEST_EQUALITY(myDomainMap->getMinLocalIndex(), 0);
+  TEST_EQUALITY(myDomainMap->getGlobalNumElements(), 36);
 
-  //    TEST_EQUALITY(myDomainMap->getMaxAllGlobalIndex(), 35);
-  //    TEST_EQUALITY(myDomainMap->getMinAllGlobalIndex(), 0);
-  //    TEST_EQUALITY(myDomainMap->getMinLocalIndex(),0);
-  //    TEST_EQUALITY(myDomainMap->getGlobalNumElements(),36);
+  TEST_EQUALITY(graph->GetGlobalNumEdges(), 106);
 
-  //    TEST_EQUALITY(graph->GetGlobalNumEdges(),36);
-
-}  // SignaledUnScaledCutClassical
+}  // SignedUnScaledCutClassical
 
 TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, BlockDiagonalColoredSignedClassical, Scalar, LocalOrdinal, GlobalOrdinal, Node) {
 #include <MueLu_UseShortNames.hpp>
@@ -1770,7 +1754,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, BlockDiagonalColoredSigne
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<const Teuchos::Comm<int> > comm = Parameters::getDefaultComm();
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
   Level fineLevel;
   TestHelpers::TestFactory<SC, LO, GO, NO>::createSingleLevelHierarchy(fineLevel);
 
@@ -1796,8 +1780,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, BlockDiagonalColoredSigne
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &coalesceDropFact);
+  auto graph                  = graph_d->copyToHost();
+  LO myDofsPerNode            = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 
   const RCP<const Map> myImportMap = graph->GetImportMap();  // < note that the ImportMap is built from the column map of the matrix A WITHOUT dropping!
@@ -1827,7 +1812,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, BlockDiagonalNoColoredSig
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<const Teuchos::Comm<int> > comm = Parameters::getDefaultComm();
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
   // this test is only compatible with rank higher than 1
   if (comm->getSize() == 1) {
     return;
@@ -1873,8 +1858,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, BlockDiagonalNoColoredSig
   // Need an importer
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &coalesceDropFact);
+  auto graph                  = graph_d->copyToHost();
+  LO myDofsPerNode            = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 
   const RCP<const Map> myImportMap = graph->GetImportMap();  // < note that the ImportMap is built from the column map of the matrix A WITHOUT dropping!
@@ -1904,7 +1890,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, BlockDiagonalSignedClassi
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<const Teuchos::Comm<int> > comm = Parameters::getDefaultComm();
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
 
   Level fineLevel;
   TestHelpers::TestFactory<SC, LO, GO, NO>::createSingleLevelHierarchy(fineLevel);
@@ -1931,8 +1917,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, BlockDiagonalSignedClassi
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &coalesceDropFact);
+  auto graph                  = graph_d->copyToHost();
+  LO myDofsPerNode            = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 
   const RCP<const Map> myImportMap = graph->GetImportMap();  // < note that the ImportMap is built from the column map of the matrix A WITHOUT dropping!
@@ -1962,8 +1949,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, BlockDiagonal, Scalar, Lo
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<const Teuchos::Comm<int> > comm = Parameters::getDefaultComm();
-  Xpetra::UnderlyingLib lib           = TestHelpers::Parameters::getLib();
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
+  Xpetra::UnderlyingLib lib          = TestHelpers::Parameters::getLib();
 
   GO nx = 10 * comm->getSize();
   Teuchos::ParameterList matrixList;
@@ -1994,8 +1981,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, BlockDiagonal, Scalar, Lo
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &coalesceDropFact);
+  auto graph                  = graph_d->copyToHost();
+  LO myDofsPerNode            = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 }
 
@@ -2009,8 +1997,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, BlockDiagonalClassical, S
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<const Teuchos::Comm<int> > comm = Parameters::getDefaultComm();
-  Xpetra::UnderlyingLib lib           = TestHelpers::Parameters::getLib();
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
+  Xpetra::UnderlyingLib lib          = TestHelpers::Parameters::getLib();
 
   GO nx = 10 * comm->getSize();
   Teuchos::ParameterList matrixList;
@@ -2039,8 +2027,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, BlockDiagonalClassical, S
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &coalesceDropFact);
+  auto graph                  = graph_d->copyToHost();
+  LO myDofsPerNode            = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 }
 
@@ -2054,8 +2043,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, BlockDiagonalDistanceLapl
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<const Teuchos::Comm<int> > comm = Parameters::getDefaultComm();
-  Xpetra::UnderlyingLib lib           = TestHelpers::Parameters::getLib();
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
+  Xpetra::UnderlyingLib lib          = TestHelpers::Parameters::getLib();
 
   GO nx = 10 * comm->getSize();
   Teuchos::ParameterList matrixList;
@@ -2084,8 +2073,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, BlockDiagonalDistanceLapl
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &coalesceDropFact);
+  auto graph                  = graph_d->copyToHost();
+  LO myDofsPerNode            = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 }
 
@@ -2099,8 +2089,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, BlockDiagonalDistanceDiff
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<const Teuchos::Comm<int> > comm = Parameters::getDefaultComm();
-  Xpetra::UnderlyingLib lib           = TestHelpers::Parameters::getLib();
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
+  Xpetra::UnderlyingLib lib          = TestHelpers::Parameters::getLib();
 
   GO nx = 10 * comm->getSize();
   Teuchos::ParameterList matrixList;
@@ -2134,8 +2124,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, BlockDiagonalDistanceDiff
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &coalesceDropFact);
+  auto graph                  = graph_d->copyToHost();
+  LO myDofsPerNode            = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 }
 
@@ -2149,8 +2140,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, BlockDiagonalDistanceLapl
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<const Teuchos::Comm<int> > comm = Parameters::getDefaultComm();
-  Xpetra::UnderlyingLib lib           = TestHelpers::Parameters::getLib();
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
+  Xpetra::UnderlyingLib lib          = TestHelpers::Parameters::getLib();
 
   GO nx = 10 * comm->getSize();
   Teuchos::ParameterList matrixList;
@@ -2185,8 +2176,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, BlockDiagonalDistanceLapl
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &coalesceDropFact);
+  auto graph                  = graph_d->copyToHost();
+  LO myDofsPerNode            = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 }
 
@@ -2200,8 +2192,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, DistanceLaplacianWeighted
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<const Teuchos::Comm<int> > comm = Parameters::getDefaultComm();
-  Xpetra::UnderlyingLib lib           = TestHelpers::Parameters::getLib();
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
+  Xpetra::UnderlyingLib lib          = TestHelpers::Parameters::getLib();
 
   GO nx = 10 * comm->getSize();
   Teuchos::ParameterList matrixList;
@@ -2231,8 +2223,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, DistanceLaplacianWeighted
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &coalesceDropFact);
+  auto graph                  = graph_d->copyToHost();
+  LO myDofsPerNode            = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 }
 
@@ -2243,8 +2236,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AggresiveDroppingIsMarked
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<const Teuchos::Comm<int> > comm = Parameters::getDefaultComm();
-  Xpetra::UnderlyingLib lib           = TestHelpers::Parameters::getLib();
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
+  Xpetra::UnderlyingLib lib          = TestHelpers::Parameters::getLib();
 
   RCP<const Map> dofMap    = Xpetra::MapFactory<LocalOrdinal, GlobalOrdinal, Node>::Build(lib, 12 * comm->getSize(), 0, comm);
   Teuchos::RCP<Matrix> mtx = TestHelpers::TestFactory<SC, LO, GO, NO>::BuildTridiag(dofMap, 2.0, -1.0, -1.0);
@@ -2267,7 +2260,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AggresiveDroppingIsMarked
 
     dropFact.Build(fineLevel);
 
-    RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &dropFact);
+    RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &dropFact);
+    auto graph                  = graph_d->copyToHost();
 
     auto boundaryNodes         = graph->GetBoundaryNodeMap();
     bool allNodesAreOnBoundary = true;
@@ -2294,7 +2288,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AggresiveDroppingIsMarked
 
     dropFact.Build(fineLevel);
 
-    RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &dropFact);
+    RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &dropFact);
+    auto graph                  = graph_d->copyToHost();
 
     auto boundaryNodes         = graph->GetBoundaryNodeMap();
     bool allNodesAreOnBoundary = true;
@@ -2321,7 +2316,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, AggresiveDroppingIsMarked
 
     dropFact.Build(fineLevel);
 
-    RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &dropFact);
+    RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &dropFact);
+    auto graph                  = graph_d->copyToHost();
 
     auto boundaryNodes         = graph->GetBoundaryNodeMap();
     bool allNodesAreOnBoundary = true;
@@ -2341,8 +2337,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, SignedClassicalSA, Scalar
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<const Teuchos::Comm<int> > comm = Parameters::getDefaultComm();
-  Xpetra::UnderlyingLib lib           = TestHelpers::Parameters::getLib();
+  RCP<const Teuchos::Comm<int>> comm = Parameters::getDefaultComm();
+  Xpetra::UnderlyingLib lib          = TestHelpers::Parameters::getLib();
 
   GO nx = 10 * comm->getSize();
   Teuchos::ParameterList matrixList;
@@ -2365,15 +2361,15 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, SignedClassicalSA, Scalar
 
   coalesceDropFact.Build(fineLevel);
 
-  RCP<LWGraph> graph = fineLevel.Get<RCP<LWGraph> >("Graph", &coalesceDropFact);
-  LO myDofsPerNode   = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
+  RCP<LWGraph_kokkos> graph_d = fineLevel.Get<RCP<LWGraph_kokkos>>("Graph", &coalesceDropFact);
+  auto graph                  = graph_d->copyToHost();
+  LO myDofsPerNode            = fineLevel.Get<LO>("DofsPerNode", &coalesceDropFact);
   TEST_EQUALITY(Teuchos::as<int>(myDofsPerNode) == 1, true);
 }
 
 #define MUELU_ETI_GROUP(SC, LO, GO, Node)                                                                             \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(CoalesceDropFactory, Constructor, SC, LO, GO, Node)                            \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(CoalesceDropFactory, Build, SC, LO, GO, Node)                                  \
-  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(CoalesceDropFactory, PreDrop, SC, LO, GO, Node)                                \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(CoalesceDropFactory, AmalgamationBasic, SC, LO, GO, Node)                      \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(CoalesceDropFactory, AmalgamationStrided, SC, LO, GO, Node)                    \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(CoalesceDropFactory, AmalgamationStrided2, SC, LO, GO, Node)                   \
@@ -2391,9 +2387,9 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory, SignedClassicalSA, Scalar
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(CoalesceDropFactory, DistanceLaplacianCutSym, SC, LO, GO, Node)                \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(CoalesceDropFactory, ClassicalScaledCut, SC, LO, GO, Node)                     \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(CoalesceDropFactory, ClassicalUnScaledCut, SC, LO, GO, Node)                   \
-  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(CoalesceDropFactory, SignaledClassical, SC, LO, GO, Node)                      \
-  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(CoalesceDropFactory, SignaledScaledCutClassical, SC, LO, GO, Node)             \
-  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(CoalesceDropFactory, SignaledUnscaledCutClassical, SC, LO, GO, Node)           \
+  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(CoalesceDropFactory, SignedClassical, SC, LO, GO, Node)                        \
+  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(CoalesceDropFactory, SignedScaledCutClassical, SC, LO, GO, Node)               \
+  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(CoalesceDropFactory, SignedUnscaledCutClassical, SC, LO, GO, Node)             \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(CoalesceDropFactory, BlockDiagonalColoredSignedClassical, SC, LO, GO, Node)    \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(CoalesceDropFactory, BlockDiagonalNoColoredSignedClassical, SC, LO, GO, Node)  \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(CoalesceDropFactory, BlockDiagonalSignedClassical, SC, LO, GO, Node)           \

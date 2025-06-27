@@ -466,7 +466,7 @@ void BrickAggregationFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::BuildGr
     }
     Set(currentLevel, "DofsPerNode", 1);
     Set(currentLevel, "Graph", graph);
-    Set(currentLevel, "Filtering", false);
+    // Set(currentLevel, "Filtering", false);
   } else {
     FactoryMonitor m(*this, "Generating Graph", currentLevel);
     /*** Case 2: Dropping required ***/
@@ -529,7 +529,7 @@ void BrickAggregationFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::BuildGr
     }
     Set(currentLevel, "DofsPerNode", 1);
     Set(currentLevel, "Graph", graph);
-    Set(currentLevel, "Filtering", true);
+    // Set(currentLevel, "Filtering", true);
   }  // end else
 
 }  // end BuildGraph

@@ -31,6 +31,7 @@
 #include "MueLu_ClassicalMapFactory.hpp"
 #include "MueLu_AmalgamationInfo.hpp"
 #include "MueLu_LWGraph.hpp"
+#include "MueLu_LWGraph_kokkos.hpp"
 
 //#define CMS_DEBUG
 //#define CMS_DUMP
@@ -114,7 +115,8 @@ void ClassicalPFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::BuildP(Level&
   RCP<const Matrix> A                              = Get<RCP<Matrix> >(fineLevel, "A");
   RCP<const Map> ownedCoarseMap                    = Get<RCP<const Map> >(fineLevel, "CoarseMap");
   RCP<const LocalOrdinalVector> owned_fc_splitting = Get<RCP<LocalOrdinalVector> >(fineLevel, "FC Splitting");
-  RCP<const LWGraph> graph                         = Get<RCP<LWGraph> >(fineLevel, "Graph");
+  auto graph_d                                     = Get<RCP<LWGraph_kokkos> >(fineLevel, "Graph");
+  auto graph                                       = graph_d->copyToHost();
   //    LO nDofsPerNode                 = Get<LO>(fineLevel, "DofsPerNode");
   //    RCP<AmalgamationInfo> amalgInfo = Get< RCP<AmalgamationInfo> >     (fineLevel, "UnAmalgamationInfo");
   RCP<const Import> Importer = A->getCrsGraph()->getImporter();

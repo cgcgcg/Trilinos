@@ -15,9 +15,11 @@
 
 #include <MueLu_InitialBlockNumberFactory.hpp>
 #include "MueLu_CoalesceDropFactory.hpp"
+#ifdef HAVE_MUELU_DEPRECATED_CODE
 #include "MueLu_FilteredAFactory.hpp"
-#include "MueLu_CoalesceDropFactory_kokkos.hpp"
+#endif
 #include "MueLu_AmalgamationFactory.hpp"
+#include "MueLu_LWGraph.hpp"
 #include "MueLu_LWGraph_kokkos.hpp"
 #include "MueLu_AmalgamationInfo.hpp"
 
@@ -31,7 +33,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, Constructor, Scala
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, NO);
   out << "version: " << MueLu::Version() << std::endl;
 
-  RCP<CoalesceDropFactory_kokkos> coalesceDropFact = rcp(new CoalesceDropFactory_kokkos());
+  RCP<CoalesceDropFactory> coalesceDropFact = rcp(new CoalesceDropFactory());
   TEST_EQUALITY(coalesceDropFact != Teuchos::null, true);
 
   out << *coalesceDropFact << std::endl;
@@ -51,7 +53,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, Build, Scalar, Loc
   RCP<Matrix> A = TestHelpers_kokkos::TestFactory<SC, LO, GO, NO>::Build1DPoisson(36);
   fineLevel.Set("A", A);
 
-  CoalesceDropFactory_kokkos coalesceDropFact;
+  CoalesceDropFactory coalesceDropFact;
   coalesceDropFact.SetDefaultVerbLevel(MueLu::Extreme);
   fineLevel.Request("Graph", &coalesceDropFact);
   fineLevel.Request("DofsPerNode", &coalesceDropFact);
@@ -102,7 +104,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, DistanceLaplacian,
     RCP<RealValuedMultiVector> coordinates = Galeri::Xpetra::Utils::CreateCartesianCoordinates<SC, LO, GO, Map, RealValuedMultiVector>("1D", A->getRowMap(), galeriList);
     fineLevel.Set("Coordinates", coordinates);
 
-    CoalesceDropFactory_kokkos coalesceDropFact;
+    CoalesceDropFactory coalesceDropFact;
     coalesceDropFact.SetDefaultVerbLevel(MueLu::Extreme);
     // We're dropping all the interior off-diagonal entries.
     // dx = 1/36
@@ -187,7 +189,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, DistanceLaplacian,
     fineLevel.Set("A", A);
     fineLevel.Set("Coordinates", coordinates);
 
-    CoalesceDropFactory_kokkos coalesceDropFact;
+    CoalesceDropFactory coalesceDropFact;
     coalesceDropFact.SetDefaultVerbLevel(MueLu::Extreme);
     // We're dropping all the edges in weak ny direction and keep the ones in nx
     // criterion for dropping is |L_ij|^2 <= tol^2 * |L_ii*L_jj|
@@ -245,7 +247,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, DistanceLaplacianS
 
   fineLevel.Set("Coordinates", coordinates);
 
-  CoalesceDropFactory_kokkos coalesceDropFact;
+  CoalesceDropFactory coalesceDropFact;
   coalesceDropFact.SetDefaultVerbLevel(MueLu::Extreme);
   // We're dropping all the interior off-diagonal entries.
   // dx = 1/36
@@ -312,7 +314,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, DistanceLaplacianU
 
   fineLevel.Set("Coordinates", coordinates);
 
-  CoalesceDropFactory_kokkos coalesceDropFact;
+  CoalesceDropFactory coalesceDropFact;
   coalesceDropFact.SetDefaultVerbLevel(MueLu::Extreme);
   // We're dropping all the interior off-diagonal entries.
   // dx = 1/36
@@ -379,7 +381,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, DistanceLaplacianC
 
   fineLevel.Set("Coordinates", coordinates);
 
-  CoalesceDropFactory_kokkos coalesceDropFact;
+  CoalesceDropFactory coalesceDropFact;
   coalesceDropFact.SetDefaultVerbLevel(MueLu::Extreme);
 
   coalesceDropFact.SetParameter("aggregation: drop tol", Teuchos::ParameterEntry(0.5));
@@ -439,7 +441,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, DistanceLaplacianS
   material->putScalar(1.0);
   fineLevel.Set("Material", material);
 
-  CoalesceDropFactory_kokkos coalesceDropFact;
+  CoalesceDropFactory coalesceDropFact;
   coalesceDropFact.SetDefaultVerbLevel(MueLu::Extreme);
   // We're dropping all the interior off-diagonal entries.
   // dx = 1/36
@@ -563,7 +565,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, DistanceLaplacianT
     fineLevel.Set("Coordinates", coordinates);
     fineLevel.Set("Material", material);
 
-    CoalesceDropFactory_kokkos coalesceDropFact;
+    CoalesceDropFactory coalesceDropFact;
     coalesceDropFact.SetDefaultVerbLevel(MueLu::Extreme);
     coalesceDropFact.SetParameter("aggregation: drop tol", Teuchos::ParameterEntry(0.02));
     coalesceDropFact.SetParameter("aggregation: drop scheme", Teuchos::ParameterEntry(std::string("distance laplacian")));
@@ -651,7 +653,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, ClassicalScaledCut
   RCP<RealValuedMultiVector> coordinates = Galeri::Xpetra::Utils::CreateCartesianCoordinates<SC, LO, GO, Map, RealValuedMultiVector>("1D", A->getRowMap(), galeriList);
   fineLevel.Set("Coordinates", coordinates);
 
-  CoalesceDropFactory_kokkos coalesceDropFact;
+  CoalesceDropFactory coalesceDropFact;
   coalesceDropFact.SetDefaultVerbLevel(MueLu::Extreme);
   // We're dropping all the interior off-diagonal entries.
   // dx = 1/36
@@ -723,7 +725,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, ClassicalUnScaledC
   RCP<RealValuedMultiVector> coordinates = Galeri::Xpetra::Utils::CreateCartesianCoordinates<SC, LO, GO, Map, RealValuedMultiVector>("1D", A->getRowMap(), galeriList);
   fineLevel.Set("Coordinates", coordinates);
 
-  CoalesceDropFactory_kokkos coalesceDropFact;
+  CoalesceDropFactory coalesceDropFact;
   coalesceDropFact.SetDefaultVerbLevel(MueLu::Extreme);
 
   coalesceDropFact.SetParameter("aggregation: drop tol", Teuchos::ParameterEntry(0.51));
@@ -791,7 +793,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, ClassicalCutSym, S
   RCP<RealValuedMultiVector> coordinates = Galeri::Xpetra::Utils::CreateCartesianCoordinates<SC, LO, GO, Map, RealValuedMultiVector>("1D", A->getRowMap(), galeriList);
   fineLevel.Set("Coordinates", coordinates);
 
-  CoalesceDropFactory_kokkos coalesceDropFact;
+  CoalesceDropFactory coalesceDropFact;
   coalesceDropFact.SetDefaultVerbLevel(MueLu::Extreme);
 
   coalesceDropFact.SetParameter("aggregation: drop tol", Teuchos::ParameterEntry(0.51));
@@ -859,7 +861,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, SignedClassical, S
   RCP<RealValuedMultiVector> coordinates = Galeri::Xpetra::Utils::CreateCartesianCoordinates<SC, LO, GO, Map, RealValuedMultiVector>("1D", A->getRowMap(), galeriList);
   fineLevel.Set("Coordinates", coordinates);
 
-  CoalesceDropFactory_kokkos coalesceDropFact;
+  CoalesceDropFactory coalesceDropFact;
   coalesceDropFact.SetDefaultVerbLevel(MueLu::Extreme);
   // A_10 = -2
   // A_ij = -1
@@ -919,7 +921,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, SignedScaledCutCla
   RCP<RealValuedMultiVector> coordinates = Galeri::Xpetra::Utils::CreateCartesianCoordinates<SC, LO, GO, Map, RealValuedMultiVector>("1D", A->getRowMap(), galeriList);
   fineLevel.Set("Coordinates", coordinates);
 
-  CoalesceDropFactory_kokkos coalesceDropFact;
+  CoalesceDropFactory coalesceDropFact;
   coalesceDropFact.SetDefaultVerbLevel(MueLu::Extreme);
   // We're dropping all the interior off-diagonal entries.
   // dx = 1/36
@@ -977,7 +979,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, SignedUnscaledCutC
   RCP<RealValuedMultiVector> coordinates = Galeri::Xpetra::Utils::CreateCartesianCoordinates<SC, LO, GO, Map, RealValuedMultiVector>("1D", A->getRowMap(), galeriList);
   fineLevel.Set("Coordinates", coordinates);
 
-  CoalesceDropFactory_kokkos coalesceDropFact;
+  CoalesceDropFactory coalesceDropFact;
   coalesceDropFact.SetDefaultVerbLevel(MueLu::Extreme);
   // We're dropping all the interior off-diagonal entries.
   // dx = 1/36
@@ -1034,7 +1036,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, BlockDiagonalColor
   RCP<RealValuedMultiVector> coordinates = Galeri::Xpetra::Utils::CreateCartesianCoordinates<SC, LO, GO, Map, RealValuedMultiVector>("1D", A->getRowMap(), galeriList);
   fineLevel.Set("Coordinates", coordinates);
 
-  CoalesceDropFactory_kokkos coalesceDropFact;
+  CoalesceDropFactory coalesceDropFact;
   coalesceDropFact.SetDefaultVerbLevel(MueLu::Extreme);
   // We're dropping all the interior off-diagonal entries.
   // dx = 1/36
@@ -1110,7 +1112,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, BlockDiagonalNoCol
   RCP<RealValuedMultiVector> coordinates = Galeri::Xpetra::Utils::CreateCartesianCoordinates<SC, LO, GO, Map, RealValuedMultiVector>("1D", A->getRowMap(), galeriList);
   fineLevel.Set("Coordinates", coordinates);
 
-  CoalesceDropFactory_kokkos coalesceDropFact;
+  CoalesceDropFactory coalesceDropFact;
   coalesceDropFact.SetDefaultVerbLevel(MueLu::Extreme);
   // We're dropping all the interior off-diagonal entries.
   // dx = 1/36
@@ -1171,7 +1173,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, BlockDiagonalSigne
   RCP<RealValuedMultiVector> coordinates = Galeri::Xpetra::Utils::CreateCartesianCoordinates<SC, LO, GO, Map, RealValuedMultiVector>("1D", A->getRowMap(), galeriList);
   fineLevel.Set("Coordinates", coordinates);
 
-  CoalesceDropFactory_kokkos coalesceDropFact;
+  CoalesceDropFactory coalesceDropFact;
   coalesceDropFact.SetDefaultVerbLevel(MueLu::Extreme);
   // We're dropping all the interior off-diagonal entries.
   // dx = 1/36
@@ -1239,7 +1241,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, BlockDiagonal, Sca
     Teuchos::ParameterList ibList;
     ibList.set("aggregation: block diagonal: interleaved blocksize", 3);
     RCP<AmalgamationFactory> amalgFact = rcp(new AmalgamationFactory());
-    CoalesceDropFactory_kokkos coalesceDropFact;
+    CoalesceDropFactory coalesceDropFact;
     coalesceDropFact.SetDefaultVerbLevel(MueLu::Extreme);
     coalesceDropFact.SetFactory("UnAmalgamationInfo", amalgFact);
     coalesceDropFact.SetFactory("BlockNumber", ibFact);
@@ -1283,7 +1285,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, BlockDiagonal, Sca
 
     Teuchos::ParameterList ibList;
     RCP<AmalgamationFactory> amalgFact = rcp(new AmalgamationFactory());
-    CoalesceDropFactory_kokkos coalesceDropFact;
+    CoalesceDropFactory coalesceDropFact;
     coalesceDropFact.SetFactory("UnAmalgamationInfo", amalgFact);
     coalesceDropFact.SetParameter("aggregation: drop scheme", Teuchos::ParameterEntry(std::string("block diagonal")));
     coalesceDropFact.SetParameter("aggregation: drop tol", Teuchos::ParameterEntry(0.0001));
@@ -1326,7 +1328,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, BlockDiagonalVecto
       fineLevel.Set("BlockNumber", blocknumber);
 
       RCP<AmalgamationFactory> amalgFact = rcp(new AmalgamationFactory());
-      CoalesceDropFactory_kokkos coalesceDropFact;
+      CoalesceDropFactory coalesceDropFact;
       coalesceDropFact.SetFactory("UnAmalgamationInfo", amalgFact);
       coalesceDropFact.SetParameter("aggregation: drop scheme", Teuchos::ParameterEntry(algo));
       coalesceDropFact.SetParameter("aggregation: drop tol", Teuchos::ParameterEntry(0.0001));
@@ -1510,7 +1512,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, BlockDiagonalClass
   Teuchos::ParameterList ibList;
   ibList.set("aggregation: block diagonal: interleaved blocksize", 3);
   RCP<AmalgamationFactory> amalgFact = rcp(new AmalgamationFactory());
-  CoalesceDropFactory_kokkos coalesceDropFact;
+  CoalesceDropFactory coalesceDropFact;
   coalesceDropFact.SetDefaultVerbLevel(MueLu::Extreme);
   coalesceDropFact.SetFactory("UnAmalgamationInfo", amalgFact);
   coalesceDropFact.SetFactory("BlockNumber", ibFact);
@@ -1555,7 +1557,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, BlockDiagonalDista
   Teuchos::ParameterList ibList;
   ibList.set("aggregation: block diagonal: interleaved blocksize", 3);
   RCP<AmalgamationFactory> amalgFact = rcp(new AmalgamationFactory());
-  CoalesceDropFactory_kokkos coalesceDropFact;
+  CoalesceDropFactory coalesceDropFact;
   coalesceDropFact.SetDefaultVerbLevel(MueLu::Extreme);
   coalesceDropFact.SetFactory("UnAmalgamationInfo", amalgFact);
   coalesceDropFact.SetFactory("BlockNumber", ibFact);
@@ -1605,7 +1607,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, BlockDiagonalDista
   Teuchos::ParameterList ibList;
   ibList.set("aggregation: block diagonal: interleaved blocksize", 3);
   RCP<AmalgamationFactory> amalgFact = rcp(new AmalgamationFactory());
-  CoalesceDropFactory_kokkos coalesceDropFact;
+  CoalesceDropFactory coalesceDropFact;
   coalesceDropFact.SetDefaultVerbLevel(MueLu::Extreme);
   coalesceDropFact.SetFactory("UnAmalgamationInfo", amalgFact);
   coalesceDropFact.SetFactory("BlockNumber", ibFact);
@@ -1653,7 +1655,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, BlockDiagonalDista
   Teuchos::ParameterList ibList;
   ibList.set("aggregation: block diagonal: interleaved blocksize", 3);
   RCP<AmalgamationFactory> amalgFact = rcp(new AmalgamationFactory());
-  CoalesceDropFactory_kokkos coalesceDropFact;
+  CoalesceDropFactory coalesceDropFact;
   coalesceDropFact.SetDefaultVerbLevel(MueLu::Extreme);
   coalesceDropFact.SetFactory("UnAmalgamationInfo", amalgFact);
   coalesceDropFact.SetFactory("BlockNumber", ibFact);
@@ -1701,7 +1703,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, DistanceLaplacianW
   fineLevel.Set("Coordinates", coordinates);
 
   RCP<AmalgamationFactory> amalgFact = rcp(new AmalgamationFactory());
-  CoalesceDropFactory_kokkos coalesceDropFact;
+  CoalesceDropFactory coalesceDropFact;
   coalesceDropFact.SetDefaultVerbLevel(MueLu::Extreme);
   coalesceDropFact.SetFactory("UnAmalgamationInfo", amalgFact);
   coalesceDropFact.SetParameter("aggregation: drop tol", Teuchos::ParameterEntry(0.025));
@@ -1743,7 +1745,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, SignedClassicalSA,
   fineLevel.Set("A", A);
 
   RCP<AmalgamationFactory> amalgFact = rcp(new AmalgamationFactory());
-  CoalesceDropFactory_kokkos coalesceDropFact;
+  CoalesceDropFactory coalesceDropFact;
   coalesceDropFact.SetFactory("UnAmalgamationInfo", amalgFact);
   coalesceDropFact.SetParameter("aggregation: drop tol", Teuchos::ParameterEntry(0.0));
   coalesceDropFact.SetParameter("aggregation: drop scheme", Teuchos::ParameterEntry(std::string("signed classical sa")));
@@ -1772,7 +1774,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, ClassicScalarWitho
   fineLevel.Set("A", A);
 
   RCP<AmalgamationFactory> amalgFact = rcp(new AmalgamationFactory);
-  CoalesceDropFactory_kokkos dropFact;
+  CoalesceDropFactory dropFact;
   dropFact.SetFactory("UnAmalgamationInfo", amalgFact);
 
   fineLevel.Request("Graph", &dropFact);
@@ -1846,8 +1848,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, ClassicScalarWithF
   mtx->SetFixedBlockSize(1, 0);
   fineLevel.Set("A", mtx);
 
-  RCP<AmalgamationFactory> amalgFact  = rcp(new AmalgamationFactory);
-  CoalesceDropFactory_kokkos dropFact = CoalesceDropFactory_kokkos();
+  RCP<AmalgamationFactory> amalgFact = rcp(new AmalgamationFactory);
+  CoalesceDropFactory dropFact       = CoalesceDropFactory();
   dropFact.SetFactory("UnAmalgamationInfo", amalgFact);
   dropFact.SetParameter("aggregation: drop tol", Teuchos::ParameterEntry(0.5));
 
@@ -1926,8 +1928,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, ClassicBlockWithou
   mtx->SetFixedBlockSize(blockSize, 0);
   fineLevel.Set("A", mtx);
 
-  RCP<AmalgamationFactory> amalgFact  = rcp(new AmalgamationFactory);
-  CoalesceDropFactory_kokkos dropFact = CoalesceDropFactory_kokkos();
+  RCP<AmalgamationFactory> amalgFact = rcp(new AmalgamationFactory);
+  CoalesceDropFactory dropFact       = CoalesceDropFactory();
   dropFact.SetFactory("UnAmalgamationInfo", amalgFact);
 
   fineLevel.Request("Graph", &dropFact);
@@ -2018,8 +2020,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, ClassicBlockWithFi
   mtx->SetFixedBlockSize(3, 0);
   fineLevel.Set("A", mtx);
 
-  RCP<AmalgamationFactory> amalgFact  = rcp(new AmalgamationFactory);
-  CoalesceDropFactory_kokkos dropFact = CoalesceDropFactory_kokkos();
+  RCP<AmalgamationFactory> amalgFact = rcp(new AmalgamationFactory);
+  CoalesceDropFactory dropFact       = CoalesceDropFactory();
   dropFact.SetFactory("UnAmalgamationInfo", amalgFact);
   dropFact.SetParameter("aggregation: drop tol", Teuchos::ParameterEntry(1.0));
 
@@ -2078,7 +2080,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, ClassicBlockWithFi
     fineLevel.Set("A", A);
 
     RCP<AmalgamationFactory> amalgFact = rcp(new AmalgamationFactory);
-    CoalesceDropFactory_kokkos dropFact;
+    CoalesceDropFactory dropFact;
     dropFact.SetFactory("UnAmalgamationInfo", amalgFact);
     dropFact.SetParameter("aggregation: drop scheme", Teuchos::ParameterEntry(std::string("distance laplacian")));
 
@@ -2455,8 +2457,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, AggresiveDroppingI
     mtx->SetFixedBlockSize(1);
     fineLevel.Set("A", mtx);
 
-    CoalesceDropFactory_kokkos dropFact = CoalesceDropFactory_kokkos();
-    RCP<AmalgamationFactory> amalgFact  = rcp(new AmalgamationFactory());
+    CoalesceDropFactory dropFact       = CoalesceDropFactory();
+    RCP<AmalgamationFactory> amalgFact = rcp(new AmalgamationFactory());
     dropFact.SetFactory("UnAmalgamationInfo", amalgFact);
     dropFact.SetParameter("aggregation: drop tol", Teuchos::ParameterEntry(4.1));
     fineLevel.Request("Graph", &dropFact);
@@ -2482,7 +2484,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, AggresiveDroppingI
   //   mtx->SetFixedBlockSize(2);
   //   fineLevel.Set("A", mtx);
 
-  //   CoalesceDropFactory_kokkos dropFact = CoalesceDropFactory_kokkos();
+  //   CoalesceDropFactory dropFact = CoalesceDropFactory();
   //   RCP<AmalgamationFactory> amalgFact = rcp(new AmalgamationFactory());
   //   dropFact.SetFactory("UnAmalgamationInfo",amalgFact);
   //   dropFact.SetParameter("aggregation: drop tol",Teuchos::ParameterEntry(4.1));
@@ -2507,7 +2509,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, AggresiveDroppingI
   //   mtx->SetFixedBlockSize(3);
   //   fineLevel.Set("A", mtx);
 
-  //   CoalesceDropFactory_kokkos dropFact = CoalesceDropFactory_kokkos();
+  //   CoalesceDropFactory dropFact = CoalesceDropFactory();
   //   RCP<AmalgamationFactory> amalgFact = rcp(new AmalgamationFactory());
   //   dropFact.SetFactory("UnAmalgamationInfo",amalgFact);
   //   dropFact.SetParameter("aggregation: drop tol",Teuchos::ParameterEntry(4.1));
@@ -2665,7 +2667,13 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, 2x2, Scalar, Local
     auto expectedFilteredMatrix = expectedFilteredMatrices[testNo];
     auto expectedBoundaryNodes  = expectedBoundaryNodesVector[testNo];
 
-    for (bool useKokkos : {false, true}) {
+    for (bool useKokkos :
+#ifdef HAVE_MUELU_DEPRECATED_CODE
+         {false, true}
+#else
+         {true}
+#endif
+    ) {
       RCP<Matrix> filteredA;
       Kokkos::View<bool *, Kokkos::HostSpace> boundaryNodes;
       {
@@ -2679,10 +2687,12 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, 2x2, Scalar, Local
         if (useKokkos) {
           out << "\nKokkos code path\nparams:\n"
               << param << "\n";
-          dropFact = rcp(new CoalesceDropFactory_kokkos());
+          dropFact = rcp(new CoalesceDropFactory());
           dropFact->SetParameterList(param);
           filteredAFact = dropFact;
-        } else {
+        }
+#ifdef HAVE_MUELU_DEPRECATED_CODE
+        else {
           out << "\nNon-Kokkos code path\nparams:\n"
               << param << "\n";
           dropFact            = rcp(new CoalesceDropFactory());
@@ -2699,6 +2709,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, 2x2, Scalar, Local
           filteredAFact->SetFactory("Graph", dropFact);
           filteredAFact->SetFactory("Filtering", dropFact);
         }
+#endif
         fineLevel.Request("A", filteredAFact.get());
         fineLevel.Request("Graph", dropFact.get());
         fineLevel.Request("DofsPerNode", dropFact.get());
@@ -2767,7 +2778,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, SignedClassicalDis
   fineLevel.Set("Nullspace", nullspace);
 
   RCP<AmalgamationFactory> amalgFact = rcp(new AmalgamationFactory());
-  CoalesceDropFactory_kokkos coalesceDropFact;
+  CoalesceDropFactory coalesceDropFact;
   coalesceDropFact.SetFactory("UnAmalgamationInfo", amalgFact);
   coalesceDropFact.SetParameter("aggregation: drop tol", Teuchos::ParameterEntry(1.0));
   coalesceDropFact.SetParameter("aggregation: drop scheme", Teuchos::ParameterEntry(std::string("signed classical distance laplacian")));
@@ -2807,7 +2818,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(CoalesceDropFactory_kokkos, SignedClassicalSAD
   fineLevel.Set("Nullspace", nullspace);
 
   RCP<AmalgamationFactory> amalgFact = rcp(new AmalgamationFactory());
-  CoalesceDropFactory_kokkos coalesceDropFact;
+  CoalesceDropFactory coalesceDropFact;
   coalesceDropFact.SetFactory("UnAmalgamationInfo", amalgFact);
   coalesceDropFact.SetParameter("aggregation: drop tol", Teuchos::ParameterEntry(0.6));
   coalesceDropFact.SetParameter("aggregation: drop scheme", Teuchos::ParameterEntry(std::string("signed classical sa distance laplacian")));

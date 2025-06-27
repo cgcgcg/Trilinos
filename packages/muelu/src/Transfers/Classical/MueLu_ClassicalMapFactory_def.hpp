@@ -80,12 +80,13 @@ void ClassicalMapFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(Level
   const ParameterList& pL = GetParameterList();
   RCP<const Matrix> A     = Get<RCP<Matrix> >(currentLevel, "A");
 
-  RCP<const LWGraph> graph;
+  RCP<LWGraph_kokkos> graph_d;
   bool use_color_graph = pL.get<bool>("aggregation: coloring: use color graph");
   if (use_color_graph)
-    graph = Get<RCP<LWGraph> >(currentLevel, "Coloring Graph");
+    graph_d = Get<RCP<LWGraph_kokkos> >(currentLevel, "Coloring Graph");
   else
-    graph = Get<RCP<LWGraph> >(currentLevel, "Graph");
+    graph_d = Get<RCP<LWGraph_kokkos> >(currentLevel, "Graph");
+  RCP<const LWGraph> graph = graph_d->copyToHost();
 
   /* ============================================================= */
   /* Phase 1 : Compute an initial MIS                              */
