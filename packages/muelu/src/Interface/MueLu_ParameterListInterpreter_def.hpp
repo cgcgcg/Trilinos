@@ -39,7 +39,6 @@
 #include "MueLu_Exceptions.hpp"
 #include "MueLu_FacadeClassFactory.hpp"
 #include "MueLu_FactoryFactory.hpp"
-#include "MueLu_FilteredAFactory.hpp"
 #include "MueLu_GenericRFactory.hpp"
 #include "MueLu_InitialBlockNumberFactory.hpp"
 #include "MueLu_LineDetectionFactory.hpp"
@@ -74,7 +73,6 @@
 #include "MueLu_NodePartitionInterface.hpp"
 #include "MueLu_LowPrecisionFactory.hpp"
 
-#include "MueLu_CoalesceDropFactory_kokkos.hpp"
 #include "MueLu_SemiCoarsenPFactory_kokkos.hpp"
 #include "MueLu_TentativePFactory_kokkos.hpp"
 
@@ -1057,10 +1055,8 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "aggregation: penalty parameters", Teuchos::Array<double>, dropParams);
     dropFactory->SetParameterList(dropParams);
   } else {
-    MUELU_KOKKOS_FACTORY_NO_DECL(dropFactory, CoalesceDropFactory, CoalesceDropFactory_kokkos);
+    dropFactory = rcp(new CoalesceDropFactory());
     ParameterList dropParams;
-    if (!rcp_dynamic_cast<CoalesceDropFactory>(dropFactory).is_null())
-      dropParams.set("lightweight wrap", true);
     MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "aggregation: drop scheme", std::string, dropParams);
     MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "aggregation: row sum drop tol", double, dropParams);
     MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "aggregation: block diagonal: interleaved blocksize", int, dropParams);
@@ -1199,7 +1195,6 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     // Unlike other factories, BrickAggregationFactory makes the Graph/DofsPerNode itself
     manager.SetFactory("Graph", aggFactory);
     manager.SetFactory("DofsPerNode", aggFactory);
-    manager.SetFactory("Filtering", aggFactory);
     if (levelID > 1) {
       // We check for levelID > 0, as in the interpreter aggFactory for
       // levelID really corresponds to level 0. Managers are clunky, as they
@@ -2075,35 +2070,7 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   // Filtering
   MUELU_SET_VAR_2LIST(paramList, defaultList, "sa: use filtered matrix", bool, useFiltering);
   if (useFiltering) {
-    // NOTE: Here, non-Kokkos and Kokkos versions diverge in the way the
-    // dependency tree is setup. The Kokkos version has merged the the
-    // FilteredAFactory into the CoalesceDropFactory.
-    if (!useKokkos_) {
-      RCP<Factory> filterFactory = rcp(new FilteredAFactory());
-
-      ParameterList fParams;
-      MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "filtered matrix: use lumping", bool, fParams);
-      MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "filtered matrix: reuse graph", bool, fParams);
-      MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "filtered matrix: reuse eigenvalue", bool, fParams);
-      MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "filtered matrix: use root stencil", bool, fParams);
-      MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "filtered matrix: Dirichlet threshold", double, fParams);
-      MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "filtered matrix: use spread lumping", bool, fParams);
-      // MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "filtered matrix: lumping choice", std::string, fParams);
-      MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "filtered matrix: spread lumping diag dom growth factor", double, fParams);
-      MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "filtered matrix: spread lumping diag dom cap", double, fParams);
-      MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "filtered matrix: count negative diagonals", bool, fParams);
-      filterFactory->SetParameterList(fParams);
-      filterFactory->SetFactory("Graph", manager.GetFactory("Graph"));
-      filterFactory->SetFactory("Aggregates", manager.GetFactory("Aggregates"));
-      filterFactory->SetFactory("UnAmalgamationInfo", manager.GetFactory("UnAmalgamationInfo"));
-      // I'm not sure why we need this line. See comments for DofsPerNode for UncoupledAggregation above
-      filterFactory->SetFactory("Filtering", manager.GetFactory("Graph"));
-
-      P->SetFactory("A", filterFactory);
-
-    } else {
-      P->SetFactory("A", manager.GetFactory("Graph"));
-    }
+    P->SetFactory("A", manager.GetFactory("Graph"));
   }
 
   P->SetFactory("P", manager.GetFactory("Ptent"));
@@ -2136,34 +2103,7 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   // Filtering
   MUELU_SET_VAR_2LIST(paramList, defaultList, "emin: use filtered matrix", bool, useFiltering);
   if (useFiltering) {
-    // NOTE: Here, non-Kokkos and Kokkos versions diverge in the way the
-    // dependency tree is setup. The Kokkos version has merged the the
-    // FilteredAFactory into the CoalesceDropFactory.
-    if (!useKokkos_) {
-      RCP<Factory> filterFactory = rcp(new FilteredAFactory());
-
-      ParameterList fParams;
-      MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "filtered matrix: use lumping", bool, fParams);
-      MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "filtered matrix: reuse graph", bool, fParams);
-      MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "filtered matrix: reuse eigenvalue", bool, fParams);
-      MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "filtered matrix: use root stencil", bool, fParams);
-      MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "filtered matrix: Dirichlet threshold", double, fParams);
-      MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "filtered matrix: use spread lumping", bool, fParams);
-      MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "filtered matrix: lumping choice", std::string, fParams);
-      MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "filtered matrix: spread lumping diag dom growth factor", double, fParams);
-      MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "filtered matrix: spread lumping diag dom cap", double, fParams);
-      filterFactory->SetParameterList(fParams);
-      filterFactory->SetFactory("Graph", manager.GetFactory("Graph"));
-      filterFactory->SetFactory("Aggregates", manager.GetFactory("Aggregates"));
-      filterFactory->SetFactory("UnAmalgamationInfo", manager.GetFactory("UnAmalgamationInfo"));
-      // I'm not sure why we need this line. See comments for DofsPerNode for UncoupledAggregation above
-      filterFactory->SetFactory("Filtering", manager.GetFactory("Graph"));
-
-      patternFactory->SetFactory("A", filterFactory);
-
-    } else {
-      patternFactory->SetFactory("A", manager.GetFactory("Graph"));
-    }
+    patternFactory->SetFactory("A", manager.GetFactory("Graph"));
   }
 
   manager.SetFactory("Ppattern", patternFactory);

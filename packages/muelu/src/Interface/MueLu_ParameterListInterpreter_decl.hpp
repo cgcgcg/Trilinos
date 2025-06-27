@@ -31,7 +31,6 @@
 #include "MueLu_FacadeClassBase.hpp"
 #include "MueLu_FacadeClassFactory.hpp"
 #include "MueLu_FactoryFactory_fwd.hpp"
-#include "MueLu_FilteredAFactory_fwd.hpp"
 #include "MueLu_GenericRFactory_fwd.hpp"
 #include "MueLu_InitialBlockNumberFactory_fwd.hpp"
 #include "MueLu_LineDetectionFactory_fwd.hpp"
@@ -63,7 +62,6 @@
 #include "MueLu_SingleLevelMatlabFactory_fwd.hpp"
 #endif
 
-#include "MueLu_CoalesceDropFactory_kokkos_fwd.hpp"
 #include "MueLu_SemiCoarsenPFactory_kokkos_fwd.hpp"
 #include "MueLu_TentativePFactory_kokkos_fwd.hpp"
 

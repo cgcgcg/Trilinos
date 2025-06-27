@@ -10,6 +10,9 @@
 #ifndef MUELU_FILTEREDAFACTORY_FWD_HPP
 #define MUELU_FILTEREDAFACTORY_FWD_HPP
 
+#include "MueLu_ConfigDefs.hpp"
+#if defined(HAVE_MUELU_DEPRECATED_CODE)
+
 namespace MueLu {
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 class FilteredAFactory;
@@ -17,6 +20,8 @@ class FilteredAFactory;
 
 #ifndef MUELU_FILTEREDAFACTORY_SHORT
 #define MUELU_FILTEREDAFACTORY_SHORT
+#endif
+
 #endif
 
 #endif  // MUELU_FILTEREDAFACTORY_FWD_HPP

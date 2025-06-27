@@ -186,7 +186,6 @@ void SmooVecCoalesceDropFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Buil
 #endif
 
   SC threshold = .01;
-  Set<bool>(currentLevel, "Filtering", (threshold != STS::zero()));
   Set(currentLevel, "Graph", filteredGraph);
   Set(currentLevel, "DofsPerNode", 1);
 

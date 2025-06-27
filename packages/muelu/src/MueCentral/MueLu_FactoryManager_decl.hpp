@@ -39,7 +39,9 @@
 #include "MueLu_InterfaceMappingTransferFactory_fwd.hpp"
 #include "MueLu_InterfaceAggregationFactory_fwd.hpp"
 
+#ifdef HAVE_MUELU_DEPRECATED_CODE
 #include "MueLu_CoalesceDropFactory_kokkos_fwd.hpp"
+#endif
 #include "MueLu_TentativePFactory_kokkos_fwd.hpp"
 
 namespace MueLu {

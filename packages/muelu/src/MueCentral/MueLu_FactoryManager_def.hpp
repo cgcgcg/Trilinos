@@ -41,7 +41,9 @@
 #include "MueLu_InterfaceAggregationFactory.hpp"
 #include "MueLu_InverseApproximationFactory.hpp"
 
+#ifdef HAVE_MUELU_DEPRECATED_CODE
 #include "MueLu_CoalesceDropFactory_kokkos.hpp"
+#endif
 #include "MueLu_TentativePFactory_kokkos.hpp"
 
 #include "MueLu_FactoryManager_decl.hpp"
@@ -154,13 +156,17 @@ const RCP<const FactoryBase> FactoryManager<Scalar, LocalOrdinal, GlobalOrdinal,
     }
     if (varName == "repartition: heuristic target rows per process") return GetFactory("number of partitions");
 
+#ifdef HAVE_MUELU_DEPRECATED_CODE
     if (varName == "Graph") return MUELU_KOKKOS_FACTORY(varName, CoalesceDropFactory, CoalesceDropFactory_kokkos);
+#else
+    if (varName == "Graph") return SetAndReturnDefaultFactory(varName, rcp(new CoalesceDropFactory()));
+#endif
     if (varName == "UnAmalgamationInfo") return SetAndReturnDefaultFactory(varName, rcp(new AmalgamationFactory()));
     if (varName == "Aggregates") return SetAndReturnDefaultFactory(varName, rcp(new UncoupledAggregationFactory()));
     if (varName == "AggregateQualities") return SetAndReturnDefaultFactory(varName, rcp(new AggregateQualityEstimateFactory()));
     if (varName == "CoarseMap") return SetAndReturnDefaultFactory(varName, rcp(new CoarseMapFactory()));
     if (varName == "DofsPerNode") return GetFactory("Graph");
-    if (varName == "Filtering") return GetFactory("Graph");
+
     if (varName == "BlockNumber") return SetAndReturnDefaultFactory(varName, rcp(new InitialBlockNumberFactory()));
     if (varName == "LineDetection_VertLineIds") return SetAndReturnDefaultFactory(varName, rcp(new LineDetectionFactory()));
     if (varName == "LineDetection_Layers") return GetFactory("LineDetection_VertLineIds");

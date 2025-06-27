@@ -56,7 +56,9 @@
 #include "MueLu_DirectSolver_fwd.hpp"
 #include "MueLu_DropNegativeEntriesFactory_fwd.hpp"
 #include "MueLu_EminPFactory_fwd.hpp"
+#ifdef HAVE_MUELU_DEPRECATED_CODE
 #include "MueLu_FilteredAFactory_fwd.hpp"
+#endif
 #include "MueLu_FineLevelInputDataFactory_fwd.hpp"
 #include "MueLu_GeneralGeometricPFactory_fwd.hpp"
 #include "MueLu_ReplicatePFactory_fwd.hpp"
@@ -123,7 +125,9 @@
 #include "MueLu_Zoltan2Interface_fwd.hpp"
 #include "MueLu_NodePartitionInterface_fwd.hpp"
 
+#ifdef HAVE_MUELU_DEPRECATED_CODE
 #include "MueLu_CoalesceDropFactory_kokkos_fwd.hpp"
+#endif
 #include "MueLu_GeometricInterpolationPFactory_kokkos_fwd.hpp"
 #include "MueLu_SemiCoarsenPFactory_kokkos_fwd.hpp"
 #include "MueLu_StructuredAggregationFactory_kokkos_fwd.hpp"

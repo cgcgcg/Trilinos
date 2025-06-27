@@ -31,7 +31,7 @@ template <class Scalar        = DefaultScalar,
           class LocalOrdinal  = DefaultLocalOrdinal,
           class GlobalOrdinal = DefaultGlobalOrdinal,
           class Node          = DefaultNode>
-class FilteredAFactory : public SingleLevelFactoryBase {
+class [[deprecated]] FilteredAFactory : public SingleLevelFactoryBase {
 #undef MUELU_FILTEREDAFACTORY_SHORT
 #include "MueLu_UseShortNames.hpp"
 

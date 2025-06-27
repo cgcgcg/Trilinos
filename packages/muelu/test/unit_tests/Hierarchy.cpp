@@ -225,6 +225,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(Hierarchy, Iterate, Scalar, LocalOrdinal, Glob
   UncoupledAggFact->SetMaxNeighAlreadySelected(0);
   UncoupledAggFact->SetOrdering("natural");
   UncoupledAggFact->SetParameter("aggregation: deterministic", Teuchos::ParameterEntry(true));
+  UncoupledAggFact->SetParameter("aggregation: backend", Teuchos::ParameterEntry(std::string("host")));
 
   RCP<CoalesceDropFactory> cdFact;
   RCP<TentativePFactory> TentPFact = rcp(new TentativePFactory());
@@ -422,6 +423,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(Hierarchy, IterateWithImplicitRestriction, Sca
   UncoupledAggFact->SetMaxNeighAlreadySelected(0);
   UncoupledAggFact->SetOrdering("natural");
   UncoupledAggFact->SetParameter("aggregation: deterministic", Teuchos::ParameterEntry(true));
+  UncoupledAggFact->SetParameter("aggregation: backend", Teuchos::ParameterEntry(std::string("host")));
   RCP<CoalesceDropFactory> cdFact;
   RCP<TentativePFactory> TentPFact = rcp(new TentativePFactory());
 

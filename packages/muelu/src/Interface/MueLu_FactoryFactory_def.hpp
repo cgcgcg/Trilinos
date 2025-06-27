@@ -35,7 +35,9 @@
 #include "MueLu_DirectSolver.hpp"
 #include "MueLu_DropNegativeEntriesFactory.hpp"
 #include "MueLu_EminPFactory.hpp"
+#ifdef HAVE_MUELU_DEPRECATED_CODE
 #include "MueLu_FilteredAFactory.hpp"
+#endif
 #include "MueLu_FineLevelInputDataFactory.hpp"
 #include "MueLu_GeneralGeometricPFactory.hpp"
 #include "MueLu_ReplicatePFactory.hpp"
@@ -102,7 +104,9 @@
 #include "MueLu_Zoltan2Interface.hpp"
 #include "MueLu_NodePartitionInterface.hpp"
 
+#ifdef HAVE_MUELU_DEPRECATED_CODE
 #include "MueLu_CoalesceDropFactory_kokkos.hpp"
+#endif
 #include "MueLu_GeometricInterpolationPFactory_kokkos.hpp"
 #include "MueLu_SemiCoarsenPFactory_kokkos.hpp"
 #include "MueLu_StructuredAggregationFactory_kokkos.hpp"
@@ -153,7 +157,9 @@ RCP<const FactoryBase> FactoryFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>
   if (factoryName == "DirectSolver") return BuildDirectSolver(paramList, factoryMapIn, factoryManagersIn);
   if (factoryName == "DropNegativeEntriesFactory") return Build2<DropNegativeEntriesFactory>(paramList, factoryMapIn, factoryManagersIn);
   if (factoryName == "EminPFactory") return Build2<EminPFactory>(paramList, factoryMapIn, factoryManagersIn);
+#ifdef HAVE_MUELU_DEPRECATED_CODE
   if (factoryName == "FilteredAFactory") return Build2<FilteredAFactory>(paramList, factoryMapIn, factoryManagersIn);
+#endif
   if (factoryName == "FineLevelInputDataFactory") return Build2<FineLevelInputDataFactory>(paramList, factoryMapIn, factoryManagersIn);
   if (factoryName == "GeneralGeometricPFactory") return Build2<GeneralGeometricPFactory>(paramList, factoryMapIn, factoryManagersIn);
   if (factoryName == "ReplicatePFactory") return Build2<ReplicatePFactory>(paramList, factoryMapIn, factoryManagersIn);
@@ -205,7 +211,9 @@ RCP<const FactoryBase> FactoryFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>
   if (factoryName == "UserPFactory") return Build2<UserPFactory>(paramList, factoryMapIn, factoryManagersIn);
   if (factoryName == "VariableDofLaplacianFactory") return Build2<VariableDofLaplacianFactory>(paramList, factoryMapIn, factoryManagersIn);
   if (factoryName == "ZeroSubBlockAFactory") return Build2<ZeroSubBlockAFactory>(paramList, factoryMapIn, factoryManagersIn);
+#ifdef HAVE_MUELU_DEPRECATED_CODE
   if (factoryName == "CoalesceDropFactory_kokkos") return Build2<CoalesceDropFactory_kokkos>(paramList, factoryMapIn, factoryManagersIn);
+#endif
   if (factoryName == "GeometricInterpolationPFactory_kokkos") return Build2<GeometricInterpolationPFactory_kokkos>(paramList, factoryMapIn, factoryManagersIn);
   if (factoryName == "SemiCoarsenPFactory_kokkos") return Build2<SemiCoarsenPFactory_kokkos>(paramList, factoryMapIn, factoryManagersIn);
   if (factoryName == "StructuredAggregationFactory_kokkos") return Build2<StructuredAggregationFactory_kokkos>(paramList, factoryMapIn, factoryManagersIn);
