@@ -44,6 +44,9 @@ class TimeMonitor : public BaseClass {
 
 // TODO: code duplication MutuallyExclusiveTimeMonitor / TimeMonitor
 
+
+
+
 /*! @class MutuallyExclusiveTimeMonitor
 
     @brief Similar to TimeMonitor, but uses MutuallyExclusiveTime objects.
@@ -51,7 +54,10 @@ class TimeMonitor : public BaseClass {
 */
 template <class TagName>
 class MutuallyExclusiveTimeMonitor : public BaseClass {
- public:
+
+
+
+public:
   /*! @brief Constructor
 
      @param[in] object      Reference to the class instance that is creating this MutuallyExclusiveTimeMonitor.
