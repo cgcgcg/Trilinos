@@ -10,6 +10,7 @@
 #ifndef THYRA_MUELU_PRECONDITIONER_FACTORY_DEF_HPP
 #define THYRA_MUELU_PRECONDITIONER_FACTORY_DEF_HPP
 
+#include <sstream>
 #include "Thyra_MueLuPreconditionerFactory_decl.hpp"
 #include "MueLu_TpetraOperatorAsRowMatrix.hpp"
 #include "MueLu_MasterList.hpp"
@@ -52,6 +53,7 @@ bool Converters<Scalar, LocalOrdinal, GlobalOrdinal, Node>::replaceWithXpetra(Pa
   typedef Tpetra::Operator<Scalar, LocalOrdinal, GlobalOrdinal, Node> tOp;
   typedef Tpetra::Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node> tV;
   typedef Thyra::TpetraVector<Scalar, LocalOrdinal, GlobalOrdinal, Node> thyTpV;
+  typedef Thyra::MultiVectorBase<Scalar> thyMVbase;
   typedef Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node> tMV;
   typedef Tpetra::MultiVector<Magnitude, LocalOrdinal, GlobalOrdinal, Node> tMagMV;
 #if defined(MUELU_CAN_USE_MIXED_PRECISION)
@@ -137,6 +139,10 @@ bool Converters<Scalar, LocalOrdinal, GlobalOrdinal, Node>::replaceWithXpetra(Pa
       RCP<XpMat> M = Xpetra::MatrixFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(xpDiag);
       paramList.set<RCP<XpMat> >(parameterName, M);
       return true;
+    } else if (paramList.isType<RCP<thyMVbase> >(parameterName)) {
+      auto thyMV = paramList.get<RCP<thyMVbase> >(parameterName);
+      auto xpMV  = XpThyUtils::toXpetra(thyMV, Teuchos::null);
+      paramList.set(parameterName, xpMV);
     } else if (paramList.isType<RCP<const ThyLinOpBase> >(parameterName)) {
       RCP<const ThyLinOpBase> thyM = paramList.get<RCP<const ThyLinOpBase> >(parameterName);
       paramList.remove(parameterName);
@@ -159,7 +165,9 @@ bool Converters<Scalar, LocalOrdinal, GlobalOrdinal, Node>::replaceWithXpetra(Pa
       }
       return true;
     } else {
-      TEUCHOS_TEST_FOR_EXCEPTION(true, MueLu::Exceptions::RuntimeError, "Parameter " << parameterName << " has wrong type.");
+      std::stringstream ss;
+      ss << paramList.getEntry(parameterName);
+      TEUCHOS_TEST_FOR_EXCEPTION(true, MueLu::Exceptions::RuntimeError, "Parameter " << parameterName << " has wrong type: " + ss.str());
       return false;
     }
   } else
