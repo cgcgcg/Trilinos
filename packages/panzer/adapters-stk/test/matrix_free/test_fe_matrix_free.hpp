@@ -906,6 +906,36 @@ int feAssemblyHex(int argc, char *argv[]) {
         }
         strat_params->sublist("Preconditioner Types").sublist("MueLu").sublist("level " + std::to_string(mueluLevel+1)+" user data").set("A", thyra_Ac);
 
+        if (coarse_degree == 1) {
+          { // Set up nullspace for problem
+            auto coarseNullspace = Teuchos::rcp(new multivector_t(coarseOwnedMap, 1));
+            coarseNullspace->putScalar(1.);
+            auto thyra_coarseNullspace = Thyra::createMultiVector(coarseNullspace);
+            strat_params->sublist("Preconditioner Types").sublist("MueLu").sublist("level " + std::to_string(mueluLevel+1)+" user data").set("Nullspace", thyra_coarseNullspace);
+          }
+          { // Set up coordinates for problem
+
+            // auto coarseCoords = Teuchos::rcp(new multivector_t(coarseOwnedMap, 1));
+            auto fieldPattern = coarseDofManager->getFieldPattern(coarseFieldName);
+            auto intrepid2FieldPattern = Teuchos::rcp_dynamic_cast<const panzer::Intrepid2FieldPattern>(fieldPattern, true);
+
+            TEUCHOS_ASSERT(intrepid2FieldPattern->supportsInterpolatoryCoordinates());
+            std::map<std::string,Kokkos::DynRankView<double,PHX::Device> > data;
+            Kokkos::DynRankView<double,PHX::Device> & fieldData = data[blockId];
+            intrepid2FieldPattern->getInterpolatoryCoordinates(physVertices, fieldData);
+
+            auto atv = Teuchos::rcp(new panzer::ArrayToFieldVector(coarseDofManager));
+            auto coarseCoords = atv->template getDataVector<double>(std::string(coarseFieldName), data);
+
+            // std::cout << "HERE " << fieldData.extent(0) << " " << fieldData.extent(1)<< std::endl;
+            // std::cout << "HERE2 "<< *coarseCoords << std::endl;
+            // std::cout << "HERE2 "<< *resultVec << std::endl;
+
+            auto thyra_coarseCoords = Thyra::createMultiVector(coarseCoords);
+            strat_params->sublist("Preconditioner Types").sublist("MueLu").sublist("level " + std::to_string(mueluLevel+1)+" user data").set("Coordinates", thyra_coarseCoords);
+          }
+        }
+
         ++mueluLevel;
         fineDofManager = coarseDofManager;
         fineFieldName = coarseFieldName;
