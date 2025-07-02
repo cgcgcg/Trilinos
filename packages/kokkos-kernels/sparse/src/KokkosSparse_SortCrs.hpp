@@ -65,9 +65,13 @@ void sort_crs_matrix(const execution_space& exec, const rowmap_t& rowmap, const 
   Ordinal numRows = rowmap.extent(0) ? rowmap.extent(0) - 1 : 0;
   if constexpr (!KokkosKernels::Impl::is_gpu_exec_space_v<execution_space>) {
     // On CPUs, use a sequential radix sort within each row.
-    Kokkos::parallel_for("sort_crs_matrix[CPU,radix]",
+    // Kokkos::parallel_for("sort_crs_matrix[CPU,radix]",
+    //                      Kokkos::RangePolicy<execution_space, Kokkos::Schedule<Kokkos::Dynamic>>(exec, 0, numRows),
+    //                      Impl::MatrixRadixSortFunctor<rowmap_t, entries_t, values_t>(rowmap, entries, values));
+    // SortCrsEntries<rowmap_t, entries_t, values_t>::sortCrsEntries (rowmap, entries, values);
+    Kokkos::parallel_for("sort_crs_matrix[CPU,shell]",
                          Kokkos::RangePolicy<execution_space, Kokkos::Schedule<Kokkos::Dynamic>>(exec, 0, numRows),
-                         Impl::MatrixRadixSortFunctor<rowmap_t, entries_t, values_t>(rowmap, entries, values));
+                         Impl::SortCrsEntries(rowmap, entries, values));
   } else {
     // On GPUs:
     //   If the matrix is highly imbalanced, or has long rows AND the dimensions

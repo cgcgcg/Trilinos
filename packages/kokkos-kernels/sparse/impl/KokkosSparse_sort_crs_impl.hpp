@@ -31,6 +31,65 @@
 namespace KokkosSparse {
 namespace Impl {
 
+template<class RowOffsetsType, class ColumnIndicesType, class ValuesType>
+struct SortCrsEntries {
+  typedef typename ColumnIndicesType::non_const_value_type ordinal_type;
+  typedef typename ValuesType::non_const_value_type scalar_type;
+
+  SortCrsEntries (const RowOffsetsType& ptr,
+                  const ColumnIndicesType& ind,
+                  const ValuesType& val) :
+    ptr_ (ptr),
+    ind_ (ind),
+    val_ (val)
+  {
+    static_assert (std::is_signed<ordinal_type>::value, "The type of each "
+                   "column index -- that is, the type of each entry of ind "
+                   "-- must be signed in order for this functor to work.");
+  }
+
+  KOKKOS_FUNCTION void operator() (const size_t i) const
+  {
+    const size_t nnz = ind_.extent (0);
+    const size_t start = ptr_(i);
+    const bool permute_values_array = val_.extent(0) > 0;
+
+    if (start < nnz) {
+      const size_t NumEntries = ptr_(i+1) - start;
+
+      const ordinal_type n = static_cast<ordinal_type> (NumEntries);
+      ordinal_type m = 1;
+      while (m<n) m = m*3+1;
+      m /= 3;
+
+      while (m > 0) {
+        ordinal_type max = n - m;
+        for (ordinal_type j = 0; j < max; j++) {
+          for (ordinal_type k = j; k >= 0; k -= m) {
+            const size_t sk = start+k;
+            if (ind_(sk+m) >= ind_(sk)) {
+              break;
+            }
+            if (permute_values_array) {
+              const scalar_type dtemp = val_(sk+m);
+              val_(sk+m)   = val_(sk);
+              val_(sk)     = dtemp;
+            }
+            const ordinal_type itemp = ind_(sk+m);
+            ind_(sk+m) = ind_(sk);
+            ind_(sk)   = itemp;
+          }
+        }
+        m = m/3;
+      }
+    }
+  }
+
+  RowOffsetsType ptr_;
+  ColumnIndicesType ind_;
+  ValuesType val_;
+};
+
 template <typename rowmap_t, typename entries_t, typename values_t>
 struct MatrixRadixSortFunctor {
   using Offset          = typename rowmap_t::non_const_value_type;

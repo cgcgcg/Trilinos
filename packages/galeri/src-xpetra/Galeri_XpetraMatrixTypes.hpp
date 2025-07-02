@@ -1583,7 +1583,9 @@ StencilMatrixKokkos(const Teuchos::RCP<const Map>& map,
       });
 
   auto lclA = local_matrix_type(matLabel, numMyElements, ghosted_map->getLocalNumElements(), myNNZ, stencil.values, rowptr, stencil.colidx);
+  Teuchos::RCP<TimeMonitor> tmStep = rcp(new TimeMonitor(*TimeMonitor::getNewTimer("Galeri: " + matLabel + " generation - sort")));
   ::KokkosSparse::sort_crs_matrix(lclA);
+  tmStep = Teuchos::null;
   auto mtx = MatrixTraits<Map, Matrix>::Build(lclA, map, ghosted_map, map, map);
 
 #ifdef HAVE_GALERI_DEBUG
