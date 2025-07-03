@@ -495,7 +495,9 @@ int feAssemblyHex(const int &degree,
     stacked_timer->setVerboseOstream(outStream);
 
     Teuchos::RCP<Teuchos::ParameterList> strat_params = Teuchos::rcp(new Teuchos::ParameterList("Stratimikos parameters"));
+    Teuchos::RCP<Teuchos::ParameterList> strat_params_mf = Teuchos::rcp(new Teuchos::ParameterList("Stratimikos parameters"));
     Teuchos::updateParametersFromXmlFileAndBroadcast(stratFileName, strat_params.ptr(), *comm);
+    Teuchos::updateParametersFromXmlFileAndBroadcast(stratFileName, strat_params_mf.ptr(), *comm);
 
     local_ordinal_t numOwnedElems = nx*ny*nz;
 
@@ -842,26 +844,41 @@ int feAssemblyHex(const int &degree,
 
         // grid transfer
         {
+          Teuchos::TimeMonitor pTimer =  *Teuchos::TimeMonitor::getNewTimer("Assemble matrix prolongator between orders " +std::to_string(coarse_degree) +" and "+std::to_string(degree));
+          RCP<const Thyra::LinearOpBase<scalar_t> > P = panzer::buildInterpolation(connManager,
+                                                                                   coarseDofManager, fineDofManager,
+                                                                                   coarseFieldName, fineFieldName,
+                                                                                   Intrepid2::OPERATOR_VALUE,
+                                                                                   /*worksetSize=*/1000, /*forceVectorial=*/false,
+                                                                                   /*useTpetra=*/true, /*matrixFree=*/false);
+          strat_params->sublist("Preconditioner Types").sublist("MueLu").sublist("level " + std::to_string(mueluLevel+1)+" user data").set("P", P);
+        }
+        {
+          Teuchos::TimeMonitor pTimer =  *Teuchos::TimeMonitor::getNewTimer("Assemble matrix-free prolongator between orders " +std::to_string(coarse_degree) +" and "+std::to_string(degree));
           RCP<const Thyra::LinearOpBase<scalar_t> > P = panzer::buildInterpolation(connManager,
                                                                                    coarseDofManager, fineDofManager,
                                                                                    coarseFieldName, fineFieldName,
                                                                                    Intrepid2::OPERATOR_VALUE,
                                                                                    /*worksetSize=*/1000, /*forceVectorial=*/false,
                                                                                    /*useTpetra=*/true, /*matrixFree=*/true);
-          strat_params->sublist("Preconditioner Types").sublist("MueLu").sublist("level " + std::to_string(mueluLevel+1)+" user data").set("P", P);
+          strat_params_mf->sublist("Preconditioner Types").sublist("MueLu").sublist("level " + std::to_string(mueluLevel+1)+" user data").set("P", P);
         }
 
         // coarse matrix
         auto thyra_vs_fine = Thyra::tpetraVectorSpace<scalar_t, local_ordinal_t, global_ordinal_t, node_t>(fineOwnedMap);
         auto thyra_vs_coarse = Thyra::tpetraVectorSpace<scalar_t, local_ordinal_t, global_ordinal_t, node_t>(coarseOwnedMap);
-        Teuchos::RCP<const Thyra::LinearOpBase<scalar_t> > thyra_Ac;
-        if (coarse_degree == 1) {
+        Teuchos::RCP<const Thyra::LinearOpBase<scalar_t> > thyra_Ac, thyra_Ac_mf;
+        {
           // matrix assembly
+          Teuchos::TimeMonitor acTimer =  *Teuchos::TimeMonitor::getNewTimer("Assemble matrix for order " +std::to_string(coarse_degree));
           auto feGraph = buildFEGraph(coarseDofManager, coarseFieldName, coarseOwnedMap, coarseOwnedAndGhostedMap);
           auto Ac = Teuchos::rcp(new fe_matrix_t(feGraph));
           fillMatrix<ValueType, DeviceType>(coarseDofManager, coarseFieldName, geometry, elemOrts, Ac);
           thyra_Ac = Thyra::tpetraLinearOp<scalar_t, local_ordinal_t, global_ordinal_t, node_t>(thyra_vs_coarse, thyra_vs_coarse, Ac);
-        } else {
+        }
+
+        if (coarse_degree > 1) {
+          Teuchos::TimeMonitor acTimer =  *Teuchos::TimeMonitor::getNewTimer("Assemble matrix-free operator for order " +std::to_string(coarse_degree));
           // matrix-free assembly
           auto fieldPattern = coarseDofManager->getFieldPattern(coarseFieldName);
           auto coarseBasis = rcp_dynamic_cast<const panzer::Intrepid2FieldPattern>(fieldPattern, true)->getIntrepidBasis();
@@ -872,9 +889,14 @@ int feAssemblyHex(const int &degree,
                                                                                                               coarseBasis, geometry,
                                                                                                               coarseCubature, elemOrts,
                                                                                                               coarseDofManager, coarseGlobalIndexer));
-          thyra_Ac = Thyra::tpetraLinearOp<scalar_t, local_ordinal_t, global_ordinal_t, node_t>(thyra_vs_coarse, thyra_vs_coarse, Ac);
+          thyra_Ac_mf = Thyra::tpetraLinearOp<scalar_t, local_ordinal_t, global_ordinal_t, node_t>(thyra_vs_coarse, thyra_vs_coarse, Ac);
         }
         strat_params->sublist("Preconditioner Types").sublist("MueLu").sublist("level " + std::to_string(mueluLevel+1)+" user data").set("A", thyra_Ac);
+        if (coarse_degree == 1) {
+          strat_params_mf->sublist("Preconditioner Types").sublist("MueLu").sublist("level " + std::to_string(mueluLevel+1)+" user data").set("A", thyra_Ac);
+        } else {
+          strat_params_mf->sublist("Preconditioner Types").sublist("MueLu").sublist("level " + std::to_string(mueluLevel+1)+" user data").set("A", thyra_Ac_mf);
+        }
 
         if (coarse_degree == 1) {
           { // Set up nullspace for problem
@@ -896,10 +918,6 @@ int feAssemblyHex(const int &degree,
 
             auto atv = Teuchos::rcp(new panzer::ArrayToFieldVector(coarseDofManager));
             auto coarseCoords = atv->template getDataVector<double>(std::string(coarseFieldName), data);
-
-            // std::cout << "HERE " << fieldData.extent(0) << " " << fieldData.extent(1)<< std::endl;
-            // std::cout << "HERE2 "<< *coarseCoords << std::endl;
-            // std::cout << "HERE2 "<< *resultVec << std::endl;
 
             auto thyra_coarseCoords = Thyra::createMultiVector(coarseCoords);
             strat_params->sublist("Preconditioner Types").sublist("MueLu").sublist("level " + std::to_string(mueluLevel+1)+" user data").set("Coordinates", thyra_coarseCoords);
@@ -1023,57 +1041,64 @@ int feAssemblyHex(const int &degree,
 
     // ************************************ SOLVE LINEAR SYSTEMS **************************************
     {
-      crsTotalTimer->start();
       *outStream << *strat_params << std::endl;
       Stratimikos::LinearSolverBuilder<scalar_t> linearSolverBuilder;
       Stratimikos::enableMueLu<scalar_t, local_ordinal_t, global_ordinal_t, node_t>(linearSolverBuilder);
-      linearSolverBuilder.setParameterList(strat_params);
-      Teuchos::RCP<Thyra::LinearOpWithSolveFactoryBase<scalar_t> > lowsFactory = createLinearSolveStrategy(linearSolverBuilder);
+
       auto thyra_vs = Thyra::tpetraVectorSpace<scalar_t, local_ordinal_t, global_ordinal_t, node_t>(ownedMap);
       auto thyra_b = Thyra::constTpetraVector<scalar_t, local_ordinal_t, global_ordinal_t, node_t>(thyra_vs, b->getVector(0));
 
       {
-        Teuchos::RCP<Thyra::VectorBase<scalar_t> > thyra_x_crs;
-        Teuchos::RCP<const Thyra::LinearOpBase<scalar_t> > thyra_A_crs;
-        Teuchos::RCP<Thyra::LinearOpWithSolveBase<scalar_t> > thyra_inverse_A_crs;
-
+        crsTotalTimer->start();
+        linearSolverBuilder.setParameterList(strat_params);
+        Teuchos::RCP<Thyra::LinearOpWithSolveFactoryBase<scalar_t> > lowsFactory = createLinearSolveStrategy(linearSolverBuilder);
         {
-          Teuchos::TimeMonitor mfSolveTimer =  *Teuchos::TimeMonitor::getNewTimer("Matrix solver setup");
-          thyra_x_crs = Thyra::createMember(*thyra_vs);
-          thyra_x_crs->assign(0.);
-          thyra_A_crs = Thyra::tpetraLinearOp<scalar_t, local_ordinal_t, global_ordinal_t, node_t>(thyra_vs, thyra_vs, A_crs);
-          thyra_inverse_A_crs = Thyra::linearOpWithSolve(*lowsFactory, thyra_A_crs);
-        }
+          Teuchos::RCP<Thyra::VectorBase<scalar_t> > thyra_x_crs;
+          Teuchos::RCP<const Thyra::LinearOpBase<scalar_t> > thyra_A_crs;
+          Teuchos::RCP<Thyra::LinearOpWithSolveBase<scalar_t> > thyra_inverse_A_crs;
 
-        {
-          Teuchos::TimeMonitor mfSolveTimer =  *Teuchos::TimeMonitor::getNewTimer("Matrix solve");
-          Thyra::SolveStatus<scalar_t> status = Thyra::solve<scalar_t>(*thyra_inverse_A_crs, Thyra::NOTRANS, *thyra_b, thyra_x_crs.ptr());
-          errorFlag += (status.solveStatus != Thyra::SOLVE_STATUS_CONVERGED);
+          {
+            Teuchos::TimeMonitor mfSolveTimer =  *Teuchos::TimeMonitor::getNewTimer("Matrix solver setup");
+            thyra_x_crs = Thyra::createMember(*thyra_vs);
+            thyra_x_crs->assign(0.);
+            thyra_A_crs = Thyra::tpetraLinearOp<scalar_t, local_ordinal_t, global_ordinal_t, node_t>(thyra_vs, thyra_vs, A_crs);
+            thyra_inverse_A_crs = Thyra::linearOpWithSolve(*lowsFactory, thyra_A_crs);
+          }
+
+          {
+            Teuchos::TimeMonitor mfSolveTimer =  *Teuchos::TimeMonitor::getNewTimer("Matrix solve");
+            Thyra::SolveStatus<scalar_t> status = Thyra::solve<scalar_t>(*thyra_inverse_A_crs, Thyra::NOTRANS, *thyra_b, thyra_x_crs.ptr());
+            errorFlag += (status.solveStatus != Thyra::SOLVE_STATUS_CONVERGED);
+          }
         }
+        crsTotalTimer->stop();
       }
-      crsTotalTimer->stop();
 
-      mfTotalTimer->start();
       {
-        Teuchos::RCP<Thyra::VectorBase<scalar_t> > thyra_x_mf;
-        Teuchos::RCP<const Thyra::LinearOpBase<scalar_t> > thyra_A_mf;
-        Teuchos::RCP<Thyra::LinearOpWithSolveBase<scalar_t> > thyra_inverse_A_mf;
-
+        linearSolverBuilder.setParameterList(strat_params_mf);
+        Teuchos::RCP<Thyra::LinearOpWithSolveFactoryBase<scalar_t> > lowsFactory = createLinearSolveStrategy(linearSolverBuilder);
+        mfTotalTimer->start();
         {
-          Teuchos::TimeMonitor mfSolveTimer =  *Teuchos::TimeMonitor::getNewTimer("Matrix-free solver setup");
-          thyra_x_mf = Thyra::createMember<scalar_t>(*thyra_vs);
-          thyra_x_mf->assign(0.);
-          thyra_A_mf = Thyra::tpetraLinearOp<scalar_t, local_ordinal_t, global_ordinal_t, node_t>(thyra_vs, thyra_vs, A_mf);
-          thyra_inverse_A_mf = Thyra::linearOpWithSolve(*lowsFactory, thyra_A_mf);
-        }
+          Teuchos::RCP<Thyra::VectorBase<scalar_t> > thyra_x_mf;
+          Teuchos::RCP<const Thyra::LinearOpBase<scalar_t> > thyra_A_mf;
+          Teuchos::RCP<Thyra::LinearOpWithSolveBase<scalar_t> > thyra_inverse_A_mf;
 
-        {
-          Teuchos::TimeMonitor mfSolveTimer =  *Teuchos::TimeMonitor::getNewTimer("Matrix-free solve");
-          Thyra::SolveStatus<scalar_t> status = Thyra::solve<scalar_t>(*thyra_inverse_A_mf, Thyra::NOTRANS, *thyra_b, thyra_x_mf.ptr());
-          errorFlag += (status.solveStatus != Thyra::SOLVE_STATUS_CONVERGED);
+          {
+            Teuchos::TimeMonitor mfSolveTimer =  *Teuchos::TimeMonitor::getNewTimer("Matrix-free solver setup");
+            thyra_x_mf = Thyra::createMember<scalar_t>(*thyra_vs);
+            thyra_x_mf->assign(0.);
+            thyra_A_mf = Thyra::tpetraLinearOp<scalar_t, local_ordinal_t, global_ordinal_t, node_t>(thyra_vs, thyra_vs, A_mf);
+            thyra_inverse_A_mf = Thyra::linearOpWithSolve(*lowsFactory, thyra_A_mf);
+          }
+
+          {
+            Teuchos::TimeMonitor mfSolveTimer =  *Teuchos::TimeMonitor::getNewTimer("Matrix-free solve");
+            Thyra::SolveStatus<scalar_t> status = Thyra::solve<scalar_t>(*thyra_inverse_A_mf, Thyra::NOTRANS, *thyra_b, thyra_x_mf.ptr());
+            errorFlag += (status.solveStatus != Thyra::SOLVE_STATUS_CONVERGED);
+          }
         }
+        mfTotalTimer->stop();
       }
-      mfTotalTimer->stop();
     }
     standardAssemblyTotalTime = crsTotalTimer->totalElapsedTime();
     matrixFreeTotalTime = mfTotalTimer->totalElapsedTime();
