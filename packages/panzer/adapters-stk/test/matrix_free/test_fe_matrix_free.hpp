@@ -383,8 +383,19 @@ void fillMatrix(Teuchos::RCP<panzer::DOFManager> dofManager,
 }
 
 template<typename ValueType, typename DeviceType>
-int feAssemblyHex(int argc, char *argv[]) {
-
+int feAssemblyHex(const int &degree,
+                  const local_ordinal_t &nx, const local_ordinal_t &ny, const local_ordinal_t &nz,
+                  const int &px, const int &py, const int &pz,
+                  const int &cubDegree,
+                  const std::string &stratFileName,
+                  const std::string &timingsFile,
+                  const std::string &test_name,
+                  const int &verbose)
+{
+  // ************************************ GET INPUTS **************************************
+  constexpr local_ordinal_t dim = 3;
+  constexpr int bx=1, by=1, bz=1;  //blocks on each process. Here we assume there is only one block per process
+  
   // host_memory/execution/mirror_space deprecated for kokkos@3.7.00, removed after release
   // see https://github.com/kokkos/kokkos/pull/3973
   using exec_space = typename DeviceType::execution_space;
@@ -469,52 +480,11 @@ int feAssemblyHex(int argc, char *argv[]) {
   //output stream/file
   Teuchos::RCP<Teuchos::FancyOStream> outStream = getFancyOStream(Teuchos::rcpFromRef(std::cout));
   Teuchos::RCP<Teuchos::StackedTimer> stacked_timer;
-  std::string timingsFile = "";
-  std::string test_name = "Matrix-free driver";
 
   stacked_timer = Teuchos::rcp(new Teuchos::StackedTimer("Matrix-free driver"));;
   Teuchos::TimeMonitor::setStackedTimer(stacked_timer);
 
   try {
-
-
-    // ************************************ GET INPUTS **************************************
-    constexpr local_ordinal_t dim = 3;
-    int degree = 4;
-    local_ordinal_t nx = 2;
-    local_ordinal_t ny            = nx;
-    local_ordinal_t nz            = nx;
-    int np   = comm->getSize(); // number of processors
-    int px = std::cbrt(np); while(np%px!=0) --px;
-    int py = std::sqrt(np/px); while(np%py!=0) --py;
-    int pz = np/(px*py);
-    constexpr int bx=1, by=1, bz=1;  //blocks on each process. Here we assume there is only one block per process
-    int verbose = 1;
-
-    // parse command line arguments
-    Teuchos::CommandLineProcessor clp;
-    clp.setOption("nx",&nx);
-    clp.setOption("ny",&ny);
-    clp.setOption("nz",&nz);
-    clp.setOption("px",&px);
-    clp.setOption("py",&py);
-    clp.setOption("pz",&pz);
-    clp.setOption("basis-degree",&degree);
-    int cubDegree = -1;
-    clp.setOption("quadrature-degree",&cubDegree);
-    clp.setOption("timings-file",&timingsFile);
-    clp.setOption("test-name", &test_name, "Name of test (for Watchr output)");
-    clp.setOption("verbose", &verbose);
-    std::string stratFileName = "stratimikos.xml";
-    clp.setOption("stratimikosParams", &stratFileName);
-    auto cmdResult = clp.parse(argc,argv);
-    cubDegree = (cubDegree == -1) ? 2*degree : cubDegree;
-
-    if(cmdResult!=Teuchos::CommandLineProcessor::PARSE_SUCCESSFUL) {
-      clp.printHelpMessage(argv[0], std::cout);
-      errorFlag++;
-    }
-
     outStream = ((comm->getRank () == 0) && verbose) ?
       getFancyOStream(Teuchos::rcpFromRef (std::cout)) :
       getFancyOStream(Teuchos::rcp (new Teuchos::oblackholestream ()));
@@ -1128,6 +1098,67 @@ int feAssemblyHex(int argc, char *argv[]) {
 
   *outStream << "PAMatrix GEMM Throughput: " << gemmThroughput << " GFlops.\n";
 
+  return errorFlag;
+}
+
+template<typename ValueType, typename DeviceType>
+int feAssemblyHex(int argc, char *argv[]) {
+  Teuchos::RCP<const Teuchos::MpiComm<int> > comm
+    = Teuchos::rcp_dynamic_cast<const Teuchos::MpiComm<int> >(Teuchos::DefaultComm<int>::getComm());
+  
+  // ************************************ GET INPUTS **************************************
+  constexpr local_ordinal_t dim = 3;
+  int degree = 4;
+  local_ordinal_t nx = 2;
+  local_ordinal_t ny            = nx;
+  local_ordinal_t nz            = nx;
+  int np   = comm->getSize(); // number of processors
+  int px = std::cbrt(np); while(np%px!=0) --px;
+  int py = std::sqrt(np/px); while(np%py!=0) --py;
+  int pz = np/(px*py);
+  constexpr int bx=1, by=1, bz=1;  //blocks on each process. Here we assume there is only one block per process
+  
+  int errorFlag = 0;
+  int verbose = 1;
+  
+  std::string timingsFile = "";
+  std::string test_name = "Matrix-free driver";
+
+  // parse command line arguments
+  Teuchos::CommandLineProcessor clp;
+  clp.setOption("nx",&nx);
+  clp.setOption("ny",&ny);
+  clp.setOption("nz",&nz);
+  clp.setOption("px",&px);
+  clp.setOption("py",&py);
+  clp.setOption("pz",&pz);
+  clp.setOption("basis-degree",&degree);
+  int cubDegree = -1;
+  clp.setOption("quadrature-degree",&cubDegree);
+  clp.setOption("timings-file",&timingsFile);
+  clp.setOption("test-name", &test_name, "Name of test (for Watchr output)");
+  clp.setOption("verbose", &verbose);
+  std::string stratFileName = "stratimikos.xml";
+  clp.setOption("stratimikosParams", &stratFileName);
+  auto cmdResult = clp.parse(argc,argv);
+  cubDegree = (cubDegree == -1) ? 2*degree : cubDegree;
+
+  if(cmdResult!=Teuchos::CommandLineProcessor::PARSE_SUCCESSFUL)
+  {
+    clp.printHelpMessage(argv[0], std::cout);
+    errorFlag++;
+  }
+  else
+  {
+    errorFlag = feAssemblyHex<ValueType, DeviceType>(degree, nx, ny, nz,
+                                                     px, py, pz,
+                                                     cubDegree,
+                                                     stratFileName, timingsFile, test_name,
+                                                     verbose);
+  }
+  
+  Teuchos::RCP<Teuchos::FancyOStream> outStream = getFancyOStream(Teuchos::rcpFromRef(std::cout));
+  
   if (errorFlag != 0)
     *outStream << "End Result: TEST FAILED = " << errorFlag << "\n";
   else
