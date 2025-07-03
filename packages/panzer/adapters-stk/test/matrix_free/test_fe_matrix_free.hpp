@@ -395,7 +395,7 @@ int feAssemblyHex(const int &degree,
   // ************************************ GET INPUTS **************************************
   constexpr local_ordinal_t dim = 3;
   constexpr int bx=1, by=1, bz=1;  //blocks on each process. Here we assume there is only one block per process
-  
+
   // host_memory/execution/mirror_space deprecated for kokkos@3.7.00, removed after release
   // see https://github.com/kokkos/kokkos/pull/3973
   using exec_space = typename DeviceType::execution_space;
@@ -823,6 +823,7 @@ int feAssemblyHex(const int &degree,
 
       Teuchos::RCP<panzer::DOFManager> fineDofManager = dofManager;
       Teuchos::RCP<panzer::DOFManager> coarseDofManager;
+      int fine_degree = degree;
       std::string fineFieldName = "order"+std::to_string(degree);
       std::string coarseFieldName;
       Teuchos::RCP<const map_t> fineOwnedMap = ownedMap;
@@ -844,7 +845,7 @@ int feAssemblyHex(const int &degree,
 
         // grid transfer
         {
-          Teuchos::TimeMonitor pTimer =  *Teuchos::TimeMonitor::getNewTimer("Assemble matrix prolongator between orders " +std::to_string(coarse_degree) +" and "+std::to_string(degree));
+          Teuchos::TimeMonitor pTimer =  *Teuchos::TimeMonitor::getNewTimer("Assemble matrix prolongator between orders " +std::to_string(coarse_degree) +" and "+std::to_string(fine_degree));
           RCP<const Thyra::LinearOpBase<scalar_t> > P = panzer::buildInterpolation(connManager,
                                                                                    coarseDofManager, fineDofManager,
                                                                                    coarseFieldName, fineFieldName,
@@ -854,12 +855,14 @@ int feAssemblyHex(const int &degree,
           strat_params->sublist("Preconditioner Types").sublist("MueLu").sublist("level " + std::to_string(mueluLevel+1)+" user data").set("P", P);
         }
         {
-          Teuchos::TimeMonitor pTimer =  *Teuchos::TimeMonitor::getNewTimer("Assemble matrix-free prolongator between orders " +std::to_string(coarse_degree) +" and "+std::to_string(degree));
+          Teuchos::TimeMonitor pTimer =  *Teuchos::TimeMonitor::getNewTimer("Assemble matrix-free prolongator between orders " +std::to_string(coarse_degree) +" and "+std::to_string(fine_degree));
+          // I set the worksetSize to 1. On serial backend this should not matter in terms of computations, but it saves a lot of memory.
+          // Need to revisit this for parallel backends.
           RCP<const Thyra::LinearOpBase<scalar_t> > P = panzer::buildInterpolation(connManager,
                                                                                    coarseDofManager, fineDofManager,
                                                                                    coarseFieldName, fineFieldName,
                                                                                    Intrepid2::OPERATOR_VALUE,
-                                                                                   /*worksetSize=*/1000, /*forceVectorial=*/false,
+                                                                                   /*worksetSize=*/1, /*forceVectorial=*/false,
                                                                                    /*useTpetra=*/true, /*matrixFree=*/true);
           strat_params_mf->sublist("Preconditioner Types").sublist("MueLu").sublist("level " + std::to_string(mueluLevel+1)+" user data").set("P", P);
         }
@@ -926,6 +929,7 @@ int feAssemblyHex(const int &degree,
 
         ++mueluLevel;
         fineDofManager = coarseDofManager;
+        fine_degree = coarse_degree;
         fineFieldName = coarseFieldName;
         fineOwnedMap = coarseOwnedMap;
       }
@@ -1130,7 +1134,7 @@ template<typename ValueType, typename DeviceType>
 int feAssemblyHex(int argc, char *argv[]) {
   Teuchos::RCP<const Teuchos::MpiComm<int> > comm
     = Teuchos::rcp_dynamic_cast<const Teuchos::MpiComm<int> >(Teuchos::DefaultComm<int>::getComm());
-  
+
   // ************************************ GET INPUTS **************************************
   constexpr local_ordinal_t dim = 3;
   int degree = 4;
@@ -1142,10 +1146,10 @@ int feAssemblyHex(int argc, char *argv[]) {
   int py = std::sqrt(np/px); while(np%py!=0) --py;
   int pz = np/(px*py);
   constexpr int bx=1, by=1, bz=1;  //blocks on each process. Here we assume there is only one block per process
-  
+
   int errorFlag = 0;
   int verbose = 1;
-  
+
   std::string timingsFile = "";
   std::string test_name = "Matrix-free driver";
 
@@ -1181,9 +1185,9 @@ int feAssemblyHex(int argc, char *argv[]) {
                                                      stratFileName, timingsFile, test_name,
                                                      verbose);
   }
-  
+
   Teuchos::RCP<Teuchos::FancyOStream> outStream = getFancyOStream(Teuchos::rcpFromRef(std::cout));
-  
+
   if (errorFlag != 0)
     *outStream << "End Result: TEST FAILED = " << errorFlag << "\n";
   else

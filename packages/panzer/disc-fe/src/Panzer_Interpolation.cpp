@@ -874,12 +874,15 @@ Teuchos::RCP<Thyra::LinearOpBase<double> > buildInterpolation(const Teuchos::RCP
         auto valuesAtDofCoordsOrientedWorkset_d = Kokkos::subview(valuesAtDofCoordsOriented_d, worksetRange, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
         auto basisCoeffsLIOrientedWorkset_d     = Kokkos::subview(basisCoeffsLIOriented_d,     worksetRange, Kokkos::ALL(), Kokkos::ALL());
 
+        {
+          Teuchos::TimeMonitor tmOrientations(*Teuchos::TimeMonitor::getNewTimer(std::string("Mini-EM: matrix-free apply no_trans orientations ") + name));
         // apply orientations for LO basis
         // shuffles things in the second dimension, i.e. wrt LO basis
         ots::modifyBasisByOrientation(valuesAtDofCoordsOrientedWorkset_d,
                                       valuesAtDofCoordsNonOriented_d,
                                       elemOrtsWorkset_d,
                                       domain_basis.get());
+        }
 
         Kokkos::deep_copy(reducedValuesAtDofCoordsOriented_d, 0.0);
 
@@ -901,12 +904,16 @@ Teuchos::RCP<Thyra::LinearOpBase<double> > buildInterpolation(const Teuchos::RCP
                                  }
           });
 
-          for (size_t j = 0; j<numVectors; ++j)
-            li::getBasisCoeffs(Kokkos::subview(basisCoeffsLIOrientedWorkset_d, Kokkos::ALL(), Kokkos::ALL(), j),
-                               Kokkos::subview(reducedValuesAtDofCoordsOriented_d, worksetRange, Kokkos::ALL(), Kokkos::ALL(), j),
-                               range_basis.get(),
-                               elemOrtsWorkset_d
-                               );
+          {
+            Teuchos::TimeMonitor tmOrientations(*Teuchos::TimeMonitor::getNewTimer(std::string("Mini-EM: matrix-free apply no_trans LagrangianInterpolation ") + name));
+
+            for (size_t j = 0; j<numVectors; ++j)
+              li::getBasisCoeffs(Kokkos::subview(basisCoeffsLIOrientedWorkset_d, Kokkos::ALL(), Kokkos::ALL(), j),
+                                 Kokkos::subview(reducedValuesAtDofCoordsOriented_d, worksetRange, Kokkos::ALL(), Kokkos::ALL(), j),
+                                 range_basis.get(),
+                                 elemOrtsWorkset_d
+                                 );
+          }
         } else {
           Kokkos::parallel_for("miniEM:MatrixFreeInterpolationOp:cellLoop1",
                                range_type(0, std::min(numCells, elementIds_d.extent_int(0)-Teuchos::as<int>(elemIter))),
@@ -923,12 +930,16 @@ Teuchos::RCP<Thyra::LinearOpBase<double> > buildInterpolation(const Teuchos::RCP
                                  }
           });
 
-          for (size_t j = 0; j<numVectors; ++j)
-            li::getBasisCoeffs(Kokkos::subview(basisCoeffsLIOrientedWorkset_d, Kokkos::ALL(), Kokkos::ALL(), j),
-                               Kokkos::subview(reducedValuesAtDofCoordsOriented_d, worksetRange, Kokkos::ALL(), j),
-                               range_basis.get(),
-                               elemOrtsWorkset_d
-                               );
+          {
+            Teuchos::TimeMonitor tmOrientations(*Teuchos::TimeMonitor::getNewTimer(std::string("Mini-EM: matrix-free apply no_trans LagrangianInterpolation ") + name));
+
+            for (size_t j = 0; j<numVectors; ++j)
+              li::getBasisCoeffs(Kokkos::subview(basisCoeffsLIOrientedWorkset_d, Kokkos::ALL(), Kokkos::ALL(), j),
+                                 Kokkos::subview(reducedValuesAtDofCoordsOriented_d, worksetRange, Kokkos::ALL(), j),
+                                 range_basis.get(),
+                                 elemOrtsWorkset_d
+                                 );
+          }
         }
 
         auto owner_d = owner_d_;
@@ -1067,6 +1078,7 @@ Teuchos::RCP<Thyra::LinearOpBase<double> > buildInterpolation(const Teuchos::RCP
       // get element orientations
       auto elemOrts_d = orientations_.at(elementBlockIds[blockIter]);
 
+      Teuchos::TimeMonitor tmLoopElem(*Teuchos::TimeMonitor::getNewTimer(std::string("Mini-EM: matrix-free apply trans elem ") + name));
       for(std::size_t elemIter = 0; elemIter < elementIds_d.extent(0); elemIter += numCells) {
 
         int endCellRange =
@@ -1081,22 +1093,29 @@ Teuchos::RCP<Thyra::LinearOpBase<double> > buildInterpolation(const Teuchos::RCP
         auto valuesAtDofCoordsOrientedWorkset_d = Kokkos::subview(valuesAtDofCoordsOriented_d, worksetRange, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
         auto basisCoeffsLIOrientedWorkset_d     = Kokkos::subview(basisCoeffsLIOriented_d,     worksetRange, Kokkos::ALL(), Kokkos::ALL());
 
-        // apply orientations for domain basis
-        // shuffles things in the second dimension, i.e. wrt domain basis
-        ots::modifyBasisByOrientation(valuesAtDofCoordsOrientedWorkset_d,
-                                      valuesAtDofCoordsNonOriented_d,
-                                      elemOrtsWorkset_d,
-                                      domain_basis.get());
-        Kokkos::fence();
+        {
+          Teuchos::TimeMonitor tmOrientations(*Teuchos::TimeMonitor::getNewTimer(std::string("Mini-EM: matrix-free apply trans orientations ") + name));
+          // apply orientations for domain basis
+          // shuffles things in the second dimension, i.e. wrt domain basis
+          ots::modifyBasisByOrientation(valuesAtDofCoordsOrientedWorkset_d,
+                                        valuesAtDofCoordsNonOriented_d,
+                                        elemOrtsWorkset_d,
+                                        domain_basis.get());
+          Kokkos::fence();
+        }
 
-        // get basis coefficients of domain basis functions wrt range basis
-        for(size_t domainIter=0; domainIter<domainCardinality; domainIter++)
-          // Get basis coeffs wrt range basis on reference element.
-          // basisCoeffsLI has dimensions (numCells, numFields=rangeCardinality, domainCardinality)
-          li::getBasisCoeffs(Kokkos::subview(basisCoeffsLIOrientedWorkset_d, Kokkos::ALL(), Kokkos::ALL(), domainIter),
-                             Kokkos::subview(valuesAtDofCoordsOrientedWorkset_d, Kokkos::ALL(), domainIter, Kokkos::ALL(), Kokkos::ALL()),
-                             range_basis.get(), elemOrtsWorkset_d);
-        Kokkos::fence();
+        {
+          Teuchos::TimeMonitor tmLI(*Teuchos::TimeMonitor::getNewTimer(std::string("Mini-EM: matrix-free apply trans LagrangianInterpolation ") + name));
+
+          // get basis coefficients of domain basis functions wrt range basis
+          for(size_t domainIter=0; domainIter<domainCardinality; domainIter++)
+            // Get basis coeffs wrt range basis on reference element.
+            // basisCoeffsLI has dimensions (numCells, numFields=rangeCardinality, domainCardinality)
+            li::getBasisCoeffs(Kokkos::subview(basisCoeffsLIOrientedWorkset_d, Kokkos::ALL(), Kokkos::ALL(), domainIter),
+                               Kokkos::subview(valuesAtDofCoordsOrientedWorkset_d, Kokkos::ALL(), domainIter, Kokkos::ALL(), Kokkos::ALL()),
+                               range_basis.get(), elemOrtsWorkset_d);
+          Kokkos::fence();
+        }
 
         auto owner_d = owner_d_;
 
