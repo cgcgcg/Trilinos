@@ -92,7 +92,7 @@ class Monitor : public BaseClass {
   //! Manages printing.
   PrintMonitor printMonitor_;
   //! Records total time spent  in this object and all its children, over all levels.
-  TimeMonitor timerMonitor_;
+  RCP<TimeMonitor> timerMonitor_;
 };
 
 //---------------------------------------------------------------------------------------------------
@@ -138,7 +138,7 @@ class SubMonitor : public BaseClass {
 
  private:
   PrintMonitor printMonitor_;
-  TimeMonitor timerMonitor_;
+  RCP<TimeMonitor> timerMonitor_;
 };
 
 //---------------------------------------------------------------------------------------------------
@@ -194,7 +194,7 @@ class FactoryMonitor : public Monitor {
   //! Total time spent on this level in this object and all its children.
   RCP<TimeMonitor> levelTimeMonitor_;
   //! Total time spent on all levels in this object only, excluding all children.
-  MutuallyExclusiveTimeMonitor<FactoryBase> timerMonitorExclusive_;
+  RCP<MutuallyExclusiveTimeMonitor<FactoryBase> > timerMonitorExclusive_;
   //! Total time spent on this level in this object only, excluding all children.
   RCP<MutuallyExclusiveTimeMonitor<Level> > levelTimeMonitorExclusive_;
 };
