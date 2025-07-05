@@ -55,12 +55,14 @@ class PointwiseDropBoundaryFunctor {
 
   local_matrix_type A;
   boundary_nodes_view boundaryNodes;
+  boundary_nodes_view boundaryNodesCol;
   results_view results;
 
  public:
-  PointwiseDropBoundaryFunctor(local_matrix_type& A_, boundary_nodes_view boundaryNodes_, results_view& results_)
+  PointwiseDropBoundaryFunctor(local_matrix_type& A_, boundary_nodes_view boundaryNodes_, boundary_nodes_view boundaryNodesCol_, results_view& results_)
     : A(A_)
     , boundaryNodes(boundaryNodes_)
+    , boundaryNodesCol(boundaryNodesCol_)
     , results(results_) {}
 
   KOKKOS_FORCEINLINE_FUNCTION
@@ -68,12 +70,11 @@ class PointwiseDropBoundaryFunctor {
     auto row                 = A.rowConst(rlid);
     const size_t offset      = A.graph.row_map(rlid);
     const bool isBoundaryRow = boundaryNodes(rlid);
-    if (isBoundaryRow) {
-      for (local_ordinal_type k = 0; k < row.length; ++k) {
-        auto clid           = row.colidx(k);
+    for (local_ordinal_type k = 0; k < row.length; ++k) {
+      auto clid = row.colidx(k);
+      if (isBoundaryRow || boundaryNodesCol(clid))
         results(offset + k) = Kokkos::max(rlid == clid ? KEEP : DROP,
                                           results(offset + k));
-      }
     }
   }
 };
@@ -94,14 +95,18 @@ class VectorDropBoundaryFunctor {
 
   local_matrix_type A;
   block_indices_view_type point_to_block;
+  block_indices_view_type ghosted_point_to_block;
   boundary_nodes_view boundaryNodes;
+  boundary_nodes_view boundaryNodesCol;
   results_view results;
 
  public:
-  VectorDropBoundaryFunctor(local_matrix_type& A_, block_indices_view_type point_to_block_, boundary_nodes_view boundaryNodes_, results_view& results_)
+  VectorDropBoundaryFunctor(local_matrix_type& A_, block_indices_view_type point_to_block_, block_indices_view_type ghosted_point_to_block_, boundary_nodes_view boundaryNodes_, boundary_nodes_view boundaryNodesCol_, results_view& results_)
     : A(A_)
     , point_to_block(point_to_block_)
+    , ghosted_point_to_block(ghosted_point_to_block_)
     , boundaryNodes(boundaryNodes_)
+    , boundaryNodesCol(boundaryNodesCol_)
     , results(results_) {}
 
   KOKKOS_FORCEINLINE_FUNCTION
@@ -109,9 +114,9 @@ class VectorDropBoundaryFunctor {
     auto row                 = A.rowConst(rlid);
     const size_t offset      = A.graph.row_map(rlid);
     const bool isBoundaryRow = boundaryNodes(point_to_block(rlid));
-    if (isBoundaryRow) {
-      for (local_ordinal_type k = 0; k < row.length; ++k) {
-        auto clid           = row.colidx(k);
+    for (local_ordinal_type k = 0; k < row.length; ++k) {
+      auto clid = row.colidx(k);
+      if (isBoundaryRow || boundaryNodesCol(ghosted_point_to_block(clid))) {
         results(offset + k) = Kokkos::max(rlid == clid ? KEEP : DROP,
                                           results(offset + k));
       }

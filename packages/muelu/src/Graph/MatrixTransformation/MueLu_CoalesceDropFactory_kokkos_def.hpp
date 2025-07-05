@@ -26,6 +26,7 @@
 #include "MueLu_LWGraph_kokkos.hpp"
 #include "MueLu_MasterList.hpp"
 #include "MueLu_Monitor.hpp"
+#include "MueLu_Utilities.hpp"
 
 // #define MUELU_COALESCE_DROP_DEBUG 1
 
@@ -541,7 +542,10 @@ std::tuple<GlobalOrdinal, typename MueLu::LWGraph_kokkos<LocalOrdinal, GlobalOrd
   {
     SubFactoryMonitor mDropping(*this, "Dropping decisions", currentLevel);
 
-    auto drop_boundaries = Misc::PointwiseDropBoundaryFunctor(lclA, boundaryNodes, results);
+    auto boundaryNodesColumn = boundary_nodes_type("boundaryNodesColumn", A->getColMap()->getLocalNumElements());
+    auto boundaryNodesDomain = boundary_nodes_type("boundaryNodesDomain", A->getDomainMap()->getLocalNumElements());
+    Utilities::DetectDirichletColsAndDomains(*A, boundaryNodes, boundaryNodesColumn, boundaryNodesDomain);
+    auto drop_boundaries = Misc::PointwiseDropBoundaryFunctor(lclA, boundaryNodes, boundaryNodesColumn, results);
 
     if (threshold != zero) {
       auto preserve_diagonals          = Misc::KeepDiagonalFunctor(lclA, results);
@@ -571,10 +575,7 @@ std::tuple<GlobalOrdinal, typename MueLu::LWGraph_kokkos<LocalOrdinal, GlobalOrd
       }
     } else {
       Kokkos::deep_copy(results, KEEP);
-      // FIXME: This seems inconsistent
-      // MueLu_runDroppingFunctors(drop_boundaries);
-      auto no_op = Misc::NoOpFunctor<LocalOrdinal>();
-      MueLu_runDroppingFunctors(no_op);
+      MueLu_runDroppingFunctors(drop_boundaries);
     }
 
     if (symmetrizeDroppedGraph) {
@@ -1016,7 +1017,10 @@ std::tuple<GlobalOrdinal, typename MueLu::LWGraph_kokkos<LocalOrdinal, GlobalOrd
   {
     SubFactoryMonitor mDropping(*this, "Dropping decisions", currentLevel);
 
-    auto drop_boundaries = Misc::VectorDropBoundaryFunctor(lclA, rowTranslation, boundaryNodes, results);
+    auto boundaryNodesColumn = boundary_nodes_type("boundaryNodesColumn", A->getColMap()->getLocalNumElements());
+    auto boundaryNodesDomain = boundary_nodes_type("boundaryNodesDomain", A->getDomainMap()->getLocalNumElements());
+    Utilities::DetectDirichletColsAndDomains(*A, boundaryNodes, boundaryNodesColumn, boundaryNodesDomain);
+    auto drop_boundaries = Misc::VectorDropBoundaryFunctor(lclA, rowTranslation, colTranslation, boundaryNodes, boundaryNodesColumn, results);
 
     if (threshold != zero) {
       auto preserve_diagonals          = Misc::KeepDiagonalFunctor(lclA, results);
