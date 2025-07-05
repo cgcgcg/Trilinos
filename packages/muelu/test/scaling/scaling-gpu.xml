@@ -12,7 +12,7 @@
   <!-- ===========  AGGREGATION  =========== -->
   <Parameter        name="aggregation: strength-of-connection: matrix"   type="string"   value="A"/>
   <Parameter        name="aggregation: strength-of-connection: measure"  type="string"   value="smoothed aggregation"/>
-  <Parameter        name="aggregation: coloring algorithm"      type="string"   value="mis2 aggregation"/>
+  <Parameter        name="aggregation: coloring algorithm"      type="string"   value="mis2 coarsening"/>
   <Parameter        name="aggregation: drop scheme"             type="string"   value="cut-drop"/>
   <Parameter        name="aggregation: drop tol"                type="double"   value="0.02"/>
 
