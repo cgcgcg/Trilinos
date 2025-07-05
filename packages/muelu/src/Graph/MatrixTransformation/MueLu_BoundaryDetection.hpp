@@ -30,16 +30,15 @@ namespace MueLu::BoundaryDetection {
   A row is marked as Dirichlet boundary if fewer than dirichletNonzeroThreshold entries are larger in absolute value than dirichletThreshold.
   It is assumed that boundaryNodes was initialized to false.
 */
-template <class local_matrix_type>
+template <class local_matrix_type, class boundary_nodes_view>
 class PointDirichletFunctor {
  private:
   using scalar_type        = typename local_matrix_type::value_type;
   using local_ordinal_type = typename local_matrix_type::ordinal_type;
   using memory_space       = typename local_matrix_type::memory_space;
 
-  using ATS                 = Kokkos::ArithTraits<scalar_type>;
-  using magnitudeType       = typename ATS::magnitudeType;
-  using boundary_nodes_view = Kokkos::View<bool*, memory_space>;
+  using ATS           = Kokkos::ArithTraits<scalar_type>;
+  using magnitudeType = typename ATS::magnitudeType;
 
   local_matrix_type A;
   boundary_nodes_view boundaryNodes;
@@ -80,16 +79,15 @@ class PointDirichletFunctor {
   A row is marked as Dirichlet boundary if fewer than dirichletNonzeroThreshold entries are larger in absolute value than dirichletThreshold.
   It is assumed that boundaryNodes was initialized to false.
 */
-template <class local_matrix_type, bool useGreedyDirichlet>
+template <class local_matrix_type, class boundary_nodes_view, bool useGreedyDirichlet>
 class VectorDirichletFunctor {
  private:
   using scalar_type        = typename local_matrix_type::value_type;
   using local_ordinal_type = typename local_matrix_type::ordinal_type;
   using memory_space       = typename local_matrix_type::memory_space;
 
-  using ATS                 = Kokkos::ArithTraits<scalar_type>;
-  using magnitudeType       = typename ATS::magnitudeType;
-  using boundary_nodes_view = Kokkos::View<bool*, memory_space>;
+  using ATS           = Kokkos::ArithTraits<scalar_type>;
+  using magnitudeType = typename ATS::magnitudeType;
 
   local_matrix_type A;
   local_ordinal_type blockSize;
@@ -145,17 +143,16 @@ class VectorDirichletFunctor {
   A row is marked as Dirichlet boundary if the sum of off-diagonal values is smaller in absolute value than the diagonal multiplied by the threshold rowSumTol.
   It is assumed that boundaryNodes was initialized to false.
 */
-template <class local_matrix_type>
+template <class local_matrix_type, class boundary_nodes_view>
 class RowSumFunctor {
  private:
   using scalar_type        = typename local_matrix_type::value_type;
   using local_ordinal_type = typename local_matrix_type::ordinal_type;
   using memory_space       = typename local_matrix_type::memory_space;
 
-  using ATS                 = Kokkos::ArithTraits<scalar_type>;
-  using magnitudeType       = typename ATS::magnitudeType;
-  using magATS              = Kokkos::ArithTraits<magnitudeType>;
-  using boundary_nodes_view = Kokkos::View<bool*, memory_space>;
+  using ATS           = Kokkos::ArithTraits<scalar_type>;
+  using magnitudeType = typename ATS::magnitudeType;
+  using magATS        = Kokkos::ArithTraits<magnitudeType>;
 
   local_matrix_type A;
   boundary_nodes_view boundaryNodes;

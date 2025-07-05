@@ -88,7 +88,7 @@ class LWGraphBase {
                                                                typename Node::device_type,
                                                                void, size_t>;
   using local_graph_type        = typename std::conditional<OnHost, typename local_graph_device_type::HostMirror, local_graph_device_type>::type;
-  using boundary_nodes_type     = Kokkos::View<bool*, memory_space>;
+  using boundary_nodes_type     = Kokkos::View<int*, memory_space>;
   using row_type                = typename local_graph_type::row_map_type;
   using entries_type            = typename local_graph_type::entries_type;
   using neighbor_vertices_type  = KokkosSparse::GraphRowViewConst<local_graph_type>;
@@ -228,6 +228,12 @@ class LWGraphBase {
   //! Return the list entries in the local graph
   KOKKOS_INLINE_FUNCTION entries_type getEntries() const {
     return graph_.entries;
+  }
+
+  //! Set boolean array indicating which rows correspond to Dirichlet boundaries.
+  KOKKOS_INLINE_FUNCTION void SetBoundaryNodeMap(const Kokkos::View<bool*, memory_space> bndry) {
+    dirichletBoundaries_ = boundary_nodes_type("boundary_nodes", bndry.extent(0));
+    Kokkos::deep_copy(dirichletBoundaries_, bndry);
   }
 
   //! Set boolean array indicating which rows correspond to Dirichlet boundaries.

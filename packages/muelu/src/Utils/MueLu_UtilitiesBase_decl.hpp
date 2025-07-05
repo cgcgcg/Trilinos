@@ -280,6 +280,9 @@ class UtilitiesBase {
   static void FindNonZeros(const typename Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::dual_view_type::t_dev_const_um vals,
                            Kokkos::View<bool*, typename Node::device_type> nonzeros);
 
+  static void FindNonZeros(const typename Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::dual_view_type::t_dev_const_um vals,
+                           Kokkos::View<int*, typename Node::device_type> nonzeros);
+
   /*! @brief Detects Dirichlet columns & domains from a list of Dirichlet rows
 
     @param[in] A - Matrix on which to apply Dirichlet column detection
@@ -304,6 +307,11 @@ class UtilitiesBase {
                                             const Kokkos::View<bool*, typename Node::device_type>& dirichletRows,
                                             Kokkos::View<bool*, typename Node::device_type> dirichletCols,
                                             Kokkos::View<bool*, typename Node::device_type> dirichletDomain);
+
+  static void DetectDirichletColsAndDomains(const Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& A,
+                                            const Kokkos::View<int*, typename Node::device_type>& dirichletRows,
+                                            Kokkos::View<int*, typename Node::device_type> dirichletCols,
+                                            Kokkos::View<int*, typename Node::device_type> dirichletDomain);
 
   /*! @brief Apply Rowsum Criterion
 

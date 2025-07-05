@@ -869,10 +869,10 @@ std::tuple<GlobalOrdinal, typename MueLu::LWGraph_kokkos<LocalOrdinal, GlobalOrd
   }
 
     if (useGreedyDirichlet) {
-      auto dirichlet_detection = BoundaryDetection::VectorDirichletFunctor<local_matrix_type, true>(lclA, blkPartSize, boundaryNodes, dirichletThreshold, dirichletNonzeroThreshold);
+      auto dirichlet_detection = BoundaryDetection::VectorDirichletFunctor<local_matrix_type, boundary_nodes_type, true>(lclA, blkPartSize, boundaryNodes, dirichletThreshold, dirichletNonzeroThreshold);
       MueLu_runBoundaryFunctors(dirichlet_detection);
     } else {
-      auto dirichlet_detection = BoundaryDetection::VectorDirichletFunctor<local_matrix_type, false>(lclA, blkPartSize, boundaryNodes, dirichletThreshold, dirichletNonzeroThreshold);
+      auto dirichlet_detection = BoundaryDetection::VectorDirichletFunctor<local_matrix_type, boundary_nodes_type, false>(lclA, blkPartSize, boundaryNodes, dirichletThreshold, dirichletNonzeroThreshold);
       MueLu_runBoundaryFunctors(dirichlet_detection);
     }
 #undef MueLu_runBoundaryFunctors

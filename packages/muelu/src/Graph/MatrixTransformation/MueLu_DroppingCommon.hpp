@@ -44,14 +44,13 @@ class NoOpFunctor {
   @class PointwiseDropBoundaryFunctor
   @brief Functor that drops boundary nodes for a blockSize == 1 problem.
 */
-template <class local_matrix_type>
+template <class local_matrix_type, class boundary_nodes_view>
 class PointwiseDropBoundaryFunctor {
  private:
-  using scalar_type         = typename local_matrix_type::value_type;
-  using local_ordinal_type  = typename local_matrix_type::ordinal_type;
-  using memory_space        = typename local_matrix_type::memory_space;
-  using results_view        = Kokkos::View<DecisionType*, memory_space>;
-  using boundary_nodes_view = Kokkos::View<const bool*, memory_space>;
+  using scalar_type        = typename local_matrix_type::value_type;
+  using local_ordinal_type = typename local_matrix_type::ordinal_type;
+  using memory_space       = typename local_matrix_type::memory_space;
+  using results_view       = Kokkos::View<DecisionType*, memory_space>;
 
   local_matrix_type A;
   boundary_nodes_view boundaryNodes;
@@ -83,14 +82,13 @@ class PointwiseDropBoundaryFunctor {
   @class VectorDropBoundaryFunctor
   @brief Functor that drops boundary nodes for a blockSize > 1 problem.
 */
-template <class local_matrix_type>
+template <class local_matrix_type, class boundary_nodes_view>
 class VectorDropBoundaryFunctor {
  private:
   using scalar_type             = typename local_matrix_type::value_type;
   using local_ordinal_type      = typename local_matrix_type::ordinal_type;
   using memory_space            = typename local_matrix_type::memory_space;
   using results_view            = Kokkos::View<DecisionType*, memory_space>;
-  using boundary_nodes_view     = Kokkos::View<const bool*, memory_space>;
   using block_indices_view_type = Kokkos::View<local_ordinal_type*, memory_space>;
 
   local_matrix_type A;
@@ -195,15 +193,13 @@ class DropOffRankFunctor {
 @class MarkSingletonFunctor
 @brief Functor that marks singletons (all off-diagonal entries in a row are dropped) as boundary.
 */
-template <class local_matrix_type>
+template <class local_matrix_type, class boundary_nodes_view>
 class MarkSingletonFunctor {
  private:
   using scalar_type        = typename local_matrix_type::value_type;
   using local_ordinal_type = typename local_matrix_type::ordinal_type;
   using memory_space       = typename local_matrix_type::memory_space;
   using results_view       = Kokkos::View<DecisionType*, memory_space>;
-
-  using boundary_nodes_view = Kokkos::View<bool*, memory_space>;
 
   local_matrix_type A;
   boundary_nodes_view boundaryNodes;
@@ -239,7 +235,7 @@ class MarkSingletonFunctor {
 @class MarkSingletonVectorFunctor
 @brief Functor that marks singletons (all off-diagonal entries in a row are dropped) as boundary.
 */
-template <class local_matrix_type>
+template <class local_matrix_type, class boundary_nodes_view>
 class MarkSingletonVectorFunctor {
  private:
   using scalar_type             = typename local_matrix_type::value_type;
@@ -247,8 +243,6 @@ class MarkSingletonVectorFunctor {
   using memory_space            = typename local_matrix_type::memory_space;
   using results_view            = Kokkos::View<DecisionType*, memory_space>;
   using block_indices_view_type = Kokkos::View<local_ordinal_type*, memory_space>;
-
-  using boundary_nodes_view = Kokkos::View<bool*, memory_space>;
 
   local_matrix_type A;
   block_indices_view_type point_to_block;
@@ -407,8 +401,6 @@ class DebugFunctor {
   using local_ordinal_type = typename local_matrix_type::ordinal_type;
   using memory_space       = typename local_matrix_type::memory_space;
   using results_view       = Kokkos::View<DecisionType*, memory_space>;
-
-  using boundary_nodes_view = Kokkos::View<bool*, memory_space>;
 
   local_matrix_type A;
   results_view results;
