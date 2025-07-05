@@ -915,14 +915,14 @@ std::tuple<GlobalOrdinal, typename MueLu::LWGraph_kokkos<LocalOrdinal, GlobalOrd
 
   // Macro that handles optional block diagonalization.
   // Calls MueLu_runDroppingFunctorsImpl
-#define MueLu_runDroppingFunctors(...)                                                                                                       \
-  {                                                                                                                                          \
-    if (useBlocking) {                                                                                                                       \
-      auto BlockNumber       = Get<RCP<LocalOrdinalVector>>(currentLevel, "BlockNumber");                                                    \
-      auto block_diagonalize = Misc::BlockDiagonalizeVectorFunctor(*A, *BlockNumber, nonUniqueMap, results, rowTranslation, colTranslation); \
-      MueLu_runDroppingFunctorsImpl(block_diagonalize, __VA_ARGS__);                                                                         \
-    } else                                                                                                                                   \
-      MueLu_runDroppingFunctorsImpl(__VA_ARGS__);                                                                                            \
+#define MueLu_runDroppingFunctors(...)                                                                                                                                \
+  {                                                                                                                                                                   \
+    if (useBlocking) {                                                                                                                                                \
+      auto BlockNumber       = Get<RCP<LocalOrdinalVector>>(currentLevel, "BlockNumber");                                                                             \
+      auto block_diagonalize = Misc::BlockDiagonalizeVectorFunctor(*A, *BlockNumber, mergedA->getCrsGraph()->getImporter(), results, rowTranslation, colTranslation); \
+      MueLu_runDroppingFunctorsImpl(block_diagonalize, __VA_ARGS__);                                                                                                  \
+    } else                                                                                                                                                            \
+      MueLu_runDroppingFunctorsImpl(__VA_ARGS__);                                                                                                                     \
   }
 
   // Macro that runs dropping for SoC based on A itself, handling of droppingMethod.
@@ -1014,12 +1014,38 @@ std::tuple<GlobalOrdinal, typename MueLu::LWGraph_kokkos<LocalOrdinal, GlobalOrd
 
   // dropping decisions for each entry
   auto results = Kokkos::View<DecisionType*, memory_space>("results", lclA.nnz());  // initialized to UNDECIDED
+
+  RCP<Matrix> mergedA;
   {
     SubFactoryMonitor mDropping(*this, "Dropping decisions", currentLevel);
 
-    auto boundaryNodesColumn = boundary_nodes_type("boundaryNodesColumn", A->getColMap()->getLocalNumElements());
-    auto boundaryNodesDomain = boundary_nodes_type("boundaryNodesDomain", A->getDomainMap()->getLocalNumElements());
-    Utilities::DetectDirichletColsAndDomains(*A, boundaryNodes, boundaryNodesColumn, boundaryNodesDomain);
+    {
+      // Construct merged A.
+
+      auto merged_rowptr      = rowptr_type("rowptr", numNodes + 1);
+      LocalOrdinal nnz_merged = 0;
+
+      auto functor = MatrixConstruction::MergeCountFunctor(lclA, blkPartSize, colTranslation, merged_rowptr);
+      Kokkos::parallel_scan("MergeCount", range, functor, nnz_merged);
+
+      local_graph_type lclMergedGraph;
+      auto colidx_merged = entries_type("entries", nnz_merged);
+      auto values_merged = values_type("values", nnz_merged);
+
+      local_matrix_type lclMergedA = local_matrix_type("mergedA",
+                                                       numNodes, nonUniqueMap->getLocalNumElements(),
+                                                       nnz_merged,
+                                                       values_merged, merged_rowptr, colidx_merged);
+
+      auto fillFunctor = MatrixConstruction::MergeFillFunctor<local_matrix_type>(lclA, blkSize, colTranslation, lclMergedA);
+      Kokkos::parallel_for("MueLu::CoalesceDrop::MergeFill", range, fillFunctor);
+
+      mergedA = Xpetra::MatrixFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(lclMergedA, uniqueMap, nonUniqueMap, uniqueMap, uniqueMap);
+    }
+
+    auto boundaryNodesColumn = boundary_nodes_type("boundaryNodesColumn", mergedA->getColMap()->getLocalNumElements());
+    auto boundaryNodesDomain = boundary_nodes_type("boundaryNodesDomain", mergedA->getDomainMap()->getLocalNumElements());
+    Utilities::DetectDirichletColsAndDomains(*mergedA, boundaryNodes, boundaryNodesColumn, boundaryNodesDomain);
     auto drop_boundaries = Misc::VectorDropBoundaryFunctor(lclA, rowTranslation, colTranslation, boundaryNodes, boundaryNodesColumn, results);
 
     if (threshold != zero) {
@@ -1062,31 +1088,6 @@ std::tuple<GlobalOrdinal, typename MueLu::LWGraph_kokkos<LocalOrdinal, GlobalOrd
             if (GetVerbLevel() & Statistics1)
               GetOStream(Statistics1) << "Using distance laplacian weights: " << dlap_weights << std::endl;
           }
-        }
-
-        RCP<Matrix> mergedA;
-        {
-          // Construct merged A.
-
-          auto merged_rowptr      = rowptr_type("rowptr", numNodes + 1);
-          LocalOrdinal nnz_merged = 0;
-
-          auto functor = MatrixConstruction::MergeCountFunctor(lclA, blkPartSize, colTranslation, merged_rowptr);
-          Kokkos::parallel_scan("MergeCount", range, functor, nnz_merged);
-
-          local_graph_type lclMergedGraph;
-          auto colidx_merged = entries_type("entries", nnz_merged);
-          auto values_merged = values_type("values", nnz_merged);
-
-          local_matrix_type lclMergedA = local_matrix_type("mergedA",
-                                                           numNodes, nonUniqueMap->getLocalNumElements(),
-                                                           nnz_merged,
-                                                           values_merged, merged_rowptr, colidx_merged);
-
-          auto fillFunctor = MatrixConstruction::MergeFillFunctor<local_matrix_type>(lclA, blkSize, colTranslation, lclMergedA);
-          Kokkos::parallel_for("MueLu::CoalesceDrop::MergeFill", range, fillFunctor);
-
-          mergedA = Xpetra::MatrixFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(lclMergedA, uniqueMap, nonUniqueMap, uniqueMap, uniqueMap);
         }
 
         if (socUsesMeasure == "unscaled") {

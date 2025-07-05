@@ -354,7 +354,7 @@ class BlockDiagonalizeVectorFunctor {
   using block_indices_type            = Xpetra::Vector<LocalOrdinal, LocalOrdinal, GlobalOrdinal, Node>;
   using local_block_indices_view_type = typename block_indices_type::dual_view_type_const::t_dev;
   using id_translation_type           = Kokkos::View<local_ordinal_type*, memory_space>;
-  using map_type                      = Xpetra::Map<LocalOrdinal, GlobalOrdinal, Node>;
+  using importer_type                 = Xpetra::Import<LocalOrdinal, GlobalOrdinal, Node>;
 
   local_matrix_type A;
   local_block_indices_view_type point_to_block;
@@ -365,14 +365,12 @@ class BlockDiagonalizeVectorFunctor {
   Teuchos::RCP<block_indices_type> ghosted_point_to_blockMV;
 
  public:
-  BlockDiagonalizeVectorFunctor(matrix_type& A_, block_indices_type& point_to_block_, Teuchos::RCP<const map_type> non_unique_map_, results_view& results_, id_translation_type row_translation_, id_translation_type col_translation_)
+  BlockDiagonalizeVectorFunctor(matrix_type& A_, block_indices_type& point_to_block_, const RCP<const importer_type>& importer, results_view& results_, id_translation_type row_translation_, id_translation_type col_translation_)
     : A(A_.getLocalMatrixDevice())
     , point_to_block(point_to_block_.getLocalViewDevice(Xpetra::Access::ReadOnly))
     , results(results_)
     , row_translation(row_translation_)
     , col_translation(col_translation_) {
-    auto importer = Xpetra::ImportFactory<LocalOrdinal, GlobalOrdinal, Node>::Build(point_to_block_.getMap(), non_unique_map_);
-
     if (!importer.is_null()) {
       ghosted_point_to_blockMV = Xpetra::VectorFactory<LocalOrdinal, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap());
       ghosted_point_to_blockMV->doImport(point_to_block_, *importer, Xpetra::INSERT);
