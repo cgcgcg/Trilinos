@@ -1079,9 +1079,9 @@ int feAssemblyHex(const int &degree,
             Thyra::SolveStatus<scalar_t> status = Thyra::solve<scalar_t>(*thyra_inverse_A_crs, Thyra::NOTRANS, *thyra_b, thyra_x_crs.ptr());
             errorFlag += (status.solveStatus != Thyra::SOLVE_STATUS_CONVERGED);
           }
+          crsTotalTimer->stop();
+          standardAssemblySolveTime = crsTotalTimer->totalElapsedTime() - totalTimeBeforeSolve;
         }
-        crsTotalTimer->stop();
-        standardAssemblySolveTime = crsTotalTimer->totalElapsedTime() - totalTimeBeforeSolve;
       }
 
       {
@@ -1109,9 +1109,9 @@ int feAssemblyHex(const int &degree,
             Thyra::SolveStatus<scalar_t> status = Thyra::solve<scalar_t>(*thyra_inverse_A_mf, Thyra::NOTRANS, *thyra_b, thyra_x_mf.ptr());
             errorFlag += (status.solveStatus != Thyra::SOLVE_STATUS_CONVERGED);
           }
+          mfTotalTimer->stop();
+          matrixFreeSolveTime = mfTotalTimer->totalElapsedTime() - totalTimeBeforeSolve;
         }
-        mfTotalTimer->stop();
-        matrixFreeSolveTime = mfTotalTimer->totalElapsedTime() - totalTimeBeforeSolve;
       }
     }
     standardAssemblyTotalTime = crsTotalTimer->totalElapsedTime();
