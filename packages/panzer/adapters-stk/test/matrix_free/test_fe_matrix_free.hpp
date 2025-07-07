@@ -190,6 +190,27 @@ namespace Example {
     }
   };
 
+  struct SolveMetrics
+  {
+    double matrixFreeTotalTime;      // time in seconds for all matrix-free-specific operations (setup + solve)
+    double assembledTotalTime;       // time in seconds for all assembled-matrix-specific operations (setup + solve)
+    
+    double assembledSolveTime;       // time in seconds for assembled-matrix solve (neglecting setup time)
+    double matrixFreeSolveTime;      // time in seconds for matrix-free solve (neglecting setup time)
+    
+    double matrixFreeGemmFlops;      // estimated total operation count (multiplies and adds) involved in gemm() calls from PAMatrix
+    double matrixFreeGemmTime;       // time in seconds spent in gemm() calls from PAMatrix
+    double matrixFreeGemmThroughput; // estimated throughput in Gigaflops involved in gemm() calls from PAMatrix
+    
+    double matrixFreeExtractDiagonalTime; // time in seconds spent in PAMatrix::extractDiagonal()
+    
+    int assembledIterationCount;
+    int matrixFreeIterationCount;
+    
+    bool assembledSolveSuccess;  // true indicates that the iterative solver converged
+    bool matrixFreeSolveSuccess; // true indicates that the iterative solver converged
+  };
+
 
 using map_t = Tpetra::Map<panzer::LocalOrdinal, panzer::GlobalOrdinal>;
 
@@ -383,7 +404,7 @@ void fillMatrix(Teuchos::RCP<panzer::DOFManager> dofManager,
 }
 
 template<typename ValueType, typename DeviceType>
-int feAssemblyHex(const int &degree,
+SolveMetrics feAssemblyHex(const int &degree,
                   const local_ordinal_t &nx, const local_ordinal_t &ny, const local_ordinal_t &nz,
                   const int &px, const int &py, const int &pz,
                   const int &cubDegree,
@@ -392,6 +413,11 @@ int feAssemblyHex(const int &degree,
                   const std::string &test_name,
                   const int &verbose)
 {
+  SolveMetrics solveMetrics;
+  
+  double gemmBaseFlops = Intrepid2::PAMatrix<DeviceType,double>::gemmFlopCount();
+  double gemmBaseTime  = Intrepid2::PAMatrix<DeviceType,double>::gemmTimeSeconds();
+  
   // ************************************ GET INPUTS **************************************
   constexpr local_ordinal_t dim = 3;
   constexpr int bx=1, by=1, bz=1;  //blocks on each process. Here we assume there is only one block per process
@@ -526,8 +552,14 @@ int feAssemblyHex(const int &degree,
     bool setupMultigrid = true;
     std::vector<int> pCoarsenSchedule;
     // Use all degrees between 1 and degree for now.
-    for (int deg = degree-1; deg>0; --deg) {
-      pCoarsenSchedule.push_back(deg);
+//    for (int deg = degree-1; deg>0; --deg) {
+//      pCoarsenSchedule.push_back(deg);
+//    }
+    int pCoarse = std::max(degree/2, 1);
+    pCoarsenSchedule.push_back(pCoarse);
+    while (pCoarse > 1) {
+      pCoarse = std::max(pCoarse/2, 1);
+      pCoarsenSchedule.push_back(pCoarse);
     }
     std::vector<Teuchos::RCP<panzer::DOFManager> > dofManagers;
 
@@ -1077,7 +1109,10 @@ int feAssemblyHex(const int &degree,
           {
             Teuchos::TimeMonitor mfSolveTimer =  *Teuchos::TimeMonitor::getNewTimer("Matrix solve");
             Thyra::SolveStatus<scalar_t> status = Thyra::solve<scalar_t>(*thyra_inverse_A_crs, Thyra::NOTRANS, *thyra_b, thyra_x_crs.ptr());
-            errorFlag += (status.solveStatus != Thyra::SOLVE_STATUS_CONVERGED);
+            bool solveConverged = (status.solveStatus == Thyra::SOLVE_STATUS_CONVERGED);
+            solveMetrics.assembledIterationCount = status.extraParameters->template get<int>("Iteration Count", -1);
+            solveMetrics.assembledSolveSuccess = solveConverged;
+            errorFlag += !solveConverged;
           }
           crsTotalTimer->stop();
           standardAssemblySolveTime = crsTotalTimer->totalElapsedTime() - totalTimeBeforeSolve;
@@ -1107,7 +1142,11 @@ int feAssemblyHex(const int &degree,
           {
             Teuchos::TimeMonitor mfSolveTimer =  *Teuchos::TimeMonitor::getNewTimer("Matrix-free solve");
             Thyra::SolveStatus<scalar_t> status = Thyra::solve<scalar_t>(*thyra_inverse_A_mf, Thyra::NOTRANS, *thyra_b, thyra_x_mf.ptr());
-            errorFlag += (status.solveStatus != Thyra::SOLVE_STATUS_CONVERGED);
+            bool solveConverged = (status.solveStatus == Thyra::SOLVE_STATUS_CONVERGED);
+            solveMetrics.matrixFreeSolveSuccess = solveConverged;
+            
+            solveMetrics.matrixFreeIterationCount = status.extraParameters->template get<int>("Iteration Count", -1);
+            errorFlag += !solveConverged;
           }
           mfTotalTimer->stop();
           matrixFreeSolveTime = mfTotalTimer->totalElapsedTime() - totalTimeBeforeSolve;
@@ -1116,15 +1155,43 @@ int feAssemblyHex(const int &degree,
     }
     standardAssemblyTotalTime = crsTotalTimer->totalElapsedTime();
     matrixFreeTotalTime = mfTotalTimer->totalElapsedTime();
-    gemmThroughput = Intrepid2::PAMatrix<DeviceType,double>::gemmThroughputGFlops();
   } catch (const std::exception & err) {
     *outStream << " Exception\n";
     *outStream << err.what() << "\n\n";
     errorFlag = -1000;
   }
 
+  gemmThroughput = Intrepid2::PAMatrix<DeviceType,double>::gemmThroughputGFlops(gemmBaseFlops, gemmBaseTime);
 
   stacked_timer->stop("Matrix-free driver");
+  
+  {
+    std::string computeDiagonalTimerLabel = "matrix-free computeDiagonal (not really matrix-free yet)";
+    Teuchos::stat_map_type statData;
+    std::vector<std::string> statNames;
+    Teuchos::TimeMonitor::computeGlobalTimerStatistics(statData, statNames, Teuchos::Intersection, computeDiagonalTimerLabel);
+    
+    if (statData[computeDiagonalTimerLabel].size() > 0)
+    {
+      const double timeInSeconds = statData[computeDiagonalTimerLabel][0].first;
+      solveMetrics.matrixFreeExtractDiagonalTime = timeInSeconds;
+    }
+    else
+    {
+      solveMetrics.matrixFreeExtractDiagonalTime = -1;
+    }
+  }
+  
+  solveMetrics.assembledTotalTime = standardAssemblyTotalTime;
+  solveMetrics.assembledSolveTime = standardAssemblySolveTime;
+  
+  solveMetrics.matrixFreeTotalTime = matrixFreeTotalTime;
+  solveMetrics.matrixFreeSolveTime = matrixFreeSolveTime;
+  
+  solveMetrics.matrixFreeGemmFlops      = Intrepid2::PAMatrix<DeviceType,double>::gemmFlopCount() - gemmBaseFlops;
+  solveMetrics.matrixFreeGemmTime       = Intrepid2::PAMatrix<DeviceType,double>::gemmTimeSeconds();
+  solveMetrics.matrixFreeGemmThroughput = gemmThroughput;
+  
   Teuchos::StackedTimer::OutputOptions options;
   options.output_fraction = options.output_histogram = options.output_minmax = true;
   stacked_timer->report(*outStream, comm, options);
@@ -1132,17 +1199,36 @@ int feAssemblyHex(const int &degree,
   if(xmlOut.length())
     *outStream << "\nAlso created Watchr performance report " << xmlOut << '\n';
 
-  *outStream << "PAMatrix GEMM Throughput: " << gemmThroughput << " GFlops.\n";
+  *outStream << "PAMatrix GEMM Throughput: " << solveMetrics.matrixFreeGemmThroughput << " GFlops.\n";
   
-  *outStream << "Standard Assembly solve: " << standardAssemblySolveTime << " seconds." << std::endl;
-  *outStream << "Matrix-Free solve:       " << matrixFreeSolveTime << " seconds." << std::endl;
-  *outStream << "Solve speedup:           " << standardAssemblySolveTime / matrixFreeSolveTime << std::endl << std::endl;
+  *outStream << "Standard Assembly solve: " << solveMetrics.assembledSolveTime  << " seconds." << std::endl;
+  *outStream << "Matrix-Free solve:       " << solveMetrics.matrixFreeSolveTime << " seconds." << std::endl;
+  *outStream << "Solve speedup:           " << solveMetrics.assembledSolveTime / solveMetrics.matrixFreeSolveTime << std::endl << std::endl;
   
-  *outStream << "Standard Assembly total: " << standardAssemblyTotalTime << " seconds." << std::endl;
-  *outStream << "Matrix-Free total:       " << matrixFreeTotalTime << " seconds." << std::endl;
-  *outStream << "Overall speedup:         " << standardAssemblyTotalTime / matrixFreeTotalTime << std::endl << std::endl;
+  *outStream << "Standard Assembly total: " << solveMetrics.assembledTotalTime  << " seconds." << std::endl;
+  *outStream << "Matrix-Free total:       " << solveMetrics.matrixFreeTotalTime << " seconds." << std::endl;
+  *outStream << "Overall speedup:         " << solveMetrics.assembledTotalTime / solveMetrics.matrixFreeTotalTime << std::endl << std::endl;
   
-  return errorFlag;
+  *outStream << "Time to compute the diagonal for matrix-free (part of setup) " << solveMetrics.matrixFreeExtractDiagonalTime << " seconds." << std::endl << std::endl;
+  
+  if (! solveMetrics.assembledSolveSuccess)
+  {
+    *outStream << "Assembled-matrix solve did NOT converge after " << solveMetrics.assembledIterationCount << " iterations.\n";
+  }
+  else
+  {
+    *outStream << "Assembled-matrix solve converged after " << solveMetrics.assembledIterationCount << " iterations.\n";
+  }
+  if (! solveMetrics.matrixFreeSolveSuccess)
+  {
+    *outStream << "Matrix-free solve did NOT converge after " << solveMetrics.matrixFreeIterationCount << " iterations.\n";
+  }
+  else
+  {
+    *outStream << "Matrix-free solve converged after " << solveMetrics.matrixFreeIterationCount << " iterations.\n";
+  }
+  
+  return solveMetrics;
 }
 
 template<typename ValueType, typename DeviceType>
@@ -1187,6 +1273,8 @@ int feAssemblyHex(int argc, char *argv[]) {
   auto cmdResult = clp.parse(argc,argv);
   cubDegree = (cubDegree == -1) ? 2*degree : cubDegree;
 
+  SolveMetrics solveMetrics;
+  
   if(cmdResult!=Teuchos::CommandLineProcessor::PARSE_SUCCESSFUL)
   {
     clp.printHelpMessage(argv[0], std::cout);
@@ -1194,11 +1282,12 @@ int feAssemblyHex(int argc, char *argv[]) {
   }
   else
   {
-    errorFlag = feAssemblyHex<ValueType, DeviceType>(degree, nx, ny, nz,
-                                                     px, py, pz,
-                                                     cubDegree,
-                                                     stratFileName, timingsFile, test_name,
-                                                     verbose);
+    solveMetrics = feAssemblyHex<ValueType, DeviceType>(degree, nx, ny, nz,
+                                                        px, py, pz,
+                                                        cubDegree,
+                                                        stratFileName, timingsFile, test_name,
+                                                        verbose);
+    errorFlag += !(solveMetrics.assembledSolveSuccess && solveMetrics.matrixFreeSolveSuccess);
   }
 
   Teuchos::RCP<Teuchos::FancyOStream> outStream = getFancyOStream(Teuchos::rcpFromRef(std::cout));
