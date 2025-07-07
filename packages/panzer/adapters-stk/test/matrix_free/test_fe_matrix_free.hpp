@@ -469,6 +469,8 @@ int feAssemblyHex(const int &degree,
 
   double standardAssemblyTotalTime = 0;
   double matrixFreeTotalTime = 0;
+  double standardAssemblySolveTime = 0;
+  double matrixFreeSolveTime = 0;
   double gemmThroughput = 0;
 
 
@@ -1069,6 +1071,9 @@ int feAssemblyHex(const int &degree,
             thyra_inverse_A_crs = Thyra::linearOpWithSolve(*lowsFactory, thyra_A_crs);
           }
 
+          crsTotalTimer->stop();
+          double totalTimeBeforeSolve = crsTotalTimer->totalElapsedTime();
+          crsTotalTimer->start();
           {
             Teuchos::TimeMonitor mfSolveTimer =  *Teuchos::TimeMonitor::getNewTimer("Matrix solve");
             Thyra::SolveStatus<scalar_t> status = Thyra::solve<scalar_t>(*thyra_inverse_A_crs, Thyra::NOTRANS, *thyra_b, thyra_x_crs.ptr());
@@ -1076,6 +1081,7 @@ int feAssemblyHex(const int &degree,
           }
         }
         crsTotalTimer->stop();
+        standardAssemblySolveTime = crsTotalTimer->totalElapsedTime() - totalTimeBeforeSolve;
       }
 
       {
@@ -1095,6 +1101,9 @@ int feAssemblyHex(const int &degree,
             thyra_inverse_A_mf = Thyra::linearOpWithSolve(*lowsFactory, thyra_A_mf);
           }
 
+          mfTotalTimer->stop();
+          double totalTimeBeforeSolve = mfTotalTimer->totalElapsedTime();
+          mfTotalTimer->start();
           {
             Teuchos::TimeMonitor mfSolveTimer =  *Teuchos::TimeMonitor::getNewTimer("Matrix-free solve");
             Thyra::SolveStatus<scalar_t> status = Thyra::solve<scalar_t>(*thyra_inverse_A_mf, Thyra::NOTRANS, *thyra_b, thyra_x_mf.ptr());
@@ -1102,6 +1111,7 @@ int feAssemblyHex(const int &degree,
           }
         }
         mfTotalTimer->stop();
+        matrixFreeSolveTime = mfTotalTimer->totalElapsedTime() - totalTimeBeforeSolve;
       }
     }
     standardAssemblyTotalTime = crsTotalTimer->totalElapsedTime();
@@ -1122,11 +1132,16 @@ int feAssemblyHex(const int &degree,
   if(xmlOut.length())
     *outStream << "\nAlso created Watchr performance report " << xmlOut << '\n';
 
-  *outStream << "Standard Assembly total: " << standardAssemblyTotalTime << " seconds." << std::endl;
-  *outStream << "Matrix-Free total:       " << matrixFreeTotalTime << " seconds." << std::endl << std::endl;
-
   *outStream << "PAMatrix GEMM Throughput: " << gemmThroughput << " GFlops.\n";
-
+  
+  *outStream << "Standard Assembly solve: " << standardAssemblySolveTime << " seconds." << std::endl;
+  *outStream << "Matrix-Free solve:       " << matrixFreeSolveTime << " seconds." << std::endl;
+  *outStream << "Solve speedup:           " << standardAssemblySolveTime / matrixFreeSolveTime << std::endl << std::endl;
+  
+  *outStream << "Standard Assembly total: " << standardAssemblyTotalTime << " seconds." << std::endl;
+  *outStream << "Matrix-Free total:       " << matrixFreeTotalTime << " seconds." << std::endl;
+  *outStream << "Overall speedup:         " << standardAssemblyTotalTime / matrixFreeTotalTime << std::endl << std::endl;
+  
   return errorFlag;
 }
 

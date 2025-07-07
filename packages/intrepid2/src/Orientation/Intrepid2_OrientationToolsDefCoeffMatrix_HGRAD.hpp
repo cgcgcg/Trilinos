@@ -234,8 +234,11 @@ getCoeffMatrix_HGRAD(OutputViewType &output, /// this is device view
   }
 
   // Print A Matrix
-  /*
+  
   {
+    std::cout << "Subcell " << subcellId << " of dimension " << subcellDim << " in " << cellDim << "D cell, ort " << subcellOrt;
+    if (inverse) std::cout << " (inverse)";
+    std::cout << ":\n";
     std::cout  << "|";
     for (ordinal_type i=0;i<ndofSubcell;++i) {
       for (ordinal_type j=0;j<ndofSubcell;++j) {
@@ -245,7 +248,6 @@ getCoeffMatrix_HGRAD(OutputViewType &output, /// this is device view
     }
     std::cout <<std::endl;
   }
-  */
 
   {
     // move the data to original device memory
