@@ -1496,18 +1496,38 @@ double PAMatrix<DeviceType,Scalar>::recordGEMMFlops(const ordinal_type &M, const
 }
 
 template<typename DeviceType,class Scalar>
-double PAMatrix<DeviceType,Scalar>::gemmThroughputGFlops()
+double PAMatrix<DeviceType,Scalar>::gemmFlopCount()
 {
   auto approximateFlopCountTotal = recordGEMMFlops(0,0,0);
-  
+  return approximateFlopCountTotal;
+}
+
+template<typename DeviceType,class Scalar>
+double PAMatrix<DeviceType,Scalar>::gemmTimeSeconds() // returns cumulative time spent in gemm() calls
+{
   Teuchos::stat_map_type statData;
   std::vector<std::string> statNames;
   Teuchos::TimeMonitor::computeGlobalTimerStatistics(statData, statNames, Teuchos::Intersection, "gemm");
-//  Teuchos::TimeMonitor::computeGlobalTimerStatistics(statData, statNames, Teuchos::Intersection);
   
   if (statData["gemm"].size() > 0)
   {
     const double timeInSeconds = statData["gemm"][0].first;
+    return timeInSeconds;
+  }
+  else
+  {
+    return 0;
+  }
+}
+
+template<typename DeviceType,class Scalar>
+double PAMatrix<DeviceType,Scalar>::gemmThroughputGFlops(const double baseFlopCount, const double baseTimeSeconds)
+{
+  auto timeInSeconds = gemmTimeSeconds() - baseTimeSeconds;
+
+  if (timeInSeconds > 0)
+  {
+    auto approximateFlopCountTotal = gemmFlopCount() - baseFlopCount;
     return approximateFlopCountTotal / timeInSeconds / 1.0e9;
   }
   else
@@ -1515,6 +1535,7 @@ double PAMatrix<DeviceType,Scalar>::gemmThroughputGFlops()
     return 0;
   }
 }
+
 
 } // end namespace Intrepid2
 #endif

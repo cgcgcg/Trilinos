@@ -236,9 +236,17 @@ namespace Intrepid2 {
     
     
     
+    //! Returns the cumulative estimated floating-point operation count for calls to gemm() from PAMatrix.
+    static double gemmFlopCount();
+    
     //! Accumulates into a static variable with cumulative flop count.  Returns its current value.
     static double recordGEMMFlops(const ordinal_type &M, const ordinal_type &N, const ordinal_type &K);
-    static double gemmThroughputGFlops();
+    
+    //! Returns the cumulative time spent in calls to gemm() from PAMatrix.
+    static double gemmTimeSeconds(); // returns cumulative time spent in gemm() calls
+    
+    //! if baseFlopCount and baseTimeSeconds are provided, these will be subtracted from the cumulative counts to provide a throughput since a previous measurement.
+    static double gemmThroughputGFlops(const double baseFlopCount = 0, const double baseTimeSeconds = 0);
 
   }; // end PAMatrix class
 
