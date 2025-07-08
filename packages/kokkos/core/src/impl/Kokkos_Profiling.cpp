@@ -27,6 +27,8 @@
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #include <impl/Kokkos_Command_Line_Parsing.hpp>
 
+#include <impl/Kokkos_Stacktrace.hpp>
+
 #if defined(KOKKOS_ENABLE_LIBDL) || defined(KOKKOS_TOOLS_INDEPENDENT_BUILD)
 #include <dlfcn.h>
 #define KOKKOS_TOOLS_ENABLE_LIBDL
@@ -399,15 +401,20 @@ void endParallelReduce(const uint64_t kernelID) {
 }
 
 void pushRegion(const std::string& kName) {
+  std::cout << "Pushing region \"" << kName << "\"\n";
   Experimental::invoke_kokkosp_callback(
       Experimental::MayRequireGlobalFencing::Yes,
       Experimental::current_callbacks.push_region, kName.c_str());
 }
 
 void popRegion() {
+  std::cout << "Popping region\n";
   Experimental::invoke_kokkosp_callback(
       Experimental::MayRequireGlobalFencing::Yes,
       Experimental::current_callbacks.pop_region);
+  ::Kokkos::Impl::save_stacktrace();
+  ::Kokkos::Impl::print_demangled_saved_stacktrace(std::cout);
+  std::cout << std::endl;
 }
 
 void allocateData(const SpaceHandle space, const std::string label,
