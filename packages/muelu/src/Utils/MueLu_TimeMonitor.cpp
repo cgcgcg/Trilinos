@@ -50,13 +50,14 @@ TimeMonitor::TimeMonitor(const BaseClass& object, const std::string& msg, MsgTyp
     }
 
     // Start the timer (this is what is done by Teuchos::TimeMonitor)
-    timer_->start();
     timer_->incrementNumCalls();
 #ifdef HAVE_TEUCHOS_ADD_TIME_MONITOR_TO_STACKED_TIMER
     const auto stackedTimer = Teuchos::TimeMonitor::getStackedTimer();
     if (nonnull(stackedTimer))
       stackedTimer->start(timer_->name());
+    else
 #endif
+      timer_->start();
   }
 }  // TimeMonitor::TimeMonitor()
 
@@ -65,12 +66,13 @@ TimeMonitor::TimeMonitor() {}
 TimeMonitor::~TimeMonitor() {
   // Stop the timer if present
   if (timer_ != Teuchos::null) {
-    timer_->stop();
 #ifdef HAVE_TEUCHOS_ADD_TIME_MONITOR_TO_STACKED_TIMER
     try {
       const auto stackedTimer = Teuchos::TimeMonitor::getStackedTimer();
       if (nonnull(stackedTimer))
         stackedTimer->stop(timer_->name());
+      else
+        timer_->stop();
     } catch (std::runtime_error&) {
       std::ostringstream warning;
       warning << "\n*********************************************************************\n"
@@ -83,6 +85,8 @@ TimeMonitor::~TimeMonitor() {
       std::cout << warning.str() << std::endl;
       Teuchos::TimeMonitor::setStackedTimer(Teuchos::null);
     }
+#else
+    timer_->stop();
 #endif
   }
 }  // TimeMonitor::~TimeMonitor()

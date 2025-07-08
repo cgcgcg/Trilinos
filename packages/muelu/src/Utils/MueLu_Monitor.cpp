@@ -48,22 +48,24 @@ SubMonitor::~SubMonitor() = default;
 
 FactoryMonitor::FactoryMonitor(const BaseClass& object, const std::string& msg, int levelID, MsgType msgLevel, MsgType timerLevel)
   : Monitor(object, msg, msgLevel, timerLevel)
-  , timerMonitorExclusive_(object, object.ShortClassName() + ": " + msg, timerLevel) {
+// , timerMonitorExclusive_(object, object.ShortClassName() + ": " + msg, timerLevel)
+{
   if (object.IsPrint(TimingsByLevel)) {
     if (Teuchos::TimeMonitor::getStackedTimer().is_null())
       levelTimeMonitor_ = rcp(new TimeMonitor(object, object.ShortClassName() + ": " + msg + " (total, level=" + Teuchos::Utils::toString(levelID) + ")", timerLevel));
-    levelTimeMonitorExclusive_ = rcp(new MutuallyExclusiveTimeMonitor<Level>(object, object.ShortClassName() + ": " + msg + " (level=" + Teuchos::Utils::toString(levelID) + ")", timerLevel));
+    // levelTimeMonitorExclusive_ = rcp(new MutuallyExclusiveTimeMonitor<Level>(object, object.ShortClassName() + ": " + msg + " (level=" + Teuchos::Utils::toString(levelID) + ")", timerLevel));
   }
 }
 
 FactoryMonitor::FactoryMonitor(const BaseClass& object, const std::string& msg, const Level& level, MsgType msgLevel, MsgType timerLevel)
   : Monitor(object, msg, FormattingHelper::getColonLabel(level.getObjectLabel()), msgLevel, timerLevel)
-  , timerMonitorExclusive_(object, FormattingHelper::getColonLabel(level.getObjectLabel()) + object.ShortClassName() + ": " + msg, timerLevel) {
+// , timerMonitorExclusive_(object, FormattingHelper::getColonLabel(level.getObjectLabel()) + object.ShortClassName() + ": " + msg, timerLevel)
+{
   if (object.IsPrint(TimingsByLevel)) {
     std::string label = FormattingHelper::getColonLabel(level.getObjectLabel());
     if (Teuchos::TimeMonitor::getStackedTimer().is_null())
       levelTimeMonitor_ = rcp(new TimeMonitor(object, label + object.ShortClassName() + ": " + msg + " (total, level=" + Teuchos::Utils::toString(level.GetLevelID()) + ")", timerLevel));
-    levelTimeMonitorExclusive_ = rcp(new MutuallyExclusiveTimeMonitor<Level>(object, label + object.ShortClassName() + ": " + msg + " (level=" + Teuchos::Utils::toString(level.GetLevelID()) + ")", timerLevel));
+    // levelTimeMonitorExclusive_ = rcp(new MutuallyExclusiveTimeMonitor<Level>(object, label + object.ShortClassName() + ": " + msg + " (level=" + Teuchos::Utils::toString(level.GetLevelID()) + ")", timerLevel));
   }
 }
 

@@ -82,7 +82,7 @@ class MutuallyExclusiveTimeMonitor : public BaseClass {
       timer_->stop();
   }
 
- protected:
+  // protected:
   MutuallyExclusiveTimeMonitor() {}
 
  private:

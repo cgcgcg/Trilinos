@@ -278,6 +278,46 @@ void translateOldAlgoParam(const Teuchos::ParameterList& pL, std::string& droppi
   }
 }
 
+template <class local_matrix_type, class boundary_nodes_type, class magnitudeType, class LocalOrdinal>
+void runBoundaryDetection(local_matrix_type& lclA, boundary_nodes_type& boundaryNodes, magnitudeType dirichletThreshold, LocalOrdinal dirichletNonzeroThreshold, magnitudeType rowSumTol) {
+  Kokkos::Profiling::pushRegion("BCs");
+  // SubFactoryMonitor mBoundary(*this, "Boundary detection", currentLevel);
+
+  using execution_space    = typename local_matrix_type::execution_space;
+  using local_ordinal_type = LocalOrdinal;
+  using range_type         = Kokkos::RangePolicy<local_ordinal_type, execution_space>;
+
+  auto range = range_type(0, lclA.numRows());
+
+  //     // macro that applies boundary detection functors
+  // #define MueLu_runBoundaryFunctors(...)                                          \
+//   {                                                                             \
+//     auto boundaries = BoundaryDetection::BoundaryFunctor(lclA, __VA_ARGS__);    \
+//     Kokkos::parallel_for("CoalesceDrop::BoundaryDetection", range, boundaries); \
+//   }
+
+  //     auto dirichlet_detection = BoundaryDetection::PointDirichletFunctor(lclA, boundaryNodes, dirichletThreshold, dirichletNonzeroThreshold);
+
+  //     if (rowSumTol <= 0.) {
+  //       MueLu_runBoundaryFunctors(dirichlet_detection);
+  //     } else {
+  //       auto apply_rowsum = BoundaryDetection::RowSumFunctor(lclA, boundaryNodes, rowSumTol);
+  //       MueLu_runBoundaryFunctors(dirichlet_detection,
+  //                                 apply_rowsum);
+  //     }
+  // #undef MueLu_runBoundaryFunctors
+
+  // Kokkos::parallel_for("test", range,
+  //                      KOKKOS_LAMBDA(const LocalOrdinal i) {
+  //   boundaryNodes(i) = false;
+  // });
+
+  auto dirichlet_detection = BoundaryDetection::PointDirichletFunctor(lclA, boundaryNodes, dirichletThreshold, dirichletNonzeroThreshold);
+  auto boundaries          = BoundaryDetection::BoundaryFunctor(lclA, dirichlet_detection);
+  Kokkos::parallel_for("CoalesceDrop::BoundaryDetection", range, boundaries);
+  Kokkos::Profiling::popRegion();
+}
+
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 std::tuple<GlobalOrdinal, typename MueLu::LWGraph_kokkos<LocalOrdinal, GlobalOrdinal, Node>::boundary_nodes_type> CoalesceDropFactory_kokkos<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     BuildScalar(Level& currentLevel) const {
@@ -385,27 +425,28 @@ std::tuple<GlobalOrdinal, typename MueLu::LWGraph_kokkos<LocalOrdinal, GlobalOrd
 
   // Dirichlet nodes
   auto boundaryNodes = boundary_nodes_type("boundaryNodes", lclA.numRows());  // initialized to false
-  {
-    SubFactoryMonitor mBoundary(*this, "Boundary detection", currentLevel);
+  runBoundaryDetection(lclA, boundaryNodes, dirichletThreshold, dirichletNonzeroThreshold, rowSumTol);
+  // {
+  //     SubFactoryMonitor mBoundary(*this, "Boundary detection", currentLevel);
 
-    // macro that applies boundary detection functors
-#define MueLu_runBoundaryFunctors(...)                                          \
-  {                                                                             \
-    auto boundaries = BoundaryDetection::BoundaryFunctor(lclA, __VA_ARGS__);    \
-    Kokkos::parallel_for("CoalesceDrop::BoundaryDetection", range, boundaries); \
-  }
+  //     // macro that applies boundary detection functors
+  // #define MueLu_runBoundaryFunctors(...)                                          \
+//   {                                                                             \
+//     auto boundaries = BoundaryDetection::BoundaryFunctor(lclA, __VA_ARGS__);    \
+//     Kokkos::parallel_for("CoalesceDrop::BoundaryDetection", range, boundaries); \
+//   }
 
-    auto dirichlet_detection = BoundaryDetection::PointDirichletFunctor(lclA, boundaryNodes, dirichletThreshold, dirichletNonzeroThreshold);
+  //     auto dirichlet_detection = BoundaryDetection::PointDirichletFunctor(lclA, boundaryNodes, dirichletThreshold, dirichletNonzeroThreshold);
 
-    if (rowSumTol <= 0.) {
-      MueLu_runBoundaryFunctors(dirichlet_detection);
-    } else {
-      auto apply_rowsum = BoundaryDetection::RowSumFunctor(lclA, boundaryNodes, rowSumTol);
-      MueLu_runBoundaryFunctors(dirichlet_detection,
-                                apply_rowsum);
-    }
-#undef MueLu_runBoundaryFunctors
-  }
+  //     if (rowSumTol <= 0.) {
+  //       MueLu_runBoundaryFunctors(dirichlet_detection);
+  //     } else {
+  //       auto apply_rowsum = BoundaryDetection::RowSumFunctor(lclA, boundaryNodes, rowSumTol);
+  //       MueLu_runBoundaryFunctors(dirichlet_detection,
+  //                                 apply_rowsum);
+  //     }
+  // #undef MueLu_runBoundaryFunctors
+  //   }
   // In what follows, boundaryNodes can still still get modified if aggregationMayCreateDirichlet == true.
   // Otherwise we're now done with it now.
 
