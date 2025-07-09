@@ -386,7 +386,7 @@ class BlockRowComparison {
   block_indices_view_type ghosted_point_to_block;
 
  public:
-  BlockRowComparison(local_matrix_type& A_, local_ordinal_type bsize_, block_indices_view_type ghosted_point_to_block_)
+  BlockRowComparison(local_matrix_type& A_, local_ordinal_type bsize_, const block_indices_view_type& ghosted_point_to_block_)
     : A(A_)
     , bsize(bsize_)
     , ghosted_point_to_block(ghosted_point_to_block_) {}
@@ -467,7 +467,7 @@ class VectorCountingFunctor {
 #endif
 
  public:
-  VectorCountingFunctor(local_matrix_type& A_, local_ordinal_type blockSize_, block_indices_view_type ghosted_point_to_block_, results_view& results_, rowptr_type& filtered_rowptr_, rowptr_type& graph_rowptr_, functor_type& functor_, remaining_functor_types&... remainingFunctors_)
+  VectorCountingFunctor(local_matrix_type& A_, local_ordinal_type blockSize_, const block_indices_view_type& ghosted_point_to_block_, results_view& results_, rowptr_type& filtered_rowptr_, rowptr_type& graph_rowptr_, functor_type& functor_, remaining_functor_types&... remainingFunctors_)
     : A(A_)
     , blockSize(blockSize_)
     , ghosted_point_to_block(ghosted_point_to_block_)
@@ -643,7 +643,7 @@ class VectorCountingFunctor<local_matrix_type, functor_type> {
   permutation_type permutation;
 
  public:
-  VectorCountingFunctor(local_matrix_type& A_, local_ordinal_type blockSize_, block_indices_view_type ghosted_point_to_block_, results_view& results_, rowptr_type& filtered_rowptr_, rowptr_type& graph_rowptr_, functor_type& functor_)
+  VectorCountingFunctor(local_matrix_type& A_, local_ordinal_type blockSize_, const block_indices_view_type& ghosted_point_to_block_, results_view& results_, rowptr_type& filtered_rowptr_, rowptr_type& graph_rowptr_, functor_type& functor_)
     : A(A_)
     , blockSize(blockSize_)
     , ghosted_point_to_block(ghosted_point_to_block_)
@@ -819,7 +819,7 @@ class VectorFillFunctor {
   permutation_type permutation;
 
  public:
-  VectorFillFunctor(local_matrix_type& A_, local_ordinal_type blockSize_, block_indices_view_type ghosted_point_to_block_, results_view& results_, local_matrix_type& filteredA_, local_graph_type& graph_, magnitudeType dirichletThreshold_)
+  VectorFillFunctor(local_matrix_type& A_, local_ordinal_type blockSize_, const block_indices_view_type& ghosted_point_to_block_, results_view& results_, local_matrix_type& filteredA_, local_graph_type& graph_, magnitudeType dirichletThreshold_)
     : A(A_)
     , blockSize(blockSize_)
     , ghosted_point_to_block(ghosted_point_to_block_)
@@ -1011,7 +1011,7 @@ class MergeFillFunctor {
   permutation_type permutation;
 
  public:
-  MergeFillFunctor(local_matrix_type& A_, local_ordinal_type blockSize_, block_indices_view_type ghosted_point_to_block_, local_matrix_type& mergedA_)
+  MergeFillFunctor(const local_matrix_type& A_, const local_ordinal_type blockSize_, const block_indices_view_type& ghosted_point_to_block_, local_matrix_type& mergedA_)
     : A(A_)
     , blockSize(blockSize_)
     , ghosted_point_to_block(ghosted_point_to_block_)
@@ -1074,7 +1074,7 @@ class GraphConstruction {
   local_graph_type graph;
 
  public:
-  GraphConstruction(local_matrix_type& A_, results_view& results_, local_graph_type& graph_)
+  GraphConstruction(const local_matrix_type& A_, results_view& results_, local_graph_type& graph_)
     : A(A_)
     , results(results_)
     , graph(graph_) {}

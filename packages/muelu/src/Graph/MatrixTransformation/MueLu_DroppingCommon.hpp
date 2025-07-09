@@ -51,14 +51,14 @@ class PointwiseDropBoundaryFunctor {
   using local_ordinal_type  = typename local_matrix_type::ordinal_type;
   using memory_space        = typename local_matrix_type::memory_space;
   using results_view        = Kokkos::View<DecisionType*, memory_space>;
-  using boundary_nodes_view = Kokkos::View<const bool*, memory_space>;
+  using boundary_nodes_view = Kokkos::View<bool*, memory_space>;
 
   local_matrix_type A;
   boundary_nodes_view boundaryNodes;
   results_view results;
 
  public:
-  PointwiseDropBoundaryFunctor(local_matrix_type& A_, boundary_nodes_view boundaryNodes_, results_view& results_)
+  PointwiseDropBoundaryFunctor(const local_matrix_type& A_, const boundary_nodes_view& boundaryNodes_, results_view& results_)
     : A(A_)
     , boundaryNodes(boundaryNodes_)
     , results(results_) {}
@@ -133,7 +133,7 @@ class VectorDropBoundaryFunctor {
   using local_ordinal_type      = typename local_matrix_type::ordinal_type;
   using memory_space            = typename local_matrix_type::memory_space;
   using results_view            = Kokkos::View<DecisionType*, memory_space>;
-  using boundary_nodes_view     = Kokkos::View<const bool*, memory_space>;
+  using boundary_nodes_view     = Kokkos::View<bool*, memory_space>;
   using block_indices_view_type = Kokkos::View<local_ordinal_type*, memory_space>;
 
   local_matrix_type A;
@@ -142,7 +142,7 @@ class VectorDropBoundaryFunctor {
   results_view results;
 
  public:
-  VectorDropBoundaryFunctor(local_matrix_type& A_, block_indices_view_type point_to_block_, boundary_nodes_view boundaryNodes_, results_view& results_)
+  VectorDropBoundaryFunctor(const local_matrix_type& A_, const block_indices_view_type& point_to_block_, const boundary_nodes_view& boundaryNodes_, results_view& results_)
     : A(A_)
     , point_to_block(point_to_block_)
     , boundaryNodes(boundaryNodes_)
@@ -229,7 +229,7 @@ class KeepDiagonalFunctor {
   results_view results;
 
  public:
-  KeepDiagonalFunctor(local_matrix_type& A_, results_view& results_)
+  KeepDiagonalFunctor(const local_matrix_type& A_, results_view& results_)
     : A(A_)
     , results(results_) {}
 
@@ -263,7 +263,7 @@ class DropOffRankFunctor {
   results_view results;
 
  public:
-  DropOffRankFunctor(local_matrix_type& A_, results_view& results_)
+  DropOffRankFunctor(const local_matrix_type& A_, results_view& results_)
     : A(A_)
     , results(results_) {}
 
@@ -299,7 +299,7 @@ class MarkSingletonFunctor {
   results_view results;
 
  public:
-  MarkSingletonFunctor(local_matrix_type& A_, boundary_nodes_view boundaryNodes_, results_view& results_)
+  MarkSingletonFunctor(const local_matrix_type& A_, boundary_nodes_view& boundaryNodes_, results_view& results_)
     : A(A_)
     , boundaryNodes(boundaryNodes_)
     , results(results_) {}
@@ -345,7 +345,7 @@ class MarkSingletonVectorFunctor {
   results_view results;
 
  public:
-  MarkSingletonVectorFunctor(local_matrix_type& A_, block_indices_view_type point_to_block_, boundary_nodes_view boundaryNodes_, results_view& results_)
+  MarkSingletonVectorFunctor(const local_matrix_type& A_, const block_indices_view_type point_to_block_, boundary_nodes_view boundaryNodes_, results_view& results_)
     : A(A_)
     , point_to_block(point_to_block_)
     , boundaryNodes(boundaryNodes_)
@@ -396,7 +396,7 @@ class BlockDiagonalizeFunctor {
   results_view results;
 
  public:
-  BlockDiagonalizeFunctor(matrix_type& A_, block_indices_type& point_to_block_, results_view& results_)
+  BlockDiagonalizeFunctor(const matrix_type& A_, const block_indices_type& point_to_block_, results_view& results_)
     : A(A_.getLocalMatrixDevice())
     , point_to_block(point_to_block_.getLocalViewDevice(Xpetra::Access::ReadOnly))
     , results(results_) {
@@ -454,7 +454,7 @@ class BlockDiagonalizeVectorFunctor {
   Teuchos::RCP<block_indices_type> ghosted_point_to_blockMV;
 
  public:
-  BlockDiagonalizeVectorFunctor(matrix_type& A_, block_indices_type& point_to_block_, const RCP<const importer_type>& importer, results_view& results_, id_translation_type row_translation_, id_translation_type col_translation_)
+  BlockDiagonalizeVectorFunctor(const matrix_type& A_, const block_indices_type& point_to_block_, const RCP<const importer_type>& importer, results_view& results_, const id_translation_type& row_translation_, const id_translation_type& col_translation_)
     : A(A_.getLocalMatrixDevice())
     , point_to_block(point_to_block_.getLocalViewDevice(Xpetra::Access::ReadOnly))
     , results(results_)
@@ -497,13 +497,11 @@ class DebugFunctor {
   using memory_space       = typename local_matrix_type::memory_space;
   using results_view       = Kokkos::View<DecisionType*, memory_space>;
 
-  using boundary_nodes_view = Kokkos::View<bool*, memory_space>;
-
   local_matrix_type A;
   results_view results;
 
  public:
-  DebugFunctor(local_matrix_type& A_, results_view& results_)
+  DebugFunctor(const local_matrix_type& A_, results_view& results_)
     : A(A_)
     , results(results_) {}
 
@@ -536,7 +534,7 @@ class SymmetrizeFunctor {
   results_view results;
 
  public:
-  SymmetrizeFunctor(local_matrix_type& A_, results_view& results_)
+  SymmetrizeFunctor(const local_matrix_type& A_, results_view& results_)
     : A(A_)
     , results(results_) {}
 

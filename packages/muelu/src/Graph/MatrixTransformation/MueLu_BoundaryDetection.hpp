@@ -47,7 +47,7 @@ class PointDirichletFunctor {
   local_ordinal_type dirichletNonzeroThreshold;
 
  public:
-  PointDirichletFunctor(local_matrix_type& A_, boundary_nodes_view boundaryNodes_, magnitudeType dirichletThreshold_, local_ordinal_type dirichletNonzeroThreshold_)
+  PointDirichletFunctor(const local_matrix_type& A_, boundary_nodes_view& boundaryNodes_, const magnitudeType dirichletThreshold_, const local_ordinal_type dirichletNonzeroThreshold_)
     : A(A_)
     , boundaryNodes(boundaryNodes_)
     , dirichletThreshold(dirichletThreshold_)
@@ -98,7 +98,7 @@ class VectorDirichletFunctor {
   local_ordinal_type dirichletNonzeroThreshold;
 
  public:
-  VectorDirichletFunctor(local_matrix_type& A_, local_ordinal_type blockSize_, boundary_nodes_view boundaryNodes_, magnitudeType dirichletThreshold_, local_ordinal_type dirichletNonzeroThreshold_)
+  VectorDirichletFunctor(const local_matrix_type& A_, const local_ordinal_type blockSize_, boundary_nodes_view& boundaryNodes_, const magnitudeType dirichletThreshold_, const local_ordinal_type dirichletNonzeroThreshold_)
     : A(A_)
     , blockSize(blockSize_)
     , boundaryNodes(boundaryNodes_)
@@ -162,7 +162,7 @@ class RowSumFunctor {
   magnitudeType rowSumTol;
 
  public:
-  RowSumFunctor(local_matrix_type& A_, boundary_nodes_view boundaryNodes_, magnitudeType rowSumTol_)
+  RowSumFunctor(const local_matrix_type& A_, boundary_nodes_view& boundaryNodes_, const magnitudeType rowSumTol_)
     : A(A_)
     , boundaryNodes(boundaryNodes_)
     , rowSumTol(rowSumTol_) {}
@@ -198,7 +198,7 @@ class BoundaryFunctor {
   BoundaryFunctor<local_matrix_type, RemainingFunctors...> remainingFunctors;
 
  public:
-  BoundaryFunctor(local_matrix_type& A_, Functor& functor_, RemainingFunctors&... remainingFunctors_)
+  BoundaryFunctor(const local_matrix_type& A_, Functor& functor_, RemainingFunctors&... remainingFunctors_)
     : functor(functor_)
     , remainingFunctors(A_, remainingFunctors_...) {}
 
@@ -217,7 +217,7 @@ class BoundaryFunctor<local_matrix_type, Functor> {
   Functor functor;
 
  public:
-  BoundaryFunctor(local_matrix_type& A_, Functor& functor_)
+  BoundaryFunctor(const local_matrix_type& A_, Functor& functor_)
     : A(A_)
     , functor(functor_) {}
 
