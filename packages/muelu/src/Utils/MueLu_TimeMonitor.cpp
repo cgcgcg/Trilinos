@@ -20,7 +20,7 @@ std::string cleanupLabel(const std::string& label) {
   // Our main interest is to remove double quotes from the label
   // since tracing formats can be written in JSON/YAML
   auto clean_label                     = label;
-  std::vector<std::string> bad_values  = {"\""};
+  std::vector<std::string>      bad_values  = {"\""};
   std::vector<std::string> good_values = {"'"};
   for (size_t i = 0; i < bad_values.size(); ++i) {
     const auto& bad_value  = bad_values[i];
