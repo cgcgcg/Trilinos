@@ -1,10 +1,9 @@
 name: Check packages with clang-format
 
-on: [pull_request_target]
+on: [pull_request]
 
 permissions:
   contents: read
-  pull-requests: write
 
 jobs:
   clang_format:
@@ -12,8 +11,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      with:
-        ref: "${{ github.event.pull_request.head.sha }}"
 
     - uses: DoozyX/clang-format-lint-action@bcb4eb2cb0d707ee4f3e5cc3b456eb075f12cf73 # v0.20
       with:
@@ -46,13 +43,12 @@ jobs:
         echo "" >> format_patch_message.txt
         echo "More details about our use of clang-format can be found in the [wiki](https://github.com/trilinos/Trilinos/wiki/Clang\%E2\%80\%90format)." >> format_patch_message.txt
 
-    - name: Post artifact in issue comment
-      uses: mshick/add-pr-comment@b8f338c590a895d50bcbfa6c5859251edc8952fc # v2.8.2
-      if: ${{ hashFiles('format_patch.txt') != '' }}
+    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      id: upload-artf-msg
+      if: ${{ hashFiles('format_patch_message.txt') != '' }}
       with:
-        message-id: clang-format-patch
-        refresh-message-position: true
-        message-path: format_patch_message.txt
+        name: clang_format_patch_message
+        path: format_patch_message.txt
 
     - uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
       if: ${{ hashFiles('format_patch.txt') != '' }}

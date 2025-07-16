@@ -1,0 +1,52 @@
+name: Comment for clang-format
+
+on:
+  workflow_run:
+    workflows: ["Check packages with clang-format"]
+    types:
+      - completed
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+
+    steps:
+    # - name: 'Download artifact'
+    #   uses: actions/github-script@v3.1.0
+    #   with:
+    #     script: |
+    #       var artifacts = await github.actions.listWorkflowRunArtifacts({
+    #          owner: context.repo.owner,
+    #          repo: context.repo.repo,
+    #          run_id: ${{github.event.workflow_run.id }},
+    #       });
+    #       var matchArtifact = artifacts.data.artifacts.filter((artifact) => {
+    #         return artifact.name == "clang_format_patch_message"
+    #       })[0];
+    #       var download = await github.actions.downloadArtifact({
+    #          owner: context.repo.owner,
+    #          repo: context.repo.repo,
+    #          artifact_id: matchArtifact.id,
+    #          archive_format: 'zip',
+    #       });
+    #       var fs = require('fs');
+    #       fs.writeFileSync('${{github.workspace}}/clang_format_patch_message.zip', Buffer.from(download.data));
+
+    - name: 'Download artifact'
+      uses: actions/download-artifact@v4
+      with:
+        # name: clang_format_patch_message
+        run-id: ${{github.event.workflow_run.id }}
+
+    - run: unzip clang_format_patch_message.zip
+
+    - name: Post artifact in issue comment
+      uses: mshick/add-pr-comment@b8f338c590a895d50bcbfa6c5859251edc8952fc # v2.8.2
+      with:
+        message-id: clang-format-patch
+        refresh-message-position: true
+        message-path: format_patch_message.txt
