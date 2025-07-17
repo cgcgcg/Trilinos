@@ -556,20 +556,11 @@ SolveMetrics feAssemblyHex(const int &degree,
 //      pCoarsenSchedule.push_back(deg);
 //    }
     
-    constexpr bool debuggingComparisonToCamellia = true;
-    if (debuggingComparisonToCamellia)
-    {
-      // just one level, to p=2, for simplicity of diagnosis
-      pCoarsenSchedule.push_back(2);
-    }
-    else
-    {
-      int pCoarse = std::max(degree/2, 1);
+    int pCoarse = std::max(degree/2, 1);
+    pCoarsenSchedule.push_back(pCoarse);
+    while (pCoarse > 1) {
+      pCoarse = std::max(pCoarse/2, 1);
       pCoarsenSchedule.push_back(pCoarse);
-      while (pCoarse > 1) {
-        pCoarse = std::max(pCoarse/2, 1);
-        pCoarsenSchedule.push_back(pCoarse);
-      }
     }
     std::vector<Teuchos::RCP<panzer::DOFManager> > dofManagers;
 
