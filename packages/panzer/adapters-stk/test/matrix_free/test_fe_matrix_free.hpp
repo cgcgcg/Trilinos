@@ -204,8 +204,8 @@ namespace Example {
     
     double matrixFreeExtractDiagonalTime; // time in seconds spent in PAMatrix::extractDiagonal()
     
-    int assembledIterationCount;
-    int matrixFreeIterationCount;
+    int assembledIterationCount = -1;
+    int matrixFreeIterationCount = -1;
     
     bool assembledSolveSuccess;  // true indicates that the iterative solver converged
     bool matrixFreeSolveSuccess; // true indicates that the iterative solver converged
@@ -555,11 +555,21 @@ SolveMetrics feAssemblyHex(const int &degree,
 //    for (int deg = degree-1; deg>0; --deg) {
 //      pCoarsenSchedule.push_back(deg);
 //    }
-    int pCoarse = std::max(degree/2, 1);
-    pCoarsenSchedule.push_back(pCoarse);
-    while (pCoarse > 1) {
-      pCoarse = std::max(pCoarse/2, 1);
+    
+    constexpr bool debuggingComparisonToCamellia = true;
+    if (debuggingComparisonToCamellia)
+    {
+      // just one level, to p=2, for simplicity of diagnosis
+      pCoarsenSchedule.push_back(2);
+    }
+    else
+    {
+      int pCoarse = std::max(degree/2, 1);
       pCoarsenSchedule.push_back(pCoarse);
+      while (pCoarse > 1) {
+        pCoarse = std::max(pCoarse/2, 1);
+        pCoarsenSchedule.push_back(pCoarse);
+      }
     }
     std::vector<Teuchos::RCP<panzer::DOFManager> > dofManagers;
 
