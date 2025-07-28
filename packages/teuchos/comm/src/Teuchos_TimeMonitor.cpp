@@ -219,8 +219,8 @@ namespace Teuchos {
   typedef std::map<std::string, std::pair<double, int> > timer_map_t;
 
   // static initialization
-  Teuchos::RCP<Teuchos::StackedTimer> TimeMonitor::stackedTimer_ = Teuchos::rcp(new Teuchos::StackedTimer("Teuchos::StackedTimer"));
-  
+  Teuchos::RCP<Teuchos::StackedTimer> TimeMonitor::stackedTimer_ = Teuchos::null;
+
   TimeMonitor::TimeMonitor (Time& timer, bool reset)
     : PerformanceMonitorBase<Time>(timer, reset)
   {
@@ -1386,7 +1386,7 @@ namespace Teuchos {
   bool TimeMonitor::alwaysWriteLocal_ = false;
   bool TimeMonitor::writeGlobalStats_ = true;
   bool TimeMonitor::writeZeroTimers_ = true;
-  
+
   void
   TimeMonitor::setReportFormatParameter (ParameterList& plist)
   {
@@ -1465,8 +1465,10 @@ namespace Teuchos {
   }
 
   Teuchos::RCP<Teuchos::StackedTimer>
-  TimeMonitor::getStackedTimer()
+  TimeMonitor::getStackedTimer(bool constructIfNull)
   {
+    if (stackedTimer_.is_null() && constructIfNull)
+      stackedTimer_ = Teuchos::rcp(new Teuchos::StackedTimer("Teuchos::StackedTimer"));
     return stackedTimer_;
   }
 

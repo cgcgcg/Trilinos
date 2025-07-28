@@ -604,8 +604,10 @@ public:
   /// \param t [in/out] StackedTimer object.
   static void setStackedTimer(const Teuchos::RCP<Teuchos::StackedTimer>& t);
 
-  //! The StackedTimer used by the TimeMonitor.
-  static Teuchos::RCP<Teuchos::StackedTimer> getStackedTimer();
+  /// \brief The StackedTimer used by the TimeMonitor.
+  //
+  // \param constructIfNull [in] Construct a new stacked timer if none has been set up.
+  static Teuchos::RCP<Teuchos::StackedTimer> getStackedTimer(bool constructIfNull=true);
 
  private:
   /// \brief Valid output formats for report().
@@ -730,7 +732,7 @@ public:
 protected:
   /// \brief Stacked timer for optional injection of timing from
   ///   TimeMonitor-enabled objects.
-  static Teuchos::RCP<Teuchos::StackedTimer> stackedTimer_; 
+  static Teuchos::RCP<Teuchos::StackedTimer> stackedTimer_;
 };
 
 

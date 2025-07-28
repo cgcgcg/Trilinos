@@ -310,9 +310,9 @@ TEUCHOS_UNIT_TEST(StackedTimer, TimeMonitorInteroperability)
   const auto gmresTimer = Teuchos::TimeMonitor::getNewTimer("GMRES");
 
   // Test the set and get stacked timer methods on TimeMonitor
-  const auto timeMonitorDefaultStackedTimer = Teuchos::TimeMonitor::getStackedTimer();
-  const auto timer = Teuchos::rcp(new Teuchos::StackedTimer("TM:Interoperability"));
+  auto timeMonitorDefaultStackedTimer = Teuchos::TimeMonitor::getStackedTimer(true);
   TEST_ASSERT(nonnull(timeMonitorDefaultStackedTimer));
+  const auto timer = Teuchos::rcp(new Teuchos::StackedTimer("TM:Interoperability"));
   TEST_ASSERT(nonnull(timer));
   TEST_ASSERT(timeMonitorDefaultStackedTimer != timer);
   Teuchos::TimeMonitor::setStackedTimer(timer);
@@ -619,7 +619,7 @@ TEUCHOS_UNIT_TEST(StackedTimer, OverlappingTimersViaRCP)
   Teuchos::RCP<Teuchos::TimeMonitor> timer = Teuchos::rcp(new Teuchos::TimeMonitor(*precTimer));
   timer = Teuchos::rcp(new Teuchos::TimeMonitor(*gmresTimer));
 
-  TEST_ASSERT(is_null(Teuchos::TimeMonitor::getStackedTimer()));
+  TEST_ASSERT(is_null(Teuchos::TimeMonitor::getStackedTimer(false)));
 }
 #endif
 
