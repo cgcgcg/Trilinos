@@ -71,7 +71,7 @@ namespace {
             "ordering of timer creation and destuction or disable the StackedTimer\n";
     std::cout << warning.str() << std::endl;
   }
-    
+
 }// anonymous space
 
 
@@ -82,52 +82,56 @@ namespace Details {
     Teuchos::RCP<Teuchos::Time> timer_;
     bool initialized_ = false;
 
-    void kokkosp_begin_deep_copy(Kokkos::Tools::SpaceHandle dst_handle, const char* dst_name, const void* dst_ptr,                                 
+    void kokkosp_begin_deep_copy(Kokkos::Tools::SpaceHandle dst_handle, const char* dst_name, const void* dst_ptr,
                                  Kokkos::Tools::SpaceHandle src_handle, const char* src_name, const void* src_ptr,
-                                 uint64_t size) {      
+                                 uint64_t size) {
       // In verbose mode, we add the src/dst names as well
       std::string extra_label;
       if(Tpetra::Details::Behavior::timeKokkosDeepCopyVerbose1()) {
         extra_label = std::string(" {") + src_name + "=>" + dst_name + "}";
       } else if(Tpetra::Details::Behavior::timeKokkosDeepCopyVerbose2()) {
         extra_label = std::string(" {") + src_name + "=>" + dst_name + "," + std::to_string(size)+"}";
-      }    
+      }
 
       if(timer_ != Teuchos::null)
         std::cout << "WARNING: Kokkos::deep_copy() started within another Kokkos::deep_copy().  Timers will be in error"<<std::endl;
 
-      // If the src_name is "Scalar" or "(none)" then we're doing a "Fill" style copy from host to devices, which we want to record separately.  
-      if(!strcmp(src_name,"Scalar") || !strcmp(src_name,"(none)")) 
+      // If the src_name is "Scalar" or "(none)" then we're doing a "Fill" style copy from host to devices, which we want to record separately.
+      if(!strcmp(src_name,"Scalar") || !strcmp(src_name,"(none)"))
         timer_ = Teuchos::TimeMonitor::getNewTimer(std::string("Kokkos::deep_copy_scalar [")+src_handle.name+"=>"+dst_handle.name+"]" + extra_label);
       // If the size is under 65 bytes, we're going to flag this as "small" to make it easier to watch the big stuff
       else if(size <= 64)
         timer_ = Teuchos::TimeMonitor::getNewTimer(std::string("Kokkos::deep_copy_small [")+src_handle.name+"=>"+dst_handle.name+"]" + extra_label);
       else
         timer_ = Teuchos::TimeMonitor::getNewTimer(std::string("Kokkos::deep_copy [")+src_handle.name+"=>"+dst_handle.name+"]" + extra_label);
-      timer_->start();
       timer_->incrementNumCalls();
 #ifdef HAVE_TEUCHOS_ADD_TIME_MONITOR_TO_STACKED_TIMER
-      const auto stackedTimer = Teuchos::TimeMonitor::getStackedTimer();
+      const auto stackedTimer = Teuchos::TimeMonitor::getStackedTimer(false);
       if (nonnull(stackedTimer))
         stackedTimer->start(timer_->name());
+      else
 #endif
+        timer_->start();
     }
 
     void kokkosp_end_deep_copy() {
       if (timer_ != Teuchos::null) {
-        timer_->stop();
 #ifdef HAVE_TEUCHOS_ADD_TIME_MONITOR_TO_STACKED_TIMER
         try {
-          const auto stackedTimer = Teuchos::TimeMonitor::getStackedTimer();
+          const auto stackedTimer = Teuchos::TimeMonitor::getStackedTimer(false);
           if (nonnull(stackedTimer))
             stackedTimer->stop(timer_->name());
+          else
+            timer_->stop();
         }
         catch (std::runtime_error&) {
           overlappingWarning();
           Teuchos::TimeMonitor::setStackedTimer(Teuchos::null);
         }
+#else
+        timer_->stop();
 #endif
-      }      
+      }
       timer_ = Teuchos::null;
     }
 
@@ -144,7 +148,7 @@ namespace Details {
     }
   }
 
-  
+
   namespace FenceTimerInjection {
     Teuchos::RCP<Teuchos::Time> timer_;
     bool initialized_ = false;
@@ -155,41 +159,44 @@ namespace Details {
 
       // Nested fences are not allowed
       if(timer_ != Teuchos::null)
-        return;        
+        return;
       active_handle = (active_handle+1) % 1024;
       *handle = active_handle;
 
       std::string device_label = deviceIdToString(deviceId);
 
       timer_ = Teuchos::TimeMonitor::getNewTimer(std::string("Kokkos::fence ")+name + " " + device_label);
-      timer_->start();
       timer_->incrementNumCalls();
 #ifdef HAVE_TEUCHOS_ADD_TIME_MONITOR_TO_STACKED_TIMER
-      const auto stackedTimer = Teuchos::TimeMonitor::getStackedTimer();
+      const auto stackedTimer = Teuchos::TimeMonitor::getStackedTimer(false);
       if (nonnull(stackedTimer))
         stackedTimer->start(timer_->name());
+      else
 #endif
-      
+        timer_->start();
     }
 
 
     void kokkosp_end_fence(const uint64_t handle) {
       if(handle == active_handle) {
         if (timer_ != Teuchos::null) {
-          timer_->stop();
 #ifdef HAVE_TEUCHOS_ADD_TIME_MONITOR_TO_STACKED_TIMER
           try {
-            const auto stackedTimer = Teuchos::TimeMonitor::getStackedTimer();
+            const auto stackedTimer = Teuchos::TimeMonitor::getStackedTimer(false);
             if (nonnull(stackedTimer))
               stackedTimer->stop(timer_->name());
+            else
+              timer_->stop();
           }
           catch (std::runtime_error&) {
             overlappingWarning();
             Teuchos::TimeMonitor::setStackedTimer(Teuchos::null);
           }
+#else
+          timer_->stop();
 #endif
-        }        
-        timer_ = Teuchos::null;        
+        }
+        timer_ = Teuchos::null;
       }
       // Else: We've nested our fences, and we need to ignore the inner fences
     }
@@ -216,18 +223,18 @@ namespace Details {
                               uint64_t* kernelID) {
       // Nested fences are not allowed
       if(timer_ != Teuchos::null)
-        return;        
+        return;
       std::string device_label = deviceIdToString(devID);
 
       timer_ = Teuchos::TimeMonitor::getNewTimer(std::string("Kokkos::")+ kernelName + " " +kernelPrefix + " " + device_label);
-      timer_->start();
       timer_->incrementNumCalls();
 #ifdef HAVE_TEUCHOS_ADD_TIME_MONITOR_TO_STACKED_TIMER
-      const auto stackedTimer = Teuchos::TimeMonitor::getStackedTimer();
+      const auto stackedTimer = Teuchos::TimeMonitor::getStackedTimer(false);
       if (nonnull(stackedTimer))
         stackedTimer->start(timer_->name());
+      else
 #endif
-      
+        timer_->start();
     }
 
     void kokkosp_begin_for(const char* kernelPrefix, const uint32_t devID, uint64_t* kernelID) {
@@ -241,24 +248,27 @@ namespace Details {
     void kokkosp_begin_reduce(const char* kernelPrefix, const uint32_t devID, uint64_t* kernelID) {
       kokkosp_begin_kernel("parallel_reduce",kernelPrefix,devID,kernelID);
     }
-                              
+
     void kokkosp_end_kernel(const uint64_t handle) {
       if (timer_ != Teuchos::null) {
-        timer_->stop();
 #ifdef HAVE_TEUCHOS_ADD_TIME_MONITOR_TO_STACKED_TIMER
         try {
-          const auto stackedTimer = Teuchos::TimeMonitor::getStackedTimer();
+          const auto stackedTimer = Teuchos::TimeMonitor::getStackedTimer(false);
           if (nonnull(stackedTimer))
             stackedTimer->stop(timer_->name());
+          else
+            timer_->stop();
         }
         catch (std::runtime_error&) {
           overlappingWarning();
           Teuchos::TimeMonitor::setStackedTimer(Teuchos::null);
         }
+#else
+        timer_->stop();
 #endif
       }
-      
-      timer_ = Teuchos::null;      
+
+      timer_ = Teuchos::null;
     }
   }//end FunctionsInjection
 
@@ -282,4 +292,3 @@ namespace Details {
 
 } // namespace Details
 } // namespace Tpetra
-
