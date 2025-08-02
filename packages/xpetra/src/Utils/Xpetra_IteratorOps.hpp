@@ -64,7 +64,42 @@ void Jacobi(
     const Tpetra::CrsMatrix<SC, LO, GO, NO>& tpB    = Xpetra::Helpers<SC, LO, GO, NO>::Op2TpetraCrs(B);
     Tpetra::CrsMatrix<SC, LO, GO, NO>& tpC          = Xpetra::Helpers<SC, LO, GO, NO>::Op2NonConstTpetraCrs(C);
     const RCP<Tpetra::Vector<SC, LO, GO, NO> >& tpD = toTpetra(Dinv);
-    Tpetra::MatrixMatrix::Jacobi(omega, *tpD, tpA, tpB, tpC, haveMultiplyDoFillComplete, label, params);
+    if (false) {
+      Tpetra::MatrixMatrix::Jacobi(omega, *tpD, tpA, tpB, tpC, haveMultiplyDoFillComplete, label, params);
+    } else {
+      using tpCrsType   = Tpetra::CrsMatrix<SC, LO, GO, NO>;
+      using values_type = typename Tpetra::CrsMatrix<SC, LO, GO, NO>::values_device_view_type::non_const_type;
+
+      // Build S := I-omega*invD*A
+      auto tpS = tpCrsType(tpA, Teuchos::Copy);
+      {
+        using scalar_type     = typename values_type::non_const_value_type;
+        using KAT             = typename Kokkos::ArithTraits<scalar_type>;
+        using execution_space = typename tpCrsType::execution_space;
+        using range_type      = Kokkos::RangePolicy<execution_space, LocalOrdinal>;
+        const auto one        = KAT::one();
+
+        auto lclDinv = tpD->getLocalViewDevice(Tpetra::Access::ReadOnly);
+        auto lclS    = tpS.getLocalMatrixDevice();
+        Kokkos::parallel_for(
+            "Xpetra::IteratorOps::Jacobi::scale",
+            range_type(0, lclS.numRows()),
+            KOKKOS_LAMBDA(const LocalOrdinal rlid) {
+              auto omegaInvD = omega * lclDinv(rlid, 0);
+              auto row       = lclS.row(rlid);
+              for (LocalOrdinal k = 0; k < row.length; ++k) {
+                auto clid = row.colidx(k);
+                if (rlid == clid) {
+                  row.value(k) = one - omegaInvD * row.value(k);
+                } else {
+                  row.value(k) = -omegaInvD * row.value(k);
+                }
+              }
+            });
+      }
+
+      Tpetra::MatrixMatrix::Multiply(tpS, false, tpB, false, tpC, haveMultiplyDoFillComplete, label, params);
+    }
 #else
     throw(Xpetra::Exceptions::RuntimeError("Xpetra must be compiled with Tpetra."));
 #endif
