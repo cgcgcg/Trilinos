@@ -1978,15 +1978,18 @@ void performSymbolicPhase(const Teuchos::RCP<const typename BlockHelperDetails::
     const auto dommap = g->getDomainMap();
     TEUCHOS_ASSERT(!(rowmap.is_null() || colmap.is_null() || dommap.is_null()));
 
+    auto lclRowMap = rowmap->getLocalMap();
+    auto lclColMap = colmap->getLocalMap();
+
 #if !defined(__CUDA_ARCH__) && !defined(__HIP_DEVICE_COMPILE__) && !defined(__SYCL_DEVICE_ONLY__)
     const Kokkos::RangePolicy<host_execution_space> policy(0, nrows);
     Kokkos::parallel_for(
         "performSymbolicPhase::RangePolicy::col2row",
         policy, KOKKOS_LAMBDA(const local_ordinal_type &lr) {
-          const global_ordinal_type gid = rowmap->getGlobalElement(lr);
+          const global_ordinal_type gid = lclRowMap.getGlobalElement(lr);
           TEUCHOS_ASSERT(gid != Teuchos::OrdinalTraits<global_ordinal_type>::invalid());
           if (dommap->isNodeGlobalElement(gid)) {
-            const local_ordinal_type lc = colmap->getLocalElement(gid);
+            const local_ordinal_type lc = lclColMap.getLocalElement(gid);
 #if defined(BLOCKTRIDICONTAINER_DEBUG)
             TEUCHOS_TEST_FOR_EXCEPT_MSG(lc == Teuchos::OrdinalTraits<local_ordinal_type>::invalid(),
                                         BlockHelperDetails::get_msg_prefix(comm) << "GID " << gid
