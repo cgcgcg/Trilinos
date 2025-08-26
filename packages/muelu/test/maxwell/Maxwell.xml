@@ -5,10 +5,18 @@
   <Parameter name="refmaxwell: mode" type="string" value="additive"/>
   <Parameter name="refmaxwell: disable addon" type="bool" value="false"/>
   <Parameter name="refmaxwell: dump matrices" type="bool" value="false"/>
-  <Parameter name="refmaxwell: subsolves on subcommunicators" type="bool" value="false"/>
+  <Parameter name="refmaxwell: subsolves on subcommunicators" type="bool" value="true"/>
   <Parameter name="refmaxwell: enable reuse" type="bool" value="true"/>
 
   <Parameter name="aggregation: drop tol" type="double" value="0.01"/>
+
+  <ParameterList name="refmaxwell: ImporterCoarse11 params">
+    <Parameter name="Send type" type="string" value="Ialltofewv"/>
+  </ParameterList>
+
+  <ParameterList name="refmaxwell: Importer22 params">
+    <Parameter name="Send type" type="string" value="Ialltofewv"/>
+  </ParameterList>
 
   <Parameter name="smoother: type" type="string" value="RELAXATION"/>
   <ParameterList name="smoother: params">

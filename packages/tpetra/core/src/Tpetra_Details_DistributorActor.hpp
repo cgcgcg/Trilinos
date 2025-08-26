@@ -592,6 +592,7 @@ void DistributorActor::doPostRecvsImpl(const DistributorPlan& plan,
 
   // These send options require no matching receives, so we just return.
   const Details::EDistributorSendType sendType = plan.getSendType();
+  std::cout << plan.getComm()->getRank () << ": " << Details::DistributorSendTypeEnumToString(sendType) << std::endl;
   if ((sendType == Details::DISTRIBUTOR_ALLTOALL)
       || (sendType == Details::DISTRIBUTOR_IALLTOFEWV)
 #ifdef HAVE_TPETRACORE_MPI_ADVANCE

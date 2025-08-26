@@ -173,6 +173,10 @@ RefMaxwell<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 
   ParameterList &matvecParams = params->sublist("matvec params");
   matvecParams.disableRecursiveValidation();
+  ParameterList &importer11Params = params->sublist("refmaxwell: ImporterCoarse11 params");
+  importer11Params.disableRecursiveValidation();
+  ParameterList &importer22Params = params->sublist("refmaxwell: Importer22 params");
+  importer22Params.disableRecursiveValidation();
 
   params->set("multigrid algorithm", "unsmoothed");
   params->set("aggregation: type", MasterList::getDefault<std::string>("aggregation: type"));
