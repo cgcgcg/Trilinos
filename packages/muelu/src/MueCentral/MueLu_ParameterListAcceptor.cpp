@@ -10,6 +10,7 @@
 #include <iostream>
 
 #include "MueLu_ParameterListAcceptor.hpp"
+#include "Teuchos_TimeMonitor.hpp"
 
 // TODO See also: Teuchos::ParameterListAcceptor, Teko::Clonable
 
@@ -37,7 +38,11 @@ void ParameterListAcceptorImpl::SetParameterList(const Teuchos::ParameterList& p
   paramList_.setParameters(paramList);
 
   // Validate and add defaults parameters.
-  Teuchos::RCP<const Teuchos::ParameterList> validParamList = GetValidParameterList();
+  Teuchos::RCP<const Teuchos::ParameterList> validParamList;
+  {
+    Teuchos::RCP<Teuchos::TimeMonitor> tM = Teuchos::rcp(new Teuchos::TimeMonitor(*Teuchos::TimeMonitor::getNewTimer(std::string("GetValidParameterList"))));
+    validParamList                        = GetValidParameterList();
+  }
   if (validParamList != Teuchos::null) {
     paramList_.validateParametersAndSetDefaults(*validParamList);
   } else {
