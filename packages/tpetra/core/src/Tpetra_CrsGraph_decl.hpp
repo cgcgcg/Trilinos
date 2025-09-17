@@ -2324,8 +2324,10 @@ public:
     /// 
     /// UVM Removal Note:   Device view takes place of k_gblInds1D_
 
+  public:
     // TODO: Make private -- matrix shouldn't access directly
     global_inds_wdv_type gblInds_wdv;
+  protected:
 
     /// \brief Get a const, locally indexed view of the
     ///   locally owned row myRow, such that rowinfo =
