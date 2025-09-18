@@ -1,0 +1,16 @@
+# Enforces rules on commit messages
+# https://github.com/jorisroovers/gitlint
+
+[general]
+# Ignore rules, reference them by id or name (comma-separated)
+ignore=title-trailing-punctuation, T3, T5, B6
+
+# Enable specific community contributed rules
+contrib=contrib-body-requires-signed-off-by
+
+### Configuring rules ###
+[title-max-length]
+line-length=120
+
+[title-min-length]
+min-length=1
