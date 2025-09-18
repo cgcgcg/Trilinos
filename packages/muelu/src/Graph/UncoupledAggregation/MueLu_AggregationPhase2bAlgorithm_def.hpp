@@ -136,6 +136,9 @@ class CountUnggregatedByColor {
   using value_type = LO[];
   LO value_count;
 
+
+dasld;
+
   CountUnggregatedByColor(AggStatType& aggStat_, ColorsType& colors_, LO numColors_)
     : aggStat(aggStat_)
     , colors(colors_)
