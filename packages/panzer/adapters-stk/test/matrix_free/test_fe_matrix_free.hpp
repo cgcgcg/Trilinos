@@ -1166,6 +1166,7 @@ SolveMetrics feAssemblyHex(const int &degree,
 
   stacked_timer->stop("Matrix-free driver");
   
+  double mfOrientationsTime = 0;
   {
     std::string computeDiagonalTimerLabel = "matrix-free computeDiagonal (not really matrix-free yet)";
     Teuchos::stat_map_type statData;
@@ -1180,6 +1181,34 @@ SolveMetrics feAssemblyHex(const int &degree,
     else
     {
       solveMetrics.matrixFreeExtractDiagonalTime = -1;
+    }
+    std::string orientationsNoTransposeLabel = "Mini-EM: matrix-free apply no_trans orientations";
+    Teuchos::TimeMonitor::computeGlobalTimerStatistics(statData, statNames, Teuchos::Intersection, orientationsNoTransposeLabel);
+    
+    if (statData[orientationsNoTransposeLabel].size() > 0)
+    {
+      const double timeInSeconds = statData[orientationsNoTransposeLabel][0].first;
+      mfOrientationsTime += timeInSeconds;
+    }
+    
+    std::string orientationsTransposeLabel = "Mini-EM: matrix-free apply trans orientations";
+    Teuchos::TimeMonitor::computeGlobalTimerStatistics(statData, statNames, Teuchos::Intersection, orientationsTransposeLabel);
+    if (statData[orientationsTransposeLabel].size() > 0)
+    {
+      mfOrientationsTime += statData[orientationsTransposeLabel][0].first;
+    }
+    std::string orientationsLeftLabel = "PAMatrix apply orientations left";
+    Teuchos::TimeMonitor::computeGlobalTimerStatistics(statData, statNames, Teuchos::Intersection, orientationsLeftLabel);
+    if (statData[orientationsLeftLabel].size() > 0)
+    {
+      mfOrientationsTime += statData[orientationsLeftLabel][0].first;
+    }
+    
+    std::string orientationsRightLabel = "PAMatrix apply orientations right";
+    Teuchos::TimeMonitor::computeGlobalTimerStatistics(statData, statNames, Teuchos::Intersection, orientationsRightLabel);
+    if (statData[orientationsRightLabel].size() > 0)
+    {
+      mfOrientationsTime += statData[orientationsRightLabel][0].first;
     }
   }
   
@@ -1210,7 +1239,8 @@ SolveMetrics feAssemblyHex(const int &degree,
   *outStream << "Matrix-Free total:       " << solveMetrics.matrixFreeTotalTime << " seconds." << std::endl;
   *outStream << "Overall speedup:         " << solveMetrics.assembledTotalTime / solveMetrics.matrixFreeTotalTime << std::endl << std::endl;
   
-  *outStream << "Time to compute the diagonal for matrix-free (part of setup) " << solveMetrics.matrixFreeExtractDiagonalTime << " seconds." << std::endl << std::endl;
+  *outStream << "Time to compute the diagonal for matrix-free (part of setup): " << solveMetrics.matrixFreeExtractDiagonalTime << " seconds." << std::endl << std::endl;
+  *outStream << "Time to apply orientations for matrix-free: " << mfOrientationsTime << " seconds." << std::endl << std::endl;
   
   if (! solveMetrics.assembledSolveSuccess)
   {

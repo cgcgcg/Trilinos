@@ -1230,6 +1230,8 @@ void PAMatrix<DeviceType,Scalar>::apply(const OutputViewType &outputVector,
     DynScratchView workspace3, workspace4, workspace5;
     if (_orientations.size() > 0)
     {
+      Teuchos::TimeMonitor orientationTimer = *Teuchos::TimeMonitor::getNewTimer("PAMatrix apply orientations right");
+      
       int work_offset = workspace1_size + workspace2_size;
       workspace3 = DynScratchView(workspace.data() + work_offset, Cw, F2, N);
       work_offset += workspace3_size;
@@ -1441,6 +1443,7 @@ void PAMatrix<DeviceType,Scalar>::apply(const OutputViewType &outputVector,
       auto orientationsWorkset = Kokkos::subview(_orientations, cellRange);
       for (int n=0; n<N; n++)
       {
+        Teuchos::TimeMonitor orientationTimer = *Teuchos::TimeMonitor::getNewTimer("PAMatrix apply orientations left");
         auto outputVectorWorkset_n = Kokkos::subview( outputVector,   cellRange, Kokkos::ALL, n);
         auto workspace4_n          = Kokkos::subview( workspace4,   Kokkos::ALL, Kokkos::ALL, n);
         auto workspace5_n          = Kokkos::subview( workspace5,   Kokkos::ALL, Kokkos::ALL, n);
@@ -1476,6 +1479,7 @@ void PAMatrix<DeviceType,Scalar>::assemble(Data<Scalar,DeviceType> &integrals) c
   
   if (_orientations.size() > 0)
   {
+    Teuchos::TimeMonitor orientationTimer = *Teuchos::TimeMonitor::getNewTimer("PAMatrix assembled matrix apply orientations");
     // modify integrals by orientations -- we are NOT allowed to use the same view as source and result, so let's create a mirror view for source.
     auto unorientatedValues = Kokkos::create_mirror_view_and_copy(MemorySpace(), integrals.getUnderlyingView());
     OrientationTools<DeviceType>::modifyMatrixByOrientation(integrals.getUnderlyingView(), unorientatedValues,
