@@ -139,6 +139,11 @@ StackedTimer::collectRemoteData(Teuchos::RCP<const Teuchos::Comm<int> > comm, co
     per_proc_stddev_max_.resize(num_names);
   }
 
+  if (options.output_per_proc_minmax) {
+    per_proc_min_.resize(num_names);
+    per_proc_max_.resize(num_names);
+  }
+
   // Temp data
   Array<double> time(num_names);
   Array<unsigned long> count(num_names);
@@ -148,8 +153,14 @@ StackedTimer::collectRemoteData(Teuchos::RCP<const Teuchos::Comm<int> > comm, co
   Array<int> used(num_names);
   Array<int> bins;
   Array<double> per_proc_stddev;
+  Array<double> per_proc_min;
+  Array<double> per_proc_max;
   if (options.output_per_proc_stddev)
     per_proc_stddev.resize(num_names);
+  if (options.output_per_proc_minmax) {
+    per_proc_min.resize(num_names);
+    per_proc_max.resize(num_names);
+  }
 
   if (options.output_histogram)
     bins.resize(num_names);
@@ -165,6 +176,10 @@ StackedTimer::collectRemoteData(Teuchos::RCP<const Teuchos::Comm<int> > comm, co
       updates[i] = t.updates;
     if (options.output_per_proc_stddev)
       per_proc_stddev[i] = t.stdDev;
+    if (options.output_per_proc_minmax) {
+      per_proc_min[i] = t.minPerCall;
+      per_proc_max[i] = t.maxPerCall;
+    }
   }
 
   // Now reduce the data
@@ -233,6 +248,11 @@ StackedTimer::collectRemoteData(Teuchos::RCP<const Teuchos::Comm<int> > comm, co
   if (options.output_per_proc_stddev) {
     reduceAll(*comm, REDUCE_MIN, num_names, per_proc_stddev.getRawPtr(), per_proc_stddev_min_.getRawPtr());
     reduceAll(*comm, REDUCE_MAX, num_names, per_proc_stddev.getRawPtr(), per_proc_stddev_max_.getRawPtr());
+  }
+
+  if (options.output_per_proc_minmax) {
+    reduceAll(*comm, REDUCE_MIN, num_names, per_proc_min.getRawPtr(), per_proc_min_.getRawPtr());
+    reduceAll(*comm, REDUCE_MAX, num_names, per_proc_max.getRawPtr(), per_proc_max_.getRawPtr());
   }
 
 }
@@ -535,6 +555,15 @@ StackedTimer::printLevel (std::string prefix, int print_level, std::ostream &os,
       tmp << per_proc_stddev_min_[i];
       tmp << "/";
       tmp << per_proc_stddev_max_[i];
+      os << tmp.str();
+    }
+
+    if (options.output_per_proc_minmax) {
+      std::ostringstream tmp;
+      tmp << ", min/max call=";
+      tmp << per_proc_min_[i];
+      tmp << "/";
+      tmp << per_proc_max_[i];
       os << tmp.str();
     }
 

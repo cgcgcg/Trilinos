@@ -60,7 +60,7 @@ public:
 
   using Clock = std::chrono::high_resolution_clock;
 
-  BaseTimer() : accumulation_(0.0), accumulationSquared_(0.0), count_started_(0), count_updates_(0), running_(false) {}
+  BaseTimer() : accumulation_(0.0), accumulationSquared_(0.0), min_(std::numeric_limits<double>::max()), max_(0), count_started_(0), count_updates_(0), running_(false) {}
 
   /// Start a currently stopped timer
   void start(){
@@ -79,6 +79,8 @@ public:
     auto elapsed = std::chrono::duration_cast<std::chrono::duration<double>>(Clock::now() - start_time_).count();
     accumulation_ += elapsed;
     accumulationSquared_ += elapsed*elapsed;
+    min_ = std::min(min_, elapsed);
+    max_ = std::max(max_, elapsed);
     running_ = false;
   }
 
@@ -142,6 +144,14 @@ public:
     }
   }
 
+  double minTimePerCall() const {
+    return min_;
+  }
+
+  double maxTimePerCall() const {
+    return max_;
+  }
+
   /**
    * \brief  Return the difference between two timers in seconds,
    * @param [in] from reference time you are computing difference from
@@ -179,9 +189,11 @@ public:
 
   struct TimeInfo {
     TimeInfo():time(0.0), stdDev(0.0), count(0), updates(0), running(false){}
-    TimeInfo(BaseTimer* t): time(t->accumulation_), stdDev(t->timePerCallStdDev()), count(t->count_started_), updates(t->count_updates_), running(t->running()) {}
+    TimeInfo(BaseTimer* t): time(t->accumulation_), stdDev(t->timePerCallStdDev()), minPerCall(t->minTimePerCall()), maxPerCall(t->maxTimePerCall()), count(t->count_started_), updates(t->count_updates_), running(t->running()) {}
     double time;
     double stdDev;
+    double minPerCall;
+    double maxPerCall;
     unsigned long count;
     unsigned long long updates;
     bool running;
@@ -190,6 +202,8 @@ public:
 protected:
   double accumulation_;       // total time
   double accumulationSquared_;  // Sum of squares of elapsed times
+  double min_;
+  double max_;
   unsigned long count_started_; // Number of times this timer has been started
   unsigned long long count_updates_; // Total count of items updated during this timer
   Clock::time_point start_time_;
@@ -707,7 +721,7 @@ public:
     OutputOptions() : output_fraction(false), output_total_updates(false), output_histogram(false),
                       output_minmax(false), output_proc_minmax(false), num_histogram(10), max_levels(INT_MAX),
                       print_warnings(true), align_columns(false), print_names_before_values(true),
-                      drop_time(-1.0), output_per_proc_stddev(false) {}
+                      drop_time(-1.0), output_per_proc_stddev(false), output_per_proc_minmax(false) {}
     bool output_fraction;
     bool output_total_updates;
     bool output_histogram;
@@ -720,6 +734,7 @@ public:
     bool print_names_before_values;
     double drop_time;
     bool output_per_proc_stddev;
+    bool output_per_proc_minmax;
   };
 
   /**
@@ -845,6 +860,8 @@ protected:
   Array<Array<int>> hist_;
   Array<double> per_proc_stddev_min_;
   Array<double> per_proc_stddev_max_;
+  Array<double> per_proc_min_;
+  Array<double> per_proc_max_;
   Array<unsigned long> count_;
   Array<unsigned long long> updates_;
   Array<int> active_;
