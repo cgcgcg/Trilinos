@@ -9,12 +9,10 @@
         <link rel="stylesheet" type="text/css"
    	  href="common/parameterList/trilinos-bootstrap.css" />
 
-        <script type="text/javascript"
-         src="common/parameterList/js/jquery.js"></script>
+        <script type="text/javascript" src="$relpath^jquery.js"></script>
         <script type="text/javascript"
          src="common/parameterList/js/iframeResizer.contentWindow.min.js"></script>
-        <script type="text/javascript"
-         src="common/parameterList/bootstrap/js/bootstrap.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
         <script type="text/javascript">
    $('.accordion-toggle').click(function(){
            $("i", this).toggleClass("t-icon-arrow-right t-icon-arrow-down");
