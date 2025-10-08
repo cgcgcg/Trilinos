@@ -7,29 +7,22 @@
 // *****************************************************************************
 // @HEADER
 
-#ifndef GALERI_STENCILPROBLEMS_HPP
-#define GALERI_STENCILPROBLEMS_HPP
+#ifndef GALERI_STENCILPROBLEMS_DEF_HPP
+#define GALERI_STENCILPROBLEMS_DEF_HPP
+
+#include "Galeri_StencilProblems_decl.hpp"
 
 #include <Teuchos_RCP.hpp>
 
-#include "Galeri_Problem.hpp"
 #include "Galeri_XpetraMatrixTypes.hpp"
 #include "Galeri_XpetraUtils.hpp"
 
-namespace Galeri {
-
-namespace Xpetra {
+namespace Galeri::Xpetra {
 
 // =============================================  Scalar Problem =========================================
 template <typename Map, typename Matrix, typename MultiVector>
-class ScalarProblem : public Problem<Map, Matrix, MultiVector> {
- public:
-  using RealValuedMultiVector = typename Problem<Map, Matrix, MultiVector>::RealValuedMultiVector;
-
-  ScalarProblem(Teuchos::ParameterList& list, const Teuchos::RCP<const Map>& map)
+ScalarProblem<Map, Matrix, MultiVector>::ScalarProblem(Teuchos::ParameterList& list, const Teuchos::RCP<const Map>& map)
     : Problem<Map, Matrix, MultiVector>(list, map) {}
-  Teuchos::RCP<MultiVector> BuildNullspace();
-};
 
 template <typename Map, typename Matrix, typename MultiVector>
 Teuchos::RCP<MultiVector> ScalarProblem<Map, Matrix, MultiVector>::BuildNullspace() {
@@ -40,15 +33,8 @@ Teuchos::RCP<MultiVector> ScalarProblem<Map, Matrix, MultiVector>::BuildNullspac
 
 // =============================================  Laplace1D  =============================================
 template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Map, typename Matrix, typename MultiVector>
-class Laplace1DProblem : public ScalarProblem<Map, Matrix, MultiVector> {
- public:
-  using RealValuedMultiVector = typename Problem<Map, Matrix, MultiVector>::RealValuedMultiVector;
-
-  Laplace1DProblem(Teuchos::ParameterList& list, const Teuchos::RCP<const Map>& map)
+Laplace1DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix, MultiVector>::Laplace1DProblem(Teuchos::ParameterList& list, const Teuchos::RCP<const Map>& map)
     : ScalarProblem<Map, Matrix, MultiVector>(list, map) {}
-  Teuchos::RCP<Matrix> BuildMatrix();
-  Teuchos::RCP<RealValuedMultiVector> BuildCoords();
-};
 
 template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Map, typename Matrix, typename MultiVector>
 Teuchos::RCP<Matrix> Laplace1DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix, MultiVector>::BuildMatrix() {
@@ -99,15 +85,9 @@ Teuchos::RCP<typename Problem<Map, Matrix, MultiVector>::RealValuedMultiVector> 
 
 // =============================================  Laplace2D  =============================================
 template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Map, typename Matrix, typename MultiVector>
-class Laplace2DProblem : public ScalarProblem<Map, Matrix, MultiVector> {
- public:
-  using RealValuedMultiVector = typename Problem<Map, Matrix, MultiVector>::RealValuedMultiVector;
+Laplace2DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix, MultiVector>::Laplace2DProblem(Teuchos::ParameterList& list, const Teuchos::RCP<const Map>& map)
+  : ScalarProblem<Map, Matrix, MultiVector>(list, map) {}
 
-  Laplace2DProblem(Teuchos::ParameterList& list, const Teuchos::RCP<const Map>& map)
-    : ScalarProblem<Map, Matrix, MultiVector>(list, map) {}
-  Teuchos::RCP<Matrix> BuildMatrix();
-  Teuchos::RCP<RealValuedMultiVector> BuildCoords();
-};
 
 template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Map, typename Matrix, typename MultiVector>
 Teuchos::RCP<Matrix> Laplace2DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix, MultiVector>::BuildMatrix() {
@@ -173,12 +153,9 @@ Teuchos::RCP<typename Problem<Map, Matrix, MultiVector>::RealValuedMultiVector> 
 
 // =============================================  AnisotropicDiffusion2DProblem  =============================================
 template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Map, typename Matrix, typename MultiVector>
-class AnisotropicDiffusion2DProblem : public ScalarProblem<Map, Matrix, MultiVector> {
- public:
-  AnisotropicDiffusion2DProblem(Teuchos::ParameterList& list, const Teuchos::RCP<const Map>& map)
-    : ScalarProblem<Map, Matrix, MultiVector>(list, map) {}
-  Teuchos::RCP<Matrix> BuildMatrix();
-};
+AnisotropicDiffusion2DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix, MultiVector>::AnisotropicDiffusion2DProblem(Teuchos::ParameterList& list, const Teuchos::RCP<const Map>& map)
+  : ScalarProblem<Map, Matrix, MultiVector>(list, map) {}
+
 
 template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Map, typename Matrix, typename MultiVector>
 Teuchos::RCP<Matrix> AnisotropicDiffusion2DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix, MultiVector>::BuildMatrix() {
@@ -299,15 +276,8 @@ Teuchos::RCP<Matrix> AnisotropicDiffusion2DProblem<Scalar, LocalOrdinal, GlobalO
 
 // =============================================  Laplace3D  =============================================
 template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Map, typename Matrix, typename MultiVector>
-class Laplace3DProblem : public ScalarProblem<Map, Matrix, MultiVector> {
- public:
-  using RealValuedMultiVector = typename Problem<Map, Matrix, MultiVector>::RealValuedMultiVector;
-
-  Laplace3DProblem(Teuchos::ParameterList& list, const Teuchos::RCP<const Map>& map)
+Laplace3DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix, MultiVector>::Laplace3DProblem(Teuchos::ParameterList& list, const Teuchos::RCP<const Map>& map)
     : ScalarProblem<Map, Matrix, MultiVector>(list, map) {}
-  Teuchos::RCP<Matrix> BuildMatrix();
-  Teuchos::RCP<RealValuedMultiVector> BuildCoords();
-};
 
 template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Map, typename Matrix, typename MultiVector>
 Teuchos::RCP<Matrix> Laplace3DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix, MultiVector>::BuildMatrix() {
@@ -385,12 +355,8 @@ Teuchos::RCP<typename Problem<Map, Matrix, MultiVector>::RealValuedMultiVector> 
 
 // =============================================  Star2D  =============================================
 template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Map, typename Matrix, typename MultiVector>
-class Star2DProblem : public ScalarProblem<Map, Matrix, MultiVector> {
- public:
-  Star2DProblem(Teuchos::ParameterList& list, const Teuchos::RCP<const Map>& map)
+Star2DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix, MultiVector>::Star2DProblem(Teuchos::ParameterList& list, const Teuchos::RCP<const Map>& map)
     : ScalarProblem<Map, Matrix, MultiVector>(list, map) {}
-  Teuchos::RCP<Matrix> BuildMatrix();
-};
 
 template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Map, typename Matrix, typename MultiVector>
 Teuchos::RCP<Matrix> Star2DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix, MultiVector>::BuildMatrix() {
@@ -430,12 +396,8 @@ Teuchos::RCP<Matrix> Star2DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, Mat
 
 // =============================================  BigStar2D  =============================================
 template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Map, typename Matrix, typename MultiVector>
-class BigStar2DProblem : public ScalarProblem<Map, Matrix, MultiVector> {
- public:
-  BigStar2DProblem(Teuchos::ParameterList& list, const Teuchos::RCP<const Map>& map)
+BigStar2DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix, MultiVector>::BigStar2DProblem(Teuchos::ParameterList& list, const Teuchos::RCP<const Map>& map)
     : ScalarProblem<Map, Matrix, MultiVector>(list, map) {}
-  Teuchos::RCP<Matrix> BuildMatrix();
-};
 
 template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Map, typename Matrix, typename MultiVector>
 Teuchos::RCP<Matrix> BigStar2DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix, MultiVector>::BuildMatrix() {
@@ -479,15 +441,9 @@ Teuchos::RCP<Matrix> BigStar2DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, 
 
 // =============================================  Brick3D  =============================================
 template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Map, typename Matrix, typename MultiVector>
-class Brick3DProblem : public ScalarProblem<Map, Matrix, MultiVector> {
- public:
-  using RealValuedMultiVector = typename Problem<Map, Matrix, MultiVector>::RealValuedMultiVector;
+Brick3DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix, MultiVector>::Brick3DProblem(Teuchos::ParameterList& list, const Teuchos::RCP<const Map>& map)
+  : ScalarProblem<Map, Matrix, MultiVector>(list, map) {}
 
-  Brick3DProblem(Teuchos::ParameterList& list, const Teuchos::RCP<const Map>& map)
-    : ScalarProblem<Map, Matrix, MultiVector>(list, map) {}
-  Teuchos::RCP<Matrix> BuildMatrix();
-  Teuchos::RCP<RealValuedMultiVector> BuildCoords();
-};
 
 template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Map, typename Matrix, typename MultiVector>
 Teuchos::RCP<Matrix> Brick3DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix, MultiVector>::BuildMatrix() {
@@ -553,15 +509,8 @@ Teuchos::RCP<typename Problem<Map, Matrix, MultiVector>::RealValuedMultiVector> 
 
 // =============================================  Identity  =============================================
 template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Map, typename Matrix, typename MultiVector>
-class IdentityProblem : public Problem<Map, Matrix, MultiVector> {
- public:
-  using RealValuedMultiVector = typename Problem<Map, Matrix, MultiVector>::RealValuedMultiVector;
-  IdentityProblem(Teuchos::ParameterList& list, const Teuchos::RCP<const Map>& map)
-    : Problem<Map, Matrix, MultiVector>(list, map) {}
-  Teuchos::RCP<Matrix> BuildMatrix();
-  Teuchos::RCP<MultiVector> BuildNullspace();
-  Teuchos::RCP<RealValuedMultiVector> BuildCoords();
-};
+IdentityProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix, MultiVector>::IdentityProblem(Teuchos::ParameterList& list, const Teuchos::RCP<const Map>& map)
+  : Problem<Map, Matrix, MultiVector>(list, map) {}
 
 template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Map, typename Matrix, typename MultiVector>
 Teuchos::RCP<Matrix> IdentityProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix, MultiVector>::BuildMatrix() {
@@ -620,12 +569,8 @@ Teuchos::RCP<typename Problem<Map, Matrix, MultiVector>::RealValuedMultiVector> 
 
 // =============================================  Recirc2D  =============================================
 template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Map, typename Matrix, typename MultiVector>
-class Recirc2DProblem : public ScalarProblem<Map, Matrix, MultiVector> {
- public:
-  Recirc2DProblem(Teuchos::ParameterList& list, const Teuchos::RCP<const Map>& map)
+Recirc2DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix, MultiVector>::Recirc2DProblem(Teuchos::ParameterList& list, const Teuchos::RCP<const Map>& map)
     : ScalarProblem<Map, Matrix, MultiVector>(list, map) {}
-  Teuchos::RCP<Matrix> BuildMatrix();
-};
 
 template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Map, typename Matrix, typename MultiVector>
 Teuchos::RCP<Matrix> Recirc2DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix, MultiVector>::BuildMatrix() {
@@ -734,8 +679,35 @@ Teuchos::RCP<Matrix> Recirc2DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, M
   return this->A_;
 }  // Recirc2DProblem
 
-}  // namespace Xpetra
+}  // namespace Galeri::Xpetra
 
-}  // namespace Galeri
 
-#endif  // GALERI_STENCILPROBLEMS_HPP
+#define GALERI_STENCILPROBLEMS_INSTANT_XPETRA(S, LO, GO, N) \
+  template class Galeri::Xpetra::ScalarProblem<Xpetra::Map<LO, GO, N>, Xpetra::CrsMatrixWrap<S, LO, GO, N>, Xpetra::MultiVector<S, LO, GO, N>>; \
+  template class Galeri::Xpetra::Laplace1DProblem<S, LO, GO, Xpetra::Map<LO, GO, N>, Xpetra::CrsMatrixWrap<S, LO, GO, N>, Xpetra::MultiVector<S, LO, GO, N>>; \
+  template class Galeri::Xpetra::Laplace2DProblem<S, LO, GO, Xpetra::Map<LO, GO, N>, Xpetra::CrsMatrixWrap<S, LO, GO, N>, Xpetra::MultiVector<S, LO, GO, N>>; \
+  template class Galeri::Xpetra::AnisotropicDiffusion2DProblem<S, LO, GO, Xpetra::Map<LO, GO, N>, Xpetra::CrsMatrixWrap<S, LO, GO, N>, Xpetra::MultiVector<S, LO, GO, N>>; \
+  template class Galeri::Xpetra::Laplace3DProblem<S, LO, GO, Xpetra::Map<LO, GO, N>, Xpetra::CrsMatrixWrap<S, LO, GO, N>, Xpetra::MultiVector<S, LO, GO, N>>; \
+  template class Galeri::Xpetra::Star2DProblem<S, LO, GO, Xpetra::Map<LO, GO, N>, Xpetra::CrsMatrixWrap<S, LO, GO, N>, Xpetra::MultiVector<S, LO, GO, N>>; \
+  template class Galeri::Xpetra::BigStar2DProblem<S, LO, GO, Xpetra::Map<LO, GO, N>, Xpetra::CrsMatrixWrap<S, LO, GO, N>, Xpetra::MultiVector<S, LO, GO, N>>; \
+  template class Galeri::Xpetra::Brick3DProblem<S, LO, GO, Xpetra::Map<LO, GO, N>, Xpetra::CrsMatrixWrap<S, LO, GO, N>, Xpetra::MultiVector<S, LO, GO, N>>; \
+  template class Galeri::Xpetra::IdentityProblem<S, LO, GO, Xpetra::Map<LO, GO, N>, Xpetra::CrsMatrixWrap<S, LO, GO, N>, Xpetra::MultiVector<S, LO, GO, N>>; \
+  template class Galeri::Xpetra::Recirc2DProblem<S, LO, GO, Xpetra::Map<LO, GO, N>, Xpetra::CrsMatrixWrap<S, LO, GO, N>, Xpetra::MultiVector<S, LO, GO, N>>;
+
+#define GALERI_STENCILPROBLEMS_INSTANT_TPETRA(S, LO, GO, N) \
+  template class Galeri::Xpetra::ScalarProblem<Tpetra::Map<LO, GO, N>, Tpetra::CrsMatrix<S, LO, GO, N>, Tpetra::MultiVector<S, LO, GO, N>>; \
+  template class Galeri::Xpetra::Laplace1DProblem<S, LO, GO, Tpetra::Map<LO, GO, N>, Tpetra::CrsMatrix<S, LO, GO, N>, Tpetra::MultiVector<S, LO, GO, N>>; \
+  template class Galeri::Xpetra::Laplace2DProblem<S, LO, GO, Tpetra::Map<LO, GO, N>, Tpetra::CrsMatrix<S, LO, GO, N>, Tpetra::MultiVector<S, LO, GO, N>>; \
+  template class Galeri::Xpetra::AnisotropicDiffusion2DProblem<S, LO, GO, Tpetra::Map<LO, GO, N>, Tpetra::CrsMatrix<S, LO, GO, N>, Tpetra::MultiVector<S, LO, GO, N>>; \
+  template class Galeri::Xpetra::Laplace3DProblem<S, LO, GO, Tpetra::Map<LO, GO, N>, Tpetra::CrsMatrix<S, LO, GO, N>, Tpetra::MultiVector<S, LO, GO, N>>; \
+  template class Galeri::Xpetra::Star2DProblem<S, LO, GO, Tpetra::Map<LO, GO, N>, Tpetra::CrsMatrix<S, LO, GO, N>, Tpetra::MultiVector<S, LO, GO, N>>; \
+  template class Galeri::Xpetra::BigStar2DProblem<S, LO, GO, Tpetra::Map<LO, GO, N>, Tpetra::CrsMatrix<S, LO, GO, N>, Tpetra::MultiVector<S, LO, GO, N>>; \
+  template class Galeri::Xpetra::Brick3DProblem<S, LO, GO, Tpetra::Map<LO, GO, N>, Tpetra::CrsMatrix<S, LO, GO, N>, Tpetra::MultiVector<S, LO, GO, N>>; \
+  template class Galeri::Xpetra::IdentityProblem<S, LO, GO, Tpetra::Map<LO, GO, N>, Tpetra::CrsMatrix<S, LO, GO, N>, Tpetra::MultiVector<S, LO, GO, N>>; \
+  template class Galeri::Xpetra::Recirc2DProblem<S, LO, GO, Tpetra::Map<LO, GO, N>, Tpetra::CrsMatrix<S, LO, GO, N>, Tpetra::MultiVector<S, LO, GO, N>>;
+
+#define GALERI_STENCILPROBLEMS_INSTANT(S, LO, GO, N) \
+  GALERI_STENCILPROBLEMS_INSTANT_XPETRA(S, LO, GO, N) \
+  GALERI_STENCILPROBLEMS_INSTANT_TPETRA(S, LO, GO, N)
+
+#endif  // GALERI_STENCILPROBLEMS_DEF_HPP

@@ -53,3 +53,6 @@
 
 /* Define if want to build with Triutils support enabled. */
 #cmakedefine HAVE_GALERI_TRIUTILS
+
+/* Define if user requested explicit instantiation of classes */
+#cmakedefine HAVE_GALERI_EXPLICIT_INSTANTIATION

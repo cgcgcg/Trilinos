@@ -9,21 +9,14 @@
 /*
   Direct translation of parts of Galeri matrix generator.
 */
-#ifndef GALERI_XPETRAMATRIXFACTORY_HPP
-#define GALERI_XPETRAMATRIXFACTORY_HPP
+#ifndef GALERI_XPETRAPROBLEMFACTORY_DEF_HPP
+#define GALERI_XPETRAPROBLEMFACTORY_DEF_HPP
 
-#include "Teuchos_ParameterList.hpp"
+#include "Galeri_XpetraProblemFactory_decl.hpp"
+
 #include "Teuchos_Assert.hpp"
 
-#include "Galeri_StencilProblems.hpp"
-#include "Galeri_Elasticity2DProblem.hpp"
-#include "Galeri_Elasticity3DProblem.hpp"
-
-#include <iostream>
-
-namespace Galeri {
-
-namespace Xpetra {
+namespace Galeri::Xpetra {
 
 using Teuchos::RCP;
 
@@ -63,8 +56,26 @@ RCP<Problem<Map, Matrix, MultiVector> > BuildProblem(const std::string& MatrixTy
   return P;
 }
 
-}  // namespace Xpetra
+} // namespace Galeri::Xpetra
 
-}  // namespace Galeri
 
-#endif  // ifndef GALERI_XPETRAMATRIXFACTORY_HPP
+#define GALERI_XPETRAPROBLEMFACTORY_INSTANT_XPETRA(S, LO, GO, N) \
+  template \
+  Teuchos::RCP<Galeri::Xpetra::Problem<::Xpetra::Map<LO, GO, N>, ::Xpetra::CrsMatrixWrap<S, LO, GO, N>, ::Xpetra::MultiVector<S, LO, GO, N> >> \
+  Galeri::Xpetra::BuildProblem<S, LO, GO, ::Xpetra::Map<LO, GO, N>, ::Xpetra::CrsMatrixWrap<S, LO, GO, N>, ::Xpetra::MultiVector<S, LO, GO, N >> \
+  (const std::string&, const Teuchos::RCP<const ::Xpetra::Map<LO, GO, N>>&, Teuchos::ParameterList&);
+
+#define GALERI_XPETRAPROBLEMFACTORY_INSTANT_TPETRA(S, LO, GO, N) \
+  template \
+  Teuchos::RCP<Galeri::Xpetra::Problem<Tpetra::Map<LO, GO, N>, Tpetra::CrsMatrix<S, LO, GO, N>, Tpetra::MultiVector<S, LO, GO, N>> > \
+  Galeri::Xpetra::BuildProblem<S, LO, GO, Tpetra::Map<LO, GO, N>, Tpetra::CrsMatrix<S, LO, GO, N>, Tpetra::MultiVector<S, LO, GO, N >> \
+  (const std::string&, const Teuchos::RCP<const Tpetra::Map<LO, GO, N>>&, Teuchos::ParameterList&);
+
+
+#define GALERI_XPETRAPROBLEMFACTORY_INSTANT(S, LO, GO, N) \
+  GALERI_XPETRAPROBLEMFACTORY_INSTANT_XPETRA(S, LO, GO, N) \
+  GALERI_XPETRAPROBLEMFACTORY_INSTANT_TPETRA(S, LO, GO, N)
+
+
+
+#endif  // ifndef GALERI_XPETRAPROBLEMFACTORY_DEF_HPP

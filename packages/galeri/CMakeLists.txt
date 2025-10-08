@@ -10,6 +10,11 @@ TRIBITS_PACKAGE(Galeri)
 # B) Set up package-specific options
 #
 
+TRIBITS_ADD_EXPLICIT_INSTANTIATION_OPTION()
+
+# we use this for testing as well as library eti, so do it regardless
+# TRIBITS_ADD_ETI_SUPPORT()
+
 TRIBITS_ADD_DEBUG_OPTION()
 
 #

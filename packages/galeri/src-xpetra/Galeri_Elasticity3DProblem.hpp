@@ -134,7 +134,7 @@ Teuchos::RCP<Matrix> Elasticity3DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Ma
   SC t = 1;
 
   // Material matrix
-  RCP<Memory2D> D(new Memory2D);
+  Teuchos::RCP<Memory2D> D(new Memory2D);
   BuildMaterialMatrix(*D);
 
   // Reference element, and reference Gauss points
@@ -339,7 +339,7 @@ Teuchos::RCP<Matrix> Elasticity3DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Ma
 }
 
 template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Map, typename Matrix, typename MultiVector>
-RCP<typename Problem<Map, Matrix, MultiVector>::RealValuedMultiVector>
+Teuchos::RCP<typename Problem<Map, Matrix, MultiVector>::RealValuedMultiVector>
 Elasticity3DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix, MultiVector>::BuildCoords() {
   // FIXME: map here is an extended map, with multiple DOF per node
   // as we cannot construct a single DOF map in Problem, we repeat the coords
@@ -372,7 +372,7 @@ Elasticity3DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix, MultiVecto
 }
 
 template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Map, typename Matrix, typename MultiVector>
-RCP<MultiVector> Elasticity3DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix, MultiVector>::BuildNullspace() {
+Teuchos::RCP<MultiVector> Elasticity3DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix, MultiVector>::BuildNullspace() {
   typedef typename RealValuedMultiVector::scalar_type real_type;
 
   const int numVectors = 6;

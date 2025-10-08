@@ -9,8 +9,8 @@
 /*
   Direct translation of parts of Galeri matrix generator.
 */
-#ifndef GALERI_XPETRACARTESIAN2D_HPP
-#define GALERI_XPETRACARTESIAN2D_HPP
+#ifndef GALERI_XPETRACARTESIAN_DEF_HPP
+#define GALERI_XPETRACARTESIAN_DEF_HPP
 
 #include <Teuchos_RCP.hpp>
 #include <Teuchos_Comm.hpp>
@@ -41,8 +41,8 @@ Teuchos::RCP<Map> Cartesian1D(const Teuchos::RCP<const Teuchos::Comm<int>>& comm
   if (nx <= 0 || mx <= 0 || (mx > nx))
     throw Exception(__FILE__, __LINE__,
                     "Incorrect input parameter to Maps::Cartesian1D()",
-                    "nx = " + toString(nx) +
-                        ", mx = " + toString(mx));
+                    "nx = " + std::to_string(nx) +
+                        ", mx = " + std::to_string(mx));
 
   using GO = GlobalOrdinal;
   using LO = LocalOrdinal;
@@ -98,10 +98,10 @@ Teuchos::RCP<Map> Cartesian2D(const Teuchos::RCP<const Teuchos::Comm<int>>& comm
   if (nx <= 0 || ny <= 0 || mx <= 0 || my <= 0 || (mx > nx) || (my > ny))
     throw(Exception(__FILE__, __LINE__,
                     "Incorrect input parameter to Maps::Cartesian2D()",
-                    "nx = " + toString(nx) +
-                        ", ny = " + toString(ny) +
-                        ", mx = " + toString(mx) +
-                        ", my = " + toString(my)));
+                    "nx = " + std::to_string(nx) +
+                        ", ny = " + std::to_string(ny) +
+                        ", mx = " + std::to_string(mx) +
+                        ", my = " + std::to_string(my)));
 
   using GO = GlobalOrdinal;
   using LO = LocalOrdinal;
@@ -163,12 +163,12 @@ Teuchos::RCP<Map> Cartesian3D(const Teuchos::RCP<const Teuchos::Comm<int>>& comm
       (mx > nx) || (my > ny) || (mz > nz))
     throw Exception(__FILE__, __LINE__,
                     "Incorrect input parameter to Maps::Cartesian3D()",
-                    "nx = " + toString(nx) +
-                        ", ny = " + toString(ny) +
-                        ", nz = " + toString(nz) +
-                        ", mx = " + toString(mx) +
-                        ", my = " + toString(my) +
-                        ", mz = " + toString(mz));
+                    "nx = " + std::to_string(nx) +
+                        ", ny = " + std::to_string(ny) +
+                        ", nz = " + std::to_string(nz) +
+                        ", mx = " + std::to_string(mx) +
+                        ", my = " + std::to_string(my) +
+                        ", mz = " + std::to_string(mz));
 
   using GO = GlobalOrdinal;
   using LO = LocalOrdinal;
@@ -228,5 +228,25 @@ Teuchos::RCP<Map> Cartesian3D(const Teuchos::RCP<const Teuchos::Comm<int>>& comm
 }  // namespace Maps
 }  // namespace Xpetra
 }  // namespace Galeri
+
+#define GALERI_XPETRACARTESIAN_INSTANT_XPETRA(LO, GO, N)                                                                                                                               \
+  template Teuchos::RCP<::Xpetra::TpetraMap<LO, GO, N>>                                                                                                                                      \
+  Galeri::Xpetra::Maps::Cartesian1D<LO, GO, ::Xpetra::TpetraMap<LO, GO, N>>(Teuchos::RCP<const Teuchos::Comm<int>> const&, const GO, const GO, Teuchos::ParameterList&);                     \
+  template Teuchos::RCP<::Xpetra::TpetraMap<LO, GO, N>>                                                                                                                                      \
+  Galeri::Xpetra::Maps::Cartesian2D<LO, GO, ::Xpetra::TpetraMap<LO, GO, N>>(Teuchos::RCP<const Teuchos::Comm<int>> const&, const GO, const GO, const GO, const GO, Teuchos::ParameterList&); \
+  template Teuchos::RCP<::Xpetra::TpetraMap<LO, GO, N>>                                                                                                                                      \
+  Galeri::Xpetra::Maps::Cartesian3D<LO, GO, ::Xpetra::TpetraMap<LO, GO, N>>(Teuchos::RCP<const Teuchos::Comm<int>> const&, const GO, const GO, const GO, const GO, const GO, const GO, Teuchos::ParameterList&);
+
+#define GALERI_XPETRACARTESIAN_INSTANT_TPETRA(LO, GO, N)                                                                                                                               \
+  template Teuchos::RCP<Tpetra::Map<LO, GO, N>>                                                                                                                                        \
+  Galeri::Xpetra::Maps::Cartesian1D<LO, GO, Tpetra::Map<LO, GO, N>>(Teuchos::RCP<const Teuchos::Comm<int>> const&, const GO, const GO, Teuchos::ParameterList&);                     \
+  template Teuchos::RCP<Tpetra::Map<LO, GO, N>>                                                                                                                                        \
+  Galeri::Xpetra::Maps::Cartesian2D<LO, GO, Tpetra::Map<LO, GO, N>>(Teuchos::RCP<const Teuchos::Comm<int>> const&, const GO, const GO, const GO, const GO, Teuchos::ParameterList&); \
+  template Teuchos::RCP<Tpetra::Map<LO, GO, N>>                                                                                                                                        \
+  Galeri::Xpetra::Maps::Cartesian3D<LO, GO, Tpetra::Map<LO, GO, N>>(Teuchos::RCP<const Teuchos::Comm<int>> const&, const GO, const GO, const GO, const GO, const GO, const GO, Teuchos::ParameterList&);
+
+#define GALERI_XPETRACARTESIAN_INSTANT(LO, GO, N)  \
+  GALERI_XPETRACARTESIAN_INSTANT_XPETRA(LO, GO, N) \
+  GALERI_XPETRACARTESIAN_INSTANT_TPETRA(LO, GO, N)
 
 #endif
