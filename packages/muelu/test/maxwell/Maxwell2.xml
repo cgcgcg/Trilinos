@@ -17,6 +17,14 @@
     <Parameter name="relaxation: use l1" type="bool" value="true"/>
   </ParameterList>
 
+  <ParameterList name="refmaxwell: ImporterCoarse11 params">
+    <Parameter name="Send type" type="string" value="Ialltofewv"/>
+  </ParameterList>
+
+  <ParameterList name="refmaxwell: Importer22 params">
+    <Parameter name="Send type" type="string" value="Ialltofewv"/>
+  </ParameterList>
+
   <ParameterList name="refmaxwell: 11list">
     <Parameter name="use kokkos refactor" type="bool" value="false"/>
     <Parameter name="multigrid algorithm" type="string" value="unsmoothed"/>
