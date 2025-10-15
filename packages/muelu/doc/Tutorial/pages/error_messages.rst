@@ -113,13 +113,13 @@ Advanced XML file format
 This error indicates that there is a problem with the provided near null space vectors. There are different reasons which can trigger this problem:
 
 * The near null space vectors are not valid (containing zeros, wrong ordering of internal degrees of freedom).
-Please check your near null space vectors.
-Maybe there is an empty vector or the ordering of degrees of freedom for the linear operator
-does not match with the ordering of the near null space vectors.
+  Please check your near null space vectors.
+  Maybe there is an empty vector or the ordering of degrees of freedom for the linear operator
+  does not match with the ordering of the near null space vectors.
 * The near null space vectors are correct but used in a wrong way (e.g., a wrong number of degrees of freedom).
-Check the screen output for wrong block dimensions (CoalesceDropFactory).
+  Check the screen output for wrong block dimensions (CoalesceDropFactory).
 * There is a problem with the aggregates.
-Validate the screen output and look for unusual (e.g. very small or empty) aggregates.
+  Validate the screen output and look for unusual (e.g. very small or empty) aggregates.
 
 ::
 
@@ -136,7 +136,7 @@ In general, it is a good idea to start with a working XML file and extend it ste
 The following general strategies may help to track down the problem:
 
 * Run the problem with **verbosity=extreme** to get as much screen output as possible.
-Check for unusual screen output (such as **Nullspace factory**).
+  Check for unusual screen output (such as **Nullspace factory**).
 * Try to generate a graphical dependency tree as described in :ref:`useful_commands_and_debugging/dependencytrees`.
 
 
@@ -188,8 +188,8 @@ Only in very special cases, this would not be necessary.
 To solve above problem there are two possibilities:
 
 * Following above comment, just register **myTentativePFact** for generating **Nullspace**.
-That is, just comment in the corresponding line in above xml file.
+  That is, just comment in the corresponding line in above xml file.
 * Alternatively, you can register **myTentativePFact** for generating **Ptent** (and **P**).
-This way you mark the **myTentativePFact** object to be used for generating the unsmoothed transfer operators
-(and state that they shall be used for the final prolongation operators).
-MueLu is smart enough to understand that the factory responsible for generating **Ptent** is also supposed to generate the null space vectors.
+  This way you mark the **myTentativePFact** object to be used for generating the unsmoothed transfer operators
+  (and state that they shall be used for the final prolongation operators).
+  MueLu is smart enough to understand that the factory responsible for generating **Ptent** is also supposed to generate the null space vectors.

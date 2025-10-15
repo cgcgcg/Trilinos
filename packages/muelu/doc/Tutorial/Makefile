@@ -6,7 +6,7 @@
 SPHINXOPTS    ?=
 SPHINXBUILD   ?= ~/mueludoc/utils/mueludoc-python-venv/bin/sphinx-build
 SOURCEDIR     = .
-BUILDDIR      = _build
+BUILDDIR      ?= _build
 
 # Put it first so that "make" without argument is like "make help".
 help:

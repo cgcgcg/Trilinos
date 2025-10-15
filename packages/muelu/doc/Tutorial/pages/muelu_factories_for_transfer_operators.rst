@@ -85,7 +85,7 @@ To construct a multigrid hierarchy with unsmoothed transfer operators one can us
 
 .. literalinclude:: ../../../test/tutorial/s3a.xml
   :language: xml
-	:caption:
+  :caption:
 
 Beside the **TentiativePFactory** which is responsible to generate the unsmoothed transfer operators we also introduce the **UncoupledAggregationFactory** with this example.
 In the **Factories** section of the XML file, you find both an entry for the aggregation factory and the prolongation operator factory with its parameters.
@@ -140,7 +140,7 @@ Take a look at the XML file (in **../../../test/tutorial/s3b.xml**).
 
 .. literalinclude:: ../../../test/tutorial/s3b.xml
   :language: xml
-	:caption:
+  :caption:
 
 The interesting part is the **Factories** section where several different factories for the restriction operator are defined
 

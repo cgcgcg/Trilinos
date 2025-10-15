@@ -40,7 +40,7 @@ Please refer to the ML guide [1]_ for a complete list of available parameters.
 
 .. note::
 	Be aware that the MLParameterListInterpreter does not support all ML parameters,
-  but only the most important ones (e.g., smoothers, transfer operators, rebalancing, ...).
+        but only the most important ones (e.g., smoothers, transfer operators, rebalancing, ...).
 
 Instead of defining the ML parameters by hand in the ParameterList,
 you can also read in XML files with ML parameters using
@@ -89,8 +89,8 @@ we can use it the same way as described in :ref:`Iteration Phase <user_api/itera
 .. admonition:: Exercise 1
 
 	Study the source code of **../../../test/tutorial/MLParameterList.cpp** and compile it.
-  Run the executable **MueLu_tutorial_MLParameterList.exe** with the **--help** command line parameter
-  to get an overview of all available command line parameters.
+        Run the executable **MueLu_tutorial_MLParameterList.exe** with the **--help** command line parameter
+        to get an overview of all available command line parameters.
 
   Run the example on a 1D mesh with 256 elements using
 
@@ -108,7 +108,7 @@ we can use it the same way as described in :ref:`Iteration Phase <user_api/itera
 .. admonition:: Exercise 2
 
 	Play around with the parameters from **MueLu_tutorial_MLParameterList.exe**.
-  Change, e.g., the problem type to a 2D Laplace problem (**--matrixType=Laplace2D**) and adapt the **--nx** and **--ny** parameters accordingly.
+        Change, e.g., the problem type to a 2D Laplace problem (**--matrixType=Laplace2D**) and adapt the **--nx** and **--ny** parameters accordingly.
 
 Footnotes
 =========

@@ -253,7 +253,7 @@ Finally, it is important to declare all necessary main factories in the **Hierar
 .. _advanced_concepts/line-smoothing:
 
 Line-smoothing
-=============
+==============
 
 General idea
 ------------
@@ -301,10 +301,10 @@ To use line-smoothing instead one has the following options:
 .. admonition:: Description
 
    * [LINESMOOTHING\BANDEDRELAXATION] Use banded containers to store the local block associated with one vertical line.
-   This is the recommended variant as it saves memory and is usually faster.
+     This is the recommended variant as it saves memory and is usually faster.
    * [LINESMOOTHING\BLOCKEDRELAXATION] Use a dense matrix container to store the local block associated with one vertical line.
-   This is the safe fallback variant.
-   Use the **LINESMOOTHING\_BANDEDRELAXATION** variant instead.
+     This is the safe fallback variant.
+     Use the **LINESMOOTHING\_BANDEDRELAXATION** variant instead.
 
 
 All the other parameters in the parameter sublist correspond to the usual parameters for relaxation based smoothers such as Jacobi, Gauss-Seidel or Symmetric Gauss-Seidel methods.
