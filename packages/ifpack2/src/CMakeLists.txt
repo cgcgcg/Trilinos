@@ -68,7 +68,11 @@ IF(Ifpack2_ENABLE_EXPLICIT_INSTANTIATION)
   # classes usually operate on sparse matrices (instances of
   # Tpetra::CrsMatrix or Tpetra::RowMatrix, which also take these
   # template parameters).
-  SET(IFPACK2_ETI_CLASSES
+
+  # IFPACK2_ETI_CLASSES and IFPACK2_ETI_LO_GO_CLASSES are global
+  # variables so that Stokhos can do ETI.
+
+  GLOBAL_SET(IFPACK2_ETI_CLASSES
     AdditiveSchwarz
     BlockRelaxation
     BorderedOperator
@@ -112,17 +116,17 @@ IF(Ifpack2_ENABLE_EXPLICIT_INSTANTIATION)
     )
 
   IF(Ifpack2_ENABLE_Amesos2)
-    APPEND_SET(IFPACK2_ETI_CLASSES
+    APPEND_GLOBAL_SET(IFPACK2_ETI_CLASSES
       Details::Amesos2Wrapper
       )
   ENDIF()
 
   IF(${PACKAGE_NAME}_ENABLE_Experimental_KokkosKernels_Features)
-    APPEND_SET(IFPACK2_ETI_CLASSES BlockTriDiContainer)
+    APPEND_GLOBAL_SET(IFPACK2_ETI_CLASSES BlockTriDiContainer)
   ENDIF()
 
   IF(Ifpack2_ENABLE_ShyLU_NodeFastILU)
-    APPEND_SET(IFPACK2_ETI_CLASSES
+    APPEND_GLOBAL_SET(IFPACK2_ETI_CLASSES
       Details::FastILU_Base
       Details::Filu
       Details::Fic
@@ -131,7 +135,7 @@ IF(Ifpack2_ENABLE_EXPLICIT_INSTANTIATION)
   ENDIF()
 
   IF(Ifpack2_ENABLE_HYPRE)
-    APPEND_SET(IFPACK2_ETI_CLASSES
+    APPEND_GLOBAL_SET(IFPACK2_ETI_CLASSES
       Hypre
       )
   ENDIF()
@@ -140,7 +144,7 @@ IF(Ifpack2_ENABLE_EXPLICIT_INSTANTIATION)
   # which we want to do ETI using this system.  These classes usually
   # operate on sparse graphs (instances of Tpetra::CrsGraph or
   # Tpetra::RowGraph, which also take these template parameters).
-  SET(IFPACK2_ETI_LO_GO_CLASSES
+  GLOBAL_SET(IFPACK2_ETI_LO_GO_CLASSES
     LinearPartitioner
     OverlappingPartitioner
     Details::OverlappingRowGraph
