@@ -19,7 +19,7 @@ MatrixMatrix
 #ReorderedBlockedCrsMatrix
 ThyraUtils - #if defined(HAVE_XPETRA_THYRA)
 TpetraBlockCrsMatrix
-TpetraCrsMatrix
+#TpetraCrsMatrix
 #TpetraHalfPrecisionOperator
 ##TpetraVbrMatrix
 TripleMatrixMultiply

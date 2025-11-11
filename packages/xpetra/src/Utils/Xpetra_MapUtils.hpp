@@ -14,7 +14,6 @@
 
 #include "Xpetra_Exceptions.hpp"
 #include "Xpetra_Map.hpp"
-#include "Xpetra_MapFactory.hpp"
 
 namespace Xpetra {
 

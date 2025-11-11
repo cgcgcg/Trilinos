@@ -20,7 +20,6 @@
 #include "Xpetra_MultiVector.hpp"
 #include "Xpetra_CrsGraph.hpp"
 #include "Xpetra_CrsMatrix.hpp"
-#include "Xpetra_CrsMatrixFactory.hpp"
 #include "Xpetra_MatrixView.hpp"
 #include "Xpetra_Operator.hpp"
 #include "Xpetra_StridedMap.hpp"

@@ -18,14 +18,11 @@
 #include "Xpetra_ConfigDefs.hpp"
 #include "Xpetra_Exceptions.hpp"
 
-#include "Xpetra_MapFactory.hpp"
 #include "Xpetra_MultiVector.hpp"
 #include "Xpetra_BlockedMultiVector.hpp"
-#include "Xpetra_MultiVectorFactory.hpp"
 #include "Xpetra_BlockedVector.hpp"
 #include "Xpetra_CrsGraph.hpp"
 #include "Xpetra_CrsMatrix.hpp"
-#include "Xpetra_CrsMatrixFactory.hpp"
 
 #include "Xpetra_MapExtractor.hpp"
 #include "Xpetra_MapExtractorFactory.hpp"

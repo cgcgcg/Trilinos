@@ -23,7 +23,6 @@
 #include "Xpetra_MultiVector.hpp"
 #include "Xpetra_CrsGraph.hpp"
 #include "Xpetra_CrsMatrix.hpp"
-#include "Xpetra_CrsMatrixFactory.hpp"
 
 #include "Xpetra_Matrix.hpp"
 

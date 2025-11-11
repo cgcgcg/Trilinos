@@ -20,13 +20,9 @@
 #include "Xpetra_MultiVector_decl.hpp"
 #include "Xpetra_CrsGraph.hpp"
 #include "Xpetra_CrsMatrix.hpp"
-#include "Xpetra_CrsMatrixFactory.hpp"
 
 #include "Xpetra_Matrix.hpp"
-#include "Xpetra_TpetraOperator.hpp"
 #include "Xpetra_TpetraBlockCrsMatrix.hpp"
-#include "Xpetra_TpetraRowMatrix.hpp"
-#include "Xpetra_TpetraCrsMatrix.hpp"
 
 #include <Teuchos_SerialDenseMatrix.hpp>
 #include <Teuchos_Hashtable.hpp>

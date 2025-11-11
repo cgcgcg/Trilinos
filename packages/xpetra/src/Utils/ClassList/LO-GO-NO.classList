@@ -13,7 +13,7 @@ StridedMap
 StridedMapFactory
 #StridedTpetraMap
 ##TpetraBlockMap
-TpetraCrsGraph
-TpetraExport
-TpetraImport
-TpetraMap
+#TpetraCrsGraph
+#TpetraExport
+#TpetraImport
+#TpetraMap

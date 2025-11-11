@@ -11,7 +11,6 @@
 #define XPETRA_TPETRABLOCKCRSMATRIX_DEF_HPP
 
 #include "Xpetra_TpetraBlockCrsMatrix_decl.hpp"
-#include "Xpetra_TpetraCrsGraph.hpp"
 
 namespace Xpetra {
 
@@ -738,9 +737,9 @@ class TpetraBlockCrsMatrix<Scalar, int, int, EpetraNode>
   typedef int GlobalOrdinal;
   typedef EpetraNode Node;
   typedef TpetraBlockCrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node> TpetraBlockCrsMatrixClass;
-  typedef TpetraVector<Scalar, LocalOrdinal, GlobalOrdinal, Node> TpetraVectorClass;
-  typedef TpetraImport<LocalOrdinal, GlobalOrdinal, Node> TpetraImportClass;
-  typedef TpetraExport<LocalOrdinal, GlobalOrdinal, Node> TpetraExportClass;
+  typedef Tpetra::Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node> TpetraVectorClass;
+  typedef Tpetra::Import<LocalOrdinal, GlobalOrdinal, Node> TpetraImportClass;
+  typedef Tpetra::Export<LocalOrdinal, GlobalOrdinal, Node> TpetraExportClass;
 
  public:
   //! @name Constructor/Destructor Methods
