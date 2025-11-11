@@ -25,7 +25,7 @@ class BlockedMap : public Map<LocalOrdinal, GlobalOrdinal, Node> {
   typedef LocalOrdinal local_ordinal_type;
   typedef GlobalOrdinal global_ordinal_type;
   typedef Node node_type;
-  typedef typename Map<LocalOrdinal, GlobalOrdinal, Node>::global_indices_array_device_type global_indices_array_device_type;
+  typedef Kokkos::View<const global_ordinal_type *, typename Node::device_type> global_indices_array_device_type;
 
  private:
 #undef XPETRA_BLOCKEDMAP_SHORT

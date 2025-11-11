@@ -5,8 +5,8 @@ BlockedMap
 #ExportFactory
 #Import
 #ImportFactory
-Map
-MapFactory
+#Map
+#MapFactory
 #MapUtils
 #MatrixView
 StridedMap

@@ -17,9 +17,6 @@
 #include "Xpetra_CrsGraph.hpp"
 #include "Xpetra_TpetraCrsGraph_decl.hpp"
 #include "Xpetra_Utils.hpp"
-#include "Xpetra_TpetraMap.hpp"
-#include "Xpetra_TpetraImport.hpp"
-#include "Xpetra_TpetraExport.hpp"
 
 namespace Xpetra {
 

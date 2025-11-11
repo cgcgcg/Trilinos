@@ -47,7 +47,7 @@ class StridedMapFactory {
         const Teuchos::RCP<const Teuchos::Comm<int>>& comm,
         LocalOrdinal stridedBlockId = -1,
         GlobalOrdinal offset        = 0,
-        LocalGlobal lg              = Xpetra::GloballyDistributed);
+        LocalGlobal lg              = Tpetra::GloballyDistributed);
 
   //! Map constructor with a user-defined contiguous distribution.
   static RCP<StridedMap>

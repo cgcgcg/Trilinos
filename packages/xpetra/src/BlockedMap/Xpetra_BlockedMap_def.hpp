@@ -13,10 +13,39 @@
 #include "Xpetra_BlockedMap_decl.hpp"
 
 #include "Xpetra_Exceptions.hpp"
-#include "Xpetra_ImportFactory.hpp"
-#include "Xpetra_MapFactory.hpp"
+#include "Xpetra_Map_decl.hpp"
 
 namespace Xpetra {
+
+template <class LocalOrdinal, class GlobalOrdinal, class Node>
+Teuchos::RCP<Map<LocalOrdinal, GlobalOrdinal, Node>>
+Build(const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node>>& nodeMap,
+          const LocalOrdinal numDofPerNode, const GlobalOrdinal gidOffset = Teuchos::ScalarTraits<GlobalOrdinal>::zero()) {
+
+  RCP<const BlockedMap<LocalOrdinal, GlobalOrdinal, Node>> bmap =
+      Teuchos::rcp_dynamic_cast<const BlockedMap<LocalOrdinal, GlobalOrdinal, Node>>(nodeMap);
+
+  if (!bmap.is_null()) {
+    TEUCHOS_TEST_FOR_EXCEPTION(numDofPerNode != 1, Xpetra::Exceptions::RuntimeError,
+                               "Xpetra::MapFactory::Build: When provided a BlockedMap numDofPerNode must set to be one. It is set to "
+                                   << numDofPerNode << ".");
+    return rcp(new Xpetra::BlockedMap<LocalOrdinal, GlobalOrdinal, Node>(*bmap));
+  }
+
+#ifdef HAVE_XPETRA_TPETRA
+  LocalOrdinal numLocalElements                       = nodeMap->getLocalNumElements();
+  Teuchos::ArrayView<const GlobalOrdinal> oldElements = nodeMap->getLocalElementList();
+  Teuchos::Array<GlobalOrdinal> newElements(nodeMap->getLocalNumElements() * numDofPerNode);
+  for (LocalOrdinal i = 0; i < numLocalElements; i++) {
+    for (LocalOrdinal j = 0; j < numDofPerNode; j++) {
+      newElements[i * numDofPerNode + j] = oldElements[i] * numDofPerNode + j + gidOffset;
+    }
+  }
+  return rcp(new Map<LocalOrdinal, GlobalOrdinal, Node>(nodeMap->getGlobalNumElements() * numDofPerNode, newElements, nodeMap->getIndexBase(), nodeMap->getComm()));
+#endif
+
+  TEUCHOS_UNREACHABLE_RETURN(Teuchos::null);
+}
 
 template <class LocalOrdinal, class GlobalOrdinal, class Node>
 BlockedMap<LocalOrdinal, GlobalOrdinal, Node>::
@@ -86,8 +115,8 @@ BlockedMap<LocalOrdinal, GlobalOrdinal, Node>::
 
       Teuchos::ArrayView<GlobalOrdinal> subMapGidsView(&subMapGids[0], subMapGids.size());
 
-      Teuchos::RCP<Map> mySubMap = Xpetra::MapFactory<LocalOrdinal, GlobalOrdinal, Node>::Build(
-          maps[v]->lib(), INVALID, subMapGidsView, maps[v]->getIndexBase(), maps[v]->getComm());
+      Teuchos::RCP<Map> mySubMap = rcp(new Map(
+                                               INVALID, subMapGidsView, maps[v]->getIndexBase(), maps[v]->getComm()));
       maps_[v] = mySubMap;
     }
 
@@ -100,8 +129,8 @@ BlockedMap<LocalOrdinal, GlobalOrdinal, Node>::
 
     Teuchos::ArrayView<GlobalOrdinal> fullMapGidsView(&fullMapGids[0], fullMapGids.size());
 
-    fullmap_ = Xpetra::MapFactory<LocalOrdinal, GlobalOrdinal, Node>::Build(
-        fullmap->lib(), INVALID, fullMapGidsView, fullmap->getIndexBase(), fullmap->getComm());
+    fullmap_ = rcp(new Xpetra::Map<LocalOrdinal, GlobalOrdinal, Node>(
+                                                                      INVALID, fullMapGidsView, fullmap->getIndexBase(), fullmap->getComm()));
 
     // plausibility check
     size_t numAllElements = 0;
@@ -118,7 +147,7 @@ BlockedMap<LocalOrdinal, GlobalOrdinal, Node>::
   importers_.resize(maps_.size());
   for (unsigned i = 0; i < maps_.size(); ++i) {
     if (maps[i] != null) {
-      importers_[i] = Xpetra::ImportFactory<LocalOrdinal, GlobalOrdinal, Node>::Build(fullmap_, maps_[i]);
+      importers_[i] = rcp(new Xpetra::Import<LocalOrdinal, GlobalOrdinal, Node>(fullmap_, maps_[i]));
     }
   }
   TEUCHOS_TEST_FOR_EXCEPTION(
@@ -161,7 +190,7 @@ BlockedMap<LocalOrdinal, GlobalOrdinal, Node>::
   importers_.resize(maps_.size());
   for (unsigned i = 0; i < maps_.size(); ++i) {
     if (maps[i] != null) {
-      importers_[i] = Xpetra::ImportFactory<LocalOrdinal, GlobalOrdinal, Node>::Build(fullmap_, maps_[i]);
+      importers_[i] = rcp(new Xpetra::Import<LocalOrdinal, GlobalOrdinal, Node>(fullmap_, maps_[i]));
     }
   }
   TEUCHOS_TEST_FOR_EXCEPTION(
@@ -275,7 +304,7 @@ BlockedMap<LocalOrdinal, GlobalOrdinal, Node>::
                        const Teuchos::ArrayView<int>& /* nodeIDList */,
                        const Teuchos::ArrayView<LocalOrdinal>& /* LIDList    */) const {
   throw Xpetra::Exceptions::RuntimeError("BlockedMap::getRemoteIndexList: routine not implemented.");
-  TEUCHOS_UNREACHABLE_RETURN(IDNotPresent);
+  TEUCHOS_UNREACHABLE_RETURN(Tpetra::IDNotPresent);
 }
 
 template <class LocalOrdinal, class GlobalOrdinal, class Node>
@@ -284,7 +313,7 @@ BlockedMap<LocalOrdinal, GlobalOrdinal, Node>::
     getRemoteIndexList(const Teuchos::ArrayView<const GlobalOrdinal>& /* GIDList */,
                        const Teuchos::ArrayView<int>& /* nodeIDList */) const {
   throw Xpetra::Exceptions::RuntimeError("BlockedMap::getRemoteIndexList: routine not implemented.");
-  TEUCHOS_UNREACHABLE_RETURN(IDNotPresent);
+  TEUCHOS_UNREACHABLE_RETURN(Tpetra::IDNotPresent);
 }
 
 template <class LocalOrdinal, class GlobalOrdinal, class Node>
@@ -295,7 +324,7 @@ BlockedMap<LocalOrdinal, GlobalOrdinal, Node>::
 }
 
 template <class LocalOrdinal, class GlobalOrdinal, class Node>
-typename Map<LocalOrdinal, GlobalOrdinal, Node>::global_indices_array_device_type
+typename BlockedMap<LocalOrdinal, GlobalOrdinal, Node>::global_indices_array_device_type
 BlockedMap<LocalOrdinal, GlobalOrdinal, Node>::
     getMyGlobalIndicesDevice() const {
   return fullmap_->getMyGlobalIndicesDevice();
@@ -413,7 +442,7 @@ BlockedMap<LocalOrdinal, GlobalOrdinal, Node>::
 template <class LocalOrdinal, class GlobalOrdinal, class Node>
 UnderlyingLib
 BlockedMap<LocalOrdinal, GlobalOrdinal, Node>::lib() const {
-  return fullmap_->lib();
+  return Xpetra::UseTpetra;
 }
 
 template <class LocalOrdinal, class GlobalOrdinal, class Node>
@@ -517,15 +546,15 @@ void BlockedMap<LocalOrdinal, GlobalOrdinal, Node>::
   // TODO check implementation, simplify copy constructor
   bThyraMode_ = input.getThyraMode();
 
-  fullmap_ = Xpetra::MapFactory<LocalOrdinal, GlobalOrdinal, Node>::Build(input.getFullMap(), 1);
+  fullmap_ = Build(input.getFullMap(), 1);
 
   maps_.resize(input.getNumMaps(), Teuchos::null);
   if (bThyraMode_ == true)
     thyraMaps_.resize(input.getNumMaps(), Teuchos::null);
   for (size_t i = 0; i < input.getNumMaps(); ++i) {
-    maps_[i] = Xpetra::MapFactory<LocalOrdinal, GlobalOrdinal, Node>::Build(input.getMap(i, false), 1);
+    maps_[i] = Build(input.getMap(i, false), 1);
     if (bThyraMode_ == true)
-      thyraMaps_[i] = Xpetra::MapFactory<LocalOrdinal, GlobalOrdinal, Node>::Build(input.getMap(i, true), 1);
+      thyraMaps_[i] = Build(input.getMap(i, true), 1);
   }
 
   // plausibility check
@@ -542,7 +571,7 @@ void BlockedMap<LocalOrdinal, GlobalOrdinal, Node>::
   importers_.resize(maps_.size());
   for (unsigned i = 0; i < maps_.size(); ++i)
     if (maps_[i] != null)
-      importers_[i] = Xpetra::ImportFactory<LocalOrdinal, GlobalOrdinal, Node>::Build(fullmap_, maps_[i]);
+      importers_[i] = rcp(new Xpetra::Import<LocalOrdinal, GlobalOrdinal, Node>(fullmap_, maps_[i]));
   TEUCHOS_TEST_FOR_EXCEPTION(
       CheckConsistency() == false, std::logic_error, "logic error. full map and sub maps are inconsistently distributed over the processors.");
 }
@@ -573,8 +602,8 @@ BlockedMap<LocalOrdinal, GlobalOrdinal, Node>::
   // gids.erase(std::unique(gids.begin(), gids.end()), gids.end());
   Teuchos::ArrayView<GlobalOrdinal> gidsView(&gids[0], gids.size());
 
-  Teuchos::RCP<Xpetra::Map<LocalOrdinal, GlobalOrdinal, Node>> fullMap = Xpetra::MapFactory<LocalOrdinal, GlobalOrdinal, Node>::
-      Build(subMaps[0]->lib(), INVALID, gidsView, subMaps[0]->getIndexBase(), subMaps[0]->getComm());
+  Teuchos::RCP<Xpetra::Map<LocalOrdinal, GlobalOrdinal, Node>> fullMap = rcp(new Xpetra::Map<LocalOrdinal, GlobalOrdinal, Node>
+      (INVALID, gidsView, subMaps[0]->getIndexBase(), subMaps[0]->getComm()));
 
   return fullMap;
 }

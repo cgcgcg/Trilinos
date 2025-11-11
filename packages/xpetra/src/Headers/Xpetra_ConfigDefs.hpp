@@ -138,16 +138,20 @@ Currently, it is typedefed to size_t.
 typedef size_t global_size_t;
 
 /*! Local versus global allocation of Map elements */
-enum LocalGlobal {
-  LocallyReplicated,  /*!< Indicates that map elements are locally replicated across all nodes */
-  GloballyDistributed /*!< Indicates that map elements are globally distributed across all nodes */
-};
+// enum LocalGlobal {
+//   LocallyReplicated,  /*!< Indicates that map elements are locally replicated across all nodes */
+//   GloballyDistributed /*!< Indicates that map elements are globally distributed across all nodes */
+// };
+
+using LocalGlobal = Tpetra::LocalGlobal;
 
 /*! Return status of Map lookup */
-enum LookupStatus {
-  AllIDsPresent, /*!< Indicates that all queried IDs were present in the Map */
-  IDNotPresent   /*!< Indicates that at least one of the specified IDs was not present in the Map */
-};
+// enum LookupStatus {
+//   AllIDsPresent, /*!< Indicates that all queried IDs were present in the Map */
+//   IDNotPresent   /*!< Indicates that at least one of the specified IDs was not present in the Map */
+// };
+using LookupStatus = Tpetra::LookupStatus;
+
 
 /*! Optimize storage option */
 enum OptimizeOption {

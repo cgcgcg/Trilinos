@@ -66,7 +66,7 @@ class StridedMap : public virtual Map<LocalOrdinal, GlobalOrdinal, Node> {
   typedef LocalOrdinal local_ordinal_type;
   typedef GlobalOrdinal global_ordinal_type;
   typedef Node node_type;
-  typedef typename Map<LocalOrdinal, GlobalOrdinal, Node>::global_indices_array_device_type global_indices_array_device_type;
+  typedef Kokkos::View<const global_ordinal_type *, typename Node::device_type> global_indices_array_device_type;
 
  private:
 #undef XPETRA_STRIDEDMAP_SHORT
@@ -103,7 +103,7 @@ class StridedMap : public virtual Map<LocalOrdinal, GlobalOrdinal, Node> {
              const Teuchos::RCP<const Teuchos::Comm<int>>& comm,
              LocalOrdinal stridedBlockId = -1,  // FIXME (mfh 03 Sep 2014) This breaks for unsigned LocalOrdinal
              GlobalOrdinal offset        = 0,
-             LocalGlobal lg              = GloballyDistributed);
+             LocalGlobal lg              = Tpetra::GloballyDistributed);
 
   //! Map constructor with a user-defined contiguous distribution.
   /** \brief Map constructor with a user-defined contiguous distribution.

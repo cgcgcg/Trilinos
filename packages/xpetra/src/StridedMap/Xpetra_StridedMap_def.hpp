@@ -12,12 +12,12 @@
 #ifndef XPETRA_STRIDEDMAP_DEF_HPP
 #define XPETRA_STRIDEDMAP_DEF_HPP
 
+#include "Xpetra_Map_decl.hpp"
 #include "Xpetra_StridedMap.hpp"
 
 #include <Teuchos_OrdinalTraits.hpp>
 
 #include "Xpetra_Exceptions.hpp"
-#include "Xpetra_MapFactory.hpp"
 
 namespace Xpetra {
 
@@ -35,7 +35,6 @@ StridedMap<LocalOrdinal, GlobalOrdinal, Node>::
   , stridedBlockId_(stridedBlockId)
   , offset_(offset)
   , indexBase_(indexBase) {
-  using MapFactory_t = Xpetra::MapFactory<LocalOrdinal, GlobalOrdinal, Node>;
 
   size_t blkSize = getFixedBlockSize();
 
@@ -65,7 +64,7 @@ StridedMap<LocalOrdinal, GlobalOrdinal, Node>::
     global_size_t numGlobalNodes = numGlobalElements / blkSize;
 
     // build an equally distributed node map
-    RCP<Map> nodeMap            = MapFactory_t::Build(xlib, numGlobalNodes, indexBase, comm, lg);
+    RCP<Map> nodeMap            = rcp(new Map(numGlobalNodes, indexBase, comm, lg));
     global_size_t numLocalNodes = nodeMap->getLocalNumElements();
 
     // translate local node ids to local dofs
@@ -90,7 +89,7 @@ StridedMap<LocalOrdinal, GlobalOrdinal, Node>::
       }
     }
 
-    map_ = MapFactory_t::Build(xlib, numGlobalElements, dofgids, indexBase, comm);
+    map_ = rcp(new Map(numGlobalElements, dofgids, indexBase, comm));
 
     if (stridedBlockId == -1) {
       TEUCHOS_TEST_FOR_EXCEPTION(getLocalNumElements() != Teuchos::as<size_t>(nodeMap->getLocalNumElements() * nDofsPerNode),
@@ -111,7 +110,7 @@ StridedMap<LocalOrdinal, GlobalOrdinal, Node>::
                                  "StridedTpetraMap::StridedTpetraMap: wrong distribution of dofs among processors.");
     }
   } else {
-    map_ = MapFactory_t::Build(xlib, numGlobalElements, indexBase, comm, lg);
+    map_ = rcp(new Map(numGlobalElements, indexBase, comm, lg));
   }
 
   TEUCHOS_TEST_FOR_EXCEPTION(CheckConsistency() == false, Exceptions::RuntimeError, "StridedTpetraMap::StridedTpetraMap: CheckConsistency() == false");
@@ -131,7 +130,6 @@ StridedMap<LocalOrdinal, GlobalOrdinal, Node>::
   , stridedBlockId_(stridedBlockId)
   , offset_(offset)
   , indexBase_(indexBase) {
-  using MapFactory_t = Xpetra::MapFactory<LocalOrdinal, GlobalOrdinal, Node>;
 
   size_t blkSize = getFixedBlockSize();
   TEUCHOS_TEST_FOR_EXCEPTION(stridingInfo.size() == 0,
@@ -175,7 +173,7 @@ StridedMap<LocalOrdinal, GlobalOrdinal, Node>::
     global_size_t numLocalNodes = numLocalElements / blkSize;
 
     // build an equally distributed node map
-    RCP<Map> nodeMap = MapFactory_t::Build(xlib, numGlobalNodes, numLocalNodes, indexBase, comm);
+    RCP<Map> nodeMap = rcp(new Map(numGlobalNodes, numLocalNodes, indexBase, comm));
 
     // translate local node ids to local dofs
     size_t nStridedOffset = 0;
@@ -199,7 +197,7 @@ StridedMap<LocalOrdinal, GlobalOrdinal, Node>::
       }
     }
 
-    map_ = MapFactory_t::Build(xlib, numGlobalElements, dofgids, indexBase, comm);
+    map_ = rcp(new Map(numGlobalElements, dofgids, indexBase, comm));
 
     if (stridedBlockId == -1) {
       TEUCHOS_TEST_FOR_EXCEPTION(getLocalNumElements() != Teuchos::as<size_t>(nodeMap->getLocalNumElements() * nDofsPerNode),
@@ -221,7 +219,7 @@ StridedMap<LocalOrdinal, GlobalOrdinal, Node>::
                                  "StridedTpetraMap::StridedTpetraMap: wrong distribution of dofs among processors.");
     }
   } else {
-    map_ = MapFactory_t::Build(xlib, numGlobalElements, numLocalElements, indexBase, comm);
+    map_ = rcp(new Map(numGlobalElements, numLocalElements, indexBase, comm));
   }
 
   TEUCHOS_TEST_FOR_EXCEPTION(CheckConsistency() == false, Exceptions::RuntimeError, "StridedTpetraMap::StridedTpetraMap: CheckConsistency() == false");
@@ -239,7 +237,6 @@ StridedMap<LocalOrdinal, GlobalOrdinal, Node>::
   : stridingInfo_(stridingInfo)
   , stridedBlockId_(stridedBlockId)
   , indexBase_(indexBase) {
-  using MapFactory_t = Xpetra::MapFactory<LocalOrdinal, GlobalOrdinal, Node>;
 
   size_t blkSize = getFixedBlockSize();
 
@@ -286,7 +283,7 @@ StridedMap<LocalOrdinal, GlobalOrdinal, Node>::
                                "an integer multiple of elementList.size().");
   }
 
-  map_ = MapFactory_t::Build(xlib, numGlobalElements, elementList, indexBase, comm);
+  map_ = rcp(new Map(numGlobalElements, elementList, indexBase, comm));
 
   // calculate offset_
 
@@ -329,10 +326,11 @@ StridedMap<LocalOrdinal, GlobalOrdinal, Node>::
   //      A strided map never can be built from a strided map. getMap always returns the underlying
   //      Xpetra::Map object which contains the data (either in a Xpetra::EpetraMapT or Xpetra::TpetraMap
   //      object)
-  if (Teuchos::rcp_dynamic_cast<const StridedMap>(map) == Teuchos::null) {
+  auto smap = Teuchos::rcp_dynamic_cast<const StridedMap>(map);
+  if (smap.is_null()) {
     map_ = map;  // if map is not a strided map, just store it (standard case)
   } else {
-    map_ = map->getMap();  // if map is also a strided map, store the underlying plain Epetra/Tpetra Xpetra map object
+    map_ = smap->getMap();  // if map is also a strided map, store the underlying plain Epetra/Tpetra Xpetra map object
   }
 }
 
@@ -595,7 +593,7 @@ StridedMap<LocalOrdinal, GlobalOrdinal, Node>::
 }
 
 template <class LocalOrdinal, class GlobalOrdinal, class Node>
-typename Map<LocalOrdinal, GlobalOrdinal, Node>::global_indices_array_device_type
+typename StridedMap<LocalOrdinal, GlobalOrdinal, Node>::global_indices_array_device_type
 StridedMap<LocalOrdinal, GlobalOrdinal, Node>::
     getMyGlobalIndicesDevice() const {
   return map_->getMyGlobalIndicesDevice();
@@ -675,7 +673,7 @@ template <class LocalOrdinal, class GlobalOrdinal, class Node>
 UnderlyingLib
 StridedMap<LocalOrdinal, GlobalOrdinal, Node>::
     lib() const {
-  return map_->lib();
+  return Xpetra::UseTpetra;
 }
 
 }  // namespace Xpetra
