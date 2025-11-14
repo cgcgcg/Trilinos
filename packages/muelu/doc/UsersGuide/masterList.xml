@@ -2189,6 +2189,13 @@ optimized neighbor discovery for Importer construction.</description>
     </parameter>
 
     <parameter>
+      <name>refmaxwell: dump local matrices</name>
+      <type>bool</type>
+      <default>false</default>
+      <description>Dump local parts of matrices to disk.</description>
+    </parameter>
+
+    <parameter>
       <name>refmaxwell: subsolves on subcommunicators</name>
       <type>bool</type>
       <default>false</default>

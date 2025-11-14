@@ -694,7 +694,7 @@ class RefMaxwell : public VerboseObject, public Xpetra::Operator<Scalar, LocalOr
   Teuchos::RCP<Teuchos::ParameterList> coarseA11_AP_reuse_data_, coarseA11_RAP_reuse_data_;
   Teuchos::RCP<Teuchos::ParameterList> A22_AP_reuse_data_, A22_RAP_reuse_data_;
   //! Some options
-  bool disable_addon_, disable_addon_22_, dump_matrices_, useKokkos_, use_as_preconditioner_, implicitTranspose_, fuseProlongationAndUpdate_, syncTimers_, enable_reuse_, skipFirst11Level_, skipFirst22Level_;
+  bool disable_addon_, disable_addon_22_, dump_matrices_, dump_local_matrices_, useKokkos_, use_as_preconditioner_, implicitTranspose_, fuseProlongationAndUpdate_, syncTimers_, enable_reuse_, skipFirst11Level_, skipFirst22Level_;
   bool applyBCsToAnodal_, applyBCsToCoarse11_, applyBCsTo22_;
   int numItersCoarse11_, numIters22_;
   std::string mode_;

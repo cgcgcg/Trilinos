@@ -135,6 +135,7 @@ RefMaxwell<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   params->set("refmaxwell: mode", MasterList::getDefault<std::string>("refmaxwell: mode"));
   params->set("refmaxwell: use as preconditioner", MasterList::getDefault<bool>("refmaxwell: use as preconditioner"));
   params->set("refmaxwell: dump matrices", MasterList::getDefault<bool>("refmaxwell: dump matrices"));
+  params->set("refmaxwell: dump local matrices", MasterList::getDefault<bool>("refmaxwell: dump local matrices"));
   params->set("refmaxwell: enable reuse", MasterList::getDefault<bool>("refmaxwell: enable reuse"));
   params->set("refmaxwell: skip first (1,1) level", MasterList::getDefault<bool>("refmaxwell: skip first (1,1) level"));
   params->set("refmaxwell: skip first (2,2) level", false);
@@ -235,6 +236,7 @@ void RefMaxwell<Scalar, LocalOrdinal, GlobalOrdinal, Node>::setParameters(Teucho
   mode_                      = parameterList_.get<std::string>("refmaxwell: mode");
   use_as_preconditioner_     = parameterList_.get<bool>("refmaxwell: use as preconditioner");
   dump_matrices_             = parameterList_.get<bool>("refmaxwell: dump matrices");
+  dump_local_matrices_             = parameterList_.get<bool>("refmaxwell: dump local matrices");
   enable_reuse_              = parameterList_.get<bool>("refmaxwell: enable reuse");
   implicitTranspose_         = parameterList_.get<bool>("transpose: use implicit");
   fuseProlongationAndUpdate_ = parameterList_.get<bool>("fuse prolongation and update");
@@ -1341,6 +1343,10 @@ void RefMaxwell<Scalar, LocalOrdinal, GlobalOrdinal, Node>::dump(const RCP<Matri
   if (dump_matrices_ && !A.is_null()) {
     GetOStream(Runtime0) << "Dumping to " << name << std::endl;
     Xpetra::IO<SC, LO, GO, NO>::Write(name, *A);
+  }
+  if (dump_local_matrices_ && !A.is_null()) {
+    GetOStream(Runtime0) << "Dumping local parts to " << name << std::endl;
+    Xpetra::IO<SC, LO, GO, NO>::WriteLocal(name, *A);
   }
 }
 
