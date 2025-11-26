@@ -1,5 +1,6 @@
 
 INCLUDE(TrilinosCreateClientTemplateHeaders)
+INCLUDE(ETI_functions)
 
 #
 # A) Package-specific configuration options
@@ -36,6 +37,19 @@ TRILINOS_CREATE_CLIENT_TEMPLATE_HEADERS(${DIR})
 TRIBITS_SET_AND_INC_DIRS(DIR ${CMAKE_CURRENT_BINARY_DIR})
 APPEND_GLOB(HEADERS ${DIR}/*.hpp)
 
+
+IF (${PACKAGE_NAME}_ENABLE_EXPLICIT_INSTANTIATION)
+
+  # Generate ETI .cpp files for Tpetra::MatrixMarketReaderWriter.
+  TPETRA_PROCESS_ALL_SLGN_TEMPLATES(MatrixMarketReaderWriter_OUTPUT_FILES "Tpetra_ETI_SC_LO_GO_NT.tmpl" "IO_MatrixMarket" "IO_MATRIXMARKET" "${TpetraCore_ETI_SCALARS}" "${TpetraCore_ETI_LORDS}" "${TpetraCore_ETI_GORDS}" "${TpetraCore_ETI_NODES}" TRUE)
+  LIST(APPEND SOURCES ${MatrixMarketReaderWriter_OUTPUT_FILES})
+
+  # Generate ETI .cpp files for Tpetra::MatrixMarketReaderWriter.
+  TPETRA_PROCESS_ALL_SLGN_TEMPLATES(BinaryReaderWriter_OUTPUT_FILES "Tpetra_ETI_SC_LO_GO_NT.tmpl" "IO_Binary" "IO_BINARY" "${TpetraCore_ETI_SCALARS}" "${TpetraCore_ETI_LORDS}" "${TpetraCore_ETI_GORDS}" "${TpetraCore_ETI_NODES}" TRUE)
+  LIST(APPEND SOURCES ${BinaryReaderWriter_OUTPUT_FILES})
+
+ENDIF()
+
 #
 # C) Define the targets for package's library(s)
 #
@@ -47,7 +61,7 @@ TRIBITS_ADD_LIBRARY(
   DEPLIBS tpetra
   )
 
-# TRIBITS_ADD_TEST_DIRECTORIES(test)
+TRIBITS_ADD_TEST_DIRECTORIES(examples)
 
 #
 # Make a trivial change to this comment if you add / remove a file
