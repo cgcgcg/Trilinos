@@ -1076,8 +1076,8 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     Pparams.set("Keep Constraint0", true);
   }
   P->SetParameterList(Pparams);
-  P->SetFactory("P", manager.GetFactory("Ptent"));
-  P->SetFactory("Constraint", manager.GetFactory("Constraint"));
+  P->SetFactory("P", constraintFactory);
+  P->SetFactory("Constraint", constraintFactory);
   manager.SetFactory("P", P);
 }
 
