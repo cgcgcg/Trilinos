@@ -17,3 +17,9 @@ TRIBITS_COPY_FILES_TO_BINARY_DIR(MatrixMatrix_UnitTests_cp
    ABt.mat
    AtBt.mat
 )
+
+TRIBITS_ADD_EXECUTABLE_AND_TEST(
+  Comparison
+  SOURCES
+    Comparison.cpp
+  )
