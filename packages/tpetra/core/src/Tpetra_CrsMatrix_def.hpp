@@ -4384,15 +4384,12 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
                              const Teuchos::RCP<const import_type>& importer,
                              const Teuchos::RCP<const export_type>& exporter,
                              const Teuchos::RCP<Teuchos::ParameterList>& params) {
-#ifdef HAVE_TPETRA_MMM_TIMINGS
   std::string label;
   if (!params.is_null())
     label = params->get("Timer Label", label);
   std::string prefix = std::string("Tpetra ") + label + std::string(": ");
-  using Teuchos::TimeMonitor;
 
-  Teuchos::TimeMonitor all(*TimeMonitor::getNewTimer(prefix + std::string("ESFC-all")));
-#endif
+  auto all = Teuchos::rcp(new Tpetra::Details::ProfilingRegion((prefix + std::string("ESFC-all")).c_str()));
 
   const char tfecfFuncName[] = "expertStaticFillComplete: ";
   TEUCHOS_TEST_FOR_EXCEPTION_CLASS_FUNC(!isFillActive() || isFillComplete(),
@@ -4403,17 +4400,13 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
       myGraph_.is_null(), std::logic_error, "myGraph_ is null.  This is not allowed.");
 
   {
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-    Teuchos::TimeMonitor graph(*TimeMonitor::getNewTimer(prefix + std::string("eSFC-M-Graph")));
-#endif
+    Tpetra::Details::ProfilingRegion graph((prefix + std::string("eSFC-M-Graph")).c_str());
     // We will presume globalAssemble is not needed, so we do the ESFC on the graph
     myGraph_->expertStaticFillComplete(domainMap, rangeMap, importer, exporter, params);
   }
 
   {
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-    TimeMonitor fLGAM(*TimeMonitor::getNewTimer(prefix + std::string("eSFC-M-fLGAM")));
-#endif
+    Tpetra::Details::ProfilingRegion fLGAM((prefix + std::string("eSFC-M-fLGAM")).c_str());
     // Fill the local graph and matrix
     fillLocalGraphAndMatrix(params);
   }
@@ -4432,9 +4425,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
                                         "Please report this bug to the Tpetra developers.");
 #endif  // HAVE_TPETRA_DEBUG
   {
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-    Teuchos::TimeMonitor cIS(*TimeMonitor::getNewTimer(prefix + std::string("ESFC-M-cIS")));
-#endif
+    Tpetra::Details::ProfilingRegion cIS((prefix + std::string("ESFC-M-cIS")).c_str());
 
     checkInternalState();
   }
@@ -7553,8 +7544,6 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
                                       Teuchos::REDUCE_MAX, *(getComm()));
   }
 
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-  using Teuchos::TimeMonitor;
   std::string label;
   if (!params.is_null())
     label = params->get("Timer Label", label);
@@ -7569,8 +7558,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     tlstr = os.str();
   }
 
-  Teuchos::TimeMonitor MMall(*TimeMonitor::getNewTimer(prefix + std::string("TAFC All") + tlstr));
-#endif
+  auto MM2 = Teuchos::rcp(new Tpetra::Details::ProfilingRegion((prefix + std::string("TAFC All") + tlstr).c_str()));
 
   // Make sure that the input argument rowTransfer is either an
   // Import or an Export.  Import and Export are the only two
@@ -7748,9 +7736,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   /***** 1) First communicator restriction phase ****/
   /***************************************************/
   if (restrictComm) {
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-    Teuchos::TimeMonitor MMrc(*TimeMonitor::getNewTimer(prefix + std::string("TAFC restrictComm")));
-#endif
+    Tpetra::Details::ProfilingRegion MMrc((prefix + std::string("TAFC restrictComm")).c_str());
     ReducedRowMap = MyRowMap->removeEmptyProcesses();
     ReducedComm   = ReducedRowMap.is_null() ? Teuchos::null : ReducedRowMap->getComm();
     destMat->removeEmptyProcessesInPlace(ReducedRowMap);
@@ -7783,9 +7769,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   bool bSameDomainMap = BaseDomainMap->isSameAs(*getDomainMap());
 
   if (!restrictComm && !MyImporter.is_null() && bSameDomainMap) {
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-    Teuchos::TimeMonitor MMrc(*TimeMonitor::getNewTimer(prefix + std::string("TAFC getOwningPIDs same map")));
-#endif
+    Tpetra::Details::ProfilingRegion MMrc((prefix + std::string("TAFC getOwningPIDs same map")).c_str());
     // Same domain map as source matrix
     //
     // NOTE: This won't work for restrictComm (because the Import
@@ -7796,9 +7780,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   } else if (restrictComm && !MyImporter.is_null() && bSameDomainMap) {
     // Same domain map as source matrix (restricted communicator)
     // We need one import from the domain to the column map
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-    Teuchos::TimeMonitor MMrc(*TimeMonitor::getNewTimer(prefix + std::string("TAFC getOwningPIDs restricted comm")));
-#endif
+    Tpetra::Details::ProfilingRegion MMrc((prefix + std::string("TAFC getOwningPIDs restricted comm")).c_str());
     IntVectorType SourceDomain_pids(getDomainMap(), true);
     IntVectorType SourceCol_pids(getColMap());
     // SourceDomain_pids contains the restricted pids
@@ -7809,9 +7791,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     SourceCol_pids.get1dCopy(SourcePids());
   } else if (MyImporter.is_null()) {
     // Matrix has no off-process entries
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-    Teuchos::TimeMonitor MMrc(*TimeMonitor::getNewTimer(prefix + std::string("TAFC getOwningPIDs all local entries")));
-#endif
+    Tpetra::Details::ProfilingRegion MMrc((prefix + std::string("TAFC getOwningPIDs all local entries")).c_str());
     SourcePids.resize(getColMap()->getLocalNumElements());
     SourcePids.assign(getColMap()->getLocalNumElements(), MyPID);
   } else if (!MyImporter.is_null() &&
@@ -7820,9 +7800,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     // domain map different than SourceMatrix domain map.
     // User has to provide a DomainTransfer object. We need
     // to communications (import/export)
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-    Teuchos::TimeMonitor MMrc(*TimeMonitor::getNewTimer(prefix + std::string("TAFC getOwningPIDs rectangular case")));
-#endif
+    Tpetra::Details::ProfilingRegion MMrc((prefix + std::string("TAFC getOwningPIDs rectangular case")).c_str());
 
     // TargetDomain_pids lives on the rebalanced new domain map
     IntVectorType TargetDomain_pids(domainMap);
@@ -7856,9 +7834,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
              BaseDomainMap->isSameAs(*BaseRowMap) &&
              getDomainMap()->isSameAs(*getRowMap())) {
     // We can use the rowTransfer + SourceMatrix's Import to find out who owns what.
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-    Teuchos::TimeMonitor MMrc(*TimeMonitor::getNewTimer(prefix + std::string("TAFC getOwningPIDs query import")));
-#endif
+    Tpetra::Details::ProfilingRegion MMrc((prefix + std::string("TAFC getOwningPIDs query import")).c_str());
 
     IntVectorType TargetRow_pids(domainMap);
     IntVectorType SourceRow_pids(getRowMap());
@@ -7896,9 +7872,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   // Tpetra-specific stuff
   size_t constantNumPackets = destMat->constantNumberOfPackets();
   {
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-    Teuchos::TimeMonitor MMrc(*TimeMonitor::getNewTimer(prefix + std::string("TAFC reallocate buffers")));
-#endif
+    Tpetra::Details::ProfilingRegion MMrc((prefix + std::string("TAFC reallocate buffers")).c_str());
     if (constantNumPackets == 0) {
       destMat->reallocArraysForNumPacketsPerLid(ExportLIDs.size(),
                                                 RemoteLIDs.view_host().size());
@@ -7914,9 +7888,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 
   // Pack & Prepare w/ owning PIDs
   {
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-    Teuchos::TimeMonitor MMrc(*TimeMonitor::getNewTimer(prefix + std::string("TAFC pack and prepare")));
-#endif
+    Tpetra::Details::ProfilingRegion MMrc((prefix + std::string("TAFC pack and prepare")).c_str());
     if (debug) {
       using std::cerr;
       using std::endl;
@@ -8027,9 +7999,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 
   // Do the exchange of remote data.
   {
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-    Teuchos::TimeMonitor MMrc(*TimeMonitor::getNewTimer(prefix + std::string("TAFC getOwningPIDs exchange remote data")));
-#endif
+    Tpetra::Details::ProfilingRegion MMrc((prefix + std::string("TAFC getOwningPIDs exchange remote data")).c_str());
     if (!communication_needed) {
       if (verbose) {
         std::ostringstream os;
@@ -8242,9 +8212,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     // TODO JHU This only becomes apparent as we begin to convert TAFC to run on device.
     destMat->numImportPacketsPerLID_.modify_host();  // FIXME
 
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-    RCP<TimeMonitor> tmCopySPRdata = rcp(new TimeMonitor(*TimeMonitor::getNewTimer(prefix + std::string("TAFC unpack-count-resize + copy same-perm-remote data"))));
-#endif
+    auto tmCopySPRdata = Teuchos::rcp(new Tpetra::Details::ProfilingRegion((prefix + std::string("TAFC unpack-count-resize + copy same-perm-remote data")).c_str()));
     ArrayRCP<size_t> CSR_rowptr;
     ArrayRCP<GO> CSR_colind_GID;
     ArrayRCP<LO> CSR_colind_LID;
@@ -8290,9 +8258,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     for (size_t i = 0; i < static_cast<size_t>(TargetPids.size()); i++) {
       if (TargetPids[i] == -1) TargetPids[i] = MyPID;
     }
-#ifdef HAVE_TPETRA_MMM_TIMINGS
     tmCopySPRdata = Teuchos::null;
-#endif
     /**************************************************************/
     /**** 4) Call Optimized MakeColMap w/ no Directory Lookups ****/
     /**************************************************************/
@@ -8306,9 +8272,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
       std::cerr << os.str();
     }
     {
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-      Teuchos::TimeMonitor MMrc(*TimeMonitor::getNewTimer(prefix + std::string("TAFC makeColMap")));
-#endif
+      Tpetra::Details::ProfilingRegion MMrc((prefix + std::string("TAFC makeColMap")).c_str());
       Import_Util::lowCommunicationMakeColMapAndReindexSerial(CSR_rowptr(),
                                                               CSR_colind_LID(),
                                                               CSR_colind_GID(),
@@ -8329,9 +8293,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     /**** 4) Second communicator restriction phase      ****/
     /*******************************************************/
     {
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-      Teuchos::TimeMonitor MMrc(*TimeMonitor::getNewTimer(prefix + std::string("TAFC restrict colmap")));
-#endif
+      Tpetra::Details::ProfilingRegion MMrc((prefix + std::string("TAFC restrict colmap")).c_str());
       if (restrictComm) {
         ReducedColMap = (MyRowMap.getRawPtr() == MyColMap.getRawPtr()) ? ReducedRowMap : MyColMap->replaceCommWithSubset(ReducedComm);
         MyColMap      = ReducedColMap;  // Reset the "my" maps
@@ -8372,9 +8334,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
         os << *verbosePrefix << "Calling sortCrsEntries" << endl;
         std::cerr << os.str();
       }
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-      Teuchos::TimeMonitor MMrc(*TimeMonitor::getNewTimer(prefix + std::string("TAFC sortCrsEntries")));
-#endif
+      Tpetra::Details::ProfilingRegion MMrc((prefix + std::string("TAFC sortCrsEntries")).c_str());
       Import_Util::sortCrsEntries(CSR_rowptr(),
                                   CSR_colind_LID(),
                                   CSR_vals());
@@ -8386,9 +8346,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
            << endl;
         std::cerr << os.str();
       }
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-      Teuchos::TimeMonitor MMrc(*TimeMonitor::getNewTimer(prefix + std::string("TAFC sortAndMergeCrsEntries")));
-#endif
+      Tpetra::Details::ProfilingRegion MMrc((prefix + std::string("TAFC sortAndMergeCrsEntries")).c_str());
       Import_Util::sortAndMergeCrsEntries(CSR_rowptr(),
                                           CSR_colind_LID(),
                                           CSR_vals());
@@ -8419,9 +8377,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     // refactor version of CrsMatrix, though it reserves the right to
     // make a deep copy of the arrays.
     {
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-      Teuchos::TimeMonitor MMrc(*TimeMonitor::getNewTimer(prefix + std::string("TAFC setAllValues")));
-#endif
+      Tpetra::Details::ProfilingRegion MMrc((prefix + std::string("TAFC setAllValues")).c_str());
       destMat->setAllValues(CSR_rowptr, CSR_colind_LID, CSR_vals);
     }
 
@@ -8435,9 +8391,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     // TODO JHU This only becomes apparent as we begin to convert TAFC to run on device.
     destMat->numImportPacketsPerLID_.modify_host();  // FIXME
 
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-    RCP<TimeMonitor> tmCopySPRdata = rcp(new TimeMonitor(*TimeMonitor::getNewTimer(prefix + std::string("TAFC unpack-count-resize + copy same-perm-remote data"))));
-#endif
+    auto tmCopySPRdata = Teuchos::rcp(new Tpetra::Details::ProfilingRegion((prefix + std::string("TAFC unpack-count-resize + copy same-perm-remote data")).c_str()));
     ArrayRCP<size_t> CSR_rowptr;
     ArrayRCP<GO> CSR_colind_GID;
     ArrayRCP<LO> CSR_colind_LID;
@@ -8476,9 +8430,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 
     Kokkos::resize(CSR_colind_LID_d, CSR_colind_GID_d.size());
 
-#ifdef HAVE_TPETRA_MMM_TIMINGS
     tmCopySPRdata = Teuchos::null;
-#endif
     /**************************************************************/
     /**** 4) Call Optimized MakeColMap w/ no Directory Lookups ****/
     /**************************************************************/
@@ -8492,9 +8444,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
       std::cerr << os.str();
     }
     {
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-      Teuchos::TimeMonitor MMrc(*TimeMonitor::getNewTimer(prefix + std::string("TAFC makeColMap")));
-#endif
+      Tpetra::Details::ProfilingRegion MMrc((prefix + std::string("TAFC makeColMap")).c_str());
       Import_Util::lowCommunicationMakeColMapAndReindex(CSR_rowptr_d,
                                                         CSR_colind_LID_d,
                                                         CSR_colind_GID_d,
@@ -8515,9 +8465,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     /**** 4) Second communicator restriction phase      ****/
     /*******************************************************/
     {
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-      Teuchos::TimeMonitor MMrc(*TimeMonitor::getNewTimer(prefix + std::string("TAFC restrict colmap")));
-#endif
+      Tpetra::Details::ProfilingRegion MMrc((prefix + std::string("TAFC restrict colmap")).c_str());
       if (restrictComm) {
         ReducedColMap = (MyRowMap.getRawPtr() == MyColMap.getRawPtr()) ? ReducedRowMap : MyColMap->replaceCommWithSubset(ReducedComm);
         MyColMap      = ReducedColMap;  // Reset the "my" maps
@@ -8559,9 +8507,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
         os << *verbosePrefix << "Calling sortCrsEntries" << endl;
         std::cerr << os.str();
       }
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-      Teuchos::TimeMonitor MMrc(*TimeMonitor::getNewTimer(prefix + std::string("TAFC sortCrsEntries")));
-#endif
+      Tpetra::Details::ProfilingRegion MMrc((prefix + std::string("TAFC sortCrsEntries")).c_str());
       Import_Util::sortCrsEntries(CSR_rowptr_d,
                                   CSR_colind_LID_d,
                                   CSR_vals_d);
@@ -8573,9 +8519,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
            << endl;
         std::cerr << os.str();
       }
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-      Teuchos::TimeMonitor MMrc(*TimeMonitor::getNewTimer(prefix + std::string("TAFC sortAndMergeCrsEntries")));
-#endif
+      Tpetra::Details::ProfilingRegion MMrc((prefix + std::string("TAFC sortAndMergeCrsEntries")).c_str());
       Import_Util::sortAndMergeCrsEntries(CSR_rowptr_d,
                                           CSR_colind_LID_d,
                                           CSR_vals_d);
@@ -8598,9 +8542,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     }
 
     {
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-      Teuchos::TimeMonitor MMrc(*TimeMonitor::getNewTimer(prefix + std::string("TAFC setAllValues")));
-#endif
+      Tpetra::Details::ProfilingRegion MMrc((prefix + std::string("TAFC setAllValues")).c_str());
       destMat->setAllValues(CSR_rowptr_d, CSR_colind_LID_d, CSR_vals_d);
     }
 
@@ -8609,9 +8551,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   /***************************************************/
   /**** 7) Build Importer & Call ESFC             ****/
   /***************************************************/
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-  RCP<TimeMonitor> tmIESFC = rcp(new TimeMonitor(*TimeMonitor::getNewTimer(prefix + std::string("TAFC build importer and esfc"))));
-#endif
+  auto tmIESFC = Teuchos::rcp(new Tpetra::Details::ProfilingRegion((prefix + std::string("TAFC build importer and esfc")).c_str()));
   // Pre-build the importer using the existing PIDs
   Teuchos::ParameterList esfc_params;
 
@@ -8632,9 +8572,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   }
 
   if (isMM) {
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-    Teuchos::TimeMonitor MMisMM(*TimeMonitor::getNewTimer(prefix + std::string("isMM Block")));
-#endif
+    Tpetra::Details::ProfilingRegion MMisMM((prefix + std::string("isMM Block")).c_str());
     // Combine all type1/2/3 lists, [filter them], then call the expert import constructor.
 
     if (verbose) {
@@ -8655,9 +8593,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     }
 
     {
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-      TimeMonitor tm_rnd(*TimeMonitor::getNewTimer(prefix + std::string("isMMrevNeighDis")));
-#endif
+      Tpetra::Details::ProfilingRegion tm_rnd((prefix + std::string("isMMrevNeighDis")).c_str());
       Import_Util::reverseNeighborDiscovery(*this,
                                             rowptr,
                                             colind,
@@ -8793,9 +8729,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
       std::cerr << os.str();
     }
 
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-    auto ismmIctor(*TimeMonitor::getNewTimer(prefix + std::string("isMMIportCtor")));
-#endif
+    Tpetra::Details::ProfilingRegion ismmIctor((prefix + std::string("isMMIportCtor")).c_str());
     Teuchos::RCP<Teuchos::ParameterList> plist = rcp(new Teuchos::ParameterList());
     // 25 Jul 2018: Test for equality with the non-isMM path's Import object.
     if ((MyDomainMap != MyColMap) && (!MyDomainMap->isSameAs(*MyColMap)))
@@ -8813,10 +8747,8 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     }
 
     {
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-      TimeMonitor esfc(*TimeMonitor::getNewTimer(prefix + std::string("isMM::destMat->eSFC")));
+      Tpetra::Details::ProfilingRegion esfc((prefix + std::string("isMM::destMat->eSFC")).c_str());
       esfc_params.set("Timer Label", label + std::string("isMM eSFC"));
-#endif
       if (!params.is_null())
         esfc_params.set("compute global constants", params->get("compute global constants", true));
       destMat->expertStaticFillComplete(MyDomainMap, MyRangeMap, MyImport, Teuchos::null, rcp(new Teuchos::ParameterList(esfc_params)));
@@ -8824,18 +8756,14 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 
   }  // if(isMM)
   else {
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-    TimeMonitor MMnotMMblock(*TimeMonitor::getNewTimer(prefix + std::string("TAFC notMMblock")));
-#endif
+    Tpetra::Details::ProfilingRegion MMnotMMblock((prefix + std::string("TAFC notMMblock")).c_str());
     if (verbose) {
       std::ostringstream os;
       os << *verbosePrefix << "Create Import" << std::endl;
       std::cerr << os.str();
     }
 
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-    TimeMonitor notMMIcTor(*TimeMonitor::getNewTimer(prefix + std::string("TAFC notMMCreateImporter")));
-#endif
+    Tpetra::Details::ProfilingRegion notMMIcTor((prefix + std::string("TAFC notMMCreateImporter")).c_str());
     Teuchos::RCP<Teuchos::ParameterList> mypars = rcp(new Teuchos::ParameterList);
     mypars->set("Timer Label", "notMMFrom_tAFC");
     if ((MyDomainMap != MyColMap) && (!MyDomainMap->isSameAs(*MyColMap)))
@@ -8847,13 +8775,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
       std::cerr << os.str();
     }
 
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-    TimeMonitor esfcnotmm(*TimeMonitor::getNewTimer(prefix + std::string("notMMdestMat->expertStaticFillComplete")));
-    esfc_params.set("Timer Label", prefix + std::string("notMM eSFC"));
-#else
-    esfc_params.set("Timer Label", std::string("notMM eSFC"));
-#endif
-
+    Tpetra::Details::ProfilingRegion esfcnotmm((prefix + std::string("notMMdestMat->expertStaticFillComplete")).c_str());
     if (!params.is_null()) {
       esfc_params.set("compute global constants",
                       params->get("compute global constants", true));
@@ -8863,9 +8785,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
                                       rcp(new Teuchos::ParameterList(esfc_params)));
   }
 
-#ifdef HAVE_TPETRA_MMM_TIMINGS
   tmIESFC = Teuchos::null;
-#endif
 
   if (verbose) {
     std::ostringstream os;

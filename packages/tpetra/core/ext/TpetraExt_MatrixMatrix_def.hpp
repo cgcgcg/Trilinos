@@ -1621,6 +1621,7 @@ void mult_A_B_newmatrix(
   lo_view_t Bcol2Ccol(Kokkos::ViewAllocateWithoutInitializing("Bcol2Ccol"), Bview.colMap->getLocalNumElements()), Icol2Ccol;
 
   if (Bview.importMatrix.is_null()) {
+    Tpetra::Details::ProfilingRegion MM2("TpetraExt: MMM: M5 Cmap - importMatrix is null");
     // mfh 27 Sep 2016: B has no "remotes," so B and C have the same column Map.
     Cimport             = Bimport;
     Ccolmap             = Bview.colMap;
@@ -1633,6 +1634,7 @@ void mult_A_B_newmatrix(
           Bcol2Ccol(i) = i;
         });
   } else {
+    Tpetra::Details::ProfilingRegion MM2("TpetraExt: MMM: M5 Cmap - importMatrix is nonnull");
     // mfh 27 Sep 2016: B has "remotes," so we need to build the
     // column Map of C, as well as C's Import object (from its domain
     // Map to its column Map).  C's column Map is the union of the
@@ -1700,20 +1702,22 @@ void mult_A_B_newmatrix(
   lo_view_t targetMapToOrigRow(Kokkos::ViewAllocateWithoutInitializing("targetMapToOrigRow"), Aview.colMap->getLocalNumElements());
   lo_view_t targetMapToImportRow(Kokkos::ViewAllocateWithoutInitializing("targetMapToImportRow"), Aview.colMap->getLocalNumElements());
 
-  Kokkos::parallel_for(
-      "Tpetra::mult_A_B_newmatrix::construct_tables", range_type(Aview.colMap->getMinLocalIndex(), Aview.colMap->getMaxLocalIndex() + 1), KOKKOS_LAMBDA(const LO i) {
-        GO aidx  = Acolmap_local.getGlobalElement(i);
-        LO B_LID = Browmap_local.getLocalElement(aidx);
-        if (B_LID != LO_INVALID) {
-          targetMapToOrigRow(i)   = B_LID;
-          targetMapToImportRow(i) = LO_INVALID;
-        } else {
-          LO I_LID                = Irowmap_local.getLocalElement(aidx);
-          targetMapToOrigRow(i)   = LO_INVALID;
-          targetMapToImportRow(i) = I_LID;
-        }
-      });
-
+  {
+    Tpetra::Details::ProfilingRegion MM3("TpetraExt: MMM: M5 Cmap - table lookups");
+    Kokkos::parallel_for(
+        "Tpetra::mult_A_B_newmatrix::construct_tables", range_type(Aview.colMap->getMinLocalIndex(), Aview.colMap->getMaxLocalIndex() + 1), KOKKOS_LAMBDA(const LO i) {
+          GO aidx  = Acolmap_local.getGlobalElement(i);
+          LO B_LID = Browmap_local.getLocalElement(aidx);
+          if (B_LID != LO_INVALID) {
+            targetMapToOrigRow(i)   = B_LID;
+            targetMapToImportRow(i) = LO_INVALID;
+          } else {
+            LO I_LID                = Irowmap_local.getLocalElement(aidx);
+            targetMapToOrigRow(i)   = LO_INVALID;
+            targetMapToImportRow(i) = I_LID;
+          }
+        });
+  }
   // Call the actual kernel.  We'll rely on partial template specialization to call the correct one ---
   // Either the straight-up Tpetra code (SerialNode) or the KokkosKernels one (other NGP node types)
   KernelWrappers<Scalar, LocalOrdinal, GlobalOrdinal, Node, lo_view_t>::mult_A_B_newmatrix_kernel_wrapper(Aview, Bview, targetMapToOrigRow, targetMapToImportRow, Bcol2Ccol, Icol2Ccol, C, Cimport, label, params);
@@ -2005,85 +2009,89 @@ void KernelWrappers<Scalar, LocalOrdinal, GlobalOrdinal, Node, LocalOrdinalViewT
   // you whether the corresponding row of B belongs to B_local
   // ("orig") or B_remote ("Import").
 
-  // For each row of A/C
-  size_t CSR_ip = 0, OLD_ip = 0;
-  for (size_t i = 0; i < m; i++) {
-    // mfh 27 Sep 2016: m is the number of rows in the input matrix A
-    // on the calling process.
-    Crowptr[i] = CSR_ip;
+  {
+    Tpetra::Details::ProfilingRegion MM5("TpetraExt: MMM: Newmatrix insert");
 
-    // mfh 27 Sep 2016: For each entry of A in the current row of A
-    for (size_t k = Arowptr[i]; k < Arowptr[i + 1]; k++) {
-      LO Aik        = Acolind[k];  // local column index of current entry of A
-      const SC Aval = Avals[k];    // value of current entry of A
-      if (Aval == SC_ZERO)
-        continue;  // skip explicitly stored zero values in A
+    // For each row of A/C
+    size_t CSR_ip = 0, OLD_ip = 0;
+    for (size_t i = 0; i < m; i++) {
+      // mfh 27 Sep 2016: m is the number of rows in the input matrix A
+      // on the calling process.
+      Crowptr[i] = CSR_ip;
 
-      if (targetMapToOrigRow[Aik] != LO_INVALID) {
-        // mfh 27 Sep 2016: If the entry of targetMapToOrigRow
-        // corresponding to the current entry of A is populated, then
-        // the corresponding row of B is in B_local (i.e., it lives on
-        // the calling process).
+      // mfh 27 Sep 2016: For each entry of A in the current row of A
+      for (size_t k = Arowptr[i]; k < Arowptr[i + 1]; k++) {
+        LO Aik        = Acolind[k];  // local column index of current entry of A
+        const SC Aval = Avals[k];    // value of current entry of A
+        if (Aval == SC_ZERO)
+          continue;  // skip explicitly stored zero values in A
 
-        // Local matrix
-        size_t Bk = static_cast<size_t>(targetMapToOrigRow[Aik]);
+        if (targetMapToOrigRow[Aik] != LO_INVALID) {
+          // mfh 27 Sep 2016: If the entry of targetMapToOrigRow
+          // corresponding to the current entry of A is populated, then
+          // the corresponding row of B is in B_local (i.e., it lives on
+          // the calling process).
 
-        // mfh 27 Sep 2016: Go through all entries in that row of B_local.
-        for (size_t j = Browptr[Bk]; j < Browptr[Bk + 1]; ++j) {
-          LO Bkj = Bcolind[j];
-          LO Cij = Bcol2Ccol[Bkj];
+          // Local matrix
+          size_t Bk = static_cast<size_t>(targetMapToOrigRow[Aik]);
 
-          if (c_status[Cij] == INVALID || c_status[Cij] < OLD_ip) {
-            // New entry
-            c_status[Cij]   = CSR_ip;
-            Ccolind[CSR_ip] = Cij;
-            Cvals[CSR_ip]   = Aval * Bvals[j];
-            CSR_ip++;
+          // mfh 27 Sep 2016: Go through all entries in that row of B_local.
+          for (size_t j = Browptr[Bk]; j < Browptr[Bk + 1]; ++j) {
+            LO Bkj = Bcolind[j];
+            LO Cij = Bcol2Ccol[Bkj];
 
-          } else {
-            Cvals[c_status[Cij]] += Aval * Bvals[j];
+            if (c_status[Cij] == INVALID || c_status[Cij] < OLD_ip) {
+              // New entry
+              c_status[Cij]   = CSR_ip;
+              Ccolind[CSR_ip] = Cij;
+              Cvals[CSR_ip]   = Aval * Bvals[j];
+              CSR_ip++;
+
+            } else {
+              Cvals[c_status[Cij]] += Aval * Bvals[j];
+            }
           }
-        }
 
-      } else {
-        // mfh 27 Sep 2016: If the entry of targetMapToOrigRow
-        // corresponding to the current entry of A NOT populated (has
-        // a flag "invalid" value), then the corresponding row of B is
-        // in B_local (i.e., it lives on the calling process).
+        } else {
+          // mfh 27 Sep 2016: If the entry of targetMapToOrigRow
+          // corresponding to the current entry of A NOT populated (has
+          // a flag "invalid" value), then the corresponding row of B is
+          // in B_local (i.e., it lives on the calling process).
 
-        // Remote matrix
-        size_t Ik = static_cast<size_t>(targetMapToImportRow[Aik]);
-        for (size_t j = Irowptr[Ik]; j < Irowptr[Ik + 1]; ++j) {
-          LO Ikj = Icolind[j];
-          LO Cij = Icol2Ccol[Ikj];
+          // Remote matrix
+          size_t Ik = static_cast<size_t>(targetMapToImportRow[Aik]);
+          for (size_t j = Irowptr[Ik]; j < Irowptr[Ik + 1]; ++j) {
+            LO Ikj = Icolind[j];
+            LO Cij = Icol2Ccol[Ikj];
 
-          if (c_status[Cij] == INVALID || c_status[Cij] < OLD_ip) {
-            // New entry
-            c_status[Cij]   = CSR_ip;
-            Ccolind[CSR_ip] = Cij;
-            Cvals[CSR_ip]   = Aval * Ivals[j];
-            CSR_ip++;
-          } else {
-            Cvals[c_status[Cij]] += Aval * Ivals[j];
+            if (c_status[Cij] == INVALID || c_status[Cij] < OLD_ip) {
+              // New entry
+              c_status[Cij]   = CSR_ip;
+              Ccolind[CSR_ip] = Cij;
+              Cvals[CSR_ip]   = Aval * Ivals[j];
+              CSR_ip++;
+            } else {
+              Cvals[c_status[Cij]] += Aval * Ivals[j];
+            }
           }
         }
       }
+
+      // Resize for next pass if needed
+      if (i + 1 < m && CSR_ip + std::min(n, (Arowptr[i + 2] - Arowptr[i + 1]) * b_max_nnz_per_row) > CSR_alloc) {
+        CSR_alloc *= 2;
+        Kokkos::resize(Ccolind, CSR_alloc);
+        Kokkos::resize(Cvals, CSR_alloc);
+      }
+      OLD_ip = CSR_ip;
     }
 
-    // Resize for next pass if needed
-    if (i + 1 < m && CSR_ip + std::min(n, (Arowptr[i + 2] - Arowptr[i + 1]) * b_max_nnz_per_row) > CSR_alloc) {
-      CSR_alloc *= 2;
-      Kokkos::resize(Ccolind, CSR_alloc);
-      Kokkos::resize(Cvals, CSR_alloc);
-    }
-    OLD_ip = CSR_ip;
+    Crowptr[m] = CSR_ip;
+
+    // Downward resize
+    Kokkos::resize(Ccolind, CSR_ip);
+    Kokkos::resize(Cvals, CSR_ip);
   }
-
-  Crowptr[m] = CSR_ip;
-
-  // Downward resize
-  Kokkos::resize(Ccolind, CSR_ip);
-  Kokkos::resize(Cvals, CSR_ip);
 
   {
     Tpetra::Details::ProfilingRegion MM3("TpetraExt: MMM: Newmatrix Final Sort");
@@ -2094,8 +2102,8 @@ void KernelWrappers<Scalar, LocalOrdinal, GlobalOrdinal, Node, LocalOrdinalViewT
     C.setAllValues(Crowptr, Ccolind, Cvals);
   }
 
-  Tpetra::Details::ProfilingRegion MM4("TpetraExt: MMM: Newmatrix ESCC");
   {
+    Tpetra::Details::ProfilingRegion MM4("TpetraExt: MMM: Newmatrix ESCC");
     // Final FillComplete
     //
     // mfh 27 Sep 2016: So-called "expert static fill complete" bypasses

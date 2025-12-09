@@ -138,6 +138,7 @@ DistributorPlan::DistributorPlan(const DistributorPlan& otherPlan)
 }
 
 size_t DistributorPlan::createFromSends(const Teuchos::ArrayView<const int>& exportProcIDs) {
+  Tpetra::Details::ProfilingRegion pr("Tpetra::DistributorPlan::createFromSends");
   using std::endl;
   using Teuchos::outArg;
   using Teuchos::REDUCE_MAX;
@@ -610,6 +611,7 @@ Teuchos::RCP<DistributorPlan> DistributorPlan::getReversePlan() const {
 }
 
 void DistributorPlan::createReversePlan() const {
+  Tpetra::Details::ProfilingRegion pr("Tpetra::DistributorPlan::createReversePlan");
   reversePlan_                  = Teuchos::rcp(new DistributorPlan(comm_));
   reversePlan_->howInitialized_ = Details::DISTRIBUTOR_INITIALIZED_BY_REVERSE;
   reversePlan_->sendType_       = sendType_;
@@ -674,6 +676,7 @@ void DistributorPlan::createReversePlan() const {
 }
 
 void DistributorPlan::computeReceives() {
+  Tpetra::Details::ProfilingRegion pr("Tpetra::DistributorPlan::computeReceives");
   using Teuchos::Array;
   using Teuchos::ArrayRCP;
   using Teuchos::as;
