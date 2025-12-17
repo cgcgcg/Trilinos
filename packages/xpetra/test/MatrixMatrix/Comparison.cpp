@@ -192,6 +192,8 @@ int main(int argc, char** argv) {
     Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Write("epetra_" + A_file, *eA);
     Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Write("epetra_" + P_file, *eP);
 
+    map->getComm()->barrier();
+
     for (int iter = 0; iter < numRepeats; ++iter) {
       auto timer = rcp(new Teuchos::TimeMonitor(*Teuchos::TimeMonitor::getNewTimer("Epetra implicit")));
       RCP<Matrix> yAP;
@@ -205,6 +207,8 @@ int main(int argc, char** argv) {
         yPtAP       = Xpetra::MatrixMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Multiply(*eP, true, *yAP, false, yPtAP, *out, true, true);
       }
     }
+
+    map->getComm()->barrier();
 
     for (int iter = 0; iter < numRepeats; ++iter) {
       auto timer = rcp(new Teuchos::TimeMonitor(*Teuchos::TimeMonitor::getNewTimer("Epetra explicit")));
@@ -245,6 +249,9 @@ int main(int argc, char** argv) {
     AP_ml = ML_Operator_Create(comm);
     ML_Operator_WrapEpetraMatrix(&Ae, A_ml);
     ML_Operator_WrapEpetraMatrix(&Pe, P_ml);
+
+    map->getComm()->barrier();
+
     for (int iter = 0; iter < numRepeats; ++iter) {
       auto timer = rcp(new Teuchos::TimeMonitor(*Teuchos::TimeMonitor::getNewTimer("ML explicit")));
       RCP<Matrix> yAP;
@@ -282,6 +289,8 @@ int main(int argc, char** argv) {
 
   // Tpetra
   {
+    map->getComm()->barrier();
+
     for (int iter = 0; iter < numRepeats; ++iter) {
       auto timer = rcp(new Teuchos::TimeMonitor(*Teuchos::TimeMonitor::getNewTimer("Tpetra implicit")));
       RCP<Matrix> yAP;
@@ -295,6 +304,8 @@ int main(int argc, char** argv) {
         yPtAP       = Xpetra::MatrixMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Multiply(*xP, true, *yAP, false, yPtAP, *out, true, true);
       }
     }
+
+    map->getComm()->barrier();
 
     for (int iter = 0; iter < numRepeats; ++iter) {
       auto timer = rcp(new Teuchos::TimeMonitor(*Teuchos::TimeMonitor::getNewTimer("Tpetra explicit")));
