@@ -153,15 +153,22 @@ int main(int argc, char** argv) {
 
   int numRepeats = 100;
 
+  // 224 ranks
+  std::string map_file        = "rowmap_A_0.m";
+  std::string coarse_map_file = "domainmap_P_1.m";
+  std::string A_file          = "A_0.m";
+  std::string P_file          = "P_1.m";
+
   // std::string map_file = "rowmap_A_3.m";
   // std::string coarse_map_file = "domainmap_P_4.m";
   // std::string A_file = "A_3.m";
   // std::string P_file = "P_4.m";
 
-  std::string map_file        = "rowmap_A_2.m";
-  std::string coarse_map_file = "domainmap_P_3.m";
-  std::string A_file          = "A_2.m";
-  std::string P_file          = "P_3.m";
+  // 34 ranks
+  // std::string map_file        = "rowmap_A_2.m";
+  // std::string coarse_map_file = "domainmap_P_3.m";
+  // std::string A_file          = "A_2.m";
+  // std::string P_file          = "P_3.m";
 
   auto lib = Xpetra::UseTpetra;
 
@@ -181,6 +188,9 @@ int main(int argc, char** argv) {
 
     auto eA = Xpetra::MatrixFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(xA->getLocalMatrixHost(), ep_map, ep_A_colmap, ep_map, ep_map);
     auto eP = Xpetra::MatrixFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(xP->getLocalMatrixHost(), ep_map, ep_P_colmap, ep_coarse_map, ep_map);
+
+    Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Write("epetra_" + A_file, *eA);
+    Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Write("epetra_" + P_file, *eP);
 
     for (int iter = 0; iter < numRepeats; ++iter) {
       auto timer = rcp(new Teuchos::TimeMonitor(*Teuchos::TimeMonitor::getNewTimer("Epetra implicit")));
