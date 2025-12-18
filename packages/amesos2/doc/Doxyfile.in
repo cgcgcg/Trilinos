@@ -1,0 +1,13 @@
+#
+# This file is used by doxygen for building documentation in the build tree
+#
+@INCLUDE         = @CMAKE_CURRENT_BINARY_DIR@/../../../doc/Doxyfile
+@INCLUDE         = @CMAKE_CURRENT_SOURCE_DIR@/Doxyfile.options
+
+PROJECT_NAME     = @PACKAGE_NAME@
+INPUT            = @CMAKE_CURRENT_SOURCE_DIR@/index.doc @CMAKE_CURRENT_SOURCE_DIR@/../src
+EXCLUDE          = @CMAKE_CURRENT_SOURCE_DIR@/../src/SuiteSparse
+INCLUDE_PATH     =
+EXAMPLE_PATH     = @CMAKE_CURRENT_SOURCE_DIR@/../example
+OUTPUT_DIRECTORY = @LOCAL_DOXYGEN_OUTPUT_DIR@
+GENERATE_TAGFILE = @DOXYGEN_TAG_OUTPUT_DIR@/tag_files/@PACKAGE_NAME@.tag

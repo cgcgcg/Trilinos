@@ -1,0 +1,15 @@
+#
+# This file is used by doxygen for building documentation in the build tree
+#
+@INCLUDE         = @CMAKE_CURRENT_BINARY_DIR@/../../../doc/Doxyfile
+@INCLUDE         = @CMAKE_CURRENT_SOURCE_DIR@/Doxyfile.options
+
+PROJECT_NAME     = @PACKAGE_NAME@
+INPUT            = @CMAKE_CURRENT_SOURCE_DIR@/index.doc @CMAKE_CURRENT_SOURCE_DIR@/groups.doc @CMAKE_CURRENT_SOURCE_DIR@/../src @CMAKE_CURRENT_SOURCE_DIR@/../thyra/src @CMAKE_CURRENT_SOURCE_DIR@/../epetra/src @CMAKE_CURRENT_SOURCE_DIR@/../tpetra/src
+EXCLUDE          = @CMAKE_CURRENT_SOURCE_DIR@/../src/ModalAnalysisSolvers @CMAKE_CURRENT_SOURCE_DIR@/../src/AnasaziDenseMatTraits.hpp @CMAKE_CURRENT_SOURCE_DIR@/../src/AnasaziDirectSolver.hpp
+INCLUDE_PATH     = @CMAKE_CURRENT_SOURCE_DIR@/../src
+EXAMPLE_PATH     = @CMAKE_CURRENT_SOURCE_DIR@/../tpetra/example
+IMAGE_PATH       = @CMAKE_CURRENT_SOURCE_DIR@/images
+OUTPUT_DIRECTORY = @LOCAL_DOXYGEN_OUTPUT_DIR@
+GENERATE_TAGFILE = @DOXYGEN_TAG_OUTPUT_DIR@/tag_files/@PACKAGE_NAME@.tag
+TAGFILES         = ../../common/tag_files/Teuchos.tag=../../../teuchos/doc/html ../../common/tag_files/ThyraInterfacesOperatorVectorANAFundamental.tag=../../../thyra/src/interfaces/operator_vector/ana/fundamental/doc/html

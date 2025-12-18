@@ -1,0 +1,1 @@
+ADD_DOXYGEN_TARGET("amesos2")
