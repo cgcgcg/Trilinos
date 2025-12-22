@@ -148,6 +148,7 @@ void PreconditionerSetup(Teuchos::RCP<Xpetra::Matrix<Scalar, LocalOrdinal, Globa
   if (useML && lib != Xpetra::UseEpetra) throw std::runtime_error("Error: Cannot use ML on non-epetra matrices");
 
   for (int i = 0; i <= numRebuilds; i++) {
+    A->getRowMap()->getComm()->barrier();
     auto tm = Teuchos::rcp(new TimeMonitor(*TimeMonitor::getNewTimer((!sacrifice || (i > 0)) ? "Driver: 2 - MueLu Setup" : "Driver: 2 - MueLu Setup (sacrifice)")));
     A->SetMaxEigenvalueEstimate(-Teuchos::ScalarTraits<SC>::one());
     if (useAMGX) {
@@ -159,7 +160,8 @@ void PreconditionerSetup(Teuchos::RCP<Xpetra::Matrix<Scalar, LocalOrdinal, Globa
 #endif
     } else if (useML) {
 #if defined(HAVE_MUELU_ML) and defined(HAVE_MUELU_EPETRA)
-      mueluList.remove("use external multigrid package");
+      if (mueluList.isParameter("use external multigrid package"))
+        mueluList.remove("use external multigrid package");
       if (!coordinates.is_null()) {
         RCP<const Epetra_MultiVector> epetraCoord = MueLu::Utilities<coordinate_type, LO, GO, NO>::MV2EpetraMV(coordinates);
         if (epetraCoord->NumVectors() > 0) mueluList.set("x-coordinates", (*epetraCoord)[0]);
@@ -186,6 +188,7 @@ void PreconditionerSetup(Teuchos::RCP<Xpetra::Matrix<Scalar, LocalOrdinal, Globa
       userParamList.set<Teuchos::Array<LO>>("Array<LO> lNodesPerDim", lNodesPerDim);
       H = MueLu::CreateXpetraPreconditioner(A, mueluList);
     }
+    A->getRowMap()->getComm()->barrier();
   }
 #ifdef HAVE_MUELU_CUDA
   if (profileSetup) cudaProfilerStop();
