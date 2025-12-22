@@ -22,12 +22,14 @@
 
 #include <Xpetra_Map.hpp>
 #include <Xpetra_Matrix.hpp>
+#include <Xpetra_MultiVector.hpp>
 #include <Xpetra_CrsMatrix.hpp>
 #include <Xpetra_CrsMatrixWrap.hpp>
 #include <Xpetra_TpetraCrsMatrix.hpp>
 #include <MatrixMarket_Tpetra.hpp>
 #include <Xpetra_MapFactory.hpp>
 #include <Xpetra_MatrixMatrix.hpp>
+#include <Xpetra_MultiVectorFactory.hpp>
 #include <Xpetra_IO.hpp>
 
 #include <Xpetra_EpetraCrsMatrix.hpp>
@@ -159,6 +161,8 @@ int main(int argc, char** argv) {
   std::string A_file          = "A_0.m";
   std::string P_file          = "P_1.m";
 
+  std::string coords_file     = "coords.mm";
+
   // std::string map_file = "rowmap_A_3.m";
   // std::string coarse_map_file = "domainmap_P_4.m";
   // std::string A_file = "A_3.m";
@@ -176,6 +180,7 @@ int main(int argc, char** argv) {
   auto coarse_map = Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::ReadMap(coarse_map_file, lib, comm, false);
   auto xA         = Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Read(A_file, map, Teuchos::null, map, map);
   auto xP         = Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Read(P_file, map, Teuchos::null, coarse_map, map);
+  auto xCoords    = Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::ReadMultiVector(coords_file, map);
 
   // Epetra
   {
@@ -188,9 +193,15 @@ int main(int argc, char** argv) {
 
     auto eA = Xpetra::MatrixFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(xA->getLocalMatrixHost(), ep_map, ep_A_colmap, ep_map, ep_map);
     auto eP = Xpetra::MatrixFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(xP->getLocalMatrixHost(), ep_map, ep_P_colmap, ep_coarse_map, ep_map);
+    auto eCoords = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(ep_map, xCoords->getNumVectors());
+
+    Kokkos::deep_copy(eCoords->getLocalViewDevice(Tpetra::Access::OverwriteAll),
+                      xCoords->getLocalViewDevice(Tpetra::Access::ReadOnly));
+
 
     Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Write("epetra_" + A_file, *eA);
     Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Write("epetra_" + P_file, *eP);
+    Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Write("epetra_" + coords_file, *eCoords);
 
     map->getComm()->barrier();
 
