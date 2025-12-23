@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_HPP
 #define KOKKOS_MATHEMATICAL_FUNCTIONS_HPP
@@ -27,12 +14,7 @@
 #include <type_traits>
 
 #ifdef KOKKOS_ENABLE_SYCL
-// FIXME_SYCL
-#if __has_include(<sycl/sycl.hpp>)
 #include <sycl/sycl.hpp>
-#else
-#include <CL/sycl.hpp>
-#endif
 #endif
 
 namespace Kokkos {
@@ -120,6 +102,34 @@ using promote_3_t = typename promote_3<T, U, V>::type;
     return FUNC(static_cast<double>(x));                                       \
   }
 
+#define KOKKOS_IMPL_MATH_UNARY_INT_FUNCTION(FUNC)                           \
+  KOKKOS_INLINE_FUNCTION int FUNC(float x) {                                \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                       \
+    return FUNC(x);                                                         \
+  }                                                                         \
+  KOKKOS_INLINE_FUNCTION int FUNC(double x) {                               \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                       \
+    return FUNC(x);                                                         \
+  }                                                                         \
+  inline int FUNC(long double x) {                                          \
+    using std::FUNC;                                                        \
+    return FUNC(x);                                                         \
+  }                                                                         \
+  KOKKOS_INLINE_FUNCTION int FUNC##f(float x) {                             \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                       \
+    return FUNC(x);                                                         \
+  }                                                                         \
+  inline int FUNC##l(long double x) {                                       \
+    using std::FUNC;                                                        \
+    return FUNC(x);                                                         \
+  }                                                                         \
+  template <class T>                                                        \
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_integral_v<T>, int> FUNC( \
+      T x) {                                                                \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                       \
+    return FUNC(static_cast<double>(x));                                    \
+  }
+
 // isinf, isnan, and isinfinite do not work on Windows with CUDA with std::
 // getting warnings about calling host function in device function then
 // runtime test fails
@@ -201,6 +211,51 @@ using promote_3_t = typename promote_3<T, U, V>::type;
     static_assert(std::is_same_v<Promoted, long double>);                      \
     using std::FUNC;                                                           \
     return FUNC(static_cast<Promoted>(x), static_cast<Promoted>(y));           \
+  }
+
+#define KOKKOS_IMPL_MATH_TERNARY_INT_PTR_FUNCTION(FUNC)                        \
+  KOKKOS_INLINE_FUNCTION float FUNC(float x, float y, int* z) {                \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                          \
+    return FUNC(x, y, z);                                                      \
+  }                                                                            \
+  KOKKOS_INLINE_FUNCTION double FUNC(double x, double y, int* z) {             \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                          \
+    return FUNC(x, y, z);                                                      \
+  }                                                                            \
+  inline long double FUNC(long double x, long double y, int* z) {              \
+    using std::FUNC;                                                           \
+    return FUNC(x, y, z);                                                      \
+  }                                                                            \
+  KOKKOS_INLINE_FUNCTION float FUNC##f(float x, float y, int* z) {             \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                          \
+    return FUNC(x, y, z);                                                      \
+  }                                                                            \
+  inline long double FUNC##l(long double x, long double y, int* z) {           \
+    using std::FUNC;                                                           \
+    return FUNC(x, y, z);                                                      \
+  }                                                                            \
+  template <class T1, class T2>                                                \
+  KOKKOS_INLINE_FUNCTION                                                       \
+      std::enable_if_t<std::is_arithmetic_v<T1> && std::is_arithmetic_v<T2> && \
+                           !std::is_same_v<T1, long double> &&                 \
+                           !std::is_same_v<T2, long double>,                   \
+                       Kokkos::Impl::promote_2_t<T1, T2>>                      \
+      FUNC(T1 x, T2 y, int* z) {                                               \
+    using Promoted = Kokkos::Impl::promote_2_t<T1, T2>;                        \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                          \
+    return FUNC(static_cast<Promoted>(x), static_cast<Promoted>(y), z);        \
+  }                                                                            \
+  template <class T1, class T2>                                                \
+  inline std::enable_if_t<std::is_arithmetic_v<T1> &&                          \
+                              std::is_arithmetic_v<T2> &&                      \
+                              (std::is_same_v<T1, long double> ||              \
+                               std::is_same_v<T2, long double>),               \
+                          long double>                                         \
+  FUNC(T1 x, T2 y, int* z) {                                                   \
+    using Promoted = Kokkos::Impl::promote_2_t<T1, T2>;                        \
+    static_assert(std::is_same_v<Promoted, long double>);                      \
+    using std::FUNC;                                                           \
+    return FUNC(static_cast<Promoted>(x), static_cast<Promoted>(y), z);        \
   }
 
 #define KOKKOS_IMPL_MATH_TERNARY_FUNCTION(FUNC)                             \
@@ -299,7 +354,7 @@ inline long double abs(long double x) {
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(fabs)
 KOKKOS_IMPL_MATH_BINARY_FUNCTION(fmod)
 KOKKOS_IMPL_MATH_BINARY_FUNCTION(remainder)
-// remquo
+KOKKOS_IMPL_MATH_TERNARY_INT_PTR_FUNCTION(remquo)
 KOKKOS_IMPL_MATH_TERNARY_FUNCTION(fma)
 KOKKOS_IMPL_MATH_BINARY_FUNCTION(fmax)
 KOKKOS_IMPL_MATH_BINARY_FUNCTION(fmin)
@@ -433,7 +488,7 @@ KOKKOS_IMPL_MATH_UNARY_FUNCTION(nearbyint)
 // modf
 // scalbn
 // scalbln
-// ilog
+KOKKOS_IMPL_MATH_UNARY_INT_FUNCTION(ilogb)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(logb)
 KOKKOS_IMPL_MATH_BINARY_FUNCTION(nextafter)
 // nexttoward
@@ -454,6 +509,7 @@ KOKKOS_IMPL_MATH_UNARY_PREDICATE(signbit)
 
 #undef KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE
 #undef KOKKOS_IMPL_MATH_UNARY_FUNCTION
+#undef KOKKOS_IMPL_MATH_UNARY_INT_FUNCTION
 #undef KOKKOS_IMPL_MATH_UNARY_PREDICATE
 #undef KOKKOS_IMPL_MATH_BINARY_FUNCTION
 #undef KOKKOS_IMPL_MATH_TERNARY_FUNCTION

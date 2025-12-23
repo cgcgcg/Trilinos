@@ -1,20 +1,12 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 
 #include <Kokkos_Timer.hpp>
 #include <iostream>
@@ -356,32 +348,12 @@ struct functor_teamvector_reduce_reducer {
 template <typename Scalar, class ExecutionSpace>
 bool test_scalar(int nteams, int team_size, int test) {
   Kokkos::View<int, Kokkos::LayoutLeft, ExecutionSpace> d_flag("flag");
-  typename Kokkos::View<int, Kokkos::LayoutLeft, ExecutionSpace>::HostMirror
-      h_flag("h_flag");
+  typename Kokkos::View<int, Kokkos::LayoutLeft,
+                        ExecutionSpace>::host_mirror_type h_flag("h_flag");
   h_flag() = 0;
   Kokkos::deep_copy(d_flag, h_flag);
 
   Kokkos::TeamPolicy<ExecutionSpace> policy(nteams, team_size, 8);
-
-  // FIXME_OPENMPTARGET - Need to allocate scratch space via set_scratch_space
-  // for the OPENMPTARGET backend.
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-  using scratch_t = Kokkos::View<Scalar*, ExecutionSpace,
-                                 Kokkos::MemoryTraits<Kokkos::Unmanaged> >;
-
-  int scratch_size = 0;
-  if (test == 0) {
-    scratch_size = scratch_t::shmem_size(131);
-  } else {
-    // FIXME_OPENMPTARGET - Currently allocating more than one team for nested
-    // reduction leads to runtime errors of illegal memory access, caused mostly
-    // due to the OpenMP memory allocation constraints.
-    policy       = Kokkos::TeamPolicy<ExecutionSpace>(1, team_size, 8);
-    scratch_size = scratch_t::shmem_size(1);
-  }
-
-  policy.set_scratch_size(0, Kokkos::PerTeam(scratch_size));
-#endif
 
   if (test == 0) {
     Kokkos::parallel_for(
@@ -420,12 +392,8 @@ bool Test(int test) {
            test_scalar<long long int, ExecutionSpace>(317, team_size, test);
   passed = passed && test_scalar<float, ExecutionSpace>(317, team_size, test);
   passed = passed && test_scalar<double, ExecutionSpace>(317, team_size, test);
-  // FIXME_OPENMPTARGET - Use of custom reducers currently results in runtime
-  // memory errors.
-#if !defined(KOKKOS_ENABLE_OPENMPTARGET)
   passed =
       passed && test_scalar<my_complex, ExecutionSpace>(317, team_size, test);
-#endif
 
   return passed;
 }
@@ -437,10 +405,6 @@ namespace Test {
 TEST(TEST_CATEGORY, team_teamvector_range) {
   ASSERT_TRUE((TestTeamVectorRange::Test<TEST_EXECSPACE>(0)));
   ASSERT_TRUE((TestTeamVectorRange::Test<TEST_EXECSPACE>(1)));
-  // FIXME_OPENMPTARGET - Use of kokkos reducers currently results in runtime
-  // memory errors.
-#if !defined(KOKKOS_ENABLE_OPENMPTARGET)
   ASSERT_TRUE((TestTeamVectorRange::Test<TEST_EXECSPACE>(2)));
-#endif
 }
 }  // namespace Test

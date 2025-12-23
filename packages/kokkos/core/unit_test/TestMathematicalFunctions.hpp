@@ -1,40 +1,27 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #include <gtest/gtest.h>
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
+#include <impl/Kokkos_Half_FloatingPointWrapper.hpp>
+
 #include <algorithm>
+#include <cmath>
 #include <initializer_list>
 #include <type_traits>
 #include <cstdint>
 #include <cfloat>
 
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) ||          \
-    defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET) || \
-    defined(KOKKOS_ENABLE_OPENACC)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENACC)
 #else
 #define MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
-#endif
-
-#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
-    !defined(KOKKOS_COMPILER_MSVC)
-#define MATHEMATICAL_FUNCTIONS_TEST_UNREACHABLE __builtin_unreachable();
-#else
-#define MATHEMATICAL_FUNCTIONS_TEST_UNREACHABLE
 #endif
 
 namespace KE = Kokkos::Experimental;
@@ -321,6 +308,15 @@ struct FloatingPointComparison {
   }
 };
 
+struct IntegerComparison {
+  template <class Lhs, class Rhs>
+  KOKKOS_FUNCTION bool compare(Lhs const& lhs, Rhs const& rhs) const {
+    static_assert(std::is_integral_v<Lhs>);
+    static_assert(std::is_integral_v<Rhs>);
+    return lhs == rhs;
+  }
+};
+
 template <class>
 struct math_function_name;
 
@@ -342,7 +338,6 @@ struct math_function_name;
                                      math_unary_function_return_type_t<T>>); \
         return std::FUNC(x);                                                 \
       }                                                                      \
-      MATHEMATICAL_FUNCTIONS_TEST_UNREACHABLE                                \
     }                                                                        \
     static KOKKOS_FUNCTION int ulp_factor() { return ULP_FACTOR; }           \
   };                                                                         \
@@ -374,6 +369,31 @@ struct math_function_name;
   struct math_function_name<MathUnaryFunction_##FUNC> {                    \
     static constexpr char name[] = #FUNC;                                  \
   };                                                                       \
+  constexpr char math_function_name<MathUnaryFunction_##FUNC>::name[]
+
+#define DEFINE_UNARY_FUNCTION_EVAL_INT(FUNC)                           \
+  struct MathUnaryFunction_##FUNC {                                    \
+    template <typename T>                                              \
+    static KOKKOS_FUNCTION auto eval(T x) {                            \
+      static_assert(std::is_integral_v<decltype(Kokkos::FUNC((T)0))>); \
+      return Kokkos::FUNC(x);                                          \
+    }                                                                  \
+    template <typename T>                                              \
+    static auto eval_std(T x) {                                        \
+      if constexpr (std::is_same_v<T, KE::half_t> ||                   \
+                    std::is_same_v<T, KE::bhalf_t>) {                  \
+        return std::FUNC(static_cast<float>(x));                       \
+      } else {                                                         \
+        static_assert(std::is_integral_v<decltype(std::FUNC((T)0))>);  \
+        return std::FUNC(x);                                           \
+      }                                                                \
+    }                                                                  \
+  };                                                                   \
+  using kk_##FUNC = MathUnaryFunction_##FUNC;                          \
+  template <>                                                          \
+  struct math_function_name<MathUnaryFunction_##FUNC> {                \
+    static constexpr char name[] = #FUNC;                              \
+  };                                                                   \
   constexpr char math_function_name<MathUnaryFunction_##FUNC>::name[]
 
 #ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_3
@@ -437,6 +457,7 @@ DEFINE_UNARY_FUNCTION_EVAL(round, 1);
 DEFINE_UNARY_FUNCTION_EVAL(nearbyint, 2);
 #endif
 
+DEFINE_UNARY_FUNCTION_EVAL_INT(ilogb);
 DEFINE_UNARY_FUNCTION_EVAL(logb, 2);
 #endif
 
@@ -468,7 +489,6 @@ DEFINE_UNARY_FUNCTION_EVAL(logb, 2);
                            math_binary_function_return_type_t<T, U>>);         \
         return std::FUNC(x, y);                                                \
       }                                                                        \
-      MATHEMATICAL_FUNCTIONS_TEST_UNREACHABLE                                  \
     }                                                                          \
     static KOKKOS_FUNCTION int ulp_factor() { return ULP_FACTOR; }             \
   };                                                                           \
@@ -489,6 +509,37 @@ DEFINE_BINARY_FUNCTION_EVAL(fmin, 0);
 #endif
 
 #undef DEFINE_BINARY_FUNCTION_EVAL
+
+#define DEFINE_TERNARY_INT_PTR_FUNCTION_EVAL(FUNC, ULP_FACTOR)              \
+  struct MathTernaryIntPtrFunction_##FUNC {                                 \
+    template <typename T, typename U>                                       \
+    static KOKKOS_FUNCTION auto eval(T x, U y, int* z) {                    \
+      static_assert(                                                        \
+          std::is_same_v<decltype(Kokkos::FUNC((T)0, (U)0, (int*)nullptr)), \
+                         math_binary_function_return_type_t<T, U>>);        \
+      return Kokkos::FUNC(x, y, z);                                         \
+    }                                                                       \
+    template <typename T, typename U>                                       \
+    static auto eval_std(T x, U y, int* z) {                                \
+      static_assert(                                                        \
+          std::is_same_v<decltype(std::FUNC((T)0, (U)0, (int*)nullptr)),    \
+                         math_binary_function_return_type_t<T, U>>);        \
+      return std::FUNC(x, y, z);                                            \
+    }                                                                       \
+    static KOKKOS_FUNCTION int ulp_factor() { return ULP_FACTOR; }          \
+  };                                                                        \
+  using kk3_##FUNC = MathTernaryIntPtrFunction_##FUNC;                      \
+  template <>                                                               \
+  struct math_function_name<MathTernaryIntPtrFunction_##FUNC> {             \
+    static constexpr char name[] = #FUNC;                                   \
+  };                                                                        \
+  constexpr char math_function_name<MathTernaryIntPtrFunction_##FUNC>::name[]
+
+#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
+DEFINE_TERNARY_INT_PTR_FUNCTION_EVAL(remquo, 0);
+#endif
+
+#undef DEFINE_TERNARY_INT_PTR_FUNCTION_EVAL
 
 #define DEFINE_TERNARY_FUNCTION_EVAL(FUNC, ULP_FACTOR)                   \
   struct MathTernaryFunction_##FUNC {                                    \
@@ -609,6 +660,69 @@ void do_test_half_math_unary_function(const Arg (&x)[N]) {
 #define TEST_HALF_MATH_FUNCTION(FUNC, T) \
   do_test_half_math_unary_function<T, TEST_EXECSPACE, MathUnaryFunction_##FUNC>
 
+template <class Space, class Func, class Arg, std::size_t N>
+struct TestIntMathUnaryFunction : IntegerComparison {
+  Arg val_[N];
+  int res_[N];
+  TestIntMathUnaryFunction(const Arg (&val)[N]) {
+    std::copy(val, val + N, val_);
+    std::transform(val, val + N, res_,
+                   [](auto x) { return Func::eval_std(x); });
+    run();
+  }
+  void run() {
+    int errors = 0;
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, N), *this, errors);
+    ASSERT_EQ(errors, 0) << "Failed check no error for "
+                         << math_function_name<Func>::name << "("
+                         << type_helper<Arg>::name() << ")";
+  }
+  KOKKOS_FUNCTION void operator()(int i, int& e) const {
+    bool ar = compare(Func::eval(val_[i]), res_[i]);
+    if (!ar) {
+      ++e;
+      Kokkos::printf("value at %f which is %f was expected to be %f\n",
+                     (double)val_[i], (double)Func::eval(val_[i]),
+                     (double)res_[i]);
+    }
+  }
+};
+
+template <class Space, class... Func, class Arg, std::size_t N>
+void do_test_int_math_unary_function(const Arg (&x)[N]) {
+  (void)std::initializer_list<int>{
+      (TestIntMathUnaryFunction<Space, Func, Arg, N>(x), 0)...};
+
+  // test if potentially device specific math functions also work on host
+  if constexpr (!std::is_same_v<Space, Kokkos::DefaultHostExecutionSpace>)
+    (void)std::initializer_list<int>{
+        (TestIntMathUnaryFunction<Kokkos::DefaultHostExecutionSpace, Func, Arg,
+                                  N>(x),
+         0)...};
+}
+
+#define TEST_INT_MATH_FUNCTION(FUNC) \
+  do_test_int_math_unary_function<TEST_EXECSPACE, MathUnaryFunction_##FUNC>
+
+template <class Half, class Space, class... Func, class Arg, std::size_t N>
+void do_test_int_half_math_unary_function(const Arg (&x)[N]) {
+  Half y[N];
+  std::copy(x, x + N, y);  // cast to array of half type
+  (void)std::initializer_list<int>{
+      (TestIntMathUnaryFunction<Space, Func, Half, N>(y), 0)...};
+
+  // test if potentially device specific math functions also work on host
+  if constexpr (!std::is_same_v<Space, Kokkos::DefaultHostExecutionSpace>)
+    (void)std::initializer_list<int>{
+        (TestIntMathUnaryFunction<Kokkos::DefaultHostExecutionSpace, Func, Half,
+                                  N>(y),
+         0)...};
+}
+
+#define TEST_INT_HALF_MATH_FUNCTION(FUNC, T)              \
+  do_test_int_half_math_unary_function<T, TEST_EXECSPACE, \
+                                       MathUnaryFunction_##FUNC>
+
 template <class Space, class Func, class Arg1, class Arg2,
           class Ret = math_binary_function_return_type_t<Arg1, Arg2>>
 struct TestMathBinaryFunction : FloatingPointComparison {
@@ -644,6 +758,46 @@ void do_test_math_binary_function(Arg1 arg1, Arg2 arg2) {
       (TestMathBinaryFunction<Space, Func, Arg1, Arg2>(arg1, arg2), 0)...};
 }
 
+template <class Space, class Func, class Arg1, class Arg2,
+          class Ret = math_binary_function_return_type_t<Arg1, Arg2>>
+struct TestMathTernaryIntPtrFunction : FloatingPointComparison {
+  Arg1 val1_;
+  Arg2 val2_;
+  int val_;
+  Ret res_;
+  TestMathTernaryIntPtrFunction(Arg1 val1, Arg2 val2)
+      : val1_(val1), val2_(val2), res_(Func::eval_std(val1, val2, &val_)) {
+    run();
+  }
+  void run() {
+    int errors = 0;
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
+    ASSERT_EQ(errors, 0) << "Failed check no error for "
+                         << math_function_name<Func>::name << "("
+                         << type_helper<Arg1>::name() << ", "
+                         << type_helper<Arg2>::name() << ")";
+  }
+  KOKKOS_FUNCTION void operator()(int, int& e) const {
+    int val;
+    auto res  = Func::eval(val1_, val2_, &val);
+    bool ar_1 = compare(res, res_, Func::ulp_factor());
+    bool ar_2 = (val_ == val);
+    if (!(ar_1 && ar_2)) {
+      ++e;
+      Kokkos::printf(
+          "value at %f, %f which is %f and %i was expected to be %f and %i\n",
+          (double)val1_, (double)val2_, (double)res, val, (double)res_, val_);
+    }
+  }
+};
+
+template <class Space, class... Func, class Arg1, class Arg2>
+void do_test_math_ternary_int_ptr_function(Arg1 arg1, Arg2 arg2) {
+  (void)std::initializer_list<int>{
+      (TestMathTernaryIntPtrFunction<Space, Func, Arg1, Arg2>(arg1, arg2),
+       0)...};
+}
+
 template <class Space, class Func, class Arg1, class Arg2, class Arg3,
           class Ret = math_ternary_function_return_type_t<Arg1, Arg2, Arg3>>
 struct TestMathTernaryFunction : FloatingPointComparison {
@@ -664,7 +818,7 @@ struct TestMathTernaryFunction : FloatingPointComparison {
     ASSERT_EQ(errors, 0) << "Failed check no error for "
                          << math_function_name<Func>::name << "("
                          << type_helper<Arg1>::name() << ", "
-                         << type_helper<Arg1>::name() << ", "
+                         << type_helper<Arg2>::name() << ", "
                          << type_helper<Arg3>::name() << ")";
   }
   KOKKOS_FUNCTION void operator()(int, int& e) const {
@@ -858,6 +1012,15 @@ TEST(TEST_CATEGORY, mathematical_functions_fma) {
 #endif
 }
 
+TEST(TEST_CATEGORY, mathematical_functions_remquo) {
+  do_test_math_ternary_int_ptr_function<TEST_EXECSPACE, kk3_remquo>(2.f, 3.f);
+  do_test_math_ternary_int_ptr_function<TEST_EXECSPACE, kk3_remquo>(2., 3.);
+  do_test_math_ternary_int_ptr_function<TEST_EXECSPACE, kk3_remquo>(2, 3);
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+  do_test_math_ternary_int_ptr_function<TEST_EXECSPACE, kk3_remquo>(2.l, 3.l);
+#endif
+}
+
 TEST(TEST_CATEGORY, mathematical_functions_fmax_fmin) {
   do_test_math_binary_function<TEST_EXECSPACE, kk_fmax>(
       static_cast<KE::half_t>(2.f), static_cast<KE::half_t>(3.f));
@@ -958,13 +1121,7 @@ TEST(TEST_CATEGORY, mathematical_functions_exponential_functions) {
   TEST_MATH_FUNCTION(log10)({1234.l, 567.l, 89.l, .003l});
 #endif
 
-// FIXME_OPENMPTARGET FIXME_AMD
-#if defined(KOKKOS_ENABLE_OPENMPTARGET) &&                                 \
-    (defined(KOKKOS_ARCH_AMD_GFX906) || defined(KOKKOS_ARCH_AMD_GFX908) || \
-     defined(KOKKOS_ARCH_AMD_GFX90A) || defined(KOKKOS_ARCH_AMD_GFX942))
-
   TEST_MATH_FUNCTION(log2)({1, 23, 456, 7890});
-#endif
   TEST_MATH_FUNCTION(log2)({1l, 23l, 456l, 7890l});
   TEST_MATH_FUNCTION(log2)({1ll, 23ll, 456ll, 7890ll});
   TEST_MATH_FUNCTION(log2)({1u, 23u, 456u, 7890u});
@@ -1241,6 +1398,22 @@ TEST(TEST_CATEGORY,
 
 TEST(TEST_CATEGORY,
      mathematical_functions_floating_point_manipulation_functions) {
+  TEST_INT_MATH_FUNCTION(ilogb)({1, 13, 132, 1282, 7839});
+  TEST_INT_MATH_FUNCTION(ilogb)({1l, 13l, 132l, 1282l, 7839l});
+  TEST_INT_MATH_FUNCTION(ilogb)({1ll, 13ll, 132ll, 1282ll, 7839ll});
+  TEST_INT_MATH_FUNCTION(ilogb)({1u, 13u, 132u, 1282u, 7839u});
+  TEST_INT_MATH_FUNCTION(ilogb)({1ul, 13ul, 132ul, 1282ul, 7839ul});
+  TEST_INT_MATH_FUNCTION(ilogb)({1ull, 13ull, 132ull, 1282ull, 7839ull});
+  TEST_INT_HALF_MATH_FUNCTION(ilogb, KE::half_t)
+  ({0.3f, 13.7f, 132.7f, 1282.4f, 7839.9f});
+  TEST_INT_HALF_MATH_FUNCTION(ilogb, KE::bhalf_t)
+  ({0.3f, 13.7f, 132.7f, 1282.4f, 7839.9f});
+  TEST_INT_MATH_FUNCTION(ilogb)({0.3f, 13.7f, 132.7f, 1282.4f, 7839.9f});
+  TEST_INT_MATH_FUNCTION(ilogb)({0.3, 13.7, 132.7, 1282.4, 7839.9});
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+  TEST_INT_MATH_FUNCTION(ilogb)({0.3l, 13.7l, 132.7l, 1282.4l, 7839.9l});
+#endif
+
   TEST_MATH_FUNCTION(logb)({2, 3, 4, 56, 789});
   TEST_MATH_FUNCTION(logb)({2l, 3l, 4l, 56l, 789l});
   TEST_MATH_FUNCTION(logb)({2ll, 3ll, 4ll, 56ll, 789ll});
@@ -1344,6 +1517,7 @@ struct TestAbsoluteValueFunction {
       Kokkos::printf("failed abs(long double)\n");
     }
 #endif
+#if !__FINITE_MATH_ONLY__
     // special values
     using Kokkos::isinf;
     using Kokkos::isnan;
@@ -1351,6 +1525,7 @@ struct TestAbsoluteValueFunction {
       ++e;
       Kokkos::printf("failed abs(floating_point) special values\n");
     }
+#endif
 
     static_assert(std::is_same_v<decltype(abs(1)), int>);
     static_assert(std::is_same_v<decltype(abs(2l)), long>);
@@ -1405,6 +1580,7 @@ struct TestFloatingPointAbsoluteValueFunction {
       Kokkos::printf("failed fabs(long double)\n");
     }
 #endif
+#if !__FINITE_MATH_ONLY__
     // special values
     using Kokkos::isinf;
     using Kokkos::isnan;
@@ -1412,6 +1588,7 @@ struct TestFloatingPointAbsoluteValueFunction {
       ++e;
       Kokkos::printf("failed fabs(floating_point) special values\n");
     }
+#endif
 
     static_assert(std::is_same_v<decltype(fabs(static_cast<KE::half_t>(4.f))),
                                  KE::half_t>);
@@ -1473,6 +1650,7 @@ struct TestFloatingPointRemainderFunction : FloatingPointComparison {
       Kokkos::printf("failed fmod(long double)\n");
     }
 #endif
+#if !__FINITE_MATH_ONLY__
     // special values
     using Kokkos::isinf;
     using Kokkos::isnan;
@@ -1481,6 +1659,7 @@ struct TestFloatingPointRemainderFunction : FloatingPointComparison {
       ++e;
       Kokkos::printf("failed fmod(floating_point) special values\n");
     }
+#endif
 
     static_assert(std::is_same_v<decltype(fmod(static_cast<KE::half_t>(4.f),
                                                static_cast<KE::half_t>(4.f))),
@@ -1547,6 +1726,7 @@ struct TestIEEEFloatingPointRemainderFunction : FloatingPointComparison {
       Kokkos::printf("failed remainder(long double)\n");
     }
 #endif
+#if !__FINITE_MATH_ONLY__
     // special values
     using Kokkos::isinf;
     using Kokkos::isnan;
@@ -1556,6 +1736,7 @@ struct TestIEEEFloatingPointRemainderFunction : FloatingPointComparison {
       Kokkos::printf(
           "failed remainder(floating_point) special values\n");
     }
+#endif
 
     static_assert(
         std::is_same<decltype(remainder(static_cast<KE::half_t>(4.f),
@@ -1582,6 +1763,23 @@ TEST(TEST_CATEGORY, mathematical_functions_ieee_remainder_function) {
 // TODO: TestFpClassify, see https://github.com/kokkos/kokkos/issues/6279
 
 #ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
+
+// Known to fail with
+// * CUDA 12.4 and GCC 13.2
+// * CUDA 12.8 and GCC 13.3, 14.2
+#if defined(KOKKOS_COMPILER_NVCC) && \
+    (defined(KOKKOS_COMPILER_GNU) && \
+     (KOKKOS_COMPILER_GNU >= 1300 && KOKKOS_COMPILER_GNU < 1500))
+#define KOKKOS_TEST_WORKAROUND_DEPRECATED_STD_ITERATOR_WARNINGS_PUSH() \
+  KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
+
+#define KOKKOS_TEST_WORKAROUND_DEPRECATED_STD_ITERATOR_WARNINGS_POP() \
+  KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+#else
+#define KOKKOS_TEST_WORKAROUND_DEPRECATED_STD_ITERATOR_WARNINGS_PUSH()
+#define KOKKOS_TEST_WORKAROUND_DEPRECATED_STD_ITERATOR_WARNINGS_POP()
+#endif
+
 template <class Space>
 struct TestIsFinite {
   TestIsFinite() { run(); }
@@ -1641,9 +1839,11 @@ struct TestIsFinite {
       Kokkos::printf("failed isfinite(floating_point) special values\n");
     }
 
+    KOKKOS_TEST_WORKAROUND_DEPRECATED_STD_ITERATOR_WARNINGS_PUSH()
     static_assert(std::is_same_v<decltype(isfinite(1)), bool>);
     static_assert(std::is_same_v<decltype(isfinite(2.f)), bool>);
     static_assert(std::is_same_v<decltype(isfinite(3.)), bool>);
+    KOKKOS_TEST_WORKAROUND_DEPRECATED_STD_ITERATOR_WARNINGS_POP()
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
     static_assert(std::is_same_v<decltype(isfinite(4.l)), bool>);
 #endif
@@ -1651,6 +1851,9 @@ struct TestIsFinite {
 };
 
 TEST(TEST_CATEGORY, mathematical_functions_isfinite) {
+#if __FINITE_MATH_ONLY__
+  GTEST_SKIP() << "skipping when compiling with -ffinite-math-only";
+#endif
   TestIsFinite<TEST_EXECSPACE>();
 }
 
@@ -1712,9 +1915,11 @@ struct TestIsInf {
       Kokkos::printf("failed isinf(floating_point) special values\n");
     }
 
+    KOKKOS_TEST_WORKAROUND_DEPRECATED_STD_ITERATOR_WARNINGS_PUSH()
     static_assert(std::is_same_v<decltype(isinf(1)), bool>);
     static_assert(std::is_same_v<decltype(isinf(2.f)), bool>);
     static_assert(std::is_same_v<decltype(isinf(3.)), bool>);
+    KOKKOS_TEST_WORKAROUND_DEPRECATED_STD_ITERATOR_WARNINGS_POP()
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
     static_assert(std::is_same_v<decltype(isinf(4.l)), bool>);
 #endif
@@ -1722,6 +1927,9 @@ struct TestIsInf {
 };
 
 TEST(TEST_CATEGORY, mathematical_functions_isinf) {
+#if __FINITE_MATH_ONLY__
+  GTEST_SKIP() << "skipping when compiling with -ffinite-math-only";
+#endif
   TestIsInf<TEST_EXECSPACE>();
 }
 
@@ -1783,9 +1991,11 @@ struct TestIsNaN {
       Kokkos::printf("failed isnan(floating_point) special values\n");
     }
 
+    KOKKOS_TEST_WORKAROUND_DEPRECATED_STD_ITERATOR_WARNINGS_PUSH()
     static_assert(std::is_same_v<decltype(isnan(1)), bool>);
     static_assert(std::is_same_v<decltype(isnan(2.f)), bool>);
     static_assert(std::is_same_v<decltype(isnan(3.)), bool>);
+    KOKKOS_TEST_WORKAROUND_DEPRECATED_STD_ITERATOR_WARNINGS_POP()
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
     static_assert(std::is_same_v<decltype(isnan(4.l)), bool>);
 #endif
@@ -1793,6 +2003,9 @@ struct TestIsNaN {
 };
 
 TEST(TEST_CATEGORY, mathematical_functions_isnan) {
+#if __FINITE_MATH_ONLY__
+  GTEST_SKIP() << "skipping when compiling with -ffinite-math-only";
+#endif
   TestIsNaN<TEST_EXECSPACE>();
 }
 
@@ -1802,6 +2015,12 @@ KE::half_t ref_test_fallback_half(KE::half_t) {
   return KE::half_t(0.f);
 #elif defined(KOKKOS_ENABLE_CUDA)
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
+    return KE::half_t(0.f);
+  } else {
+    return KE::half_t(1.f);
+  }
+#elif defined(KOKKOS_ENABLE_HIP)
+  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::HIP>) {
     return KE::half_t(0.f);
   } else {
     return KE::half_t(1.f);
@@ -1819,6 +2038,14 @@ KE::bhalf_t ref_test_fallback_bhalf(KE::bhalf_t) {
     (KOKKOS_IMPL_ARCH_NVIDIA_GPU >= 80)
   // bhalf_t support for CUDA is only available starting with Ampere (80)
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
+    return KE::bhalf_t(0.f);
+  } else {
+    return KE::bhalf_t(1.f);
+  }
+#elif defined(KOKKOS_ENABLE_HIP)
+  // bhalf_t is supported on host and device for HIP but the mathematical
+  // functions only have have a native implementation on the device
+  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::HIP>) {
     return KE::bhalf_t(0.f);
   } else {
     return KE::bhalf_t(1.f);

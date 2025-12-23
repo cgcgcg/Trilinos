@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_HALF_MATHEMATICAL_FUNCTIONS_HPP_
 #define KOKKOS_HALF_MATHEMATICAL_FUNCTIONS_HPP_
@@ -30,6 +17,10 @@
 #include <Cuda/Kokkos_Cuda_Half_MathematicalFunctions.hpp>
 #endif
 
+#ifdef KOKKOS_ENABLE_HIP
+#include <HIP/Kokkos_HIP_Half_MathematicalFunctions.hpp>
+#endif
+
 #ifdef KOKKOS_ENABLE_SYCL
 #include <SYCL/Kokkos_SYCL_Half_MathematicalFunctions.hpp>
 #endif
@@ -38,25 +29,44 @@
 namespace Kokkos {
 // BEGIN macro definitions
 #if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
-  #define KOKKOS_IMPL_MATH_H_FUNC_WRAPPER(MACRO, FUNC) \
-    MACRO(FUNC, Kokkos::Experimental::half_t)
+// FIXME_MSVC Use /Zc:preprocessor
+#if defined(KOKKOS_COMPILER_MSVC)
+  #define KOKKOS_IMPL_MATH_H_FUNC_WRAPPER(MACRO, FUNC, /*MAYBE_RET*/...) \
+    MACRO(FUNC, Kokkos::Experimental::half_t, ##__VA_ARGS__)
 #else
-  #define KOKKOS_IMPL_MATH_H_FUNC_WRAPPER(MACRO, FUNC)
+  #define KOKKOS_IMPL_MATH_H_FUNC_WRAPPER(MACRO, FUNC, /*MAYBE_RET*/...) \
+    MACRO(FUNC, Kokkos::Experimental::half_t __VA_OPT__(,) __VA_ARGS__)
+#endif
+#else
+  #define KOKKOS_IMPL_MATH_H_FUNC_WRAPPER(MACRO, FUNC, ...)
 #endif
 
 #if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
-  #define KOKKOS_IMPL_MATH_B_FUNC_WRAPPER(MACRO, FUNC) \
-    MACRO(FUNC, Kokkos::Experimental::bhalf_t)
+// FIXME_MSVC Use /Zc:preprocessor
+#if defined(KOKKOS_COMPILER_MSVC)
+  #define KOKKOS_IMPL_MATH_B_FUNC_WRAPPER(MACRO, FUNC, /*MAYBE_RET*/...) \
+    MACRO(FUNC, Kokkos::Experimental::bhalf_t, ##__VA_ARGS__)
 #else
-  #define KOKKOS_IMPL_MATH_B_FUNC_WRAPPER(MACRO, FUNC)
+  #define KOKKOS_IMPL_MATH_B_FUNC_WRAPPER(MACRO, FUNC, /*MAYBE_RET*/...) \
+    MACRO(FUNC, Kokkos::Experimental::bhalf_t __VA_OPT__(,) __VA_ARGS__)
+#endif
+#else
+  #define KOKKOS_IMPL_MATH_B_FUNC_WRAPPER(MACRO, FUNC, ...)
 #endif
 
-#define KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(MACRO, FUNC) \
-  KOKKOS_IMPL_MATH_H_FUNC_WRAPPER(MACRO, FUNC)          \
-  KOKKOS_IMPL_MATH_B_FUNC_WRAPPER(MACRO, FUNC)
+// FIXME_MSVC Use /Zc:preprocessor
+#if defined(KOKKOS_COMPILER_MSVC)
+#define KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(MACRO, FUNC, /*MAYBE_RETURN_TYPE*/...) \
+  KOKKOS_IMPL_MATH_H_FUNC_WRAPPER(MACRO, FUNC, ##__VA_ARGS__)          \
+  KOKKOS_IMPL_MATH_B_FUNC_WRAPPER(MACRO, FUNC, ##__VA_ARGS__)
+#else
+#define KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(MACRO, FUNC, /*MAYBE_RETURN_TYPE*/...) \
+  KOKKOS_IMPL_MATH_H_FUNC_WRAPPER(MACRO, FUNC __VA_OPT__(,) __VA_ARGS__)          \
+  KOKKOS_IMPL_MATH_B_FUNC_WRAPPER(MACRO, FUNC __VA_OPT__(,) __VA_ARGS__)
+#endif
 
 #define KOKKOS_IMPL_MATH_UNARY_FUNCTION_HALF_TYPE(FUNC, HALF_TYPE)      \
-  namespace Impl { \
+  namespace Impl {                                                      \
   template <bool fallback = true>                                       \
   KOKKOS_INLINE_FUNCTION HALF_TYPE impl_##FUNC(HALF_TYPE x) {           \
     return static_cast<HALF_TYPE>(Kokkos::FUNC(static_cast<float>(x))); \
@@ -64,6 +74,17 @@ namespace Kokkos {
   }  /* namespace Impl */                                               \
   KOKKOS_INLINE_FUNCTION HALF_TYPE FUNC(HALF_TYPE x) {                  \
     return Kokkos::Impl::impl_##FUNC(x);                                \
+  }
+
+#define KOKKOS_IMPL_MATH_UNARY_FUNCTION_HALF_TYPE_RETURN_INT(FUNC, HALF_TYPE, INT_TYPE) \
+  namespace Impl {                                                                      \
+  template <bool fallback = true>                                                       \
+  KOKKOS_INLINE_FUNCTION INT_TYPE impl_##FUNC(HALF_TYPE x) {                            \
+    return Kokkos::FUNC(static_cast<float>(x));                                         \
+  }                                                                                     \
+  }  /* namespace Impl */                                                               \
+  KOKKOS_INLINE_FUNCTION INT_TYPE FUNC(HALF_TYPE x) {                                   \
+    return Kokkos::Impl::impl_##FUNC(x);                                                \
   }
 
 #define KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, MIXED_TYPE) \
@@ -196,6 +217,7 @@ KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_UNARY_FUNCTION_HALF_TYPE, ne
 // scalbn
 // scalbln
 // ilog
+KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_UNARY_FUNCTION_HALF_TYPE_RETURN_INT, ilogb, int)
 KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_UNARY_FUNCTION_HALF_TYPE, logb)
 
 // FIXME nextafter for fp16 is unavailable for MSVC CUDA builds
@@ -447,6 +469,7 @@ KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_COMPLEX_IMAG_HALF, imag)
 #undef KOKKOS_IMPL_MATH_UNARY_PREDICATE_HALF
 #undef KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF
 #undef KOKKOS_IMPL_MATH_UNARY_FUNCTION_HALF_TYPE
+#undef KOKKOS_IMPL_MATH_UNARY_FUNCTION_HALF_TYPE_RETURN_INT
 #undef KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER
 #undef KOKKOS_IMPL_MATH_B_FUNC_WRAPPER
 #undef KOKKOS_IMPL_MATH_H_FUNC_WRAPPER

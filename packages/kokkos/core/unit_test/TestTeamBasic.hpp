@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_TEST_TEAM_BASIC_HPP
 #define KOKKOS_TEST_TEAM_BASIC_HPP
@@ -35,8 +22,6 @@ TEST(TEST_CATEGORY, team_for) {
       1000);
 }
 
-// FIXME_OPENMPTARGET wrong results
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
 TEST(TEST_CATEGORY, team_reduce) {
   TestTeamPolicy<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>>::test_reduce(
       0);
@@ -51,7 +36,6 @@ TEST(TEST_CATEGORY, team_reduce) {
   TestTeamPolicy<TEST_EXECSPACE,
                  Kokkos::Schedule<Kokkos::Dynamic>>::test_reduce(1000);
 }
-#endif
 
 template <typename ExecutionSpace>
 struct TestTeamReduceLarge {
@@ -127,16 +111,6 @@ struct TestTeamForAggregate {
 
   static void run() {
     int minTeamSize = 1;
-    /* OpenMPTarget hard-codes 32 as the minimum size
-       FIXME OPENMPTARGET
-    */
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-    if constexpr (std::is_same<ExecutionSpace,
-                               Kokkos::Experimental::OpenMPTarget>::value) {
-      minTeamSize = 32;
-    }
-#endif
-
     int maxTeamSize;
     {
       TestTeamForAggregate test;
@@ -186,26 +160,19 @@ TEST(TEST_CATEGORY, large_team_scratch_size) {
   const int level   = 1;
   const int n_teams = 1;
 
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-  // Allocate slightly more than (2^31-1) bytes. The other value resulted in
-  // problems allocating too much memory.
-  const size_t per_team_extent = 268435460;
-#else
-  // Value originally chosen in the reproducer.
+#if defined(KOKKOS_ENABLE_LARGE_MEM_TESTS) || defined(KOKKOS_ENABLE_CUDA) || \
+    defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+  //  The GPU backends use unsigned as size_type and we need to check that we
+  //  didn't screw the scratch space calculation up, CPU backends anyway use
+  //  size_t so less likely to screw up
   const size_t per_team_extent = 502795560;
+#else
+  const size_t per_team_extent = 268435460;
 #endif
 
   const size_t per_team_bytes = per_team_extent * sizeof(double);
 
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-  Kokkos::TeamPolicy<TEST_EXECSPACE> policy(
-      n_teams,
-      std::is_same<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>::value
-          ? 32
-          : 1);
-#else
   Kokkos::TeamPolicy<TEST_EXECSPACE> policy(n_teams, 1);
-#endif
   policy.set_scratch_size(level, Kokkos::PerTeam(per_team_bytes));
 
   Kokkos::parallel_for(policy,
@@ -235,10 +202,6 @@ TEST(TEST_CATEGORY, team_broadcast_long) {
                     long>::test_teambroadcast(1000, 1);
 }
 
-// FIXME_OPENMPTARGET CI fails with
-// Libomptarget error: Copying data from device failed.
-// Possibly, because long_wrapper is not trivially-copyable.
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
 struct long_wrapper {
   long value;
 
@@ -299,7 +262,6 @@ TEST(TEST_CATEGORY, team_broadcast_long_wrapper) {
   TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
                     long_wrapper>::test_teambroadcast(1000, 1);
 }
-#endif
 
 TEST(TEST_CATEGORY, team_broadcast_char) {
   {
@@ -491,7 +453,5 @@ TEST(TEST_CATEGORY, team_handle_by_value) {
 
 }  // namespace Test
 
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
 #include <TestTeamVector.hpp>
-#endif
 #endif

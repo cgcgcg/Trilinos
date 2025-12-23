@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_HIP_PARALLEL_REDUCE_TEAM_HPP
 #define KOKKOS_HIP_PARALLEL_REDUCE_TEAM_HPP
@@ -326,7 +313,7 @@ class ParallelReduce<CombinedFunctorReducerType,
     auto internal_space_instance =
         m_policy.space().impl_internal_space_instance();
     if (m_team_size < 0) {
-      m_team_size = arg_policy.team_size_recommended(
+      m_team_size = arg_policy.team_size_recommended_internal(
           arg_functor_reducer.get_functor(), arg_functor_reducer.get_reducer(),
           ParallelReduceTag());
       if (m_team_size <= 0)
@@ -395,7 +382,7 @@ class ParallelReduce<CombinedFunctorReducerType,
                       "L0 scratch memory"));
     }
 
-    size_t max_size = arg_policy.team_size_max(
+    size_t max_size = arg_policy.team_size_max_internal(
         arg_functor_reducer.get_functor(), arg_functor_reducer.get_reducer(),
         ParallelReduceTag());
     if (static_cast<int>(m_team_size) > static_cast<int>(max_size)) {

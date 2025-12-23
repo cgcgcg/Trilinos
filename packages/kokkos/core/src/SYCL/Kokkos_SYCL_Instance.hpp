@@ -1,29 +1,11 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_SYCL_INSTANCE_HPP_
 #define KOKKOS_SYCL_INSTANCE_HPP_
 
 #include <optional>
-// FIXME_SYCL
-#if __has_include(<sycl/sycl.hpp>)
 #include <sycl/sycl.hpp>
-#else
-#include <CL/sycl.hpp>
-#endif
 
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Profiling.hpp>
@@ -32,7 +14,7 @@ namespace Impl {
 
 class SYCLInternal {
  public:
-  using size_type = int;
+  using size_type = unsigned int;
 
   SYCLInternal() = default;
   ~SYCLInternal();

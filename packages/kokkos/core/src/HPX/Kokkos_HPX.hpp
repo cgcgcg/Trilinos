@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <Kokkos_Macros.hpp>
@@ -33,11 +20,12 @@ static_assert(false,
 #include <Kokkos_MemoryTraits.hpp>
 #include <Kokkos_Parallel.hpp>
 #include <Kokkos_ScratchSpace.hpp>
+#include <impl/Kokkos_CheckUsage.hpp>
 #include <impl/Kokkos_ConcurrentBitset.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 #include <impl/Kokkos_HostSharedPtr.hpp>
-#include <impl/Kokkos_Tools.hpp>
 #include <impl/Kokkos_InitializationSettings.hpp>
+#include <impl/Kokkos_Tools.hpp>
 
 #include <KokkosExp_MDRangePolicy.hpp>
 
@@ -54,6 +42,7 @@ static_assert(false,
 #include <iosfwd>
 #include <functional>
 #include <memory>
+#include <new>
 #include <type_traits>
 #include <vector>
 
@@ -169,22 +158,32 @@ class HPX {
 #pragma GCC diagnostic ignored "-Wuninitialized"
 
   HPX()
-      : m_instance_data(Kokkos::Impl::HostSharedPtr<instance_data>(
-            &m_default_instance_data, &default_instance_deleter)) {}
+      : m_instance_data(
+            (Kokkos::Impl::check_execution_space_constructor_precondition(
+                 name()),
+             Kokkos::Impl::HostSharedPtr<instance_data>(
+                 &m_default_instance_data, &default_instance_deleter))) {}
 
 #pragma GCC diagnostic pop
 
-  ~HPX() = default;
+  ~HPX() {
+    Kokkos::Impl::check_execution_space_destructor_precondition(name());
+  }
   explicit HPX(instance_mode mode)
       : m_instance_data(
-            mode == instance_mode::independent
-                ? (Kokkos::Impl::HostSharedPtr<instance_data>(
-                      new instance_data(m_next_instance_id++)))
-                : Kokkos::Impl::HostSharedPtr<instance_data>(
-                      &m_default_instance_data, &default_instance_deleter)) {}
+            (Kokkos::Impl::check_execution_space_constructor_precondition(
+                 name()),
+             mode == instance_mode::independent
+                 ? (Kokkos::Impl::HostSharedPtr<instance_data>(
+                       new instance_data(m_next_instance_id++)))
+                 : Kokkos::Impl::HostSharedPtr<instance_data>(
+                       &m_default_instance_data, &default_instance_deleter))) {}
   explicit HPX(hpx::execution::experimental::unique_any_sender<> &&sender)
-      : m_instance_data(Kokkos::Impl::HostSharedPtr<instance_data>(
-            new instance_data(m_next_instance_id++, std::move(sender)))) {}
+      : m_instance_data(
+            (Kokkos::Impl::check_execution_space_constructor_precondition(
+                 name()),
+             Kokkos::Impl::HostSharedPtr<instance_data>(new instance_data(
+                 m_next_instance_id++, std::move(sender))))) {}
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   template <typename T = void>
@@ -200,10 +199,7 @@ class HPX {
       : HPX(std::move(sender)) {}
 #endif
 
-  HPX(HPX &&other)      = default;
-  HPX(const HPX &other) = default;
-
-  HPX &operator=(HPX &&)      = default;
+  HPX(const HPX &other)       = default;
   HPX &operator=(const HPX &) = default;
 
   void print_configuration(std::ostream &os, bool /*verbose*/ = false) const;
@@ -272,7 +268,6 @@ class HPX {
   int concurrency() const;
 #endif
   static void impl_initialize(InitializationSettings const &);
-  static bool impl_is_initialized() noexcept;
   static void impl_finalize();
   static int impl_thread_pool_size() noexcept;
   static int impl_thread_pool_rank() noexcept;
@@ -360,6 +355,7 @@ class HPX {
                        hpx::threads::thread_stacksize stacksize =
                            hpx::threads::thread_stacksize::default_) const {
     impl_bulk_plain_erased(force_synchronous, is_light_weight_policy,
+                           // NOLINTNEXTLINE(bugprone-exception-escape)
                            {[functor](Index i) {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
                              impl_in_parallel_scope p;
@@ -527,6 +523,15 @@ struct MemorySpaceAccess<Kokkos::Experimental::HPX::memory_space,
   enum : bool { assignable = false };
   enum : bool { accessible = true };
   enum : bool { deepcopy = false };
+};
+
+template <>
+struct ZeroMemset<Kokkos::Experimental::HPX> {
+  ZeroMemset(const Kokkos::Experimental::HPX &exec, void *dst, size_t cnt) {
+    exec.fence(
+        "Kokkos::Impl::ZeroMemset: HostSpace fence before calling std::memset");
+    std::memset(dst, 0, cnt);
+  }
 };
 
 }  // namespace Impl
@@ -932,6 +937,12 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
     init(league_size_request, 1);
   }
 
+  TeamPolicyInternal(const PolicyUpdate, const TeamPolicyInternal &other,
+                     typename traits::execution_space space)
+      : TeamPolicyInternal(other) {
+    this->m_space = std::move(space);
+  }
+
   inline int chunk_size() const { return m_chunk_size; }
 
   inline TeamPolicyInternal &set_chunk_size(
@@ -999,7 +1010,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
   }
 
   inline ParallelFor(const FunctorType &arg_functor, Policy arg_policy)
-      : m_functor(arg_functor), m_policy(arg_policy) {}
+      : m_functor(arg_functor), m_policy(std::move(arg_policy)) {}
 };
 
 template <class FunctorType, class... Traits>
@@ -1587,10 +1598,10 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   ParallelFor(const FunctorType &arg_functor, const Policy &arg_policy)
       : m_functor(arg_functor),
         m_policy(arg_policy),
-        m_league(arg_policy.league_size()),
-        m_shared(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
+        m_league(m_policy.league_size()),
+        m_shared(m_policy.scratch_size(0) + m_policy.scratch_size(1) +
                  FunctorTeamShmemSize<FunctorType>::value(
-                     arg_functor, arg_policy.team_size())) {}
+                     m_functor, m_policy.team_size())) {}
 };
 
 template <class CombinedFunctorReducerType, class... Properties>
@@ -2088,10 +2099,6 @@ KOKKOS_INLINE_FUNCTION void single(
 }
 
 }  // namespace Kokkos
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-#include <HPX/Kokkos_HPX_Task.hpp>
-#endif
 
 #endif /* #if defined( KOKKOS_ENABLE_HPX ) */
 #endif /* #ifndef KOKKOS_HPX_HPP */

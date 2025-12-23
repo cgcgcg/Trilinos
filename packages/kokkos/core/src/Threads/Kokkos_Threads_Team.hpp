@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_THREADSTEAM_HPP
 #define KOKKOS_THREADSTEAM_HPP
@@ -20,6 +7,7 @@
 #include <Kokkos_Macros.hpp>
 
 #include <cstdio>
+#include <new>
 
 #include <utility>
 #include <impl/Kokkos_HostThreadTeam.hpp>
@@ -540,6 +528,8 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
   bool m_tune_team_size;
   bool m_tune_vector_length;
 
+  Threads m_space;
+
   inline void init(const int league_size_request, const int team_size_request) {
     const int pool_size = traits::execution_space::impl_thread_pool_size(0);
     const int max_host_team_size = Impl::HostThreadTeamData::max_team_members;
@@ -572,15 +562,11 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
 
  public:
   //! Tag this class as a kokkos execution policy
-  //! Tag this class as a kokkos execution policy
   using execution_policy = TeamPolicyInternal;
 
   using traits = PolicyTraits<Properties...>;
 
-  const typename traits::execution_space& space() const {
-    static typename traits::execution_space m_space;
-    return m_space;
-  }
+  const typename traits::execution_space& space() const { return m_space; }
 
   template <class ExecSpace, class... OtherProperties>
   friend class TeamPolicyInternal;
@@ -599,6 +585,7 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
     m_chunk_size             = p.m_chunk_size;
     m_tune_team_size         = p.m_tune_team_size;
     m_tune_vector_length     = p.m_tune_vector_length;
+    m_space                  = p.m_space;
   }
 
   //----------------------------------------
@@ -728,6 +715,11 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
                      const Kokkos::AUTO_t& /* vector_length_request */)
       : TeamPolicyInternal(typename traits::execution_space(),
                            league_size_request, team_size_request, -1) {}
+
+  // FIXME_THREADS https://github.com/kokkos/kokkos/issues/8510
+  TeamPolicyInternal(const PolicyUpdate, const TeamPolicyInternal& other,
+                     const typename traits::execution_space&)
+      : TeamPolicyInternal(other) {}
 
   inline int chunk_size() const { return m_chunk_size; }
 
