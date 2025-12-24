@@ -1,0 +1,34 @@
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index 3ec0c75..be352fb 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -149,16 +149,16 @@ install(
+   INCLUDES DESTINATION      ${MAGISTRATE_EXTERNAL_DESTINATION}
+ )
+ 
+-install(
+-  EXPORT                    ${MAGISTRATE_LIBRARY}
+-  DESTINATION               cmake
+-  FILE                      "magistrateTargets.cmake"
+-  NAMESPACE                 vt::lib::
+-  COMPONENT                 runtime
+-)
+-
+-export(
+-  TARGETS                   ${MAGISTRATE_LIBRARY}
+-  FILE                      "magistrateTargets.cmake"
+-  NAMESPACE                 vt::lib::
+-)
++#install(
++#  EXPORT                    ${MAGISTRATE_LIBRARY}
++#  DESTINATION               cmake
++#  FILE                      "magistrateTargets.cmake"
++#  NAMESPACE                 vt::lib::
++#  COMPONENT                 runtime
++#)
++
++#export(
++#  TARGETS                   ${MAGISTRATE_LIBRARY}
++#  FILE                      "magistrateTargets.cmake"
++#  NAMESPACE                 vt::lib::
++#)
