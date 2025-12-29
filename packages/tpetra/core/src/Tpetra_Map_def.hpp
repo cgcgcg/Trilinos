@@ -828,8 +828,8 @@ Map<LocalOrdinal, GlobalOrdinal, Node>::
   Tpetra::Details::Behavior::reject_unrecognized_env_vars();
   Tpetra::Details::ProfilingRegion pr(funcName);
   Impl::checkMapInputArray("(GST, const GO[], LO, GO, comm)",
-                     indexList, static_cast<size_t>(indexListSize),
-                     comm.getRawPtr());
+                           indexList, static_cast<size_t>(indexListSize),
+                           comm.getRawPtr());
   // Not quite sure if I trust all code to behave correctly if the
   // pointer is nonnull but the array length is nonzero, so I'll
   // make sure the raw pointer is null if the length is zero.
@@ -874,8 +874,8 @@ Map<LocalOrdinal, GlobalOrdinal, Node>::
   Tpetra::Details::ProfilingRegion pr(funcName);
   const size_t numLclInds = static_cast<size_t>(entryList.size());
   Impl::checkMapInputArray("(GST, ArrayView, GO, comm)",
-                     entryList.getRawPtr(), numLclInds,
-                     comm.getRawPtr());
+                           entryList.getRawPtr(), numLclInds,
+                           comm.getRawPtr());
   // Not quite sure if I trust both ArrayView and View to behave
   // correctly if the pointer is nonnull but the array length is
   // nonzero, so I'll make sure it's null if the length is zero.
@@ -941,9 +941,9 @@ Map<LocalOrdinal, GlobalOrdinal, Node>::
   Tpetra::Details::Behavior::reject_unrecognized_env_vars();
   Tpetra::Details::ProfilingRegion pr(funcName);
   Impl::checkMapInputArray("(GST, Kokkos::View, GO, comm)",
-                     entryList.data(),
-                     static_cast<size_t>(entryList.extent(0)),
-                     comm.getRawPtr());
+                           entryList.data(),
+                           static_cast<size_t>(entryList.extent(0)),
+                           comm.getRawPtr());
 
   // The user has specified the distribution of indices over the
   // processes, via the input array of global indices on each
@@ -2470,7 +2470,7 @@ Tpetra::createOneToOne(const Teuchos::RCP<const Tpetra::Map<LO, GO, NT>>& M) {
   if (verbose) {
     auto comm = M.is_null() ? Teuchos::null : M->getComm();
     prefix    = Details::createPrefix(
-           comm.getRawPtr(), "createOneToOne(Map)");
+        comm.getRawPtr(), "createOneToOne(Map)");
     std::ostringstream os;
     os << *prefix << "Start" << endl;
     cerr << os.str();
@@ -2617,7 +2617,7 @@ Tpetra::createOneToOne(const Teuchos::RCP<const Tpetra::Map<LocalOrdinal, Global
   if (verbose) {
     auto comm = M.is_null() ? Teuchos::null : M->getComm();
     prefix    = Details::createPrefix(
-           comm.getRawPtr(), "createOneToOne(Map,TieBreak)");
+        comm.getRawPtr(), "createOneToOne(Map,TieBreak)");
     std::ostringstream os;
     os << *prefix << "Start" << endl;
     cerr << os.str();
