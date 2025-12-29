@@ -36,7 +36,8 @@
 #include "Tpetra_Details_initializeKokkos.hpp"
 #include "Tpetra_Details_Profiling.hpp"
 
-namespace {  // (anonymous)
+namespace Tpetra {
+namespace Impl {
 
 void checkMapInputArray(const char ctorName[],
                         const void* indexList,
@@ -124,9 +125,7 @@ void computeConstantsOnDevice(const ViewType& entryList, GlobalOrdinal& minMyGID
   lastContiguousGID_loc = myMinLoc.val;
 }
 
-}  // namespace
-
-namespace Tpetra {
+}  // namespace Impl
 
 template <class LocalOrdinal, class GlobalOrdinal, class Node>
 Map<LocalOrdinal, GlobalOrdinal, Node>::
@@ -828,7 +827,7 @@ Map<LocalOrdinal, GlobalOrdinal, Node>::
   Tpetra::Details::initializeKokkos();
   Tpetra::Details::Behavior::reject_unrecognized_env_vars();
   Tpetra::Details::ProfilingRegion pr(funcName);
-  checkMapInputArray("(GST, const GO[], LO, GO, comm)",
+  Impl::checkMapInputArray("(GST, const GO[], LO, GO, comm)",
                      indexList, static_cast<size_t>(indexListSize),
                      comm.getRawPtr());
   // Not quite sure if I trust all code to behave correctly if the
@@ -874,7 +873,7 @@ Map<LocalOrdinal, GlobalOrdinal, Node>::
   Tpetra::Details::Behavior::reject_unrecognized_env_vars();
   Tpetra::Details::ProfilingRegion pr(funcName);
   const size_t numLclInds = static_cast<size_t>(entryList.size());
-  checkMapInputArray("(GST, ArrayView, GO, comm)",
+  Impl::checkMapInputArray("(GST, ArrayView, GO, comm)",
                      entryList.getRawPtr(), numLclInds,
                      comm.getRawPtr());
   // Not quite sure if I trust both ArrayView and View to behave
@@ -941,7 +940,7 @@ Map<LocalOrdinal, GlobalOrdinal, Node>::
   Tpetra::Details::initializeKokkos();
   Tpetra::Details::Behavior::reject_unrecognized_env_vars();
   Tpetra::Details::ProfilingRegion pr(funcName);
-  checkMapInputArray("(GST, Kokkos::View, GO, comm)",
+  Impl::checkMapInputArray("(GST, Kokkos::View, GO, comm)",
                      entryList.data(),
                      static_cast<size_t>(entryList.extent(0)),
                      comm.getRawPtr());
