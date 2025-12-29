@@ -144,6 +144,8 @@ class Constraint
     return X_;
   }
 
+  virtual typename CrsGraph::local_graph_type FindBlocks(RCP<const CrsGraph>& XXt);
+
   void AssignMatrixEntriesToVector(const Matrix& P, const RCP<const CrsGraph>& pattern, MultiVector& vecP) const;
 
   void AssignMatrixEntriesToVector(const Matrix& P, MultiVector& vecP) const;

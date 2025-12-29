@@ -127,99 +127,6 @@ class MinSpmMVT {
   }
 };
 
-template <class LocalOrdinal, class GlobalOrdinal, class Node>
-typename Xpetra::CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::local_graph_type
-FindBlocks(RCP<const Xpetra::CrsGraph<LocalOrdinal, GlobalOrdinal, Node>>& X) {
-  using execution_space = typename Node::execution_space;
-  using range_type      = Kokkos::RangePolicy<LocalOrdinal, execution_space>;
-
-  auto numRows = X->getRowMap()->getLocalNumElements();
-
-  Kokkos::View<LocalOrdinal*> blockIds("blockIds", numRows);
-  Kokkos::View<LocalOrdinal*> blockIds2("blockIds2", numRows);
-
-  auto lclGraph = X->getLocalGraphDevice();
-
-  auto range = range_type(0, numRows);
-
-  Kokkos::parallel_for(
-      "init", range,
-      KOKKOS_LAMBDA(const LocalOrdinal i) {
-        blockIds(i) = i;
-      });
-  Kokkos::fence();
-
-  bool changed    = true;
-  bool resultsIn2 = false;
-  while (changed) {
-    changed = false;
-    if (!resultsIn2) {
-      MinSpmMV functor(lclGraph, blockIds, blockIds2);
-      Kokkos::parallel_reduce("backward_pass", range, functor, changed);
-      resultsIn2 = true;
-    } else {
-      MinSpmMV functor(lclGraph, blockIds2, blockIds);
-      Kokkos::parallel_reduce("backward_pass", range, functor, changed);
-      resultsIn2 = false;
-    }
-  }
-  if (resultsIn2)
-    Kokkos::deep_copy(blockIds, blockIds2);
-
-  Kokkos::View<bool*> blockStatus("", numRows);
-  Kokkos::View<LocalOrdinal*> newBlockIds("", numRows);
-  Kokkos::parallel_for(
-      "init", range,
-      KOKKOS_LAMBDA(LocalOrdinal i) {
-        Kokkos::atomic_store(&blockStatus(blockIds(i)), true);
-      });
-  Kokkos::fence();
-
-  LocalOrdinal numBlocks = 0;
-  Kokkos::parallel_scan(
-      "init", range,
-      KOKKOS_LAMBDA(LocalOrdinal i, LocalOrdinal & count, const bool final) {
-        if (final)
-          newBlockIds(i) = count;
-        if (blockStatus(i))
-          ++count;
-      },
-      numBlocks);
-
-  // Build graph with block info
-  using graph_type = typename Xpetra::CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::local_graph_type;
-  typename graph_type::row_map_type::non_const_type rowptr("", numBlocks + 1);
-  typename graph_type::entries_type::non_const_type indices("", numRows);
-
-  Kokkos::parallel_for(
-      "", range, KOKKOS_LAMBDA(const LocalOrdinal i) {
-        auto blockId = newBlockIds(blockIds(i));
-        if (blockId + 2 < numBlocks + 1)
-          Kokkos::atomic_inc(&rowptr(blockId + 2));
-      });
-  Kokkos::fence();
-
-  auto block_range = range_type(0, numBlocks);
-
-  Kokkos::parallel_scan(
-      "", block_range, KOKKOS_LAMBDA(const LocalOrdinal i, LocalOrdinal& sum, const bool final) {
-    sum += rowptr(i+1);
-    if (final) {
-      rowptr(i+1) = sum;
-    } });
-
-  Kokkos::parallel_for(
-      "", range, KOKKOS_LAMBDA(const LocalOrdinal i) {
-        auto blockId = newBlockIds(blockIds(i));
-        auto k       = Kokkos::atomic_fetch_inc(&rowptr(blockId + 1));
-        indices(k)   = i;
-      });
-
-  graph_type blocks(indices, rowptr);
-
-  return blocks;
-}
-
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 class BlockInverseFunctor {
  public:
@@ -233,9 +140,9 @@ class BlockInverseFunctor {
   using magnitude_type = typename ATS::magnitudeType;
   using magATS         = KokkosKernels::ArithTraits<magnitude_type>;
 #else
-  using ATS                        = Kokkos::ArithTraits<scalar_type>;
-  using magnitude_type             = typename ATS::magnitudeType;
-  using magATS                     = Kokkos::ArithTraits<magnitude_type>;
+  using ATS            = Kokkos::ArithTraits<scalar_type>;
+  using magnitude_type = typename ATS::magnitudeType;
+  using magATS         = Kokkos::ArithTraits<magnitude_type>;
 #endif
 
   using shared_matrix = Kokkos::View<scalar_type**, typename Node::execution_space::scratch_memory_space, Kokkos::MemoryUnmanaged>;
@@ -513,6 +420,103 @@ allocateBlockDiagonalMatrix(RCP<const Xpetra::Map<LocalOrdinal, GlobalOrdinal, N
 }
 
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+typename Xpetra::CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::local_graph_type Constraint<Scalar, LocalOrdinal, GlobalOrdinal, Node>::FindBlocks(RCP<const Xpetra::CrsGraph<LocalOrdinal, GlobalOrdinal, Node>>& XXt) {
+  using execution_space = typename Node::execution_space;
+  using range_type      = Kokkos::RangePolicy<LocalOrdinal, execution_space>;
+
+  auto numConstraints = XXt->getRowMap()->getLocalNumElements();
+
+  Kokkos::View<LocalOrdinal*> blockIds("blockIds", numConstraints);
+  Kokkos::View<LocalOrdinal*> blockIds2("blockIds2", numConstraints);
+
+  auto lclGraph = XXt->getLocalGraphDevice();
+
+  auto constraint_range = range_type(0, numConstraints);
+
+  // initialize blockIds with constraintIds
+  Kokkos::parallel_for(
+      "init_blockIds", constraint_range,
+      KOKKOS_LAMBDA(const LocalOrdinal contraintId) {
+        blockIds(contraintId) = contraintId;
+      });
+  Kokkos::fence();
+
+  // loop over rows of XXt and assign min of encountered blockIds until nothing changes anymore.
+  bool changed    = true;
+  bool resultsIn2 = false;
+  while (changed) {
+    changed = false;
+    if (!resultsIn2) {
+      MinSpmMV functor(lclGraph, blockIds, blockIds2);
+      Kokkos::parallel_reduce("minSpmv1", constraint_range, functor, changed);
+      resultsIn2 = true;
+    } else {
+      MinSpmMV functor(lclGraph, blockIds2, blockIds);
+      Kokkos::parallel_reduce("minSpmv2", constraint_range, functor, changed);
+      resultsIn2 = false;
+    }
+  }
+  if (resultsIn2)
+    Kokkos::deep_copy(blockIds, blockIds2);
+
+  // record all blockIds that are still in use
+  Kokkos::View<bool*> blockStatus("blockStatus", numConstraints);
+  Kokkos::parallel_for(
+      "set_blockstatus", constraint_range,
+      KOKKOS_LAMBDA(LocalOrdinal contraintId) {
+        Kokkos::atomic_store(&blockStatus(blockIds(contraintId)), true);
+      });
+  Kokkos::fence();
+
+  // renumber blockIds that are still in use consecutively
+  Kokkos::View<LocalOrdinal*> newBlockIds("newBlockIds", numConstraints);
+  LocalOrdinal numBlocks = 0;
+  Kokkos::parallel_scan(
+      "compute_blockIds", constraint_range,
+      KOKKOS_LAMBDA(LocalOrdinal contraintId, LocalOrdinal & blockId, const bool final) {
+        if (final)
+          newBlockIds(contraintId) = blockId;
+        if (blockStatus(contraintId))
+          ++blockId;
+      },
+      numBlocks);
+
+  // Build graph with block info
+  using graph_type = typename Xpetra::CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::local_graph_type;
+  typename graph_type::row_map_type::non_const_type rowptr("blocks_rowptr", numBlocks + 1);
+  typename graph_type::entries_type::non_const_type indices("blocks_indices", numConstraints);
+
+  Kokkos::parallel_for(
+      "count_entries_per_block", constraint_range, KOKKOS_LAMBDA(const LocalOrdinal constraintId) {
+        auto blockId = newBlockIds(blockIds(constraintId));
+        if (blockId + 2 < numBlocks + 1)
+          Kokkos::atomic_inc(&rowptr(blockId + 2));
+      });
+  Kokkos::fence();
+
+  auto block_range = range_type(0, numBlocks);
+
+  // prefix sum
+  Kokkos::parallel_scan(
+      "prefix_sum", block_range, KOKKOS_LAMBDA(const LocalOrdinal blockId, LocalOrdinal& sum, const bool final) {
+    sum += rowptr(blockId+1);
+    if (final) {
+      rowptr(blockId+1) = sum;
+    } });
+
+  Kokkos::parallel_for(
+      "fill", constraint_range, KOKKOS_LAMBDA(const LocalOrdinal contraintId) {
+        auto blockId    = newBlockIds(blockIds(contraintId));
+        auto offset     = Kokkos::atomic_fetch_inc(&rowptr(blockId + 1));
+        indices(offset) = contraintId;
+      });
+
+  graph_type blocks(indices, rowptr);
+
+  return blocks;
+}
+
+template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 void Constraint<Scalar, LocalOrdinal, GlobalOrdinal, Node>::PrepareLeastSquaresSolveDirect(const bool detect_singular_blocks) {
   Monitor m(*this, "PrepareLeastSquaresSolveDirect");
 
@@ -523,7 +527,7 @@ void Constraint<Scalar, LocalOrdinal, GlobalOrdinal, Node>::PrepareLeastSquaresS
   }
 
   auto XXtgraph = XXt->getCrsGraph();
-  auto blocks   = FindBlocks(XXtgraph);
+  auto blocks   = this->FindBlocks(XXtgraph);
   invXXt_       = allocateBlockDiagonalMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>(XXt->getRowMap(), blocks);
 
   LocalOrdinal numBlocks    = blocks.numRows();
