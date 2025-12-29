@@ -12,14 +12,11 @@
 
 #include <Xpetra_Matrix.hpp>
 #include <Xpetra_MatrixMatrix.hpp>
-// #include <Xpetra_IO.hpp>
 
 #include "MueLu_EdgeProlongatorPatternFactory_decl.hpp"
 
-#include "MueLu_MasterList.hpp"
 #include "MueLu_Monitor.hpp"
 #include "Teuchos_ScalarTraitsDecl.hpp"
-//#include "MueLu_Utilities.hpp"
 
 namespace MueLu {
 
@@ -126,11 +123,35 @@ void EdgeProlongatorPatternFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::B
                       const typename Matrix::impl_scalar_type val) {
           return ((ATS::magnitude(val - 2.0) < eps) || ((lclSingleParent(col, 0) == 1.0) && (ATS::magnitude(val - 1.0) < eps)));
         });
+
+    if (IsPrint(Statistics1)) {
+      auto numEntriesBeforeFiltering = absD_absPn_absDcT->getGlobalNumEntries();
+      auto numEntriesAfterFiltering  = filtered->getGlobalNumEntries();
+      GetOStream(Statistics1) << "Number of kept entries in filtered pattern for P: " << numEntriesAfterFiltering << "/" << numEntriesBeforeFiltering << std::endl;
+    }
+  }
+
+  auto Ppattern = filtered->getCrsGraph();
+
+  // Sanity check
+  if (IsPrint(Warnings0)) {
+    auto lclGraph = Ppattern->getLocalGraphDevice();
+    LocalOrdinal numEmptyRows;
+    Kokkos::parallel_reduce("", Kokkos::RangePolicy<LocalOrdinal, typename Node::execution_space>(0, lclGraph.numRows()), KOKKOS_LAMBDA(const LocalOrdinal rowId, LocalOrdinal& emptyRows) {
+      if (lclGraph.row_map(rowId + 1) == lclGraph.row_map(rowId))
+        ++emptyRows;
+    }, numEmptyRows);
+
+    LocalOrdinal globalNumEmptyRows;
+    MueLu_sumAll(comm, numEmptyRows, globalNumEmptyRows);
+
+    if (globalNumEmptyRows > 0)
+      GetOStream(Warnings0) << "The pattern for P has " << globalNumEmptyRows << " empty rows.\n";
   }
 
   // Xpetra::IO<SC, LO, GO, NO>::Write("pattern.code", *filtered);
 
-  Set(coarseLevel, "Ppattern", filtered->getCrsGraph());
+  Set(coarseLevel, "Ppattern", Ppattern);
 }
 
 }  // namespace MueLu
