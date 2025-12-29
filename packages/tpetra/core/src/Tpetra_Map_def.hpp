@@ -2470,7 +2470,7 @@ Tpetra::createOneToOne(const Teuchos::RCP<const Tpetra::Map<LO, GO, NT>>& M) {
   if (verbose) {
     auto comm = M.is_null() ? Teuchos::null : M->getComm();
     prefix    = Details::createPrefix(
-        comm.getRawPtr(), "createOneToOne(Map)");
+           comm.getRawPtr(), "createOneToOne(Map)");
     std::ostringstream os;
     os << *prefix << "Start" << endl;
     cerr << os.str();
@@ -2617,7 +2617,7 @@ Tpetra::createOneToOne(const Teuchos::RCP<const Tpetra::Map<LocalOrdinal, Global
   if (verbose) {
     auto comm = M.is_null() ? Teuchos::null : M->getComm();
     prefix    = Details::createPrefix(
-        comm.getRawPtr(), "createOneToOne(Map,TieBreak)");
+           comm.getRawPtr(), "createOneToOne(Map,TieBreak)");
     std::ostringstream os;
     os << *prefix << "Start" << endl;
     cerr << os.str();
