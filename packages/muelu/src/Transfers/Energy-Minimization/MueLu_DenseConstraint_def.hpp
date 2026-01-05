@@ -37,6 +37,7 @@ DenseConstraint<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   this->SetPattern(Ppattern);
   B_  = B;
   Bc_ = Bc;
+  this->SetProcRankVerbose(Ppattern->getRowMap()->getComm()->getRank());
   Setup();
   this->PrepareLeastSquaresSolve(solverType, /*detect_singular_blocks=*/false);
 }

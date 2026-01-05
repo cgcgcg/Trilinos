@@ -40,6 +40,7 @@ SparseConstraint<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   P_nodal_ = P_nodal;
   D_       = D;
   Dc_      = Dc;
+  this->SetProcRankVerbose(Ppattern->getRowMap()->getComm()->getRank());
   Setup();
   this->PrepareLeastSquaresSolve(solverType, /*detect_singular_blocks=*/true);
 }
@@ -245,27 +246,31 @@ typename Xpetra::CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::local_graph_type S
   auto lclGraph = RHS_pattern_->getLocalGraphDevice();
 
   LocalOrdinal numEmptyRows;
-  Kokkos::parallel_reduce("", range_type(0, lclGraph.numRows()), KOKKOS_LAMBDA(const LocalOrdinal rowId, LocalOrdinal& emptyRows) {
-    if (lclGraph.row_map(rowId + 1) == lclGraph.row_map(rowId))
-      ++emptyRows;
-  }, numEmptyRows);
+  Kokkos::parallel_reduce(
+      "CountEmptyRows", range_type(0, lclGraph.numRows()), KOKKOS_LAMBDA(const LocalOrdinal rowId, LocalOrdinal& emptyRows) {
+        if (lclGraph.row_map(rowId + 1) == lclGraph.row_map(rowId))
+          ++emptyRows;
+      },
+      numEmptyRows);
 
   auto numConstraints = lclGraph.entries.extent(0);
-  using graph_type = typename Xpetra::CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::local_graph_type;
+  using graph_type    = typename Xpetra::CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::local_graph_type;
   typename graph_type::row_map_type::non_const_type rowptr("blocks_rowptr", lclGraph.numRows() + 1 - numEmptyRows);
   typename graph_type::entries_type::non_const_type indices("blocks_indices", numConstraints);
 
-  Kokkos::parallel_scan("", range_type(0, lclGraph.numRows()), KOKKOS_LAMBDA(const LocalOrdinal rowId, LocalOrdinal& rowIdNew, const bool is_final) {
-    if (lclGraph.row_map(rowId + 1) != lclGraph.row_map(rowId)) {
-      if (is_final)
-        rowptr(rowIdNew+1) = lclGraph.row_map(rowId+1);
-      ++rowIdNew;
-    }
-  });
+  Kokkos::parallel_scan(
+      "GenerateBlockRowPtr", range_type(0, lclGraph.numRows()), KOKKOS_LAMBDA(const LocalOrdinal rowId, LocalOrdinal& rowIdNew, const bool is_final) {
+        if (lclGraph.row_map(rowId + 1) != lclGraph.row_map(rowId)) {
+          if (is_final)
+            rowptr(rowIdNew + 1) = lclGraph.row_map(rowId + 1);
+          ++rowIdNew;
+        }
+      });
 
-  Kokkos::parallel_for("", range_type(0, numConstraints), KOKKOS_LAMBDA(const LocalOrdinal constraintId) {
-    indices(constraintId) = constraintId;
-  });
+  Kokkos::parallel_for(
+      "FillBlockIndices", range_type(0, numConstraints), KOKKOS_LAMBDA(const LocalOrdinal constraintId) {
+        indices(constraintId) = constraintId;
+      });
 
   return graph_type(indices, rowptr);
 }
