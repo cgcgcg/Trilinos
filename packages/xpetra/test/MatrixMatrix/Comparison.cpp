@@ -161,7 +161,7 @@ int main(int argc, char** argv) {
   std::string A_file          = "A_0.m";
   std::string P_file          = "P_1.m";
 
-  std::string coords_file     = "coords.mm";
+  std::string coords_file = "coords.mm";
 
   // std::string map_file = "rowmap_A_3.m";
   // std::string coarse_map_file = "domainmap_P_4.m";
@@ -191,13 +191,12 @@ int main(int argc, char** argv) {
     auto P_colmap      = xP->getColMap();
     auto ep_P_colmap   = MapFactory::Build(Xpetra::UseEpetra, P_colmap->getGlobalNumElements(), P_colmap->getLocalElementList(), 0, comm);
 
-    auto eA = Xpetra::MatrixFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(xA->getLocalMatrixHost(), ep_map, ep_A_colmap, ep_map, ep_map);
-    auto eP = Xpetra::MatrixFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(xP->getLocalMatrixHost(), ep_map, ep_P_colmap, ep_coarse_map, ep_map);
+    auto eA      = Xpetra::MatrixFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(xA->getLocalMatrixHost(), ep_map, ep_A_colmap, ep_map, ep_map);
+    auto eP      = Xpetra::MatrixFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(xP->getLocalMatrixHost(), ep_map, ep_P_colmap, ep_coarse_map, ep_map);
     auto eCoords = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(ep_map, xCoords->getNumVectors());
 
     Kokkos::deep_copy(eCoords->getLocalViewDevice(Tpetra::Access::OverwriteAll),
                       xCoords->getLocalViewDevice(Tpetra::Access::ReadOnly));
-
 
     Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Write("epetra_" + A_file, *eA);
     Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Write("epetra_" + P_file, *eP);
@@ -254,9 +253,10 @@ int main(int argc, char** argv) {
     const Epetra_MpiComm* Mcomm = dynamic_cast<const Epetra_MpiComm*>(&Ae.Comm());
     if (Mcomm) ML_Comm_Set_UsrComm(comm, Mcomm->GetMpiComm());
 
-    ML_Operator *A_ml, *P_ml, *AP_ml;
+    ML_Operator *R_ml, *A_ml, *P_ml, *AP_ml, *Ac_ml;
     A_ml  = ML_Operator_Create(comm);
     P_ml  = ML_Operator_Create(comm);
+    R_ml  = ML_Operator_Create(comm);
     AP_ml = ML_Operator_Create(comm);
     ML_Operator_WrapEpetraMatrix(&Ae, A_ml);
     ML_Operator_WrapEpetraMatrix(&Pe, P_ml);
@@ -265,27 +265,22 @@ int main(int argc, char** argv) {
 
     for (int iter = 0; iter < numRepeats; ++iter) {
       auto timer = rcp(new Teuchos::TimeMonitor(*Teuchos::TimeMonitor::getNewTimer("ML explicit")));
-      RCP<Matrix> yAP;
       {
         auto timer2 = rcp(new Teuchos::TimeMonitor(*Teuchos::TimeMonitor::getNewTimer("ML explicit AP")));
         AP_ml       = ML_Operator_Create(comm);
         ML_2matmult(A_ml, P_ml, AP_ml, ML_EpetraCRS_MATRIX);
         ML_Operator_Destroy(&AP_ml);
       }
-      // RCP<Matrix> yR;
-      // {
-      //   auto timer2 = rcp(new Teuchos::TimeMonitor(*Teuchos::TimeMonitor::getNewTimer("Epetra explicit AP")));
-      //   // By default, we don't need global constants for transpose
-      //   auto Tparams = rcp(new Teuchos::ParameterList() );
-      //   Tparams->set("compute global constants: temporaries", Tparams->get("compute global constants: temporaries", false));
-      //   Tparams->set("compute global constants", Tparams->get("compute global constants", false));
-      //   yR = Transpose(*eP, true, "TransP", Tparams);
-      // }
-      // RCP<Matrix> yRAP;
-      // {
-      //   auto timer2 = rcp(new Teuchos::TimeMonitor(*Teuchos::TimeMonitor::getNewTimer("ML explicit RAP")));
-      //   yRAP        = ML_Multiply(*yR, *yAP);
-      // }
+      {
+        auto timer2 = rcp(new Teuchos::TimeMonitor(*Teuchos::TimeMonitor::getNewTimer("ML transpose P")));
+        ML_Operator_Transpose_byrow(P_ml, R_ml);
+      }
+      {
+        auto timer2 = rcp(new Teuchos::TimeMonitor(*Teuchos::TimeMonitor::getNewTimer("ML RAP")));
+        Ac_ml       = ML_Operator_Create(comm);
+        ML_rap(R_ml, A_ml, P_ml, Ac_ml, ML_CSR_MATRIX);
+        ML_Operator_Destroy(&Ac_ml);
+      }
     }
 
     ML_Comm_Destroy(&comm);
