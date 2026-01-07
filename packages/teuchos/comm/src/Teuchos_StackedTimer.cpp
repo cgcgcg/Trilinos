@@ -908,21 +908,36 @@ bool StackedTimer::isTimer(const std::string& flat_timer_name)
 std::stack<std::string> StackedTimer::stopAllTimers()
 {
   std::stack<std::string> timer_names;
+
   while (top_->level() > 0) {
     const std::string name = top_->get_name();
     timer_names.push(name);
     this->stop(name);
   }
-  this->stopBaseTimer();
+
+  // Base timer is handled differently for start/stop
+  if (timer_.running()) {
+    timer_names.push(timer_.get_name());
+    this->stopBaseTimer();
+  }
 
   return timer_names;
 }
 
 void StackedTimer::startTimers(std::stack<std::string> timers_to_start)
 {
-  this->startBaseTimer();
+  bool first_timer = true;
   while (timers_to_start.size() > 0) {
-    this->start(timers_to_start.top());
+    // Base timer is handled differently for start/stop
+    if (first_timer) {
+      TEUCHOS_ASSERT(timer_.get_name() == timers_to_start.top());
+      this->startBaseTimer();
+      first_timer = false;
+    }
+    else {
+      this->start(timers_to_start.top());
+    }
+
     timers_to_start.pop();
   }
 }

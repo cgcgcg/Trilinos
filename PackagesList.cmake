@@ -6,7 +6,7 @@ TRIBITS_REPOSITORY_DEFINE_PACKAGES(
   TrilinosATDMConfigTests cmake/std/atdm                  PT
   Kokkos                packages/kokkos                   PT
   KokkosKernels         packages/kokkos-kernels           PT
-  magistrate            external/magistrate               ST
+  magistrate            packages/external/magistrate      EX
   Teuchos               packages/teuchos                  PT
   RTOp                  packages/rtop                     PT
   Sacado                packages/sacado                   PT

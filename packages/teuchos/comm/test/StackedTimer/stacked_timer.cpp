@@ -878,11 +878,14 @@ TEUCHOS_UNIT_TEST(StackedTimer, StopTimersForCheckpointing)
       if (i == 5) {
         auto list_of_running_timers = timer.stopAllTimers();
 
+        TEST_EQUALITY(list_of_running_timers.size(), 3);
+
         out << "\nTimer Before Serialization:\n" << std::endl;
         timer.report(out);
         out << std::endl;
 
         magistrate::serializeToFile(timer, filename);
+
         timer.startTimers(list_of_running_timers);
       }
       timer.stop("Residual");
@@ -911,6 +914,39 @@ TEUCHOS_UNIT_TEST(StackedTimer, StopTimersForCheckpointing)
   TEST_EQUALITY(timer.findTimer("Total Time@Assembly").count, 11);
   TEST_EQUALITY(timer.findTimer("Total Time@Assembly@Residual").count, 11);
   TEST_EQUALITY(timer.findTimer("Total Time@Assembly@Jacobian").count, 10);
+}
+
+// Make sure pausing timers works for the corner cases of (1) all
+// timers are already stopped and (2) for when just the top level
+// timer is running. The top level timer is handled differently than
+// child timers.
+TEUCHOS_UNIT_TEST(StackedTimer, CheckpointCornerCases)
+{
+  const std::string filename = "magistrate_test_checkpointing_an_already_stopped_timer.txt";
+
+  Teuchos::StackedTimer timer("Total Time",false);
+
+  {
+    timer.startBaseTimer();
+    timer.stopBaseTimer();
+    auto list_of_running_timers = timer.stopAllTimers();
+    TEST_EQUALITY(list_of_running_timers.size(), 0);
+    magistrate::serializeToFile(timer, filename);
+    timer.startTimers(list_of_running_timers);
+    auto dtimer = magistrate::deserializeFromFile<Teuchos::StackedTimer>(filename);
+    dtimer->report(out);
+  }
+
+  {
+    timer.startBaseTimer();
+    auto list_of_running_timers = timer.stopAllTimers();
+    TEST_EQUALITY(list_of_running_timers.size(), 1);
+    magistrate::serializeToFile(timer, filename);
+    timer.startTimers(list_of_running_timers);
+    timer.stopBaseTimer();
+    auto dtimer = magistrate::deserializeFromFile<Teuchos::StackedTimer>(filename);
+    dtimer->report(out);
+  }
 }
 
 #endif // HAVE_TEUCHOSCOMM_MAGISTRATE
