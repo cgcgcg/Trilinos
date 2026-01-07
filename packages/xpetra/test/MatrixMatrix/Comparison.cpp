@@ -253,35 +253,49 @@ int main(int argc, char** argv) {
     const Epetra_MpiComm* Mcomm = dynamic_cast<const Epetra_MpiComm*>(&Ae.Comm());
     if (Mcomm) ML_Comm_Set_UsrComm(comm, Mcomm->GetMpiComm());
 
-    ML_Operator *R_ml, *A_ml, *P_ml, *AP_ml, *Ac_ml;
-    A_ml  = ML_Operator_Create(comm);
-    P_ml  = ML_Operator_Create(comm);
-    R_ml  = ML_Operator_Create(comm);
-    AP_ml = ML_Operator_Create(comm);
+    ML_Operator *R_ml, *A_ml, *P_ml, *Ac_ml;
+    A_ml = ML_Operator_Create(comm);
+    P_ml = ML_Operator_Create(comm);
     ML_Operator_WrapEpetraMatrix(&Ae, A_ml);
     ML_Operator_WrapEpetraMatrix(&Pe, P_ml);
 
     map->getComm()->barrier();
 
     for (int iter = 0; iter < numRepeats; ++iter) {
-      auto timer = rcp(new Teuchos::TimeMonitor(*Teuchos::TimeMonitor::getNewTimer("ML explicit")));
+      auto timer = rcp(new Teuchos::TimeMonitor(*Teuchos::TimeMonitor::getNewTimer("ML implicit")));
+      R_ml       = ML_Operator_Create(comm);
       {
-        auto timer2 = rcp(new Teuchos::TimeMonitor(*Teuchos::TimeMonitor::getNewTimer("ML explicit AP")));
-        AP_ml       = ML_Operator_Create(comm);
-        ML_2matmult(A_ml, P_ml, AP_ml, ML_EpetraCRS_MATRIX);
-        ML_Operator_Destroy(&AP_ml);
+        auto timer2 = rcp(new Teuchos::TimeMonitor(*Teuchos::TimeMonitor::getNewTimer("ML implicit Pt")));
+        ML_Operator_ImplicitTranspose(P_ml, R_ml, 0);
       }
-      {
-        auto timer2 = rcp(new Teuchos::TimeMonitor(*Teuchos::TimeMonitor::getNewTimer("ML transpose P")));
-        ML_Operator_Transpose_byrow(P_ml, R_ml);
-      }
+      Ac_ml = ML_Operator_Create(comm);
       {
         auto timer2 = rcp(new Teuchos::TimeMonitor(*Teuchos::TimeMonitor::getNewTimer("ML RAP")));
-        Ac_ml       = ML_Operator_Create(comm);
         ML_rap(R_ml, A_ml, P_ml, Ac_ml, ML_CSR_MATRIX);
-        ML_Operator_Destroy(&Ac_ml);
       }
+      ML_Operator_Destroy(&Ac_ml);
+      ML_Operator_Destroy(&R_ml);
     }
+
+    map->getComm()->barrier();
+
+    for (int iter = 0; iter < numRepeats; ++iter) {
+      auto timer = rcp(new Teuchos::TimeMonitor(*Teuchos::TimeMonitor::getNewTimer("ML explicit")));
+      R_ml       = ML_Operator_Create(comm);
+      {
+        auto timer2 = rcp(new Teuchos::TimeMonitor(*Teuchos::TimeMonitor::getNewTimer("ML explicit Pt")));
+        ML_Operator_Transpose_byrow(P_ml, R_ml);
+      }
+      Ac_ml = ML_Operator_Create(comm);
+      {
+        auto timer2 = rcp(new Teuchos::TimeMonitor(*Teuchos::TimeMonitor::getNewTimer("ML RAP")));
+        ML_rap(R_ml, A_ml, P_ml, Ac_ml, ML_CSR_MATRIX);
+      }
+      ML_Operator_Destroy(&Ac_ml);
+      ML_Operator_Destroy(&R_ml);
+    }
+
+    map->getComm()->barrier();
 
     ML_Comm_Destroy(&comm);
     // global_comm = temp;
