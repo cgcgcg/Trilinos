@@ -1024,7 +1024,7 @@ Map<LocalOrdinal, GlobalOrdinal, Node>::
     // DEEP_COPY REVIEW - DEVICE-TO-DEVICE
     Kokkos::deep_copy(typename device_type::execution_space(), lgMap, entryList);
     LO lastContiguousGID_loc;
-    computeConstantsOnDevice(entryList, minMyGID_, maxMyGID_, firstContiguousGID_, lastContiguousGID_, lastContiguousGID_loc);
+    Impl::computeConstantsOnDevice(entryList, minMyGID_, maxMyGID_, firstContiguousGID_, lastContiguousGID_, lastContiguousGID_loc);
     LO firstNonContiguous_loc = lastContiguousGID_loc + 1;
     auto nonContigGids        = Kokkos::subview(entryList, std::pair<size_t, size_t>(firstNonContiguous_loc, entryList.extent(0)));
 
