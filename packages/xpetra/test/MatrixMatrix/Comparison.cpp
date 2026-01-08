@@ -47,25 +47,166 @@ using Teuchos::rcp;
 using Teuchos::rcp_dynamic_cast;
 using Teuchos::rcpFromRef;
 
+int ML_Gen_Restrictor_TransP2(ML_Operator *Rmat,
+                              ML_Operator *Pmat) {
+  // ML_Operator *Pmat, *Rmat;
+  int *row_ptr, *colbuf, *cols;
+  int isize, osize, i, j, N_nzs, flag, length, sum, new_sum;
+  int Nneighbors, *neigh_list, *send_list, *rcv_list, Nsend, Nrcv;
+  void *data = NULL;
+  double *valbuf, *vals;
+  int (*getrow)(ML_Operator *, int, int *, int, int *, double *, int *) = NULL;
+  struct ML_CSR_MSRdata *temp;
+  int Nghost = 0, Nghost2 = 0;
+  int *remap, remap_leng;
+  ML_CommInfoOP *c_info, **c2_info;
+
+  /* pull out things from ml_handle */
+
+  temp   = (struct ML_CSR_MSRdata *)Pmat->data;
+  isize  = Pmat->outvec_leng;
+  osize  = Pmat->invec_leng;
+  data   = (void *)Pmat;
+  getrow = Pmat->getrow->func_ptr;
+
+  /* transpose Pmat's communication list. This means that PRE communication */
+  /* is replaced by POST, ML_OVERWRITE is replaced by ML_ADD, and the send  */
+  /* send and receive lists are swapped.                                    */
+
+  c_info     = Pmat->getrow->pre_comm;
+  Nneighbors = ML_CommInfoOP_Get_Nneighbors(c_info);
+  neigh_list = ML_CommInfoOP_Get_neighbors(c_info);
+  remap_leng = osize;
+  Nrcv       = 0;
+  Nsend      = 0;
+  for (i = 0; i < Nneighbors; i++) {
+    Nrcv += ML_CommInfoOP_Get_Nrcvlist(c_info, neigh_list[i]);
+    Nsend += ML_CommInfoOP_Get_Nsendlist(c_info, neigh_list[i]);
+  }
+  remap_leng = osize + Nrcv + Nsend;
+  remap      = (int *)ML_allocate(remap_leng * sizeof(int));
+  for (i = 0; i < osize; i++) remap[i] = i;
+  for (i = osize; i < osize + Nrcv + Nsend; i++)
+    remap[i] = -1;
+
+  c2_info = &(Rmat->getrow->post_comm);
+  ML_CommInfoOP_Set_neighbors(c2_info, Nneighbors,
+                              neigh_list, ML_ADD, remap, remap_leng);
+  ML_free(remap);
+  for (i = 0; i < Nneighbors; i++) {
+    Nsend     = ML_CommInfoOP_Get_Nsendlist(c_info, neigh_list[i]);
+    send_list = ML_CommInfoOP_Get_sendlist(c_info, neigh_list[i]);
+    Nrcv      = ML_CommInfoOP_Get_Nrcvlist(c_info, neigh_list[i]);
+    Nghost += Nrcv;
+    rcv_list = ML_CommInfoOP_Get_rcvlist(c_info, neigh_list[i]);
+    /* handle empty rows ... i.e. ghost variables not used */
+    if (rcv_list != NULL) {
+      for (j = 0; j < Nrcv; j++) {
+        if (rcv_list[j] > Nghost2 + osize - 1)
+          Nghost2 = rcv_list[j] - osize + 1;
+      }
+    }
+
+    ML_CommInfoOP_Set_exch_info(*c2_info, neigh_list[i], Nsend, send_list,
+                                Nrcv, rcv_list);
+    if (send_list != NULL) ML_free(send_list);
+    if (rcv_list != NULL) ML_free(rcv_list);
+  }
+  if (Nghost2 > Nghost) Nghost = Nghost2;
+  if (neigh_list != NULL) ML_free(neigh_list);
+
+  row_ptr = (int *)ML_allocate(sizeof(int) * (Nghost + osize + 1));
+  colbuf  = (int *)ML_allocate(sizeof(int) * (Nghost + osize + 1));
+  valbuf  = (double *)ML_allocate(sizeof(double) * (Nghost + osize + 1));
+
+  /* count the total number of nonzeros and compute */
+  /* the length of each row in the transpose.       */
+
+  for (i = 0; i < Nghost + osize; i++) row_ptr[i] = 0;
+
+  N_nzs = 0;
+  for (i = 0; i < isize; i++) {
+    flag = getrow((ML_Operator *)data, 1, &i, Nghost + osize + 1, colbuf, valbuf, &length);
+    if (flag == 0) pr_error("ML_Transpose_Prolongator: sizes don't work\n");
+    N_nzs += length;
+    for (j = 0; j < length; j++)
+      row_ptr[colbuf[j]]++;
+  }
+
+  cols = (int *)ML_allocate(sizeof(int) * (N_nzs + 1));
+  vals = (double *)ML_allocate(sizeof(double) * (N_nzs + 1));
+  if (vals == NULL)
+    pr_error("ML_Gen_Restrictor_TransP: Out of space\n");
+
+  /* set 'row_ptr' so it points to the beginning of each row */
+
+  sum = 0;
+  for (i = 0; i < Nghost + osize; i++) {
+    new_sum    = sum + row_ptr[i];
+    row_ptr[i] = sum;
+    sum        = new_sum;
+  }
+  row_ptr[osize + Nghost] = sum;
+
+  /* read in the prolongator matrix and store transpose in Rmat */
+
+  for (i = 0; i < isize; i++) {
+    getrow((ML_Operator *)data, 1, &i, Nghost + osize + 1, colbuf, valbuf, &length);
+    for (j = 0; j < length; j++) {
+      cols[row_ptr[colbuf[j]]]   = i;
+      vals[row_ptr[colbuf[j]]++] = valbuf[j];
+    }
+  }
+
+  /* row_ptr[i] now points to the i+1th row.    */
+  /* Reset it so that it points to the ith row. */
+
+  for (i = Nghost + osize; i > 0; i--)
+    row_ptr[i] = row_ptr[i - 1];
+  row_ptr[0] = 0;
+
+  ML_free(valbuf);
+  ML_free(colbuf);
+
+  // std::cout << "HERE "<< N_nzs << std::endl;
+
+  /* store the matrix into ML */
+
+  temp          = (struct ML_CSR_MSRdata *)ML_allocate(sizeof(struct ML_CSR_MSRdata));
+  temp->columns = cols;
+  temp->values  = vals;
+  temp->rowptr  = row_ptr;
+
+  Rmat->data_destroy = ML_CSR_MSRdata_Destroy;
+  // ML_Init_Restrictor(ml_handle, level, level2, isize, osize, (void *) temp);
+  ML_Operator_Set_ApplyFuncData(Rmat, isize, osize,
+                                (void *)temp, osize, NULL, 0);
+  ML_Operator_Set_ApplyFunc(Rmat, CSR_matvec);
+  ML_Operator_Set_Getrow(Rmat,
+                         Nghost + osize, CSR_getrow);
+  Rmat->N_nonzeros = N_nzs;
+  return (1);
+}
+
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-Epetra_CrsMatrix& Op2NonConstEpetraCrs(Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Op) {
+Epetra_CrsMatrix &Op2NonConstEpetraCrs(Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node> &Op) {
   using CrsMatrixWrap   = Xpetra::CrsMatrixWrap<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
   using EpetraCrsMatrix = Xpetra::EpetraCrsMatrixT<GlobalOrdinal, Node>;
   try {
-    CrsMatrixWrap& crsOp = dynamic_cast<CrsMatrixWrap&>(Op);
+    CrsMatrixWrap &crsOp = dynamic_cast<CrsMatrixWrap &>(Op);
     try {
-      EpetraCrsMatrix& tmp_ECrsMtx = dynamic_cast<EpetraCrsMatrix&>(*crsOp.getCrsMatrix());
+      EpetraCrsMatrix &tmp_ECrsMtx = dynamic_cast<EpetraCrsMatrix &>(*crsOp.getCrsMatrix());
       return *tmp_ECrsMtx.getEpetra_CrsMatrixNonConst();
-    } catch (std::bad_cast&) {
+    } catch (std::bad_cast &) {
       throw std::runtime_error("Cast from Xpetra::CrsMatrix to Xpetra::EpetraCrsMatrix failed");
     }
-  } catch (std::bad_cast&) {
+  } catch (std::bad_cast &) {
     throw std::runtime_error("Cast from Xpetra::Matrix to Xpetra::CrsMatrixWrap failed");
   }
 }
 
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>> ML_Multiply(Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Op1, Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Op2) {
+RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>> ML_Multiply(Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node> &Op1, Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node> &Op2) {
   using Matrix          = Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
   using CrsMatrix       = Xpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
   using CrsMatrixWrap   = Xpetra::CrsMatrixWrap<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
@@ -83,14 +224,14 @@ RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>> ML_Multiply(Xpetr
 }
 
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>> Transpose(Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Op, bool /* optimizeTranspose */ = false, const std::string& label = std::string(), const Teuchos::RCP<Teuchos::ParameterList>& params = Teuchos::null) {
+RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>> Transpose(Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node> &Op, bool /* optimizeTranspose */ = false, const std::string &label = std::string(), const Teuchos::RCP<Teuchos::ParameterList> &params = Teuchos::null) {
   using Matrix          = Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
   using CrsMatrix       = Xpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
   using CrsMatrixWrap   = Xpetra::CrsMatrixWrap<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
   using EpetraCrsMatrix = Xpetra::EpetraCrsMatrixT<GlobalOrdinal, Node>;
   switch (Op.getRowMap()->lib()) {
     case Xpetra::UseTpetra: {
-      const Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& tpetraOp = toTpetra(Op);
+      const Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node> &tpetraOp = toTpetra(Op);
 
       // Compute the transpose A of the Tpetra matrix tpetraOp.
       RCP<Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>> A;
@@ -115,9 +256,9 @@ RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>> Transpose(Xpetra:
     }
     case Xpetra::UseEpetra: {
       // Epetra case
-      Epetra_CrsMatrix& epetraOp = Op2NonConstEpetraCrs(Op);
+      Epetra_CrsMatrix &epetraOp = Op2NonConstEpetraCrs(Op);
       EpetraExt::RowMatrix_Transpose transposer;
-      Epetra_CrsMatrix* A = dynamic_cast<Epetra_CrsMatrix*>(&transposer(epetraOp));
+      Epetra_CrsMatrix *A = dynamic_cast<Epetra_CrsMatrix *>(&transposer(epetraOp));
       transposer.ReleaseTranspose();  // So we can keep A in Muelu...
 
       RCP<Epetra_CrsMatrix> rcpA(A);
@@ -135,7 +276,7 @@ RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>> Transpose(Xpetra:
   TEUCHOS_UNREACHABLE_RETURN(Teuchos::null);
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
   Teuchos::oblackholestream blackhole;
   Teuchos::GlobalMPISession mpiSession(&argc, &argv, &blackhole);
   auto comm = Teuchos::DefaultComm<int>::getComm();
@@ -156,17 +297,18 @@ int main(int argc, char** argv) {
   int numRepeats = 100;
 
   // 224 ranks
-  std::string map_file        = "rowmap_A_0.m";
-  std::string coarse_map_file = "domainmap_P_1.m";
-  std::string A_file          = "A_0.m";
-  std::string P_file          = "P_1.m";
+  // std::string map_file        = "rowmap_A_0.m";
+  // std::string coarse_map_file = "domainmap_P_1.m";
+  // std::string A_file          = "A_0.m";
+  // std::string P_file          = "P_1.m";
 
   std::string coords_file = "coords.mm";
 
-  // std::string map_file = "rowmap_A_3.m";
-  // std::string coarse_map_file = "domainmap_P_4.m";
-  // std::string A_file = "A_3.m";
-  // std::string P_file = "P_4.m";
+  // 1 rank
+  std::string map_file        = "rowmap_A_3.m";
+  std::string coarse_map_file = "domainmap_P_4.m";
+  std::string A_file          = "A_3.m";
+  std::string P_file          = "P_4.m";
 
   // 34 ranks
   // std::string map_file        = "rowmap_A_2.m";
@@ -180,7 +322,7 @@ int main(int argc, char** argv) {
   auto coarse_map = Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::ReadMap(coarse_map_file, lib, comm, false);
   auto xA         = Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Read(A_file, map, Teuchos::null, map, map);
   auto xP         = Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Read(P_file, map, Teuchos::null, coarse_map, map);
-  auto xCoords    = Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::ReadMultiVector(coords_file, map);
+  // auto xCoords    = Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::ReadMultiVector(coords_file, map);
 
   // Epetra
   {
@@ -191,16 +333,16 @@ int main(int argc, char** argv) {
     auto P_colmap      = xP->getColMap();
     auto ep_P_colmap   = MapFactory::Build(Xpetra::UseEpetra, P_colmap->getGlobalNumElements(), P_colmap->getLocalElementList(), 0, comm);
 
-    auto eA      = Xpetra::MatrixFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(xA->getLocalMatrixHost(), ep_map, ep_A_colmap, ep_map, ep_map);
-    auto eP      = Xpetra::MatrixFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(xP->getLocalMatrixHost(), ep_map, ep_P_colmap, ep_coarse_map, ep_map);
-    auto eCoords = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(ep_map, xCoords->getNumVectors());
+    auto eA = Xpetra::MatrixFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(xA->getLocalMatrixHost(), ep_map, ep_A_colmap, ep_map, ep_map);
+    auto eP = Xpetra::MatrixFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(xP->getLocalMatrixHost(), ep_map, ep_P_colmap, ep_coarse_map, ep_map);
+    // auto eCoords = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(ep_map, xCoords->getNumVectors());
 
-    Kokkos::deep_copy(eCoords->getLocalViewDevice(Tpetra::Access::OverwriteAll),
-                      xCoords->getLocalViewDevice(Tpetra::Access::ReadOnly));
+    // Kokkos::deep_copy(eCoords->getLocalViewDevice(Tpetra::Access::OverwriteAll),
+    //                   xCoords->getLocalViewDevice(Tpetra::Access::ReadOnly));
 
     Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Write("epetra_" + A_file, *eA);
     Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Write("epetra_" + P_file, *eP);
-    Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Write("epetra_" + coords_file, *eCoords);
+    // Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Write("epetra_" + coords_file, *eCoords);
 
     map->getComm()->barrier();
 
@@ -250,7 +392,7 @@ int main(int argc, char** argv) {
     // temp = global_comm;
     ML_Comm_Create(&comm);
 
-    const Epetra_MpiComm* Mcomm = dynamic_cast<const Epetra_MpiComm*>(&Ae.Comm());
+    const Epetra_MpiComm *Mcomm = dynamic_cast<const Epetra_MpiComm *>(&Ae.Comm());
     if (Mcomm) ML_Comm_Set_UsrComm(comm, Mcomm->GetMpiComm());
 
     ML_Operator *R_ml, *A_ml, *P_ml, *Ac_ml;
@@ -266,13 +408,15 @@ int main(int argc, char** argv) {
       R_ml       = ML_Operator_Create(comm);
       {
         auto timer2 = rcp(new Teuchos::TimeMonitor(*Teuchos::TimeMonitor::getNewTimer("ML implicit Pt")));
-        ML_Operator_ImplicitTranspose(P_ml, R_ml, 0);
+        // ML_Operator_ImplicitTranspose(P_ml, R_ml, 0);
+        ML_Gen_Restrictor_TransP2(R_ml, P_ml);
       }
       Ac_ml = ML_Operator_Create(comm);
       {
         auto timer2 = rcp(new Teuchos::TimeMonitor(*Teuchos::TimeMonitor::getNewTimer("ML RAP")));
         ML_rap(R_ml, A_ml, P_ml, Ac_ml, ML_CSR_MATRIX);
       }
+      // std::cout << "HERE2 " << ML_Operator_Get_Nnz(Ac_ml) << std::endl;
       ML_Operator_Destroy(&Ac_ml);
       ML_Operator_Destroy(&R_ml);
     }
@@ -291,6 +435,7 @@ int main(int argc, char** argv) {
         auto timer2 = rcp(new Teuchos::TimeMonitor(*Teuchos::TimeMonitor::getNewTimer("ML RAP")));
         ML_rap(R_ml, A_ml, P_ml, Ac_ml, ML_CSR_MATRIX);
       }
+      // std::cout << "HERE3 " << ML_Operator_Get_Nnz(Ac_ml) << std::endl;
       ML_Operator_Destroy(&Ac_ml);
       ML_Operator_Destroy(&R_ml);
     }
