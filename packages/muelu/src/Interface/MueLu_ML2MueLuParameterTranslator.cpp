@@ -325,6 +325,10 @@ std::string ML2MueLuParameterTranslator::SetParameterList(const Teuchos::Paramet
     paramList.set("repartition: put on single proc", 5000);
   }
 
+  if (!paramList.isParameter("transpose: use implicit")) {
+    paramList.set("transpose: use implicit", true);
+  }
+
   // Set the default values
   if (defaultVals != "") {
     TEUCHOS_TEST_FOR_EXCEPTION(defaultVals != "SA" && defaultVals != "NSSA" && defaultVals != "refmaxwell" && defaultVals != "Maxwell", Exceptions::RuntimeError,
