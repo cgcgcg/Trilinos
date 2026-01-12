@@ -197,11 +197,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(EminPFactory, NullspaceConstraint_Elasticity3D
 
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 void testMaxwellConstraint(const std::string &inputDir,
-                           GlobalOrdinal global_num_fine_edges,
-                           GlobalOrdinal global_num_coarse_edges,
-                           GlobalOrdinal global_num_fine_nodes,
-                           GlobalOrdinal global_num_coarse_nodes,
-                           const bool readWriteForTesting,
+                           const bool readNodalProlongators,
                            Teuchos::FancyOStream &out, bool &success) {
 #include "MueLu_UseShortNames.hpp"
 
@@ -215,12 +211,6 @@ void testMaxwellConstraint(const std::string &inputDir,
   out << "version: " << MueLu::Version() << std::endl;
 
   RCP<const Teuchos::Comm<int>> comm = TestHelpers::Parameters::getDefaultComm();
-  int numProcs                       = comm->getSize();
-  if (numProcs != 1) {
-    std::cout << "\nThis test must be run on 1 processor!\n"
-              << std::endl;
-    return;
-  }
 
   std::string scalarName = Teuchos::ScalarTraits<Scalar>::name();
   out << "scalar type = " << scalarName << std::endl;
@@ -229,26 +219,41 @@ void testMaxwellConstraint(const std::string &inputDir,
     return;
   }
 
-  // #define GrindEmin
-
-  LocalOrdinal indexBase = 0;
-
   auto lib = TestHelpers::Parameters::getLib();
 
-  auto fine_edge_map    = MapFactory::Build(lib, global_num_fine_edges, indexBase, comm);
-  auto coarse_edge_map  = MapFactory::Build(lib, global_num_coarse_edges, indexBase, comm);
-  auto fine_nodal_map   = MapFactory::Build(lib, global_num_fine_nodes, indexBase, comm);
-  auto coarse_nodal_map = MapFactory::Build(lib, global_num_coarse_nodes, indexBase, comm);
+  auto A = Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Read(inputDir + "A.dat", lib, comm);
+  auto D = Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Read(inputDir + "D0h.dat", lib, comm);
 
-  auto A = Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Read(inputDir + "A.dat", fine_edge_map, fine_edge_map, fine_edge_map, fine_edge_map);
-  auto D = Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Read(inputDir + "D0h.dat", fine_edge_map, fine_nodal_map, fine_nodal_map, fine_edge_map);
+  auto fine_edge_map  = A->getDomainMap();
+  auto fine_nodal_map = D->getDomainMap();
+  TEUCHOS_ASSERT(fine_edge_map->isSameAs(*D->getRangeMap()));
 
   // Auxiliary nodal hierarchy
   RCP<Matrix> NodeAggMatrix, NodeAggMatrixCoarse, Pnodal, Ptentnodal;
+  // Edge hierarchy
+  RCP<Matrix> P0, P;
+  const bool useExternalP0 = false;
+  const bool GrindEmin     = false;
+
   {
     auto A_D0     = Xpetra::MatrixMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Multiply(*A, false, *D, false, out, true, true);
     NodeAggMatrix = Xpetra::MatrixMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Multiply(*D, true, *A_D0, false, out, true, true);
+  }
+  if (readNodalProlongators) {
+    Ptentnodal = Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Read(inputDir + "Ptent.dat", lib, comm);
+    Pnodal     = Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Read(inputDir + "Pn.dat", lib, comm);
 
+    TEUCHOS_ASSERT(fine_nodal_map->isSameAs(*Ptentnodal->getRangeMap()));
+    TEUCHOS_ASSERT(fine_nodal_map->isSameAs(*Pnodal->getRangeMap()));
+
+    if (useExternalP0) {
+      P0 = Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Read(inputDir + "Pe.dat", lib, comm);
+      TEUCHOS_ASSERT(fine_edge_map->isSameAs(*P0->getRangeMap()));
+    }
+
+    auto NodeAggMatrix_P = Xpetra::MatrixMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Multiply(*NodeAggMatrix, false, *Pnodal, false, out, true, true);
+    NodeAggMatrixCoarse  = Xpetra::MatrixMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Multiply(*Pnodal, true, *NodeAggMatrix_P, false, out, true, true);
+  } else {
     RCP<Hierarchy> H = rcp(new Hierarchy("Nodal Hierarchy"));
     H->setDefaultVerbLevel(Teuchos::VERB_HIGH);
 
@@ -269,21 +274,8 @@ void testMaxwellConstraint(const std::string &inputDir,
     Pnodal                      = coarseLevelNodal->Get<RCP<Matrix>>("P");
     NodeAggMatrixCoarse         = coarseLevelNodal->Get<RCP<Matrix>>("A");
   }
-  // Edge hierarchy
-  RCP<Matrix> P0, P;
+
   RCP<Constraint> constraint;
-  bool useExternalP0 = false;
-  if (readWriteForTesting) {
-    // Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Write("Ptent.code", *Ptentnodal);
-    // Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Write("Pnodal.code", *Pnodal);
-    // Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Write("NodeAggMatrixCoarse.code", *NodeAggMatrixCoarse);
-    Ptentnodal = Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Read(inputDir + "Ptent.dat", fine_nodal_map, coarse_nodal_map, coarse_nodal_map, fine_nodal_map);
-    Pnodal     = Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Read(inputDir + "Pn.dat", fine_nodal_map, coarse_nodal_map, coarse_nodal_map, fine_nodal_map);
-
-    if (useExternalP0)
-      P0 = Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Read(inputDir + "Pe.dat", fine_edge_map, coarse_edge_map, coarse_edge_map, fine_edge_map);
-  }
-
   {
     Level fineLevel, coarseLevel;
     if (P0 != Teuchos::null) coarseLevel.Set("P0", P0);
@@ -316,12 +308,8 @@ void testMaxwellConstraint(const std::string &inputDir,
     RCP<EminPFactory> eminFact = rcp(new EminPFactory());
     eminFact->SetFactory("Constraint", constraintFact);
     eminFact->SetFactory("P", constraintFact);
-#ifdef GrindEmin
-    eminFact->SetParameter("emin: num iterations", Teuchos::ParameterEntry(110));
-#endif
-
-    if (readWriteForTesting)
-      coarseLevel.Request("D0", reitzingerFact.get());
+    if (GrindEmin)
+      eminFact->SetParameter("emin: num iterations", Teuchos::ParameterEntry(110));
 
     coarseLevel.Request("Constraint", constraintFact.get());
     coarseLevel.Request("P", constraintFact.get());
@@ -340,12 +328,6 @@ void testMaxwellConstraint(const std::string &inputDir,
 
     // This is the result after running the minimization.
     coarseLevel.Get("P", P, eminFact.get());
-    if (readWriteForTesting) {
-      RCP<Matrix> D0H;
-      D0H = coarseLevel.Get<RCP<Matrix>>("D0");
-      Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Write("D0H.code", *D0H);
-      Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Write("Pe.code", *P);
-    }
   }
 
   const auto eps = Teuchos::ScalarTraits<magnitude_type>::eps();
@@ -367,11 +349,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(EminPFactory, MaxwellConstraint_1, Scalar, Loc
   MUELU_TESTING_SET_OSTREAM;
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   testMaxwellConstraint<Scalar, LocalOrdinal, GlobalOrdinal, Node>(/*inputDir=*/"emin_matrices/",
-                                                                   /*global_num_fine_edges=*/56,
-                                                                   /*global_num_coarse_edges=*/5,
-                                                                   /*global_num_fine_nodes=*/25,
-                                                                   /*global_num_coarse_nodes=*/4,
-                                                                   /*readWriteForTesting=*/false,
+                                                                   /*readNodalProlongators=*/false,
                                                                    out, success);
 }
 
@@ -380,11 +358,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(EminPFactory, MaxwellConstraint_Tris, Scalar, 
   MUELU_TESTING_SET_OSTREAM;
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   testMaxwellConstraint<Scalar, LocalOrdinal, GlobalOrdinal, Node>(/*inputDir=*/"emin_matrices/tris/",
-                                                                   /*global_num_fine_edges=*/12416,
-                                                                   /*global_num_coarse_edges=*/1365,
-                                                                   /*global_num_fine_nodes=*/4225,
-                                                                   /*global_num_coarse_nodes=*/484,
-                                                                   /*readWriteForTesting=*/true,
+                                                                   /*readNodalProlongators=*/true,
                                                                    out, success);
 }
 
@@ -393,11 +367,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(EminPFactory, MaxwellConstraint_TrisWithDir, S
   MUELU_TESTING_SET_OSTREAM;
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   testMaxwellConstraint<Scalar, LocalOrdinal, GlobalOrdinal, Node>(/*inputDir=*/"emin_matrices/tris/withDir/",
-                                                                   /*global_num_fine_edges=*/12352,
-                                                                   /*global_num_coarse_edges=*/1387,
-                                                                   /*global_num_fine_nodes=*/4160,
-                                                                   /*global_num_coarse_nodes=*/484,
-                                                                   /*readWriteForTesting=*/true,
+                                                                   /*readNodalProlongators=*/true,
                                                                    out, success);
 }
 
@@ -406,11 +376,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(EminPFactory, MaxwellConstraint_Quads, Scalar,
   MUELU_TESTING_SET_OSTREAM;
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   testMaxwellConstraint<Scalar, LocalOrdinal, GlobalOrdinal, Node>(/*inputDir=*/"emin_matrices/quads/",
-                                                                   /*global_num_fine_edges=*/1512,
-                                                                   /*global_num_coarse_edges=*/180,
-                                                                   /*global_num_fine_nodes=*/784,
-                                                                   /*global_num_coarse_nodes=*/100,
-                                                                   /*readWriteForTesting=*/true,
+                                                                   /*readNodalProlongators=*/true,
                                                                    out, success);
 }
 
@@ -419,11 +385,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(EminPFactory, MaxwellConstraint_QuadsWithDir, 
   MUELU_TESTING_SET_OSTREAM;
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   testMaxwellConstraint<Scalar, LocalOrdinal, GlobalOrdinal, Node>(/*inputDir=*/"emin_matrices/quads/withDir/",
-                                                                   /*global_num_fine_edges=*/1485,
-                                                                   /*global_num_coarse_edges=*/171,
-                                                                   /*global_num_fine_nodes=*/756,
-                                                                   /*global_num_coarse_nodes=*/90,
-                                                                   /*readWriteForTesting=*/true,
+                                                                   /*readNodalProlongators=*/true,
                                                                    out, success);
 }
 
@@ -432,11 +394,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(EminPFactory, MaxwellConstraint_Tets, Scalar, 
   MUELU_TESTING_SET_OSTREAM;
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   testMaxwellConstraint<Scalar, LocalOrdinal, GlobalOrdinal, Node>(/*inputDir=*/"emin_matrices/tets/",
-                                                                   /*global_num_fine_edges=*/5859,
-                                                                   /*global_num_coarse_edges=*/279,
-                                                                   /*global_num_fine_nodes=*/1000,
-                                                                   /*global_num_coarse_nodes=*/64,
-                                                                   /*readWriteForTesting=*/true,
+                                                                   /*readNodalProlongators=*/true,
                                                                    out, success);
 }
 
@@ -445,11 +403,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(EminPFactory, MaxwellConstraint_TetsWithDir, S
   MUELU_TESTING_SET_OSTREAM;
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   testMaxwellConstraint<Scalar, LocalOrdinal, GlobalOrdinal, Node>(/*inputDir=*/"emin_matrices/tets/withDir/",
-                                                                   /*global_num_fine_edges=*/5850,
-                                                                   /*global_num_coarse_edges=*/342,
-                                                                   /*global_num_fine_nodes=*/990,
-                                                                   /*global_num_coarse_nodes=*/62,
-                                                                   /*readWriteForTesting=*/true,
+                                                                   /*readNodalProlongators=*/true,
                                                                    out, success);
 }
 
@@ -458,11 +412,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(EminPFactory, MaxwellConstraint_Hexes, Scalar,
   MUELU_TESTING_SET_OSTREAM;
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   testMaxwellConstraint<Scalar, LocalOrdinal, GlobalOrdinal, Node>(/*inputDir=*/"emin_matrices/hexes/",
-                                                                   /*global_num_fine_edges=*/2700,
-                                                                   /*global_num_coarse_edges=*/144,
-                                                                   /*global_num_fine_nodes=*/1000,
-                                                                   /*global_num_coarse_nodes=*/64,
-                                                                   /*readWriteForTesting=*/true,
+                                                                   /*readNodalProlongators=*/true,
                                                                    out, success);
 }
 
@@ -471,11 +421,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(EminPFactory, MaxwellConstraint_HexesWithDir, 
   MUELU_TESTING_SET_OSTREAM;
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
   testMaxwellConstraint<Scalar, LocalOrdinal, GlobalOrdinal, Node>(/*inputDir=*/"emin_matrices/hexes/withDir/",
-                                                                   /*global_num_fine_edges=*/2691,
-                                                                   /*global_num_coarse_edges=*/155,
-                                                                   /*global_num_fine_nodes=*/990,
-                                                                   /*global_num_coarse_nodes=*/60,
-                                                                   /*readWriteForTesting=*/true,
+                                                                   /*readNodalProlongators=*/true,
                                                                    out, success);
 }
 
