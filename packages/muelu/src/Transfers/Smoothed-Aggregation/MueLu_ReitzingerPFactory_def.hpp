@@ -117,7 +117,7 @@ void ReitzingerPFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::BuildP(Level
   //
   // If Z_ij != 0 we create an edge e between the nodal aggregates i and j.
   // Z is clearly symmetric. We only create a single edge between i and j.
-  // In the distributed case, we also need to decide which rank owns the edge e.
+  // In the distributed case, we also need to decide which rank owns the coarse edge e.
   // If both endpoints i and j live on process proc0 then proc0 should obiously own the edge e.
   // If i lives on proc0 and j lives on proc1, we tie-break based on the rule
   //
@@ -227,7 +227,7 @@ void ReitzingerPFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::BuildP(Level
     // (rlid, clid) of Z.
     auto add_edge = KOKKOS_LAMBDA(LocalOrdinal rlid, LocalOrdinal clid) {
       if (clid < numLocalRows) {
-        // Both row and column index are local, this process owns the new edge
+        // Both row and column index are local, this process owns the new edge.
         // Only create one edge between rlid and clid and ignore the transposed entry.
         return (rlid < clid);
       } else {
@@ -238,7 +238,7 @@ void ReitzingerPFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::BuildP(Level
       }
     };
 
-    // Count up how many coarse regular edges we are creating
+    // Count up how many coarse regular edges we are creating.
     LocalOrdinal numRegularEdges = 0;
     Kokkos::parallel_reduce(
         numLocalRows, KOKKOS_LAMBDA(const LocalOrdinal rlid, LocalOrdinal& ne) {
@@ -254,61 +254,47 @@ void ReitzingerPFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::BuildP(Level
 
     // Mark as singleParents any D0 edges with only one node (so these are
     // edges that connect an interior node with a Dirichlet node).
-    // We also define a vector that records the global Id of the
-    // interior node associated with each singleParent edge
-
-    auto ntheSingleParent   = VectorFactory::Build(D0->getRowMap(), false);
-    auto singleParentAggGid = VectorFactory::Build(D0->getRowMap(), true);
+    // isDirichletFineEdge is 1 for edges with a single endpoint and 0 otherwise.
+    // TODO: Use a vector with Scalar=LocalOrdinal.
+    auto isDirichletFineEdge = VectorFactory::Build(D0->getRowMap(), false);
     {
       auto oneVec = VectorFactory::Build(D0->getDomainMap(), false);
       oneVec->putScalar(one_Scalar);
-      D0->apply(*oneVec, *ntheSingleParent, Teuchos::NO_TRANS);
+      D0->apply(*oneVec, *isDirichletFineEdge, Teuchos::NO_TRANS);
 
-      auto lcl_ntheSingleParent   = ntheSingleParent->getLocalViewDevice(Tpetra::Access::ReadWrite);
-      auto lcl_singleParentAggGid = singleParentAggGid->getLocalViewDevice(Tpetra::Access::ReadWrite);
-      auto lcl_D0_Pn              = D0_Pn->getLocalMatrixDevice();
-      auto lcl_colmap             = D0_Pn->getColMap()->getLocalMap();
+      auto lcl_isDirichletFineEdge = isDirichletFineEdge->getLocalViewDevice(Tpetra::Access::ReadWrite);
+      auto lcl_D0_Pn               = D0_Pn->getLocalMatrixDevice();
       Kokkos::parallel_for(
-          lcl_ntheSingleParent.extent(0), KOKKOS_LAMBDA(const LocalOrdinal i) {
-            if (ATS::magnitude(ATS::magnitude(lcl_ntheSingleParent(i, 0)) - one_mag) > eps_mag) {
+          lcl_isDirichletFineEdge.extent(0), KOKKOS_LAMBDA(const LocalOrdinal i) {
+            if (ATS::magnitude(ATS::magnitude(lcl_isDirichletFineEdge(i, 0)) - one_mag) > eps_mag) {
               // This is a regular edge with two end points.
-              lcl_ntheSingleParent(i, 0) = zero_impl_scalar;
+              lcl_isDirichletFineEdge(i, 0) = zero_impl_scalar;
             } else {
               // This is an edge with one endpoint.
               auto row = lcl_D0_Pn.rowConst(i);
               KOKKOS_ASSERT(row.length == 1);
-              lcl_ntheSingleParent(i, 0) = one_impl_scalar;
-              // GID of the endpoint
-              lcl_singleParentAggGid(i, 0) = (impl_scalar_type)lcl_colmap.getGlobalElement(row.colidx(0));
+              lcl_isDirichletFineEdge(i, 0) = one_impl_scalar;
             }
           });
     }
-    // ntheSingleParent is 1 for edges with a single endpoint and 0 otherwise.
-    // singleParentAggGid is the GID on the single edge endpoint for single edges and 0 otherwise.
 
-    // For Orphan edge i, D0_Pn(i,:) has just one nonzero (when Pn is a tentative prolongator
-    // as it should be for ReitzingerPFactory). This means that the transpose has just one
-    // nonzero equal to 1 or -1 in the associated column. We can set all nonzeros equal to
-    // 1 in (D0*Pn)^T and do matvecs with v. These matvecs should sum all entries of v associated
-    // with the same coarse node (which should all be equal to each other for v1 and for v2).
-    // Thus, the desired gid is obtained via v2/v1 where v2[i] = gid*k and v1[i]=k where k
-    // is the number of fine singleParent edges incident to the same gid^th coarse node (or aggregate)
-    auto v1 = VectorFactory::Build(D0_Pn->getDomainMap(), false);
-    auto v2 = VectorFactory::Build(D0_Pn->getDomainMap(), false);
-
-    // Count up Dirichlet coarse edges
-    LocalOrdinal numDirichletEdges = 0;
+    // Count the number of fine Dirichlet edges that are connected to every coarse nodal aggregate via
+    // the graph of D0*Pn.
+    auto numberConnectedFineDirichletEdgesToCoarseNode = VectorFactory::Build(D0_Pn->getDomainMap(), false);
     {
       D0_Pn->setAllToScalar(one_Scalar);
-      D0_Pn->apply(*ntheSingleParent, *v1, Teuchos::TRANS);
-      D0_Pn->apply(*singleParentAggGid, *v2, Teuchos::TRANS);
+      D0_Pn->apply(*isDirichletFineEdge, *numberConnectedFineDirichletEdgesToCoarseNode, Teuchos::TRANS);
+    }
 
-      auto lcl_v1 = v1->getLocalViewDevice(Tpetra::Access::ReadOnly);
+    // Count local Dirichlet coarse edges
+    LocalOrdinal numDirichletEdges = 0;
+    {
+      auto lcl_numberConnectedFineDirichletEdgesToCoarseNode = numberConnectedFineDirichletEdgesToCoarseNode->getLocalViewDevice(Tpetra::Access::ReadOnly);
 
       Kokkos::parallel_reduce(
-          lcl_v1.extent(0),
+          lcl_numberConnectedFineDirichletEdgesToCoarseNode.extent(0),
           KOKKOS_LAMBDA(const LocalOrdinal i, LocalOrdinal& ne) {
-            if (ATS::magnitude(lcl_v1(i, 0)) > eps_mag) {
+            if (ATS::magnitude(lcl_numberConnectedFineDirichletEdgesToCoarseNode(i, 0)) > eps_mag) {
               ++ne;
             }
           },
@@ -375,20 +361,19 @@ void ReitzingerPFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::BuildP(Level
         });
 
     // Fill Dirichlet edges
+    // Create one coarse Dirichlet edge for every nodal aggregate that is connected to at least one fine Dirichlet edge.
     {
-      auto lcl_v1 = v1->getLocalViewDevice(Tpetra::Access::ReadOnly);
-      auto lcl_v2 = v2->getLocalViewDevice(Tpetra::Access::ReadOnly);
+      auto lcl_numberConnectedFineDirichletEdgesToCoarseNode = numberConnectedFineDirichletEdgesToCoarseNode->getLocalViewDevice(Tpetra::Access::ReadOnly);
       Kokkos::parallel_scan(
-          lcl_v1.extent(0),
-          KOKKOS_LAMBDA(const LocalOrdinal i, LocalOrdinal& ne, const bool update) {
-            if (ATS::magnitude(lcl_v1(i, 0)) > eps_mag) {
+          lcl_numberConnectedFineDirichletEdgesToCoarseNode.extent(0),
+          KOKKOS_LAMBDA(const LocalOrdinal agg_lid, LocalOrdinal& ne, const bool update) {
+            if (ATS::magnitude(lcl_numberConnectedFineDirichletEdgesToCoarseNode(agg_lid, 0)) > eps_mag) {
               if (!update) {
                 // First pass: figure out offsets
                 ++ne;
               } else {
                 // Second pass: fill
-                auto lid                         = lclColMap.getLocalElement((GlobalOrdinal)(ATS::magnitude(lcl_v2(i, 0)) / lcl_v1(i, 0)));
-                colidx(2 * numRegularEdges + ne) = lid;
+                colidx(2 * numRegularEdges + ne) = agg_lid;
                 values(2 * numRegularEdges + ne) = one_impl_scalar;
                 ++ne;
                 rowptr(numRegularEdges + ne) = 2 * numRegularEdges + ne;
