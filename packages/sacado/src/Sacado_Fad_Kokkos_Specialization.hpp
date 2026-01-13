@@ -222,11 +222,16 @@ void deep_copy(const ExecT& exec_space, const DstT& dst, const SrcT& src) {
       total_extent *= src.extent(r);
   }
 
+  size_t vector_size = 1;
+
+#if defined(SACADO_VIEW_CUDA_HIERARCHICAL) ||                                  \
+    defined(SACADO_VIEW_CUDA_HIERARCHICAL_DFAD)
   // It looks like SFAD only works with 64 wide vector in HIP
 #ifdef KOKKOS_ENABLE_HIP
-  size_t vector_size = 64;
+  vector_size = 64;
 #else
-  size_t vector_size = 32;
+  vector_size = 32;
+#endif
 #endif
 
   // Just arbitraryly using team_size = 1 for low concurrency backends (i.e. CPUs)
