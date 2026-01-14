@@ -39,10 +39,10 @@
 namespace Tpetra {
 namespace Impl {
 
-void checkMapInputArray(const char ctorName[],
-                        const void* indexList,
-                        const size_t indexListSize,
-                        const Teuchos::Comm<int>* const comm) {
+inline void checkMapInputArray(const char ctorName[],
+                               const void* indexList,
+                               const size_t indexListSize,
+                               const Teuchos::Comm<int>* const comm) {
   using Tpetra::Details::Behavior;
 
   const bool debug = Behavior::debug("Map");
