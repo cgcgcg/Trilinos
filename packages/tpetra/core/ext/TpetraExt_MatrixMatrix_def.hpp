@@ -29,6 +29,7 @@
 #include "Tpetra_Import_Util.hpp"
 #include "Tpetra_Import_Util2.hpp"
 #include "Tpetra_Details_Profiling.hpp"
+#include "Tpetra_Details_Sortedness.hpp"
 
 #include <algorithm>
 #include <type_traits>
@@ -131,7 +132,7 @@ void Multiply(
 
   using Teuchos::ParameterList;
   RCP<ParameterList> transposeParams(new ParameterList);
-  transposeParams->set("sort", true);  // Kokkos Kernels spgemm requires inputs to be sorted
+  transposeParams->set("sort", Details::MatrixTraits<Scalar, LocalOrdinal, GlobalOrdinal, Node>::spgemmNeedsSortedInputs());  // Kokkos Kernels spgemm requires inputs to be sorted
 
   if (!use_optimized_ATB && transposeA) {
     transposer_type transposer(rcpFromRef(A));
@@ -1182,7 +1183,7 @@ void mult_AT_B_newmatrix(
 
   using Teuchos::ParameterList;
   RCP<ParameterList> transposeParams(new ParameterList);
-  transposeParams->set("sort", true);  // Kokkos Kernels spgemm requires inputs to be sorted
+  transposeParams->set("sort", Details::MatrixTraits<Scalar, LocalOrdinal, GlobalOrdinal, Node>::spgemmNeedsSortedInputs());  // Kokkos Kernels spgemm requires inputs to be sorted
   if (!params.is_null()) {
     transposeParams->set("compute global constants",
                          params->get("compute global constants: temporaries",
@@ -2097,7 +2098,7 @@ void KernelWrappers<Scalar, LocalOrdinal, GlobalOrdinal, Node, LocalOrdinalViewT
     Tpetra::Details::ProfilingRegion MM3("TpetraExt: MMM: Newmatrix Final Sort");
 
     // Final sort & set of CRS arrays
-    if (params.is_null() || params->get("sort entries", true))
+    if (params.is_null() || params->get("sort entries", Details::MatrixTraits<Scalar, LocalOrdinal, GlobalOrdinal, Node>::spgemmNeedsSortedInputs()))
       Import_Util::sortCrsEntries(Crowptr, Ccolind, Cvals);
     C.setAllValues(Crowptr, Ccolind, Cvals);
   }
@@ -2715,7 +2716,7 @@ void KernelWrappers2<Scalar, LocalOrdinal, GlobalOrdinal, Node, LocalOrdinalView
     // TODO (mfh 27 Sep 2016) Will the thread-parallel "local" sparse
     // matrix-matrix multiply routine sort the entries for us?
     // Final sort & set of CRS arrays
-    if (params.is_null() || params->get("sort entries", true))
+    if (params.is_null() || params->get("sort entries", Details::MatrixTraits<Scalar, LocalOrdinal, GlobalOrdinal, Node>::spgemmNeedsSortedInputs()))
       Import_Util::sortCrsEntries(Crowptr, Ccolind, Cvals);
     C.setAllValues(Crowptr, Ccolind, Cvals);
   }
