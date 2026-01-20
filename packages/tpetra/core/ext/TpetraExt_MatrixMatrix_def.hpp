@@ -38,7 +38,8 @@
 #include "TpetraExt_MatrixMatrix_ExtraKernels_def.hpp"
 #include "Tpetra_Details_getEntryOnHost.hpp"
 
-#include "TpetraExt_MatrixMatrix_KernelWrappers.hpp"
+#include "TpetraExt_Local_SpGEMM.hpp"
+#include "TpetraExt_Local_Jacobi.hpp"
 
 #include "KokkosSparse_spgemm.hpp"
 #include "KokkosSparse_spadd.hpp"
@@ -54,7 +55,6 @@
 /*********************************************************************************************************/
 // Include the architecture-specific kernel partial specializations here
 // NOTE: This needs to be outside all namespaces
-#include "TpetraExt_MatrixMatrix_Serial.hpp"
 #include "TpetraExt_MatrixMatrix_OpenMP.hpp"
 
 namespace Tpetra {
@@ -1106,6 +1106,213 @@ void Add(
 namespace MMdetails {
 
 /*********************************************************************************************************/
+template <class Scalar,
+          class LocalOrdinal,
+          class GlobalOrdinal,
+          class Node,
+          class LocalOrdinalViewType>
+void KernelWrappers_spgemm<Scalar, LocalOrdinal, GlobalOrdinal, Node, LocalOrdinalViewType>::mult_A_B_newmatrix_kernel_wrapper(CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Aview,
+                                                                                                                               CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Bview,
+                                                                                                                               const LocalOrdinalViewType& Acol2Brow,
+                                                                                                                               const LocalOrdinalViewType& Acol2Irow,
+                                                                                                                               const LocalOrdinalViewType& Bcol2Ccol,
+                                                                                                                               const LocalOrdinalViewType& Icol2Ccol,
+                                                                                                                               CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& C,
+                                                                                                                               Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node>> Cimport,
+                                                                                                                               const std::string& label,
+                                                                                                                               const Teuchos::RCP<Teuchos::ParameterList>& params) {
+  mult_A_B_newmatrix_local_KokkosKernels(Aview, Bview, Acol2Brow, Acol2Irow, Bcol2Ccol, Icol2Ccol, C, Cimport, label, params);
+}
+
+template <class Scalar,
+          class LocalOrdinal,
+          class GlobalOrdinal,
+          class Node,
+          class LocalOrdinalViewType>
+void KernelWrappers_spgemm<Scalar, LocalOrdinal, GlobalOrdinal, Node, LocalOrdinalViewType>::mult_A_B_reuse_kernel_wrapper(CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Aview,
+                                                                                                                           CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Bview,
+                                                                                                                           const LocalOrdinalViewType& Acol2Brow,
+                                                                                                                           const LocalOrdinalViewType& Acol2Irow,
+                                                                                                                           const LocalOrdinalViewType& Bcol2Ccol,
+                                                                                                                           const LocalOrdinalViewType& Icol2Ccol,
+                                                                                                                           CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& C,
+                                                                                                                           Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node>> Cimport,
+                                                                                                                           const std::string& label,
+                                                                                                                           const Teuchos::RCP<Teuchos::ParameterList>& params) {
+  mult_A_B_reuse_local_serial(Aview, Bview, Acol2Brow, Acol2Irow, Bcol2Ccol, Icol2Ccol, C, Cimport, label, params);
+}
+
+#ifdef HAVE_TPETRA_SERIAL
+template <class Scalar,
+          class LocalOrdinal,
+          class GlobalOrdinal,
+          class LocalOrdinalViewType>
+void KernelWrappers_spgemm<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosSerialWrapperNode, LocalOrdinalViewType>::mult_A_B_newmatrix_kernel_wrapper(CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosSerialWrapperNode>& Aview,
+                                                                                                                                                                        CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosSerialWrapperNode>& Bview,
+                                                                                                                                                                        const LocalOrdinalViewType& Acol2Brow,
+                                                                                                                                                                        const LocalOrdinalViewType& Acol2Irow,
+                                                                                                                                                                        const LocalOrdinalViewType& Bcol2Ccol,
+                                                                                                                                                                        const LocalOrdinalViewType& Icol2Ccol,
+                                                                                                                                                                        CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosSerialWrapperNode>& C,
+                                                                                                                                                                        Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosSerialWrapperNode>> Cimport,
+                                                                                                                                                                        const std::string& label,
+                                                                                                                                                                        const Teuchos::RCP<Teuchos::ParameterList>& params) {
+  mult_A_B_newmatrix_local_serial(Aview, Bview, Acol2Brow, Acol2Irow, Bcol2Ccol, Icol2Ccol, C, Cimport, label, params);
+}
+
+template <class Scalar,
+          class LocalOrdinal,
+          class GlobalOrdinal,
+          class LocalOrdinalViewType>
+void KernelWrappers_spgemm<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosSerialWrapperNode, LocalOrdinalViewType>::mult_A_B_reuse_kernel_wrapper(CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosSerialWrapperNode>& Aview,
+                                                                                                                                                                    CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosSerialWrapperNode>& Bview,
+                                                                                                                                                                    const LocalOrdinalViewType& Acol2Brow,
+                                                                                                                                                                    const LocalOrdinalViewType& Acol2Irow,
+                                                                                                                                                                    const LocalOrdinalViewType& Bcol2Ccol,
+                                                                                                                                                                    const LocalOrdinalViewType& Icol2Ccol,
+                                                                                                                                                                    CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosSerialWrapperNode>& C,
+                                                                                                                                                                    Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosSerialWrapperNode>> Cimport,
+                                                                                                                                                                    const std::string& label,
+                                                                                                                                                                    const Teuchos::RCP<Teuchos::ParameterList>& params) {
+  mult_A_B_reuse_local_serial(Aview, Bview, Acol2Brow, Acol2Irow, Bcol2Ccol, Icol2Ccol, C, Cimport, label, params);
+}
+#endif
+
+/*********************************************************************************************************/
+template <class Scalar,
+          class LocalOrdinal,
+          class GlobalOrdinal,
+          class Node,
+          class LocalOrdinalViewType>
+void KernelWrappers_jacobi<Scalar, LocalOrdinal, GlobalOrdinal, Node, LocalOrdinalViewType>::jacobi_A_B_newmatrix_kernel_wrapper(Scalar omega,
+                                                                                                                                 const Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Dinv,
+                                                                                                                                 CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Aview,
+                                                                                                                                 CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Bview,
+                                                                                                                                 const LocalOrdinalViewType& Acol2Brow,
+                                                                                                                                 const LocalOrdinalViewType& Acol2Irow,
+                                                                                                                                 const LocalOrdinalViewType& Bcol2Ccol,
+                                                                                                                                 const LocalOrdinalViewType& Icol2Ccol,
+                                                                                                                                 CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& C,
+                                                                                                                                 Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node>> Cimport,
+                                                                                                                                 const std::string& label,
+                                                                                                                                 const Teuchos::RCP<Teuchos::ParameterList>& params) {
+  // Node-specific code
+  std::string myalg("KK");
+  std::string nodeLowerCase;
+
+  // This code works for serial and openmp backends as well.
+  // Taking out the static asserts is all that is needed.
+#ifdef KOKKOS_ENABLE_SERIAL
+  static_assert(!std::is_same_v<Node, Tpetra::KokkosCompat::KokkosSerialWrapperNode>,
+                "This is the default implementation of jacobi_A_B_newmatrix_kernel_wrapper. We should never get here but instead use the overload for serial node.");
+  if constexpr (std::is_same_v<Node, Tpetra::KokkosCompat::KokkosSerialWrapperNode>) {
+    nodeLowerCase = "serial";
+  }
+#endif
+#ifdef KOKKOS_ENABLE_OPENMP
+  static_assert(!std::is_same_v<Node, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode>,
+                "This is the default implementation of jacobi_A_B_newmatrix_kernel_wrapper. We should never get here but instead use the overload for openmp node.");
+  if constexpr (std::is_same_v<Node, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode>) {
+    nodeLowerCase = "openmp";
+  }
+#endif
+#ifdef KOKKOS_ENABLE_CUDA
+  if constexpr (std::is_same_v<Node, Tpetra::KokkosCompat::KokkosCudaWrapperNode>) {
+    nodeLowerCase = "cuda";
+  }
+#endif
+#ifdef KOKKOS_ENABLE_HIP
+  if constexpr (std::is_same_v<Node, Tpetra::KokkosCompat::KokkosHipWrapperNode>) {
+    nodeLowerCase = "hip";
+  }
+#endif
+#ifdef KOKKOS_ENABLE_SYCL
+  if constexpr (std::is_same_v<Node, Tpetra::KokkosCompat::KokkosSYCLWrapperNode>) {
+    nodeLowerCase = "sycl";
+  }
+#endif
+
+  using Teuchos::RCP;
+  using Teuchos::rcp;
+  RCP<Tpetra::Details::ProfilingRegion> MM = rcp(new Tpetra::Details::ProfilingRegion("TpetraExt: MMM: Jacobi"));
+
+  // Options
+  if (!params.is_null()) {
+    if (params->isParameter(nodeLowerCase + ": jacobi algorithm"))
+      myalg = params->get(nodeLowerCase + ": jacobi algorithm", myalg);
+  }
+
+  if (myalg == "MSAK") {
+    jacobi_A_B_newmatrix_local_MultiplyScaleAddKernel(omega, Dinv, Aview, Bview, Acol2Brow, Acol2Irow, Bcol2Ccol, Icol2Ccol, C, Cimport, label, params);
+  } else if (myalg == "KK") {
+    jacobi_A_B_newmatrix_local_KokkosKernels(omega, Dinv, Aview, Bview, Acol2Brow, Acol2Irow, Bcol2Ccol, Icol2Ccol, C, Cimport, label, params);
+  } else {
+    throw std::runtime_error("Tpetra::MatrixMatrix::Jacobi newmatrix unknown kernel");
+  }
+}
+
+template <class Scalar,
+          class LocalOrdinal,
+          class GlobalOrdinal,
+          class Node,
+          class LocalOrdinalViewType>
+void KernelWrappers_jacobi<Scalar, LocalOrdinal, GlobalOrdinal, Node, LocalOrdinalViewType>::jacobi_A_B_reuse_kernel_wrapper(Scalar omega,
+                                                                                                                             const Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Dinv,
+                                                                                                                             CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Aview,
+                                                                                                                             CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Bview,
+                                                                                                                             const LocalOrdinalViewType& Acol2Brow,
+                                                                                                                             const LocalOrdinalViewType& Acol2Irow,
+                                                                                                                             const LocalOrdinalViewType& Bcol2Ccol,
+                                                                                                                             const LocalOrdinalViewType& Icol2Ccol,
+                                                                                                                             CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& C,
+                                                                                                                             Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node>> Cimport,
+                                                                                                                             const std::string& label,
+                                                                                                                             const Teuchos::RCP<Teuchos::ParameterList>& params) {
+  jacobi_A_B_reuse_local_serial(omega, Dinv, Aview, Bview, Acol2Brow, Acol2Irow, Bcol2Ccol, Icol2Ccol, C, Cimport, label, params);
+}
+
+#ifdef HAVE_TPETRA_SERIAL
+template <class Scalar,
+          class LocalOrdinal,
+          class GlobalOrdinal,
+          class LocalOrdinalViewType>
+void KernelWrappers_jacobi<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosSerialWrapperNode, LocalOrdinalViewType>::jacobi_A_B_newmatrix_kernel_wrapper(Scalar omega,
+                                                                                                                                                                          const Vector<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosSerialWrapperNode>& Dinv,
+                                                                                                                                                                          CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosSerialWrapperNode>& Aview,
+                                                                                                                                                                          CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosSerialWrapperNode>& Bview,
+                                                                                                                                                                          const LocalOrdinalViewType& Acol2Brow,
+                                                                                                                                                                          const LocalOrdinalViewType& Acol2Irow,
+                                                                                                                                                                          const LocalOrdinalViewType& Bcol2Ccol,
+                                                                                                                                                                          const LocalOrdinalViewType& Icol2Ccol,
+                                                                                                                                                                          CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosSerialWrapperNode>& C,
+                                                                                                                                                                          Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosSerialWrapperNode>> Cimport,
+                                                                                                                                                                          const std::string& label,
+                                                                                                                                                                          const Teuchos::RCP<Teuchos::ParameterList>& params) {
+  jacobi_A_B_newmatrix_local_serial(omega, Dinv, Aview, Bview, Acol2Brow, Acol2Irow, Bcol2Ccol, Icol2Ccol, C, Cimport, label, params);
+}
+
+template <class Scalar,
+          class LocalOrdinal,
+          class GlobalOrdinal,
+          class LocalOrdinalViewType>
+void KernelWrappers_jacobi<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosSerialWrapperNode, LocalOrdinalViewType>::jacobi_A_B_reuse_kernel_wrapper(Scalar omega,
+                                                                                                                                                                      const Vector<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosSerialWrapperNode>& Dinv,
+                                                                                                                                                                      CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosSerialWrapperNode>& Aview,
+                                                                                                                                                                      CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosSerialWrapperNode>& Bview,
+                                                                                                                                                                      const LocalOrdinalViewType& Acol2Brow,
+                                                                                                                                                                      const LocalOrdinalViewType& Acol2Irow,
+                                                                                                                                                                      const LocalOrdinalViewType& Bcol2Ccol,
+                                                                                                                                                                      const LocalOrdinalViewType& Icol2Ccol,
+                                                                                                                                                                      CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosSerialWrapperNode>& C,
+                                                                                                                                                                      Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosSerialWrapperNode>> Cimport,
+                                                                                                                                                                      const std::string& label,
+                                                                                                                                                                      const Teuchos::RCP<Teuchos::ParameterList>& params) {
+  jacobi_A_B_reuse_local_serial(omega, Dinv, Aview, Bview, Acol2Brow, Acol2Irow, Bcol2Ccol, Icol2Ccol, C, Cimport, label, params);
+}
+
+#endif
+
+/*********************************************************************************************************/
 //// Prints MMM-style statistics on communication done with an Import or Export object
 // template <class TransferType>
 // void printMultiplicationStatistics(Teuchos::RCP<TransferType > Transfer, const std::string &label) {
@@ -1717,7 +1924,7 @@ void mult_A_B_newmatrix(
 
   // Call the actual kernel.  We'll rely on partial template specialization to call the correct one ---
   // Either the straight-up Tpetra code (SerialNode) or the KokkosKernels one (other NGP node types)
-  KernelWrappers<Scalar, LocalOrdinal, GlobalOrdinal, Node, lo_view_t>::mult_A_B_newmatrix_kernel_wrapper(Aview, Bview, targetMapToOrigRow, targetMapToImportRow, Bcol2Ccol, Icol2Ccol, C, Cimport, label, params);
+  KernelWrappers_spgemm<Scalar, LocalOrdinal, GlobalOrdinal, Node, lo_view_t>::mult_A_B_newmatrix_kernel_wrapper(Aview, Bview, targetMapToOrigRow, targetMapToImportRow, Bcol2Ccol, Icol2Ccol, C, Cimport, label, params);
 }
 
 /*********************************************************************************************************/
@@ -1909,208 +2116,6 @@ void mult_A_B_newmatrix(BlockCrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal
   C = rcp(new block_crs_matrix_type(*graphC, values, Aview.blocksize));
 }
 
-template <class Scalar,
-          class LocalOrdinal,
-          class GlobalOrdinal,
-          class Node,
-          class LocalOrdinalViewType>
-void KernelWrappers<Scalar, LocalOrdinal, GlobalOrdinal, Node, LocalOrdinalViewType>::mult_A_B_newmatrix_kernel_wrapper(CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Aview,
-                                                                                                                        CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Bview,
-                                                                                                                        const LocalOrdinalViewType& Acol2Brow,
-                                                                                                                        const LocalOrdinalViewType& Acol2Irow,
-                                                                                                                        const LocalOrdinalViewType& Bcol2Ccol,
-                                                                                                                        const LocalOrdinalViewType& Icol2Ccol,
-                                                                                                                        CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& C,
-                                                                                                                        Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node>> Cimport,
-                                                                                                                        const std::string& label,
-                                                                                                                        const Teuchos::RCP<Teuchos::ParameterList>& params) {
-  using Teuchos::RCP;
-  using Teuchos::rcp;
-  RCP<Tpetra::Details::ProfilingRegion> MM = rcp(new Tpetra::Details::ProfilingRegion("TpetraExt: MMM: Newmatrix"));
-
-  // Node-specific code
-  std::string myalg("SPGEMM_KK_MEMORY");
-  int team_work_size;
-  std::string nodeLowerCase;
-  std::string nodeUpperCase;
-#ifdef KOKKOS_ENABLE_SERIAL
-  if constexpr (std::is_same_v<Node, Tpetra::KokkosCompat::KokkosSerialWrapperNode>) {
-    nodeLowerCase  = "serial";
-    nodeUpperCase  = "Serial";
-    team_work_size = 1;
-    throw std::runtime_error("WE SHOULD NEVER GET HERE");
-  }
-#endif
-#ifdef KOKKOS_ENABLE_OPENMP
-  if constexpr (std::is_same_v<Node, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode>) {
-    nodeLowerCase  = "openmp";
-    nodeLowerCase  = "OpenMP";
-    team_work_size = 16;
-    throw std::runtime_error("WE SHOULD NEVER GET HERE");
-  }
-#endif
-#ifdef KOKKOS_ENABLE_CUDA
-  if constexpr (std::is_same_v<Node, Tpetra::KokkosCompat::KokkosCudaWrapperNode>) {
-    nodeLowerCase  = "cuda";
-    nodeUpperCase  = "Cuda";
-    team_work_size = 16;
-  }
-#endif
-#ifdef KOKKOS_ENABLE_HIP
-  if constexpr (std::is_same_v<Node, Tpetra::KokkosCompat::KokkosHipWrapperNode>) {
-    nodeLowerCase  = "hip";
-    nodeUpperCase  = "HIP";
-    team_work_size = 16;
-  }
-#endif
-#ifdef KOKKOS_ENABLE_SYCL
-  if constexpr (std::is_same_v<Node, Tpetra::KokkosCompat::KokkosSYCLWrapperNode>) {
-    nodeLowerCase  = "sycl";
-    nodeUpperCase  = "SYCL";
-    team_work_size = 16;
-  }
-#endif
-
-  // Lots and lots of typedefs
-  using KCRS = typename Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::local_matrix_device_type;
-  using device_t = typename KCRS::device_type;
-  using graph_t = typename KCRS::StaticCrsGraphType;
-  using lno_view_t = typename graph_t::row_map_type::non_const_type;
-  using int_view_t = Kokkos::View<int*, typename lno_view_t::array_layout, typename lno_view_t::memory_space, typename lno_view_t::memory_traits>;
-  using c_lno_view_t = typename graph_t::row_map_type::const_type;
-  using lno_nnz_view_t = typename graph_t::entries_type::non_const_type;
-  using scalar_view_t = typename KCRS::values_type::non_const_type;
-  // typedef typename graph_t::row_map_type::const_type lno_view_t_const;
-
-  // Options
-  if (!params.is_null()) {
-    if (params->isParameter(nodeLowerCase + ": algorithm"))
-      myalg = params->get(nodeLowerCase + ": algorithm", myalg);
-    if (params->isParameter(nodeLowerCase + ": team work size"))
-      team_work_size = params->get(nodeLowerCase + ": team work size", team_work_size);
-  }
-
-  // KokkosKernelsHandle
-  using KernelHandle = KokkosKernels::Experimental::KokkosKernelsHandle<
-      typename lno_view_t::const_value_type, typename lno_nnz_view_t::const_value_type, typename scalar_view_t::const_value_type,
-      typename device_t::execution_space, typename device_t::memory_space, typename device_t::memory_space>;
-  using IntKernelHandle = KokkosKernels::Experimental::KokkosKernelsHandle<
-      typename int_view_t::const_value_type, typename lno_nnz_view_t::const_value_type, typename scalar_view_t::const_value_type,
-      typename device_t::execution_space, typename device_t::memory_space, typename device_t::memory_space>;
-
-  // Grab the  Kokkos::SparseCrsMatrices
-  const KCRS Amat = Aview.origMatrix->getLocalMatrixDevice();
-  const KCRS Bmat = Bview.origMatrix->getLocalMatrixDevice();
-
-  c_lno_view_t Arowptr         = Amat.graph.row_map;
-  c_lno_view_t Browptr         = Bmat.graph.row_map;
-  const lno_nnz_view_t Acolind = Amat.graph.entries;
-  const lno_nnz_view_t Bcolind = Bmat.graph.entries;
-  const scalar_view_t Avals    = Amat.values;
-  const scalar_view_t Bvals    = Bmat.values;
-
-  // Get the algorithm mode
-  std::string alg = nodeUpperCase + std::string(" algorithm");
-  //  printf("DEBUG: Using kernel: %s\n",myalg.c_str());
-  if (!params.is_null() && params->isParameter(alg)) myalg = params->get(alg, myalg);
-  KokkosSparse::SPGEMMAlgorithm alg_enum = KokkosSparse::StringToSPGEMMAlgorithm(myalg);
-
-  // Merge the B and Bimport matrices
-  KCRS Bmerged = Tpetra::MMdetails::merge_matrices(Aview, Bview, Acol2Brow, Acol2Irow, Bcol2Ccol, Icol2Ccol, C.getColMap()->getLocalNumElements());
-
-  if constexpr (Details::MatrixTraits<Scalar, LocalOrdinal, GlobalOrdinal, Node>::spgemmNeedsSortedInputs()) {
-    if (!KokkosSparse::isCrsGraphSorted(Bmerged.graph.row_map, Bmerged.graph.entries)) {
-      KokkosSparse::sort_crs_matrix(Bmerged);
-    }
-  }
-
-  MM = Teuchos::null;
-  MM = rcp(new Tpetra::Details::ProfilingRegion("TpetraExt: MMM: Newmatrix Core"));
-
-  // Do the multiply on whatever we've got
-  typename KernelHandle::nnz_lno_t AnumRows = Amat.numRows();
-  typename KernelHandle::nnz_lno_t BnumRows = Bmerged.numRows();
-  typename KernelHandle::nnz_lno_t BnumCols = Bmerged.numCols();
-
-  // regardless of whether integer row ptrs are used, need to ultimately produce the row pointer, entries, and values of the expected types
-  lno_view_t row_mapC(Kokkos::ViewAllocateWithoutInitializing("non_const_lno_row"), AnumRows + 1);
-  lno_nnz_view_t entriesC;
-  scalar_view_t valuesC;
-
-  Tpetra::Details::IntRowPtrHelper<decltype(Bmerged)> irph(Bmerged.nnz(), Bmerged.graph.row_map);
-  const bool useIntRowptrs =
-      irph.shouldUseIntRowptrs() &&
-      Aview.origMatrix->getApplyHelper()->shouldUseIntRowptrs();
-
-  if (useIntRowptrs) {
-    IntKernelHandle kh;
-    kh.create_spgemm_handle(alg_enum);
-    kh.set_team_work_size(team_work_size);
-
-    int_view_t int_row_mapC(Kokkos::ViewAllocateWithoutInitializing("non_const_int_row"), AnumRows + 1);
-
-    auto Aint = Aview.origMatrix->getApplyHelper()->getIntRowptrMatrix(Amat);
-    auto Bint = irph.getIntRowptrMatrix(Bmerged);
-
-    {
-      Tpetra::Details::ProfilingRegion MM2("TpetraExt: MMM: Newmatrix KokkosKernels symbolic int");
-      KokkosSparse::spgemm_symbolic(&kh, AnumRows, BnumRows, BnumCols, Aint.graph.row_map, Aint.graph.entries, false, Bint.graph.row_map, Bint.graph.entries, false, int_row_mapC);
-    }
-
-    Tpetra::Details::ProfilingRegion MM2("TpetraExt: MMM: Newmatrix KokkosKernels numeric int");
-
-    size_t c_nnz_size = kh.get_spgemm_handle()->get_c_nnz();
-    if (c_nnz_size) {
-      entriesC = lno_nnz_view_t(Kokkos::ViewAllocateWithoutInitializing("entriesC"), c_nnz_size);
-      valuesC  = scalar_view_t(Kokkos::ViewAllocateWithoutInitializing("valuesC"), c_nnz_size);
-    }
-    KokkosSparse::spgemm_numeric(&kh, AnumRows, BnumRows, BnumCols, Aint.graph.row_map, Aint.graph.entries, Aint.values, false, Bint.graph.row_map, Bint.graph.entries, Bint.values, false, int_row_mapC, entriesC, valuesC);
-    // transfer the integer rowptrs back to the correct rowptr type
-    Kokkos::parallel_for(
-        int_row_mapC.size(), KOKKOS_LAMBDA(int i) { row_mapC(i) = int_row_mapC(i); });
-    kh.destroy_spgemm_handle();
-
-  } else {
-    KernelHandle kh;
-    kh.create_spgemm_handle(alg_enum);
-    kh.set_team_work_size(team_work_size);
-
-    {
-      Tpetra::Details::ProfilingRegion MM2("TpetraExt: Jacobi: Newmatrix KokkosKernels symbolic non-int");
-      KokkosSparse::spgemm_symbolic(&kh, AnumRows, BnumRows, BnumCols, Amat.graph.row_map, Amat.graph.entries, false, Bmerged.graph.row_map, Bmerged.graph.entries, false, row_mapC);
-    }
-
-    Tpetra::Details::ProfilingRegion MM2("TpetraExt: Jacobi: Newmatrix KokkosKernels numeric non-int");
-    size_t c_nnz_size = kh.get_spgemm_handle()->get_c_nnz();
-    if (c_nnz_size) {
-      entriesC = lno_nnz_view_t(Kokkos::ViewAllocateWithoutInitializing("entriesC"), c_nnz_size);
-      valuesC  = scalar_view_t(Kokkos::ViewAllocateWithoutInitializing("valuesC"), c_nnz_size);
-    }
-
-    KokkosSparse::spgemm_numeric(&kh, AnumRows, BnumRows, BnumCols, Amat.graph.row_map, Amat.graph.entries, Amat.values, false, Bmerged.graph.row_map, Bmerged.graph.entries, Bmerged.values, false, row_mapC, entriesC, valuesC);
-
-    kh.destroy_spgemm_handle();
-  }
-
-  MM = Teuchos::null;
-  MM = rcp(new Tpetra::Details::ProfilingRegion("TpetraExt: MMM: Newmatrix Sort"));
-
-  // Sort & set values
-  if (params.is_null() || params->get("sort entries", true))
-    Import_Util::sortCrsEntries(row_mapC, entriesC, valuesC);
-  C.setAllValues(row_mapC, entriesC, valuesC);
-
-  MM = Teuchos::null;
-  MM = rcp(new Tpetra::Details::ProfilingRegion("TpetraExt: MMM: Newmatrix ESFC"));
-
-  // Final Fillcomplete
-  RCP<Teuchos::ParameterList> labelList = rcp(new Teuchos::ParameterList);
-  labelList->set("Timer Label", label);
-  if (!params.is_null()) labelList->set("compute global constants", params->get("compute global constants", true));
-  RCP<const Export<LocalOrdinal, GlobalOrdinal, Node>> dummyExport;
-  C.expertStaticFillComplete(Bview.origMatrix->getDomainMap(), Aview.origMatrix->getRangeMap(), Cimport, dummyExport, labelList);
-}
-
 /*********************************************************************************************************/
 // Kernel method for computing the local portion of C = A*B (reuse)
 template <class Scalar,
@@ -2203,26 +2208,7 @@ void mult_A_B_reuse(
 
   // Call the actual kernel.  We'll rely on partial template specialization to call the correct one ---
   // Either the straight-up Tpetra code (SerialNode) or the KokkosKernels one (other NGP node types)
-  KernelWrappers<Scalar, LocalOrdinal, GlobalOrdinal, Node, lo_view_t>::mult_A_B_reuse_kernel_wrapper(Aview, Bview, targetMapToOrigRow, targetMapToImportRow, Bcol2Ccol, Icol2Ccol, C, Cimport, label, params);
-}
-
-/*********************************************************************************************************/
-template <class Scalar,
-          class LocalOrdinal,
-          class GlobalOrdinal,
-          class Node,
-          class LocalOrdinalViewType>
-void KernelWrappers<Scalar, LocalOrdinal, GlobalOrdinal, Node, LocalOrdinalViewType>::mult_A_B_reuse_kernel_wrapper(CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Aview,
-                                                                                                                    CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Bview,
-                                                                                                                    const LocalOrdinalViewType& targetMapToOrigRow_dev,
-                                                                                                                    const LocalOrdinalViewType& targetMapToImportRow_dev,
-                                                                                                                    const LocalOrdinalViewType& Bcol2Ccol_dev,
-                                                                                                                    const LocalOrdinalViewType& Icol2Ccol_dev,
-                                                                                                                    CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& C,
-                                                                                                                    Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node>> Cimport,
-                                                                                                                    const std::string& label,
-                                                                                                                    const Teuchos::RCP<Teuchos::ParameterList>& params) {
-  mult_A_B_reuse_kernel_wrapper_fun(Aview, Bview, targetMapToOrigRow_dev, targetMapToImportRow_dev, Bcol2Ccol_dev, Icol2Ccol_dev, C, Cimport, label, params);
+  KernelWrappers_spgemm<Scalar, LocalOrdinal, GlobalOrdinal, Node, lo_view_t>::mult_A_B_reuse_kernel_wrapper(Aview, Bview, targetMapToOrigRow, targetMapToImportRow, Bcol2Ccol, Icol2Ccol, C, Cimport, label, params);
 }
 
 /*********************************************************************************************************/
@@ -2381,101 +2367,7 @@ void jacobi_A_B_newmatrix(
 
   // Call the actual kernel.  We'll rely on partial template specialization to call the correct one ---
   // Either the straight-up Tpetra code (SerialNode) or the KokkosKernels one (other NGP node types)
-  KernelWrappers2<Scalar, LocalOrdinal, GlobalOrdinal, Node, lo_view_t>::jacobi_A_B_newmatrix_kernel_wrapper(omega, Dinv, Aview, Bview, targetMapToOrigRow, targetMapToImportRow, Bcol2Ccol, Icol2Ccol, C, Cimport, label, params);
-}
-
-/*********************************************************************************************************/
-template <class Scalar,
-          class LocalOrdinal,
-          class GlobalOrdinal,
-          class Node,
-          class LocalOrdinalViewType>
-void KernelWrappers2<Scalar, LocalOrdinal, GlobalOrdinal, Node, LocalOrdinalViewType>::jacobi_A_B_newmatrix_kernel_wrapper(Scalar omega,
-                                                                                                                           const Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Dinv,
-                                                                                                                           CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Aview,
-                                                                                                                           CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Bview,
-                                                                                                                           const LocalOrdinalViewType& Acol2Brow,
-                                                                                                                           const LocalOrdinalViewType& Acol2Irow,
-                                                                                                                           const LocalOrdinalViewType& Bcol2Ccol,
-                                                                                                                           const LocalOrdinalViewType& Icol2Ccol,
-                                                                                                                           CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& C,
-                                                                                                                           Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node>> Cimport,
-                                                                                                                           const std::string& label,
-                                                                                                                           const Teuchos::RCP<Teuchos::ParameterList>& params) {
-  // Node-specific code
-  std::string myalg("KK");
-  int team_work_size;
-  std::string nodeLowerCase;
-  std::string nodeUpperCase;
-#ifdef KOKKOS_ENABLE_SERIAL
-  if constexpr (std::is_same_v<Node, Tpetra::KokkosCompat::KokkosSerialWrapperNode>) {
-    nodeLowerCase  = "serial";
-    nodeUpperCase  = "Serial";
-    team_work_size = 1;
-    throw std::runtime_error("WE SHOULD NEVER GET HERE");
-  }
-#endif
-#ifdef KOKKOS_ENABLE_OPENMP
-  if constexpr (std::is_same_v<Node, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode>) {
-    nodeLowerCase  = "openmp";
-    nodeLowerCase  = "OpenMP";
-    team_work_size = 16;
-    throw std::runtime_error("WE SHOULD NEVER GET HERE");
-  }
-#endif
-#ifdef KOKKOS_ENABLE_CUDA
-  if constexpr (std::is_same_v<Node, Tpetra::KokkosCompat::KokkosCudaWrapperNode>) {
-    nodeLowerCase  = "cuda";
-    nodeUpperCase  = "Cuda";
-    team_work_size = 16;
-  }
-#endif
-#ifdef KOKKOS_ENABLE_HIP
-  if constexpr (std::is_same_v<Node, Tpetra::KokkosCompat::KokkosHipWrapperNode>) {
-    nodeLowerCase  = "hip";
-    nodeUpperCase  = "HIP";
-    team_work_size = 16;
-  }
-#endif
-#ifdef KOKKOS_ENABLE_SYCL
-  if constexpr (std::is_same_v<Node, Tpetra::KokkosCompat::KokkosSYCLWrapperNode>) {
-    nodeLowerCase  = "sycl";
-    nodeUpperCase  = "SYCL";
-    team_work_size = 16;
-  }
-#endif
-
-  using Teuchos::RCP;
-  using Teuchos::rcp;
-  RCP<Tpetra::Details::ProfilingRegion> MM = rcp(new Tpetra::Details::ProfilingRegion("TpetraExt: MMM: Jacobi"));
-
-  // Options
-  if (!params.is_null()) {
-    if (params->isParameter(nodeLowerCase + ": jacobi algorithm"))
-      myalg = params->get(nodeLowerCase + ": jacobi algorithm", myalg);
-  }
-
-  if (myalg == "MSAK") {
-    ::Tpetra::MatrixMatrix::ExtraKernels::jacobi_A_B_newmatrix_MultiplyScaleAddKernel(omega, Dinv, Aview, Bview, Acol2Brow, Acol2Irow, Bcol2Ccol, Icol2Ccol, C, Cimport, label, params);
-  } else if (myalg == "KK") {
-    jacobi_A_B_newmatrix_KokkosKernels(omega, Dinv, Aview, Bview, Acol2Brow, Acol2Irow, Bcol2Ccol, Icol2Ccol, C, Cimport, label, params);
-  } else {
-    throw std::runtime_error("Tpetra::MatrixMatrix::Jacobi newmatrix unknown kernel");
-  }
-
-  MM = Teuchos::null;
-  MM = rcp(new Tpetra::Details::ProfilingRegion("TpetraExt: Jacobi: Newmatrix ESFC"));
-
-  // Final Fillcomplete
-  RCP<Teuchos::ParameterList> labelList = rcp(new Teuchos::ParameterList);
-  labelList->set("Timer Label", label);
-  if (!params.is_null()) labelList->set("compute global constants", params->get("compute global constants", true));
-
-  // NOTE: MSAK already fillCompletes, so we have to check here
-  if (!C.isFillComplete()) {
-    RCP<const Export<LocalOrdinal, GlobalOrdinal, Node>> dummyExport;
-    C.expertStaticFillComplete(Bview.origMatrix->getDomainMap(), Aview.origMatrix->getRangeMap(), Cimport, dummyExport, labelList);
-  }
+  KernelWrappers_jacobi<Scalar, LocalOrdinal, GlobalOrdinal, Node, lo_view_t>::jacobi_A_B_newmatrix_kernel_wrapper(omega, Dinv, Aview, Bview, targetMapToOrigRow, targetMapToImportRow, Bcol2Ccol, Icol2Ccol, C, Cimport, label, params);
 }
 
 /*********************************************************************************************************/
@@ -2576,248 +2468,7 @@ void jacobi_A_B_reuse(
 
   // Call the actual kernel.  We'll rely on partial template specialization to call the correct one ---
   // Either the straight-up Tpetra code (SerialNode) or the KokkosKernels one (other NGP node types)
-  KernelWrappers2<Scalar, LocalOrdinal, GlobalOrdinal, Node, lo_view_t>::jacobi_A_B_reuse_kernel_wrapper(omega, Dinv, Aview, Bview, targetMapToOrigRow, targetMapToImportRow, Bcol2Ccol, Icol2Ccol, C, Cimport, label, params);
-}
-
-/*********************************************************************************************************/
-template <class Scalar,
-          class LocalOrdinal,
-          class GlobalOrdinal,
-          class Node,
-          class LocalOrdinalViewType>
-void KernelWrappers2<Scalar, LocalOrdinal, GlobalOrdinal, Node, LocalOrdinalViewType>::jacobi_A_B_reuse_kernel_wrapper(Scalar omega,
-                                                                                                                       const Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Dinv,
-                                                                                                                       CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Aview,
-                                                                                                                       CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Bview,
-                                                                                                                       const LocalOrdinalViewType& targetMapToOrigRow_dev,
-                                                                                                                       const LocalOrdinalViewType& targetMapToImportRow_dev,
-                                                                                                                       const LocalOrdinalViewType& Bcol2Ccol_dev,
-                                                                                                                       const LocalOrdinalViewType& Icol2Ccol_dev,
-                                                                                                                       CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& C,
-                                                                                                                       Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node>> Cimport,
-                                                                                                                       const std::string& label,
-                                                                                                                       const Teuchos::RCP<Teuchos::ParameterList>& params) {
-  jacobi_A_B_reuse_kernel_wrapper_fun(omega, Dinv, Aview, Bview, targetMapToOrigRow_dev, targetMapToImportRow_dev, Bcol2Ccol_dev, Icol2Ccol_dev, C, Cimport, label, params);
-}
-
-/*********************************************************************************************************/
-template <class Scalar,
-          class LocalOrdinal,
-          class GlobalOrdinal,
-          class Node,
-          class LocalOrdinalViewType>
-void KernelWrappers2<Scalar, LocalOrdinal, GlobalOrdinal, Node, LocalOrdinalViewType>::jacobi_A_B_newmatrix_KokkosKernels(Scalar omega,
-                                                                                                                          const Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Dinv,
-                                                                                                                          CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Aview,
-                                                                                                                          CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Bview,
-                                                                                                                          const LocalOrdinalViewType& Acol2Brow,
-                                                                                                                          const LocalOrdinalViewType& Acol2Irow,
-                                                                                                                          const LocalOrdinalViewType& Bcol2Ccol,
-                                                                                                                          const LocalOrdinalViewType& Icol2Ccol,
-                                                                                                                          CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& C,
-                                                                                                                          Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node>> Cimport,
-                                                                                                                          const std::string& label,
-                                                                                                                          const Teuchos::RCP<Teuchos::ParameterList>& params) {
-  // Check if the diagonal entries exist in debug mode
-  const bool debug = Tpetra::Details::Behavior::debug();
-  if (debug) {
-    auto rowMap = Aview.origMatrix->getRowMap();
-    Tpetra::Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node> diags(rowMap);
-    Aview.origMatrix->getLocalDiagCopy(diags);
-    size_t diagLength = rowMap->getLocalNumElements();
-    Teuchos::Array<Scalar> diagonal(diagLength);
-    diags.get1dCopy(diagonal());
-
-    for (size_t i = 0; i < diagLength; ++i) {
-      TEUCHOS_TEST_FOR_EXCEPTION(diagonal[i] == Teuchos::ScalarTraits<Scalar>::zero(),
-                                 std::runtime_error,
-                                 "Matrix A has a zero/missing diagonal: " << diagonal[i] << std::endl
-                                                                          << "KokkosKernels Jacobi-fused SpGEMM requires nonzero diagonal entries in A" << std::endl);
-    }
-  }
-
-  using Teuchos::RCP;
-  using Teuchos::rcp;
-  RCP<Tpetra::Details::ProfilingRegion> MM = rcp(new Tpetra::Details::ProfilingRegion("TpetraExt: Jacobi: Newmatrix KokkosKernels"));
-
-  // Usings
-  using device_t       = typename Node::device_type;
-  using matrix_t       = typename Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::local_matrix_device_type;
-  using graph_t        = typename matrix_t::StaticCrsGraphType;
-  using lno_view_t     = typename graph_t::row_map_type::non_const_type;
-  using int_view_t     = Kokkos::View<int*,
-                                  typename lno_view_t::array_layout,
-                                  typename lno_view_t::memory_space,
-                                  typename lno_view_t::memory_traits>;
-  // using c_lno_view_t   = typename graph_t::row_map_type::const_type;
-  using lno_nnz_view_t = typename graph_t::entries_type::non_const_type;
-  using scalar_view_t  = typename matrix_t::values_type::non_const_type;
-
-  // KokkosKernels handle
-  using handle_t = typename KokkosKernels::Experimental::KokkosKernelsHandle<
-      typename lno_view_t::const_value_type, typename lno_nnz_view_t::const_value_type, typename scalar_view_t::const_value_type,
-      typename device_t::execution_space, typename device_t::memory_space, typename device_t::memory_space>;
-
-  using int_handle_t = typename KokkosKernels::Experimental::KokkosKernelsHandle<
-      typename int_view_t::const_value_type, typename lno_nnz_view_t::const_value_type, typename scalar_view_t::const_value_type,
-      typename device_t::execution_space, typename device_t::memory_space, typename device_t::memory_space>;
-
-  // Merge the B and Bimport matrices
-  const matrix_t Bmerged = Tpetra::MMdetails::merge_matrices(Aview, Bview, Acol2Brow, Acol2Irow, Bcol2Ccol, Icol2Ccol, C.getColMap()->getLocalNumElements());
-
-  // Get the properties and arrays of input matrices
-  const matrix_t Amat = Aview.origMatrix->getLocalMatrixDevice();
-  const matrix_t Bmat = Bview.origMatrix->getLocalMatrixDevice();
-
-  typename handle_t::nnz_lno_t AnumRows = Amat.numRows();
-  typename handle_t::nnz_lno_t BnumRows = Bmerged.numRows();
-  typename handle_t::nnz_lno_t BnumCols = Bmerged.numCols();
-
-  // Arrays of the output matrix
-  lno_view_t row_mapC(Kokkos::ViewAllocateWithoutInitializing("row_mapC"), AnumRows + 1);
-  lno_nnz_view_t entriesC;
-  scalar_view_t valuesC;
-
-  std::string myalg("SPGEMM_KK_MEMORY");
-  int team_work_size;
-  std::string nodeLowerCase;
-  std::string nodeUpperCase;
-#ifdef KOKKOS_ENABLE_SERIAL
-  if constexpr (std::is_same_v<Node, Tpetra::KokkosCompat::KokkosSerialWrapperNode>) {
-    nodeLowerCase  = "serial";
-    nodeUpperCase  = "Serial";
-    team_work_size = 1;
-  }
-#endif
-#ifdef KOKKOS_ENABLE_OPENMP
-  if constexpr (std::is_same_v<Node, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode>) {
-    nodeLowerCase  = "openmp";
-    nodeLowerCase  = "OpenMP";
-    team_work_size = 16;
-  }
-#endif
-#ifdef KOKKOS_ENABLE_CUDA
-  if constexpr (std::is_same_v<Node, Tpetra::KokkosCompat::KokkosCudaWrapperNode>) {
-    nodeLowerCase  = "cuda";
-    nodeUpperCase  = "Cuda";
-    team_work_size = 16;
-  }
-#endif
-#ifdef KOKKOS_ENABLE_HIP
-  if constexpr (std::is_same_v<Node, Tpetra::KokkosCompat::KokkosHipWrapperNode>) {
-    nodeLowerCase  = "hip";
-    nodeUpperCase  = "HIP";
-    team_work_size = 16;
-  }
-#endif
-#ifdef KOKKOS_ENABLE_SYCL
-  if constexpr (std::is_same_v<Node, Tpetra::KokkosCompat::KokkosSYCLWrapperNode>) {
-    nodeLowerCase  = "sycl";
-    nodeUpperCase  = "SYCL";
-    team_work_size = 16;
-  }
-#endif
-
-  // Options
-  if (!params.is_null()) {
-    if (params->isParameter(nodeLowerCase + ": algorithm"))
-      myalg = params->get(nodeLowerCase + ": algorithm", myalg);
-    if (params->isParameter(nodeLowerCase + ": team work size"))
-      team_work_size = params->get(nodeLowerCase + ": team work size", team_work_size);
-  }
-
-  // Get the algorithm mode
-  std::string alg(nodeUpperCase + " algorithm");
-  if (!params.is_null() && params->isParameter(alg)) myalg = params->get(alg, myalg);
-  KokkosSparse::SPGEMMAlgorithm alg_enum = KokkosSparse::StringToSPGEMMAlgorithm(myalg);
-
-  // decide whether to use integer-typed row pointers for this spgemm
-  Tpetra::Details::IntRowPtrHelper<decltype(Bmerged)> irph(Bmerged.nnz(), Bmerged.graph.row_map);
-  const bool useIntRowptrs =
-      irph.shouldUseIntRowptrs() &&
-      Aview.origMatrix->getApplyHelper()->shouldUseIntRowptrs();
-
-  if (useIntRowptrs) {
-    int_handle_t kh;
-    kh.create_spgemm_handle(alg_enum);
-    kh.set_team_work_size(team_work_size);
-
-    int_view_t int_row_mapC(Kokkos::ViewAllocateWithoutInitializing("int_row_mapC"), AnumRows + 1);
-
-    auto Aint = Aview.origMatrix->getApplyHelper()->getIntRowptrMatrix(Amat);
-    auto Bint = irph.getIntRowptrMatrix(Bmerged);
-
-    {
-      Tpetra::Details::ProfilingRegion MM2("TpetraExt: Jacobi: KokkosKernels symbolic int");
-      KokkosSparse::spgemm_symbolic(&kh, AnumRows, BnumRows, BnumCols,
-                                    Aint.graph.row_map, Aint.graph.entries, false,
-                                    Bint.graph.row_map, Bint.graph.entries, false,
-                                    int_row_mapC);
-    }
-
-    size_t c_nnz_size = kh.get_spgemm_handle()->get_c_nnz();
-    if (c_nnz_size) {
-      entriesC = lno_nnz_view_t(Kokkos::ViewAllocateWithoutInitializing("entriesC"), c_nnz_size);
-      valuesC  = scalar_view_t(Kokkos::ViewAllocateWithoutInitializing("valuesC"), c_nnz_size);
-    }
-    Tpetra::Details::ProfilingRegion MM2("TpetraExt: Jacobi: KokkosKernels numeric int");
-
-    // even though there is no TPL for this, we have to use the same handle that was used in the symbolic phase,
-    // so need to have a special int-typed call for this as well.
-    KokkosSparse::Experimental::spgemm_jacobi(&kh, AnumRows, BnumRows, BnumCols,
-                                              Aint.graph.row_map, Aint.graph.entries, Amat.values, false,
-                                              Bint.graph.row_map, Bint.graph.entries, Bint.values, false,
-                                              int_row_mapC, entriesC, valuesC,
-                                              omega, Dinv.getLocalViewDevice(Access::ReadOnly));
-    // transfer the integer rowptrs back to the correct rowptr type
-    Kokkos::parallel_for(
-        int_row_mapC.size(), KOKKOS_LAMBDA(int i) { row_mapC(i) = int_row_mapC(i); });
-    kh.destroy_spgemm_handle();
-  } else {
-    handle_t kh;
-    kh.create_spgemm_handle(alg_enum);
-    kh.set_team_work_size(team_work_size);
-
-    {
-      Tpetra::Details::ProfilingRegion MM2("TpetraExt: Jacobi: KokkosKernels symbolic non-int");
-      KokkosSparse::spgemm_symbolic(&kh, AnumRows, BnumRows, BnumCols,
-                                    Amat.graph.row_map, Amat.graph.entries, false,
-                                    Bmerged.graph.row_map, Bmerged.graph.entries, false,
-                                    row_mapC);
-    }
-
-    size_t c_nnz_size = kh.get_spgemm_handle()->get_c_nnz();
-    if (c_nnz_size) {
-      entriesC = lno_nnz_view_t(Kokkos::ViewAllocateWithoutInitializing("entriesC"), c_nnz_size);
-      valuesC  = scalar_view_t(Kokkos::ViewAllocateWithoutInitializing("valuesC"), c_nnz_size);
-    }
-
-    Tpetra::Details::ProfilingRegion MM2("TpetraExt: Jacobi: KokkosKernels numeric non-int");
-    KokkosSparse::Experimental::spgemm_jacobi(&kh, AnumRows, BnumRows, BnumCols,
-                                              Amat.graph.row_map, Amat.graph.entries, Amat.values, false,
-                                              Bmerged.graph.row_map, Bmerged.graph.entries, Bmerged.values, false,
-                                              row_mapC, entriesC, valuesC,
-                                              omega, Dinv.getLocalViewDevice(Access::ReadOnly));
-    kh.destroy_spgemm_handle();
-  }
-
-  MM = Teuchos::null;
-  MM = rcp(new Tpetra::Details::ProfilingRegion("TpetraExt: Jacobi: Newmatrix Sort"));
-
-  // Sort & set values
-  if (params.is_null() || params->get("sort entries", true))
-    Import_Util::sortCrsEntries(row_mapC, entriesC, valuesC);
-  C.setAllValues(row_mapC, entriesC, valuesC);
-
-  MM = Teuchos::null;
-  MM = rcp(new Tpetra::Details::ProfilingRegion("TpetraExt: Jacobi: Newmatrix ESFC"));
-
-  // Final Fillcomplete
-  Teuchos::RCP<Teuchos::ParameterList> labelList = rcp(new Teuchos::ParameterList);
-  labelList->set("Timer Label", label);
-  if (!params.is_null()) labelList->set("compute global constants", params->get("compute global constants", true));
-  Teuchos::RCP<const Export<LocalOrdinal, GlobalOrdinal, Node>> dummyExport;
-  C.expertStaticFillComplete(Bview.origMatrix->getDomainMap(), Aview.origMatrix->getRangeMap(), Cimport, dummyExport, labelList);
+  KernelWrappers_jacobi<Scalar, LocalOrdinal, GlobalOrdinal, Node, lo_view_t>::jacobi_A_B_reuse_kernel_wrapper(omega, Dinv, Aview, Bview, targetMapToOrigRow, targetMapToImportRow, Bcol2Ccol, Icol2Ccol, C, Cimport, label, params);
 }
 
 /*********************************************************************************************************/

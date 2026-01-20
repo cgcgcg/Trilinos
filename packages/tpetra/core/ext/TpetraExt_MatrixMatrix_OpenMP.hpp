@@ -19,7 +19,7 @@ namespace MMdetails {
 template <class Scalar,
           class LocalOrdinal,
           class GlobalOrdinal, class LocalOrdinalViewType>
-struct KernelWrappers<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode, LocalOrdinalViewType> {
+struct KernelWrappers_spgemm<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode, LocalOrdinalViewType> {
   static void mult_A_B_newmatrix_kernel_wrapper(CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode>& Aview,
                                                 CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode>& Bview,
                                                 const LocalOrdinalViewType& Acol2Brow,
@@ -49,7 +49,7 @@ struct KernelWrappers<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat:
 template <class Scalar,
           class LocalOrdinal,
           class GlobalOrdinal, class LocalOrdinalViewType>
-struct KernelWrappers2<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode, LocalOrdinalViewType> {
+struct KernelWrappers_jacobi<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode, LocalOrdinalViewType> {
   static void jacobi_A_B_newmatrix_kernel_wrapper(Scalar omega,
                                                   const Vector<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode>& Dinv,
                                                   CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode>& Aview,
@@ -78,18 +78,6 @@ struct KernelWrappers2<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat
     jacobi_A_B_reuse_kernel_wrapper_fun(omega, Dinv, Aview, Bview, Acol2Brow, Acol2Irow, Bcol2Ccol, Icol2Ccol, C, Cimport, label, params);
   }
 
-  static void jacobi_A_B_newmatrix_KokkosKernels(Scalar omega,
-                                                 const Vector<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode>& Dinv,
-                                                 CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode>& Aview,
-                                                 CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode>& Bview,
-                                                 const LocalOrdinalViewType& Acol2Brow,
-                                                 const LocalOrdinalViewType& Acol2Irow,
-                                                 const LocalOrdinalViewType& Bcol2Ccol,
-                                                 const LocalOrdinalViewType& Icol2Ccol,
-                                                 CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode>& C,
-                                                 Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode> > Cimport,
-                                                 const std::string& label                           = std::string(),
-                                                 const Teuchos::RCP<Teuchos::ParameterList>& params = Teuchos::null);
 };
 
 // Triple-Product KernelWrappers for Partial Specialization to OpenMP
@@ -149,7 +137,7 @@ template <class Scalar,
           class LocalOrdinal,
           class GlobalOrdinal,
           class LocalOrdinalViewType>
-void KernelWrappers<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode, LocalOrdinalViewType>::mult_A_B_newmatrix_kernel_wrapper(CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode>& Aview,
+void KernelWrappers_spgemm<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode, LocalOrdinalViewType>::mult_A_B_newmatrix_kernel_wrapper(CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode>& Aview,
                                                                                                                                                                  CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode>& Bview,
                                                                                                                                                                  const LocalOrdinalViewType& Acol2Brow,
                                                                                                                                                                  const LocalOrdinalViewType& Acol2Irow,
@@ -298,7 +286,7 @@ template <class Scalar,
           class LocalOrdinal,
           class GlobalOrdinal,
           class LocalOrdinalViewType>
-void KernelWrappers<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode, LocalOrdinalViewType>::mult_A_B_reuse_kernel_wrapper(CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode>& Aview,
+void KernelWrappers_spgemm<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode, LocalOrdinalViewType>::mult_A_B_reuse_kernel_wrapper(CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode>& Aview,
                                                                                                                                                              CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode>& Bview,
                                                                                                                                                              const LocalOrdinalViewType& Acol2Brow,
                                                                                                                                                              const LocalOrdinalViewType& Acol2Irow,
@@ -346,7 +334,7 @@ template <class Scalar,
           class LocalOrdinal,
           class GlobalOrdinal,
           class LocalOrdinalViewType>
-void KernelWrappers2<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode, LocalOrdinalViewType>::jacobi_A_B_newmatrix_kernel_wrapper(Scalar omega,
+void KernelWrappers_jacobi<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode, LocalOrdinalViewType>::jacobi_A_B_newmatrix_kernel_wrapper(Scalar omega,
                                                                                                                                                                     const Vector<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode>& Dinv,
                                                                                                                                                                     CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode>& Aview,
                                                                                                                                                                     CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode>& Bview,
@@ -410,7 +398,7 @@ template <class Scalar,
           class LocalOrdinal,
           class GlobalOrdinal,
           class LocalOrdinalViewType>
-void KernelWrappers2<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode, LocalOrdinalViewType>::jacobi_A_B_reuse_kernel_wrapper(Scalar omega,
+void KernelWrappers_jacobi<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode, LocalOrdinalViewType>::jacobi_A_B_reuse_kernel_wrapper(Scalar omega,
                                                                                                                                                                 const Vector<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode>& Dinv,
                                                                                                                                                                 CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode>& Aview,
                                                                                                                                                                 CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Tpetra::KokkosCompat::KokkosOpenMPWrapperNode>& Bview,

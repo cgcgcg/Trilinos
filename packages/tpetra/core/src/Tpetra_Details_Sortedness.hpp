@@ -30,7 +30,7 @@ template <class Scalar,
 class MatrixTraits<Scalar, LocalOrdinal, GlobalOrdinal, KokkosCompat::KokkosSerialWrapperNode> {
  public:
   static constexpr bool spgemmNeedsSortedInputs() {
-    return false;
+    return true;
   }
 };
 #endif
@@ -55,7 +55,6 @@ class MatrixTraits<Scalar, LocalOrdinal, GlobalOrdinal, KokkosCompat::KokkosCuda
   }
 };
 #endif
-
 
 }  // namespace Tpetra::Details
 
