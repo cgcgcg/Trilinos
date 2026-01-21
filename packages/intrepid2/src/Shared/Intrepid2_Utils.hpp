@@ -409,7 +409,11 @@ namespace Intrepid2 {
     createMatchingUnmanagedView(const InViewType &view, const CtorProp &data, const Dims... dims)
     {
   #ifdef HAVE_INTREPID2_SACADO
+  #ifdef SACADO_HAS_NEW_KOKKOS_VIEW_IMPL
       if constexpr (Sacado::is_view_fad<InViewType>::value)
+  #else
+      if constexpr (Kokkos::is_view_fad<InViewType>::value)
+  #endif
       {
         const int derivative_dimension = get_dimension_scalar(view);
         return OutViewType(data, dims..., derivative_dimension);
