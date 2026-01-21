@@ -292,12 +292,21 @@ cmake -DTrilinos_DIR={trilinos_install_path}/include ..
 
 from the ```cmakebuild``` directory.
 
-##### [LICENSE](https://github.com/vqd8a/Trilinos/tree/add_adelus/packages/adelus/LICENSE)
-[![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
+## Documentation
 
-Adelus is licensed under standard 3-clause BSD terms of use. For
-specifics, please refer to the LICENSE file contained in the
-repository or distribution.  Under the terms of Contract DE-NA0003525 with NTESS,
-the U.S. Government retains certain rights in this software.
+Additional information on Adelus can be found at the [Trilinos Project](https://trilinos.github.io).
+
+## Questions?
 
 Any questions can be directed to: Vinh Dang (vqdang@sandia.gov), Joseph Kotulski (jdkotul@sandia.gov), Siva Rajamanickam (srajama@sandia.gov)
+
+## Copyright and License
+
+[![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
+
+Adelus is licensed under standard 3-clause BSD terms of use.
+For Adelus-specific copyright and license details, refer to the [adelus/COPYRIGHT](COPYRIGHT) and [adelus/LICENSE](LICENSE) files located in the `adelus` directory. Additional copyright information may also be found in the headers of individual source files.
+
+For general copyright and license information, refer to the Trilinos [License](../../LICENSE) and [Copyright](../../COPYRIGHT).
+
+For developers, general guidance on documenting copyrights and licenses can be found in the Trilinos [Guidance on Copyrights and Licenses](https://github.com/trilinos/Trilinos/wiki/Guidance-on-Copyrights-and-Licenses) document.
