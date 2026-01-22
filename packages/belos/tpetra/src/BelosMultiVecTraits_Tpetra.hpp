@@ -15,6 +15,7 @@
 
 #include "BelosMultiVecTraits.hpp"
 #include "BelosTypes.hpp"
+#include "Tpetra_Core.hpp"
 #include "Tpetra_Map.hpp"
 #include "Tpetra_MultiVector.hpp"
 #include "Tpetra_Details_Behavior.hpp"
@@ -104,7 +105,11 @@ class MultiVecPool
 {
 public:
   MultiVecPool() {
-    Kokkos::push_finalize_hook([this]() { this->availableDVs.clear(); });
+    Kokkos::push_finalize_hook([this]() {
+      if (Tpetra::isInitialized()) {
+        this->availableDVs.clear();
+      }
+    });
   }
 
   using MV = ::Tpetra::MultiVector<Scalar, LO, GO, Node>;
