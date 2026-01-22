@@ -294,7 +294,7 @@ from the ```cmakebuild``` directory.
 
 ## Documentation
 
-Additional information on Adelus can be found at the [Trilinos Project](https://trilinos.github.io).
+Additional information on Adelus can be found at the [Trilinos Project](https://trilinos.github.io), and through the [Adelus's Doxygen webpages](https://trilinos.github.io/docs/adelus/index.html).
 
 ## Questions?
 
