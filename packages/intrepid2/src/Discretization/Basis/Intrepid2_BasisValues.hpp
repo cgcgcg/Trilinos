@@ -90,7 +90,7 @@ namespace Intrepid2
     {}
     
     //! Returns the basis used to generate these values, if specified using setBasis().
-    BasisPtr<DeviceType,Scalar,Scalar> getBasis()
+    BasisPtr<DeviceType,Scalar,Scalar> getBasis() const
     {
       return basis_;
     }
