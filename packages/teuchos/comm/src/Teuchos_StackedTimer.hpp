@@ -17,6 +17,10 @@
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_Array.hpp"
 #include "Teuchos_PerformanceMonitorBase.hpp"
+#include "Teuchos_Behavior.hpp"
+#ifdef HAVE_TEUCHOSCORE_KOKKOS
+#include "Kokkos_Core.hpp"
+#endif
 #include <string>
 #include <vector>
 #include <cassert>
@@ -56,7 +60,7 @@ public:
 
   using Clock = std::chrono::high_resolution_clock;
 
-  BaseTimer() : accumulation_(0.0), count_started_(0), count_updates_(0), running_(false) {}
+  BaseTimer() : accumulation_(0.0), accumulationSquared_(0.0), count_started_(0), count_updates_(0), running_(false) {}
 
   /// Start a currently stopped timer
   void start(){
@@ -310,6 +314,11 @@ protected:
       return full_name;
     }
 
+    std::string get_name() const {
+      std::string my_name(name_);
+      return my_name;
+    }
+
     /**
      * Return the number of timers on this level
      * @return the number of timers and sub timers
@@ -479,24 +488,44 @@ public:
     }
   }
 
+  std::string name() {
+    return timer_.get_full_name();
+  }
+
   /**
    * Start the base level timer only
    */
-  void startBaseTimer() {
+  void startBaseTimer(const bool push_kokkos_profiling_region = true) {
+#ifdef HAVE_TEUCHOSCORE_KOKKOS
+    // Fence before starting timer to ignore async kernels started before this timer starts
+    if (Behavior::fenceTimers()) {
+      Kokkos::fence("timer_fence_begin_"+timer_.get_name());
+    }
+#endif
     timer_.BaseTimer::start();
 #if defined(HAVE_TEUCHOS_KOKKOS_PROFILING) && defined(HAVE_TEUCHOSCORE_KOKKOS)
-    ::Kokkos::Tools::pushRegion(timer_.get_full_name());
+    if (push_kokkos_profiling_region) {
+      ::Kokkos::Tools::pushRegion(timer_.get_name());
+    }
 #endif
   }
 
   /**
    * Stop the base level timer only
    */
-  void stopBaseTimer() {
-    timer_.BaseTimer::stop();
-#if defined(HAVE_TEUCHOS_KOKKOS_PROFILING) && defined(HAVE_TEUCHOSCORE_KOKKOS)
-    ::Kokkos::Tools::popRegion();
+  void stopBaseTimer(const bool pop_kokkos_profiling_region = true) {
+#ifdef HAVE_TEUCHOSCORE_KOKKOS
+    // Fence before stopping the timer to include async kokkos kernels launched within this timer
+    if (Behavior::fenceTimers()) {
+      Kokkos::fence("timer_fence_end_"+timer_.get_name());
+    }
 #endif
+#if defined(HAVE_TEUCHOS_KOKKOS_PROFILING) && defined(HAVE_TEUCHOSCORE_KOKKOS)
+    if (pop_kokkos_profiling_region) {
+      ::Kokkos::Tools::popRegion();
+    }
+#endif
+    timer_.BaseTimer::stop();
   }
 
   /**
@@ -507,15 +536,22 @@ public:
   void start(const std::string name,
              const bool push_kokkos_profiling_region = true) {
     if (enable_timers_) {
-      if (top_ == nullptr)
+      if (top_ == nullptr) {
         top_ = timer_.start(name.c_str());
-      else
+      } else {
+#ifdef HAVE_TEUCHOSCORE_KOKKOS
+        // Fence before starting timer to ignore async kernels started before this timer starts
+        if (Behavior::fenceTimers()) {
+          Kokkos::fence("timer_fence_begin_"+name);
+        }
+#endif
         top_ = top_->start(name.c_str());
 #if defined(HAVE_TEUCHOS_KOKKOS_PROFILING) && defined(HAVE_TEUCHOSCORE_KOKKOS)
-      if (push_kokkos_profiling_region) {
-        ::Kokkos::Tools::pushRegion(name);
-      }
+        if (push_kokkos_profiling_region) {
+          ::Kokkos::Tools::pushRegion(name);
+        }
 #endif
+      }
     }
     if (enable_verbose_) {
       if (!verbose_timestamp_levels_) {
@@ -546,15 +582,22 @@ public:
   void stop(const std::string &name,
             const bool pop_kokkos_profiling_region = true) {
     if (enable_timers_) {
-      if (top_)
-        top_ = top_->stop(name);
-      else
-        timer_.BaseTimer::stop();
-#if defined(HAVE_TEUCHOS_KOKKOS_PROFILING) && defined(HAVE_TEUCHOSCORE_KOKKOS)
-      if (pop_kokkos_profiling_region) {
-        ::Kokkos::Tools::popRegion();
-      }
+      if (top_) {
+#ifdef HAVE_TEUCHOSCORE_KOKKOS
+        // Fence before stopping the timer to include async kokkos kernels launched within this timer
+        if (Behavior::fenceTimers()) {
+          Kokkos::fence("timer_fence_end_"+name);
+        }
 #endif
+#if defined(HAVE_TEUCHOS_KOKKOS_PROFILING) && defined(HAVE_TEUCHOSCORE_KOKKOS)
+        if (pop_kokkos_profiling_region) {
+          ::Kokkos::Tools::popRegion();
+        }
+#endif
+        top_ = top_->stop(name);
+      } else {
+        timer_.BaseTimer::stop();
+      }
     }
     if (enable_verbose_) {
       if (!verbose_timestamp_levels_) {

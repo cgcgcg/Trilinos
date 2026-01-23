@@ -38,7 +38,7 @@ public:
       return static_cast<float>(firstValue) > static_cast<float>(secondValue);
     }
 
-    double get_element_quality_metric(const unsigned dim, const std::vector<stk::math::Vector3d> &nodeLocations) const override
+    double get_element_quality_metric([[maybe_unused]] const unsigned dim, const std::vector<stk::math::Vector3d> &nodeLocations) const override
     {
       STK_ThrowAssert(dim == 3);
       return tet_mean_ratio(nodeLocations);
@@ -76,6 +76,11 @@ public:
 
   virtual double get_acceptable_value_for_metric() const override { return 0.1; }
 };
+
+bool is_less_than_in_x_then_y_then_z(const stk::math::Vector3d& A, const stk::math::Vector3d &B);
+
+int determine_diagonal_of_quad_that_cuts_largest_angle(const stk::math::Vector3d & x0, const stk::math::Vector3d & x1, const stk::math::Vector3d & x2, const stk::math::Vector3d & x3);
+bool will_cutting_quad_from_0to2_cut_largest_angle(const stk::math::Vector3d & x0, const stk::math::Vector3d & x1, const stk::math::Vector3d & x2, const stk::math::Vector3d & x3);
 
 }
 

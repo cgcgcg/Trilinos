@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOSBATCHED_TBSV_SERIAL_IMPL_HPP_
 #define KOKKOSBATCHED_TBSV_SERIAL_IMPL_HPP_
@@ -75,7 +62,7 @@ struct SerialTbsv<Uplo::Lower, Trans::NoTranspose, ArgDiag, Algo::Tbsv::Unblocke
     if (info) return info;
 
     return Impl::SerialTbsvInternalLower<Algo::Tbsv::Unblocked>::invoke(
-        ArgDiag::use_unit_diag, A.extent(1), A.data(), A.stride_0(), A.stride_1(), x.data(), x.stride_0(), k);
+        ArgDiag::use_unit_diag, A.extent(1), A.data(), A.stride(0), A.stride(1), x.data(), x.stride(0), k);
   }
 };
 
@@ -88,8 +75,8 @@ struct SerialTbsv<Uplo::Lower, Trans::Transpose, ArgDiag, Algo::Tbsv::Unblocked>
     if (info) return info;
 
     return Impl::SerialTbsvInternalLowerTranspose<Algo::Tbsv::Unblocked>::invoke(
-        KokkosBlas::Impl::OpID(), ArgDiag::use_unit_diag, A.extent(1), A.data(), A.stride_0(), A.stride_1(), x.data(),
-        x.stride_0(), k);
+        KokkosBlas::Impl::OpID(), ArgDiag::use_unit_diag, A.extent(1), A.data(), A.stride(0), A.stride(1), x.data(),
+        x.stride(0), k);
   }
 };
 
@@ -102,8 +89,8 @@ struct SerialTbsv<Uplo::Lower, Trans::ConjTranspose, ArgDiag, Algo::Tbsv::Unbloc
     if (info) return info;
 
     return Impl::SerialTbsvInternalLowerTranspose<Algo::Tbsv::Unblocked>::invoke(
-        KokkosBlas::Impl::OpConj(), ArgDiag::use_unit_diag, A.extent(1), A.data(), A.stride_0(), A.stride_1(), x.data(),
-        x.stride_0(), k);
+        KokkosBlas::Impl::OpConj(), ArgDiag::use_unit_diag, A.extent(1), A.data(), A.stride(0), A.stride(1), x.data(),
+        x.stride(0), k);
   }
 };
 
@@ -116,7 +103,7 @@ struct SerialTbsv<Uplo::Upper, Trans::NoTranspose, ArgDiag, Algo::Tbsv::Unblocke
     if (info) return info;
 
     return Impl::SerialTbsvInternalUpper<Algo::Tbsv::Unblocked>::invoke(
-        ArgDiag::use_unit_diag, A.extent(1), A.data(), A.stride_0(), A.stride_1(), x.data(), x.stride_0(), k);
+        ArgDiag::use_unit_diag, A.extent(1), A.data(), A.stride(0), A.stride(1), x.data(), x.stride(0), k);
   }
 };
 
@@ -129,8 +116,8 @@ struct SerialTbsv<Uplo::Upper, Trans::Transpose, ArgDiag, Algo::Tbsv::Unblocked>
     if (info) return info;
 
     return Impl::SerialTbsvInternalUpperTranspose<Algo::Tbsv::Unblocked>::invoke(
-        KokkosBlas::Impl::OpID(), ArgDiag::use_unit_diag, A.extent(1), A.data(), A.stride_0(), A.stride_1(), x.data(),
-        x.stride_0(), k);
+        KokkosBlas::Impl::OpID(), ArgDiag::use_unit_diag, A.extent(1), A.data(), A.stride(0), A.stride(1), x.data(),
+        x.stride(0), k);
   }
 };
 
@@ -143,8 +130,8 @@ struct SerialTbsv<Uplo::Upper, Trans::ConjTranspose, ArgDiag, Algo::Tbsv::Unbloc
     if (info) return info;
 
     return Impl::SerialTbsvInternalUpperTranspose<Algo::Tbsv::Unblocked>::invoke(
-        KokkosBlas::Impl::OpConj(), ArgDiag::use_unit_diag, A.extent(1), A.data(), A.stride_0(), A.stride_1(), x.data(),
-        x.stride_0(), k);
+        KokkosBlas::Impl::OpConj(), ArgDiag::use_unit_diag, A.extent(1), A.data(), A.stride(0), A.stride(1), x.data(),
+        x.stride(0), k);
   }
 };
 

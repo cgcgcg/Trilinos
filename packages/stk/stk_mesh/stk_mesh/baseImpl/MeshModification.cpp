@@ -5,6 +5,7 @@
 #include <stk_util/parallel/Parallel.hpp>
 #include <stk_util/parallel/ParallelReduce.hpp>
 #include <stk_util/parallel/CommSparse.hpp>
+#include <stk_mesh/baseImpl/EntityCommHelpers.hpp>
 #include <stk_mesh/baseImpl/MeshImplUtils.hpp>
 #include <stk_mesh/baseImpl/EntityKeyMapping.hpp>
 #include <stk_mesh/base/EntityLess.hpp>
@@ -17,8 +18,13 @@ namespace stk {
 namespace mesh {
 namespace impl {
 
-bool MeshModification::modification_begin(const std::string /*description*/)
+bool MeshModification::modification_begin(const std::string /*description*/, bool resetSymGhostInfo, bool isSyncToHost)
 {
+    if (isSyncToHost)
+    {
+      STK_ThrowRequireMsg(!this->in_modifiable_state(), "Cannot syncToHost inside an existing mod cycle");
+    }
+
     if (m_bulkData.m_runConsistencyCheck) {
       parallel_machine_barrier( m_bulkData.parallel() );
     }
@@ -52,16 +58,19 @@ bool MeshModification::modification_begin(const std::string /*description*/)
     this->set_sync_state_modifiable();
     this->reset_shared_entity_changed_parts();
 
-    if (m_bulkData.has_symmetric_ghost_info() && m_bulkData.parallel_size() > 2) {
+    if (m_bulkData.has_symmetric_ghost_info() && m_bulkData.parallel_size() > 2 && resetSymGhostInfo) {
       m_bulkData.remove_symmetric_ghost_info();
     }
 
-    const stk::mesh::FieldVector allFields = m_bulkData.mesh_meta_data().get_fields();
-    for (FieldBase * stkField : allFields) {
-      stkField->sync_to_host();
-    }
+    if (!isSyncToHost)
+    {
+      const stk::mesh::FieldVector allFields = m_bulkData.mesh_meta_data().get_fields();
+      for (FieldBase * stkField : allFields) {
+        stkField->sync_to_host();
+      }
 
-    this->increment_sync_count();
+      this->increment_sync_count();
+    }
     return true;
 }
 
@@ -219,7 +228,8 @@ bool MeshModification::change_entity_owner( const EntityProcVec & arg_change)
     m_bulkData.notifier.notify_elements_about_to_move_procs(local_change);
 
     modification_optimization mod_optimization = MOD_END_SORT;
-    modification_begin("change_entity_owner");
+    constexpr bool resetSymGhostInfo = true;
+    modification_begin("change_entity_owner", resetSymGhostInfo);
     internal_change_entity_owner(local_change, mod_optimization);
     m_bulkData.update_sharing_after_change_entity_owner();
     m_bulkData.internal_modification_end_for_change_entity_owner(mod_optimization);

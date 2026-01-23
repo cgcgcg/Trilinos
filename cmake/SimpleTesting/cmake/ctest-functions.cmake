@@ -113,7 +113,9 @@ macro(print_options_list)
     message(">>> configure_file           = ${configure_file}")
     message(">>> build_root               = ${build_root}")
     message(">>> build_dir                = ${build_dir}")
-    message(">>> SOURCE_DIR               = ${SOURCE_DIR}")
+    message(">>> source_dir               = ${source_dir}")
+    message(">>> package_enables          = ${package_enables}")
+    message(">>> subprojects_file         = ${subprojects_file}")
     message(">>> CMAKE_CURRENT_LIST_DIR   = ${CMAKE_CURRENT_LIST_DIR}")
     message(">>> CTEST_SOURCE_DIRECTORY   = ${CTEST_SOURCE_DIRECTORY}")
     message(">>> CTEST_BINARY_DIRECTORY   = ${CTEST_BINARY_DIRECTORY}")
@@ -168,7 +170,6 @@ function(generate_build_url3 url_output cdash_site cdash_location project_name b
     banner("generate_build_url3() FINISH")
 endfunction()
 
-
 # generate_build_url4 generates a link to view all builds for a particular PR
 function(generate_build_url4 url_output cdash_site cdash_location project_name pr_num)
     banner("generate_build_url4() START")
@@ -177,7 +178,7 @@ function(generate_build_url4 url_output cdash_site cdash_location project_name p
     message(">>> project_name  : ${project_name}")
     message(">>> pr_num        : ${pr_num}")
     string(REPLACE " " "%20" url_output_tmp
-        "https://${cdash_site}${cdash_location}index.php?project=${project_name}&display=project&begin=2024-01-01&end=now&filtercount=1&showfilters=1&field1=buildname&compare1=65&value1=PR-${pr_num}"
+        "https://${cdash_site}${cdash_location}index.php?project=${project_name}&display=project&filtercount=2&showfilters=1&filtercombine=and&field1=buildname&compare1=65&value1=PR-${pr_num}&field2=buildstarttime&compare2=84&value2=now"
     )
     set(${url_output} ${url_output_tmp} PARENT_SCOPE)
     banner("generate_build_url4() FINISH")

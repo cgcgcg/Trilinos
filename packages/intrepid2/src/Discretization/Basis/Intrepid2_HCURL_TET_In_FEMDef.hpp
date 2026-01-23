@@ -55,12 +55,11 @@ getValues(       OutputViewType output,
   }
 
   typedef typename Kokkos::DynRankView<typename InputViewType::value_type, typename WorkViewType::memory_space> ViewType;
-  auto vcprop = Kokkos::common_view_alloc_prop(input);
   auto ptr = work.data();
 
   switch (OpType) {
   case OPERATOR_VALUE: {
-    const ViewType phis(Kokkos::view_wrap(ptr, vcprop), card, npts);
+    const ViewType phis = createMatchingUnmanagedView<ViewType>(input, ptr, card, npts);
     ViewType dummyView;
 
     Impl::Basis_HGRAD_TET_Cn_FEM_ORTH::
@@ -76,9 +75,9 @@ getValues(       OutputViewType output,
     break;
   }
   case OPERATOR_CURL: {
-    const ViewType phis(Kokkos::view_wrap(ptr, vcprop), card, npts, spaceDim);
+    const ViewType phis = createMatchingUnmanagedView<ViewType>(input, ptr, card, npts, spaceDim);
     ptr += card*npts*spaceDim*get_dimension_scalar(input);
-    const ViewType workView(Kokkos::view_wrap(ptr, vcprop), card, npts, spaceDim+1);
+    const ViewType workView = createMatchingUnmanagedView<ViewType>(input, ptr, card, npts, spaceDim+1);
 
     Impl::Basis_HGRAD_TET_Cn_FEM_ORTH::
     Serial<OPERATOR_GRAD>::getValues(phis, input, workView, order);
@@ -126,25 +125,22 @@ getValues(
   const auto loopSize = loopSizeTmp1 + loopSizeTmp2;
   Kokkos::RangePolicy<ExecSpaceType,Kokkos::Schedule<Kokkos::Static> > policy(space, 0, loopSize);
 
-  typedef typename inputPointViewType::value_type inputPointType;
+  //typedef typename inputPointViewType::value_type inputPointType;
 
   const ordinal_type cardinality = outputValues.extent(0);
   const ordinal_type spaceDim = 3;
 
-  auto vcprop = Kokkos::common_view_alloc_prop(inputPoints);
-  typedef typename Kokkos::DynRankView< inputPointType, typename inputPointViewType::memory_space> workViewType;
-
   switch (operatorType) {
   case OPERATOR_VALUE: {
-    workViewType  work(Kokkos::view_alloc(space, "Basis_HCURL_TET_In_FEM::getValues::work", vcprop), cardinality, inputPoints.extent(0));
-    typedef Functor<outputValueViewType,inputPointViewType,vinvViewType, workViewType,
+    auto work = createMatchingDynRankView(inputPoints, "Basis_HCURL_TET_In_FEM::getValues::work", cardinality, inputPoints.extent(0));
+    typedef Functor<outputValueViewType,inputPointViewType,vinvViewType, decltype(work),
         OPERATOR_VALUE,numPtsPerEval> FunctorType;
     Kokkos::parallel_for( policy, FunctorType(outputValues, inputPoints, coeffs, work) );
     break;
   }
   case OPERATOR_CURL: {
-    workViewType  work(Kokkos::view_alloc(space, "Basis_HCURL_TET_In_FEM::getValues::work", vcprop), cardinality*(2*spaceDim+1), inputPoints.extent(0));
-    typedef Functor<outputValueViewType,inputPointViewType,vinvViewType, workViewType,
+    auto work = createMatchingDynRankView(inputPoints, "Basis_HCURL_TET_In_FEM::getValues::work", cardinality*(2*spaceDim+1), inputPoints.extent(0));
+    typedef Functor<outputValueViewType,inputPointViewType,vinvViewType, decltype(work),
         OPERATOR_CURL,numPtsPerEval> FunctorType;
     Kokkos::parallel_for( policy, FunctorType(outputValues, inputPoints, coeffs, work) );
     break;
@@ -267,12 +263,12 @@ Basis_HCURL_TET_In_FEM( const ordinal_type order,
       V1.extent(0) ,
       V1.extent(1) ,
       V1.data() ,
-      V1.stride_1() ,
+      V1.stride(1) ,
       S.data() ,
       U.data() ,
-      U.stride_1() ,
+      U.stride(1) ,
       Vt.data() ,
-      Vt.stride_1() ,
+      Vt.stride(1) ,
       work.data() ,
       5*cardVecPn ,
       rWork.data() ,
@@ -504,7 +500,7 @@ Basis_HCURL_TET_In_FEM( const ordinal_type order,
   info = 0;
 
   lapack.GETRF(card, card,
-      vmat.data(), vmat.stride_1(),
+      vmat.data(), vmat.stride(1),
       (ordinal_type*)ipiv.data(),
       &info);
 
@@ -513,7 +509,7 @@ Basis_HCURL_TET_In_FEM( const ordinal_type order,
       ">>> ERROR: (Intrepid2::Basis_HCURL_TET_In_FEM) lapack.GETRF returns nonzero info." );
 
   lapack.GETRI(card,
-      vmat.data(), vmat.stride_1(),
+      vmat.data(), vmat.stride(1),
       (ordinal_type*)ipiv.data(),
       work1.data(), lwork,
       &info);

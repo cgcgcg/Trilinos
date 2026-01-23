@@ -50,11 +50,6 @@ namespace BaskerNS
     {
       //Note,
       //basker thread is always used in a array so not need.
-      //Added for completeness/OpenMP
-      #ifndef BASKER_KOKKOS
-      FREE_INT_1DARRAY(iws);
-      FREE_ENTRY_1DARRAY(ews);
-      #endif
     }
 
      
@@ -787,13 +782,15 @@ namespace BaskerNS
       use_sequential_diag_facto = BASKER_FALSE;
       // MWM matching before AMD 
       //  0: no matching, 1: ShyLUBasker::mwm, 2: MC63 if enabled
-      blk_matching = 1; // if 0, then ND & AMD are applied in symbolic
+      blk_matching = 0; // if 0, then ND & AMD are applied in symbolic
 
       // ND Ordering Options (Should METIS optional?)
       use_metis = true;
       run_nd_on_leaves = false;
       run_amd_on_leaves = false;
       use_nodeNDP = true;
+      // Worker threads for ND
+      worker_threads = false;
 
       // AMD Option
       amd_dom = true;
@@ -874,6 +871,8 @@ namespace BaskerNS
     BASKER_BOOL run_nd_on_leaves;
     BASKER_BOOL run_amd_on_leaves;
     BASKER_BOOL use_nodeNDP;
+    // Worker threads for ND
+    BASKER_BOOL worker_threads;
 
     //Pivot Options
     BASKER_BOOL  no_pivot;

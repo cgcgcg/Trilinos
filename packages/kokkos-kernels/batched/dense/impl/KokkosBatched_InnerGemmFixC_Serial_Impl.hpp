@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 #ifndef KOKKOSBATCHED_INNER_GEMM_FIX_C_SERIAL_IMPL_HPP
 #define KOKKOSBATCHED_INNER_GEMM_FIX_C_SERIAL_IMPL_HPP
 
@@ -1517,7 +1504,6 @@ KOKKOS_INLINE_FUNCTION int InnerGemmFixC<1, 1>::serial_invoke(OpA opA, OpB opB, 
   if (!(m <= 1 && n <= 1)) Kokkos::abort("InnerGemmFixC<1,1>::serial_invoke, assert failure (m<=1 && n<=1)");
 
   return serial_invoke(opA, opB, alpha, A, B, k, C);
-  ;
 }
 
 }  // namespace KokkosBatched

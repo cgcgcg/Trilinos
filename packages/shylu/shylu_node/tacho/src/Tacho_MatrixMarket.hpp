@@ -112,7 +112,7 @@ template <typename ValueType> struct MatrixMarket {
   /// \brief matrix market reader
   template <typename DeviceType>
   static int read(const std::string &filename, CrsMatrixBase<ValueType, DeviceType> &A,
-                  const ordinal_type sanitize = 0, const ordinal_type verbose = 0) {
+                  const ordinal_type mm_base = 1, const ordinal_type sanitize = 0, const ordinal_type verbose = 0) {
     static_assert(Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace, typename DeviceType::memory_space>::assignable,
                   "DeviceType is not assignable from HostSpace");
 
@@ -157,8 +157,6 @@ template <typename ValueType> struct MatrixMarket {
     }
 
     // read data into coo format
-    const ordinal_type mm_base = 1;
-
     typedef ValueType value_type;
     typedef Coo<value_type> ijv_type;
     std::vector<ijv_type> mm;
@@ -169,6 +167,10 @@ template <typename ValueType> struct MatrixMarket {
         ordinal_type row, col;
         value_type val;
 
+        if (file.eof()) {
+          std::cout << " ERROR: Reached the end of file before nnz (invalid nnz?)" << std::endl << std::endl;
+          return -1;
+        }
         impl_read_value_from_file(file, cmplx, row, col, val);
 
         row -= mm_base;

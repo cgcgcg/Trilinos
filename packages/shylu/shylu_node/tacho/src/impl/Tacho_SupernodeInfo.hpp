@@ -69,11 +69,11 @@ struct SuperNodeInfoInitReducer {
   }
 
   KOKKOS_INLINE_FUNCTION void init(value_type &val) const {
-    val.max_nchildren = Kokkos::reduction_identity<ordinal_type>::max();
-    val.max_supernode_size = Kokkos::reduction_identity<ordinal_type>::max();
-    val.max_num_cols = Kokkos::reduction_identity<ordinal_type>::max();
-    val.max_schur_size = Kokkos::reduction_identity<ordinal_type>::max();
-    val.nnz = Kokkos::reduction_identity<size_type>::sum();
+    val.max_nchildren = Kokkos::Experimental::finite_min_v<ordinal_type>;
+    val.max_supernode_size = Kokkos::Experimental::finite_min_v<ordinal_type>;
+    val.max_num_cols = Kokkos::Experimental::finite_min_v<ordinal_type>;
+    val.max_schur_size = Kokkos::Experimental::finite_min_v<ordinal_type>;
+    val.nnz = 0;
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -131,6 +131,8 @@ template <typename ValueType, typename DeviceType> struct SupernodeInfo {
     int* rowptrL;
     int* colindL;
     value_type* nzvalsL;
+
+    value_type* nzvalsD;
 
     bool spmv_explicit_transpose;
 #if defined(KOKKOS_ENABLE_CUDA)

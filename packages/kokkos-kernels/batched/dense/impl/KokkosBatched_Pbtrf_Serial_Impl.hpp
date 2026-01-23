@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 #ifndef KOKKOSBATCHED_PBTRF_SERIAL_IMPL_HPP_
 #define KOKKOSBATCHED_PBTRF_SERIAL_IMPL_HPP_
 
@@ -56,8 +43,7 @@ struct SerialPbtrf<Uplo::Lower, Algo::Pbtrf::Unblocked> {
     if (info) return info;
 
     const int kd = Ab.extent(0) - 1;
-    return Impl::SerialPbtrfInternalLower<Algo::Pbtrf::Unblocked>::invoke(n, Ab.data(), Ab.stride_0(), Ab.stride_1(),
-                                                                          kd);
+    return Impl::SerialPbtrfInternalLower<Algo::Pbtrf::Unblocked>::invoke(n, Ab.data(), Ab.stride(0), Ab.stride(1), kd);
   }
 };
 
@@ -74,8 +60,7 @@ struct SerialPbtrf<Uplo::Upper, Algo::Pbtrf::Unblocked> {
     if (info) return info;
 
     const int kd = Ab.extent(0) - 1;
-    return Impl::SerialPbtrfInternalUpper<Algo::Pbtrf::Unblocked>::invoke(n, Ab.data(), Ab.stride_0(), Ab.stride_1(),
-                                                                          kd);
+    return Impl::SerialPbtrfInternalUpper<Algo::Pbtrf::Unblocked>::invoke(n, Ab.data(), Ab.stride(0), Ab.stride(1), kd);
   }
 };
 

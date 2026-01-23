@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 #ifndef TEST_BATCHED_DENSE_HPP
 #define TEST_BATCHED_DENSE_HPP
 
@@ -51,11 +38,7 @@
 #include "Test_Batched_SerialTrtri_Complex.hpp"
 #include "Test_Batched_SerialSVD.hpp"
 #include "Test_Batched_SerialPttrf.hpp"
-#include "Test_Batched_SerialPttrf_Real.hpp"
-#include "Test_Batched_SerialPttrf_Complex.hpp"
 #include "Test_Batched_SerialPttrs.hpp"
-#include "Test_Batched_SerialPttrs_Real.hpp"
-#include "Test_Batched_SerialPttrs_Complex.hpp"
 #include "Test_Batched_SerialPbtrf.hpp"
 #include "Test_Batched_SerialPbtrs.hpp"
 #include "Test_Batched_SerialLaswp.hpp"
@@ -66,6 +49,8 @@
 #include "Test_Batched_SerialSyr.hpp"
 #include "Test_Batched_SerialLacgv.hpp"
 #include "Test_Batched_SerialGbtrf.hpp"
+#include "Test_Batched_SerialGbtrs.hpp"
+#include "Test_Batched_SerialHouseholder.hpp"
 
 // Team Kernels
 #include "Test_Batched_TeamAxpy.hpp"

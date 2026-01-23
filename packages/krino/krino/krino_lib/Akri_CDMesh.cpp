@@ -44,7 +44,6 @@
 #include <Akri_DiagWriter.hpp>
 #include <Akri_Quality.hpp>
 #include <Akri_QualityMetric.hpp>
-#include <Akri_RefinementInterface.hpp>
 #include <Akri_Snap.hpp>
 #include <Akri_SnapToNode.hpp>
 #include <Akri_SubElementChildNodeAncestry.hpp>
@@ -58,9 +57,46 @@
 
 #include <Akri_RefinementSupport.hpp>
 #include <Akri_ParallelErrorMessage.hpp>
+#include <Akri_RefinementManager.hpp>
 namespace krino{
 
-std::unique_ptr<CDMesh> CDMesh::the_new_mesh;
+CDMesh & CDMesh::get_decomposed_mesh(stk::mesh::BulkData & mesh)
+{
+  CDMesh * cdmesh = const_cast<CDMesh*>(mesh.mesh_meta_data().get_attribute<CDMesh>());
+  STK_ThrowRequireMsg(nullptr != cdmesh, "Decomposed mesh not found on STK mesh.");
+  return *cdmesh;
+}
+
+const CDMesh & CDMesh::get_decomposed_mesh(const stk::mesh::BulkData & mesh)
+{
+  const CDMesh * cdmesh = mesh.mesh_meta_data().get_attribute<CDMesh>();
+  STK_ThrowRequireMsg(nullptr != cdmesh, "Decomposed mesh not found on STK mesh.");
+  return *cdmesh;
+}
+
+bool CDMesh::has_decomposed_mesh(const stk::mesh::BulkData & mesh)
+{
+  const CDMesh * cdmesh = mesh.mesh_meta_data().get_attribute<CDMesh>();
+  return cdmesh != nullptr;
+}
+
+CDMesh & CDMesh::create_decomposed_mesh(stk::mesh::BulkData & mesh)
+{
+  clear_decomposed_mesh(mesh);
+  CDMesh * cdmesh = new CDMesh(mesh);
+  mesh.mesh_meta_data().declare_attribute_with_delete<CDMesh>(cdmesh);
+  return *cdmesh;
+}
+
+void CDMesh::clear_decomposed_mesh(stk::mesh::BulkData & mesh)
+{
+  const CDMesh * cdmesh = mesh.mesh_meta_data().get_attribute<CDMesh>();
+  if (nullptr != cdmesh)
+  {
+    mesh.mesh_meta_data().remove_attribute(cdmesh);
+    delete cdmesh;
+  }
+}
 
 //--------------------------------------------------------------------------------
 
@@ -170,12 +206,12 @@ std::vector<InterfaceID> CDMesh::active_interface_ids(const std::vector<Surface_
 }
 
 void
-CDMesh::handle_possible_failed_time_step( stk::mesh::BulkData & mesh, const int step_count )
+CDMesh::handle_possible_failed_time_step( stk::mesh::BulkData & mesh, const int /*step_count*/ )
 {
-  const bool haveEverPerformedDecomposition = nullptr != the_new_mesh.get();
+  const bool haveEverPerformedDecomposition = has_decomposed_mesh(mesh);
   if (haveEverPerformedDecomposition)
   {
-    the_new_mesh->rebuild_after_rebalance_or_failed_step();
+    get_decomposed_mesh(mesh).rebuild_after_rebalance_or_failed_step();
   }
 }
 
@@ -294,7 +330,7 @@ void CDMesh::prepare_for_resnapping(const stk::mesh::BulkData & mesh, const Inte
   }
 }
 
-static void straighten_quadratic_edge(const stk::mesh::BulkData & mesh, const stk::mesh::FieldBase & coordsField, const unsigned dim, const std::array<stk::mesh::Entity,3> & edgeNodes)
+static void straighten_quadratic_edge(const stk::mesh::BulkData & /*mesh*/, const stk::mesh::FieldBase & coordsField, const unsigned dim, const std::array<stk::mesh::Entity,3> & edgeNodes)
 {
   const double * coords0 = static_cast<double*>(stk::mesh::field_data( coordsField, edgeNodes[0] ));
   const double * coords1 = static_cast<double*>(stk::mesh::field_data( coordsField, edgeNodes[1] ));
@@ -394,11 +430,7 @@ CDMesh::decompose_mesh(const InterfaceGeometry & interfaceGeometry, const int st
   NodeToCapturedDomainsMap nodesToCapturedDomains;
 
   {
-    fix_node_owners_to_assure_active_owned_element_for_node(mesh, get_active_part());
-
-    // Not sure if this is krino's responsibility or the driving application.  If we have
-    // elemental death fields, these need to be parallel consistent on aura elements.
-    parallel_communicate_elemental_death_fields();
+    fix_node_ownership_to_assure_selected_owned_element(mesh, get_active_part());
 
     stk::diag::TimeBlock timer__(my_timer_decompose);
 
@@ -448,26 +480,26 @@ CDMesh::decompose_mesh(stk::mesh::BulkData & mesh,
       const int stepCount,
       const std::vector<std::pair<stk::mesh::Entity, stk::mesh::Entity>> & periodic_node_pairs)
 {
-  const bool wasPreviouslyDecomposed = nullptr != the_new_mesh;
+  const bool wasPreviouslyDecomposed = has_decomposed_mesh(mesh);
   if (!wasPreviouslyDecomposed)
   {
     // FIXME: This can cause problems for shells.
     attach_sides_to_elements(mesh);
   }
 
-  the_new_mesh = std::make_unique<CDMesh>(mesh);
+  CDMesh & cdmesh = create_decomposed_mesh(mesh);
 
   for(auto && pair : periodic_node_pairs)
   {
-    the_new_mesh->add_periodic_node_pair(pair.first, pair.second);
+    cdmesh.add_periodic_node_pair(pair.first, pair.second);
   }
 
   const int stashStepCount = wasPreviouslyDecomposed ? stepCount : (-1);
-  const int status = the_new_mesh->decompose_mesh(interfaceGeometry, stashStepCount);
+  const int status = cdmesh.decompose_mesh(interfaceGeometry, stashStepCount);
 
-  if (!the_new_mesh->aux_meta().using_fmwk())
+  if (!cdmesh.aux_meta().using_fmwk())
   {
-    the_new_mesh->print_conformal_volumes_and_surface_areas();
+    cdmesh.print_conformal_volumes_and_surface_areas();
   }
 
   return status;
@@ -563,20 +595,6 @@ CDMesh::set_entities_for_child_nodes_with_common_ancestry_as_existing_child_node
   }
 }
 
-void
-CDMesh::parallel_communicate_elemental_death_fields() const
-{
-  std::vector< const stk::mesh::FieldBase *> element_fields;
-  for (auto && field : my_cdfem_support.get_levelset_fields())
-  {
-    if (field.valid() && field.entity_rank() == stk::topology::ELEMENT_RANK)
-    {
-      element_fields.push_back(&field.field());
-    }
-  }
-  stk::mesh::communicate_field_data(stk_bulk(), element_fields);
-}
-
 bool
 CDMesh::set_entities_for_existing_child_elements()
 {
@@ -651,10 +669,9 @@ CDMesh::get_owned_unused_old_child_elements_and_clear_child_elements()
 }
 
 bool
-CDMesh::decomposition_needs_update(const InterfaceGeometry & interfaceGeometry,
-      const std::vector<std::pair<stk::mesh::Entity, stk::mesh::Entity>> & periodic_node_pairs)
+CDMesh::decomposition_needs_update(const stk::mesh::BulkData & mesh, const InterfaceGeometry & interfaceGeometry)
 {
-  return !the_new_mesh || the_new_mesh->decomposition_has_changed(interfaceGeometry);
+  return !has_decomposed_mesh(mesh) || get_decomposed_mesh(mesh).decomposition_has_changed(interfaceGeometry);
 }
 
 void
@@ -681,7 +698,7 @@ CDMesh::nonconformal_adaptivity(stk::mesh::BulkData & mesh, const FieldRef coord
   std::function<void(int)> markerFunction;
   if (refinementSupport.has_refinement_interval())
   {
-    markerFunction = [&mesh, &refinementSupport, &interfaceGeometry](int num_refinements)
+    markerFunction = [&mesh, &refinementSupport, &interfaceGeometry](int /*num_refinements*/)
     {
       constexpr bool isDefaultCoarsen = true;
       mark_elements_that_intersect_interval(mesh,
@@ -742,18 +759,19 @@ static void delete_extraneous_inactive_sides(stk::mesh::BulkData & mesh, const R
 void
 CDMesh::rebuild_from_restart_mesh(stk::mesh::BulkData & mesh)
 {
-  ParallelThrowRequire(mesh.parallel(), !the_new_mesh);
+  ParallelThrowRequire(mesh.parallel(), !has_decomposed_mesh(mesh));
 
-  the_new_mesh = std::make_unique<CDMesh>(mesh);
-  the_new_mesh->rebuild_child_part();
-  the_new_mesh->rebuild_parent_and_active_parts_using_nonconformal_and_child_parts();
-  the_new_mesh->generate_nonconformal_elements();
-  the_new_mesh->restore_subelements();
+  CDMesh & cdmesh = create_decomposed_mesh(mesh);
 
-  activate_selected_entities_touching_active_elements(the_new_mesh->stk_bulk(), stk::topology::NODE_RANK, the_new_mesh->stk_meta().universal_part(), the_new_mesh->aux_meta().active_part()); // we should be able to skip this step if there are no higher order elements
-  the_new_mesh->update_element_side_parts(); // rebuild conformal side parts
+  cdmesh.rebuild_child_part();
+  cdmesh.rebuild_parent_and_active_parts_using_nonconformal_and_child_parts();
+  cdmesh.generate_nonconformal_elements();
+  cdmesh.restore_subelements();
 
-  delete_extraneous_inactive_sides(mesh, the_new_mesh->myRefinementSupport, the_new_mesh->get_parent_part(), the_new_mesh->get_active_part());
+  activate_selected_entities_touching_active_elements(cdmesh.stk_bulk(), stk::topology::NODE_RANK, cdmesh.stk_meta().universal_part(), cdmesh.aux_meta().active_part()); // we should be able to skip this step if there are no higher order elements
+  cdmesh.update_element_side_parts(); // rebuild conformal side parts
+
+  delete_extraneous_inactive_sides(mesh, cdmesh.myRefinementSupport, cdmesh.get_parent_part(), cdmesh.get_active_part());
 
   ParallelThrowAssert(mesh.parallel(), check_face_and_edge_ownership(mesh));
   ParallelThrowAssert(mesh.parallel(), check_face_and_edge_relations(mesh));
@@ -1988,7 +2006,7 @@ std::vector<std::vector<int>> determine_sharing_procs_of_nodes_in_ancestries(con
 }
 
 template <typename T>
-void pack_node_data_for_node_ancestries(const stk::mesh::BulkData & mesh, const std::vector<std::pair<SubElementChildNodeAncestry,T>> & nodeAncestriesAndData, const std::vector<std::vector<int>> & destinationProcs, stk::CommSparse &commSparse)
+void pack_node_data_for_node_ancestries(const stk::mesh::BulkData & /*mesh*/, const std::vector<std::pair<SubElementChildNodeAncestry,T>> & nodeAncestriesAndData, const std::vector<std::vector<int>> & destinationProcs, stk::CommSparse &commSparse)
 {
   stk::pack_and_communicate(commSparse,[&]()
   {
@@ -2923,7 +2941,7 @@ std::function<double(stk::mesh::Entity)> build_get_local_length_scale_for_side_f
 std::function<double(stk::mesh::Entity)> build_get_constant_length_scale_for_side_function(const double lengthScale)
 {
   auto get_length_scale_for_side =
-      [lengthScale](stk::mesh::Entity side)
+      [lengthScale](stk::mesh::Entity /*side*/)
       {
         return lengthScale;
       };
@@ -3152,7 +3170,7 @@ CDMesh::update_adaptivity_parent_entities()
     return;
   }
 
-  const RefinementInterface & refinement = myRefinementSupport.get_non_interface_conforming_refinement();
+  const RefinementManager & refinement = myRefinementSupport.get_non_interface_conforming_refinement();
   stk::mesh::BulkData& mesh = stk_bulk();
 
   stk::mesh::PartVector add_parts;
@@ -3373,8 +3391,18 @@ CDMesh::reset_mesh_to_original_undecomposed_state(stk::mesh::BulkData & mesh)
 
   mesh.batch_change_entity_parts(batchEntities, batchAddParts, batchRemoveParts);
 
-  if (the_new_mesh)
-    the_new_mesh.reset();
+  FieldRef cdfemSnapField = cdfemSupport.get_cdfem_snap_displacements_field();
+
+  if (cdfemSnapField.valid())
+  {
+      undo_previous_snaps_without_interpolation(mesh, cdfemSupport.get_coords_field(), cdfemSnapField);
+      stk::mesh::field_fill(0., cdfemSnapField);
+  }
+
+  if (has_decomposed_mesh(mesh))
+  {
+    clear_decomposed_mesh(mesh);
+  }
 }
 
 void CDMesh::determine_processor_prolongation_bounding_box(const bool guessAndCheckProcPadding, const double maxCFLGuess, BoundingBox & procBbox) const
@@ -3591,7 +3619,7 @@ CDMesh::get_maximum_cdfem_displacement() const
 }
 
 bool
-CDMesh::decomposition_has_changed(const InterfaceGeometry & interfaceGeometry)
+CDMesh::decomposition_has_changed(const InterfaceGeometry & interfaceGeometry) const
 {
   stk::diag::TimeBlock timer_(my_timer_decomposition_has_changed);
   return krino::decomposition_has_changed(stk_bulk(), interfaceGeometry, my_aux_meta.active_part(), my_cdfem_support, my_phase_support);

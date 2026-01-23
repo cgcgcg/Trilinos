@@ -33,6 +33,7 @@
 //
 
 #include <Kokkos_Core.hpp>
+#include <stdlib.h>
 #include <gtest/gtest.h>
 #include <stk_ngp_test/ngp_test.hpp>
 #include <stk_expreval/Evaluator.hpp>
@@ -43,6 +44,7 @@
 #include <iomanip>
 #include <cmath>
 #include <memory>
+#include "stk_expreval/Eval.hpp"
 #include "stk_expreval/NgpNode.hpp"
 #include "stk_expreval/Node.hpp"
 
@@ -125,7 +127,7 @@ double device_evaluate(const std::string & expression,
   auto variableIndicesHost = ViewInt1DHostType("variableIndices", 10);
   auto variableSizesHost = ViewInt1DHostType("variableSizes", 10);
   Kokkos::View<double[10][10], Kokkos::LayoutRight, stk::ngp::MemSpace> variableDeviceValues("device values");
-  Kokkos::View<double[10][10], Kokkos::LayoutRight, stk::ngp::MemSpace>::HostMirror variableHostValues("input variables");
+  Kokkos::View<double[10][10], Kokkos::LayoutRight, stk::ngp::MemSpace>::host_mirror_type variableHostValues("input variables");
 
   for (unsigned varIndex = 0; varIndex < boundScalars.size(); ++varIndex) {
     variableIndicesHost(varIndex) = eval.get_variable_index(boundScalars[varIndex].varName);
@@ -173,10 +175,10 @@ std::vector<double> threaded_device_evaluate(const std::string & expression,
   auto variableIndicesHost = ViewInt1DHostType("variableIndices", 10);
   auto variableSizesHost = ViewInt1DHostType("variableSizes", 10);
   Kokkos::View<double[10][10][10], Kokkos::LayoutRight, stk::ngp::MemSpace> variableDeviceValues("device values");
-  Kokkos::View<double[10][10][10], Kokkos::LayoutRight, stk::ngp::MemSpace>::HostMirror variableHostValues("input variables");
+  Kokkos::View<double[10][10][10], Kokkos::LayoutRight, stk::ngp::MemSpace>::host_mirror_type variableHostValues("input variables");
 
   Kokkos::View<double[numThreads], stk::ngp::MemSpace> deviceResults("device results");
-  typename Kokkos::View<double[numThreads], stk::ngp::MemSpace>::HostMirror hostResults = Kokkos::create_mirror_view(deviceResults);
+  typename Kokkos::View<double[numThreads], stk::ngp::MemSpace>::host_mirror_type hostResults = Kokkos::create_mirror_view(deviceResults);
 
   for (unsigned varIndex = 0; varIndex < boundScalars.size(); ++varIndex) {
     variableIndicesHost(varIndex) = eval.get_variable_index(boundScalars[varIndex].varName);
@@ -218,6 +220,37 @@ std::vector<double> threaded_device_evaluate(const std::string & expression,
   std::vector<double> vectorHostResults(hostResults.data(), hostResults.data()+numThreads);
   return vectorHostResults;
 }
+
+TEST(UnitTestEvaluator, FPErrorBehaviorEnum)
+{
+  EXPECT_EQ(stk::expreval::fp_error_behavior_string_to_enum("Ignore"), stk::expreval::Eval::FPErrorBehavior::Ignore);
+  EXPECT_EQ(stk::expreval::fp_error_behavior_string_to_enum("Warn"), stk::expreval::Eval::FPErrorBehavior::Warn);
+  EXPECT_EQ(stk::expreval::fp_error_behavior_string_to_enum("WarnOnce"), stk::expreval::Eval::FPErrorBehavior::WarnOnce);
+  EXPECT_EQ(stk::expreval::fp_error_behavior_string_to_enum("Error"), stk::expreval::Eval::FPErrorBehavior::Error);
+
+  EXPECT_ANY_THROW(stk::expreval::fp_error_behavior_string_to_enum("ignore"));
+  EXPECT_ANY_THROW(stk::expreval::fp_error_behavior_string_to_enum("foo"));
+}
+
+TEST(UnitTestEvaluator, FPErrorBehaviorEnvVariable)
+{
+
+  std::string env_var("STK_EXPREVAL_FP_ERROR_BEHAVIOR");
+  {
+    setenv(env_var.c_str(), "Error", true);
+    stk::expreval::Eval eval("1+1");
+    EXPECT_EQ(eval.get_fp_error_behavior(), stk::expreval::Eval::FPErrorBehavior::Error);
+    unsetenv(env_var.c_str());
+  }
+
+  {
+    setenv(env_var.c_str(), "Ignore", true);
+    stk::expreval::Eval eval("1+1");
+    EXPECT_EQ(eval.get_fp_error_behavior(), stk::expreval::Eval::FPErrorBehavior::Ignore);
+    unsetenv(env_var.c_str());
+  }  
+}
+
 
 TEST(UnitTestEvaluator, getVariableIndex_validVariables)
 {
@@ -764,12 +797,12 @@ void evaluate_scalar_inputs_on_device(xType & x, yType & y, const std::string & 
   auto & parsedEval = eval.get_parsed_eval();
 
   Kokkos::View<std::remove_const_t<xType>[1], Kokkos::LayoutRight, stk::ngp::MemSpace> xDeviceValues("x device value");
-  typename Kokkos::View<std::remove_const_t<xType>[1], Kokkos::LayoutRight, stk::ngp::MemSpace>::HostMirror xHostValues("x host value");
+  typename Kokkos::View<std::remove_const_t<xType>[1], Kokkos::LayoutRight, stk::ngp::MemSpace>::host_mirror_type xHostValues("x host value");
   xHostValues[0] = x;
   Kokkos::deep_copy(xDeviceValues, xHostValues);
 
   Kokkos::View<std::remove_const_t<yType>[1], Kokkos::LayoutRight, stk::ngp::MemSpace> yDeviceValues("y device value");
-  typename Kokkos::View<std::remove_const_t<yType>[1], Kokkos::LayoutRight, stk::ngp::MemSpace>::HostMirror yHostValues("y host value");
+  typename Kokkos::View<std::remove_const_t<yType>[1], Kokkos::LayoutRight, stk::ngp::MemSpace>::host_mirror_type yHostValues("y host value");
   yHostValues[0] = y;
   Kokkos::deep_copy(yDeviceValues, yHostValues);
 
@@ -876,12 +909,12 @@ void evaluate_scalar_assignment_on_device(xType & x, yType & y, const std::strin
   auto & parsedEval = eval.get_parsed_eval();
 
   Kokkos::View<std::remove_const_t<xType>[1], Kokkos::LayoutRight, stk::ngp::MemSpace> xDeviceValues("x device value");
-  typename Kokkos::View<std::remove_const_t<xType>[1], Kokkos::LayoutRight, stk::ngp::MemSpace>::HostMirror xHostValues("x host value");
+  typename Kokkos::View<std::remove_const_t<xType>[1], Kokkos::LayoutRight, stk::ngp::MemSpace>::host_mirror_type xHostValues("x host value");
   xHostValues[0] = x;
   Kokkos::deep_copy(xDeviceValues, xHostValues);
 
   Kokkos::View<std::remove_const_t<yType>[1], Kokkos::LayoutRight, stk::ngp::MemSpace> yDeviceValues("y device value");
-  typename Kokkos::View<std::remove_const_t<yType>[1], Kokkos::LayoutRight, stk::ngp::MemSpace>::HostMirror yHostValues("y host value");
+  typename Kokkos::View<std::remove_const_t<yType>[1], Kokkos::LayoutRight, stk::ngp::MemSpace>::host_mirror_type yHostValues("y host value");
   yHostValues[0] = y;
   Kokkos::deep_copy(yDeviceValues, yHostValues);
 
@@ -981,12 +1014,12 @@ void evaluate_array_inputs_on_device(xType x[3], yType y[3], const std::string &
   auto & parsedEval = eval.get_parsed_eval();
 
   Kokkos::View<std::remove_const_t<xType>[3], Kokkos::LayoutRight, stk::ngp::MemSpace> xDeviceValues("x device value");
-  typename Kokkos::View<std::remove_const_t<xType>[3], Kokkos::LayoutRight, stk::ngp::MemSpace>::HostMirror xHostValues("x host value");
+  typename Kokkos::View<std::remove_const_t<xType>[3], Kokkos::LayoutRight, stk::ngp::MemSpace>::host_mirror_type xHostValues("x host value");
   std::memcpy(xHostValues.data(), x, 3*sizeof(xType));
   Kokkos::deep_copy(xDeviceValues, xHostValues);
 
   Kokkos::View<std::remove_const_t<yType>[3], Kokkos::LayoutRight, stk::ngp::MemSpace> yDeviceValues("y device value");
-  typename Kokkos::View<std::remove_const_t<yType>[3], Kokkos::LayoutRight, stk::ngp::MemSpace>::HostMirror yHostValues("y host value");
+  typename Kokkos::View<std::remove_const_t<yType>[3], Kokkos::LayoutRight, stk::ngp::MemSpace>::host_mirror_type yHostValues("y host value");
   std::memcpy(yHostValues.data(), y, 3*sizeof(yType));
   Kokkos::deep_copy(yDeviceValues, yHostValues);
 
@@ -1097,12 +1130,12 @@ void evaluate_array_assignment_on_device(xType x[3], yType y[3], const std::stri
   auto & parsedEval = eval.get_parsed_eval();
 
   Kokkos::View<std::remove_const_t<xType>[3], Kokkos::LayoutRight, stk::ngp::MemSpace> xDeviceValues("x device value");
-  typename Kokkos::View<std::remove_const_t<xType>[3], Kokkos::LayoutRight, stk::ngp::MemSpace>::HostMirror xHostValues("x host value");
+  typename Kokkos::View<std::remove_const_t<xType>[3], Kokkos::LayoutRight, stk::ngp::MemSpace>::host_mirror_type xHostValues("x host value");
   std::memcpy(xHostValues.data(), x, 3*sizeof(xType));
   Kokkos::deep_copy(xDeviceValues, xHostValues);
 
   Kokkos::View<std::remove_const_t<yType>[3], Kokkos::LayoutRight, stk::ngp::MemSpace> yDeviceValues("y device value");
-  typename Kokkos::View<std::remove_const_t<yType>[3], Kokkos::LayoutRight, stk::ngp::MemSpace>::HostMirror yHostValues("y host value");
+  typename Kokkos::View<std::remove_const_t<yType>[3], Kokkos::LayoutRight, stk::ngp::MemSpace>::host_mirror_type yHostValues("y host value");
   std::memcpy(yHostValues.data(), y, 3*sizeof(yType));
   Kokkos::deep_copy(yDeviceValues, yHostValues);
 

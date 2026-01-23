@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 #ifndef KOKKOSBATCHED_HADAMARDPRODUCT_IMPL_HPP
 #define KOKKOSBATCHED_HADAMARDPRODUCT_IMPL_HPP
 
@@ -109,8 +96,8 @@ KOKKOS_INLINE_FUNCTION int SerialHadamardProduct::invoke(const XViewType& X, con
 #endif
 
   return SerialHadamardProductInternal::template invoke<typename XViewType::non_const_value_type>(
-      X.extent(0), X.extent(1), X.data(), X.stride_0(), X.stride_1(), Y.data(), Y.stride_0(), Y.stride_1(), V.data(),
-      V.stride_0(), V.stride_1());
+      X.extent(0), X.extent(1), X.data(), X.stride(0), X.stride(1), Y.data(), Y.stride(0), Y.stride(1), V.data(),
+      V.stride(0), V.stride(1));
 }
 
 ///
@@ -150,8 +137,8 @@ KOKKOS_INLINE_FUNCTION int TeamHadamardProduct<MemberType>::invoke(const MemberT
 
   return TeamHadamardProductInternal::template invoke<MemberType, typename XViewType::non_const_value_type,
                                                       typename XViewType::array_layout>(
-      member, X.extent(0), X.extent(1), X.data(), X.stride_0(), X.stride_1(), Y.data(), Y.stride_0(), Y.stride_1(),
-      V.data(), V.stride_0(), V.stride_1());
+      member, X.extent(0), X.extent(1), X.data(), X.stride(0), X.stride(1), Y.data(), Y.stride(0), Y.stride(1),
+      V.data(), V.stride(0), V.stride(1));
 }
 
 ///
@@ -191,8 +178,8 @@ KOKKOS_INLINE_FUNCTION int TeamVectorHadamardProduct<MemberType>::invoke(const M
 
   return TeamVectorHadamardProductInternal::invoke<MemberType, typename XViewType::non_const_value_type,
                                                    typename XViewType::array_layout>(
-      member, X.extent(0), X.extent(1), X.data(), X.stride_0(), X.stride_1(), Y.data(), Y.stride_0(), Y.stride_1(),
-      V.data(), V.stride_0(), V.stride_1());
+      member, X.extent(0), X.extent(1), X.data(), X.stride(0), X.stride(1), Y.data(), Y.stride(0), Y.stride(1),
+      V.data(), V.stride(0), V.stride(1));
 }
 
 }  // namespace KokkosBatched

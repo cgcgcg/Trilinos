@@ -39,7 +39,6 @@
 
 #include <stk_util/stk_config.h>
 #include <stk_topology/topology.hpp>    // for topology, etc
-#include <stk_util/parallel/Parallel.hpp>  // for ParallelMachine
 #include <stk_util/util/NamedPair.hpp>  // for NAMED_PAIR
 #include <stk_util/util/PairIter.hpp>   // for PairIter
 #include <cstddef>
@@ -86,7 +85,8 @@ typedef std::vector<EntityKey>      EntityKeyVector;
 enum class Layout : uint8_t
 {
   Left,    // Adjacent Entities in memory
-  Right    // Adjacent components in memory
+  Right,   // Adjacent components in memory
+  Auto     // Run-time access to Field data with the correct layout; Not for Field registration
 };
 
 inline std::ostream& operator<<(std::ostream& os, Layout layout) {
@@ -96,6 +96,9 @@ inline std::ostream& operator<<(std::ostream& os, Layout layout) {
             break;
         case Layout::Right:
             os << "Layout::Right";
+            break;
+        case Layout::Auto:
+            os << "Layout::Auto";
             break;
         default:
             os << "Unknown Layout";
@@ -124,25 +127,25 @@ enum class Operation
 
 enum FieldAccessTag : uint8_t
 {
-  ReadWrite    = 0, // Sync values to memory space and mark as modified; Allow modification
-  ReadOnly     = 1, // Sync values to memory space and do not mark as modified; Disallow modification
+  ReadOnly     = 0, // Sync values to memory space and do not mark as modified; Disallow modification
+  ReadWrite    = 1, // Sync values to memory space and mark as modified; Allow modification
   OverwriteAll = 2, // Do not sync values to memory space and mark as modified; Allow modification
 
   Unsynchronized,      // Do not sync values to memory space and do not mark as modified; Allow modification
   ConstUnsynchronized, // Do not sync values to memory space and do not mark as modified; Disallow modification
 
-  InvalidAccess,
+  InvalidAccess     // For internal use only.  Not valid for accessing data.
 };
 
 constexpr int NumTrackedFieldAccessTags = 3;
 
 inline std::ostream& operator<<(std::ostream& os, FieldAccessTag accessTag) {
     switch (accessTag) {
-        case ReadWrite:
-            os << "ReadWrite";
-            break;
         case ReadOnly:
             os << "ReadOnly";
+            break;
+        case ReadWrite:
+            os << "ReadWrite";
             break;
         case OverwriteAll:
             os << "OverwriteAll";
@@ -196,32 +199,24 @@ struct FastMeshIndex
   unsigned bucket_ord;
 };
 
+KOKKOS_INLINE_FUNCTION
 constexpr bool operator<(const FastMeshIndex& lhs, const FastMeshIndex& rhs)
 {
   return lhs.bucket_id == rhs.bucket_id ? lhs.bucket_ord < rhs.bucket_ord : lhs.bucket_id < rhs.bucket_id;
 }
 
+KOKKOS_INLINE_FUNCTION
 constexpr bool operator==(const FastMeshIndex& lhs, const FastMeshIndex& rhs)
 {
   return lhs.bucket_id == rhs.bucket_id && lhs.bucket_ord == rhs.bucket_ord;
 }
 
-#ifndef STK_HIDE_DEPRECATED_CODE // Delete after June 2025
-struct STK_DEPRECATED BucketInfo
+KOKKOS_INLINE_FUNCTION
+constexpr bool operator!=(const FastMeshIndex& lhs, const FastMeshIndex& rhs)
 {
-  unsigned bucket_id;
-  unsigned num_entities_this_bucket;
-};
+  return lhs.bucket_id != rhs.bucket_id || lhs.bucket_ord != rhs.bucket_ord;
+}
 
-struct STK_DEPRECATED BucketIndices
-{
-  std::vector<BucketInfo> bucket_info;
-  std::vector<unsigned> ords;
-};
-
-STK_DEPRECATED typedef std::vector<BucketIndices> VolatileFastSharedCommMapOneRank;
-STK_DEPRECATED typedef std::vector<VolatileFastSharedCommMapOneRank> VolatileFastSharedCommMap;
-#endif
 typedef stk::topology::rank_t EntityRank ;
 
 typedef std::map<std::pair<EntityRank, Selector>, std::pair<size_t, size_t> > SelectorCountMap;
@@ -287,7 +282,9 @@ using EntityIdProcMap = std::map<EntityId, int>;
 
 using EntityKeyProc    = std::pair<EntityKey, int>;
 using EntityKeyProcVec = std::vector<EntityKeyProc>;
-using EntityKeyProcMap = std::map<EntityKey, int>;
+#ifndef STK_HIDE_DEPRECATED_CODE // Delete after Aug 2025
+using EntityKeyProcMap STK_DEPRECATED = std::map<EntityKey, int>;
+#endif
 
 /** \brief  Spans of a vector of entity-processor pairs are common.
  *
@@ -336,8 +333,8 @@ enum ConnectivityType
   INVALID_CONNECTIVITY_TYPE
 };
 
-constexpr unsigned INVALID_BUCKET_ID = std::numeric_limits<int>::max();
-constexpr unsigned INVALID_PARTITION_ID = std::numeric_limits<int>::max();
+constexpr unsigned INVALID_BUCKET_ID = std::numeric_limits<unsigned>::max();
+constexpr unsigned INVALID_PARTITION_ID = std::numeric_limits<unsigned>::max();
 
 #define STK_16BIT_CONNECTIVITY_ORDINAL
 #ifdef STK_16BIT_CONNECTIVITY_ORDINAL

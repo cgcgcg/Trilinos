@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 #ifndef KOKKOSBATCHED_APPLY_Q_SERIAL_IMPL_HPP
 #define KOKKOSBATCHED_APPLY_Q_SERIAL_IMPL_HPP
 
@@ -54,9 +41,9 @@ KOKKOS_INLINE_FUNCTION int SerialApplyQ<Side::Left, Trans::NoTranspose, Algo::Ap
   }
 #endif
 
-  return SerialApplyQ_LeftForwardInternal::invoke(B.extent(0), B.extent(1), A.extent(1), A.data(), A.stride_0(),
-                                                  A.stride_1(), t.data(), t.stride_0(), B.data(), B.stride_0(),
-                                                  B.stride_1(), w.data());
+  return SerialApplyQ_LeftForwardInternal::invoke(B.extent(0), B.extent(1), A.extent(1), A.data(), A.stride(0),
+                                                  A.stride(1), t.data(), t.stride(0), B.data(), B.stride(0),
+                                                  B.stride(1), w.data());
 }
 
 template <>
@@ -86,9 +73,9 @@ KOKKOS_INLINE_FUNCTION int SerialApplyQ<Side::Left, Trans::Transpose, Algo::Appl
   }
 #endif
 
-  return SerialApplyQ_LeftBackwardInternal::invoke(B.extent(0), B.extent(1), A.extent(1), A.data(), A.stride_0(),
-                                                   A.stride_1(), t.data(), t.stride_0(), B.data(), B.stride_0(),
-                                                   B.stride_1(), w.data());
+  return SerialApplyQ_LeftBackwardInternal::invoke(B.extent(0), B.extent(1), A.extent(1), A.data(), A.stride(0),
+                                                   A.stride(1), t.data(), t.stride(0), B.data(), B.stride(0),
+                                                   B.stride(1), w.data());
 }
 
 template <>
@@ -118,9 +105,9 @@ KOKKOS_INLINE_FUNCTION int SerialApplyQ<Side::Right, Trans::NoTranspose, Algo::A
   }
 #endif
 
-  return SerialApplyQ_RightForwardInternal::invoke(B.extent(0), B.extent(1), A.extent(1), A.data(), A.stride_0(),
-                                                   A.stride_1(), t.data(), t.stride_0(), B.data(), B.stride_0(),
-                                                   B.stride_1(), w.data());
+  return SerialApplyQ_RightForwardInternal::invoke(B.extent(0), B.extent(1), A.extent(1), A.data(), A.stride(0),
+                                                   A.stride(1), t.data(), t.stride(0), B.data(), B.stride(0),
+                                                   B.stride(1), w.data());
 }
 
 }  // namespace KokkosBatched

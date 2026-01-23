@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 #ifndef KOKKOSBATCHED_DOT_INTERNAL_HPP
 #define KOKKOSBATCHED_DOT_INTERNAL_HPP
 
@@ -34,7 +21,7 @@ struct SerialDotInternal {
   KOKKOS_FORCEINLINE_FUNCTION static int invoke(const int m, const ValueType *KOKKOS_RESTRICT A, const int as0,
                                                 const ValueType *KOKKOS_RESTRICT B, const int bs0,
                                                 /* */ MagnitudeType *KOKKOS_RESTRICT C) {
-    using ats = Kokkos::ArithTraits<ValueType>;
+    using ats = KokkosKernels::ArithTraits<ValueType>;
     C[0]      = ValueType(0);
 #if defined(KOKKOS_ENABLE_PRAGMA_UNROLL)
 #pragma unroll
@@ -70,7 +57,7 @@ struct TeamDotInternal {
                                                 const ValueType *KOKKOS_RESTRICT A, const int as0,
                                                 const ValueType *KOKKOS_RESTRICT B, const int bs0,
                                                 /* */ MagnitudeType *KOKKOS_RESTRICT C) {
-    using ats = Kokkos::ArithTraits<ValueType>;
+    using ats = KokkosKernels::ArithTraits<ValueType>;
     ValueType t(0);
     Kokkos::parallel_reduce(
         Kokkos::TeamThreadRange(member, m),
@@ -90,7 +77,7 @@ struct TeamDotInternal {
                                                 const ValueType *KOKKOS_RESTRICT A, const int as0, const int as1,
                                                 const ValueType *KOKKOS_RESTRICT B, const int bs0, const int bs1,
                                                 /* */ MagnitudeType *KOKKOS_RESTRICT C, const int cs) {
-    using ats = Kokkos::ArithTraits<ValueType>;
+    using ats = KokkosKernels::ArithTraits<ValueType>;
     Kokkos::parallel_for(Kokkos::TeamThreadRange(member, n), [&](const int &j) {
       ValueType t(0);
       const ValueType *KOKKOS_RESTRICT A_at_j = A + j * as1;
@@ -117,7 +104,7 @@ struct TeamVectorDotInternal {
                                                 const ValueType *KOKKOS_RESTRICT A, const int as0,
                                                 const ValueType *KOKKOS_RESTRICT B, const int bs0,
                                                 /* */ MagnitudeType *KOKKOS_RESTRICT C) {
-    using ats = Kokkos::ArithTraits<ValueType>;
+    using ats = KokkosKernels::ArithTraits<ValueType>;
     ValueType t(0);
     Kokkos::parallel_reduce(
         Kokkos::TeamVectorRange(member, m),
@@ -137,7 +124,7 @@ struct TeamVectorDotInternal {
                                                 const ValueType *KOKKOS_RESTRICT A, const int as0, const int as1,
                                                 const ValueType *KOKKOS_RESTRICT B, const int bs0, const int bs1,
                                                 /* */ MagnitudeType *KOKKOS_RESTRICT C, const int cs) {
-    using ats = Kokkos::ArithTraits<ValueType>;
+    using ats = KokkosKernels::ArithTraits<ValueType>;
     Kokkos::parallel_for(Kokkos::TeamThreadRange(member, n), [&](const int &j) {
       ValueType t(0);
       const ValueType *KOKKOS_RESTRICT A_at_j = A + j * as1;
@@ -190,8 +177,8 @@ struct SerialDot<Trans::Transpose> {
 #endif
     return SerialDotInternal::template invoke<typename XViewType::non_const_value_type,
                                               typename NormViewType::non_const_value_type>(
-        X.extent(0), X.extent(1), X.data(), X.stride_0(), X.stride_1(), Y.data(), Y.stride_0(), Y.stride_1(),
-        dot.data(), dot.stride_0());
+        X.extent(0), X.extent(1), X.data(), X.stride(0), X.stride(1), Y.data(), Y.stride(0), Y.stride(1), dot.data(),
+        dot.stride(0));
   }
 };
 
@@ -225,8 +212,8 @@ struct SerialDot<Trans::NoTranspose> {
 #endif
     return SerialDotInternal::template invoke<typename XViewType::non_const_value_type,
                                               typename NormViewType::non_const_value_type>(
-        X.extent(1), X.extent(0), X.data(), X.stride_1(), X.stride_0(), Y.data(), Y.stride_1(), Y.stride_0(),
-        dot.data(), dot.stride_0());
+        X.extent(1), X.extent(0), X.data(), X.stride(1), X.stride(0), Y.data(), Y.stride(1), Y.stride(0), dot.data(),
+        dot.stride(0));
   }
 };
 
@@ -273,8 +260,8 @@ struct TeamDot<MemberType, Trans::Transpose> {
 
     return TeamDotInternal::template invoke<MemberType, typename XViewType::non_const_value_type,
                                             typename NormViewType::non_const_value_type>(
-        member, X.extent(0), X.extent(1), X.data(), X.stride_0(), X.stride_1(), Y.data(), Y.stride_0(), Y.stride_1(),
-        dot.data(), dot.stride_0());
+        member, X.extent(0), X.extent(1), X.data(), X.stride(0), X.stride(1), Y.data(), Y.stride(0), Y.stride(1),
+        dot.data(), dot.stride(0));
   }
 };
 
@@ -316,8 +303,8 @@ struct TeamDot<MemberType, Trans::NoTranspose> {
 
     return TeamDotInternal::template invoke<MemberType, typename XViewType::non_const_value_type,
                                             typename NormViewType::non_const_value_type>(
-        member, X.extent(1), X.extent(0), X.data(), X.stride_1(), X.stride_0(), Y.data(), Y.stride_1(), Y.stride_0(),
-        dot.data(), dot.stride_0());
+        member, X.extent(1), X.extent(0), X.data(), X.stride(1), X.stride(0), Y.data(), Y.stride(1), Y.stride(0),
+        dot.data(), dot.stride(0));
   }
 };
 
@@ -364,8 +351,8 @@ struct TeamVectorDot<MemberType, Trans::Transpose> {
 
     return TeamVectorDotInternal::template invoke<MemberType, typename XViewType::non_const_value_type,
                                                   typename NormViewType::non_const_value_type>(
-        member, X.extent(0), X.extent(1), X.data(), X.stride_0(), X.stride_1(), Y.data(), Y.stride_0(), Y.stride_1(),
-        dot.data(), dot.stride_0());
+        member, X.extent(0), X.extent(1), X.data(), X.stride(0), X.stride(1), Y.data(), Y.stride(0), Y.stride(1),
+        dot.data(), dot.stride(0));
   }
 };
 
@@ -407,8 +394,8 @@ struct TeamVectorDot<MemberType, Trans::NoTranspose> {
 
     return TeamVectorDotInternal::template invoke<MemberType, typename XViewType::non_const_value_type,
                                                   typename NormViewType::non_const_value_type>(
-        member, X.extent(1), X.extent(0), X.data(), X.stride_1(), X.stride_0(), Y.data(), Y.stride_1(), Y.stride_0(),
-        dot.data(), dot.stride_0());
+        member, X.extent(1), X.extent(0), X.data(), X.stride(1), X.stride(0), Y.data(), Y.stride(1), Y.stride(0),
+        dot.data(), dot.stride(0));
   }
 };
 

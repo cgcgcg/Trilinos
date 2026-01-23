@@ -277,20 +277,6 @@ public:
         return m_accumulatedLap;
     }
 
-#ifndef STK_HIDE_DEPRECATED_CODE // Delete after June 2025
-    /**
-     * Member function <b>dump</b> prints the value of the Metric to the
-     * diagnostic writer.
-     *
-     * @param dout    a <b>Writer</b> reference to the diagnostic
-     *        writer to write to.
-     *
-     * @return      a <b>Writer</b> reference to the diagnostic
-     *        writer.
-     */
-STK_DEPRECATED    Writer &dump(Writer &dout) const;
-#endif
-
     typename MetricTraits<T>::Type    m_lapStart;    ///< Most recent start time/count
     typename MetricTraits<T>::Type    m_lapStop;    ///< Most recent stop or lap time/count
     typename MetricTraits<T>::Type    m_accumulatedLap;  ///< Accumulated time/count
@@ -459,18 +445,6 @@ STK_DEPRECATED    Writer &dump(Writer &dout) const;
    */
   void checkpoint() const;
 
-#ifndef STK_HIDE_DEPRECATED_CODE // Delete after June 2025
-  /**
-   * Member function <b>dump</b> writes the timer to the specified
-   * diagnostic writer.
-   *
-   * @param dout    a <b>Writer</b> variable reference to write the timer to.
-   *
-   * @return      a <b>Writer</b> reference to <i>dout</i>.
-   */
-  STK_DEPRECATED Writer &dump(Writer& dout) const;
-#endif
-
 private:
   TimerImpl *    m_timerImpl;      ///< Reference to the actual timer
 };
@@ -485,46 +459,16 @@ Marshal &operator<<(Marshal &mout, const Timer::Metric<T> &t) {
 inline Marshal &operator<<(Marshal &mout, const Timer &t) {
   mout << t.getName() << t.getTimerMask() << t.getSubtimerLapCount()
        << t.getMetric<LapCount>() << t.getMetric<CPUTime>() << t.getMetric<WallTime>()
-       << t.getMetric<MPICount>() << t.getMetric<MPIByteCount>() << t.getMetric<HeapAlloc>();
+       << t.getMetric<MPICount>() << t.getMetric<MPIByteCount>()
+#ifndef STK_HIDE_DEPRECATED_CODE // Delete after Nov 2025
+       << t.getMetric<HeapAlloc>()
+#endif
+       ;
 
   mout << t.getTimerList();
 
   return mout;
 }
-
-#ifndef STK_HIDE_DEPRECATED_CODE // Delete after June 2025
-/**
- * @brief Function <b>operator<<</b> writes a timer to the diagnostic stream.
- *
- * @param dout      a <b>Writer</b> reference to the diagnostic writer to print
- *        to.
- *
- * @param timer      a <b>Timer::Metric</b> const reference to the timer
- *        to print.
- *
- * @return      a <b>Writer</b> reference to <b>dout</b>.
- */
-template <class T>
-STK_DEPRECATED inline Writer &operator<<(Writer &dout, const Timer::Metric<T> &timer) {
-  return timer.dump(dout);
-}
-
-/**
- * Function <b>operator<<</b> writes a timer metric to the diagnostic stream.
- *
- * @param dout      a <b>Writer</b> reference to the diagnostic writer to print
- *        to.
- *
- * @param timer      a <b>Timer::Metric</b> const reference to the timer
- *        to print.
- *
- * @return      a <b>Writer</b> reference to <b>dout</b>.
- */
-STK_DEPRECATED inline Writer &operator<<(Writer &dout, const Timer &timer) {
-  return timer.dump(dout);
-}
-#endif
-
 
 /**
  * Class <b>TimeBlock</b> is a time sentry for timing a statement block.  The

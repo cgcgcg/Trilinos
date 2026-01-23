@@ -43,8 +43,7 @@ public:
 
   static bool is_less(const ElementObj * elem0,const ElementObj * elem1) { return (elem0->entityId() < elem1->entityId()); }
 
-  static int evaluate_quad(const SubElementNode * n0, const SubElementNode * n1, const SubElementNode * n2, const SubElementNode * n3);
-  static int evaluate_quad(const stk::math::Vector3d & x0, const stk::math::Vector3d & x1, const stk::math::Vector3d & x2, const stk::math::Vector3d & x3);
+  static bool will_cutting_quad_from_0to2_cut_largest_angle(const SubElementNode * n0, const SubElementNode * n1, const SubElementNode * n2, const SubElementNode * n3);
   static bool determine_diagonal_for_internal_quad_of_cut_tet_from_owner_nodes(const SubElementNode * pn0, const SubElementNode * pn1, const SubElementNode * pn2, const SubElementNode * pn3);
   static bool determine_diagonal_for_internal_quad_of_cut_tet_from_edge_nodes(const Simplex_Generation_Method simplexMethod, const SubElementNode * n0, const SubElementNode * n1, const SubElementNode * n2, const SubElementNode * n3,
       const bool face0, const bool face1, const bool face2, const bool face3);
@@ -94,7 +93,7 @@ public:
   unsigned num_subelements() const { return my_subelements.size(); }
   bool have_refined_edges() const;
 
-  virtual void determine_decomposed_elem_phase(const std::vector<Surface_Identifier> & surfaceIDs) { STK_ThrowRequire(false); }
+  virtual void determine_decomposed_elem_phase(const std::vector<Surface_Identifier> & /*surfaceIDs*/) { STK_ThrowRequire(false); }
   virtual void cut_interior_intersection_point(CDMesh & mesh, const stk::math::Vector3d & pCoords, const std::vector<int> & sortedDomains);
   virtual void cut_face_intersection_point(const int iFace, const stk::math::Vector3d & pCoords, const std::vector<int> & sortedDomains);
   bool have_edges_with_children() const;

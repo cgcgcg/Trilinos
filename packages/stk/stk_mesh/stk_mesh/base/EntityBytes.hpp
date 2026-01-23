@@ -37,37 +37,50 @@
 #include "stk_util/stk_config.h"
 #include "stk_util/ngp/NgpSpaces.hpp"
 #include "stk_mesh/base/FieldIndexTypes.hpp"
+#include "stk_mesh/base/Types.hpp"
 #include "Kokkos_Macros.hpp"
 
 namespace stk::mesh {
 
 //==============================================================================
-// Device EntityBytes
+// Device EntityBytes: Layout::Left
 //==============================================================================
 
-template<typename T = std::byte, typename MemSpace = stk::ngp::HostMemSpace>
+template<typename T = std::byte, typename Space = stk::ngp::HostSpace, Layout DataLayout = Layout::Auto>
 class EntityBytes
 {
 public:
+  using space = Space;
+  using exec_space = typename Space::exec_space;
+  using mem_space = typename Space::mem_space;
+  static constexpr Layout layout = DataLayout;
+
   KOKKOS_INLINE_FUNCTION EntityBytes(T* bytePtr, int numBytesPerEntity, int numBytesPerScalar, int scalarStride)
     : m_bytePtr(bytePtr),
       m_numBytesPerEntity(numBytesPerEntity),
       m_numBytesPerScalar(numBytesPerScalar),
       m_scalarByteStride(scalarStride*numBytesPerScalar)
-  {}
+  {
+    static_assert(DataLayout == Layout::Left);
+  }
 
   KOKKOS_DEFAULTED_FUNCTION ~EntityBytes() = default;
 
-  KOKKOS_INLINE_FUNCTION ByteIdx num_bytes() const { return ByteIdx(m_numBytesPerEntity); }
+  KOKKOS_INLINE_FUNCTION int num_bytes() const { return m_numBytesPerEntity; }
   KOKKOS_INLINE_FUNCTION ByteIdxProxy bytes() const { return ByteIdxProxy(m_numBytesPerEntity); }
 
   KOKKOS_INLINE_FUNCTION bool is_field_defined() const { return m_numBytesPerEntity != 0; }
 
   KOKKOS_INLINE_FUNCTION T& operator()(ByteIdx byte) const {
-    const int scalar = static_cast<int>(byte) / m_numBytesPerScalar;
-    const int byteInScalar = static_cast<int>(byte) % m_numBytesPerScalar;
+    const int scalar = byte / m_numBytesPerScalar;
+    const int byteInScalar = byte() % m_numBytesPerScalar;
     return m_bytePtr[scalar*m_scalarByteStride + byteInScalar];
   }
+
+
+  KOKKOS_INLINE_FUNCTION T* pointer() const { return m_bytePtr; }
+  KOKKOS_INLINE_FUNCTION int bytes_per_scalar() const { return m_numBytesPerScalar; }
+  KOKKOS_INLINE_FUNCTION int scalar_byte_stride() const { return m_scalarByteStride; }
 
 private:
   T* m_bytePtr;
@@ -78,13 +91,18 @@ private:
 
 
 //==============================================================================
-// Host EntityBytes
+// Host EntityBytes: Layout::Auto
 //==============================================================================
 
 template<typename T>
-class EntityBytes<T, stk::ngp::HostMemSpace>
+class EntityBytes<T, stk::ngp::HostSpace, Layout::Auto>
 {
 public:
+  using space = stk::ngp::HostSpace;
+  using mem_space = stk::ngp::HostSpace::mem_space;
+  using exec_space = stk::ngp::HostSpace::exec_space;
+  static constexpr Layout layout = Layout::Auto;
+
   inline EntityBytes(T* bytePtr, int numBytesPerEntity, int numBytesPerScalar, int scalarStride)
     : m_bytePtr(bytePtr),
       m_numBytesPerEntity(numBytesPerEntity),
@@ -93,17 +111,17 @@ public:
       m_isLayoutRight(false)
   {}
 
-  inline EntityBytes(T* bytePtr, int numBytesPerEntity)
+  inline EntityBytes(T* bytePtr, int numBytesPerEntity, int numBytesPerScalar)
     : m_bytePtr(bytePtr),
       m_numBytesPerEntity(numBytesPerEntity),
-      m_numBytesPerScalar(0),
-      m_scalarByteStride(0),
+      m_numBytesPerScalar(numBytesPerScalar),
+      m_scalarByteStride(numBytesPerScalar),
       m_isLayoutRight(true)
   {}
 
   ~EntityBytes() = default;
 
-  inline ByteIdx num_bytes() const { return ByteIdx(m_numBytesPerEntity); }
+  inline int num_bytes() const { return m_numBytesPerEntity; }
   inline ByteIdxProxy bytes() const { return ByteIdxProxy(m_numBytesPerEntity); }
 
   inline bool is_field_defined() const { return m_numBytesPerEntity != 0; }
@@ -113,11 +131,16 @@ public:
       return m_bytePtr[byte];
     }
     else {
-      const int scalar = static_cast<int>(byte) / m_numBytesPerScalar;
-      const int byteInScalar = static_cast<int>(byte) % m_numBytesPerScalar;
+      const int scalar = byte / m_numBytesPerScalar;
+      const int byteInScalar = byte() % m_numBytesPerScalar;
       return m_bytePtr[scalar*m_scalarByteStride + byteInScalar];
     }
   }
+
+
+  inline T* pointer() const { return m_bytePtr; }
+  inline int bytes_per_scalar() const { return m_numBytesPerScalar; }
+  inline int scalar_byte_stride() const { return m_scalarByteStride; }
 
 private:
   T* m_bytePtr;
@@ -129,32 +152,42 @@ private:
 
 
 //==============================================================================
-// Host EntityBytesLeft
+// Host EntityBytes: Layout::Left
 //==============================================================================
 
 template <typename T>
-class EntityBytesLeft
+class EntityBytes<T, stk::ngp::HostSpace, Layout::Left>
 {
 public:
-  inline EntityBytesLeft(T* bytePtr, int numBytesPerEntity, int numBytesPerScalar, int scalarStride)
+  using space = stk::ngp::HostSpace;
+  using mem_space = stk::ngp::HostSpace::mem_space;
+  using exec_space = stk::ngp::HostSpace::exec_space;
+  static constexpr Layout layout = Layout::Left;
+
+  inline EntityBytes(T* bytePtr, int numBytesPerEntity, int numBytesPerScalar, int scalarStride)
     : m_bytePtr(bytePtr),
       m_numBytesPerEntity(numBytesPerEntity),
       m_numBytesPerScalar(numBytesPerScalar),
       m_scalarByteStride(scalarStride*numBytesPerScalar)
   {}
 
-  ~EntityBytesLeft() = default;
+  ~EntityBytes() = default;
 
-  inline ByteIdx num_bytes() const { return ByteIdx(m_numBytesPerEntity); }
+  inline int num_bytes() const { return m_numBytesPerEntity; }
   inline ByteIdxProxy bytes() const { return ByteIdxProxy(m_numBytesPerEntity); }
 
   inline bool is_field_defined() const { return m_numBytesPerEntity != 0; }
 
   inline T& operator()(ByteIdx byte) const {
-    const int scalar = static_cast<int>(byte) / m_numBytesPerScalar;
-    const int byteInScalar = static_cast<int>(byte) % m_numBytesPerScalar;
+    const int scalar = byte / m_numBytesPerScalar;
+    const int byteInScalar = byte() % m_numBytesPerScalar;
     return m_bytePtr[scalar*m_scalarByteStride + byteInScalar];
   }
+
+
+  inline T* pointer() const { return m_bytePtr; }
+  inline int bytes_per_scalar() const { return m_numBytesPerScalar; }
+  inline int scalar_byte_stride() const { return m_scalarByteStride; }
 
 private:
   T* m_bytePtr;
@@ -165,21 +198,27 @@ private:
 
 
 //==============================================================================
-// Host EntityBytesRight
+// Host EntityBytes: Layout::Right
 //==============================================================================
 
 template <typename T>
-class EntityBytesRight
+class EntityBytes<T, stk::ngp::HostSpace, Layout::Right>
 {
 public:
-  inline EntityBytesRight(T* bytePtr, int numBytesPerEntity)
+  using space = stk::ngp::HostSpace;
+  using mem_space = stk::ngp::HostSpace::mem_space;
+  using exec_space = stk::ngp::HostSpace::exec_space;
+  static constexpr Layout layout = Layout::Right;
+
+  inline EntityBytes(T* bytePtr, int numBytesPerEntity, int numBytesPerScalar)
     : m_bytePtr(bytePtr),
-      m_numBytesPerEntity(numBytesPerEntity)
+      m_numBytesPerEntity(numBytesPerEntity),
+      m_numBytesPerScalar(numBytesPerScalar)
   {}
 
-  ~EntityBytesRight() = default;
+  ~EntityBytes() = default;
 
-  inline ByteIdx num_bytes() const { return ByteIdx(m_numBytesPerEntity); }
+  inline int num_bytes() const { return m_numBytesPerEntity; }
   inline ByteIdxProxy bytes() const { return ByteIdxProxy(m_numBytesPerEntity); }
 
   inline bool is_field_defined() const { return m_numBytesPerEntity != 0; }
@@ -188,9 +227,15 @@ public:
     return m_bytePtr[byte];
   }
 
+
+  inline T* pointer() const { return m_bytePtr; }
+  inline int bytes_per_scalar() const { return m_numBytesPerScalar; }
+  inline int scalar_byte_stride() const { return m_numBytesPerScalar; }
+
 private:
   T* m_bytePtr;
   int m_numBytesPerEntity;
+  int m_numBytesPerScalar;
 };
 
 }

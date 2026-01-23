@@ -21,7 +21,11 @@
 #include "Tpetra_Details_StaticView.hpp"
 #include "Teuchos_Array.hpp"
 #include "Teuchos_ScalarTraits.hpp"
+#if KOKKOS_VERSION >= 40799
+#include "KokkosKernels_ArithTraits.hpp"
+#else
 #include "Kokkos_ArithTraits.hpp"
+#endif
 #include <map>
 #include <utility>
 #include <vector>
@@ -84,7 +88,11 @@ makeStaticLocalMultiVector (const MultiVectorType& gblMv,
     // them having been initialized.  ArithTraits lets us call nan()
     // even if the scalar type doesn't define it; it just returns some
     // undefined value in the latter case.
+#if KOKKOS_VERSION >= 40799
+    const IST nan = KokkosKernels::ArithTraits<IST>::nan ();
+#else
     const IST nan = Kokkos::ArithTraits<IST>::nan ();
+#endif
     Kokkos::deep_copy (dv.view_device(), nan);
     Kokkos::deep_copy (dv.view_host(), nan);
   }
@@ -131,7 +139,7 @@ public:
     if(available_rit != availableDVs.rend()) {
       available_rit->second.pop_back();
     }
-    dv_t dv("Belos::MultiVecPool DV", num_local_elems, numVecs);
+    dv_t dv(Kokkos::view_alloc("Belos::MultiVecPool DV", Kokkos::WithoutInitializing), num_local_elems, numVecs);
     auto & available = availableDVs[total_size];
     return Teuchos::rcpWithDealloc(new MV(map, dv), RCPDeleter{available, dv});
   }

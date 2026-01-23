@@ -19,8 +19,10 @@
 #include "Akri_NodeRefiner.hpp"
 #include "Akri_TransitionElementEdgeMarker.hpp"
 #include <Akri_QuadRefiner.hpp>
+#include <Akri_QualityMetric.hpp>
 #include "Akri_TriRefiner.hpp"
 #include "Akri_NodeRefiner.hpp"
+#include "Akri_RefinerUtils.hpp"
 
 namespace krino {
 
@@ -321,7 +323,7 @@ template<size_t NUMREFINEDPARENTNODES, size_t NUMCHILDNODES>
 static stk::mesh::Entity declare_child_element(stk::mesh::BulkData & mesh,
     EntityIdPool & entityIdPool,
     const stk::mesh::PartVector & childParts,
-    const stk::mesh::Entity elem,
+    const stk::mesh::Entity /*elem*/,
     const std::array<stk::mesh::Entity,NUMREFINEDPARENTNODES> & parentNodes,
     const std::array<int,NUMCHILDNODES> & childNodeIndices)
 {
@@ -520,23 +522,6 @@ stk::mesh::EntityId * Refinement::get_child_element_ids(const unsigned numChildW
   return childElemIdsData;
 }
 
-template <size_t SIZE, typename CONTAINER>
-std::array<int,SIZE> get_rank_of_nodes_based_on_coordinates(const CONTAINER & nodeCoords)
-{
-  // initialize original index locations
-  std::array<size_t,SIZE> index;
-  std::iota(index.begin(), index.end(), 0);
-
-  std::stable_sort(index.begin(), index.end(),
-       [&nodeCoords](size_t i1, size_t i2) {return is_less_than_in_x_then_y_then_z(nodeCoords[i1], nodeCoords[i2]);});
-
-  // invert indices to get node rank by coordinates
-  std::array<int,SIZE> rank;
-  for (size_t i=0; i < SIZE; ++i)
-    rank[index[i]] = i;
-  return rank;
-}
-
 template <size_t NUMREFINEDNODES>
 std::array<stk::math::Vector3d,NUMREFINEDNODES> Refinement::calculate_refined_simplex_vertex_coordinates(const stk::topology elemTopology, const stk::topology refinedTopology, const std::array<stk::mesh::Entity,NUMREFINEDNODES> parentElemNodes) const
 {
@@ -677,7 +662,7 @@ void Refinement::refine_beam_2_and_append_sides_to_create(const stk::mesh::PartV
     const stk::topology elemTopology,
     const stk::mesh::Entity parentElem,
     const std::vector<stk::mesh::Entity> & elemChildEdgeNodes,
-    const int caseId,
+    const int /*caseId*/,
     std::vector<ChildSideDescription> & childSides)
 {
   stk::mesh::BulkData & mesh = myMeta.mesh_bulk_data();
@@ -1470,7 +1455,7 @@ void Refinement::finalize()
   stk::mesh::BulkData & mesh = myMeta.mesh_bulk_data();
   activate_selected_entities_touching_active_elements(
       mesh, myMeta.side_rank(), myMeta.universal_part(), *myActivePart);
-  fix_node_owners_to_assure_active_owned_element_for_node(mesh, *myActivePart);
+  fix_node_ownership_to_assure_selected_owned_element(mesh, *myActivePart);
 }
 
 bool Refinement::does_mesh_have_only_vertex_elements() const
@@ -1687,7 +1672,7 @@ struct OriginatingProcParentIdChildId {
 }
 
 static
-void pack_parent_and_child_ids_for_originating_proc(const stk::mesh::BulkData & mesh,
+void pack_parent_and_child_ids_for_originating_proc(const stk::mesh::BulkData & /*mesh*/,
     const std::vector<OriginatingProcParentIdChildId> & originatingProcsParentIdChildId,
     stk::CommSparse &commSparse)
 {

@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOSBLAS1_SCAL_HPP_
 #define KOKKOSBLAS1_SCAL_HPP_
@@ -122,7 +109,10 @@ void scal(const RMV& R, const AV& a, const XMV& X) {
 struct SerialScale {
   template <typename ScalarType, typename AViewType>
   KOKKOS_INLINE_FUNCTION static int invoke(const ScalarType alpha, const AViewType& A) {
-    return Impl::SerialScaleInternal::invoke(A.extent(0), A.extent(1), alpha, A.data(), A.stride_0(), A.stride_1());
+    if constexpr (AViewType::rank() == 1)
+      return Impl::SerialScaleInternal::invoke(A.extent(0), alpha, A.data(), A.stride(0));
+    else
+      return Impl::SerialScaleInternal::invoke(A.extent(0), A.extent(1), alpha, A.data(), A.stride(0), A.stride(1));
   }
 };
 
@@ -134,8 +124,11 @@ template <typename MemberType>
 struct TeamScale {
   template <typename ScalarType, typename AViewType>
   KOKKOS_INLINE_FUNCTION static int invoke(const MemberType& member, const ScalarType alpha, const AViewType& A) {
-    return Impl::TeamScaleInternal::invoke(member, A.extent(0), A.extent(1), alpha, A.data(), A.stride_0(),
-                                           A.stride_1());
+    if constexpr (AViewType::rank() == 1)
+      return Impl::TeamScaleInternal::invoke(member, A.extent(0), alpha, A.data(), A.stride(0));
+    else
+      return Impl::TeamScaleInternal::invoke(member, A.extent(0), A.extent(1), alpha, A.data(), A.stride(0),
+                                             A.stride(1));
   }
 };
 
@@ -147,8 +140,11 @@ template <typename MemberType>
 struct TeamVectorScale {
   template <typename ScalarType, typename AViewType>
   KOKKOS_INLINE_FUNCTION static int invoke(const MemberType& member, const ScalarType alpha, const AViewType& A) {
-    return Impl::TeamVectorScaleInternal::invoke(member, A.extent(0), A.extent(1), alpha, A.data(), A.stride_0(),
-                                                 A.stride_1());
+    if constexpr (AViewType::rank() == 1)
+      return Impl::TeamVectorScaleInternal::invoke(member, A.extent(0), alpha, A.data(), A.stride(0));
+    else
+      return Impl::TeamVectorScaleInternal::invoke(member, A.extent(0), A.extent(1), alpha, A.data(), A.stride(0),
+                                                   A.stride(1));
   }
 };
 

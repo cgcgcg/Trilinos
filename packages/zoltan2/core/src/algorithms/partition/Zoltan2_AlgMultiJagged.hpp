@@ -562,11 +562,11 @@ private:
   // information, if incomplete_cut_count[x]==0, then no work is done
   // for this part.
   Kokkos::View<mj_part_t *, device_t> device_incomplete_cut_count;
-  typename decltype(device_incomplete_cut_count)::HostMirror
+  typename decltype(device_incomplete_cut_count)::host_mirror_type
     incomplete_cut_count;
 
   // Need a quick accessor for this on host
-  typename decltype (part_xadj)::HostMirror host_part_xadj;
+  typename decltype (part_xadj)::host_mirror_type host_part_xadj;
 
   // local part weights of each thread.
   Kokkos::View<double *, device_t>
@@ -603,7 +603,7 @@ private:
     global_total_part_weight_left_right_closests;
 
   Kokkos::View<mj_part_t*, device_t> device_num_partitioning_in_current_dim;
-  typename decltype(device_num_partitioning_in_current_dim)::HostMirror
+  typename decltype(device_num_partitioning_in_current_dim)::host_mirror_type
     host_num_partitioning_in_current_dim; // for quick access on host
 
   /* \brief helper functio to calculate imbalance.
@@ -2939,7 +2939,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t,
   // concurrentPartCount elements.
   if(this->comm->getSize()  > 1) {
     // We're using explicit host here as Spectrum MPI would fail
-    // with the prior HostMirror UVMSpace to UVMSpace setup.
+    // with the prior host_mirror_type UVMSpace to UVMSpace setup.
     auto host_local_min_max_total =
       Kokkos::create_mirror_view(Kokkos::HostSpace(), local_min_max_total);
     auto host_global_min_max_total =
@@ -3290,7 +3290,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t,mj_node_t>::mj_1D_part(
     // now sum up the results of mpi processors.
     if(!bSingleProcess) {
       // We're using explicit host here as Spectrum MPI would fail
-      // with the prior HostMirror UVMSpace to UVMSpace setup.
+      // with the prior host_mirror_type UVMSpace to UVMSpace setup.
       auto host_total_part_weight_left_right_closests =
         Kokkos::create_mirror_view(Kokkos::HostSpace(),
         total_part_weight_left_right_closests);
@@ -3725,7 +3725,7 @@ struct ReduceWeightsFunctor {
       sh_mem_size);
 
     // init the shared array to 0
-    Kokkos::single(Kokkos::PerTeam(teamMember), [=] () {
+    Kokkos::single(Kokkos::PerTeam(teamMember), [&] () {
       for(int n = 0; n < value_count_weights; ++n) {
         shared_ptr[n] = 0;
       }
@@ -3739,7 +3739,7 @@ struct ReduceWeightsFunctor {
 
     Kokkos::parallel_for(
       Kokkos::TeamThreadRange(teamMember, begin, end),
-      [=] (index_t ii) {
+      [&] (index_t ii) {
 #else // KOKKOS_ENABLE_CUDA || KOKKOS_ENABLE_HIP
     // create the team shared data - each thread gets one of the arrays
     size_t sh_mem_size = sizeof(array_t) * (value_count_weights +
@@ -4508,7 +4508,7 @@ struct ReduceArrayFunctor {
 
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
     // init the shared array to 0
-    Kokkos::single(Kokkos::PerTeam(teamMember), [=] () {
+    Kokkos::single(Kokkos::PerTeam(teamMember), [&] () {
       for(int n = 0; n < value_count; ++n) {
         shared_ptr[n] = 0;
       }
@@ -4516,7 +4516,7 @@ struct ReduceArrayFunctor {
     teamMember.team_barrier();
 
     Kokkos::parallel_for(Kokkos::TeamThreadRange(teamMember, begin, end),
-      [=] (index_t ii) {
+      [&] (index_t ii) {
 #else // KOKKOS_ENABLE_CUDA || KOKKOS_ENABLE_HIP
     // select the array for this thread
     Zoltan2_MJArrayType<array_t> array(&shared_ptr[teamMember.team_rank() *

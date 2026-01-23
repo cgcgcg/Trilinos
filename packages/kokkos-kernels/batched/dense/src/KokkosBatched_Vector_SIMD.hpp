@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 #ifndef KOKKOSBATCHED_VECTOR_SIMD_HPP
 #define KOKKOSBATCHED_VECTOR_SIMD_HPP
 
@@ -23,10 +10,10 @@
 #include "KokkosKernels_Macros.hpp"
 
 #if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__) || defined(__SYCL_DEVICE_ONLY__)
-#undef __KOKKOSBATCHED_ENABLE_AVX__
-#else
 // compiler bug with AVX in some architectures
-#define __KOKKOSBATCHED_ENABLE_AVX__
+#undef KOKKOSBATCHED_IMPL_ENABLE_AVX
+#else
+#define KOKKOSBATCHED_IMPL_ENABLE_AVX
 #endif
 
 namespace KokkosBatched {
@@ -36,7 +23,7 @@ class Vector<SIMD<T>, l> {
  public:
   using type       = Vector<SIMD<T>, l>;
   using value_type = T;
-  using mag_type   = typename Kokkos::ArithTraits<T>::mag_type;
+  using mag_type   = typename KokkosKernels::ArithTraits<T>::mag_type;
 
   enum : int { vector_length = l };
 
@@ -392,7 +379,11 @@ class Vector<SIMD<double>, 4> {
   using mag_type   = double;
 
   enum : int { vector_length = 4 };
+#if CUDA_VERSION >= 13000
+  typedef double4_16a data_type;
+#else
   typedef double4 data_type;
+#endif
 
   KOKKOS_INLINE_FUNCTION
   static const char *label() { return "GpuDouble4"; }
@@ -422,7 +413,7 @@ class Vector<SIMD<double>, 4> {
     _data.z = b._data.z;
     _data.w = b._data.w;
   }
-  KOKKOS_INLINE_FUNCTION Vector(const double4 &val) {
+  KOKKOS_INLINE_FUNCTION Vector(const data_type &val) {
     _data.x = val.x;
     _data.y = val.y;
     _data.z = val.z;
@@ -446,7 +437,7 @@ class Vector<SIMD<double>, 4> {
   }
 
   KOKKOS_INLINE_FUNCTION
-  type &operator=(const double4 &val) {
+  type &operator=(const data_type &val) {
     _data.x = val.x;
     _data.y = val.y;
     _data.z = val.z;
@@ -455,7 +446,7 @@ class Vector<SIMD<double>, 4> {
   }
 
   KOKKOS_INLINE_FUNCTION
-  double4 double4() const { return _data; }
+  data_type double4() const { return _data; }
 
   KOKKOS_INLINE_FUNCTION
   type &loadAligned(const value_type *p) {
@@ -498,7 +489,7 @@ class Vector<SIMD<double>, 4> {
 }  // namespace KokkosBatched
 #endif
 
-#if defined(__KOKKOSBATCHED_ENABLE_AVX__)
+#if defined(KOKKOSBATCHED_IMPL_ENABLE_AVX)
 #if defined(__AVX__) || defined(__AVX2__)
 
 #if CUDA_VERSION < 12022
@@ -790,7 +781,7 @@ class Vector<SIMD<Kokkos::complex<double> >, 4> {
 }  // namespace KokkosBatched
 
 #endif /* #if defined(__AVX512F__) */
-#endif /* #if defined(__KOKKOSBATCHED_ENABLE_AVX__) */
+#endif /* #if defined(KOKKOSBATCHED_IMPL_ENABLE_AVX) */
 
 #include "KokkosBatched_Vector_SIMD_Arith.hpp"
 #include "KokkosBatched_Vector_SIMD_Logical.hpp"

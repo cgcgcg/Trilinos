@@ -64,7 +64,6 @@ CreateXpetraPreconditioner(Teuchos::RCP<Xpetra::Operator<Scalar, LocalOrdinal, G
   std::string label;
   if (hasParamList && paramList.isParameter("hierarchy label")) {
     label = paramList.get<std::string>("hierarchy label");
-    paramList.remove("hierarchy label");
   } else
     label = op->getObjectLabel();
 

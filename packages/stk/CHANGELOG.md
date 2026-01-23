@@ -1,5 +1,73 @@
 # CHANGELOG
 
+5.27.3    (STK_VERSION 5270300) 12/16/25
+  stk_mesh: initial GPU Mesh mod: NgpMesh::batch_change_entity_parts
+            and NgpMesh::update_bulk_data
+  stk_mesh: Fixed behavior of multi-state field rotation. Now gives
+            correct behavior even for persistent copies of NgpField
+            and FieldData instances.
+  stk_mesh: Field-BLAS: deprecate field_eamin and field_eamax
+  stk_util: For MPI operations that use device-aware MPI, such as the
+            stk-mesh parallel_sum and friends, an environment variable
+            allows users to explicitly override and use host MPI:
+            $ export STK_USE_HOST_MPI_OVERRIDE=true
+  all tests: fixes related to googletest being removed from Trilinos
+            Users need to separately install googletest
+            Use -DGTest_DIR=/path/to/googletest-installation
+            Also use -DTPL_ENABLE_gtest
+  all:      Requiring/using c++20
+
+5.27.2-02    (STK_VERSION 5270202) 11/14/25
+  stk_util: deprecate STK_FUNCTION/STK_INLINE_FUNCTION; prefer direct usage
+            of KOKKOS_FUNCTION/KOKKOS_INLINE_FUNCTION
+  stk_mesh: Change default access tag for Field::data<>() to ReadOnly.
+            Also misc bug fixes related to shell-edge connectivity,
+            multi-state field initialization, etc.
+
+5.27.2-01    (STK_VERSION 5270201) 11/05/25
+  stk_doc_tests: fix build error when Seacas/Ioss is on but MPI is off
+  stk_mesh: add GPU-compatible APIs for parallel_sum and friends.
+  stk_util: add Default constructor for MPITag.
+
+5.27.2       (STK_VERSION 5270200) 11/04/25
+  stk_expreval: fix Nvidia/cuda compile warning: "calling a constexpr __host__ function("min")
+           from a __host__ __device__ function("time_space_normal") is not allowed. "
+  stk_mesh: restore ability to build with -DSTK_USE_DEVICE_MESH on non-GPU builds
+            (very useful for debugging)
+
+5.27.1-01    (STK_VERSION 5270101) 10/24/25
+  stk_unit_test_utils: Fix missing-header build-error encountered by Albany
+
+5.27.1    (STK_VERSION 5270100) 10/21/25
+  stk_util: deprecate unused/unimplemented 'malloc_used()' and also the
+            HeapAlloc specialization of stk::diag::MetricTraits.
+  stk_mesh: Added ability to rename Part (MetaData::rename)
+
+5.25.7    (STK_VERSION 5250700) 9/15/2025
+  stk_util: add missing include of <cstdlib> in stk_util/util/AlignedAllocator.hpp
+            add missing include of <cstddef> in stk_util/parallel/CommBuffer.hpp
+            fix error in stk_expreval/Function.hpp, replacing DBL_MIN with
+            std::numeric_limits<double>::min()
+  stk_mesh: add optional (off by default) STK_UNIFIED_MEMORY which allows for using
+            the same memory allocation, host and device, for field data. This is
+            targeted at the ATS-4 platform.
+
+5.25.6-01 (STK_VERSION 5250601) 8/25/2025
+  stk_mesh: mostly minor refinements to the new Field Data API
+            most stk sub-modules now converted to new Field APIs
+            removed deprecated header stk_mesh/base/GetBuckets.hpp
+  stk_util: deleted unused stk_util/parallel/DebugTool.hpp
+            deleted unused stk_util/util/Pool.hpp
+
+5.25.6 (STK_VERSION 5250600) 7/14/2025
+  stk_mesh: Fix Release/Debug hybrid build inconsistency in new
+  Field data access.
+
+5.25.4 (STK_VERSION 5250400) 7/9/2025
+  stk_tools: new disconnect-elem capability
+  stk_mesh: bug-fix for late-created multi-state field, NgpField
+  stk_mesh: refinements to new Field Data Access APIs
+
 5.25.3 (STK_VERSION 5250300) 6/10/2025
   stk_unit_test_utils: fix cmake error, some files that depend on
                       stk_search_util needed to be excluded

@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOSBLAS1_NRM2_HPP_
 #define KOKKOSBLAS1_NRM2_HPP_
@@ -185,7 +172,7 @@ serial_nrm2(const XMV X) {
   static_assert(XMV::rank == 1, "KokkosBlas::serial_nrm2: XMV must have rank 1");
 #endif  // KOKKOSKERNELS_DEBUG_LEVEL
 
-  return Impl::serial_nrm2(X.extent(0), X.data(), X.stride_0());
+  return Impl::serial_nrm2(X.extent(0), X.data(), X.stride(0));
 }
 
 template <class RV, class XMV>
@@ -205,7 +192,7 @@ KOKKOS_INLINE_FUNCTION int serial_nrm2(const XMV X, const RV& R) {
   using norm_type = typename Kokkos::Details::InnerProductSpaceTraits<typename XMV::non_const_value_type>::mag_type;
   static_assert(std::is_same<typename RV::non_const_value_type, norm_type>::value,
                 "KokkosBlas::serial_nrm2: RV must have same value_type as"
-                " Kokkos::ArithTraits<XMV::value_type>::mag_type");
+                " KokkosKernels::ArithTraits<XMV::value_type>::mag_type");
 
   if (R.extent(0) != X.extent(1)) {
     Kokkos::printf(
@@ -215,8 +202,10 @@ KOKKOS_INLINE_FUNCTION int serial_nrm2(const XMV X, const RV& R) {
     return 1;
   }
 #endif  // KOKKOSKERNELS_DEBUG_LEVEL
-
-  Impl::serial_nrm2(X.extent(0), X.extent(1), X.data(), X.stride_0(), X.stride_1(), R.data(), R.stride_0());
+  if constexpr (XMV::rank() == 1)
+    Impl::serial_nrm2(X.extent(0), X.data(), X.stride(0), R.data());
+  else
+    Impl::serial_nrm2(X.extent(0), X.extent(1), X.data(), X.stride(0), X.stride(1), R.data(), R.stride(0));
   return 0;
 }
 

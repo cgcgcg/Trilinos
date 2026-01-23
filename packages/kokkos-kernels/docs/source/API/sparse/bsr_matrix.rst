@@ -64,7 +64,7 @@ Member Types
    * - memory_traits
      - Alias for MemoryTraits.
 
-   * - HostMirror
+   * - host_mirror_type
      - CrsMatrix type templated on ScalarType, OrdinalType, host_mirror_space, MemoryTraits and SizeType.
 
    * - StaticCrsGraph
@@ -153,8 +153,17 @@ Member Functions
    * - :ref:`numCols`
      - Returns the number of columns in the matrix.
 
+   * - :ref:`setNumCols`
+     - Modify the number of columns in the matrix.
+
    * - :ref:`blockDim`
      - Returns the dimension of the blocks stored in the matrix.
+
+   * - :ref:`numPointRows <bsrmatrix_numPointRows>`
+     - Returns the number of point rows in the matrix.
+
+   * - :ref:`numPointCols <bsrmatrix_numPointCols>`
+     - Returns the number of point columns in the matrix.
 
    * - :ref:`nnz`
      - Returns the number of structural non-zero values in the matrix (some of these might actually store zero).
@@ -205,6 +214,18 @@ numCols
 
 Returns the number of columns in the matrix.
 
+.. _setNumCols:
+
+setNumCols
+^^^^^^^^^^
+
+.. code:: cppkokkos
+
+  void setNumCols(ordinal_type c);
+
+Modify the number of columns in the sparse matrix.
+This invalidates any algorithm handles which previously used this matrix.
+
 .. _blockDim:
 
 blockDim
@@ -215,6 +236,30 @@ blockDim
   KOKKOS_INLINE_FUNCTION ordinal_type blockDim() const;
 
 Returns the dimension of the blocks stored by the matrix.
+
+.. _bsrmatrix_numPointRows:
+
+numPointRows
+^^^^^^^^^^^^
+
+.. code:: cppkokkos
+
+  KOKKOS_INLINE_FUNCTION ordinal_type numPointRows() const;
+
+Returns the number of point rows in the matrix. This is the number of (block)
+rows times the block size. It is also the dimension of the matrix's range.
+
+.. _bsrmatrix_numPointCols:
+
+numPointCols
+^^^^^^^^^^^^
+
+.. code:: cppkokkos
+
+  KOKKOS_INLINE_FUNCTION ordinal_type numPointCols() const;
+
+Returns the number of point columns in the matrix. This is the number of (block)
+columns times the block size. It is also the dimension of the matrix's domain.
 
 .. _nnz:
 
@@ -276,34 +321,25 @@ unmanaged_block_const
 Return a const view of the i-th block in the matrix.
 
 
-Example
-=======
+convertToCrs
+^^^^^^^^^^^^
 
 .. code:: cppkokkos
 
-  // Namespaces / typedefs
-  using namespace KokkosSparse;
-  using namespace KokkosSparse::Experimental;
-  
-  using Crs = CrsMatrix<scalar_t, lno_t, device, void, size_type>;
-  using Bsr = BsrMatrix<scalar_t, lno_t, device, void, size_type>;
+  template <typename CrsMatrixType = KokkosSparse::CrsMatrix<ScalarType, OrdinalType, Device, MemoryTraits, SizeType>>
+  CrsMatrixType convertToCrs() const;
 
-  //
-  // Convert a Crs to a Bsr
-  //
+Convert the Bsr into a CrsMatrix
 
-  // Make a random Crs
-  constexpr auto nrows         = 5000;
-  constexpr auto diagDominance = 2;
-  const size_type nnz = 10 * nrows;
-  auto A = KokkosSparse::Impl::kk_generate_diagonally_dominant_sparse_matrix<Crs>(nrows, nrows, nnz, 0, lno_t(0.01 * nrows), diagDominance);
+The default return type will be a CrsMatrix with all the same template arguments
+as this Bsr, but you can provide your own type if needed. The only requirement
+is that the execution spaces match.
 
-  // Convert it to Bsr with block_dim= 4
-  const size_type block_dim = 4;
-  Bsr bsr(A, block_size);
+This is a host function.
 
+Example
+=======
 
-
-
-
-
+.. literalinclude:: ../../../../example/wiki/sparse/KokkosSparse_wiki_bsrmatrix_2.cpp
+  :language: c++
+  :lines: 16-

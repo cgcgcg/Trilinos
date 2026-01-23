@@ -59,6 +59,7 @@ Hierarchy<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Hierarchy()
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 Hierarchy<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Hierarchy(const std::string& label)
   : Hierarchy() {
+  SetLabel(label);
   setObjectLabel(label);
   Levels_[0]->setObjectLabel(label);
 }
@@ -276,8 +277,12 @@ bool Hierarchy<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Setup(int coarseLevel
 
   Level& level = *Levels_[coarseLevelID];
 
+  bool useStackedTimer = !Teuchos::TimeMonitor::stackedTimerNameIsDefault();
+
   std::string label = FormattingHelper::getColonLabel(level.getObjectLabel());
-  TimeMonitor m1(*this, label + this->ShortClassName() + ": " + "Setup (total)");
+  RCP<TimeMonitor> m1;
+  if (!useStackedTimer)
+    m1 = rcp(new TimeMonitor(*this, label + this->ShortClassName() + ": " + "Setup (total)"));
   TimeMonitor m2(*this, label + this->ShortClassName() + ": " + "Setup" + " (total, level=" + Teuchos::toString(coarseLevelID) + ")");
 
   // TODO: pass coarseLevelManager by reference
@@ -893,7 +898,7 @@ ConvergenceStatus Hierarchy<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Iterate(
   std::string levelSuffix  = " (level=" + toString(startLevel) + ")";
   std::string levelSuffix1 = " (level=" + toString(startLevel + 1) + ")";
 
-  bool useStackedTimer = !Teuchos::TimeMonitor::getStackedTimer().is_null();
+  bool useStackedTimer = !Teuchos::TimeMonitor::stackedTimerNameIsDefault();
 
   RCP<Monitor> iterateTime;
   RCP<TimeMonitor> iterateTime1;
@@ -1072,7 +1077,7 @@ ConvergenceStatus Hierarchy<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Iterate(
 
           Iterate(*coarseRhs, *coarseX, 1, true, startLevel + 1);
           // ^^ zero initial guess
-          if (Cycle_ == WCYCLE && WCycleStartLevel_ >= startLevel)
+          if (Cycle_ == WCYCLE && WCycleStartLevel_ <= startLevel)
             Iterate(*coarseRhs, *coarseX, 1, false, startLevel + 1);
           // ^^ nonzero initial guess
 
@@ -1270,8 +1275,9 @@ void Hierarchy<Scalar, LocalOrdinal, GlobalOrdinal, Node>::describe(Teuchos::Fan
       std::ostringstream oss;
       oss << std::setfill(' ');
       oss << "\n--------------------------------------------------------------------------------\n";
-      oss << "---                            Multigrid Summary " << std::setw(28) << std::left << label << "---\n";
+      oss << "---                            Multigrid Summary " << std::setw(32) << "---\n";
       oss << "--------------------------------------------------------------------------------" << std::endl;
+      if (hierarchyLabel_ != "") oss << "Label               = " << hierarchyLabel_ << std::endl;
       if (verbLevel & Parameters1)
         oss << "Scalar              = " << Teuchos::ScalarTraits<Scalar>::name() << std::endl;
       oss << "Number of levels    = " << numLevels << std::endl;

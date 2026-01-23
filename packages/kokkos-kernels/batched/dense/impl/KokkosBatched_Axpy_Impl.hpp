@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 #ifndef KOKKOSBATCHED_AXPY_IMPL_HPP
 #define KOKKOSBATCHED_AXPY_IMPL_HPP
 
@@ -183,8 +170,8 @@ KOKKOS_INLINE_FUNCTION int SerialAxpy::invoke(const alphaViewType& alpha, const 
 
   return SerialAxpyInternal::template invoke<typename alphaViewType::non_const_value_type,
                                              typename XViewType::non_const_value_type>(
-      X.extent(0), X.extent(1), alpha.data(), alpha.stride_0(), X.data(), X.stride_0(), X.stride_1(), Y.data(),
-      Y.stride_0(), Y.stride_1());
+      X.extent(0), X.extent(1), alpha.data(), alpha.stride(0), X.data(), X.stride(0), X.stride(1), Y.data(),
+      Y.stride(0), Y.stride(1));
 }
 
 ///
@@ -228,8 +215,8 @@ KOKKOS_INLINE_FUNCTION int TeamAxpy<MemberType>::invoke(const MemberType& member
 
   return TeamAxpyInternal::template invoke<MemberType, typename alphaViewType::non_const_value_type,
                                            typename XViewType::non_const_value_type>(
-      member, X.extent(0), X.extent(1), alpha.data(), alpha.stride_0(), X.data(), X.stride_0(), X.stride_1(), Y.data(),
-      Y.stride_0(), Y.stride_1());
+      member, X.extent(0), X.extent(1), alpha.data(), alpha.stride(0), X.data(), X.stride(0), X.stride(1), Y.data(),
+      Y.stride(0), Y.stride(1));
 }
 
 ///
@@ -273,8 +260,8 @@ KOKKOS_INLINE_FUNCTION int TeamVectorAxpy<MemberType>::invoke(const MemberType& 
 
   return TeamVectorAxpyInternal::invoke<MemberType, typename alphaViewType::non_const_value_type,
                                         typename XViewType::non_const_value_type, typename XViewType::array_layout>(
-      member, X.extent(0), X.extent(1), alpha.data(), alpha.stride_0(), X.data(), X.stride_0(), X.stride_1(), Y.data(),
-      Y.stride_0(), Y.stride_1());
+      member, X.extent(0), X.extent(1), alpha.data(), alpha.stride(0), X.data(), X.stride(0), X.stride(1), Y.data(),
+      Y.stride(0), Y.stride(1));
 }
 
 }  // namespace KokkosBatched

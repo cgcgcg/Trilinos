@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 #ifndef KOKKOSBATCHED_COPY_IMPL_HPP
 #define KOKKOSBATCHED_COPY_IMPL_HPP
 
@@ -30,13 +17,13 @@ namespace KokkosBatched {
 template <>
 template <typename AViewType, typename BViewType>
 KOKKOS_INLINE_FUNCTION int SerialCopy<Trans::NoTranspose, 1>::invoke(const AViewType &A, const BViewType &B) {
-  return SerialCopyInternal::invoke(A.extent(0), A.data(), A.stride_0(), B.data(), B.stride_0());
+  return SerialCopyInternal::invoke(A.extent(0), A.data(), A.stride(0), B.data(), B.stride(0));
 }
 
 template <>
 template <typename AViewType, typename BViewType>
 KOKKOS_INLINE_FUNCTION int SerialCopy<Trans::Transpose, 1>::invoke(const AViewType &A, const BViewType &B) {
-  return SerialCopyInternal::invoke(A.extent(0), A.data(), A.stride_0(), B.data(), B.stride_0());
+  return SerialCopyInternal::invoke(A.extent(0), A.data(), A.stride(0), B.data(), B.stride(0));
 }
 
 template <>
@@ -57,8 +44,8 @@ KOKKOS_INLINE_FUNCTION int SerialCopy<Trans::NoTranspose, 2>::invoke(const AView
     return 1;
   }
 #endif
-  return SerialCopyInternal::invoke(A.extent(0), A.extent(1), A.data(), A.stride_0(), A.stride_1(), B.data(),
-                                    B.stride_0(), B.stride_1());
+  return SerialCopyInternal::invoke(A.extent(0), A.extent(1), A.data(), A.stride(0), A.stride(1), B.data(), B.stride(0),
+                                    B.stride(1));
 }
 
 template <>
@@ -79,8 +66,8 @@ KOKKOS_INLINE_FUNCTION int SerialCopy<Trans::Transpose, 2>::invoke(const AViewTy
     return 1;
   }
 #endif
-  return SerialCopyInternal::invoke(A.extent(1), A.extent(0), A.data(), A.stride_1(), A.stride_0(), B.data(),
-                                    B.stride_0(), B.stride_1());
+  return SerialCopyInternal::invoke(A.extent(1), A.extent(0), A.data(), A.stride(1), A.stride(0), B.data(), B.stride(0),
+                                    B.stride(1));
 }
 
 ///
@@ -91,7 +78,7 @@ template <typename MemberType>
 struct TeamCopy<MemberType, Trans::NoTranspose, 1> {
   template <typename AViewType, typename BViewType>
   KOKKOS_INLINE_FUNCTION static int invoke(const MemberType &member, const AViewType &A, const BViewType &B) {
-    return TeamCopyInternal::invoke(member, A.extent(0), A.data(), A.stride_0(), B.data(), B.stride_0());
+    return TeamCopyInternal::invoke(member, A.extent(0), A.data(), A.stride(0), B.data(), B.stride(0));
   }
 };
 
@@ -99,7 +86,7 @@ template <typename MemberType>
 struct TeamCopy<MemberType, Trans::Transpose, 1> {
   template <typename AViewType, typename BViewType>
   KOKKOS_INLINE_FUNCTION static int invoke(const MemberType &member, const AViewType &A, const BViewType &B) {
-    return TeamCopyInternal::invoke(member, A.extent(0), A.data(), A.stride_0(), B.data(), B.stride_0());
+    return TeamCopyInternal::invoke(member, A.extent(0), A.data(), A.stride(0), B.data(), B.stride(0));
   }
 };
 
@@ -127,8 +114,8 @@ struct TeamCopy<MemberType, Trans::NoTranspose, 2> {
       return TeamCopy<MemberType, Trans::NoTranspose, 1>::invoke(member, Kokkos::subview(A, 0, Kokkos::ALL),
                                                                  Kokkos::subview(B, 0, Kokkos::ALL));
     }
-    return TeamCopyInternal::invoke(member, A.extent(0), A.extent(1), A.data(), A.stride_0(), A.stride_1(), B.data(),
-                                    B.stride_0(), B.stride_1());
+    return TeamCopyInternal::invoke(member, A.extent(0), A.extent(1), A.data(), A.stride(0), A.stride(1), B.data(),
+                                    B.stride(0), B.stride(1));
   }
 };
 
@@ -156,8 +143,8 @@ struct TeamCopy<MemberType, Trans::Transpose, 2> {
       return TeamCopy<MemberType, Trans::Transpose, 1>::invoke(member, Kokkos::subview(A, Kokkos::ALL, 0),
                                                                Kokkos::subview(B, Kokkos::ALL, 0));
     }
-    return TeamCopyInternal::invoke(member, A.extent(1), A.extent(0), A.data(), A.stride_1(), A.stride_0(), B.data(),
-                                    B.stride_0(), B.stride_1());
+    return TeamCopyInternal::invoke(member, A.extent(1), A.extent(0), A.data(), A.stride(1), A.stride(0), B.data(),
+                                    B.stride(0), B.stride(1));
   }
 };
 
@@ -169,7 +156,7 @@ template <typename MemberType>
 struct TeamVectorCopy<MemberType, Trans::NoTranspose, 1> {
   template <typename AViewType, typename BViewType>
   KOKKOS_INLINE_FUNCTION static int invoke(const MemberType &member, const AViewType &A, const BViewType &B) {
-    return TeamVectorCopyInternal::invoke(member, A.extent(0), A.data(), A.stride_0(), B.data(), B.stride_0());
+    return TeamVectorCopyInternal::invoke(member, A.extent(0), A.data(), A.stride(0), B.data(), B.stride(0));
   }
 };
 
@@ -177,7 +164,7 @@ template <typename MemberType>
 struct TeamVectorCopy<MemberType, Trans::Transpose, 1> {
   template <typename AViewType, typename BViewType>
   KOKKOS_INLINE_FUNCTION static int invoke(const MemberType &member, const AViewType &A, const BViewType &B) {
-    return TeamVectorCopyInternal::invoke(member, A.extent(0), A.data(), A.stride_0(), B.data(), B.stride_0());
+    return TeamVectorCopyInternal::invoke(member, A.extent(0), A.data(), A.stride(0), B.data(), B.stride(0));
   }
 };
 
@@ -205,8 +192,8 @@ struct TeamVectorCopy<MemberType, Trans::NoTranspose, 2> {
       return TeamVectorCopy<MemberType, Trans::NoTranspose, 1>::invoke(member, Kokkos::subview(A, 0, Kokkos::ALL),
                                                                        Kokkos::subview(B, 0, Kokkos::ALL));
     }
-    return TeamVectorCopyInternal::invoke(member, A.extent(0), A.extent(1), A.data(), A.stride_0(), A.stride_1(),
-                                          B.data(), B.stride_0(), B.stride_1());
+    return TeamVectorCopyInternal::invoke(member, A.extent(0), A.extent(1), A.data(), A.stride(0), A.stride(1),
+                                          B.data(), B.stride(0), B.stride(1));
   }
 };
 
@@ -234,8 +221,8 @@ struct TeamVectorCopy<MemberType, Trans::Transpose, 2> {
       return TeamVectorCopy<MemberType, Trans::NoTranspose, 1>::invoke(member, Kokkos::subview(A, Kokkos::ALL, 0),
                                                                        Kokkos::subview(B, Kokkos::ALL, 0));
     }
-    return TeamVectorCopyInternal::invoke(member, A.extent(1), A.extent(0), A.data(), A.stride_1(), A.stride_0(),
-                                          B.data(), B.stride_0(), B.stride_1());
+    return TeamVectorCopyInternal::invoke(member, A.extent(1), A.extent(0), A.data(), A.stride(1), A.stride(0),
+                                          B.data(), B.stride(0), B.stride(1));
   }
 };
 

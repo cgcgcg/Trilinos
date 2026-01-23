@@ -17,7 +17,11 @@
 #include "KokkosBatched_Trsv_Serial_Impl.hpp"
 #include "MueLu_DroppingCommon.hpp"
 #include "Kokkos_Core.hpp"
+#if KOKKOS_VERSION >= 40799
+#include "KokkosKernels_ArithTraits.hpp"
+#else
 #include "Kokkos_ArithTraits.hpp"
+#endif
 #include "Teuchos_RCP.hpp"
 #include "Xpetra_Matrix.hpp"
 #include "Xpetra_MultiVector.hpp"
@@ -33,16 +37,28 @@ template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 class UnweightedDistanceFunctor {
  private:
   using matrix_type        = Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
-  using local_matrix_type  = typename matrix_type::local_matrix_type;
+  using local_matrix_type  = typename matrix_type::local_matrix_device_type;
   using scalar_type        = typename local_matrix_type::value_type;
   using local_ordinal_type = LocalOrdinal;
-  using ATS                = Kokkos::ArithTraits<scalar_type>;
-  using impl_scalar_type   = typename ATS::val_type;
-  using implATS            = Kokkos::ArithTraits<impl_scalar_type>;
-  using magnitudeType      = typename implATS::magnitudeType;
-  using magATS             = Kokkos::ArithTraits<magnitudeType>;
-  using coords_type        = Xpetra::MultiVector<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>;
-  using local_coords_type  = typename coords_type::dual_view_type_const::t_dev;
+#if KOKKOS_VERSION >= 40799
+  using ATS = KokkosKernels::ArithTraits<scalar_type>;
+#else
+  using ATS     = Kokkos::ArithTraits<scalar_type>;
+#endif
+  using impl_scalar_type = typename ATS::val_type;
+#if KOKKOS_VERSION >= 40799
+  using implATS = KokkosKernels::ArithTraits<impl_scalar_type>;
+#else
+  using implATS = Kokkos::ArithTraits<impl_scalar_type>;
+#endif
+  using magnitudeType = typename implATS::magnitudeType;
+#if KOKKOS_VERSION >= 40799
+  using magATS = KokkosKernels::ArithTraits<magnitudeType>;
+#else
+  using magATS  = Kokkos::ArithTraits<magnitudeType>;
+#endif
+  using coords_type       = Xpetra::MultiVector<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>;
+  using local_coords_type = typename coords_type::dual_view_type_const::t_dev;
 
   Teuchos::RCP<coords_type> coordsMV;
   Teuchos::RCP<coords_type> ghostedCoordsMV;
@@ -57,10 +73,10 @@ class UnweightedDistanceFunctor {
     if (!importer.is_null()) {
       ghostedCoordsMV = Xpetra::MultiVectorFactory<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), coordsMV->getNumVectors());
       ghostedCoordsMV->doImport(*coordsMV, *importer, Xpetra::INSERT);
-      coords        = coordsMV->getLocalViewDevice(Xpetra::Access::ReadOnly);
-      ghostedCoords = ghostedCoordsMV->getLocalViewDevice(Xpetra::Access::ReadOnly);
+      coords        = coordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
+      ghostedCoords = ghostedCoordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
     } else {
-      coords        = coordsMV->getLocalViewDevice(Xpetra::Access::ReadOnly);
+      coords        = coordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
       ghostedCoords = coords;
     }
   }
@@ -85,16 +101,28 @@ template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node, cla
 class WeightedDistanceFunctor {
  private:
   using matrix_type        = Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
-  using local_matrix_type  = typename matrix_type::local_matrix_type;
+  using local_matrix_type  = typename matrix_type::local_matrix_device_type;
   using scalar_type        = typename local_matrix_type::value_type;
   using local_ordinal_type = LocalOrdinal;
-  using ATS                = Kokkos::ArithTraits<scalar_type>;
-  using impl_scalar_type   = typename ATS::val_type;
-  using implATS            = Kokkos::ArithTraits<impl_scalar_type>;
-  using magnitudeType      = typename implATS::magnitudeType;
-  using magATS             = Kokkos::ArithTraits<magnitudeType>;
-  using coords_type        = Xpetra::MultiVector<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>;
-  using local_coords_type  = typename coords_type::dual_view_type_const::t_dev;
+#if KOKKOS_VERSION >= 40799
+  using ATS = KokkosKernels::ArithTraits<scalar_type>;
+#else
+  using ATS     = Kokkos::ArithTraits<scalar_type>;
+#endif
+  using impl_scalar_type = typename ATS::val_type;
+#if KOKKOS_VERSION >= 40799
+  using implATS = KokkosKernels::ArithTraits<impl_scalar_type>;
+#else
+  using implATS = Kokkos::ArithTraits<impl_scalar_type>;
+#endif
+  using magnitudeType = typename implATS::magnitudeType;
+#if KOKKOS_VERSION >= 40799
+  using magATS = KokkosKernels::ArithTraits<magnitudeType>;
+#else
+  using magATS  = Kokkos::ArithTraits<magnitudeType>;
+#endif
+  using coords_type       = Xpetra::MultiVector<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>;
+  using local_coords_type = typename coords_type::dual_view_type_const::t_dev;
 
   Teuchos::RCP<coords_type> coordsMV;
   Teuchos::RCP<coords_type> ghostedCoordsMV;
@@ -111,10 +139,10 @@ class WeightedDistanceFunctor {
     if (!importer.is_null()) {
       ghostedCoordsMV = Xpetra::MultiVectorFactory<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), coordsMV->getNumVectors());
       ghostedCoordsMV->doImport(*coordsMV, *importer, Xpetra::INSERT);
-      coords        = coordsMV->getLocalViewDevice(Xpetra::Access::ReadOnly);
-      ghostedCoords = ghostedCoordsMV->getLocalViewDevice(Xpetra::Access::ReadOnly);
+      coords        = coordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
+      ghostedCoords = ghostedCoordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
     } else {
-      coords        = coordsMV->getLocalViewDevice(Xpetra::Access::ReadOnly);
+      coords        = coordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
       ghostedCoords = coords;
     }
     weight = weight_;
@@ -143,16 +171,28 @@ template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node, cla
 class BlockWeightedDistanceFunctor {
  private:
   using matrix_type        = Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
-  using local_matrix_type  = typename matrix_type::local_matrix_type;
+  using local_matrix_type  = typename matrix_type::local_matrix_device_type;
   using scalar_type        = typename local_matrix_type::value_type;
   using local_ordinal_type = LocalOrdinal;
-  using ATS                = Kokkos::ArithTraits<scalar_type>;
-  using impl_scalar_type   = typename ATS::val_type;
-  using implATS            = Kokkos::ArithTraits<impl_scalar_type>;
-  using magnitudeType      = typename implATS::magnitudeType;
-  using magATS             = Kokkos::ArithTraits<magnitudeType>;
-  using coords_type        = Xpetra::MultiVector<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>;
-  using local_coords_type  = typename coords_type::dual_view_type_const::t_dev;
+#if KOKKOS_VERSION >= 40799
+  using ATS = KokkosKernels::ArithTraits<scalar_type>;
+#else
+  using ATS     = Kokkos::ArithTraits<scalar_type>;
+#endif
+  using impl_scalar_type = typename ATS::val_type;
+#if KOKKOS_VERSION >= 40799
+  using implATS = KokkosKernels::ArithTraits<impl_scalar_type>;
+#else
+  using implATS = Kokkos::ArithTraits<impl_scalar_type>;
+#endif
+  using magnitudeType = typename implATS::magnitudeType;
+#if KOKKOS_VERSION >= 40799
+  using magATS = KokkosKernels::ArithTraits<magnitudeType>;
+#else
+  using magATS  = Kokkos::ArithTraits<magnitudeType>;
+#endif
+  using coords_type       = Xpetra::MultiVector<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>;
+  using local_coords_type = typename coords_type::dual_view_type_const::t_dev;
 
   Teuchos::RCP<coords_type> coordsMV;
   Teuchos::RCP<coords_type> ghostedCoordsMV;
@@ -170,10 +210,10 @@ class BlockWeightedDistanceFunctor {
     if (!importer.is_null()) {
       ghostedCoordsMV = Xpetra::MultiVectorFactory<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), coordsMV->getNumVectors());
       ghostedCoordsMV->doImport(*coordsMV, *importer, Xpetra::INSERT);
-      coords        = coordsMV->getLocalViewDevice(Xpetra::Access::ReadOnly);
-      ghostedCoords = ghostedCoordsMV->getLocalViewDevice(Xpetra::Access::ReadOnly);
+      coords        = coordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
+      ghostedCoords = ghostedCoordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
     } else {
-      coords        = coordsMV->getLocalViewDevice(Xpetra::Access::ReadOnly);
+      coords        = coordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
       ghostedCoords = coords;
     }
     weight                = weight_;
@@ -200,15 +240,27 @@ class BlockWeightedDistanceFunctor {
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 class ScalarMaterialDistanceFunctor {
  private:
-  using matrix_type         = Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
-  using local_matrix_type   = typename matrix_type::local_matrix_type;
-  using scalar_type         = typename local_matrix_type::value_type;
-  using local_ordinal_type  = LocalOrdinal;
-  using ATS                 = Kokkos::ArithTraits<scalar_type>;
-  using impl_scalar_type    = typename ATS::val_type;
-  using implATS             = Kokkos::ArithTraits<impl_scalar_type>;
-  using magnitudeType       = typename implATS::magnitudeType;
-  using magATS              = Kokkos::ArithTraits<magnitudeType>;
+  using matrix_type        = Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
+  using local_matrix_type  = typename matrix_type::local_matrix_device_type;
+  using scalar_type        = typename local_matrix_type::value_type;
+  using local_ordinal_type = LocalOrdinal;
+#if KOKKOS_VERSION >= 40799
+  using ATS = KokkosKernels::ArithTraits<scalar_type>;
+#else
+  using ATS     = Kokkos::ArithTraits<scalar_type>;
+#endif
+  using impl_scalar_type = typename ATS::val_type;
+#if KOKKOS_VERSION >= 40799
+  using implATS = KokkosKernels::ArithTraits<impl_scalar_type>;
+#else
+  using implATS = Kokkos::ArithTraits<impl_scalar_type>;
+#endif
+  using magnitudeType = typename implATS::magnitudeType;
+#if KOKKOS_VERSION >= 40799
+  using magATS = KokkosKernels::ArithTraits<magnitudeType>;
+#else
+  using magATS  = Kokkos::ArithTraits<magnitudeType>;
+#endif
   using coords_type         = Xpetra::MultiVector<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>;
   using local_coords_type   = typename coords_type::dual_view_type_const::t_dev;
   using material_type       = Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
@@ -234,18 +286,18 @@ class ScalarMaterialDistanceFunctor {
     if (!importer.is_null()) {
       ghostedCoordsMV = Xpetra::MultiVectorFactory<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), coordsMV->getNumVectors());
       ghostedCoordsMV->doImport(*coordsMV, *importer, Xpetra::INSERT);
-      coords        = coordsMV->getLocalViewDevice(Xpetra::Access::ReadOnly);
-      ghostedCoords = ghostedCoordsMV->getLocalViewDevice(Xpetra::Access::ReadOnly);
+      coords        = coordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
+      ghostedCoords = ghostedCoordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
 
       ghostedMaterialMV = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), materialMV->getNumVectors());
       ghostedMaterialMV->doImport(*materialMV, *importer, Xpetra::INSERT);
-      material        = materialMV->getLocalViewDevice(Xpetra::Access::ReadOnly);
-      ghostedMaterial = ghostedMaterialMV->getLocalViewDevice(Xpetra::Access::ReadOnly);
+      material        = materialMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
+      ghostedMaterial = ghostedMaterialMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
     } else {
-      coords        = coordsMV->getLocalViewDevice(Xpetra::Access::ReadOnly);
+      coords        = coordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
       ghostedCoords = coords;
 
-      material        = materialMV->getLocalViewDevice(Xpetra::Access::ReadOnly);
+      material        = materialMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
       ghostedMaterial = material;
     }
   }
@@ -299,18 +351,30 @@ template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 class TensorMaterialDistanceFunctor {
  private:
   using matrix_type        = Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
-  using local_matrix_type  = typename matrix_type::local_matrix_type;
+  using local_matrix_type  = typename matrix_type::local_matrix_device_type;
   using scalar_type        = typename local_matrix_type::value_type;
   using local_ordinal_type = LocalOrdinal;
-  using ATS                = Kokkos::ArithTraits<scalar_type>;
-  using impl_scalar_type   = typename ATS::val_type;
-  using implATS            = Kokkos::ArithTraits<impl_scalar_type>;
-  using magnitudeType      = typename implATS::magnitudeType;
-  using magATS             = Kokkos::ArithTraits<magnitudeType>;
-  using coords_type        = Xpetra::MultiVector<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>;
-  using local_coords_type  = typename coords_type::dual_view_type_const::t_dev;
-  using material_type      = Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
-  using memory_space       = typename local_matrix_type::memory_space;
+#if KOKKOS_VERSION >= 40799
+  using ATS = KokkosKernels::ArithTraits<scalar_type>;
+#else
+  using ATS     = Kokkos::ArithTraits<scalar_type>;
+#endif
+  using impl_scalar_type = typename ATS::val_type;
+#if KOKKOS_VERSION >= 40799
+  using implATS = KokkosKernels::ArithTraits<impl_scalar_type>;
+#else
+  using implATS = Kokkos::ArithTraits<impl_scalar_type>;
+#endif
+  using magnitudeType = typename implATS::magnitudeType;
+#if KOKKOS_VERSION >= 40799
+  using magATS = KokkosKernels::ArithTraits<magnitudeType>;
+#else
+  using magATS  = Kokkos::ArithTraits<magnitudeType>;
+#endif
+  using coords_type       = Xpetra::MultiVector<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>;
+  using local_coords_type = typename coords_type::dual_view_type_const::t_dev;
+  using material_type     = Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
+  using memory_space      = typename local_matrix_type::memory_space;
 
   using local_material_type = Kokkos::View<impl_scalar_type***, memory_space>;
   using local_dist_type     = Kokkos::View<impl_scalar_type**, memory_space>;
@@ -335,10 +399,10 @@ class TensorMaterialDistanceFunctor {
     if (!importer.is_null()) {
       ghostedCoordsMV = Xpetra::MultiVectorFactory<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), coordsMV->getNumVectors());
       ghostedCoordsMV->doImport(*coordsMV, *importer, Xpetra::INSERT);
-      coords        = coordsMV->getLocalViewDevice(Xpetra::Access::ReadOnly);
-      ghostedCoords = ghostedCoordsMV->getLocalViewDevice(Xpetra::Access::ReadOnly);
+      coords        = coordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
+      ghostedCoords = ghostedCoordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
     } else {
-      coords        = coordsMV->getLocalViewDevice(Xpetra::Access::ReadOnly);
+      coords        = coordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
       ghostedCoords = coords;
     }
 
@@ -355,7 +419,7 @@ class TensorMaterialDistanceFunctor {
       using range_type      = Kokkos::RangePolicy<LocalOrdinal, execution_space>;
 
       local_ordinal_type dim = std::sqrt(material_->getNumVectors());
-      auto lclMaterial       = ghostedMaterial->getLocalViewDevice(Xpetra::Access::ReadOnly);
+      auto lclMaterial       = ghostedMaterial->getLocalViewDevice(Tpetra::Access::ReadOnly);
       material               = local_material_type("material", lclMaterial.extent(0), dim, dim);
       lcl_dist               = local_dist_type("material", lclMaterial.extent(0), dim);
       TensorInversion<local_ordinal_type, typename material_type::dual_view_type::t_dev_const_um, local_material_type> functor(lclMaterial, material);
@@ -416,21 +480,27 @@ template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node, cla
 Teuchos::RCP<Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node> >
 getDiagonal(Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& A,
             DistanceFunctorType& distFunctor) {
-  using scalar_type         = Scalar;
-  using local_ordinal_type  = LocalOrdinal;
-  using global_ordinal_type = GlobalOrdinal;
-  using node_type           = Node;
-  using ATS                 = Kokkos::ArithTraits<scalar_type>;
-  using impl_scalar_type    = typename ATS::val_type;
-  using implATS             = Kokkos::ArithTraits<impl_scalar_type>;
-  using magnitudeType       = typename implATS::magnitudeType;
-  using execution_space     = typename Node::execution_space;
-  using range_type          = Kokkos::RangePolicy<LocalOrdinal, execution_space>;
+  using scalar_type        = Scalar;
+  using local_ordinal_type = LocalOrdinal;
+#if KOKKOS_VERSION >= 40799
+  using ATS = KokkosKernels::ArithTraits<scalar_type>;
+#else
+  using ATS     = Kokkos::ArithTraits<scalar_type>;
+#endif
+  using impl_scalar_type = typename ATS::val_type;
+#if KOKKOS_VERSION >= 40799
+  using implATS = KokkosKernels::ArithTraits<impl_scalar_type>;
+#else
+  using implATS = Kokkos::ArithTraits<impl_scalar_type>;
+#endif
+  using magnitudeType   = typename implATS::magnitudeType;
+  using execution_space = typename Node::execution_space;
+  using range_type      = Kokkos::RangePolicy<LocalOrdinal, execution_space>;
 
   auto diag = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(A.getRowMap(), 1);
   {
     auto lclA    = A.getLocalMatrixDevice();
-    auto lclDiag = diag->getLocalViewDevice(Xpetra::Access::OverwriteAll);
+    auto lclDiag = diag->getLocalViewDevice(Tpetra::Access::OverwriteAll);
 
     Kokkos::parallel_for(
         "MueLu:CoalesceDropF:Build:scalar_filter:laplacian_diag",
@@ -470,22 +540,27 @@ template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node, cla
 Teuchos::RCP<Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node> >
 getMaxMinusOffDiagonal(Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& A,
                        DistanceFunctorType& distFunctor) {
-  using scalar_type         = Scalar;
-  using local_ordinal_type  = LocalOrdinal;
-  using global_ordinal_type = GlobalOrdinal;
-  using node_type           = Node;
-  using ATS                 = Kokkos::ArithTraits<scalar_type>;
-  using impl_scalar_type    = typename ATS::val_type;
-  using implATS             = Kokkos::ArithTraits<impl_scalar_type>;
-  using magnitudeType       = typename implATS::magnitudeType;
-  using execution_space     = typename Node::execution_space;
-  using range_type          = Kokkos::RangePolicy<LocalOrdinal, execution_space>;
-  using mATS                = Kokkos::ArithTraits<magnitudeType>;
+  using scalar_type        = Scalar;
+  using local_ordinal_type = LocalOrdinal;
+#if KOKKOS_VERSION >= 40799
+  using ATS = KokkosKernels::ArithTraits<scalar_type>;
+#else
+  using ATS     = Kokkos::ArithTraits<scalar_type>;
+#endif
+  using impl_scalar_type = typename ATS::val_type;
+#if KOKKOS_VERSION >= 40799
+  using implATS = KokkosKernels::ArithTraits<impl_scalar_type>;
+#else
+  using implATS = Kokkos::ArithTraits<impl_scalar_type>;
+#endif
+  using magnitudeType   = typename implATS::magnitudeType;
+  using execution_space = typename Node::execution_space;
+  using range_type      = Kokkos::RangePolicy<LocalOrdinal, execution_space>;
 
   auto diag = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(A.getRowMap(), 1);
   {
     auto lclA    = A.getLocalMatrixDevice();
-    auto lclDiag = diag->getLocalViewDevice(Xpetra::Access::OverwriteAll);
+    auto lclDiag = diag->getLocalViewDevice(Tpetra::Access::OverwriteAll);
 
     Kokkos::parallel_for(
         "MueLu:CoalesceDropF:Build:scalar_filter:laplacian_diag",
@@ -502,8 +577,8 @@ getMaxMinusOffDiagonal(Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>
             if (row != col) {
               d  = distFunctor.distance2(row, col);
               d2 = implATS::one() / d;
-              if (implATS::magnitude(mymax) < -implATS::magnitude(d2))
-                mymax = -implATS::magnitude(d2);
+              if (implATS::magnitude(mymax) < implATS::magnitude(d2))
+                mymax = implATS::magnitude(d2);
             }
           }
           lclDiag(row, 0) = mymax;
@@ -533,7 +608,7 @@ template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node, cla
 class DropFunctor {
  public:
   using matrix_type        = Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
-  using local_matrix_type  = typename matrix_type::local_matrix_type;
+  using local_matrix_type  = typename matrix_type::local_matrix_device_type;
   using scalar_type        = typename local_matrix_type::value_type;
   using local_ordinal_type = typename local_matrix_type::ordinal_type;
   using memory_space       = typename local_matrix_type::memory_space;
@@ -542,10 +617,18 @@ class DropFunctor {
 
   using results_view = Kokkos::View<DecisionType*, memory_space>;
 
-  using ATS                 = Kokkos::ArithTraits<scalar_type>;
+#if KOKKOS_VERSION >= 40799
+  using ATS = KokkosKernels::ArithTraits<scalar_type>;
+#else
+  using ATS     = Kokkos::ArithTraits<scalar_type>;
+#endif
   using magnitudeType       = typename ATS::magnitudeType;
   using boundary_nodes_view = Kokkos::View<const bool*, memory_space>;
-  using mATS                = Kokkos::ArithTraits<magnitudeType>;
+#if KOKKOS_VERSION >= 40799
+  using mATS = KokkosKernels::ArithTraits<magnitudeType>;
+#else
+  using mATS    = Kokkos::ArithTraits<magnitudeType>;
+#endif
 
  private:
   local_matrix_type A;
@@ -564,11 +647,11 @@ class DropFunctor {
     , results(results_) {
     if constexpr ((measure == Misc::SmoothedAggregationMeasure) || (measure == Misc::SignedSmoothedAggregationMeasure)) {
       diagVec        = getDiagonal(A_, dist2);
-      auto lclDiag2d = diagVec->getLocalViewDevice(Xpetra::Access::ReadOnly);
+      auto lclDiag2d = diagVec->getLocalViewDevice(Tpetra::Access::ReadOnly);
       diag           = Kokkos::subview(lclDiag2d, Kokkos::ALL(), 0);
     } else if constexpr (measure == Misc::SignedRugeStuebenMeasure) {
       diagVec        = getMaxMinusOffDiagonal(A_, dist2);
-      auto lclDiag2d = diagVec->getLocalViewDevice(Xpetra::Access::ReadOnly);
+      auto lclDiag2d = diagVec->getLocalViewDevice(Tpetra::Access::ReadOnly);
       diag           = Kokkos::subview(lclDiag2d, Kokkos::ALL(), 0);
     }
   }
@@ -577,12 +660,49 @@ class DropFunctor {
   void operator()(local_ordinal_type rlid) const {
     auto row            = A.rowConst(rlid);
     const size_t offset = A.graph.row_map(rlid);
+
+#ifdef MUELU_COALESCE_DROP_DEBUG
+    {
+      Kokkos::printf("SoC:        ");
+      for (local_ordinal_type k = 0; k < row.length; ++k) {
+        auto clid = row.colidx(k);
+
+        scalar_type val;
+        if (rlid != clid) {
+          val = -one / dist2.distance2(rlid, clid);
+        } else {
+          val = diag(rlid);
+        }
+
+        if constexpr (measure == Misc::SmoothedAggregationMeasure) {
+          auto aiiajj = ATS::magnitude(diag(rlid)) * ATS::magnitude(diag(clid));  // |a_ii|*|a_jj|
+          auto aij2   = ATS::magnitude(val) * ATS::magnitude(val);                // |a_ij|^2
+
+          Kokkos::printf("%5f ", ATS::sqrt(aij2 / aiiajj));
+        } else if constexpr (measure == Misc::SignedRugeStuebenMeasure) {
+          auto neg_aij     = -ATS::real(val);
+          auto max_neg_aik = ATS::real(diag(rlid));
+          Kokkos::printf("%5f ", neg_aij / max_neg_aik);
+        } else if constexpr (measure == Misc::SignedSmoothedAggregationMeasure) {
+          auto aiiajj               = ATS::magnitude(diag(rlid)) * ATS::magnitude(diag(clid));  // |a_ii|*|a_jj|
+          const bool is_nonpositive = ATS::real(val) <= mATS::zero();
+          magnitudeType aij2        = ATS::magnitude(val) * ATS::magnitude(val);  // |a_ij|^2
+          // + |a_ij|^2, if a_ij < 0, - |a_ij|^2 if a_ij >=0
+          if (!is_nonpositive)
+            aij2 = -aij2;
+          Kokkos::printf("%5f ", ATS::sqrt(aij2 / aiiajj));
+        }
+      }
+      Kokkos::printf("\n");
+    }
+#endif
+
     for (local_ordinal_type k = 0; k < row.length; ++k) {
       auto clid = row.colidx(k);
 
       scalar_type val;
       if (rlid != clid) {
-        val = one / dist2.distance2(rlid, clid);
+        val = -one / dist2.distance2(rlid, clid);
       } else {
         val = diag(rlid);
       }
@@ -596,14 +716,14 @@ class DropFunctor {
       } else if constexpr (measure == Misc::SignedRugeStuebenMeasure) {
         auto neg_aij        = -ATS::real(val);
         auto max_neg_aik    = eps * ATS::real(diag(rlid));
-        results(offset + k) = Kokkos::max((neg_aij <= max_neg_aik) ? DROP : KEEP,
+        results(offset + k) = Kokkos::max((neg_aij < max_neg_aik) ? DROP : KEEP,
                                           results(offset + k));
       } else if constexpr (measure == Misc::SignedSmoothedAggregationMeasure) {
         auto aiiajj               = ATS::magnitude(diag(rlid)) * ATS::magnitude(diag(clid));  // |a_ii|*|a_jj|
         const bool is_nonpositive = ATS::real(val) <= mATS::zero();
         magnitudeType aij2        = ATS::magnitude(val) * ATS::magnitude(val);  // |a_ij|^2
         // + |a_ij|^2, if a_ij < 0, - |a_ij|^2 if a_ij >=0
-        if (is_nonpositive)
+        if (!is_nonpositive)
           aij2 = -aij2;
         results(offset + k) = Kokkos::max((aij2 <= eps * eps * aiiajj) ? DROP : KEEP,
                                           results(offset + k));
@@ -616,7 +736,7 @@ template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node, cla
 class VectorDropFunctor {
  public:
   using matrix_type             = Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
-  using local_matrix_type       = typename matrix_type::local_matrix_type;
+  using local_matrix_type       = typename matrix_type::local_matrix_device_type;
   using scalar_type             = typename local_matrix_type::value_type;
   using local_ordinal_type      = typename local_matrix_type::ordinal_type;
   using memory_space            = typename local_matrix_type::memory_space;
@@ -626,10 +746,18 @@ class VectorDropFunctor {
 
   using results_view = Kokkos::View<DecisionType*, memory_space>;
 
-  using ATS                 = Kokkos::ArithTraits<scalar_type>;
+#if KOKKOS_VERSION >= 40799
+  using ATS = KokkosKernels::ArithTraits<scalar_type>;
+#else
+  using ATS     = Kokkos::ArithTraits<scalar_type>;
+#endif
   using magnitudeType       = typename ATS::magnitudeType;
   using boundary_nodes_view = Kokkos::View<const bool*, memory_space>;
-  using mATS                = Kokkos::ArithTraits<magnitudeType>;
+#if KOKKOS_VERSION >= 40799
+  using mATS = KokkosKernels::ArithTraits<magnitudeType>;
+#else
+  using mATS    = Kokkos::ArithTraits<magnitudeType>;
+#endif
 
  private:
   local_matrix_type A;
@@ -652,11 +780,11 @@ class VectorDropFunctor {
     , ghosted_point_to_block(ghosted_point_to_block_) {
     if constexpr ((measure == Misc::SmoothedAggregationMeasure) || (measure == Misc::SignedSmoothedAggregationMeasure)) {
       diagVec        = getDiagonal(mergedA_, dist2);
-      auto lclDiag2d = diagVec->getLocalViewDevice(Xpetra::Access::ReadOnly);
+      auto lclDiag2d = diagVec->getLocalViewDevice(Tpetra::Access::ReadOnly);
       diag           = Kokkos::subview(lclDiag2d, Kokkos::ALL(), 0);
     } else if (measure == Misc::SignedRugeStuebenMeasure) {
       diagVec        = getMaxMinusOffDiagonal(A_, dist2);
-      auto lclDiag2d = diagVec->getLocalViewDevice(Xpetra::Access::ReadOnly);
+      auto lclDiag2d = diagVec->getLocalViewDevice(Tpetra::Access::ReadOnly);
       diag           = Kokkos::subview(lclDiag2d, Kokkos::ALL(), 0);
     }
   }
@@ -666,13 +794,51 @@ class VectorDropFunctor {
     auto brlid          = point_to_block(rlid);
     auto row            = A.rowConst(rlid);
     const size_t offset = A.graph.row_map(rlid);
+
+#ifdef MUELU_COALESCE_DROP_DEBUG
+    {
+      Kokkos::printf("SoC:        ");
+      for (local_ordinal_type k = 0; k < row.length; ++k) {
+        auto clid  = row.colidx(k);
+        auto bclid = ghosted_point_to_block(clid);
+
+        scalar_type val;
+        if (brlid != bclid) {
+          val = -one / dist2.distance2(brlid, bclid);
+        } else {
+          val = diag(brlid);
+        }
+
+        if constexpr (measure == Misc::SmoothedAggregationMeasure) {
+          auto aiiajj = ATS::magnitude(diag(brlid)) * ATS::magnitude(diag(bclid));  // |a_ii|*|a_jj|
+          auto aij2   = ATS::magnitude(val) * ATS::magnitude(val);                  // |a_ij|^2
+
+          Kokkos::printf("%5f ", ATS::sqrt(aij2 / aiiajj));
+        } else if constexpr (measure == Misc::SignedRugeStuebenMeasure) {
+          auto neg_aij     = -ATS::real(val);
+          auto max_neg_aik = eps * ATS::real(diag(brlid));
+          Kokkos::printf("%5f ", neg_aij / max_neg_aik);
+        } else if constexpr (measure == Misc::SignedSmoothedAggregationMeasure) {
+          auto aiiajj               = ATS::magnitude(diag(brlid)) * ATS::magnitude(diag(bclid));  // |a_ii|*|a_jj|
+          const bool is_nonpositive = ATS::real(val) <= mATS::zero();
+          magnitudeType aij2        = ATS::magnitude(val) * ATS::magnitude(val);  // |a_ij|^2
+          // + |a_ij|^2, if a_ij < 0, - |a_ij|^2 if a_ij >=0
+          if (!is_nonpositive)
+            aij2 = -aij2;
+          Kokkos::printf("%5f ", ATS::sqrt(aij2 / aiiajj));
+        }
+      }
+      Kokkos::printf("\n");
+    }
+#endif
+
     for (local_ordinal_type k = 0; k < row.length; ++k) {
       auto clid  = row.colidx(k);
       auto bclid = ghosted_point_to_block(clid);
 
       scalar_type val;
       if (brlid != bclid) {
-        val = one / dist2.distance2(brlid, bclid);
+        val = -one / dist2.distance2(brlid, bclid);
       } else {
         val = diag(brlid);
       }
@@ -686,14 +852,14 @@ class VectorDropFunctor {
       } else if constexpr (measure == Misc::SignedRugeStuebenMeasure) {
         auto neg_aij        = -ATS::real(val);
         auto max_neg_aik    = eps * ATS::real(diag(brlid));
-        results(offset + k) = Kokkos::max((neg_aij <= max_neg_aik) ? DROP : KEEP,
+        results(offset + k) = Kokkos::max((neg_aij < max_neg_aik) ? DROP : KEEP,
                                           results(offset + k));
       } else if constexpr (measure == Misc::SignedSmoothedAggregationMeasure) {
         auto aiiajj               = ATS::magnitude(diag(brlid)) * ATS::magnitude(diag(bclid));  // |a_ii|*|a_jj|
         const bool is_nonpositive = ATS::real(val) <= mATS::zero();
         magnitudeType aij2        = ATS::magnitude(val) * ATS::magnitude(val);  // |a_ij|^2
         // + |a_ij|^2, if a_ij < 0, - |a_ij|^2 if a_ij >=0
-        if (is_nonpositive)
+        if (!is_nonpositive)
           aij2 = -aij2;
         results(offset + k) = Kokkos::max((aij2 <= eps * eps * aiiajj) ? DROP : KEEP,
                                           results(offset + k));

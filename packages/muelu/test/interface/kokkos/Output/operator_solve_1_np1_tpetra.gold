@@ -10,7 +10,7 @@ smoother ->
 
 Level 1
 Prolongator smoothing (MueLu::SaPFactory)
-Build (MueLu::CoalesceDropFactory_kokkos)
+BuildScalar (MueLu::CoalesceDropFactory_kokkos)
 dropping scheme = "point-wise", strength-of-connection measure = "smoothed aggregation", strength-of-connection matrix = "A", threshold = 0, blocksize = 1, useBlocking = 0, symmetrizeDroppedGraph = 0
 Build (MueLu::TentativePFactory_kokkos)
 Build (MueLu::UncoupledAggregationFactory)
@@ -18,7 +18,6 @@ BuildAggregates (Phase - (Dirichlet))
 BuildAggregatesDeterministic (Phase 1 (main))
 BuildAggregatesDeterministic (Phase 2a (secondary))
 BuildAggregatesDeterministic (Phase 2b (expansion))
-BuildAggregatesDeterministic (Phase 3 (cleanup))
 aggregation: deterministic = 1   [unused]
 Build (MueLu::AmalgamationFactory)
 [empty list]
@@ -44,7 +43,7 @@ smoother ->
 
 Level 2
 Prolongator smoothing (MueLu::SaPFactory)
-Build (MueLu::CoalesceDropFactory_kokkos)
+BuildScalar (MueLu::CoalesceDropFactory_kokkos)
 dropping scheme = "point-wise", strength-of-connection measure = "smoothed aggregation", strength-of-connection matrix = "A", threshold = 0, blocksize = 1, useBlocking = 0, symmetrizeDroppedGraph = 0
 Build (MueLu::TentativePFactory_kokkos)
 Build (MueLu::UncoupledAggregationFactory)
@@ -52,7 +51,6 @@ BuildAggregates (Phase - (Dirichlet))
 BuildAggregatesDeterministic (Phase 1 (main))
 BuildAggregatesDeterministic (Phase 2a (secondary))
 BuildAggregatesDeterministic (Phase 2b (expansion))
-BuildAggregatesDeterministic (Phase 3 (cleanup))
 aggregation: deterministic = 1   [unused]
 Build (MueLu::AmalgamationFactory)
 [empty list]
@@ -78,7 +76,7 @@ smoother ->
 
 Level 3
 Prolongator smoothing (MueLu::SaPFactory)
-Build (MueLu::CoalesceDropFactory_kokkos)
+BuildScalar (MueLu::CoalesceDropFactory_kokkos)
 dropping scheme = "point-wise", strength-of-connection measure = "smoothed aggregation", strength-of-connection matrix = "A", threshold = 0, blocksize = 1, useBlocking = 0, symmetrizeDroppedGraph = 0
 Build (MueLu::TentativePFactory_kokkos)
 Build (MueLu::UncoupledAggregationFactory)
@@ -86,7 +84,6 @@ BuildAggregates (Phase - (Dirichlet))
 BuildAggregatesDeterministic (Phase 1 (main))
 BuildAggregatesDeterministic (Phase 2a (secondary))
 BuildAggregatesDeterministic (Phase 2b (expansion))
-BuildAggregatesDeterministic (Phase 3 (cleanup))
 aggregation: deterministic = 1   [unused]
 Build (MueLu::AmalgamationFactory)
 [empty list]

@@ -31,8 +31,8 @@ class STKConnManager : public panzer::ConnManager {
 public:
    typedef typename panzer::ConnManager::LocalOrdinal LocalOrdinal;
    typedef typename panzer::ConnManager::GlobalOrdinal GlobalOrdinal;
-   typedef typename Kokkos::DynRankView<GlobalOrdinal,PHX::Device>::HostMirror GlobalOrdinalView;
-   typedef typename Kokkos::DynRankView<LocalOrdinal, PHX::Device>::HostMirror LocalOrdinalView;
+   typedef typename Kokkos::DynRankView<GlobalOrdinal,PHX::Device>::host_mirror_type GlobalOrdinalView;
+   typedef typename Kokkos::DynRankView<LocalOrdinal, PHX::Device>::host_mirror_type LocalOrdinalView;
 
    STKConnManager(const Teuchos::RCP<const STK_Interface> & stkMeshDB);
 
@@ -195,7 +195,10 @@ public:
 
   /// If you enable caching with cacheConnectivity(), this must be called prior to exiting the code.
   static void clearCachedConnectivityData()
-  { cached_conn_managers_.clear(); }
+  {
+    PANZER_FUNC_TIME_MONITOR("panzer::ConnectivityManager::clearCachedConnectivityData()");
+    cached_conn_managers_.clear();
+  }
 
   /// This is purely for unit testing. Returns the number of times that buildConnectivity() was called, but a cached version was found to use instead.
   static int getCachedReuseCount()

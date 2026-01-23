@@ -34,7 +34,11 @@
 
 #include <Kokkos_Core.hpp>
 #include <KokkosSparse_CrsMatrix.hpp>
+#if KOKKOS_VERSION >= 40799
+#include <KokkosKernels_ArithTraits.hpp>
+#else
 #include <Kokkos_ArithTraits.hpp>
+#endif
 
 #include <SGPreconditioner.hpp>
 
@@ -330,7 +334,7 @@ public:
     m_eig( "KL Eigenvalues", m_num_rv ),
     m_pi( 4.0*std::atan(1.0) )
   {
-    typename EigenView::HostMirror host_eig =
+    typename EigenView::host_mirror_type host_eig =
       Kokkos::create_mirror_view( m_eig );
 
     const MeshScalar a = std::sqrt( std::sqrt(m_pi)*m_corr_len );
