@@ -293,14 +293,15 @@ void ReitzingerPFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::BuildP(Level
   // We also define a vector that records the global Id of the 
   // interior node associated with each singleParent edge
 
-  SC myzero  = Teuchos::ScalarTraits<SC>::zero();
-  SC myone   = Teuchos::ScalarTraits<SC>::one();
-  RCP<MultiVector> ntheSingleParent = MultiVectorFactory::Build(D0->getRowMap(),1);
-  RCP<MultiVector> singleParentAggGid   = MultiVectorFactory::Build(D0->getRowMap(),1);
-  RCP<MultiVector> oneVec = MultiVectorFactory::Build(D0->getDomainMap(),1);
-  RCP<MultiVector> v1= MultiVectorFactory::Build(PnT_D0T->getRowMap(),1);
-  RCP<MultiVector> v2= MultiVectorFactory::Build(PnT_D0T->getRowMap(),1);
-  oneVec->putScalar(myone );
+  SC myzero                           = Teuchos::ScalarTraits<SC>::zero();
+  SC myone                            = Teuchos::ScalarTraits<SC>::one();
+  MT eps                              = Teuchos::ScalarTraits<MT>::eps();
+  RCP<MultiVector> ntheSingleParent   = MultiVectorFactory::Build(D0->getRowMap(), 1);
+  RCP<MultiVector> singleParentAggGid = MultiVectorFactory::Build(D0->getRowMap(), 1);
+  RCP<MultiVector> oneVec             = MultiVectorFactory::Build(D0->getDomainMap(), 1);
+  RCP<MultiVector> v1                 = MultiVectorFactory::Build(PnT_D0T->getRowMap(), 1);
+  RCP<MultiVector> v2                 = MultiVectorFactory::Build(PnT_D0T->getRowMap(), 1);
+  oneVec->putScalar(myone);
   ntheSingleParent->putScalar(myzero);
   singleParentAggGid->putScalar(myzero);
   D0->apply(*oneVec,*ntheSingleParent,Teuchos::NO_TRANS);
@@ -308,8 +309,9 @@ void ReitzingerPFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::BuildP(Level
   Teuchos::ArrayRCP<SC> singleParentAggGidData = singleParentAggGid->getDataNonConst(0);
   ArrayView<const LO> cols;
   ArrayView<const SC> vals;
-  for (size_t i = 0; i < ntheSingleParent->getMap()->getLocalNumElements(); i++ ) {
-    if (ntheSingleParentData[i] != 1) ntheSingleParentData[i] = 0.0;
+  for (size_t i = 0; i < ntheSingleParent->getMap()->getLocalNumElements(); i++) {
+    if (Teuchos::ScalarTraits<SC>::magnitude(ntheSingleParentData[i] - myone) > eps)
+      ntheSingleParentData[i] = myzero;
     else {
       D0_Pn->getLocalRowView(i, cols, vals);
       TEUCHOS_TEST_FOR_EXCEPTION(cols.size() != 1, Exceptions::RuntimeError, "MueLu::ReitzingerPFactory: single parent Edges should have just 1 nnz.");
