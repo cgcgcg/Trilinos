@@ -84,6 +84,12 @@ class Import : public ::Tpetra::Details::Transfer<LocalOrdinal, GlobalOrdinal, N
   //! The specialization of Map used by this class.
   using map_type = ::Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>;
 
+  using execution_space  = typename Node::execution_space;
+  using memory_space     = typename Node::memory_space;
+  using remote_gids_type = Kokkos::View<GlobalOrdinal*, memory_space>;
+  using remote_lids_type = Kokkos::View<LocalOrdinal*, memory_space>;
+  using remote_pids_type = Kokkos::View<int*, memory_space>;
+
   //! @name Constructors, assignment, and destructor
   //@{
 
@@ -369,7 +375,7 @@ class Import : public ::Tpetra::Details::Transfer<LocalOrdinal, GlobalOrdinal, N
   virtual void print(std::ostream& os) const;
 
   //@}
- private:
+  // private:
   //! @name Initialization helper functions (called by the constructor)
   //@{
 

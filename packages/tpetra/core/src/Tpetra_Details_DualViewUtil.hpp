@@ -33,6 +33,32 @@ auto view_alloc_no_init(const std::string& label) -> decltype(Kokkos::view_alloc
 /// This shallow copies the host View into the output DualView,
 /// and syncs the output DualView to device.
 template <class ElementType, class DeviceType>
+void makeDualViewFromOwningDeviceView(Kokkos::DualView<ElementType*, DeviceType>& dv,
+                                      const typename Kokkos::DualView<ElementType*, DeviceType>::t_dev& devView) {
+  using execution_space = typename DeviceType::execution_space;
+  using dual_view_type  = Kokkos::DualView<ElementType*, DeviceType>;
+
+  if constexpr (Kokkos::SpaceAccessibility<Kokkos::HostSpace, typename DeviceType::memory_space>::accessible) {
+    // DualView only references one View, so we pass in the same View twice
+    dv = dual_view_type(devView, devView);
+  } else {
+    typename Kokkos::DualView<ElementType*, DeviceType>::t_host hostView;
+    if (dv.extent(0) == devView.extent(0))
+      hostView = dv.view_host();
+    else
+      hostView = Kokkos::create_mirror_view(devView);
+    // DEEP_COPY REVIEW - DEVICE-TO-HOSTMIRROR
+    Kokkos::deep_copy(execution_space(), hostView, devView);
+    dv = dual_view_type(devView, hostView);
+    execution_space().fence();
+  }
+}
+
+/// \brief Initialize \c dv such that its host View is \c hostView.
+///
+/// This shallow copies the host View into the output DualView,
+/// and syncs the output DualView to device.
+template <class ElementType, class DeviceType>
 void makeDualViewFromOwningHostView(Kokkos::DualView<ElementType*, DeviceType>& dv,
                                     const typename Kokkos::DualView<ElementType*, DeviceType>::t_host& hostView) {
   using execution_space = typename DeviceType::execution_space;
