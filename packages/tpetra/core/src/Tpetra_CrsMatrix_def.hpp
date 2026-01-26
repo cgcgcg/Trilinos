@@ -18,6 +18,7 @@
 /// for you).  If you only want the declaration of Tpetra::CrsMatrix,
 /// include "Tpetra_CrsMatrix_decl.hpp".
 
+#include "Tpetra_Access.hpp"
 #include "Tpetra_Import_Util.hpp"
 #include "Tpetra_Import_Util2.hpp"
 #include "Tpetra_RowMatrix.hpp"
@@ -1162,7 +1163,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 
   // NOTE: This does not work correctly w/ GCC 12.3 + CUDA due to a compiler bug.
   // See: https://github.com/trilinos/Trilinos/issues/12237
-  // using row_entries_type = decltype (myGraph_->k_numRowEntries_);
+  // using row_entries_type = decltype (myGraph_->numRowEntries_wdv);
   using row_entries_type = typename crs_graph_type::num_row_entries_type;
 
   typename Graph::local_graph_device_type::row_map_type curRowOffsets =
@@ -1247,12 +1248,11 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
       }
       typename row_map_type::non_const_type
           packedRowOffsets("Tpetra::CrsGraph::ptr", lclNumRows + 1);
-      typename row_entries_type::const_type numRowEnt_h =
-          myGraph_->k_numRowEntries_;
-      // We're computing offsets on device.  This function can
-      // handle numRowEnt_h being a host View.
+      auto numRowEnt_d =
+          myGraph_->numRowEntries_wdv.getDeviceView(Access::ReadOnly);
+      // We're computing offsets on device.
       lclTotalNumEntries =
-          computeOffsetsFromCounts(packedRowOffsets, numRowEnt_h);
+          computeOffsetsFromCounts(packedRowOffsets, numRowEnt_d);
       // packedRowOffsets is modifiable; k_ptrs isn't, so we have
       // to use packedRowOffsets in the loop above and assign here.
       k_ptrs       = packedRowOffsets;
@@ -1413,7 +1413,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
       (params.is_null() && defaultOptStorage);
 
   // The graph has optimized storage when indices are allocated,
-  // myGraph_->k_numRowEntries_ is empty, and there are more than
+  // myGraph_->numRowEntries_wdv is empty, and there are more than
   // zero rows on this process.
   if (requestOptimizedStorage) {
     // Free the old, unpacked, unoptimized allocations.
@@ -1421,12 +1421,12 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     // unpacked 1-D storage.
     if (verbose) {
       std::ostringstream os;
-      os << *prefix << "Optimizing storage: free k_numRowEntries_: "
-         << myGraph_->k_numRowEntries_.extent(0) << endl;
+      os << *prefix << "Optimizing storage: free numRowEntries_wdv: "
+         << myGraph_->numRowEntries_wdv.extent(0) << endl;
       std::cerr << os.str();
     }
 
-    myGraph_->k_numRowEntries_ = row_entries_type();
+    myGraph_->numRowEntries_wdv = row_entries_type();
 
     // Keep the new 1-D packed allocations.
     // FIXME KDDKDD https://github.com/trilinos/Trilinos/issues/9657
@@ -1517,11 +1517,6 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     requestOptimizedStorage = false;
   }
 
-  // NOTE: This does not work correctly w/ GCC 12.3 + CUDA due to a compiler bug.
-  // See: https://github.com/trilinos/Trilinos/issues/12237
-  // using row_entries_type = decltype (staticGraph_->k_numRowEntries_);
-  using row_entries_type = typename crs_graph_type::num_row_entries_type;
-
   // The matrix's values are currently
   // stored in a 1-D format.  However, this format is "unpacked";
   // it doesn't necessarily have the same row offsets as indicated
@@ -1563,11 +1558,10 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     size_t lclTotalNumEntries = 0;
     k_ptrs                    = tmpk_ptrs;
     {
-      typename row_entries_type::const_type numRowEnt_h =
-          staticGraph_->k_numRowEntries_;
-      // This function can handle the counts being a host View.
+      auto numRowEnt_d =
+          staticGraph_->numRowEntries_wdv.getDeviceView(Access::ReadOnly);
       lclTotalNumEntries =
-          Details::computeOffsetsFromCounts(tmpk_ptrs, numRowEnt_h);
+          Details::computeOffsetsFromCounts(tmpk_ptrs, numRowEnt_d);
     }
 
     // Allocate the "packed" values array.
@@ -4503,7 +4497,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     {
       // Accessing host unpacked (4-array CRS) local matrix.
       auto rowBegins_  = graph.getRowPtrsUnpackedHost();
-      auto rowLengths_ = graph.k_numRowEntries_;
+      auto rowLengths_ = graph.numRowEntries_wdv.getHostView(Access::ReadWrite);
       auto vals_       = this->valuesUnpacked_wdv.getHostView(Access::ReadWrite);
       auto cols_       = graph.lclIndsUnpacked_wdv.getHostView(Access::ReadWrite);
       Kokkos::parallel_reduce(
@@ -5385,13 +5379,12 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   row_ptrs_type num_row_entries_d;
 
   const bool refill_num_row_entries =
-      myGraph_->k_numRowEntries_.extent(0) != 0;
+      myGraph_->numRowEntries_wdv.extent(0) != 0;
 
   if (refill_num_row_entries) {  // unpacked storage
     // We can't assume correct *this capture until C++17, and it's
     // likely more efficient just to capture what we need anyway.
-    num_row_entries_d = create_mirror_view_and_copy(memory_space(),
-                                                    myGraph_->k_numRowEntries_);
+    num_row_entries_d = myGraph_->numRowEntries_wdv.getDeviceView(Access::ReadWrite);
     Kokkos::parallel_for(
         "Fill end row pointers", range_policy(0, N),
         KOKKOS_LAMBDA(const size_t i) {
@@ -5436,7 +5429,6 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
         KOKKOS_LAMBDA(const size_t i) {
           num_row_entries_d(i) = row_ptr_end(i) - row_ptr_beg(i);
         });
-    Kokkos::deep_copy(myGraph_->k_numRowEntries_, num_row_entries_d);
   }
 
   if (verbose) {

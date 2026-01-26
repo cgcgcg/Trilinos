@@ -101,14 +101,14 @@ namespace Details {
 ///   matrix also stores values in a single array.  "Unpacked"
 ///   means that there may be extra space in each row: that is,
 ///   the row offsets array only says how much space there is in
-///   each row.  The graph must use k_numRowEntries_ to find out
+///   each row.  The graph must use numRowEntries_wdv to find out
 ///   how many entries there actually are in the row.  A matrix
 ///   with unpacked 1-D storage must own its graph, and the graph
 ///   must have unpacked 1-D storage. </li>
 ///
 /// <li> "Packed 1-D storage": The matrix may or may not own the
 ///   graph.  "Packed" means that there is no extra space in each
-///   row.  Thus, the k_numRowEntries_ array is not necessary and
+///   row.  Thus, the numRowEntries_wdv array is not necessary and
 ///   may have been deallocated.  If the matrix was created with a
 ///   constant ("static") graph, this must be true. </li>
 /// </ol>
@@ -2398,23 +2398,27 @@ class CrsGraph : public RowGraph<LocalOrdinal, GlobalOrdinal, Node>,
   ///     (inclusive range) is the space for any global column
   ///     indices in local row i_lcl.
   ///
-  /// Only the first k_numRowEntries_(i_lcl) of these entries are
+  /// Only the first numRowEntries_wdv(i_lcl) of these entries are
   /// actual valid column indices.  Any remaining entries are "extra
   /// space."  If the graph's storage is packed, then there is no
-  /// extra space, and the k_numRowEntries_ array is invalid.
+  /// extra space, and the numRowEntries_wdv array is invalid.
   ///
   /// If it is allocated, k_rowPtrs_ has length getLocalNumRows()+1.
-  /// The k_numRowEntries_ array has has length getLocalNumRows(),
+  /// The numRowEntries_wdv array has has length getLocalNumRows(),
   /// again if it is allocated.
 
-  /// \brief The type of k_numRowEntries_ (see below).
+  /// \brief The type of numRowEntries_wdv (see below).
   ///
   /// This View gets used only on host.  However, making this
   /// literally a host View (of Kokkos::HostSpace) causes
   /// inexplicable test failures only on CUDA.  Thus, I left it as a
   /// host_mirror_type, which means (given Trilinos' current UVM
   /// requirement) that it will be a UVM allocation.
-  typedef typename Kokkos::View<size_t*, Kokkos::LayoutLeft, device_type>::host_mirror_type num_row_entries_type;
+  // typedef typename Kokkos::View<size_t*, Kokkos::LayoutLeft, device_type>::host_mirror_type num_row_entries_type;
+  using num_row_entries_dualv_type =
+      Kokkos::DualView<size_t*, device_type>;
+  using num_row_entries_type =
+      Details::WrappedDualView<num_row_entries_dualv_type>;
 
   // typedef Kokkos::View<
   //   size_t*,
@@ -2432,7 +2436,7 @@ class CrsGraph : public RowGraph<LocalOrdinal, GlobalOrdinal, Node>,
   /// "Optimize Storage" parameter is set to \c true.
   ///
   /// This may also exist with 1-D storage, if storage is unpacked.
-  num_row_entries_type k_numRowEntries_;
+  num_row_entries_type numRowEntries_wdv;
 
   /// \brief The offsets for off-rank entries.
   ///

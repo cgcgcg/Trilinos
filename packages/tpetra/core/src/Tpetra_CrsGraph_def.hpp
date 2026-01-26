@@ -13,6 +13,7 @@
 /// \file Tpetra_CrsGraph_def.hpp
 /// \brief Definition of the Tpetra::CrsGraph class
 
+#include "Tpetra_Access.hpp"
 #ifdef KOKKOS_ENABLE_SYCL
 #include <sycl/sycl.hpp>
 #endif
@@ -869,7 +870,7 @@ bool CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
   // getLocalNumRows() is zero?
 
   const bool isOpt = indicesAreAllocated_ &&
-                     k_numRowEntries_.extent(0) == 0 &&
+                     numRowEntries_wdv.extent(0) == 0 &&
                      getLocalNumRows() > 0;
 
   return isOpt;
@@ -902,14 +903,13 @@ CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
       return static_cast<size_t>(0);
     } else {
       // Avoid the "*this capture" issue by creating a local Kokkos::View.
-      auto numEntPerRow        = this->k_numRowEntries_;
-      const LO numNumEntPerRow = numEntPerRow.extent(0);
+      const LO numNumEntPerRow = this->numRowEntries_wdv.extent(0);
       if (numNumEntPerRow == 0) {
         if (static_cast<LO>(this->getRowPtrsPackedDevice().extent(0)) <
             static_cast<LO>(lclNumRows + 1)) {
           return static_cast<size_t>(0);
         } else {
-          // indices are allocated and k_numRowEntries_ is not allocated,
+          // indices are allocated and numRowEntries_wdv is not allocated,
           // so we have packed storage and the length of lclIndsPacked_wdv
           // must be the number of local entries.
           if (debug_) {
@@ -918,23 +918,16 @@ CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
           }
           return lclIndsPacked_wdv.extent(0);
         }
-      } else {  // k_numRowEntries_ is populated
-        // k_numRowEntries_ is actually be a host View, so we run
-        // the sum in its native execution space.  This also means
-        // that we can use explicit capture (which could perhaps
-        // improve build time) instead of KOKKOS_LAMBDA, and avoid
-        // any CUDA build issues with trying to run a __device__ -
-        // only function on host.
-        typedef typename num_row_entries_type::execution_space
-            host_exec_space;
-        typedef Kokkos::RangePolicy<host_exec_space, LO> range_type;
+      } else {  // numRowEntries_wdv is populated
+        auto numEntPerRow = this->numRowEntries_wdv.getDeviceView(Access::ReadOnly);
+        using range_type  = Kokkos::RangePolicy<execution_space, LO>;
 
         const LO upperLoopBound = lclNumRows < numNumEntPerRow ? lclNumRows : numNumEntPerRow;
         size_t nodeNumEnt       = 0;
         Kokkos::parallel_reduce(
             "Tpetra::CrsGraph::getNumNodeEntries",
             range_type(0, upperLoopBound),
-            [=](const LO& k, size_t& lclSum) {
+            KOKKOS_LAMBDA(const LO& k, size_t& lclSum) {
               lclSum += numEntPerRow(k);
             },
             nodeNumEnt);
@@ -1204,19 +1197,14 @@ void CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
   this->indicesAreGlobal_ = (lg == GlobalIndices);
 
   if (numRows > 0) {  // reallocate k_numRowEntries_ & fill w/ 0s
-    using Kokkos::ViewAllocateWithoutInitializing;
     const char label[] = "Tpetra::CrsGraph::numRowEntries";
     if (verbose) {
       std::ostringstream os;
-      os << *prefix << "Allocate k_numRowEntries_: " << numRows
+      os << *prefix << "Allocate numRowEntries_wdv: " << numRows
          << endl;
       std::cerr << os.str();
     }
-    num_row_entries_type numRowEnt(ViewAllocateWithoutInitializing(label), numRows);
-    // DEEP_COPY REVIEW - VALUE-TO-HOSTMIRROR
-    Kokkos::deep_copy(execution_space(), numRowEnt, static_cast<size_t>(0));  // fill w/ 0s
-    Kokkos::fence("CrsGraph::allocateIndices");                               // TODO: Need to understand downstream failure points and move this fence.
-    this->k_numRowEntries_ = numRowEnt;                                       // "commit" our allocation
+    this->numRowEntries_wdv = num_row_entries_type(num_row_entries_dualv_type(label, numRows));
   }
 
   // Once indices are allocated, CrsGraph needs to free this information.
@@ -1341,7 +1329,7 @@ CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
       ret.allocSize = rowPtrsUnpacked_host(myRow + 1) - rowPtrsUnpacked_host(myRow);
     }
 
-    ret.numEntries = (this->k_numRowEntries_.extent(0) == 0) ? ret.allocSize : this->k_numRowEntries_(myRow);
+    ret.numEntries = (this->numRowEntries_wdv.extent(0) == 0) ? ret.allocSize : this->numRowEntries_wdv.getHostView(Access::ReadOnly)(myRow);
   } else {  // haven't performed allocation yet; probably won't hit this code
     // FIXME (mfh 07 Aug 2014) We want graph's constructors to
     // allocate, rather than doing lazy allocation at first insert.
@@ -1391,7 +1379,7 @@ CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
       ret.allocSize = rowPtrsUnpacked_host(myRow + 1) - rowPtrsUnpacked_host(myRow);
     }
 
-    ret.numEntries = (this->k_numRowEntries_.extent(0) == 0) ? ret.allocSize : this->k_numRowEntries_(myRow);
+    ret.numEntries = (this->numRowEntries_wdv.extent(0) == 0) ? ret.allocSize : this->numRowEntries_wdv.getHostView(Access::ReadOnly)(myRow);
   } else {  // haven't performed allocation yet; probably won't hit this code
     // FIXME (mfh 07 Aug 2014) We want graph's constructors to
     // allocate, rather than doing lazy allocation at first insert.
@@ -1530,7 +1518,7 @@ CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
   }
 
   rowinfo.numEntries += numNewInds;
-  this->k_numRowEntries_(rowinfo.localRow) += numNewInds;
+  this->numRowEntries_wdv.getHostView(Access::ReadWrite)(rowinfo.localRow) += numNewInds;
   this->setLocallyModified();
 
   if (debug_) {
@@ -1618,7 +1606,7 @@ CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
     TEUCHOS_TEST_FOR_EXCEPTION_CLASS_FUNC(true, std::runtime_error, os.str());
   }
 
-  this->k_numRowEntries_(lclRow) += numInserted;
+  this->numRowEntries_wdv.getHostView(Access::ReadWrite)(lclRow) += numInserted;
 
   this->setLocallyModified();
   return numInserted;
@@ -1672,7 +1660,7 @@ void CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
   numNewInds    = numInserted;
   newNumEntries = rowInfo.numEntries + numNewInds;
 
-  this->k_numRowEntries_(myRow) += numNewInds;
+  this->numRowEntries_wdv.getHostView(Access::ReadWrite)(myRow) += numNewInds;
   this->setLocallyModified();
 
   if (debug_) {
@@ -1751,7 +1739,7 @@ CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
       const size_t newNumEnt     = newend - beg;
 
       // NOTE (mfh 08 May 2017) This is a host View, so it does not assume UVM.
-      this->k_numRowEntries_(rowInfo.localRow) = newNumEnt;
+      this->numRowEntries_wdv.getHostView(Access::ReadWrite)(rowInfo.localRow) = newNumEnt;
       return origNumEnt - newNumEnt;  // the number of duplicates in the row
     } else {
       return static_cast<size_t>(0);  // assume no duplicates
@@ -1944,7 +1932,7 @@ void CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
 
     TEUCHOS_TEST_FOR_EXCEPTION_CLASS_FUNC(!this->indicesAreAllocated() &&
                                               ((rowPtrsUnpacked_host.extent(0) != 0 ||
-                                                this->k_numRowEntries_.extent(0) != 0) ||
+                                                this->numRowEntries_wdv.extent(0) != 0) ||
                                                this->lclIndsUnpacked_wdv.extent(0) != 0 ||
                                                this->gblInds_wdv.extent(0) != 0),
                                           std::logic_error,
@@ -2498,8 +2486,8 @@ void CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
     allocateIndices(LocalIndices, verbose_);
   }
 
-  if (k_numRowEntries_.extent(0) != 0) {
-    this->k_numRowEntries_(lrow) = 0;
+  if (numRowEntries_wdv.extent(0) != 0) {
+    this->numRowEntries_wdv.getHostView(Access::ReadWrite)(lrow) = 0;
   }
 
   if (debug_) {
@@ -3380,17 +3368,17 @@ void CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
 
       // It's ok that k_numRowEntries_ is a host View; the
       // function can handle this.
-      typename num_row_entries_type::const_type numRowEnt_h = k_numRowEntries_;
+      auto numRowEnt_d = numRowEntries_wdv.getDeviceView(Access::ReadOnly);
       if (debug_) {
-        TEUCHOS_TEST_FOR_EXCEPTION_CLASS_FUNC(size_t(numRowEnt_h.extent(0)) != lclNumRows,
+        TEUCHOS_TEST_FOR_EXCEPTION_CLASS_FUNC(size_t(numRowEnt_d.extent(0)) != lclNumRows,
                                               std::logic_error,
                                               "(Unpacked branch) "
-                                              "numRowEnt_h.extent(0)="
-                                                  << numRowEnt_h.extent(0)
+                                              "numRowEnt_d.extent(0)="
+                                                  << numRowEnt_d.extent(0)
                                                   << " != getLocalNumRows()=" << lclNumRows << "");
       }
 
-      lclTotalNumEntries = computeOffsetsFromCounts(ptr_d, numRowEnt_h);
+      lclTotalNumEntries = computeOffsetsFromCounts(ptr_d, numRowEnt_d);
 
       if (debug_) {
         TEUCHOS_TEST_FOR_EXCEPTION_CLASS_FUNC(static_cast<size_t>(ptr_d.extent(0)) != lclNumRows + 1,
@@ -3511,7 +3499,7 @@ void CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
 
     // Free graph data structures that are only needed for
     // unpacked 1-D storage.
-    k_numRowEntries_ = num_row_entries_type();
+    numRowEntries_wdv = num_row_entries_type();
 
     // Keep the new 1-D packed allocations.
     lclIndsUnpacked_wdv = lclIndsPacked_wdv;
@@ -3984,7 +3972,6 @@ CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
   typedef GlobalOrdinal GO;
   typedef device_type DT;
   typedef typename local_graph_device_type::row_map_type::non_const_value_type offset_type;
-  typedef typename num_row_entries_type::non_const_value_type num_ent_type;
   const char tfecfFuncName[] = "makeIndicesLocal: ";
   ProfilingRegion regionMakeIndicesLocal("Tpetra::CrsGraph::makeIndicesLocal");
 
@@ -4018,10 +4005,6 @@ CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
   const map_type& colMap = *(this->getColMap());
 
   if (this->isGloballyIndexed() && lclNumRows != 0) {
-    // This is a host-accessible View.
-    typename num_row_entries_type::const_type h_numRowEnt =
-        this->k_numRowEntries_;
-
     auto rowPtrsUnpacked_host = this->getRowPtrsUnpackedHost();
 
     // Allocate space for local indices.
@@ -4067,30 +4050,22 @@ CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
     lclIndsUnpacked_wdv = local_inds_wdv_type(lclInds_dualv);
 
     auto lclColMap = colMap.getLocalMap();
-    // This is a "device mirror" of the host View h_numRowEnt.
+
     //
     // NOTE (mfh 27 Sep 2016) Currently, the right way to get a
     // Device instance is to use its default constructor.  See the
     // following Kokkos issue:
     //
     // https://github.com/kokkos/kokkos/issues/442
-    if (verbose) {
-      std::ostringstream os;
-      os << *prefix << "Allocate device mirror k_numRowEnt: "
-         << h_numRowEnt.extent(0) << endl;
-      std::cerr << os.str();
-    }
-    auto k_numRowEnt =
-        Kokkos::create_mirror_view_and_copy(device_type(), h_numRowEnt);
 
     using ::Tpetra::Details::convertColumnIndicesFromGlobalToLocal;
     lclNumErrs =
-        convertColumnIndicesFromGlobalToLocal<LO, GO, DT, offset_type, num_ent_type>(
+        convertColumnIndicesFromGlobalToLocal<LO, GO, DT, offset_type, size_t>(
             lclIndsUnpacked_wdv.getDeviceView(Access::OverwriteAll),
             gblInds_wdv.getDeviceView(Access::ReadOnly),
             this->getRowPtrsUnpackedDevice(),
             lclColMap,
-            k_numRowEnt);
+            this->numRowEntries_wdv.getDeviceView(Access::ReadOnly));
     if (lclNumErrs != 0) {
       const int myRank = [this]() {
         auto map = this->getMap();
@@ -4692,18 +4667,16 @@ void CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
   }
   row_ptrs_type row_ptrs_end(
       view_alloc("row_ptrs_end", WithoutInitializing), N);
-  row_ptrs_type num_row_entries;
+  typename num_row_entries_type::t_dev num_row_entries;
 
-  const bool refill_num_row_entries = k_numRowEntries_.extent(0) != 0;
+  const bool refill_num_row_entries = numRowEntries_wdv.extent(0) != 0;
 
   execution_space().fence();  // we need above deep_copy to be done
 
   if (refill_num_row_entries) {  // Case 1: Unpacked storage
     // We can't assume correct *this capture until C++17, and it's
     // likely more efficient just to capture what we need anyway.
-    num_row_entries =
-        row_ptrs_type(view_alloc("num_row_entries", WithoutInitializing), N);
-    Kokkos::deep_copy(num_row_entries, this->k_numRowEntries_);
+    num_row_entries = this->numRowEntries_wdv.getDeviceView(Access::ReadWrite);
     Kokkos::parallel_for(
         "Fill end row pointers", range_policy(0, N),
         KOKKOS_LAMBDA(const size_t i) {
@@ -4734,7 +4707,6 @@ void CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
         KOKKOS_LAMBDA(const size_t i) {
           num_row_entries(i) = row_ptrs_end(i) - row_ptrs_beg(i);
         });
-    Kokkos::deep_copy(this->k_numRowEntries_, num_row_entries);
   }
   if (verbose) {
     std::ostringstream os;
@@ -6987,7 +6959,7 @@ void CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
   std::swap(graph.sortGhostsAssociatedWithEachProcessor_, this->sortGhostsAssociatedWithEachProcessor_);
 
   std::swap(graph.k_numAllocPerRow_, this->k_numAllocPerRow_);  // View
-  std::swap(graph.k_numRowEntries_, this->k_numRowEntries_);    // View
+  std::swap(graph.numRowEntries_wdv, this->numRowEntries_wdv);  // View
   std::swap(graph.nonlocals_, this->nonlocals_);                // std::map
 }
 
@@ -7056,10 +7028,14 @@ bool CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
 
   // Compare k_numRowEntries_ isa Kokkos::View::host_mirror_type
   // - since this is a host_mirror_type type, it should be in host memory already
-  output = this->k_numRowEntries_.extent(0) == graph.k_numRowEntries_.extent(0) ? output : false;
-  if (output && this->k_numRowEntries_.extent(0) > 0) {
-    for (size_t i = 0; output && i < this->k_numRowEntries_.extent(0); i++)
-      output = this->k_numRowEntries_(i) == graph.k_numRowEntries_(i) ? output : false;
+  output = this->numRowEntries_wdv.extent(0) == graph.numRowEntries_wdv.extent(0) ? output : false;
+  {
+    auto this_numRowEntries  = this->numRowEntries_wdv.getHostView(Access::ReadOnly);
+    auto graph_numRowEntries = graph.numRowEntries_wdv.getHostView(Access::ReadOnly);
+    if (output && this->numRowEntries_wdv.extent(0) > 0) {
+      for (size_t i = 0; output && i < this->numRowEntries_wdv.extent(0); i++)
+        output = this_numRowEntries(i) == graph_numRowEntries(i) ? output : false;
+    }
   }
 
   // Compare this->k_rowPtrs_ isa Kokkos::View<LocalOrdinal*, ...>
@@ -7178,9 +7154,7 @@ void CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::insertGlobalIndicesDevice(
   auto srcLocalRowPtrsDevice = srcCrsGraph.getLocalRowPtrsDevice();
   auto srcLocalColIndsDevice = srcCrsGraph.lclIndsUnpacked_wdv.getDeviceView(Access::ReadOnly);
 
-  typename crs_graph_type::num_row_entries_type::non_const_type h_numRowEnt = tgtCrsGraph.k_numRowEntries_;
-
-  auto k_numRowEnt = Kokkos::create_mirror_view_and_copy(device_type(), h_numRowEnt);
+  auto k_numRowEnt = tgtCrsGraph.numRowEntries_wdv.getDeviceView(Access::ReadWrite);
 
   const bool sorted = false;
 
@@ -7261,7 +7235,6 @@ void CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::insertGlobalIndicesDevice(
         k_numRowEnt(tgtLocalRow) += num_inserted;
         return size_t(0);
       });
-  Kokkos::deep_copy(tgtCrsGraph.k_numRowEntries_, k_numRowEnt);
   tgtCrsGraph.setLocallyModified();
 }
 
