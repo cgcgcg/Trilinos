@@ -433,7 +433,7 @@ class Import : public ::Tpetra::Details::Transfer<LocalOrdinal, GlobalOrdinal, N
   /// This routine does not communicate, except perhaps for the
   /// TPETRA_ABUSE_WARNING (that is only triggered if there are
   /// remote IDs but the source is not distributed).
-  void setupSamePermuteRemote(Teuchos::Array<GlobalOrdinal>& remoteGIDs);
+  remote_gids_type setupSamePermuteRemote();
 
   /// \brief Compute the send communication plan from the receives.
   ///
@@ -464,7 +464,7 @@ class Import : public ::Tpetra::Details::Transfer<LocalOrdinal, GlobalOrdinal, N
   /// This routine fills in the <tt>remoteLIDs_</tt> field of
   /// <tt>TransferData_</tt>.
   void
-  setupExport(Teuchos::Array<GlobalOrdinal>& remoteGIDs,
+  setupExport(remote_gids_type remoteGIDs,
               bool useRemotePIDs, Teuchos::Array<int>& remotePIDs,
               const Teuchos::RCP<Teuchos::ParameterList>& plist = Teuchos::null);
   //@}

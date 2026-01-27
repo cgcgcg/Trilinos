@@ -28,10 +28,10 @@ namespace Details {
 ///   initializing.
 auto view_alloc_no_init(const std::string& label) -> decltype(Kokkos::view_alloc(label, Kokkos::WithoutInitializing));
 
-/// \brief Initialize \c dv such that its host View is \c hostView.
+/// \brief Initialize \c dv such that its device View is \c devView.
 ///
-/// This shallow copies the host View into the output DualView,
-/// and syncs the output DualView to device.
+/// This shallow copies the device View into the output DualView,
+/// and syncs the output DualView to host.
 template <class ElementType, class DeviceType>
 void makeDualViewFromOwningDeviceView(Kokkos::DualView<ElementType*, DeviceType>& dv,
                                       const typename Kokkos::DualView<ElementType*, DeviceType>::t_dev& devView) {
