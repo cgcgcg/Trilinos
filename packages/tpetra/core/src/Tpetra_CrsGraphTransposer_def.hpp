@@ -342,11 +342,8 @@ CrsGraphTransposer<LocalOrdinal, GlobalOrdinal, Node>::
   // Do the local transpose
   RCP<crs_graph_type> transGraphWithSharedRows = createTransposeLocal(params);
 
-#ifdef HAVE_TPETRA_MMM_TIMINGS
   const std::string prefix = std::string("Tpetra ") + label_ + ": ";
-  using Teuchos::TimeMonitor;
-  TimeMonitor MM(*TimeMonitor::getNewTimer(prefix + "Transpose TAFC"));
-#endif
+  Tpetra::Details::ProfilingRegion MM((prefix + "Transpose TAFC").c_str());
 
   // If transGraphWithSharedRows has an exporter, that's what we
   // want.  If it doesn't, the rows aren't actually shared, and we're
@@ -358,9 +355,7 @@ CrsGraphTransposer<LocalOrdinal, GlobalOrdinal, Node>::
     return transGraphWithSharedRows;
   } else {
     Teuchos::ParameterList labelList;
-#ifdef HAVE_TPETRA_MMM_TIMINGS
     labelList.set("Timer Label", label_);
-#endif
     if (!params.is_null()) {
       const char paramName[] = "compute global constants";
       labelList.set(paramName, params->get(paramName, true));
@@ -387,11 +382,8 @@ CrsGraphTransposer<LocalOrdinal, GlobalOrdinal, Node>::
   using import_type = Tpetra::Import<LO, GO, Node>;
   using export_type = Tpetra::Export<LO, GO, Node>;
 
-#ifdef HAVE_TPETRA_MMM_TIMINGS
   std::string prefix = std::string("Tpetra ") + label_ + ": ";
-  using Teuchos::TimeMonitor;
-  TimeMonitor MM(*TimeMonitor::getNewTimer(prefix + "Transpose Local"));
-#endif
+  Tpetra::Details::ProfilingRegion MM((prefix + "Transpose Local").c_str());
 
   const bool sort = [&]() {
     constexpr bool sortDefault = true;  // see #4607 discussion
