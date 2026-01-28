@@ -142,13 +142,9 @@ Import<LocalOrdinal, GlobalOrdinal, Node>::
            const Teuchos::RCP<const map_type>& target)
   : base_type(source, target, Teuchos::null, Teuchos::null, "Import") {
   Teuchos::Array<int> dummy;
-#ifdef HAVE_TPETRA_MMM_TIMINGS
   Teuchos::RCP<Teuchos::ParameterList> mypars = rcp(new Teuchos::ParameterList);
   mypars->set("Timer Label", "Naive_tAFC");
   init(source, target, false, dummy, mypars);
-#else
-  init(source, target, false, dummy, Teuchos::null);
-#endif
 }
 
 template <class LocalOrdinal, class GlobalOrdinal, class Node>

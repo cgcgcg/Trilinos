@@ -4389,7 +4389,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     label = params->get("Timer Label", label);
   std::string prefix = std::string("Tpetra ") + label + std::string(": ");
 
-  auto all = Teuchos::rcp(new Tpetra::Details::ProfilingRegion((prefix + std::string("ESFC-all")).c_str()));
+  Tpetra::Details::ProfilingRegion all((prefix + std::string("ESFC-all")).c_str());
 
   const char tfecfFuncName[] = "expertStaticFillComplete: ";
   TEUCHOS_TEST_FOR_EXCEPTION_CLASS_FUNC(!isFillActive() || isFillComplete(),
@@ -7558,7 +7558,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     tlstr = os.str();
   }
 
-  auto MM2 = Teuchos::rcp(new Tpetra::Details::ProfilingRegion((prefix + std::string("TAFC All") + tlstr).c_str()));
+  Tpetra::Details::ProfilingRegion MMall((prefix + std::string("TAFC All") + tlstr).c_str());
 
   // Make sure that the input argument rowTransfer is either an
   // Import or an Export.  Import and Export are the only two
@@ -8593,7 +8593,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     }
 
     {
-      Tpetra::Details::ProfilingRegion tm_rnd((prefix + std::string("isMMrevNeighDis")).c_str());
+      Tpetra::Details::ProfilingRegion MMrc((prefix + std::string("isMMrevNeighDis")).c_str());
       Import_Util::reverseNeighborDiscovery(*this,
                                             rowptr,
                                             colind,
@@ -8776,6 +8776,8 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     }
 
     Tpetra::Details::ProfilingRegion esfcnotmm((prefix + std::string("notMMdestMat->expertStaticFillComplete")).c_str());
+    esfc_params.set("Timer Label", prefix + std::string("notMM eSFC"));
+
     if (!params.is_null()) {
       esfc_params.set("compute global constants",
                       params->get("compute global constants", true));
