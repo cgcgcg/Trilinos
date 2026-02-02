@@ -244,7 +244,7 @@ def main():
     timer.report(out, comm, options)
 
     if comm.getRank() == 0 and display:
-        x0_view = tpetra_x0.getLocalViewHost()
+        x0_view = tpetra_x0.numpy_view_host()
         plt.figure()
         plt.plot(x0_view)
         plt.savefig('x0_view.png', dpi=800, bbox_inches='tight', pad_inches=0)

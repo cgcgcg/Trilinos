@@ -10,6 +10,7 @@
 #ifndef PYTRILINOS2_TPETRA_CUSTOM
 #define PYTRILINOS2_TPETRA_CUSTOM
 
+#include "Tpetra_Access.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
@@ -58,40 +59,6 @@ Teuchos::ArrayView< T > convert_np_to_ArrayView(pybind11::array_t<T> array) {
     return av;
 }
 
-// conversion of numpy arrays to kokkos arrays
-
-template<typename ViewType>
-void convert_np_to_kokkos_1d(pybind11::array_t<typename ViewType::non_const_value_type> array,  ViewType kokkos_array_device) {
-
-    auto np_array = array.template unchecked<1>();
-
-    auto kokkos_array_host = Kokkos::create_mirror_view(kokkos_array_device);
-    //Kokkos::parallel_for(Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, array.shape(0)), [&](int i) {
-      for (int i=0; i<array.shape(0); ++i) {
-        kokkos_array_host(i) = np_array(i);
-      }
-    //});
-    Kokkos::fence();
-    Kokkos::deep_copy(kokkos_array_device, kokkos_array_host);
-}
-
-template<typename ViewType>
-void convert_np_to_kokkos_2d(pybind11::array_t<typename ViewType::non_const_value_type> array,  ViewType kokkos_array_device) {
-
-    auto np_array = array.template unchecked<2>();
-
-    auto kokkos_array_host = Kokkos::create_mirror_view(kokkos_array_device);
-    //Kokkos::parallel_for(Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, array.shape(0)), [&](int i) {
-      for (int i=0; i<array.shape(0); ++i) {
-        for (int j=0; j<array.shape(1); ++j) {
-            kokkos_array_host(i,j) = np_array(i,j);
-        }
-      }
-    //});
-    Kokkos::fence();
-    Kokkos::deep_copy(kokkos_array_device, kokkos_array_host);
-}
-
 // conversion of kokkos arrays to numpy arrays
 
 template<typename T, typename T2=void>
@@ -99,16 +66,13 @@ struct cknp1d {
     pybind11::array_t<typename T::value_type> result;
     cknp1d (T kokkos_array_host) {
 
-        const int dim_out_0 = kokkos_array_host.extent(0);
-        result = pybind11::array_t<typename T::value_type>(dim_out_0);
-        auto data = result.template mutable_unchecked<1>();
-        //Kokkos::parallel_for(Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0,dim_out_0), [&](int i) {
-          for (int i=0; i<dim_out_0; ++i) {
-            data(i) = kokkos_array_host(i);
-          }
-        //});
-        Kokkos::fence();
+      T* c = new T(std::move(kokkos_array_host));
+      auto capsule = pybind11::capsule(
+            c, [](void* x) { delete reinterpret_cast<T*>(x); });
 
+      result = pybind11::array_t<typename T::value_type>(kokkos_array_host.extent(0),
+                                                         kokkos_array_host.data(),
+                                                         capsule);
     }
     pybind11::array_t<typename T::value_type> convert() { return result; }
 };
@@ -127,21 +91,14 @@ struct cknp2d {
     pybind11::array_t<typename T::value_type> result;
     cknp2d (T kokkos_array_host) {
 
-        const int dim_out_0 = kokkos_array_host.extent(0);
-        const int dim_out_1 = kokkos_array_host.extent(1);
+      T* c = new T(std::move(kokkos_array_host));
+      auto capsule = pybind11::capsule(
+            c, [](void* x) { delete reinterpret_cast<T*>(x); });
 
-        result = pybind11::array_t<typename T::value_type>(dim_out_0*dim_out_1);
-        result.resize({dim_out_0,dim_out_1});
-        auto data = result.template mutable_unchecked<T::rank>();
-        //Kokkos::parallel_for(Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0,dim_out_0), [&](int i) {
-          for (int i=0; i<dim_out_0; ++i) {
-            for (int j=0; j<dim_out_1; ++j) {
-                data(i,j) = kokkos_array_host(i,j);
-            }
-          }
-        //});
-        Kokkos::fence();
-
+      result = pybind11::array_t<typename T::value_type>({kokkos_array_host.extent(0),
+                                                          kokkos_array_host.extent(1)},
+                                                         kokkos_array_host.data(),
+                                                         capsule);
     }
     pybind11::array_t<typename T::value_type> convert() { return result; }
 };
@@ -157,12 +114,7 @@ struct cknp2d<T, enable_if_t<(T::rank!=2)> > {
 
 
 template<typename T>
-pybind11::array_t<typename T::value_type> convert_kokkos_to_np(T kokkos_array_device) {
-
-    // ensure data is accessible
-    auto kokkos_array_host =
-        Kokkos::create_mirror_view(kokkos_array_device);
-    Kokkos::deep_copy(kokkos_array_host, kokkos_array_device);
+pybind11::array_t<typename T::value_type> convert_kokkos_to_np(T kokkos_array_host) {
 
     pybind11::array_t<typename T::value_type> result;
     if (T::rank==1) {
@@ -179,25 +131,13 @@ pybind11::array_t<typename T::value_type> convert_kokkos_to_np(T kokkos_array_de
 // ----------------
 
 template<typename SCALAR, typename LO, typename GO, typename NODE>
-pybind11::array_t<SCALAR> getLocalViewHost(Teuchos::RCP<Tpetra::Vector<SCALAR,LO,GO,NODE>> &vector) {
-    return convert_kokkos_to_np(Kokkos::subview(vector->getLocalViewDevice(Tpetra::Access::ReadOnly), Kokkos::ALL, 0));
+pybind11::array_t<SCALAR> numpy_view_host(Teuchos::RCP<Tpetra::Vector<SCALAR,LO,GO,NODE>> &vector) {
+    return convert_kokkos_to_np(Kokkos::subview(vector->getLocalViewHost(Tpetra::Access::ReadWrite), Kokkos::ALL, 0));
 }
 
 template<typename SCALAR, typename LO, typename GO, typename NODE>
-pybind11::array_t<SCALAR> getLocalViewHost(Teuchos::RCP<Tpetra::MultiVector<SCALAR,LO,GO,NODE>> &mvector) {
-    return convert_kokkos_to_np(mvector->getLocalViewDevice(Tpetra::Access::ReadOnly));
-}
-
-template<typename SCALAR, typename LO, typename GO, typename NODE>
-void setLocalViewHost(Teuchos::RCP<Tpetra::Vector<SCALAR,LO,GO,NODE>> &vector, pybind11::array_t<SCALAR> input) {
-    auto view = Kokkos::subview(vector->getLocalViewDevice(Tpetra::Access::ReadWrite), Kokkos::ALL, 0);
-    convert_np_to_kokkos_1d(input, view);
-}
-
-template<typename SCALAR, typename LO, typename GO, typename NODE>
-void setLocalViewHost(Teuchos::RCP<Tpetra::MultiVector<SCALAR,LO,GO,NODE>> &mvector, pybind11::array_t<SCALAR> input) {
-    auto view = mvector->getLocalViewDevice(Tpetra::Access::ReadWrite);
-    convert_np_to_kokkos_2d(input, view);
+pybind11::array_t<SCALAR> numpy_view_host(Teuchos::RCP<Tpetra::MultiVector<SCALAR,LO,GO,NODE>> &mvector) {
+    return convert_kokkos_to_np(mvector->getLocalViewHost(Tpetra::Access::ReadWrite));
 }
 
 template<typename T>
@@ -290,11 +230,8 @@ void define_Vector_member_functions(T cl) {
   using GO = typename T::type::global_ordinal_type;
   using NODE = typename T::type::node_type;
 
-  cl.def("getLocalViewHost",[](Teuchos::RCP<Tpetra::Vector<SCALAR,LO,GO,NODE>> &m){
-      return getLocalViewHost(m);
-  });
-  cl.def("setLocalViewHost",[](Teuchos::RCP<Tpetra::Vector<SCALAR,LO,GO,NODE>> &m, py::array_t<SCALAR> input){
-      return setLocalViewHost(m, input);
+  cl.def("numpy_view_host",[](Teuchos::RCP<Tpetra::Vector<SCALAR,LO,GO,NODE>> &m){
+      return numpy_view_host(m);
   });
 }
 
@@ -305,11 +242,8 @@ void define_MultiVector_member_functions(T cl) {
   using GO = typename T::type::global_ordinal_type;
   using NODE = typename T::type::node_type;
 
-  cl.def("getLocalViewHost",[](Teuchos::RCP<Tpetra::MultiVector<SCALAR,LO,GO,NODE>> &m){
-      return getLocalViewHost(m);
-  });
-  cl.def("setLocalViewHost",[](Teuchos::RCP<Tpetra::MultiVector<SCALAR,LO,GO,NODE>> &m, py::array_t<SCALAR> input){
-      return setLocalViewHost(m, input);
+  cl.def("numpy_view_host",[](Teuchos::RCP<Tpetra::MultiVector<SCALAR,LO,GO,NODE>> &m){
+      return numpy_view_host(m);
   });
 }
 
