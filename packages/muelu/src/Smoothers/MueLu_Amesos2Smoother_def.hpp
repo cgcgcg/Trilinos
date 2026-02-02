@@ -35,7 +35,7 @@ Projection<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
                                                                            Nullspace->getMap()->getComm(),
                                                                            Xpetra::LocallyReplicated);
 
-  Teuchos::RCP<Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node> > tempMV = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(localMap_, Nullspace->getNumVectors());
+  Teuchos::RCP<Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node> > tempMV = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(localMap_, Nullspace->getNumVectors(), false);
   const Scalar ONE                                                                     = Teuchos::ScalarTraits<Scalar>::one();
   const Scalar ZERO                                                                    = Teuchos::ScalarTraits<Scalar>::zero();
   tempMV->multiply(Teuchos::CONJ_TRANS, Teuchos::NO_TRANS, ONE, *Nullspace, *Nullspace, ZERO);
@@ -195,7 +195,7 @@ void Amesos2Smoother<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Setup(Level& cu
         elements[k] = Teuchos::as<GO>(k);
       colMap           = MapFactory::Build(rowMap->lib(), gblNumCols * rowMap->getComm()->getSize(), elements, Teuchos::ScalarTraits<GO>::zero(), rowMap->getComm());
       importer         = ImportFactory::Build(rowMap, colMap);
-      ghostedNullspace = MultiVectorFactory::Build(colMap, Nullspace->getNumVectors());
+      ghostedNullspace = MultiVectorFactory::Build(colMap, Nullspace->getNumVectors(), false);
       ghostedNullspace->doImport(*Nullspace, *importer, Xpetra::INSERT);
     } else {
       ghostedNullspace = Nullspace;

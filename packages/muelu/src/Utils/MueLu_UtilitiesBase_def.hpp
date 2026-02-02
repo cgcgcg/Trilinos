@@ -197,7 +197,7 @@ Teuchos::RCP<Xpetra::Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
 UtilitiesBase<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     GetMatrixDiagonal(const Matrix& A) {
   const auto rowMap = A.getRowMap();
-  auto diag         = Xpetra::VectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(rowMap, true);
+  auto diag         = Xpetra::VectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(rowMap, false);
 
   const CrsMatrixWrap* crsOp = dynamic_cast<const CrsMatrixWrap*>(&A);
   if ((crsOp != NULL) && (rowMap->lib() == Xpetra::UseTpetra)) {
@@ -240,7 +240,7 @@ UtilitiesBase<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   RCP<const BlockedCrsMatrix> bA = Teuchos::rcp_dynamic_cast<const BlockedCrsMatrix>(rcpFromRef(A));
   if (!bA.is_null()) {
     RCP<const Map> rowMap = A.getRowMap();
-    RCP<Vector> diag      = Xpetra::VectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(rowMap, true);
+    RCP<Vector> diag      = Xpetra::VectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(rowMap, false);
     A.getLocalDiagCopy(*diag);
     RCP<Vector> inv = MueLu::UtilitiesBase<Scalar, LocalOrdinal, GlobalOrdinal, Node>::GetInverse(diag, tol, valReplacement);
     return inv;
@@ -340,7 +340,7 @@ UtilitiesBase<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
       Teuchos::rcp_dynamic_cast<const Xpetra::BlockedCrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>(rcpA);
   if (bA == Teuchos::null) {
     RCP<const Map> rowMap = rcpA->getRowMap();
-    diag                  = Xpetra::VectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(rowMap, true);
+    diag                  = Xpetra::VectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(rowMap, false);
 
     if (rowMap->lib() == Xpetra::UnderlyingLib::UseTpetra) {
       Teuchos::TimeMonitor MM = *Teuchos::TimeMonitor::getNewTimer("UtilitiesBase::GetLumpedMatrixDiagonal (Kokkos implementation)");
@@ -665,7 +665,7 @@ UtilitiesBase<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     importer = ImportFactory::Build(rowMap, colMap);
   }
   if (!importer.is_null()) {
-    RCP<Vector> diagonal = VectorFactory::Build(colMap);
+    RCP<Vector> diagonal = VectorFactory::Build(colMap, false);
     diagonal->doImport(*localDiag, *(importer), Xpetra::INSERT);
     return diagonal;
   } else
@@ -853,9 +853,9 @@ UtilitiesBase<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
                              "Utils::PowerMethod: operator must have domain and range maps that are equivalent.");
 
   // Create three vectors, fill z with random numbers
-  RCP<Vector> q = Xpetra::VectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(A.getDomainMap());
-  RCP<Vector> r = Xpetra::VectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(A.getRangeMap());
-  RCP<Vector> z = Xpetra::VectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(A.getRangeMap());
+  RCP<Vector> q = Xpetra::VectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(A.getDomainMap(), true);
+  RCP<Vector> r = Xpetra::VectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(A.getRangeMap(), true);
+  RCP<Vector> z = Xpetra::VectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(A.getRangeMap(), false);
 
   z->setSeed(seed);    // seed random number generator
   z->randomize(true);  // use Xpetra implementation: -> same results for Epetra and Tpetra

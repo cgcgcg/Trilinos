@@ -183,7 +183,7 @@ void NullspaceFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(Level& c
       } else
         GetOStream(Runtime1) << "Generating canonical nullspace: dimension = " << numPDEs << std::endl;
 
-      nullspace = MultiVectorFactory::Build(A->getDomainMap(), nullspaceDim);
+      nullspace = MultiVectorFactory::Build(A->getDomainMap(), nullspaceDim, true);
 
       fillNullspaceVector(nullspace, numPDEs, nullspaceDim, coordsView, meanView);
     }

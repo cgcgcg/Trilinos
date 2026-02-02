@@ -440,7 +440,7 @@ void TentativePFactory_kokkos<Scalar, LocalOrdinal, GlobalOrdinal, Node>::BuildP
       AmalgamationFactory<SC, LO, GO, NO>::AmalgamateMap(rcp_dynamic_cast<const StridedMap>(coarseMap), coarseCoordMap);
     }
 
-    coarseCoords = RealValuedMultiVectorFactory::Build(coarseCoordMap, fineCoords->getNumVectors());
+    coarseCoords = RealValuedMultiVectorFactory::Build(coarseCoordMap, fineCoords->getNumVectors(), false);
 
     // Create overlapped fine coordinates to reduce global communication
     auto uniqueMap                           = fineCoords->getMap();
@@ -449,7 +449,7 @@ void TentativePFactory_kokkos<Scalar, LocalOrdinal, GlobalOrdinal, Node>::BuildP
       auto nonUniqueMap = aggregates->GetMap();
       auto importer     = ImportFactory::Build(uniqueMap, nonUniqueMap);
 
-      ghostedCoords = RealValuedMultiVectorFactory::Build(nonUniqueMap, fineCoords->getNumVectors());
+      ghostedCoords = RealValuedMultiVectorFactory::Build(nonUniqueMap, fineCoords->getNumVectors(), false);
       ghostedCoords->doImport(*fineCoords, *importer, Xpetra::INSERT);
     }
 
@@ -677,11 +677,11 @@ void TentativePFactory_kokkos<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 
   // STEP 2: prepare local QR decomposition
   // Reserve memory for tentative prolongation operator
-  coarseNullspace = MultiVectorFactory::Build(coarseMap, NSDim);
+  coarseNullspace = MultiVectorFactory::Build(coarseMap, NSDim, true);
 
   // Pull out the nullspace vectors so that we can have random access (on the device)
   auto fineNS   = fineNullspace->getLocalViewDevice(Tpetra::Access::ReadWrite);
-  auto coarseNS = coarseNullspace->getLocalViewDevice(Tpetra::Access::OverwriteAll);
+  auto coarseNS = coarseNullspace->getLocalViewDevice(Tpetra::Access::ReadWrite);
 
   size_t nnz = 0;  // actual number of nnz
 
@@ -1086,11 +1086,11 @@ void TentativePFactory_kokkos<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 
   // STEP 2: prepare local QR decomposition
   // Reserve memory for tentative prolongation operator
-  coarseNullspace = MultiVectorFactory::Build(coarsePointMap, NSDim);
+  coarseNullspace = MultiVectorFactory::Build(coarsePointMap, NSDim, true);
 
   // Pull out the nullspace vectors so that we can have random access (on the device)
   auto fineNS   = fineNullspace->getLocalViewDevice(Tpetra::Access::ReadWrite);
-  auto coarseNS = coarseNullspace->getLocalViewDevice(Tpetra::Access::OverwriteAll);
+  auto coarseNS = coarseNullspace->getLocalViewDevice(Tpetra::Access::ReadWrite);
 
   typedef typename Xpetra::Matrix<SC, LO, GO, NO>::local_matrix_device_type local_matrix_type;
   typedef typename local_matrix_type::row_map_type::non_const_type rows_type;
