@@ -44,6 +44,8 @@ jobs:
 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@cdefb33c0f6224e58673d9004f47f7cb3e328b89 # v3.29.5
+      env:
+        NODE_USE_SYSTEM_CA: 1
       with:
         languages: ${{ matrix.language }}
         build-mode: ${{ matrix.build-mode }}
