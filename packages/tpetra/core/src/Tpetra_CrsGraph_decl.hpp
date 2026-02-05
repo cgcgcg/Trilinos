@@ -225,11 +225,7 @@ class CrsGraph : public RowGraph<LocalOrdinal, GlobalOrdinal, Node>,
                                    device_type, void, size_t>;
 
   //! The type of the part of the sparse graph on each MPI process.
-#if KOKKOS_VERSION >= 40799
   using local_graph_host_type = typename local_graph_device_type::host_mirror_type;
-#else
-  using local_graph_host_type = typename local_graph_device_type::HostMirror;
-#endif
 
   //! The Map specialization used by this class.
   using map_type = ::Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>;
