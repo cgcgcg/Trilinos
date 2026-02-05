@@ -95,9 +95,7 @@ int main(int argc, char *argv[]) {
         {
           auto locals = py::dict("tens"_a = torch_tensor1d);
           py::exec(R"(
-        print(tens)
         tens[0]=4.
-        print(tens)
                     )", py::globals(), locals);
         }
       }

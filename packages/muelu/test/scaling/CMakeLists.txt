@@ -140,6 +140,7 @@ IF(${PACKAGE_NAME}_HAVE_TPETRA_SOLVER_STACK OR ${PACKAGE_NAME}_HAVE_EPETRA_SOLVE
       scaling-complex.xml
       scaling-gpu.xml
       scaling-ml.xml
+      scaling-stratimikos-smoother.xml
       scaling-with-rerun.xml
       scaling-withglobalconstants.xml
       scaling.xml
