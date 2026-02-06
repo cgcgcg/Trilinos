@@ -680,19 +680,51 @@ void DistributorPlan::computeReceives() {
   using Teuchos::CommRequest;
   using Teuchos::CommStatus;
   using Teuchos::ireceive;
+  using Teuchos::isend;
   using Teuchos::RCP;
   using Teuchos::rcp;
   using Teuchos::receive;
   using Teuchos::reduce;
   using Teuchos::REDUCE_SUM;
   using Teuchos::scatter;
-  using Teuchos::send;
   using Teuchos::waitAll;
 
   const int myRank   = comm_->getRank();
   const int numProcs = comm_->getSize();
 
   const int mpiTag = DEFAULT_MPI_TAG;
+
+  // Post the sends: Tell each process to which we are sending how
+  // many packets it should expect from us in the communication
+  // pattern.  We could use nonblocking sends here, as long as we do
+  // a waitAll() on all the sends and receives at once.
+  //
+  // We assume that numSendsToOtherProcs_ and sendMessageToSelf_ have already been
+  // set.  The value of numSendsToOtherProcs_ (my process' number of sends) does
+  // not include any message that it might send to itself.
+  Array<RCP<CommRequest<int>>> requestsSend(numSendsToOtherProcs_);
+  Array<RCP<CommStatus<int>>> statusesSend(numSendsToOtherProcs_);
+  size_t reqNo           = 0;
+  size_t selfMessageSize = 0;
+  for (size_t i = 0; i < numSendsToOtherProcs_ + (sendMessageToSelf_ ? 1 : 0); ++i) {
+    if (procIdsToSendTo_[i] != myRank) {
+      // Send a message to procIdsToSendTo_[i], telling that process that
+      // this communication pattern will send that process
+      // lengthsTo_[i] blocks of packets.
+      requestsSend[reqNo] = isend<int, size_t>(Teuchos::arcpFromArrayView(lengthsTo_(i, 1)), as<int>(procIdsToSendTo_[i]), mpiTag, *comm_);
+      ++reqNo;
+    } else {
+      // We don't need a send in the self-message case.  If this
+      // process will send a message to itself in the communication
+      // pattern, then the last element of lengthsFrom_ and
+      // procsFrom_ corresponds to the self-message.  Of course
+      // this process knows how long the message is, and the process
+      // ID is its own process ID.
+      // lengthsFrom_[numReceives_ - 1] = lengthsTo_[i];
+      // procsFrom_[numReceives_ - 1]   = myRank;
+      selfMessageSize = lengthsTo_[i];
+    }
+  }
 
   // toProcsFromMe[i] == the number of messages sent by this process
   // to process i.  The data in numSendsToOtherProcs_, procIdsToSendTo_, and lengthsTo_
@@ -773,18 +805,19 @@ void DistributorPlan::computeReceives() {
     // how we could use this communication to propagate an error
     // flag for "free" in a release build.
 
-    const int root = 0;             // rank of root process of the reduction
-    Array<int> numRecvsOnEachProc;  // temp; only needed on root
-    if (myRank == root) {
-      numRecvsOnEachProc.resize(numProcs);
-    }
-    int numReceivesAsInt = 0;  // output
-    reduce<int, int>(toProcsFromMe.getRawPtr(),
-                     numRecvsOnEachProc.getRawPtr(),
-                     numProcs, REDUCE_SUM, root, *comm_);
-    scatter<int, int>(numRecvsOnEachProc.getRawPtr(), 1,
-                      &numReceivesAsInt, 1, root, *comm_);
-    numReceives_ = static_cast<size_t>(numReceivesAsInt);
+    Array<int> numRecvsOnEachProc(numProcs);
+
+    auto mpiComm  = Teuchos::rcp_dynamic_cast<const Teuchos::MpiComm<int>>(comm_);
+    const int err = MPI_Alltoall(toProcsFromMe.getRawPtr(), 1, MPI_INT,
+                                 numRecvsOnEachProc.getRawPtr(), 1, MPI_INT,
+                                 *(mpiComm->getRawMpiComm()));
+    TEUCHOS_TEST_FOR_EXCEPTION(err != MPI_SUCCESS, std::runtime_error,
+                               "MPI_Alltoall failed with the following error: "
+                                   << Teuchos::Details::getMpiErrorString(err));
+
+    int numReceivesAsInt = std::accumulate(numRecvsOnEachProc.begin(),
+                                           numRecvsOnEachProc.end(), 0);
+    numReceives_         = static_cast<size_t>(numReceivesAsInt);
   }
 
   // Now we know numReceives_, which is this process' number of
@@ -813,9 +846,9 @@ void DistributorPlan::computeReceives() {
   // buffers that it knows won't go away.  This is why we use RCPs,
   // one RCP per nonblocking receive request.  They get allocated in
   // the loop below.
-  Array<RCP<CommRequest<int>>> requests(actualNumReceives);
+  Array<RCP<CommRequest<int>>> requestsRecv(actualNumReceives);
   Array<ArrayRCP<size_t>> lengthsFromBuffers(actualNumReceives);
-  Array<RCP<CommStatus<int>>> statuses(actualNumReceives);
+  Array<RCP<CommStatus<int>>> statusesRecv(actualNumReceives);
 
   // Teuchos::Comm treats a negative process ID as MPI_ANY_SOURCE
   // (receive data from any process).
@@ -833,35 +866,13 @@ void DistributorPlan::computeReceives() {
     // do that!).
     lengthsFromBuffers[i].resize(1);
     lengthsFromBuffers[i][0] = as<size_t>(0);
-    requests[i]              = ireceive<int, size_t>(lengthsFromBuffers[i], anySourceProc,
-                                        mpiTag, *comm_);
+    requestsRecv[i]          = ireceive<int, size_t>(lengthsFromBuffers[i], anySourceProc,
+                                            mpiTag, *comm_);
   }
 
-  // Post the sends: Tell each process to which we are sending how
-  // many packets it should expect from us in the communication
-  // pattern.  We could use nonblocking sends here, as long as we do
-  // a waitAll() on all the sends and receives at once.
-  //
-  // We assume that numSendsToOtherProcs_ and sendMessageToSelf_ have already been
-  // set.  The value of numSendsToOtherProcs_ (my process' number of sends) does
-  // not include any message that it might send to itself.
-  for (size_t i = 0; i < numSendsToOtherProcs_ + (sendMessageToSelf_ ? 1 : 0); ++i) {
-    if (procIdsToSendTo_[i] != myRank) {
-      // Send a message to procIdsToSendTo_[i], telling that process that
-      // this communication pattern will send that process
-      // lengthsTo_[i] blocks of packets.
-      const size_t* const lengthsTo_i = &lengthsTo_[i];
-      send<int, size_t>(lengthsTo_i, 1, as<int>(procIdsToSendTo_[i]), mpiTag, *comm_);
-    } else {
-      // We don't need a send in the self-message case.  If this
-      // process will send a message to itself in the communication
-      // pattern, then the last element of lengthsFrom_ and
-      // procsFrom_ corresponds to the self-message.  Of course
-      // this process knows how long the message is, and the process
-      // ID is its own process ID.
-      lengthsFrom_[numReceives_ - 1] = lengthsTo_[i];
-      procsFrom_[numReceives_ - 1]   = myRank;
-    }
+  if (selfMessageSize > 0) {
+    lengthsFrom_[numReceives_ - 1] = selfMessageSize;
+    procsFrom_[numReceives_ - 1]   = myRank;
   }
 
   //
@@ -870,10 +881,10 @@ void DistributorPlan::computeReceives() {
   // request buffers into lengthsFrom_, and set procsFrom_ from the
   // status.
   //
-  waitAll(*comm_, requests(), statuses());
+  waitAll(*comm_, requestsRecv(), statusesRecv());
   for (size_t i = 0; i < actualNumReceives; ++i) {
     lengthsFrom_[i] = *lengthsFromBuffers[i];
-    procsFrom_[i]   = statuses[i]->getSourceRank();
+    procsFrom_[i]   = statusesRecv[i]->getSourceRank();
   }
 
   // Sort the procsFrom_ array, and apply the same permutation to
@@ -896,6 +907,7 @@ void DistributorPlan::computeReceives() {
   if (sendMessageToSelf_) {
     --numReceives_;
   }
+  waitAll(*comm_, requestsSend(), statusesSend());
 }
 
 void DistributorPlan::setParameterList(const Teuchos::RCP<Teuchos::ParameterList>& plist) {
