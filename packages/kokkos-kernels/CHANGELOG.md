@@ -1,5 +1,18 @@
 # Change Log
 
+## [5.0.2](https://github.com/kokkos/kokkos-kernels/tree/5.0.2)
+[Full Changelog](https://github.com/kokkos/kokkos-kernels/compare/5.0.1...5.0.2)
+
+### Bug and Warning Fixes:
+- Cleanup warning and warning system [\#2861](https://github.com/kokkos/kokkos-kernels/pull/2861)
+- Batched - Vector: marking defaulted method properly [\#2908](https://github.com/kokkos/kokkos-kernels/pull/2908)
+- Fix template argument in sort_and_merge_graph [\#2918](https://github.com/kokkos/kokkos-kernels/pull/2918)
+
+### CI and Workflow Updates:
+- CI - gcc/1050: adding new action with c++20 [\#2844](https://github.com/kokkos/kokkos-kernels/pull/2844)
+- Update workflows for cxx20 and kokkos 5.0 [\#2747](https://github.com/kokkos/kokkos-kernels/pull/2747), [\#2862](https://github.com/kokkos/kokkos-kernels/pull/2862), [\#2906](https://github.com/kokkos/kokkos-kernels/pull/2906)
+- Release workflow: update versioning scheme [\#2857](https://github.com/kokkos/kokkos-kernels/pull/2857)
+
 ## [5.0.1](https://github.com/kokkos/kokkos-kernels/tree/5.0.1)
 [Full Changelog](https://github.com/kokkos/kokkos-kernels/compare/5.0.0...5.0.1)
 
@@ -63,6 +76,12 @@
 - CI: Adding ci yaml file for Polaris [\#2812](https://github.com/kokkos/kokkos-kernels/pull/2812)
 - CI: Add V100 CUDA 12.6.2 build with TPLs [\#2738](https://github.com/kokkos/kokkos-kernels/pull/2738)
 - CI: adding new build to test previous minor release [\#2737](https://github.com/kokkos/kokkos-kernels/pull/2737)
+
+## [4.7.02](https://github.com/kokkos/kokkos-kernels/tree/4.7.02)
+[Full Changelog](https://github.com/kokkos/kokkos-kernels/compare/4.7.01...4.7.02)
+
+### Bug Fixes:
+- Fix SYCL issues with MKL on Aurora [\#2865](https://github.com/kokkos/kokkos-kernels/pull/2865)
 
 ## [4.7.01](https://github.com/kokkos/kokkos-kernels/tree/4.7.01)
 [Full Changelog](https://github.com/kokkos/kokkos-kernels/compare/4.7.00...4.7.01)
