@@ -77,11 +77,11 @@ void call_a_bunch_of_functions()
   asection *section = 0;
   bfd *abfd = 0;
 
-  const int status_bfd_gsf = (bfd_get_section_flags(abfd, section) & SEC_ALLOC);
+  const int status_bfd_gsf = (bfd_section_flags(section) & SEC_ALLOC);
 
-  bfd_vma section_vma = bfd_get_section_vma(abfd, section);
+  bfd_vma section_vma = bfd_section_vma(section);
 
-  bfd_size_type section_size = bfd_section_size(abfd, section);
+  bfd_size_type section_size = bfd_section_size(section);
 
   bfd_vma offset;
   asymbol **symbol_table = 0;
@@ -96,7 +96,7 @@ void call_a_bunch_of_functions()
   long n_symbols;
   unsigned int symbol_size;
   n_symbols = bfd_read_minisymbols(abfd, false, symbol_table_ptr, &symbol_size);
-  
+
   abfd = bfd_openr(filename_blob, NULL);
 
   const int status_bfd_cf = bfd_check_format(abfd, bfd_archive);
@@ -106,15 +106,15 @@ void call_a_bunch_of_functions()
 
   void *data = 0;
   bfd_map_over_sections(abfd, process_section, &data);
-  
+
   bfd_close(abfd);
 
   struct match_data *match;
   const int status_dl_iphdr = dl_iterate_phdr(shared_lib_callback, &(*match));
-  
+
 }
 
- 
+
 int main()
 {
   call_a_bunch_of_functions();
@@ -122,11 +122,13 @@ int main()
 }
 "
   )
-  
+
   set(CMAKE_REQUIRED_INCLUDES ${TPL_BinUtils_INCLUDE_DIRS})
   set(CMAKE_REQUIRED_LIBRARIES ${TPL_BinUtils_LIBRARIES})
-  check_cxx_source_compiles("${SOURCE}" ${VARNAME})
-  
+  check_cxx_source_compiles("${SOURCE}" ${VARNAME} OUTPUT_VARIABLE TRY_COMPILE_OUTPUT)
+
+  message(WARNING ${TRY_COMPILE_OUTPUT})
+
 endfunction()
 
 
@@ -139,6 +141,7 @@ if (TPL_ENABLE_BinUtils)
   else()
     message(STATUS "Extended attempt to enable tentatively enabled TPL 'BinUtils' failed!  Setting TPL_ENABLE_BinUtils=OFF")
     set(TPL_ENABLE_BinUtils OFF CACHE STRING "autoset" FORCE)
+    MESSAGE(FATAL_ERROR "HERE")
   endif()
 
 endif()
