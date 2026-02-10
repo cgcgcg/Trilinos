@@ -31,7 +31,7 @@ TachoSolver<Matrix,Vector>::TachoSolver(
   data_.variant   = 2;      // solver variant
   data_.streams   = 1;      // # of streams
   data_.dofs_per_node = 1;  // DoFs / node
-  data_.pivot_pert = false; // Pertubat small pivot
+  data_.pivot_pert = false; // Pertub small pivot
   data_.diag_shift = false; // Shift diagonal
   data_.verbose    = false; // verbose
 }

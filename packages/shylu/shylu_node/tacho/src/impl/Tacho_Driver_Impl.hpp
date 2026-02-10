@@ -219,7 +219,7 @@ template <typename VT, typename DT> void Driver<VT, DT>::useNoPivotTolerance() {
 
 template <typename VT, typename DT> void Driver<VT, DT>::useDefaultPivotTolerance() {
   using arith_traits = ArithTraits<value_type>;
-  _pivot_tol = sqrt(arith_traits::epsilon());
+  _pivot_tol = Kokkos::sqrt(arith_traits::epsilon());
 }
 
 template <typename VT, typename DT> void Driver<VT, DT>::storeExplicitTranspose(bool flag) {
@@ -451,7 +451,7 @@ template <typename VT, typename DT> int Driver<VT, DT>::factorize(const value_ty
     Kokkos::RangePolicy<exec_space> range_policy(0, m);
 
     // Compute alpha = ||A||_2
-    value_type alpha(0.0);
+    value_type alpha(zero);
     //for (size_t i=0; i<ax.extent(0); i++) alpha += arith_traits::conj(ax(i)) * ax(i);
     const auto ap = _ap;
     const auto aj = _aj;
@@ -468,13 +468,12 @@ template <typename VT, typename DT> int Driver<VT, DT>::factorize(const value_ty
         }
       });
     // * atomic_sum row-sums
-    alpha = zero;
     Kokkos::parallel_reduce(
       range_policy, KOKKOS_LAMBDA (int i, value_type &tmp) {
         tmp += dv(i);
       }, alpha);
     // Compute shift = sqrt(eps * ||A||_2)
-    shift = sqrt(arith_traits::abs(alpha * arith_traits::epsilon()));
+    shift = Kokkos::sqrt(arith_traits::abs(alpha * arith_traits::epsilon()));
     // Add shift to diagonal
     //for (ordinal_type i=0; i<_m; i++) for (ordinal_type k=_ap(i); k<_ap(i+1); k++) if(_aj(k) == i) ax(k) += alpha;
     Kokkos::parallel_for(
