@@ -224,9 +224,20 @@ void sort_crs_graph(const execution_space& exec, const rowmap_t& rowmap, const e
   if constexpr (!KokkosKernels::Impl::is_gpu_exec_space_v<execution_space>) {
     // If on CPU, sort each row independently. Don't need to know numCols for
     // this.
-    Kokkos::parallel_for("sort_crs_graph[CPU,radix]",
-                         Kokkos::RangePolicy<execution_space, Kokkos::Schedule<Kokkos::Dynamic>>(exec, 0, numRows),
-                         Impl::GraphRadixSortFunctor<rowmap_t, entries_t>(rowmap, entries));
+    if (option == SortAlgorithm::DEFAULT) {
+      option = SortAlgorithm::SHELL;
+    } else if ((option != SortAlgorithm::RADIX) && (option != SortAlgorithm::SHELL)) {
+      throw std::invalid_argument("sort_csr_graph: Only RADIX and SHELL sort are available on CPU.");
+    }
+
+    if (option == SortAlgorithm::RADIX)
+      Kokkos::parallel_for("sort_crs_graph[CPU,radix]",
+                           Kokkos::RangePolicy<execution_space, Kokkos::Schedule<Kokkos::Dynamic>>(exec, 0, numRows),
+                           Impl::GraphRadixSortFunctor<rowmap_t, entries_t>(rowmap, entries));
+    else
+      Kokkos::parallel_for("sort_crs_graph[CPU,shell]",
+                           Kokkos::RangePolicy<execution_space, Kokkos::Schedule<Kokkos::Dynamic>>(exec, 0, numRows),
+                           Impl::GraphShellSortFunctor<rowmap_t, entries_t>(rowmap, entries));
   } else {
     // On GPUs:
     //   If the graph is highly imbalanced AND the dimensions are not too large
