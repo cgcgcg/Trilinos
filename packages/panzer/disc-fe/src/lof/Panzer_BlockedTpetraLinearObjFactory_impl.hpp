@@ -965,6 +965,8 @@ Teuchos::RCP<const Tpetra::CrsGraph<LocalOrdinalT,GlobalOrdinalT,NodeT> >
 BlockedTpetraLinearObjFactory<Traits,ScalarT,LocalOrdinalT,GlobalOrdinalT,NodeT>::
 buildTpetraGhostedGraph(int i,int j) const
 {
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::BlockedTpetraLinearObjFactory::buildTpetraGhostedGraph",BTLOF);
+
    using Teuchos::RCP;
    using Teuchos::rcp;
 
