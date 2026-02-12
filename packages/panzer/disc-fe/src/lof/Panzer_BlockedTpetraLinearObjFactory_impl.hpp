@@ -13,6 +13,7 @@
 
 // Panzer
 #include "Panzer_BlockedVector_ReadOnly_GlobalEvaluationData.hpp"
+#include "Tpetra_Access.hpp"
 #ifdef PANZER_HAVE_EPETRA_STACK
 #include "Panzer_EpetraVector_Write_GlobalEvaluationData.hpp"                    // JMG:  Remove this eventually.
 #endif
@@ -234,6 +235,47 @@ adjustForDirichletConditions(const LinearObjContainer & localBCRows,
    }
 }
 
+template <bool have_mat, bool have_vec, bool zeroVectorRows, class bc_view_type, class matrix_type, class vector_type>
+class DirichletFunctor {
+
+  bc_view_type local_bcs;
+  bc_view_type global_bcs;
+  matrix_type mat;
+  vector_type vec;
+
+public:
+  DirichletFunctor(bc_view_type& local_bcs_, bc_view_type &global_bcs_, matrix_type &mat_, vector_type &vec_)
+  : local_bcs(local_bcs_), global_bcs(global_bcs_), mat(mat_), vec(vec_) {}
+
+  void operator()(const size_t i) const {
+    if (global_bcs(i, 0) == 0.0)
+      return;
+    if (local_bcs(i, 0) == 0.0 || zeroVectorRows) {
+      // this boundary condition was NOT set by this processor
+      if (have_vec)
+        vec(i, 0) = 0.0;
+      if (have_mat) {
+        auto row = mat.row(i);
+        for (size_t k = 0; k < row.length; ++k)
+          row.values(k) = 0.0;
+      }
+    } else {
+      // this boundary condition was set by this processor
+
+      auto scaleFactor = global_bcs(i, 0);
+
+      // if they exist scale linear objects by scale factor
+      if (have_vec)
+        vec(i, 0) /= scaleFactor;
+      if (have_mat) {
+        auto row = mat.row(i);
+        for (size_t k = 0; k < row.length; ++k)
+          row.values(k) /= scaleFactor;
+      }
+    }
+}
+};
+
 template <typename Traits,typename ScalarT,typename LocalOrdinalT,typename GlobalOrdinalT,typename NodeT>
 void BlockedTpetraLinearObjFactory<Traits,ScalarT,LocalOrdinalT,GlobalOrdinalT,NodeT>::
 adjustForDirichletConditions(const VectorType & local_bcs,
@@ -242,62 +284,66 @@ adjustForDirichletConditions(const VectorType & local_bcs,
                              const Teuchos::Ptr<CrsMatrixType> & A,
                              bool zeroVectorRows) const
 {
-   if(f==Teuchos::null && A==Teuchos::null)
-      return;
+  if(f.is_null() && A.is_null())
+    return;
 
-   Teuchos::ArrayRCP<ScalarT> f_array = f!=Teuchos::null ? f->get1dViewNonConst() : Teuchos::null;
+  TEUCHOS_ASSERT(local_bcs.getLocalLength()==global_bcs.getLocalLength());
 
-   Teuchos::ArrayRCP<const ScalarT> local_bcs_array = local_bcs.get1dView();
-   Teuchos::ArrayRCP<const ScalarT> global_bcs_array = global_bcs.get1dView();
-
-   TEUCHOS_ASSERT(local_bcs.getLocalLength()==global_bcs.getLocalLength());
-   for(std::size_t i=0;i<local_bcs.getLocalLength();i++) {
-      if(global_bcs_array[i]==0.0)
-         continue;
-
-      if(local_bcs_array[i]==0.0 || zeroVectorRows) {
-         // this boundary condition was NOT set by this processor
-
-         // if they exist put 0.0 in each entry
-         if(!Teuchos::is_null(f))
-            f_array[i] = 0.0;
-         if(!Teuchos::is_null(A)) {
-            std::size_t numEntries = 0;
-            std::size_t sz = A->getNumEntriesInLocalRow(i);
-	    typename CrsMatrixType::nonconst_local_inds_host_view_type indices("indices", sz);
-	    typename CrsMatrixType::nonconst_values_host_view_type values("values", sz);
-
-            A->getLocalRowCopy(i,indices,values,numEntries);
-
-            for(std::size_t c=0;c<numEntries;c++)
-	      values(c) = 0.0;
-
-            A->replaceLocalValues(i,indices,values);
-         }
-      }
-      else {
-         // this boundary condition was set by this processor
-
-         ScalarT scaleFactor = global_bcs_array[i];
-
-         // if they exist scale linear objects by scale factor
-         if(!Teuchos::is_null(f))
-            f_array[i] /= scaleFactor;
-         if(!Teuchos::is_null(A)) {
-            std::size_t numEntries = 0;
-            std::size_t sz = A->getNumEntriesInLocalRow(i);
-	    typename CrsMatrixType::nonconst_local_inds_host_view_type indices("indices", sz);
-	    typename CrsMatrixType::nonconst_values_host_view_type values("values", sz);
-
-            A->getLocalRowCopy(i,indices,values,numEntries);
-
-            for(std::size_t c=0;c<numEntries;c++)
-	      values(c) /= scaleFactor;
-
-            A->replaceLocalValues(i,indices,values);
-         }
-      }
-   }
+  if (f.is_null()) {
+    if (zeroVectorRows) {
+      DirichletFunctor<true, false, true> dirichletFunctor(local_bcs->getLocalViewDevice(Tpetra::Access::ReadOnly),
+                                                           global_bcs->getLocalViewDevice(Tpetra::Access::ReadOnly),
+                                                           A->getLocalMatrixDevice(),
+                                                           typename VectorType::dual_view_type::t_dev());
+      Kokkos::parallel_for("panzer::adjustForDirichletConditions",
+                           Kokkos::RangePolicy<typename NodeT::execution_space>(0, local_bcs.getLocalLength()),
+                           dirichletFunctor);
+    } else {
+      DirichletFunctor<true, false, false> dirichletFunctor(local_bcs->getLocalViewDevice(Tpetra::Access::ReadOnly),
+                                                            global_bcs->getLocalViewDevice(Tpetra::Access::ReadOnly),
+                                                            A->getLocalMatrixDevice(),
+                                                            typename VectorType::dual_view_type::t_dev());
+      Kokkos::parallel_for("panzer::adjustForDirichletConditions",
+                           Kokkos::RangePolicy<typename NodeT::execution_space>(0, local_bcs.getLocalLength()),
+                           dirichletFunctor);
+    }
+  } else if (A.is_null()) {
+    if (zeroVectorRows) {
+      DirichletFunctor<false, true, true> dirichletFunctor(local_bcs->getLocalViewDevice(Tpetra::Access::ReadOnly),
+                                                           global_bcs->getLocalViewDevice(Tpetra::Access::ReadOnly),
+                                                           typename CrsMatrixType::local_matrix_device_type(),
+                                                           f->getLocalViewDevice(Tpetra::Access::ReadWrite));
+      Kokkos::parallel_for("panzer::adjustForDirichletConditions",
+                           Kokkos::RangePolicy<typename NodeT::execution_space>(0, local_bcs.getLocalLength()),
+                           dirichletFunctor);
+    } else {
+      DirichletFunctor<false, true, false> dirichletFunctor(local_bcs->getLocalViewDevice(Tpetra::Access::ReadOnly),
+                                                            global_bcs->getLocalViewDevice(Tpetra::Access::ReadOnly),
+                                                            typename CrsMatrixType::local_matrix_device_type(),,
+                                                            f->getLocalViewDevice(Tpetra::Access::ReadWrite));
+      Kokkos::parallel_for("panzer::adjustForDirichletConditions",
+                           Kokkos::RangePolicy<typename NodeT::execution_space>(0, local_bcs.getLocalLength()),
+                           dirichletFunctor);
+    }
+  } else {
+    if (zeroVectorRows) {
+      DirichletFunctor<true, true, true> dirichletFunctor(local_bcs->getLocalViewDevice(Tpetra::Access::ReadOnly),
+                                                          global_bcs->getLocalViewDevice(Tpetra::Access::ReadOnly),
+                                                          A->getLocalMatrixDevice(),
+                                                          f->getLocalViewDevice(Tpetra::Access::ReadWrite));
+      Kokkos::parallel_for("panzer::adjustForDirichletConditions",
+                           Kokkos::RangePolicy<typename NodeT::execution_space>(0, local_bcs.getLocalLength()),
+                           dirichletFunctor);
+    } else {
+      DirichletFunctor<true, true, false> dirichletFunctor(local_bcs->getLocalViewDevice(Tpetra::Access::ReadOnly),
+                                                           global_bcs->getLocalViewDevice(Tpetra::Access::ReadOnly),
+                                                           A->getLocalMatrixDevice(),
+                                                           f->getLocalViewDevice(Tpetra::Access::ReadWrite));
+      Kokkos::parallel_for("panzer::adjustForDirichletConditions",
+                           Kokkos::RangePolicy<typename NodeT::execution_space>(0, local_bcs.getLocalLength()),
+                           dirichletFunctor);
+    }
+  }
 }
 
 template <typename Traits,typename ScalarT,typename LocalOrdinalT,typename GlobalOrdinalT,typename NodeT>
