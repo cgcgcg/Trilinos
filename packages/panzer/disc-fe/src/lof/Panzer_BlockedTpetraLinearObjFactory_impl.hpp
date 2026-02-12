@@ -978,6 +978,8 @@ buildTpetraGhostedGraph(int i,int j) const
 
    using Teuchos::RCP;
    using Teuchos::rcp;
+   using exec_space = typename CrsGraphType::execution_space;
+   using memory_space = typename NodeT::memory_space;
 
    // build the map and allocate the space for the graph and
    // grab the ghosted graph
@@ -991,9 +993,46 @@ buildTpetraGhostedGraph(int i,int j) const
    rowProvider = getGlobalIndexer(i);
    colProvider = getGlobalIndexer(j);
 
+   gidProviders_[0]->getElementBlockIds(elementBlockIds); // each sub provider "should" have the
+                                                          // same element blocks
+
+   // Gather elements from mesh blocks.
+   size_t numElements;
+   Kokkos::View<LocalOrdinalT*, memory_space> elementsFromBlocks;
+   {
+     auto numElementBlocks = elementBlockIds.size();
+
+     std::vector<size_t> elementBlockOffsets(numElementBlocks+1);
+     elementBlockOffsets[0] = 0;
+
+     numElements = 0;
+     size_t blockNo = 0;
+     std::vector<std::string>::const_iterator blockItr;
+     for(blockItr=elementBlockIds.begin();blockItr!=elementBlockIds.end();++blockItr) {
+       std::string blockId = *blockItr;
+       const std::vector<LocalOrdinalT> & elements = gidProviders_[0]->getElementBlock(blockId); // each sub provider "should" have the
+                                                                                                 // same elements in each element block
+       numElements += elements.size();
+       ++blockNo;
+       elementBlockOffsets[blockNo] = numElements;
+     }
+     elementsFromBlocks = Kokkos::View<LocalOrdinalT*, memory_space>("elementsFromBlocks", numElements);
+     blockNo = 0;
+     for(blockItr=elementBlockIds.begin();blockItr!=elementBlockIds.end();++blockItr) {
+       std::string blockId = *blockItr;
+       const std::vector<LocalOrdinalT> & elements = gidProviders_[0]->getElementBlock(blockId); // each sub provider "should" have the
+                                                                                                 // same elements in each element block
+       Kokkos::View<const LocalOrdinalT*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> elements_h(elements.data(), elements.size());
+       Kokkos::deep_copy(Kokkos::subview(elementsFromBlocks, Kokkos::make_pair(elementBlockOffsets[blockNo],
+                                                                               elementBlockOffsets[blockNo+1])),
+                         elements_h);
+       ++blockNo;
+     }
+   }
+
    RCP<CrsGraphType> graph;
    {
-     using exec_space = typename CrsGraphType::execution_space;
+
      using local_graph_type = typename CrsGraphType::local_graph_device_type;
      using rowptr_type       = typename local_graph_type::row_map_type::non_const_type;
      using colidx_type       = typename local_graph_type::entries_type::non_const_type;
@@ -1008,7 +1047,6 @@ buildTpetraGhostedGraph(int i,int j) const
      auto rowLIDs = rowProvider->getLIDs();
      auto colLIDs = colProvider->getLIDs();
 
-     auto numElements = rowLIDs.extent(0);
      auto numDoFsPerElementRow = rowLIDs.extent(1);
      auto numDoFsPerElementCol = colLIDs.extent(1);
 
@@ -1017,12 +1055,10 @@ buildTpetraGhostedGraph(int i,int j) const
 
      while (true) {
 
-       // TODO: Is it important to loop over element blocks instead of looping over all elements?
-       //       I.e. is it possible that we have elements that are not actually part of any blocks?
-
        // Loop over all elements and record the entries that we need in the graph.
        // Also start building the rowptr.
-       Kokkos::parallel_for("collect_entries", Kokkos::RangePolicy<exec_space>(0, numElements), KOKKOS_LAMBDA(const LocalOrdinalT elementId) {
+       Kokkos::parallel_for("collect_entries", Kokkos::RangePolicy<exec_space>(0, numElements), KOKKOS_LAMBDA(const LocalOrdinalT k) {
+         auto elementId = elementsFromBlocks(k);
          entry_type<LocalOrdinalT> entry;
          for (size_t dofNoRow = 0; dofNoRow<numDoFsPerElementRow; ++dofNoRow) {
            entry.row = rowLIDs(elementId, dofNoRow);
