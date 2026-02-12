@@ -3142,11 +3142,7 @@ void CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
                              const Teuchos::RCP<const export_type>& exporter,
                              const Teuchos::RCP<Teuchos::ParameterList>& params) {
   const char tfecfFuncName[] = "expertStaticFillComplete: ";
-  std::string label;
-  if (!params.is_null())
-    label = params->get("Timer Label", label);
-  std::string prefix = std::string("Tpetra ") + label + std::string(": ");
-  auto MM            = Teuchos::rcp(new Tpetra::Details::ProfilingRegion((prefix + std::string("ESFC-G-Setup")).c_str()));
+  auto MM                    = Teuchos::rcp(new Tpetra::Details::ProfilingRegion("Tpetra ESFC-G-Setup"));
 
   TEUCHOS_TEST_FOR_EXCEPTION_CLASS_FUNC(
       domainMap.is_null() || rangeMap.is_null(),
@@ -3189,7 +3185,7 @@ void CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
 
   // set domain/range map: may clear the import/export objects
   MM = Teuchos::null;
-  MM = Teuchos::rcp(new Tpetra::Details::ProfilingRegion((prefix + std::string("ESFC-G-Maps")).c_str()));
+  MM = Teuchos::rcp(new Tpetra::Details::ProfilingRegion("Tpetra ESFC-G-Maps"));
   setDomainRangeMaps(domainMap, rangeMap);
 
   // Presume the user sorted and merged the arrays first
@@ -3198,7 +3194,7 @@ void CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
 
   // makeImportExport won't create a new importer/exporter if I set one here first.
   MM = Teuchos::null;
-  MM = Teuchos::rcp(new Tpetra::Details::ProfilingRegion((prefix + std::string("ESFC-G-mIXcheckI")).c_str()));
+  MM = Teuchos::rcp(new Tpetra::Details::ProfilingRegion("Tpetra ESFC-G-mIXcheckI"));
 
   importer_ = Teuchos::null;
   exporter_ = Teuchos::null;
@@ -3211,7 +3207,7 @@ void CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
   }
 
   MM = Teuchos::null;
-  MM = Teuchos::rcp(new Tpetra::Details::ProfilingRegion((prefix + std::string("ESFC-G-mIXcheckE")).c_str()));
+  MM = Teuchos::rcp(new Tpetra::Details::ProfilingRegion("Tpetra ESFC-G-mIXcheckE"));
 
   if (exporter != Teuchos::null) {
     TEUCHOS_TEST_FOR_EXCEPTION_CLASS_FUNC(
@@ -3222,12 +3218,12 @@ void CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
   }
 
   MM = Teuchos::null;
-  MM = Teuchos::rcp(new Tpetra::Details::ProfilingRegion((prefix + std::string("ESFC-G-mIXmake")).c_str()));
+  MM = Teuchos::rcp(new Tpetra::Details::ProfilingRegion("Tpetra ESFC-G-mIXmake"));
   Teuchos::Array<int> remotePIDs(0);  // unused output argument
   this->makeImportExport(remotePIDs, false);
 
   MM = Teuchos::null;
-  MM = Teuchos::rcp(new Tpetra::Details::ProfilingRegion((prefix + std::string("ESFC-G-fLG")).c_str()));
+  MM = Teuchos::rcp(new Tpetra::Details::ProfilingRegion("Tpetra ESFC-G-fLG"));
   this->fillLocalGraph(params);
 
   const bool callComputeGlobalConstants = params.get() == nullptr ||
@@ -3235,18 +3231,18 @@ void CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
 
   if (callComputeGlobalConstants) {
     MM = Teuchos::null;
-    MM = Teuchos::rcp(new Tpetra::Details::ProfilingRegion((prefix + std::string("ESFC-G-cGC (const)")).c_str()));
+    MM = Teuchos::rcp(new Tpetra::Details::ProfilingRegion("Tpetra ESFC-G-cGC (const)"));
     this->computeGlobalConstants();
   } else {
     MM = Teuchos::null;
-    MM = Teuchos::rcp(new Tpetra::Details::ProfilingRegion((prefix + std::string("ESFC-G-cGC (noconst)")).c_str()));
+    MM = Teuchos::rcp(new Tpetra::Details::ProfilingRegion("Tpetra ESFC-G-cGC (noconst)"));
     this->computeLocalConstants();
   }
 
   fillComplete_ = true;
 
   MM = Teuchos::null;
-  MM = Teuchos::rcp(new Tpetra::Details::ProfilingRegion((prefix + std::string("ESFC-G-cIS")).c_str()));
+  MM = Teuchos::rcp(new Tpetra::Details::ProfilingRegion("Tpetra ESFC-G-cIS"));
   checkInternalState();
 }
 
@@ -6304,10 +6300,7 @@ void CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
 
   const char* prefix = "Tpetra::CrsGraph::transferAndFillComplete: ";
 
-  string label;
-  if (!params.is_null()) label = params->get("Timer Label", label);
-  string prefix2 = string("Tpetra ") + label + std::string(": CrsGraph TAFC ");
-  auto MM        = rcp(new Tpetra::Details::ProfilingRegion((prefix2 + string("Pack-1")).c_str()));
+  auto MM = rcp(new Tpetra::Details::ProfilingRegion("Tpetra CrsGraph TAFC Pack-1"));
 
   // Make sure that the input argument rowTransfer is either an
   // Import or an Export.  Import and Export are the only two
@@ -6522,7 +6515,7 @@ void CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
   /***** 2) From Tpera::DistObject::doTransfer() ****/
   /***************************************************/
   MM = Teuchos::null;
-  MM = Teuchos::rcp(new Tpetra::Details::ProfilingRegion((prefix2 + string("ImportSetup")).c_str()));
+  MM = Teuchos::rcp(new Tpetra::Details::ProfilingRegion("Tpetra CrsGraph TAFC ImportSetup"));
   // Get the owning PIDs
   RCP<const import_type> MyImporter = getImporter();
 
@@ -6644,7 +6637,7 @@ void CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
 
   // Do the exchange of remote data.
   MM = Teuchos::null;
-  MM = Teuchos::rcp(new Tpetra::Details::ProfilingRegion((prefix2 + string("Transfer")).c_str()));
+  MM = Teuchos::rcp(new Tpetra::Details::ProfilingRegion("Tpetra CrsGraph TAFC Transfer"));
 
   if (communication_needed) {
     if (reverseMode) {
@@ -6736,7 +6729,7 @@ void CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
   /*********************************************************************/
 
   MM = Teuchos::null;
-  MM = Teuchos::rcp(new Tpetra::Details::ProfilingRegion((prefix2 + string("Unpack-1")).c_str()));
+  MM = Teuchos::rcp(new Tpetra::Details::ProfilingRegion("Tpetra CrsGraph TAFC Unpack-1"));
 
   // Backwards compatibility measure.  We'll use this again below.
   destGraph->numImportPacketsPerLID_.sync_host();
@@ -6782,7 +6775,7 @@ void CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
   /**** 4) Call Optimized MakeColMap w/ no Directory Lookups ****/
   /**************************************************************/
   MM = Teuchos::null;
-  MM = Teuchos::rcp(new Tpetra::Details::ProfilingRegion((prefix2 + string("Unpack-2")).c_str()));
+  MM = Teuchos::rcp(new Tpetra::Details::ProfilingRegion("Tpetra CrsGraph TAFC Unpack-2"));
   // Call an optimized version of makeColMap that avoids the
   // Directory lookups (since the Import object knows who owns all
   // the GIDs).
@@ -6847,12 +6840,11 @@ void CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
   // Pre-build the importer using the existing PIDs
   Teuchos::ParameterList esfc_params;
   MM                        = Teuchos::null;
-  MM                        = Teuchos::rcp(new Tpetra::Details::ProfilingRegion((prefix2 + string("CreateImporter")).c_str()));
+  MM                        = Teuchos::rcp(new Tpetra::Details::ProfilingRegion("Tpetra CrsGraph TAFC CreateImporter"));
   RCP<import_type> MyImport = rcp(new import_type(MyDomainMap, MyColMap, RemotePids));
   MM                        = Teuchos::null;
-  MM                        = Teuchos::rcp(new Tpetra::Details::ProfilingRegion((prefix2 + string("ESFC")).c_str()));
+  MM                        = Teuchos::rcp(new Tpetra::Details::ProfilingRegion("Tpetra CrsGraph TAFC ESFC"));
 
-  esfc_params.set("Timer Label", prefix + std::string("TAFC"));
   if (!params.is_null())
     esfc_params.set("compute global constants", params->get("compute global constants", true));
 

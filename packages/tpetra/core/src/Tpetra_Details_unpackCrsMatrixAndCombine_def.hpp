@@ -1447,14 +1447,14 @@ void unpackAndCombineIntoCrsArrays(
   auto local_matrix = sourceMatrix.getLocalMatrixDevice();
 
   // TargetNumNonzeros is number of nonzeros in local matrix.
-  tm = Teuchos::rcp(new Tpetra::Details::ProfilingRegion((prefix + std::string("unpackAndCombineWithOwningPIDsCount")).c_str()));
+  tm = Teuchos::rcp(new Tpetra::Details::ProfilingRegion("Tpetra::Details::unpackAndCombineIntoCrsArrays_new: unpackAndCombineWithOwningPIDsCount"));
   size_t TargetNumNonzeros =
       UnpackAndCombineCrsMatrixImpl::unpackAndCombineWithOwningPIDsCount(
           local_matrix, permute_from_lids_d, imports_d,
           num_packets_per_lid_d, numSameIDs);
   tm = Teuchos::null;
 
-  tm = Teuchos::rcp(new Tpetra::Details::ProfilingRegion((prefix + std::string("resize CRS pointers")).c_str()));
+  tm = Teuchos::rcp(new Tpetra::Details::ProfilingRegion("Tpetra::Details::unpackAndCombineIntoCrsArrays_new: resize CRS pointers"));
   Kokkos::resize(crs_rowptr_d, TargetNumRows + 1);
   Kokkos::resize(crs_colind_d, TargetNumNonzeros);
   Kokkos::resize(crs_vals_d, TargetNumNonzeros);
@@ -1473,7 +1473,7 @@ void unpackAndCombineIntoCrsArrays(
   // Grab pointers for sourceMatrix
   auto local_col_map = sourceMatrix.getColMap()->getLocalMap();
 
-  tm = Teuchos::rcp(new Tpetra::Details::ProfilingRegion((prefix + std::string("create mirror views from inputs")).c_str()));
+  tm = Teuchos::rcp(new Tpetra::Details::ProfilingRegion("Tpetra::Details::unpackAndCombineIntoCrsArrays_new: create mirror views from inputs"));
   // Convert input arrays to Kokkos::Views
   DT outputDevice;
 
@@ -1510,7 +1510,7 @@ void unpackAndCombineIntoCrsArrays(
                                     outArg(bytes_per_value));
   }
 
-  tm = Teuchos::rcp(new Tpetra::Details::ProfilingRegion((prefix + std::string("unpackAndCombineIntoCrsArrays")).c_str()));
+  tm = Teuchos::rcp(new Tpetra::Details::ProfilingRegion("Tpetra::Details::unpackAndCombineIntoCrsArrays_new: unpackAndCombineIntoCrsArrays"));
   UnpackAndCombineCrsMatrixImpl::unpackAndCombineIntoCrsArrays(
       local_matrix, local_col_map, import_lids_d, imports_d,
       num_packets_per_lid_d, permute_to_lids_d, permute_from_lids_d,
@@ -1520,7 +1520,7 @@ void unpackAndCombineIntoCrsArrays(
   tm = Teuchos::null;
 
   // Copy outputs back to host
-  tm = Teuchos::rcp(new Tpetra::Details::ProfilingRegion((prefix + std::string("copy back to host")).c_str()));
+  tm = Teuchos::rcp(new Tpetra::Details::ProfilingRegion("Tpetra::Details::unpackAndCombineIntoCrsArrays_new: copy back to host"));
 
   Kokkos::parallel_for(
       "setLocalEntriesToPID", Kokkos::RangePolicy<typename DT::execution_space>(0, TargetPids.size()), KOKKOS_LAMBDA(const size_t i) {
@@ -1623,14 +1623,14 @@ void unpackAndCombineIntoCrsArrays(
   auto local_matrix = sourceMatrix.getLocalMatrixDevice();
 
   // TargetNumNonzeros is number of nonzeros in local matrix.
-  tm = Teuchos::rcp(new Tpetra::Details::ProfilingRegion((prefix + std::string("unpackAndCombineWithOwningPIDsCount")).c_str()));
+  tm = Teuchos::rcp(new Tpetra::Details::ProfilingRegion("Tpetra::Details::unpackAndCombineIntoCrsArrays_new: unpackAndCombineWithOwningPIDsCount"));
   size_t TargetNumNonzeros =
       UnpackAndCombineCrsMatrixImpl::unpackAndCombineWithOwningPIDsCount(
           local_matrix, permute_from_lids_d, imports_d,
           num_packets_per_lid_d, numSameIDs);
   tm = Teuchos::null;
 
-  tm = Teuchos::rcp(new Tpetra::Details::ProfilingRegion((prefix + std::string("resize CRS pointers")).c_str()));
+  tm = Teuchos::rcp(new Tpetra::Details::ProfilingRegion("Tpetra::Details::unpackAndCombineIntoCrsArrays_new: resize CRS pointers"));
   CRS_rowptr.resize(TargetNumRows + 1);
   CRS_colind.resize(TargetNumNonzeros);
   CRS_vals.resize(TargetNumNonzeros);
@@ -1651,7 +1651,7 @@ void unpackAndCombineIntoCrsArrays(
   // Grab pointers for sourceMatrix
   auto local_col_map = sourceMatrix.getColMap()->getLocalMap();
 
-  tm = Teuchos::rcp(new Tpetra::Details::ProfilingRegion((prefix + std::string("create mirror views from inputs")).c_str()));
+  tm = Teuchos::rcp(new Tpetra::Details::ProfilingRegion("Tpetra::Details::unpackAndCombineIntoCrsArrays_new: create mirror views from inputs"));
   // Convert input arrays to Kokkos::Views
   DT outputDevice;
 
@@ -1729,7 +1729,7 @@ void unpackAndCombineIntoCrsArrays(
                 "never happen, since std::complex does not work in Kokkos::View objects.");
 #endif  // HAVE_TPETRA_INST_COMPLEX_DOUBLE
 
-  tm = Teuchos::rcp(new Tpetra::Details::ProfilingRegion((prefix + std::string("unpackAndCombineIntoCrsArrays")).c_str()));
+  tm = Teuchos::rcp(new Tpetra::Details::ProfilingRegion("Tpetra::Details::unpackAndCombineIntoCrsArrays_new: unpackAndCombineIntoCrsArrays"));
   UnpackAndCombineCrsMatrixImpl::unpackAndCombineIntoCrsArrays(
       local_matrix, local_col_map, import_lids_d, imports_d,
       num_packets_per_lid_d, permute_to_lids_d, permute_from_lids_d,
@@ -1739,7 +1739,7 @@ void unpackAndCombineIntoCrsArrays(
   tm = Teuchos::null;
 
   // Copy outputs back to host
-  tm = Teuchos::rcp(new Tpetra::Details::ProfilingRegion((prefix + std::string("copy back to host")).c_str()));
+  tm = Teuchos::rcp(new Tpetra::Details::ProfilingRegion("Tpetra::Details::unpackAndCombineIntoCrsArrays_new: copy back to host"));
   typename decltype(crs_rowptr_d)::host_mirror_type crs_rowptr_h(
       CRS_rowptr.getRawPtr(), CRS_rowptr.size());
   // DEEP_COPY REVIEW - DEVICE-TO-HOSTMIRROR

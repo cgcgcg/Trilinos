@@ -169,10 +169,8 @@ template <class LocalOrdinal,
           class GlobalOrdinal,
           class Node>
 CrsGraphTransposer<LocalOrdinal, GlobalOrdinal, Node>::
-    CrsGraphTransposer(const Teuchos::RCP<const crs_graph_type>& origGraph,
-                       const std::string& label)
-  : origGraph_(origGraph)
-  , label_(label) {}
+    CrsGraphTransposer(const Teuchos::RCP<const crs_graph_type>& origGraph)
+  : origGraph_(origGraph) {}
 
 template <class LocalOrdinal,
           class GlobalOrdinal,
@@ -346,8 +344,7 @@ CrsGraphTransposer<LocalOrdinal, GlobalOrdinal, Node>::
   // Do the local transpose
   RCP<crs_graph_type> transGraphWithSharedRows = createTransposeLocal(params);
 
-  const std::string prefix = std::string("Tpetra ") + label_ + ": ";
-  Tpetra::Details::ProfilingRegion MM((prefix + "Transpose TAFC").c_str());
+  Tpetra::Details::ProfilingRegion MM("Tpetra: Transpose TAFC");
 
   // If transGraphWithSharedRows has an exporter, that's what we
   // want.  If it doesn't, the rows aren't actually shared, and we're
@@ -359,7 +356,6 @@ CrsGraphTransposer<LocalOrdinal, GlobalOrdinal, Node>::
     return transGraphWithSharedRows;
   } else {
     Teuchos::ParameterList labelList;
-    labelList.set("Timer Label", label_);
     if (!params.is_null()) {
       const char paramName[] = "compute global constants";
       labelList.set(paramName, params->get(paramName, true));
@@ -386,8 +382,7 @@ CrsGraphTransposer<LocalOrdinal, GlobalOrdinal, Node>::
   using import_type = Tpetra::Import<LO, GO, Node>;
   using export_type = Tpetra::Export<LO, GO, Node>;
 
-  std::string prefix = std::string("Tpetra ") + label_ + ": ";
-  Tpetra::Details::ProfilingRegion MM((prefix + "Transpose Local").c_str());
+  Tpetra::Details::ProfilingRegion MM("Tpetra: Transpose Local");
 
   const bool sort = [&]() {
     constexpr bool sortDefault = true;  // see #4607 discussion
