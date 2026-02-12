@@ -243,7 +243,7 @@ void reverseNeighborDiscovery(const CrsMatrix<Scalar, LocalOrdinal, GlobalOrdina
   Teuchos::Array<Teuchos::ArrayRCP<pidgidpair_t>> RSB(NumRecvs);
 
   {
-    Tpetra::Details::ProfilingRegion set_all((prefix + std::string("isMMallSetRSB")).c_str());
+    Tpetra::Details::ProfilingRegion set_all("Import_Util2::ReverseND::isMMallSetRSB");
 
     // 25 Jul 2018: CBL
     // todo:std::unordered_set (hash table),
@@ -257,7 +257,7 @@ void reverseNeighborDiscovery(const CrsMatrix<Scalar, LocalOrdinal, GlobalOrdina
 
     Teuchos::Array<std::set<pidgidpair_t>> pidsets(NumRecvs);
     {
-      Tpetra::Details::ProfilingRegion set_insert((prefix + std::string("isMMallSetRSBinsert")).c_str());
+      Tpetra::Details::ProfilingRegion set_insert("Import_Util2::ReverseND::isMMallSetRSBinsert");
       for (size_t i = 0; i < NumExportLIDs; i++) {
         LO lid     = ExportLIDs[i];
         GO exp_pid = ExportPIDs[i];
@@ -273,7 +273,7 @@ void reverseNeighborDiscovery(const CrsMatrix<Scalar, LocalOrdinal, GlobalOrdina
     }
 
     {
-      Tpetra::Details::ProfilingRegion set_cpy((prefix + std::string("isMMallSetRSBcpy")).c_str());
+      Tpetra::Details::ProfilingRegion set_cpy("Import_Util2::ReverseND::isMMallSetRSBcpy");
       int jj = 0;
       for (auto&& ps : pidsets) {
         auto s  = ps.size();

@@ -87,12 +87,8 @@ void Import<LocalOrdinal, GlobalOrdinal, Node>::
 
   Array<GlobalOrdinal> remoteGIDs;
 
-  std::string label;
-  if (!plist.is_null())
-    label = plist->get("Timer Label", label);
-  std::string prefix = std::string("Tpetra ") + label + std::string(":iport_ctor:preIData: ");
   {
-    Tpetra::Details::ProfilingRegion MM(prefix.c_str());
+    Tpetra::Details::ProfilingRegion MM("Tpetra:iport_ctor:preIData");
     if (this->verbose()) {
       std::ostringstream os;
       os << *verbPrefix << "Call setupSamePermuteRemote" << endl;
@@ -101,8 +97,7 @@ void Import<LocalOrdinal, GlobalOrdinal, Node>::
     setupSamePermuteRemote(remoteGIDs);
   }
   {
-    prefix = std::string("Tpetra ") + label + std::string(":iport_ctor:preSetupExport: ");
-    Tpetra::Details::ProfilingRegion MM2(prefix.c_str());
+    Tpetra::Details::ProfilingRegion MM2("Tpetra:iport_ctor:preSetupExport");
     if (source->isDistributed()) {
       if (this->verbose()) {
         std::ostringstream os;
@@ -142,9 +137,7 @@ Import<LocalOrdinal, GlobalOrdinal, Node>::
            const Teuchos::RCP<const map_type>& target)
   : base_type(source, target, Teuchos::null, Teuchos::null, "Import") {
   Teuchos::Array<int> dummy;
-  Teuchos::RCP<Teuchos::ParameterList> mypars = rcp(new Teuchos::ParameterList);
-  mypars->set("Timer Label", "Naive_tAFC");
-  init(source, target, false, dummy, mypars);
+  init(source, target, false, dummy, Teuchos::null);
 }
 
 template <class LocalOrdinal, class GlobalOrdinal, class Node>
@@ -340,7 +333,7 @@ Import<LocalOrdinal, GlobalOrdinal, Node>::
     this->verboseOutputStream() << os.str();
   }
   {
-    Tpetra::Details::ProfilingRegion MM3("Tpetra :iport_ctor:cFSAR ");
+    Tpetra::Details::ProfilingRegion MM3("Tpetra:iport_ctor:cFSAR ");
     Distributor& distributor = this->TransferData_->distributor_;
     distributor.createFromSendsAndRecvs(this->TransferData_->exportPIDs_, tRemotePIDs);
   }
@@ -1096,11 +1089,7 @@ void Import<LocalOrdinal, GlobalOrdinal, Node>::
                                           "\"remote\" process ranks are -1.  Please report this bug to the "
                                           "Tpetra developers.");
 
-    std::string label;
-    if (!plist.is_null())
-      label = plist->get("Timer Label", label);
-    std::string prefix1 = std::string("Tpetra ") + label + std::string(":iport_ctor:setupExport:1 ");
-    auto MM             = Teuchos::rcp(new Tpetra::Details::ProfilingRegion(prefix1.c_str()));
+    auto MM = Teuchos::rcp(new Tpetra::Details::ProfilingRegion("Tpetra:iport_ctor:setupExport:1"));
 
     // If all of them are invalid, we can delete the whole array.
     const size_type totalNumRemote = this->getNumRemoteIDs();
@@ -1173,11 +1162,7 @@ void Import<LocalOrdinal, GlobalOrdinal, Node>::
   // allocated by createFromRecvs().
   Array<GO> exportGIDs;
 
-  std::string label;
-  if (!plist.is_null())
-    label = plist->get("Timer Label", label);
-  std::string prefix2 = std::string("Tpetra ") + label + std::string(":iport_ctor:setupExport:3 ");
-  auto MM             = Teuchos::rcp(new Tpetra::Details::ProfilingRegion(prefix2.c_str()));
+  auto MM = Teuchos::rcp(new Tpetra::Details::ProfilingRegion("Tpetra:iport_ctor:setupExport:3"));
 
   if (this->verbose()) {
     std::ostringstream os;
@@ -1192,9 +1177,8 @@ void Import<LocalOrdinal, GlobalOrdinal, Node>::
   // exportGIDs.  For sparse matrix-vector multiply, this tells the
   // calling process how to index into the source vector to get the
   // elements which it needs to send.
-  prefix2 = std::string("Tpetra ") + label + std::string(":iport_ctor:setupExport:4 ");
-  MM      = Teuchos::null;
-  MM      = Teuchos::rcp(new Tpetra::Details::ProfilingRegion(prefix2.c_str()));
+  MM = Teuchos::null;
+  MM = Teuchos::rcp(new Tpetra::Details::ProfilingRegion("Tpetra:iport_ctor:setupExport:4"));
 
   // NOTE (mfh 03 Mar 2014) This is now a candidate for a
   // thread-parallel kernel, but only if using the new thread-safe
@@ -1337,8 +1321,7 @@ Import<LocalOrdinal, GlobalOrdinal, Node>::
   using import_type = Import<LO, GO, Node>;
   using size_type   = typename Array<GO>::size_type;
 
-  std::string label = std::string("Tpetra::Import::setUnion");
-  auto MM           = Teuchos::rcp(new Tpetra::Details::ProfilingRegion(label.c_str()));
+  auto MM = Teuchos::rcp(new Tpetra::Details::ProfilingRegion("Tpetra::Import::setUnion"));
 
   RCP<const map_type> srcMap  = this->getSourceMap();
   RCP<const map_type> tgtMap1 = this->getTargetMap();
@@ -1440,8 +1423,7 @@ Import<LocalOrdinal, GlobalOrdinal, Node>::
   }
 
   MM       = Teuchos::null;
-  label    = "Tpetra::Import::setUnion : Construct Target Map";
-  auto MM2 = Teuchos::rcp(new Tpetra::Details::ProfilingRegion(label.c_str()));
+  auto MM2 = Teuchos::rcp(new Tpetra::Details::ProfilingRegion("Tpetra::Import::setUnion : Construct Target Map"));
 
   // Create the union target Map.
   const GST INVALID       = Teuchos::OrdinalTraits<GST>::invalid();
@@ -1450,8 +1432,7 @@ Import<LocalOrdinal, GlobalOrdinal, Node>::
       rcp(new map_type(INVALID, unionTgtGIDs(), indexBaseUnion, comm));
 
   MM2      = Teuchos::null;
-  label    = "Tpetra::Import::setUnion : Export GIDs";
-  auto MM3 = Teuchos::rcp(new Tpetra::Details::ProfilingRegion(label.c_str()));
+  auto MM3 = Teuchos::rcp(new Tpetra::Details::ProfilingRegion("Tpetra::Import::setUnion : Export GIDs"));
 
   // Thus far, we have computed the following in the union Import:
   //   - numSameIDs
@@ -1551,8 +1532,7 @@ Import<LocalOrdinal, GlobalOrdinal, Node>::
 
   // Create and return the union Import. This uses the "expert" constructor
   MM3      = Teuchos::null;
-  label    = "Tpetra::Import::setUnion : Construct Import";
-  auto MM4 = Teuchos::rcp(new Tpetra::Details::ProfilingRegion(label.c_str()));
+  auto MM4 = Teuchos::rcp(new Tpetra::Details::ProfilingRegion("Tpetra::Import::setUnion : Construct Import"));
   RCP<const import_type> unionImport =
       rcp(new import_type(srcMap, unionTgtMap,
                           as<size_t>(numSameIDsUnion),
