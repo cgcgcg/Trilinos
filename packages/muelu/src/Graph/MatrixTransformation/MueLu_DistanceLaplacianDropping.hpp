@@ -55,7 +55,7 @@ class UnweightedDistanceFunctor {
     coordsMV      = coords_;
     auto importer = A.getCrsGraph()->getImporter();
     if (!importer.is_null()) {
-      ghostedCoordsMV = Xpetra::MultiVectorFactory<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), coordsMV->getNumVectors());
+      ghostedCoordsMV = Xpetra::MultiVectorFactory<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), coordsMV->getNumVectors(), false);
       ghostedCoordsMV->doImport(*coordsMV, *importer, Xpetra::INSERT);
       coords        = coordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
       ghostedCoords = ghostedCoordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
@@ -109,7 +109,7 @@ class WeightedDistanceFunctor {
     coordsMV      = coords_;
     auto importer = A.getCrsGraph()->getImporter();
     if (!importer.is_null()) {
-      ghostedCoordsMV = Xpetra::MultiVectorFactory<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), coordsMV->getNumVectors());
+      ghostedCoordsMV = Xpetra::MultiVectorFactory<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), coordsMV->getNumVectors(), false);
       ghostedCoordsMV->doImport(*coordsMV, *importer, Xpetra::INSERT);
       coords        = coordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
       ghostedCoords = ghostedCoordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
@@ -168,7 +168,7 @@ class BlockWeightedDistanceFunctor {
     coordsMV      = coords_;
     auto importer = A.getCrsGraph()->getImporter();
     if (!importer.is_null()) {
-      ghostedCoordsMV = Xpetra::MultiVectorFactory<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), coordsMV->getNumVectors());
+      ghostedCoordsMV = Xpetra::MultiVectorFactory<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), coordsMV->getNumVectors(), false);
       ghostedCoordsMV->doImport(*coordsMV, *importer, Xpetra::INSERT);
       coords        = coordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
       ghostedCoords = ghostedCoordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
@@ -232,12 +232,12 @@ class ScalarMaterialDistanceFunctor {
     materialMV    = material_;
     auto importer = A.getCrsGraph()->getImporter();
     if (!importer.is_null()) {
-      ghostedCoordsMV = Xpetra::MultiVectorFactory<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), coordsMV->getNumVectors());
+      ghostedCoordsMV = Xpetra::MultiVectorFactory<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), coordsMV->getNumVectors(), false);
       ghostedCoordsMV->doImport(*coordsMV, *importer, Xpetra::INSERT);
       coords        = coordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
       ghostedCoords = ghostedCoordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
 
-      ghostedMaterialMV = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), materialMV->getNumVectors());
+      ghostedMaterialMV = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), materialMV->getNumVectors(), false);
       ghostedMaterialMV->doImport(*materialMV, *importer, Xpetra::INSERT);
       material        = materialMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
       ghostedMaterial = ghostedMaterialMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
@@ -333,7 +333,7 @@ class TensorMaterialDistanceFunctor {
 
     auto importer = A.getCrsGraph()->getImporter();
     if (!importer.is_null()) {
-      ghostedCoordsMV = Xpetra::MultiVectorFactory<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), coordsMV->getNumVectors());
+      ghostedCoordsMV = Xpetra::MultiVectorFactory<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), coordsMV->getNumVectors(), false);
       ghostedCoordsMV->doImport(*coordsMV, *importer, Xpetra::INSERT);
       coords        = coordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
       ghostedCoords = ghostedCoordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
@@ -345,7 +345,7 @@ class TensorMaterialDistanceFunctor {
     {
       Teuchos::RCP<material_type> ghostedMaterial;
       if (!importer.is_null()) {
-        ghostedMaterial = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), material_->getNumVectors());
+        ghostedMaterial = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), material_->getNumVectors(), false);
         ghostedMaterial->doImport(*material_, *importer, Xpetra::INSERT);
       } else {
         ghostedMaterial = material_;
@@ -425,7 +425,7 @@ getDiagonal(Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& A,
   using execution_space    = typename Node::execution_space;
   using range_type         = Kokkos::RangePolicy<LocalOrdinal, execution_space>;
 
-  auto diag = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(A.getRowMap(), 1);
+  auto diag = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(A.getRowMap(), 1, false);
   {
     auto lclA    = A.getLocalMatrixDevice();
     auto lclDiag = diag->getLocalViewDevice(Tpetra::Access::OverwriteAll);
@@ -456,7 +456,7 @@ getDiagonal(Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& A,
   }
   auto importer = A.getCrsGraph()->getImporter();
   if (!importer.is_null()) {
-    auto ghostedDiag = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(A.getColMap(), 1);
+    auto ghostedDiag = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(A.getColMap(), 1, false);
     ghostedDiag->doImport(*diag, *importer, Xpetra::INSERT);
     return ghostedDiag;
   } else {
@@ -477,7 +477,7 @@ getMaxMinusOffDiagonal(Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>
   using execution_space    = typename Node::execution_space;
   using range_type         = Kokkos::RangePolicy<LocalOrdinal, execution_space>;
 
-  auto diag = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(A.getRowMap(), 1);
+  auto diag = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(A.getRowMap(), 1, false);
   {
     auto lclA    = A.getLocalMatrixDevice();
     auto lclDiag = diag->getLocalViewDevice(Tpetra::Access::OverwriteAll);
@@ -506,7 +506,7 @@ getMaxMinusOffDiagonal(Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>
   }
   auto importer = A.getCrsGraph()->getImporter();
   if (!importer.is_null()) {
-    auto ghostedDiag = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(A.getColMap(), 1);
+    auto ghostedDiag = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(A.getColMap(), 1, false);
     ghostedDiag->doImport(*diag, *importer, Xpetra::INSERT);
     return ghostedDiag;
   } else {

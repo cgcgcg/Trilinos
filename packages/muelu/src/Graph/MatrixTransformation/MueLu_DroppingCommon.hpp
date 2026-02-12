@@ -408,7 +408,7 @@ class BlockDiagonalizeFunctor {
     auto importer = A_.getCrsGraph()->getImporter();
 
     if (!importer.is_null()) {
-      ghosted_point_to_blockMV = Xpetra::VectorFactory<LocalOrdinal, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap());
+      ghosted_point_to_blockMV = Xpetra::VectorFactory<LocalOrdinal, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), false);
       ghosted_point_to_blockMV->doImport(point_to_block_, *importer, Xpetra::INSERT);
       ghosted_point_to_block = ghosted_point_to_blockMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
     } else
@@ -466,7 +466,7 @@ class BlockDiagonalizeVectorFunctor {
     , row_translation(row_translation_)
     , col_translation(col_translation_) {
     if (!importer.is_null()) {
-      ghosted_point_to_blockMV = Xpetra::VectorFactory<LocalOrdinal, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap());
+      ghosted_point_to_blockMV = Xpetra::VectorFactory<LocalOrdinal, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), false);
       ghosted_point_to_blockMV->doImport(point_to_block_, *importer, Xpetra::INSERT);
       ghosted_point_to_block = ghosted_point_to_blockMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
     } else
