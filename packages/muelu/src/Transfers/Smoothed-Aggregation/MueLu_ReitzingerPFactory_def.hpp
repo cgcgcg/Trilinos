@@ -532,7 +532,7 @@ void ReitzingerPFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::BuildP(Level
                 LocalOrdinal coarseNode_lid_D0_Pn = lcl_D0_Pn.graph.entries(offset_D0_Pn);
                 impl_scalar_type val_D0_Pn        = lcl_D0_Pn.values(offset_D0_Pn);
                 if (implATS::magnitude(val_D0_Pn) > eps_mag) {
-                  GlobalOrdinal coarseEdge_gid = lcl_map_coarseNodes_colMap_D0_Pn_to_coarseEdges(coarseNode_lid_D0_Pn, 0);
+                  GlobalOrdinal coarseEdge_gid = implATS::real(lcl_map_coarseNodes_colMap_D0_Pn_to_coarseEdges(coarseNode_lid_D0_Pn, 0));
 
                   auto coarseEdge_lid_D0_Pn_D0HT = lcl_colmap_D0_Pn_D0HT.getLocalElement(coarseEdge_gid);
 
