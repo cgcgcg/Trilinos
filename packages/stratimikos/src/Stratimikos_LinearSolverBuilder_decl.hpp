@@ -17,10 +17,6 @@
 #include "Teuchos_StandardParameterEntryValidators.hpp"
 
 // Include these to make all of the helpful decls appear
-#ifdef HAVE_STRATIMIKOS_THYRAEPETRAADAPTERS
-#include "Thyra_EpetraThyraWrappers.hpp"
-#include "Thyra_EpetraLinearOp.hpp"
-#endif
 #include "Thyra_LinearOpWithSolveFactoryHelpers.hpp"
 #include "Thyra_LinearOpWithSolveBase.hpp"
 #include "Thyra_PreconditionerFactoryHelpers.hpp"
@@ -81,7 +77,7 @@ using Teuchos::ParameterList;
  * <b>\anchor XmlFormat XML format for valid parameters accepted by this class</b>
  *
  * \verbinclude simple_stratimikos_example.options.xml.out
- * 
+ *
  */
 template <class Scalar = double>
 class LinearSolverBuilder
@@ -111,12 +107,12 @@ public:
 
   /** \brief . */
   ~LinearSolverBuilder();
-  
+
   /** \brief The name an XML file that will be read to get XML parameters (if
    * not "").
    */
   STANDARD_MEMBER_COMPOSITION_MEMBERS(std::string,paramsXmlFileName);
-    
+
   /** \brief An XML string that will be used to update the parameters (if not
    * "").
    */
@@ -226,9 +222,9 @@ public:
    */
   void writeParamsFile(
     const Thyra::LinearOpWithSolveFactoryBase<Scalar> &lowsFactory,
-    const std::string &outputXmlFileName  = "" 
+    const std::string &outputXmlFileName  = ""
     ) const;
-  
+
   /** \brief Get the name of the linear solver strategy that will be created
    * on the next call to <tt>this->createLinearSolverStrategy()</tt>.
    */
@@ -256,7 +252,7 @@ public:
   RCP<const ParameterList> getValidParameters() const;
 
   //@}
-  
+
   /** \name Overridden from LinearSolverBuilderBase. */
   //@{
 
@@ -285,7 +281,7 @@ private:
 
   // //////////////////////////////////////
   // Private data members
-  
+
   RCP<ParameterList> paramList_;
   Array<std::string> validLowsfNames_;
   Array<lowsf_fcty_t> lowsfArray_;
