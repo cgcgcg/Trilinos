@@ -549,6 +549,180 @@ class Cross3DStencil {
 };
 
 template <class Scalar, class Map, bool keepBCs>
+class Brick2DStencil {
+  // stencil
+  //  z3  e  z4
+  //   b  a  c
+  //  z1  d  z2
+
+  using ATS               = KokkosKernels::ArithTraits<Scalar>;
+  using impl_scalar_type  = typename ATS::val_type;
+  using LocalOrdinal      = typename Map::local_ordinal_type;
+  using GlobalOrdinal     = typename Map::global_ordinal_type;
+  using Node              = typename Map::node_type;
+  using local_map_type    = typename Map::local_map_type;
+  using local_matrix_type = typename ::Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::local_matrix_type;
+  using rowptr_type       = typename local_matrix_type::row_map_type::non_const_type;
+  using colidx_type       = typename local_matrix_type::index_type::non_const_type;
+  using values_type       = typename local_matrix_type::values_type::non_const_type;
+  using exec_space        = typename Node::execution_space;
+  using memory_space      = typename Node::memory_space;
+  using hashmap_type      = typename Kokkos::UnorderedMap<GlobalOrdinal, void, exec_space>;
+  using StencilIndices    = GlobalOrdinal[3][3];
+
+  GlobalOrdinal nx, ny;
+  impl_scalar_type a, b, c, d, e, z1, z2, z3, z4;
+  DirBC DirichletBC;
+  local_map_type lclMap;
+
+  const impl_scalar_type one  = KokkosKernels::ArithTraits<impl_scalar_type>::one();
+  const impl_scalar_type zero = KokkosKernels::ArithTraits<impl_scalar_type>::zero();
+  GlobalOrdinal INVALID;
+
+  Kokkos::View<impl_scalar_type[3][3], memory_space> stencil_entries;
+
+  const size_t LOW  = 0;
+  const size_t MID  = 1;
+  const size_t HIGH = 2;
+
+ public:
+  hashmap_type off_rank_indices;
+  local_map_type lclColMap;
+  colidx_type colidx;
+  values_type values;
+
+  Brick2DStencil(const Map& map, GlobalOrdinal nx_, GlobalOrdinal ny_,
+                 const Scalar a_, const Scalar b_, const Scalar c_,
+                 const Scalar d_, const Scalar e_,
+                 const Scalar z1_, const Scalar z2_,
+                 const Scalar z3_, const Scalar z4_, DirBC DirichletBC_)
+    : nx(nx_)
+    , ny(ny_)
+    , a(a_)
+    , b(b_)
+    , c(c_)
+    , d(d_)
+    , e(e_)
+    , z1(z1_)
+    , z2(z2_)
+    , z3(z3_)
+    , z4(z4_)
+    , DirichletBC(DirichletBC_) {
+    lclMap  = map.getLocalMap();
+    INVALID = Teuchos::OrdinalTraits<GlobalOrdinal>::invalid();
+
+    stencil_entries        = Kokkos::View<impl_scalar_type[3][3], memory_space>("stencil_entries");
+    auto stencil_entries_h = Kokkos::create_mirror_view(stencil_entries);
+
+    stencil_entries_h(LOW, LOW)   = z3;
+    stencil_entries_h(LOW, MID)   = e;
+    stencil_entries_h(LOW, HIGH)  = z4;
+    stencil_entries_h(MID, LOW)   = b;
+    stencil_entries_h(MID, MID)   = a;
+    stencil_entries_h(MID, HIGH)  = c;
+    stencil_entries_h(HIGH, LOW)  = z1;
+    stencil_entries_h(HIGH, MID)  = d;
+    stencil_entries_h(HIGH, HIGH) = z2;
+
+    Kokkos::deep_copy(stencil_entries, stencil_entries_h);
+  }
+
+  KOKKOS_FORCEINLINE_FUNCTION
+  void GetNeighbours(const GlobalOrdinal i,
+                     StencilIndices stencil_indices,
+                     bool& isDirichlet) const {
+    GlobalOrdinal& lower = stencil_indices[LOW][MID];
+    GlobalOrdinal& left  = stencil_indices[MID][LOW];
+    GlobalOrdinal& right = stencil_indices[MID][HIGH];
+    GlobalOrdinal& upper = stencil_indices[HIGH][MID];
+
+    GetNeighboursCartesian2dKokkos(i, nx, ny, left, right, lower, upper, INVALID);
+
+    stencil_indices[LOW][LOW]   = lower - 1;
+    stencil_indices[LOW][MID]   = lower;
+    stencil_indices[LOW][HIGH]  = lower + 1;
+    stencil_indices[MID][LOW]   = left;
+    stencil_indices[MID][MID]   = i;
+    stencil_indices[MID][HIGH]  = right;
+    stencil_indices[HIGH][LOW]  = upper - 1;
+    stencil_indices[HIGH][MID]  = upper;
+    stencil_indices[HIGH][HIGH] = upper + 1;
+
+    if (left == INVALID) {
+      for (size_t k0 = 0; k0 < 3; ++k0)
+          stencil_indices[k0][LOW] = INVALID;
+    }
+    if (right == INVALID) {
+      for (size_t k0 = 0; k0 < 3; ++k0)
+          stencil_indices[k0][HIGH] = INVALID;
+    }
+    if (lower == INVALID) {
+      for (size_t k1 = 0; k1 < 3; ++k1)
+        stencil_indices[LOW][k1] = INVALID;
+    }
+    if (upper == INVALID) {
+      for (size_t k1 = 0; k1 < 3; ++k1)
+        stencil_indices[HIGH][k1] = INVALID;
+    }
+
+    isDirichlet = (left == INVALID && (DirichletBC & DIR_LEFT)) ||
+                  (right == INVALID && (DirichletBC & DIR_RIGHT)) ||
+                  (lower == INVALID && (DirichletBC & DIR_BOTTOM)) ||
+                  (upper == INVALID && (DirichletBC & DIR_TOP));
+  }
+
+  KOKKOS_FORCEINLINE_FUNCTION
+  bool IsBoundary(const GlobalOrdinal i) const {
+    GlobalOrdinal ix  = i % nx;
+    GlobalOrdinal ixy = i % (nx * ny);
+    GlobalOrdinal iy  = (ixy - ix) / nx;
+    return (ix == 0 || ix == nx - 1 || iy == 0 || iy == ny - 1);
+  }
+
+  KOKKOS_FORCEINLINE_FUNCTION
+  void CountRowNNZ(const GlobalOrdinal i, LocalOrdinal& partial_nnz, const bool is_final) const {
+    GlobalOrdinal center;
+    StencilIndices stencil_indices;
+    bool isDirichlet;
+
+    center = lclMap.getGlobalElement(i);
+    GetNeighbours(center, stencil_indices, isDirichlet);
+
+    if (isDirichlet && keepBCs) {
+      // Dirichlet unknown we want to keep
+      Galeri_processEntry(center);
+    } else {
+      for (size_t k0 = 0; k0 < 3; ++k0)
+        for (size_t k1 = 0; k1 < 3; ++k1)
+          Galeri_processEntry(stencil_indices[k0][k1]);
+    }
+  }
+
+  KOKKOS_FORCEINLINE_FUNCTION
+  void EnterValues(const LocalOrdinal i, typename rowptr_type::value_type& entryPtr) const {
+    GlobalOrdinal center;
+    StencilIndices stencil_indices;
+    bool isDirichlet;
+
+    center = lclMap.getGlobalElement(i);
+    GetNeighbours(center, stencil_indices, isDirichlet);
+
+    impl_scalar_type offDiagonalSum           = zero;
+    typename rowptr_type::value_type rowStart = entryPtr;
+    if (isDirichlet && keepBCs) {
+      // Dirichlet unknown we want to keep
+      Galeri_enterValue(rowStart, center, one);
+    } else {
+      for (size_t k0 = 0; k0 < 3; ++k0)
+        for (size_t k1 = 0; k1 < 3; ++k1)
+          if ((k0 != MID) || (k1 != MID))
+            Galeri_enterValue(rowStart, stencil_indices[k0][k1], stencil_entries(k0, k1));
+      Galeri_enterValue(rowStart, center, (IsBoundary(center) && !isDirichlet) ? -offDiagonalSum : stencil_entries(MID, MID));
+    }
+  }
+};
+
+template <class Scalar, class Map, bool keepBCs>
 class Brick3DStencil {
   // lower plane
   //   e  d  e
@@ -871,121 +1045,6 @@ Cross2D(const Teuchos::RCP<const Map>& map, const GlobalOrdinal nx, const Global
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////
-
-/* ****************************************************************************************************** *
- *    Star2D
- * ****************************************************************************************************** */
-template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Map, typename Matrix>
-Teuchos::RCP<Matrix>
-Star2D(const Teuchos::RCP<const Map>& map,
-       const GlobalOrdinal nx, const GlobalOrdinal ny,
-       const Scalar a, const Scalar b, const Scalar c,
-       const Scalar d, const Scalar e,
-       const Scalar z1, const Scalar z2,
-       const Scalar z3, const Scalar z4,
-       const DirBC DirichletBC = 0, const bool keepBCs = false) {
-  using Teuchos::RCP;
-  using Teuchos::rcp;
-  using Teuchos::TimeMonitor;
-
-  LocalOrdinal nnz = 9;
-
-  Teuchos::RCP<Matrix> mtx = MatrixTraits<Map, Matrix>::Build(map, nnz);
-
-  LocalOrdinal numMyElements = map->getLocalNumElements();
-  GlobalOrdinal indexBase    = map->getIndexBase();
-
-  Teuchos::ArrayView<const GlobalOrdinal> myGlobalElements = map->getLocalElementList();
-
-  GlobalOrdinal center, left, right, lower, upper;
-  std::vector<Scalar> vals(nnz);
-  std::vector<GlobalOrdinal> inds(nnz);
-
-  //  z3  e  z4
-  //   b  a  c
-  //  z1  d  z2
-  {
-    Teuchos::RCP<TimeMonitor> tm = rcp(new TimeMonitor(*TimeMonitor::getNewTimer("Galeri: Star2D generation")));
-
-    for (LocalOrdinal i = 0; i < numMyElements; ++i) {
-      size_t n = 0;
-
-      center = myGlobalElements[i] - indexBase;
-      GetNeighboursCartesian2d(center, nx, ny, left, right, lower, upper);
-
-      bool isDirichlet = (left == -1 && (DirichletBC & DIR_LEFT)) ||
-                         (right == -1 && (DirichletBC & DIR_RIGHT)) ||
-                         (lower == -1 && (DirichletBC & DIR_BOTTOM)) ||
-                         (upper == -1 && (DirichletBC & DIR_TOP));
-
-      if (isDirichlet && keepBCs) {
-        // Dirichlet unknown we want to keep
-        inds[n]   = center;
-        vals[n++] = Teuchos::ScalarTraits<Scalar>::one();
-
-      } else {
-        // See comments about weird in Cross2D
-        if (left != -1) {
-          inds[n]   = left;
-          vals[n++] = b;
-        }
-        if (right != -1) {
-          inds[n]   = right;
-          vals[n++] = c;
-        }
-        if (lower != -1) {
-          inds[n]   = lower;
-          vals[n++] = d;
-        }
-        if (upper != -1) {
-          inds[n]   = upper;
-          vals[n++] = e;
-        }
-        if (left != -1 && lower != -1) {
-          inds[n]   = lower - 1;
-          vals[n++] = z1;
-        }
-        if (right != -1 && lower != -1) {
-          inds[n]   = lower + 1;
-          vals[n++] = z2;
-        }
-        if (left != -1 && upper != -1) {
-          inds[n]   = upper - 1;
-          vals[n++] = z3;
-        }
-        if (right != -1 && upper != -1) {
-          inds[n]   = upper + 1;
-          vals[n++] = z4;
-        }
-
-        // diagonal
-        Scalar z = a;
-        if (IsBoundary2d(center, nx, ny) && !isDirichlet) {
-          // Neumann boundary unknown (diagonal = sum of all offdiagonal)
-          z = Teuchos::ScalarTraits<Scalar>::zero();
-          for (size_t j = 0; j < n; j++)
-            z -= vals[j];
-        }
-        inds[n]   = center + indexBase;
-        vals[n++] = z;
-      }
-
-      for (size_t j = 0; j < n; j++)
-        inds[j] += indexBase;
-
-      Teuchos::ArrayView<GlobalOrdinal> iv(&inds[0], n);
-      Teuchos::ArrayView<Scalar> av(&vals[0], n);
-      mtx->insertGlobalValues(myGlobalElements[i], iv, av);
-    }
-  }
-
-  {
-    Teuchos::RCP<TimeMonitor> tm = rcp(new TimeMonitor(*TimeMonitor::getNewTimer("Galeri: star2D fillComplete")));
-    mtx->fillComplete();
-  }
-
-  return mtx;
-}
 
 /* ****************************************************************************************************** *
  *    BigStar2D (2D Biharmonic operator, for example)
@@ -1401,6 +1460,33 @@ Cross3DKokkos(const Teuchos::RCP<const Map>& map,
     return StencilMatrixKokkos<Matrix>(map, stencil, label);
   }
 }
+
+template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Map, typename Matrix>
+Teuchos::RCP<Matrix>
+Brick2DKokkos(const Teuchos::RCP<const Map>& map,
+              const GlobalOrdinal nx, const GlobalOrdinal ny, const GlobalOrdinal nz,
+              const Scalar a, const Scalar b, const Scalar c,
+              const Scalar d, const Scalar e,
+              const Scalar z1, const Scalar z2,
+              const Scalar z3, const Scalar z4,
+              const DirBC DirichletBC  = 0,
+              const bool keepBCs       = false,
+              const std::string& label = "Brick2D") {
+  if (keepBCs) {
+    Brick2DStencil<Scalar, Map, true> stencil(*map,
+                                              nx, ny,
+                                              a, b, c, d, e, z1, z2, z3, z4,
+                                              DirichletBC);
+    return StencilMatrixKokkos<Matrix>(map, stencil, label);
+  } else {
+    Brick2DStencil<Scalar, Map, false> stencil(*map,
+                                               nx, ny,
+                                               a, b, c, d, e, z1, z2, z3, z4,
+                                               DirichletBC);
+    return StencilMatrixKokkos<Matrix>(map, stencil, label);
+  }
+}
+
 
 template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Map, typename Matrix>
 Teuchos::RCP<Matrix>

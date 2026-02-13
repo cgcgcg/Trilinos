@@ -265,7 +265,7 @@ Teuchos::RCP<Matrix> AnisotropicDiffusion2DProblem<Scalar, LocalOrdinal, GlobalO
   } else
     TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "You need to specify meshType=\"tri\" or \"quad\".");
 
-  this->A_ = Star2D<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix>(this->Map_, nx, ny, a, b, c, d, e, z1, z2, z3, z4, this->DirichletBC_, keepBCs);
+  this->A_ = Brick2DKokkos<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix>(this->Map_, nx, ny, a, b, c, d, e, z1, z2, z3, z4, this->DirichletBC_, keepBCs, "Anisotropic Diffusion 2D");
   this->A_->setObjectLabel(this->getObjectLabel());
   return this->A_;
 }
@@ -342,17 +342,17 @@ Teuchos::RCP<typename Problem<Map, Matrix, MultiVector>::RealValuedMultiVector> 
   return this->Coords_;
 }
 
-// =============================================  Star2D  =============================================
+// =============================================  Brick2D  =============================================
 template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Map, typename Matrix, typename MultiVector>
-class Star2DProblem : public ScalarProblem<Map, Matrix, MultiVector> {
+class Brick2DProblem : public ScalarProblem<Map, Matrix, MultiVector> {
  public:
-  Star2DProblem(Teuchos::ParameterList& list, const Teuchos::RCP<const Map>& map)
+  Brick2DProblem(Teuchos::ParameterList& list, const Teuchos::RCP<const Map>& map)
     : ScalarProblem<Map, Matrix, MultiVector>(list, map) {}
   Teuchos::RCP<Matrix> BuildMatrix();
 };
 
 template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Map, typename Matrix, typename MultiVector>
-Teuchos::RCP<Matrix> Star2DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix, MultiVector>::BuildMatrix() {
+Teuchos::RCP<Matrix> Brick2DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix, MultiVector>::BuildMatrix() {
   Teuchos::ParameterList list = this->list_;
   GlobalOrdinal nx            = -1;
   GlobalOrdinal ny            = -1;
@@ -382,7 +382,7 @@ Teuchos::RCP<Matrix> Star2DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, Mat
 
   bool keepBCs = this->list_.get("keepBCs", false);
 
-  this->A_ = Star2D<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix>(this->Map_, nx, ny, a, b, c, d, e, z1, z2, z3, z4, this->DirichletBC_, keepBCs);
+  this->A_ = Brick2DKokkos<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix>(this->Map_, nx, ny, a, b, c, d, e, z1, z2, z3, z4, this->DirichletBC_, keepBCs, "Star 2D");
   this->A_->setObjectLabel(this->getObjectLabel());
   return this->A_;
 }

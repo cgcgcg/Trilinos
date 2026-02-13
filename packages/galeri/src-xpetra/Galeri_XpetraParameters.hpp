@@ -126,6 +126,7 @@ class Parameters : public Teuchos::VerboseObject<Parameters<GO> >, public Teucho
 
     else if (matrixType == "Laplace2D" ||
              matrixType == "Star2D" ||
+             matrixType == "Brick2D" ||
              matrixType == "BigStar2D" ||
              matrixType == "AnisotropicDiffusion" ||
              matrixType == "Elasticity2D" ||

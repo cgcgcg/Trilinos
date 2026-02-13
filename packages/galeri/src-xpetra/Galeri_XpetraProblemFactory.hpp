@@ -36,7 +36,9 @@ RCP<Problem<Map, Matrix, MultiVector> > BuildProblem(const std::string& MatrixTy
   else if (MatrixType == "Laplace2D")
     P.reset(new Laplace2DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix, MultiVector>(list, map));
   else if (MatrixType == "Star2D")
-    P.reset(new Star2DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix, MultiVector>(list, map));
+    P.reset(new Brick2DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix, MultiVector>(list, map));
+  else if (MatrixType == "Brick2D")
+    P.reset(new Brick2DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix, MultiVector>(list, map));
   else if (MatrixType == "BigStar2D")
     P.reset(new BigStar2DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix, MultiVector>(list, map));
   else if (MatrixType == "AnisotropicDiffusion")
