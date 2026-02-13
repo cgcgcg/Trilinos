@@ -1252,7 +1252,7 @@ StencilMatrixKokkos(const Teuchos::RCP<const Map>& map,
   ///////////////////////////
   // Step 2 - Column map
 
-  auto columnMap_entries = Kokkos::View<GlobalOrdinal*, memory_space>("columnMap_entries", numMyElements + stencil.off_rank_indices.size());
+  auto columnMap_entries = Kokkos::View<GlobalOrdinal*, memory_space>(Kokkos::ViewAllocateWithoutInitializing("columnMap_entries"), numMyElements + stencil.off_rank_indices.size());
   // Copy over on-rank entries from rowmap
   Kokkos::deep_copy(Kokkos::subview(columnMap_entries, Kokkos::make_pair(0, numMyElements)),
                     map->getMyGlobalIndicesDevice());
@@ -1276,7 +1276,7 @@ StencilMatrixKokkos(const Teuchos::RCP<const Map>& map,
   {
     // Sort the off-rank entries by PID
     auto remoteGIDs = Kokkos::subview(columnMap_entries, Kokkos::make_pair(numMyElements, columnMap_entries.extent_int(0)));
-    auto remotePIDs = Kokkos::View<int*, memory_space>("remotePIDs", remoteGIDs.extent(0));
+    auto remotePIDs = Kokkos::View<int*, memory_space>(Kokkos::ViewAllocateWithoutInitializing("remotePIDs"), remoteGIDs.extent(0));
     {
       auto remoteGIDs_h = Kokkos::create_mirror_view(remoteGIDs);
       auto remotePIDs_h = Kokkos::create_mirror_view(remotePIDs);
@@ -1315,8 +1315,8 @@ StencilMatrixKokkos(const Teuchos::RCP<const Map>& map,
   // Step 3 - Fill
 
   stencil.lclColMap = ghosted_map->getLocalMap();
-  stencil.colidx    = colidx_type("colidx", myNNZ);
-  stencil.values    = values_type("values", myNNZ);
+  stencil.colidx    = colidx_type(Kokkos::ViewAllocateWithoutInitializing("colidx"), myNNZ);
+  stencil.values    = values_type(Kokkos::ViewAllocateWithoutInitializing("values"), myNNZ);
 
   // Loop over rows and stencil and fill the matrix.
   // To enter values in row i we use rowptr(i+1) as offset.
