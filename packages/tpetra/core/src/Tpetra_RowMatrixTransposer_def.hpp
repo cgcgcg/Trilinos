@@ -29,8 +29,7 @@ template <class Scalar,
 RowMatrixTransposer<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     RowMatrixTransposer(const Teuchos::RCP<const crs_matrix_type>& origMatrix,
                         const std::string& label)
-  : origMatrix_(origMatrix)
-  , label_(label) {}
+  : origMatrix_(origMatrix) {}
 
 template <class Scalar,
           class LocalOrdinal,
@@ -43,11 +42,7 @@ RowMatrixTransposer<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   // Do the local transpose
   RCP<crs_matrix_type> transMatrixWithSharedRows = createTransposeLocal(params);
 
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-  const std::string prefix = std::string("Tpetra ") + label_ + ": ";
-  using Teuchos::TimeMonitor;
-  TimeMonitor MM(*TimeMonitor::getNewTimer(prefix + "Transpose TAFC"));
-#endif
+  Tpetra::Details::ProfilingRegion MM("Tpetra: Transpose TAFC");
 
   // If transMatrixWithSharedRows has an exporter, that's what we
   // want.  If it doesn't, the rows aren't actually shared, and we're
@@ -59,9 +54,6 @@ RowMatrixTransposer<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     return transMatrixWithSharedRows;
   } else {
     Teuchos::ParameterList labelList;
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-    labelList.set("Timer Label", label_);
-#endif
     if (!params.is_null()) {
       const char paramName[] = "compute global constants";
       labelList.set(paramName, params->get(paramName, true));
@@ -96,11 +88,7 @@ RowMatrixTransposer<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   using import_type = Tpetra::Import<LO, GO, Node>;
   using export_type = Tpetra::Export<LO, GO, Node>;
 
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-  std::string prefix = std::string("Tpetra ") + label_ + ": ";
-  using Teuchos::TimeMonitor;
-  TimeMonitor MM(*TimeMonitor::getNewTimer(prefix + "Transpose Local"));
-#endif
+  Tpetra::Details::ProfilingRegion MM("Tpetra: Transpose Local");
 
   const bool sort = [&]() {
     constexpr bool sortDefault = true;  // see #4607 discussion
@@ -172,8 +160,7 @@ template <class Scalar,
 BlockCrsMatrixTransposer<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     BlockCrsMatrixTransposer(const Teuchos::RCP<const bcrs_matrix_type>& origMatrix,
                              const std::string& label)
-  : origMatrix_(origMatrix)
-  , label_(label) {}
+  : origMatrix_(origMatrix) {}
 
 template <class Scalar,
           class LocalOrdinal,
@@ -186,11 +173,7 @@ BlockCrsMatrixTransposer<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   // Do the local transpose
   RCP<bcrs_matrix_type> transMatrixWithSharedRows = createTransposeLocal(params);
 
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-  const std::string prefix = std::string("Tpetra ") + label_ + ": ";
-  using Teuchos::TimeMonitor;
-  TimeMonitor MM(*TimeMonitor::getNewTimer(prefix + "Transpose TAFC"));
-#endif
+  Tpetra::Details::ProfilingRegion MM("Tpetra: Transpose TAFC");
 
   // If transMatrixWithSharedRows has an exporter, that's what we
   // want.  If it doesn't, the rows aren't actually shared, and we're
@@ -202,9 +185,6 @@ BlockCrsMatrixTransposer<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     return transMatrixWithSharedRows;
   } else {
     Teuchos::ParameterList labelList;
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-    labelList.set("Timer Label", label_);
-#endif
     if (!params.is_null()) {
       const char paramName[] = "compute global constants";
       labelList.set(paramName, params->get(paramName, true));
@@ -239,11 +219,7 @@ BlockCrsMatrixTransposer<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   using export_type    = Tpetra::Export<LO, GO, Node>;
   using crs_graph_type = typename bcrs_matrix_type::crs_graph_type;
 
-#ifdef HAVE_TPETRA_MMM_TIMINGS
-  std::string prefix = std::string("Tpetra ") + label_ + ": ";
-  using Teuchos::TimeMonitor;
-  TimeMonitor MM(*TimeMonitor::getNewTimer(prefix + "Transpose Local"));
-#endif
+  Tpetra::Details::ProfilingRegion MM("Tpetra: Transpose Local");
 
   RCP<const bcrs_matrix_type> crsMatrix =
       rcp_dynamic_cast<const bcrs_matrix_type>(origMatrix_);
