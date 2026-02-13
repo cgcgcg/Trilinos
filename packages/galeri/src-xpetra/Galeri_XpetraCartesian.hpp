@@ -19,9 +19,7 @@
 #include "Galeri_MapTraits.hpp"
 #include "Galeri_XpetraUtils.hpp"
 
-#ifdef HAVE_GALERI_KOKKOS
 #include "Tpetra_Details_initializeKokkos.hpp"
-#endif
 
 namespace Galeri {
 
@@ -58,7 +56,6 @@ Teuchos::RCP<Map> Cartesian1D(const Teuchos::RCP<const Teuchos::Comm<int>>& comm
 
   size_t numMyElements = endx - startx;
 
-#ifdef HAVE_GALERI_KOKKOS
   Tpetra::Details::initializeKokkos();
 
   using Node                             = typename Map::node_type;
@@ -77,15 +74,6 @@ Teuchos::RCP<Map> Cartesian1D(const Teuchos::RCP<const Teuchos::Comm<int>>& comm
       });
 
   global_indices_array_device_type elementList = myGlobalElements;
-#else
-  std::vector<GO> myGlobalElements(numMyElements);
-
-  size_t count = 0;
-  for (GO i = startx; i < endx; i++)
-    myGlobalElements[count++] = i;
-
-  const Teuchos::ArrayView<const GO> elementList(myGlobalElements);
-#endif
   global_size_t numGlobalElements = nx;
   return MapTraits<GO, Map>::Build(numGlobalElements, elementList, 0 /*indexBase*/, comm);
 }
@@ -118,7 +106,6 @@ Teuchos::RCP<Map> Cartesian2D(const Teuchos::RCP<const Teuchos::Comm<int>>& comm
 
   size_t numMyElements = (endx - startx) * (endy - starty);
 
-#ifdef HAVE_GALERI_KOKKOS
   Tpetra::Details::initializeKokkos();
 
   using Node                             = typename Map::node_type;
@@ -139,16 +126,6 @@ Teuchos::RCP<Map> Cartesian2D(const Teuchos::RCP<const Teuchos::Comm<int>>& comm
       });
 
   global_indices_array_device_type elementList = myGlobalElements;
-#else
-  std::vector<GO> myGlobalElements(numMyElements);
-
-  size_t count = 0;
-  for (GO j = starty; j < endy; j++)
-    for (GO i = startx; i < endx; i++)
-      myGlobalElements[count++] = j * nx + i;
-
-  const Teuchos::ArrayView<const GO> elementList(myGlobalElements);
-#endif
   global_size_t numGlobalElements = nx * ny;
   return MapTraits<GO, Map>::Build(numGlobalElements, elementList, 0 /*indexBase*/, comm);
 }
@@ -188,7 +165,6 @@ Teuchos::RCP<Map> Cartesian3D(const Teuchos::RCP<const Teuchos::Comm<int>>& comm
 
   size_t numMyElements = (endx - startx) * (endy - starty) * (endz - startz);
 
-#ifdef HAVE_GALERI_KOKKOS
   Tpetra::Details::initializeKokkos();
 
   using Node                             = typename Map::node_type;
@@ -210,17 +186,6 @@ Teuchos::RCP<Map> Cartesian3D(const Teuchos::RCP<const Teuchos::Comm<int>>& comm
       });
 
   global_indices_array_device_type elementList = myGlobalElements;
-#else
-  std::vector<GO> myGlobalElements(numMyElements);
-
-  size_t count = 0;
-  for (GO k = startz; k < endz; k++)
-    for (GO j = starty; j < endy; j++)
-      for (GO i = startx; i < endx; i++)
-        myGlobalElements[count++] = k * (nx * ny) + j * nx + i;
-
-  const Teuchos::ArrayView<const GO> elementList(myGlobalElements);
-#endif
   global_size_t numGlobalElements = nx * ny * nz;
   return MapTraits<GO, Map>::Build(numGlobalElements, elementList, 0 /*indexBase*/, comm);
 }

@@ -75,17 +75,10 @@ class Utils {
 
     size_t NumMyElements = map->getLocalNumElements();
 
-#if defined(HAVE_GALERI_KOKKOS) && defined(HAVE_GALERI_KOKKOSKERNELS)
     using Node             = typename Map::node_type;
     using exec_space       = typename Node::execution_space;
     using range_type       = Kokkos::RangePolicy<LocalOrdinal, exec_space>;
-    using tpetra_map       = Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>;
-    bool useKokkosCodePath = false;
-    if constexpr (std::is_same_v<Map, tpetra_map>)
-      useKokkosCodePath = true;
-    else if (map->lib() == ::Xpetra::UseTpetra)
-      useKokkosCodePath = true;
-    if (useKokkosCodePath) {
+    {
       int dim = 0;
       if (coordType == "1D")
         dim = 1;
@@ -138,68 +131,6 @@ class Utils {
             });
       }
 
-    } else
-#endif
-    {
-      Teuchos::ArrayView<const GlobalOrdinal> MyGlobalElements = map->getLocalElementList();
-
-      GlobalOrdinal ix, iy, iz;
-
-      if (coordType == "1D") {
-        coordinates = VectorTraits<Map, RealValuedMultiVector>::Build(map, 1, false);
-        Teuchos::ArrayRCP<Teuchos::ArrayRCP<real_type> > Coord(1);
-        Coord[0] = coordinates->getDataNonConst(0);
-
-        delta_x = lx / Teuchos::as<real_type>(nx - 1);
-
-        for (size_t i = 0; i < NumMyElements; ++i) {
-          ix          = MyGlobalElements[i];
-          Coord[0][i] = delta_x * Teuchos::as<real_type>(ix);
-        }
-
-      } else if (coordType == "2D") {
-        coordinates = VectorTraits<Map, RealValuedMultiVector>::Build(map, 2, false);
-        Teuchos::ArrayRCP<Teuchos::ArrayRCP<real_type> > Coord(2);
-        Coord[0] = coordinates->getDataNonConst(0);
-        Coord[1] = coordinates->getDataNonConst(1);
-
-        delta_x = lx / Teuchos::as<real_type>(nx - 1);
-        delta_y = ly / Teuchos::as<real_type>(ny - 1);
-
-        for (size_t i = 0; i < NumMyElements; ++i) {
-          ix = MyGlobalElements[i] % nx;
-          iy = (MyGlobalElements[i] - ix) / nx;
-
-          Coord[0][i] = delta_x * Teuchos::as<real_type>(ix);
-          Coord[1][i] = delta_y * Teuchos::as<real_type>(iy);
-        }
-
-      } else if (coordType == "3D") {
-        coordinates = VectorTraits<Map, RealValuedMultiVector>::Build(map, 3, false);
-        Teuchos::ArrayRCP<Teuchos::ArrayRCP<real_type> > Coord(3);
-        Coord[0] = coordinates->getDataNonConst(0);
-        Coord[1] = coordinates->getDataNonConst(1);
-        Coord[2] = coordinates->getDataNonConst(2);
-
-        delta_x = lx / Teuchos::as<real_type>(nx - 1);
-        delta_y = ly / Teuchos::as<real_type>(ny - 1);
-        delta_z = lz / Teuchos::as<real_type>(nz - 1);
-
-        for (size_t i = 0; i < NumMyElements; i++) {
-          GlobalOrdinal ixy = MyGlobalElements[i] % (nx * ny);
-          iz                = (MyGlobalElements[i] - ixy) / (nx * ny);
-
-          ix = ixy % nx;
-          iy = (ixy - ix) / nx;
-
-          Coord[0][i] = delta_x * Teuchos::as<real_type>(ix);
-          Coord[1][i] = delta_y * Teuchos::as<real_type>(iy);
-          Coord[2][i] = delta_z * Teuchos::as<real_type>(iz);
-        }
-
-      } else {
-        throw(std::runtime_error("in Galeri::Xpetra::Utils : `coordType' has incorrect value (" + coordType + ")"));
-      }  // if (coordType == ...
     }
     return coordinates;
 

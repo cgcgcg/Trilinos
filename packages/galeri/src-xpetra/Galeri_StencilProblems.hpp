@@ -16,9 +16,8 @@
 #include "Galeri_XpetraMatrixTypes.hpp"
 #include "Galeri_XpetraUtils.hpp"
 
-namespace Galeri {
 
-namespace Xpetra {
+namespace Galeri::Xpetra {
 
 // =============================================  Scalar Problem =========================================
 template <typename Map, typename Matrix, typename MultiVector>
@@ -57,21 +56,8 @@ Teuchos::RCP<Matrix> Laplace1DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, 
   if (nx == -1)
     nx = this->Map_->getGlobalNumElements();
 
-    // The Kokkos code path does not work for Epetra.
-    // Once Epetra has been removed this logic should be simplified.
-#if defined(HAVE_GALERI_KOKKOS) && defined(HAVE_GALERI_KOKKOSKERNELS)
   bool keepBCs     = false;
-  using Node       = typename Map::node_type;
-  using tpetra_map = Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>;
-  if constexpr (std::is_same_v<Map, tpetra_map>) {
-    this->A_ = TriDiagKokkos<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix>(this->Map_, nx, 2.0, -1.0, -1.0, this->DirichletBC_, keepBCs, "Laplace 1D");
-  } else if (this->Map_->lib() == ::Xpetra::UseTpetra) {
-    this->A_ = TriDiagKokkos<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix>(this->Map_, nx, 2.0, -1.0, -1.0, this->DirichletBC_, keepBCs, "Laplace 1D");
-  } else
-#endif
-  {
-    this->A_ = TriDiag<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix>(this->Map_, nx, 2.0, -1.0, -1.0);
-  }
+  this->A_ = TriDiagKokkos<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix>(this->Map_, nx, 2.0, -1.0, -1.0, this->DirichletBC_, keepBCs, "Laplace 1D");
   this->A_->setObjectLabel(this->getObjectLabel());
   return this->A_;
 }
@@ -146,20 +132,7 @@ Teuchos::RCP<Matrix> Laplace2DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, 
   Scalar south  = (Scalar)-one / (stretchy * stretchy);
   Scalar center = -(east + west + north + south);
 
-  // The Kokkos code path does not work for Epetra.
-  // Once Epetra has been removed this logic should be simplified.
-#if defined(HAVE_GALERI_KOKKOS) && defined(HAVE_GALERI_KOKKOSKERNELS)
-  using Node       = typename Map::node_type;
-  using tpetra_map = Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>;
-  if constexpr (std::is_same_v<Map, tpetra_map>) {
-    this->A_ = Cross2DKokkos<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix>(this->Map_, nx, ny, center, west, east, south, north, this->DirichletBC_, keepBCs, "Laplace 2D");
-  } else if (this->Map_->lib() == ::Xpetra::UseTpetra) {
-    this->A_ = Cross2DKokkos<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix>(this->Map_, nx, ny, center, west, east, south, north, this->DirichletBC_, keepBCs, "Laplace 2D");
-  } else
-#endif
-  {
-    this->A_ = Cross2D<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix>(this->Map_, nx, ny, center, west, east, south, north, this->DirichletBC_, keepBCs);
-  }
+  this->A_ = Cross2DKokkos<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix>(this->Map_, nx, ny, center, west, east, south, north, this->DirichletBC_, keepBCs, "Laplace 2D");
   this->A_->setObjectLabel(this->getObjectLabel());
   return this->A_;
 }
@@ -356,21 +329,7 @@ Teuchos::RCP<Matrix> Laplace3DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, 
   Scalar down   = (Scalar)-one / (stretchz * stretchz);
   Scalar center = -(right + left + front + back + up + down);
 
-  // The Kokkos code path does not work for Epetra.
-  // Once Epetra has been removed this logic should be simplified.
-#if defined(HAVE_GALERI_KOKKOS) && defined(HAVE_GALERI_KOKKOSKERNELS)
-  using Node       = typename Map::node_type;
-  using tpetra_map = Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>;
-  if constexpr (std::is_same_v<Map, tpetra_map>) {
-    this->A_ = Cross3DKokkos<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix>(this->Map_, nx, ny, nz, center, left, right, front, back, down, up, this->DirichletBC_, keepBCs, "Laplace 3D");
-  } else if (this->Map_->lib() == ::Xpetra::UseTpetra) {
-    this->A_ = Cross3DKokkos<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix>(this->Map_, nx, ny, nz, center, left, right, front, back, down, up, this->DirichletBC_, keepBCs, "Laplace 3D");
-  } else
-#endif
-  {
-    this->A_ = Cross3D<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix>(this->Map_, nx, ny, nz, center, left, right, front, back, down, up, this->DirichletBC_, keepBCs);
-  }
-
+  this->A_ = Cross3DKokkos<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix>(this->Map_, nx, ny, nz, center, left, right, front, back, down, up, this->DirichletBC_, keepBCs, "Laplace 3D");
   this->A_->setObjectLabel(this->getObjectLabel());
   return this->A_;
 }
@@ -525,20 +484,7 @@ Teuchos::RCP<Matrix> Brick3DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, Ma
 
   bool keepBCs = this->list_.get("keepBCs", false);
 
-  // The Kokkos code path does not work for Epetra.
-  // Once Epetra has been removed this logic should be simplified.
-#if defined(HAVE_GALERI_KOKKOS) && defined(HAVE_GALERI_KOKKOSKERNELS)
-  using Node       = typename Map::node_type;
-  using tpetra_map = Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>;
-  if constexpr (std::is_same_v<Map, tpetra_map>) {
-    this->A_ = Brick3DKokkos<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix>(this->Map_, nx, ny, nz, 26.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, this->DirichletBC_, keepBCs, "3D 27 point stencil");
-  } else if (this->Map_->lib() == ::Xpetra::UseTpetra) {
-    this->A_ = Brick3DKokkos<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix>(this->Map_, nx, ny, nz, 26.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, this->DirichletBC_, keepBCs, "3D 27 point stencil");
-  } else
-#endif
-  {
-    this->A_ = Brick3D<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix>(this->Map_, nx, ny, nz, 26.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, this->DirichletBC_, keepBCs);
-  }
+  this->A_ = Brick3DKokkos<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix>(this->Map_, nx, ny, nz, 26.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, this->DirichletBC_, keepBCs, "3D 27 point stencil");
   this->A_->setObjectLabel(this->getObjectLabel());
   return this->A_;
 }
@@ -572,20 +518,7 @@ Teuchos::RCP<Matrix> IdentityProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, M
   if (nx == -1)
     nx = this->Map_->getGlobalNumElements();
 
-    // The Kokkos code path does not work for Epetra.
-    // Once Epetra has been removed this logic should be simplified.
-#if defined(HAVE_GALERI_KOKKOS) && defined(HAVE_GALERI_KOKKOSKERNELS)
-  using Node       = typename Map::node_type;
-  using tpetra_map = Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>;
-  if constexpr (std::is_same_v<Map, tpetra_map>) {
-    this->A_ = ScaledIdentityKokkos<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix>(this->Map_, nx, a, "Scaled Identity");
-  } else if (this->Map_->lib() == ::Xpetra::UseTpetra) {
-    this->A_ = ScaledIdentityKokkos<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix>(this->Map_, nx, a, "Scaled Identity");
-  } else
-#endif
-  {
-    this->A_ = Identity<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix>(this->Map_, a);
-  }
+  this->A_ = ScaledIdentityKokkos<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix>(this->Map_, nx, a, "Scaled Identity");
   this->A_->setObjectLabel(this->getObjectLabel());
   return this->A_;
 }
@@ -734,8 +667,8 @@ Teuchos::RCP<Matrix> Recirc2DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, M
   return this->A_;
 }  // Recirc2DProblem
 
-}  // namespace Xpetra
+} // namespace Galeri::Xpetra
 
-}  // namespace Galeri
+
 
 #endif  // GALERI_STENCILPROBLEMS_HPP
