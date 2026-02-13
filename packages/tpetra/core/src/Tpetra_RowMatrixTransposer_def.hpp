@@ -142,6 +142,12 @@ RowMatrixTransposer<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     graphParams = rcp(new Teuchos::ParameterList);
     graphParams->set("sorted", false);
   }
+  const char computeGlobalConstantsParamName[] = "compute global constants";
+  if (!params.is_null() && params->isParameter(computeGlobalConstantsParamName)) {
+    if (graphParams.is_null())
+      graphParams = rcp(new Teuchos::ParameterList);
+    graphParams->set(computeGlobalConstantsParamName, params->get<bool>(computeGlobalConstantsParamName));
+  }
 
   return rcp(new crs_matrix_type(lclTransposeMatrix,
                                  origMatrix_->getColMap(),
