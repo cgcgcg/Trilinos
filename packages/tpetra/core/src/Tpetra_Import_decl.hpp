@@ -488,6 +488,18 @@ class Import : public ::Tpetra::Details::Transfer<LocalOrdinal, GlobalOrdinal, N
          const Teuchos::RCP<Teuchos::FancyOStream>& out    = Teuchos::null,
          const Teuchos::RCP<Teuchos::ParameterList>& plist = Teuchos::null);
 
+  Import(const Teuchos::RCP<const map_type>& source,
+         const Teuchos::RCP<const map_type>& target,
+         const size_t numSameID,
+         remote_lids_type permuteToLIDs,
+         remote_lids_type permuteFromLIDs,
+         remote_lids_type remoteLIDs,
+         remote_lids_type exportLIDs,
+         Teuchos::Array<int>& exportPIDs,
+         Distributor& distributor,
+         const Teuchos::RCP<Teuchos::FancyOStream>& out    = Teuchos::null,
+         const Teuchos::RCP<Teuchos::ParameterList>& plist = Teuchos::null);
+
 };  // class Import
 
 /// \brief Nonmember constructor for Import.
