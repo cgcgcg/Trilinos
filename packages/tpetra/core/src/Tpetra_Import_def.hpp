@@ -1776,44 +1776,38 @@ Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node>>
 Import<LocalOrdinal, GlobalOrdinal, Node>::
     setUnion() const {
   using Teuchos::Array;
-  using Teuchos::ArrayView;
-  using Teuchos::as;
-  using Teuchos::Comm;
-  using Teuchos::outArg;
   using Teuchos::RCP;
   using Teuchos::rcp;
-  using Teuchos::REDUCE_MIN;
-  using Teuchos::reduceAll;
-  typedef LocalOrdinal LO;
   typedef GlobalOrdinal GO;
-  Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node>> unionImport;
-  RCP<const map_type> srcMap = this->getSourceMap();
-  RCP<const map_type> tgtMap = this->getTargetMap();
-  RCP<const Comm<int>> comm  = srcMap->getComm();
 
-  ArrayView<const GO> srcGIDs = srcMap->getLocalElementList();
-  ArrayView<const GO> tgtGIDs = tgtMap->getLocalElementList();
+  auto srcMap = this->getSourceMap();
+  auto tgtMap = this->getTargetMap();
+  auto comm   = srcMap->getComm();
+
+  auto srcGIDs = srcMap->getMyGlobalIndicesDevice();
+  auto tgtGIDs = tgtMap->getMyGlobalIndicesDevice();
 
   // All elements in srcMap will be in the "new" target map, so...
   size_t numSameIDsNew   = srcMap->getLocalNumElements();
   size_t numRemoteIDsNew = this->getNumRemoteIDs();
-  Array<LO> permuteToLIDsNew, permuteFromLIDsNew;  // empty on purpose
+  remote_lids_type permuteToLIDsNew, permuteFromLIDsNew;  // empty on purpose
 
   // Grab some old data
-  ArrayView<const LO> remoteLIDsOld = this->getRemoteLIDs();
-  ArrayView<const LO> exportLIDsOld = this->getExportLIDs();
+  auto remoteLIDsOld = this->getRemoteLIDs_dv().view_device();
+  auto exportLIDsOld = this->getExportLIDs_dv().view_device();
 
   // Build up the new map (same part)
-  Array<GO> GIDs(numSameIDsNew + numRemoteIDsNew);
-  for (size_t i = 0; i < numSameIDsNew; i++)
-    GIDs[i] = srcGIDs[i];
+  remote_gids_type GIDs(Kokkos::ViewAllocateWithoutInitializing("GIDs"), numSameIDsNew + numRemoteIDsNew);
+  Kokkos::deep_copy(Kokkos::subview(GIDs, Kokkos::make_pair((decltype(numSameIDsNew))0, numSameIDsNew)),
+                    Kokkos::subview(srcGIDs, Kokkos::make_pair((decltype(numSameIDsNew))0, numSameIDsNew)));
 
   // Build up the new map (remote part) and remotes list
-  Array<LO> remoteLIDsNew(numRemoteIDsNew);
-  for (size_t i = 0; i < numRemoteIDsNew; i++) {
-    GIDs[numSameIDsNew + i] = tgtGIDs[remoteLIDsOld[i]];
-    remoteLIDsNew[i]        = numSameIDsNew + i;
-  }
+  remote_lids_type remoteLIDsNew(Kokkos::ViewAllocateWithoutInitializing("remoteLIDsNew"), numRemoteIDsNew);
+  Kokkos::parallel_for(
+      "", Kokkos::RangePolicy<execution_space, size_t>(0, numRemoteIDsNew), KOKKOS_LAMBDA(const size_t i) {
+        GIDs(numSameIDsNew + i) = tgtGIDs(remoteLIDsOld(i));
+        remoteLIDsNew(i)        = numSameIDsNew + i;
+      });
 
   // Build the new target map
   GO GO_INVALID = Teuchos::OrdinalTraits<GO>::invalid();
@@ -1823,20 +1817,22 @@ Import<LocalOrdinal, GlobalOrdinal, Node>::
 
   // Exports are trivial (since the sourcemap doesn't change)
   Array<int> exportPIDsnew(this->getExportPIDs());
-  Array<LO> exportLIDsnew(this->getExportLIDs());
+  auto exportLIDs = this->getExportLIDs_dv().view_device();
+  remote_lids_type exportLIDsnew(Kokkos::ViewAllocateWithoutInitializing("exportLIDsnew"), exportLIDs.extent(0));
+  Kokkos::deep_copy(exportLIDsnew, exportLIDs);
 
   // Copy the Distributor (due to how the Import constructor works)
   Distributor D(this->getDistributor());
 
   // Build the importer using the "expert" constructor
-  unionImport = rcp(new Import<LocalOrdinal, GlobalOrdinal, Node>(srcMap,
-                                                                  targetMapNew,
-                                                                  numSameIDsNew,
-                                                                  permuteToLIDsNew,
-                                                                  permuteFromLIDsNew,
-                                                                  remoteLIDsNew,
-                                                                  exportLIDsnew,
-                                                                  exportPIDsnew, D));
+  auto unionImport = rcp(new Import<LocalOrdinal, GlobalOrdinal, Node>(srcMap,
+                                                                       targetMapNew,
+                                                                       numSameIDsNew,
+                                                                       permuteToLIDsNew,
+                                                                       permuteFromLIDsNew,
+                                                                       remoteLIDsNew,
+                                                                       exportLIDsnew,
+                                                                       exportPIDsnew, D));
 
   return unionImport;
 }

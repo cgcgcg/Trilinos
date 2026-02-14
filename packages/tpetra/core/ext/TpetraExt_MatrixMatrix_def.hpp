@@ -3005,8 +3005,8 @@ void import_and_extract_views(
   using GO = GlobalOrdinal;
   using NO = Node;
 
-  using map_type = Map<LO, GO, NO>;
-  using import_type = Import<LO, GO, NO>;
+  using map_type        = Map<LO, GO, NO>;
+  using import_type     = Import<LO, GO, NO>;
   using crs_matrix_type = CrsMatrix<SC, LO, GO, NO>;
 
   RCP<Tpetra::Details::ProfilingRegion> MM = rcp(new Tpetra::Details::ProfilingRegion("TpetraExt: MMM: I&X Alloc"));
@@ -3061,7 +3061,7 @@ void import_and_extract_views(
 
       Kokkos::View<GlobalOrdinal*, typename Node::device_type> remoteRows(Kokkos::ViewAllocateWithoutInitializing("remoteRows"), numRemote);
       using execution_space = typename Node::execution_space;
-      using range_type = Kokkos::RangePolicy<execution_space, size_t>;
+      using range_type      = Kokkos::RangePolicy<execution_space, size_t>;
       Kokkos::parallel_for(
           "RemoteMapMode1", range_type(0, numRemote), KOKKOS_LAMBDA(const size_t i) {
             remoteRows(i) = lclTargetMap.getGlobalElement(remoteLIDs(i));
@@ -3082,7 +3082,7 @@ void import_and_extract_views(
       const auto INVALID = Teuchos::OrdinalTraits<LO>::invalid();
 
       using execution_space = typename Node::execution_space;
-      using range_type = Kokkos::RangePolicy<execution_space, size_t>;
+      using range_type      = Kokkos::RangePolicy<execution_space, size_t>;
       Kokkos::parallel_reduce(
           "RemoteMapMode2", range_type(0, numRows), KOKKOS_LAMBDA(const size_t i, size_t& numMyRemote) {
             const auto mlid = lclTargetMap.getLocalElement(rows(i));
