@@ -29,9 +29,12 @@
 #include <MueLu_UncoupledAggregationFactory.hpp>
 #include <MueLu_TentativePFactory.hpp>
 #include "MueLu_NoFactory.hpp"
+#include "MueLu_SaPFactory.hpp"
+#include "MueLu_FilteredAFactory.hpp"
 #include "MueLu_ReitzingerPFactory_decl.hpp"
 #include "Teuchos_ScalarTraitsDecl.hpp"
 #include "Teuchos_VerbosityLevel.hpp"
+#include <algorithm>
 
 namespace MueLuTests {
 
@@ -236,8 +239,15 @@ void testMaxwellConstraint(const std::string &inputDir,
   const bool GrindEmin     = false;
 
   {
+//  uncomment these two defines to run the miniBadSubGraph test
+//#define BadSubGraph
+//#define writeResult
+#ifdef  BadSubGraph
+    NodeAggMatrix = Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Read(inputDir + "An.dat", lib, comm);
+#else
     auto A_D0     = Xpetra::MatrixMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Multiply(*A, false, *D, false, out, true, true);
     NodeAggMatrix = Xpetra::MatrixMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Multiply(*D, true, *A_D0, false, out, true, true);
+#endif
   }
   if (readNodalProlongators) {
     Ptentnodal = Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Read(inputDir + "Ptent.dat", lib, comm);
@@ -265,6 +275,32 @@ void testMaxwellConstraint(const std::string &inputDir,
     Ptentfact->SetParameter("sa: keep tentative prolongator", Teuchos::ParameterEntry(true));
     Ptentfact->SetParameter("tentative: calculate qr", Teuchos::ParameterEntry(false));
     Ptentfact->SetParameter("tentative: constant column sums", Teuchos::ParameterEntry(false));
+#ifdef  BadSubGraph
+    RCP<AmalgamationFactory> amalgFact = rcp(new AmalgamationFactory());
+    RCP<CoalesceDropFactory> dropFact  = rcp(new CoalesceDropFactory());
+    dropFact->SetParameter("aggregation: drop tol",  Teuchos::ParameterEntry(.01));
+    dropFact->SetFactory("UnAmalgamationInfo", amalgFact);
+    RCP<UncoupledAggregationFactory> UncoupledAggFact = rcp(new UncoupledAggregationFactory());
+    UncoupledAggFact->SetFactory("Graph", dropFact);
+    RCP<CoarseMapFactory> coarseMapFact = rcp(new CoarseMapFactory());
+    coarseMapFact->SetFactory("Aggregates", UncoupledAggFact);
+    Ptentfact->SetFactory("Aggregates", UncoupledAggFact);
+    Ptentfact->SetFactory("UnAmalgamationInfo", amalgFact);
+    Ptentfact->SetFactory("CoarseMap", coarseMapFact);
+    Teuchos::ParameterList Pparams;
+    Pparams.set("sa: damping factor", 1.33333);
+    RCP<SaPFactory> Pnfact = rcp(new SaPFactory);
+    Pnfact->SetParameterList(Pparams);
+    Pnfact->SetParameter("sa: damping factor", Teuchos::ParameterEntry(1.33333));
+    Pnfact->SetFactory("P", Ptentfact);
+    RCP<Factory> filterFactory = rcp(new FilteredAFactory());
+    filterFactory->SetFactory("Graph", dropFact); // manager.GetFactory("Graph"));
+    filterFactory->SetFactory("Filtering", dropFact); //manager.GetFactory("Graph"));
+    filterFactory->SetFactory("Aggregates", UncoupledAggFact); // manager.GetFactory("Aggregates"));
+    filterFactory->SetFactory("UnAmalgamationInfo", amalgFact); // manager.GetFactory("UnAmalgamationInfo"));
+    Pnfact->SetFactory("A", filterFactory);
+    M.SetFactory("P", Pnfact);
+#endif
     M.SetFactory("Ptent", Ptentfact);
     H->SetMaxCoarseSize(1);
     H->Setup(M, 0, 2);
@@ -272,7 +308,13 @@ void testMaxwellConstraint(const std::string &inputDir,
     RCP<Level> coarseLevelNodal = H->GetLevel(1);
     Ptentnodal                  = coarseLevelNodal->Get<RCP<Matrix>>("Ptent");
     Pnodal                      = coarseLevelNodal->Get<RCP<Matrix>>("P");
+    Pnodal->RemoveView("stridedMaps");
+    Teuchos::rcp_const_cast<CrsGraph>(Pnodal->getCrsGraph())->computeGlobalConstants();
     NodeAggMatrixCoarse         = coarseLevelNodal->Get<RCP<Matrix>>("A");
+#ifdef writeResult
+    Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Write("Ptent.code", *Ptentnodal);
+    Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Write("Pn.code", *Pnodal);
+#endif
   }
 
   RCP<Constraint> constraint;
@@ -310,6 +352,10 @@ void testMaxwellConstraint(const std::string &inputDir,
     eminFact->SetFactory("P", constraintFact);
     if (GrindEmin)
       eminFact->SetParameter("emin: num iterations", Teuchos::ParameterEntry(110));
+#ifdef  BadSubGraph
+    else
+      eminFact->SetParameter("emin: num iterations", Teuchos::ParameterEntry(0));
+#endif
 
     coarseLevel.Request("Constraint", constraintFact.get());
     coarseLevel.Request("P", constraintFact.get());
@@ -328,6 +374,20 @@ void testMaxwellConstraint(const std::string &inputDir,
 
     // This is the result after running the minimization.
     coarseLevel.Get("P", P, eminFact.get());
+#ifdef writeResult
+    RCP<Matrix> D0H;
+    D0H = coarseLevel.Get<RCP<Matrix>>("D0");
+    GO nFineEdges  =   P->getRowMap()->getGlobalNumElements();
+    GO nCoarEdges  = D0H->getRowMap()->getGlobalNumElements();
+    std::string suffix = inputDir;
+    std::replace(suffix.begin(), suffix.end(), '/', '_');
+    std::string sub = "emin_matrices";
+    size_t pos = suffix.find(sub);
+    if (pos != std::string::npos) suffix.erase(pos, sub.length());
+
+    Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Write("Pe_" + std::to_string(nFineEdges) + suffix + ".code", *P);
+    Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Write("DH_" + std::to_string(nCoarEdges) + suffix +".code", *D0H);
+#endif
   }
 
   const auto eps = Teuchos::ScalarTraits<magnitude_type>::eps();
@@ -424,6 +484,13 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(EminPFactory, MaxwellConstraint_HexesWithDir, 
                                                                    /*readNodalProlongators=*/true,
                                                                    out, success);
 }
+TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(EminPFactory, miniBadSubGraph,  Scalar, LocalOrdinal, GlobalOrdinal, Node) {
+#include "MueLu_UseShortNames.hpp"
+  MUELU_TESTING_SET_OSTREAM;
+  MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
+  testMaxwellConstraint<Scalar, LocalOrdinal, GlobalOrdinal, Node>(/*inputDir=*/"emin_matrices/graphDisconnect/",
+                                                                   /*readNodalProlongators=*/false, out, success);
+}
 
 #define MUELU_ETI_GROUP(SC, LO, GO, Node)                                                                \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(EminPFactory, NullspaceConstraint_Laplace1D, SC, LO, GO, Node)    \
@@ -440,7 +507,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(EminPFactory, MaxwellConstraint_HexesWithDir, 
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(EminPFactory, MaxwellConstraint_Tets, SC, LO, GO, Node)           \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(EminPFactory, MaxwellConstraint_TetsWithDir, SC, LO, GO, Node)    \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(EminPFactory, MaxwellConstraint_Hexes, SC, LO, GO, Node)          \
-  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(EminPFactory, MaxwellConstraint_HexesWithDir, SC, LO, GO, Node)
+  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(EminPFactory, MaxwellConstraint_HexesWithDir, SC, LO, GO, Node)   \
+  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(EminPFactory, miniBadSubGraph, SC, LO, GO, Node) 
 
 #include <MueLu_ETI_4arg.hpp>
 
