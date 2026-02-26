@@ -282,6 +282,7 @@ void testMaxwellConstraint(const std::string &inputDir,
     dropFact->SetFactory("UnAmalgamationInfo", amalgFact);
     RCP<UncoupledAggregationFactory> UncoupledAggFact = rcp(new UncoupledAggregationFactory());
     UncoupledAggFact->SetFactory("Graph", dropFact);
+    UncoupledAggFact->SetParameter("aggregation: max selected neighbors", Teuchos::ParameterEntry(2));
     RCP<CoarseMapFactory> coarseMapFact = rcp(new CoarseMapFactory());
     coarseMapFact->SetFactory("Aggregates", UncoupledAggFact);
     Ptentfact->SetFactory("Aggregates", UncoupledAggFact);
