@@ -238,6 +238,7 @@ void SparseConstraint<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Setup() {
   this->SetConstraintsMatrix(X);
 }
 
+#ifdef out
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 typename Xpetra::CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::local_graph_type SparseConstraint<Scalar, LocalOrdinal, GlobalOrdinal, Node>::FindBlocks(RCP<const Xpetra::CrsGraph<LocalOrdinal, GlobalOrdinal, Node>>& /*XXt*/) {
   using execution_space = typename Node::execution_space;
@@ -274,6 +275,7 @@ typename Xpetra::CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::local_graph_type S
 
   return graph_type(indices, rowptr);
 }
+#endif
 
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 typename Teuchos::ScalarTraits<Scalar>::magnitudeType

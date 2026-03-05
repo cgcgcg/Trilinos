@@ -56,7 +56,9 @@ class SparseConstraint
 
   void Setup();
 
+#ifdef out
   typename CrsGraph::local_graph_type FindBlocks(RCP<const CrsGraph>& /*XXt*/);
+#endif
 
   MagnitudeType ResidualNorm(RCP<const Matrix> P) const override;
 

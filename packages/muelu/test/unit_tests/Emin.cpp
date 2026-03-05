@@ -36,6 +36,34 @@
 #include "Teuchos_VerbosityLevel.hpp"
 #include <algorithm>
 
+// Garbage sorting code that gives us a permutation array that we can use to reorder
+// related entities. We use it in this test to sort all the  abs( An_ij)/sqrt(A_ii A_jj)
+// nonzeros. We then use the permuation array to then reorder the nonzeros of An, 
+// of the rows and of the columns.
+// I'm sure there is a kokkos way of doing this, but I didn't find it immediately
+// so I grabbed this off the internet.
+template <typename T>
+std::vector<unsigned> getSortPermutation(const std::vector<T>& v) {
+    std::vector<unsigned> order(v.size());
+    std::iota(order.begin(), order.end(), 0); // Fills with 0, 1, 2, ...
+
+    std::sort(order.begin(), order.end(), [&](unsigned i, unsigned j){
+        return v[i] > v[j]; // Compares elements in 'v' using indices
+    });
+
+    return order;
+}
+template <typename T>
+void applyPermutation(const std::vector<unsigned>& order, std::vector<T>& t) {
+    // Assert that the sizes match
+    assert(order.size() == t.size());
+    
+    std::vector<T> temp(t.size());
+    for (unsigned i = 0; i < t.size(); ++i) {
+      temp[i] = t[order[i]]; // Apply the permutation
+    }
+    t = temp; // Overwrite the original vector
+}
 namespace MueLuTests {
 
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
@@ -242,11 +270,141 @@ void testMaxwellConstraint(const std::string &inputDir,
 //  uncomment these two defines to run the miniBadSubGraph test
 //#define BadSubGraph
 //#define writeResult
+#define randomlyPerturbAn
 #ifdef  BadSubGraph
     NodeAggMatrix = Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Read(inputDir + "An.dat", lib, comm);
 #else
     auto A_D0     = Xpetra::MatrixMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Multiply(*A, false, *D, false, out, true, true);
     NodeAggMatrix = Xpetra::MatrixMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Multiply(*D, true, *A_D0, false, out, true, true);
+#endif
+#ifdef randomlyPerturbAn
+    Xpetra::CrsMatrixWrap<Scalar, LocalOrdinal, GlobalOrdinal, Node>& crsOp =
+                     dynamic_cast<Xpetra::CrsMatrixWrap<Scalar, LocalOrdinal, GlobalOrdinal, Node>&>(*NodeAggMatrix);
+    RCP<Xpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>> tmp_CrsMtx = crsOp.getCrsMatrix();
+    RCP<Xpetra::TpetraCrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>   tmp_TCrsMtx =
+       Teuchos::rcp_dynamic_cast<Xpetra::TpetraCrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>(tmp_CrsMtx);
+#if KOKKOS_VERSION >= 40799
+   using ATS              = KokkosKernels::ArithTraits<Scalar>;
+   using impl_scalar_type = typename ATS::val_type;
+   using implATS          = KokkosKernels::ArithTraits<impl_scalar_type>;
+   using mag_type         = typename KokkosKernels::ArithTraits<impl_scalar_type>::magnitudeType;
+   using magATS           = KokkosKernels::ArithTraits<mag_type>;
+ #else
+   using ATS              = Kokkos::ArithTraits<Scalar>;
+   using impl_scalar_type = typename ATS::val_type;
+   using implATS          = Kokkos::ArithTraits<impl_scalar_type>;
+   using mag_type         = typename Kokkos::ArithTraits<impl_scalar_type>::magnitudeType;
+   using magATS           = Kokkos::ArithTraits<mag_type>;
+ #endif
+    Scalar percentOffdiagRetained = .3;
+    LO lowestNnzPerRow = 7;
+    if (tmp_TCrsMtx != Teuchos::null) {
+      RCP<Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>> Ahat = tmp_TCrsMtx->getTpetra_CrsMatrixNonConst();
+      auto view    = Ahat->getLocalValuesDevice(Tpetra::Access::ReadWrite);
+      auto offs    = Ahat->getLocalRowPtrsDevice();
+      auto inds    = Ahat->getLocalIndicesDevice();
+      auto lclMap  = Ahat->getRowMap()->getLocalMap();
+      auto lclCMap = Ahat->getColMap()->getLocalMap();
+      std::vector<bool>  isDirichlet(Ahat->getLocalNumRows(), false);
+      GO nDirichlet = 0;
+      const auto eps_mag          = magATS::epsilon();
+      size_t nnz = offs[Ahat->getLocalNumRows()];
+      std::vector<LO> cols(nnz);
+      std::vector<LO> rows(nnz);
+      std::vector<Scalar> nonzeroVals(nnz);
+      // put random numbers into the off-diagonals while setting the
+      // diagonal temporarily to 0.0. At the same time record
+      // the Dirichlet BC rows
+      for (LO i = 0; i < (LO) Ahat->getLocalNumRows(); ++i) {
+        LO nz_inRow = 0;
+
+        GO gid = lclMap.getGlobalElement(i);
+        for (size_t j = offs[i]; j < offs[i + 1]; j++) {
+          GO gidc = lclCMap.getGlobalElement(inds[j]);
+          if ( ATS::magnitude(view[j])  > eps_mag) {
+            nz_inRow++;
+            if (gid != gidc ) {
+              unsigned int mySeed = (size_t) 135 + gid + gidc + gid*gidc; //do this to get a symmetric pattern
+              Teuchos::ScalarTraits<double>::seedrandom(mySeed);
+              view[j] = -1.0 + .5*Teuchos::ScalarTraits<double>::random();
+            }
+            else {
+              view[j] = 0.0;  // set to zero so that the row sum below just includes off diagonals
+            }
+          }
+        }
+        if (nz_inRow  < 2)  { isDirichlet[i] = true; nDirichlet++;}
+      }
+
+      // set matrix diagonal so that row sums are zero
+    
+      RCP<MultiVector> onesVector = MultiVectorFactory::Build(NodeAggMatrix->getRowMap(), 1);
+      onesVector->putScalar(Teuchos::ScalarTraits<Scalar>::one());
+      RCP<MultiVector> rowSumVector = MultiVectorFactory::Build(onesVector->getMap(), 1);
+      NodeAggMatrix->apply(*onesVector, *rowSumVector);
+      RCP<Vector> ghostedDiag    = Xpetra::VectorFactory<SC, LO, GO, Node>::Build(NodeAggMatrix->getColMap(), true);
+      RCP<const Xpetra::Import<LO, GO, Node>> importer;
+      importer = NodeAggMatrix->getCrsGraph()->getImporter();
+      if (importer == Teuchos::null) {
+        importer = Xpetra::ImportFactory<LO, GO, Node>::Build(NodeAggMatrix->getRowMap(), NodeAggMatrix->getColMap());
+      }
+      auto v0 = rowSumVector->getVector(0);
+      ghostedDiag->doImport(*v0, *(importer), Xpetra::INSERT);
+      const ArrayRCP<const Scalar> diagData          = ghostedDiag->getData(0);
+
+      // make a copy of the nonzeros but change the values so that are scaled symmetrically 
+      // using the diagonal. At the same time, show the diagonal into An.
+      for (LO i = 0; i < (LO) Ahat->getLocalNumRows(); ++i) {
+        GO gid = lclMap.getGlobalElement(i);
+        for (size_t j = offs[i]; j < offs[i + 1]; j++) {
+          GO gidc = lclCMap.getGlobalElement(inds[j]);
+          rows[j] = (LO) i;
+          cols[j] = (LO) inds[j];
+          if (gid != gidc ) {
+             nonzeroVals[j] = ATS::magnitude(view[j])/( sqrt(ATS::magnitude(diagData[i]))*sqrt(ATS::magnitude(diagData[inds[j]])));
+          }
+          else { nonzeroVals[j] = 1.0; view[j] = -diagData[i]; }
+        }
+      }
+      // sort the nonzeros in descending order
+
+      auto perm_vec = getSortPermutation(nonzeroVals);
+      applyPermutation(perm_vec, nonzeroVals);
+      applyPermutation(perm_vec, rows);
+      applyPermutation(perm_vec, cols);
+
+      // Let's decide how many nonzeros we should retain based on a user-supplied percentOffdiagRetained
+      //
+      GO keepLength = (GO) ceil(percentOffdiagRetained* (nnz - Ahat->getLocalNumRows()) + Ahat->getLocalNumRows());
+      Scalar tolTarget = nonzeroVals[keepLength-1] - 1.e-5;
+      printf("recommending a tolerance of %e to retain %e of the off-diagonal entries\n", (double) tolTarget, (double) percentOffdiagRetained);
+
+      // let's check that this tolerance does not reduce the number of nonzeros in
+      // a single row below a user-supplied  lowestNnzPerRow. If the tolerance is
+      // to large, adjust it.
+
+      std::vector<LO>  newRowCounts(Ahat->getLocalNumRows(), 0);
+      GO nViolations = Ahat->getLocalNumRows() - nDirichlet;
+      for (size_t i = 0; i < (size_t) keepLength; i++) {
+        if (isDirichlet[rows[i]])
+          newRowCounts[rows[i]] = 10000;
+        else {
+          newRowCounts[rows[i]]++;
+          if (newRowCounts[rows[i]] == lowestNnzPerRow)  nViolations--;
+        }  
+      }
+      if ( nViolations > 0) printf("must adjust the tolerance because we would have %d rows with less than %d nonzero\n",(int) nViolations, (int) lowestNnzPerRow);
+      while (nViolations > 0) {
+        keepLength++; 
+        TEUCHOS_TEST_FOR_EXCEPTION(keepLength > (GO) nnz, MueLu::Exceptions::RuntimeError,
+                               "The smallest number of nonzeros per row in the undropped matrix is below the user-requested nnzs per row");
+        size_t i = keepLength-1;
+        newRowCounts[rows[i]]++;
+        if (newRowCounts[rows[i]] == lowestNnzPerRow)  nViolations--;
+      }
+      tolTarget = nonzeroVals[keepLength-1] - 1.e-5;
+      printf("the revised suggested tolerance is %e \n", (double) tolTarget);
+    }
 #endif
   }
   if (readNodalProlongators) {
@@ -275,10 +433,16 @@ void testMaxwellConstraint(const std::string &inputDir,
     Ptentfact->SetParameter("sa: keep tentative prolongator", Teuchos::ParameterEntry(true));
     Ptentfact->SetParameter("tentative: calculate qr", Teuchos::ParameterEntry(false));
     Ptentfact->SetParameter("tentative: constant column sums", Teuchos::ParameterEntry(false));
-#ifdef  BadSubGraph
     RCP<AmalgamationFactory> amalgFact = rcp(new AmalgamationFactory());
     RCP<CoalesceDropFactory> dropFact  = rcp(new CoalesceDropFactory());
-    dropFact->SetParameter("aggregation: drop tol",  Teuchos::ParameterEntry(.01));
+Scalar droptol = 0.0;; 
+#ifdef BadSubGraph
+    droptol = .01;
+#endif
+#ifdef randomlyPerturbAn
+    printf("enter the drop tolerance\n"); scanf("%lf",&droptol); // I love printf
+#endif
+    dropFact->SetParameter("aggregation: drop tol",  Teuchos::ParameterEntry(droptol));
     dropFact->SetFactory("UnAmalgamationInfo", amalgFact);
     RCP<UncoupledAggregationFactory> UncoupledAggFact = rcp(new UncoupledAggregationFactory());
     UncoupledAggFact->SetFactory("Graph", dropFact);
@@ -301,7 +465,6 @@ void testMaxwellConstraint(const std::string &inputDir,
     filterFactory->SetFactory("UnAmalgamationInfo", amalgFact); // manager.GetFactory("UnAmalgamationInfo"));
     Pnfact->SetFactory("A", filterFactory);
     M.SetFactory("P", Pnfact);
-#endif
     M.SetFactory("Ptent", Ptentfact);
     H->SetMaxCoarseSize(1);
     H->Setup(M, 0, 2);
@@ -477,6 +640,16 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(EminPFactory, MaxwellConstraint_Hexes, Scalar,
                                                                    out, success);
 }
 
+TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(EminPFactory, MaxwellRandPerubAn_Hexes, Scalar, LocalOrdinal, GlobalOrdinal, Node) {
+#include "MueLu_UseShortNames.hpp"
+  MUELU_TESTING_SET_OSTREAM;
+  MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
+  // I believe this data is on balda.
+  testMaxwellConstraint<Scalar, LocalOrdinal, GlobalOrdinal, Node>(/*inputDir=*/"emin_matrices/hexes/stretch/squishZgood/lev0/",
+                                                                   /*readNodalProlongators=*/false,
+                                                                   out, success);
+}
+
 TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(EminPFactory, MaxwellConstraint_HexesWithDir, Scalar, LocalOrdinal, GlobalOrdinal, Node) {
 #include "MueLu_UseShortNames.hpp"
   MUELU_TESTING_SET_OSTREAM;
@@ -509,6 +682,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(EminPFactory, miniBadSubGraph,  Scalar, LocalO
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(EminPFactory, MaxwellConstraint_TetsWithDir, SC, LO, GO, Node)    \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(EminPFactory, MaxwellConstraint_Hexes, SC, LO, GO, Node)          \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(EminPFactory, MaxwellConstraint_HexesWithDir, SC, LO, GO, Node)   \
+  TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(EminPFactory, MaxwellRandPerubAn_Hexes, SC, LO, GO, Node)         \
   TEUCHOS_UNIT_TEST_TEMPLATE_4_INSTANT(EminPFactory, miniBadSubGraph, SC, LO, GO, Node) 
 
 #include <MueLu_ETI_4arg.hpp>
