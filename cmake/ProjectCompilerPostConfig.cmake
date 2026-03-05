@@ -61,7 +61,6 @@ set(upcoming_warnings
     implicit-fallthrough=3  # -Wextra
     maybe-uninitialized  # -Wall
     mismatched-new-delete  # -Wall
-    pessimizing-move  # -Wall
     restrict
     #unused-parameter  # -Wextra, lots of warnings
     ${Trilinos_ADDITIONAL_WARNINGS}
@@ -127,6 +126,7 @@ set(promoted_warnings
     overloaded-virtual=1
     packed-not-aligned
     parentheses
+    pessimizing-move  # -Wall
     pointer-sign
     range-loop-construct
     redundant-move  # -Wextra
