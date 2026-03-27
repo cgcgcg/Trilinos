@@ -46,11 +46,13 @@ TpetraMap<LocalOrdinal, GlobalOrdinal, Node>::
     TpetraMap(global_size_t numGlobalElements,
               const Teuchos::ArrayView<const GlobalOrdinal> &elementList,
               GlobalOrdinal indexBase,
-              const Teuchos::RCP<const Teuchos::Comm<int> > &comm)
+              const Teuchos::RCP<const Teuchos::Comm<int> > &comm,
+              const Teuchos::RCP<Teuchos::ParameterList> &params)
   : map_(Teuchos::rcp(new Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>(numGlobalElements,
                                                                          elementList,
                                                                          indexBase,
-                                                                         comm))) {}
+                                                                         comm,
+                                                                         params))) {}
 
 #ifdef HAVE_XPETRA_TPETRA
 
@@ -60,11 +62,13 @@ TpetraMap<LocalOrdinal, GlobalOrdinal, Node>::
     TpetraMap(global_size_t numGlobalElements,
               const Kokkos::View<const GlobalOrdinal *, typename Node::device_type> &indexList,
               GlobalOrdinal indexBase,
-              const Teuchos::RCP<const Teuchos::Comm<int> > &comm)
+              const Teuchos::RCP<const Teuchos::Comm<int> > &comm,
+              const Teuchos::RCP<Teuchos::ParameterList> &params)
   : map_(Teuchos::rcp(new Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>(numGlobalElements,
                                                                          indexList,
                                                                          indexBase,
-                                                                         comm))) {}
+                                                                         comm,
+                                                                         params))) {}
 #endif
 
 //! Destructor.
