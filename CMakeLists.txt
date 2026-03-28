@@ -58,4 +58,13 @@ ENDIF()
 
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/CollectGitInfo.cmake)
 
+set(CMAKE_EXPERIMENTAL_INSTRUMENTATION ec7aa2dc-b87f-45a3-8022-fe01c5f59984)
+cmake_instrumentation(
+    API_VERSION 1
+    DATA_VERSION 1
+    OPTIONS dynamicSystemInformation staticSystemInformation trace
+    HOOKS postCMakeBuild
+    CALLBACK ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/instrument.py
+)
+
 message(STATUS "If publishing results using Trilinos, please cite us: https://trilinos.github.io/about.html#citing-trilinos")
