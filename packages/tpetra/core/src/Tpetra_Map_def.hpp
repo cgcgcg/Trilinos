@@ -2256,6 +2256,22 @@ Map<LocalOrdinal, GlobalOrdinal, Node>::
 }
 
 template <class LocalOrdinal, class GlobalOrdinal, class Node>
+LookupStatus
+Map<LocalOrdinal, GlobalOrdinal, Node>::
+    getRemoteIndexList(const Kokkos::View<GlobalOrdinal*, memory_space>& GIDs,
+                       Kokkos::View<int*, memory_space>& PIDs) const {
+  auto GIDs_h = Kokkos::create_mirror_view(GIDs);
+  Kokkos::deep_copy(GIDs_h, GIDs);
+  auto PIDs_h = Kokkos::create_mirror_view(PIDs);
+
+  auto GIDs_av = Kokkos::Compat::getConstArrayView(GIDs_h);
+  auto PIDs_av = Kokkos::Compat::getArrayView(PIDs_h);
+  auto retVal  = getRemoteIndexList(GIDs_av, PIDs_av);
+  Kokkos::deep_copy(PIDs, PIDs_h);
+  return retVal;
+}
+
+template <class LocalOrdinal, class GlobalOrdinal, class Node>
 void Map<LocalOrdinal, GlobalOrdinal, Node>::lazyPushToHost() const {
   using exec_space = typename Node::device_type::execution_space;
   if (lgMap_.extent(0) != lgMapHost_.extent(0)) {

@@ -737,6 +737,10 @@ class Map : public Teuchos::Describable {
   getRemoteIndexList(const Teuchos::ArrayView<const global_ordinal_type>& GIDList,
                      const Teuchos::ArrayView<int>& nodeIDList) const;
 
+  LookupStatus
+  getRemoteIndexList(const Kokkos::View<global_ordinal_type*, memory_space>& GIDList,
+                     Kokkos::View<int*, memory_space>& nodeIDList) const;
+
  private:
   /// \brief Type of lgMap_ (see below); used to derive return type
   ///   of getMyGlobalIndices() (also below).
