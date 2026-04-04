@@ -214,6 +214,9 @@ class Distributor : public Teuchos::Describable,
   /// \return Number of imports this process will be receiving.
   size_t createFromSends(const Teuchos::ArrayView<const int>& exportProcIDs);
 
+  template <class pid_view_type>
+  size_t createFromSends_k(const pid_view_type exportProcIDs);
+
   /// \brief Set up Distributor using list of process ranks from which to receive.
   ///
   /// Take a list of process ranks and construct a plan for
@@ -264,6 +267,11 @@ class Distributor : public Teuchos::Describable,
   void
   createFromSendsAndRecvs(const Teuchos::ArrayView<const int>& exportProcIDs,
                           const Teuchos::ArrayView<const int>& remoteProcIDs);
+
+  template <class pid_view_type>
+  void
+  createFromSendsAndRecvs_k(const pid_view_type exportProcIDs,
+                            const pid_view_type remoteProcIDs);
 
   //@}
   //! @name Attribute accessor methods

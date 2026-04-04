@@ -380,4 +380,25 @@ void Distributor::
   plan_->createFromSendsAndRecvs(exportProcIDs, remoteProcIDs);
 }
 
+template <class pid_view_type>
+size_t
+Distributor::
+    createFromSends_k(const pid_view_type exportProcIDs) {
+  auto exportProcIDs_h = Kokkos::create_mirror_view(exportProcIDs);
+  Kokkos::deep_copy(exportProcIDs_h, exportProcIDs);
+  return createFromSends(Kokkos::Compat::getConstArrayView(exportProcIDs_h));
+}
+
+template <class pid_view_type>
+void Distributor::
+    createFromSendsAndRecvs_k(const pid_view_type exportProcIDs,
+                              const pid_view_type remoteProcIDs) {
+  auto exportProcIDs_h = Kokkos::create_mirror_view(exportProcIDs);
+  Kokkos::deep_copy(exportProcIDs_h, exportProcIDs);
+  auto remoteProcIDs_h = Kokkos::create_mirror_view(remoteProcIDs);
+  Kokkos::deep_copy(remoteProcIDs_h, remoteProcIDs);
+  createFromSendsAndRecvs(Kokkos::Compat::getConstArrayView(exportProcIDs_h),
+                          Kokkos::Compat::getConstArrayView(remoteProcIDs_h));
+}
+
 }  // namespace Tpetra
