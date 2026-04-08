@@ -13,8 +13,11 @@
 /// \file Tpetra_FEMultiVector_decl.hpp
 /// \brief Declaration of the Tpetra::MultiVector class
 
+#include <cstddef>
 #include "Tpetra_FEMultiVector_fwd.hpp"
 #include "Tpetra_MultiVector_decl.hpp"
+#include "Teuchos_RCP.hpp"
+#include "Kokkos_UnorderedMap.hpp"
 
 namespace Tpetra {
 
@@ -107,6 +110,11 @@ class FEMultiVector : public MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, No
                 const size_t numVecs,
                 const bool zeroOut = true);
 
+  FEMultiVector(const Teuchos::RCP<const map_type>& map,
+                const size_t numVecs,
+                const size_t upperBoundNonlocalEntries,
+                const bool zeroOut = true);
+
   //! Copy constructor (forbidden).
   FEMultiVector(const FEMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>&) = delete;
 
@@ -165,7 +173,24 @@ class FEMultiVector : public MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, No
   //! Switches which Multivector is active (without migrating data)
   void switchActiveMultiVector();
 
+  void
+  sumIntoGlobalValue(const GlobalOrdinal gblRow,
+                     const size_t col,
+                     const impl_scalar_type& value,
+                     const bool atomic = useAtomicUpdatesByDefault);
+
  protected:
+  /// \brief Whether sumIntoLocalValue and sumIntoGlobalValue should
+  ///   use atomic updates by default.
+  ///
+  /// \warning This is an implementation detail.
+  static const bool useAtomicUpdatesByDefault =
+#ifdef KOKKOS_ENABLE_SERIAL
+      !std::is_same<execution_space, Kokkos::Serial>::value;
+#else
+      true;
+#endif  // KOKKOS_ENABLE_SERIAL
+
   /// \brief Replace the underlying Map in place.
   ///
   /// \warning FEMultiVector does not allow this and will throw if
@@ -183,6 +208,15 @@ class FEMultiVector : public MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, No
   /// This is an RCP in order to make shallow copies of the
   /// FEMultiVector work correctly.
   Teuchos::RCP<FE::WhichActive> activeMultiVector_;
+
+  const bool overlappingConstruction_;
+  const size_t upperBoundNonlocalEntries_;
+
+  using key_type                  = GlobalOrdinal;
+  using value_type                = Kokkos::pair<size_t, Scalar>;
+  using nonlocal_entries_map_type = Kokkos::UnorderedMap<key_type, value_type, typename Node::device_type>;
+
+  Teuchos::RCP<nonlocal_entries_map_type> nonlocal_entries_;
 
   //! Import object used for communication between the two MultiVectors.
   Teuchos::RCP<const Import<local_ordinal_type, global_ordinal_type, node_type>> importer_;
