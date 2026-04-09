@@ -444,6 +444,7 @@ void Jacobi(Scalar omega,
       int mm_optimization_core_count  = slist.get("MM_TAFC_OptimizationCoreCount", ::Tpetra::Details::Behavior::TAFC_OptimizationCoreCount());
       bool isMM                       = slist.get("isMatrixMatrix_TransferAndFillComplete", false);
       bool overrideAllreduce          = slist.get("MM_TAFC_OverrideAllreduceCheck", false);
+      overrideAllreduce               = true;
       auto& ip2slist                  = importParams2->sublist("matrixmatrix: kernel params", false);
       int mm_optimization_core_count2 = params->get("MM_TAFC_OptimizationCoreCount", mm_optimization_core_count);
       if (mm_optimization_core_count2 < mm_optimization_core_count) mm_optimization_core_count = mm_optimization_core_count2;

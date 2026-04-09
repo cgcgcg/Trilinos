@@ -52,4 +52,9 @@
     </ParameterList>
     <!-- end of default values -->
 
+    <ParameterList name="matrixmatrix: kernel params">
+      <ParameterList name="matrixmatrix: kernel params">
+        <Parameter name="isMatrixMatrix_TransferAndFillComplete" type="bool" value="true"/>
+       </ParameterList>
+    </ParameterList>
 </ParameterList>
