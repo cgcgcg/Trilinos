@@ -1371,10 +1371,13 @@ void Relaxation<MatrixType>::
 
   // Floating-point operations due to the damping factor, per matrix
   // row, per direction, per columm of output.
-  const double numGlobalNonzeros = as<double>(A_->getGlobalNumEntries());
-  const double dampingFlops      = (DampingFactor_ == STS::one()) ? 0.0 : 1.0;
-  ApplyFlops_ += as<double>(NumSweeps_ - startSweep) * numVectors *
-                 (2.0 * numGlobalNonzeros + dampingFlops);
+  auto crsMat = Details::getCrsMatrix(A_);
+  if (!crsMat.is_null() && crsMat->haveGlobalConstants()) {
+    const double numGlobalNonzeros = as<double>(A_->getGlobalNumEntries());
+    const double dampingFlops      = (DampingFactor_ == STS::one()) ? 0.0 : 1.0;
+    ApplyFlops_ += as<double>(NumSweeps_ - startSweep) * numVectors *
+                   (2.0 * numGlobalNonzeros + dampingFlops);
+  }
 }
 
 template <class MatrixType>
@@ -1438,10 +1441,13 @@ void Relaxation<MatrixType>::
 
   // Floating-point operations due to the damping factor, per matrix
   // row, per direction, per columm of output.
-  const double numGlobalNonzeros = as<double>(A_->getGlobalNumEntries());
-  const double dampingFlops      = (DampingFactor_ == STS::one()) ? 0.0 : 1.0;
-  ApplyFlops_ += as<double>(NumSweeps_ - startSweep) * numVectors *
-                 (2.0 * numGlobalRows + 2.0 * numGlobalNonzeros + dampingFlops);
+  auto crsMat = Details::getCrsMatrix(A_);
+  if (!crsMat.is_null() && crsMat->haveGlobalConstants()) {
+    const double numGlobalNonzeros = as<double>(A_->getGlobalNumEntries());
+    const double dampingFlops      = (DampingFactor_ == STS::one()) ? 0.0 : 1.0;
+    ApplyFlops_ += as<double>(NumSweeps_ - startSweep) * numVectors *
+                   (2.0 * numGlobalRows + 2.0 * numGlobalNonzeros + dampingFlops);
+  }
 }
 
 template <class MatrixType>
@@ -1589,12 +1595,15 @@ void Relaxation<MatrixType>::
   }
 
   // See flop count discussion in implementation of ApplyInverseGS_CrsMatrix().
-  const double dampingFlops      = (DampingFactor_ == STS::one()) ? 0.0 : 1.0;
-  const double numVectors        = as<double>(X.getNumVectors());
-  const double numGlobalRows     = as<double>(A_->getGlobalNumRows());
-  const double numGlobalNonzeros = as<double>(A_->getGlobalNumEntries());
-  ApplyFlops_ += 2.0 * NumSweeps_ * numVectors *
-                 (2.0 * numGlobalRows + 2.0 * numGlobalNonzeros + dampingFlops);
+  auto crsMat = Details::getCrsMatrix(A_);
+  if (!crsMat.is_null() && crsMat->haveGlobalConstants()) {
+    const double dampingFlops      = (DampingFactor_ == STS::one()) ? 0.0 : 1.0;
+    const double numVectors        = as<double>(X.getNumVectors());
+    const double numGlobalRows     = as<double>(A_->getGlobalNumRows());
+    const double numGlobalNonzeros = as<double>(A_->getGlobalNumEntries());
+    ApplyFlops_ += 2.0 * NumSweeps_ * numVectors *
+                   (2.0 * numGlobalRows + 2.0 * numGlobalNonzeros + dampingFlops);
+  }
 }
 
 template <class MatrixType>
@@ -1737,12 +1746,15 @@ void Relaxation<MatrixType>::
 
   // Floating-point operations due to the damping factor, per matrix
   // row, per direction, per columm of output.
-  const double dampingFlops      = (DampingFactor_ == STS::one()) ? 0.0 : 1.0;
-  const double numVectors        = X.getNumVectors();
-  const double numGlobalRows     = A_->getGlobalNumRows();
-  const double numGlobalNonzeros = A_->getGlobalNumEntries();
-  ApplyFlops_ += NumSweeps_ * numVectors *
-                 (2.0 * numGlobalRows + 2.0 * numGlobalNonzeros + dampingFlops);
+  auto crsMat = Details::getCrsMatrix(A_);
+  if (!crsMat.is_null() && crsMat->haveGlobalConstants()) {
+    const double dampingFlops      = (DampingFactor_ == STS::one()) ? 0.0 : 1.0;
+    const double numVectors        = X.getNumVectors();
+    const double numGlobalRows     = A_->getGlobalNumRows();
+    const double numGlobalNonzeros = A_->getGlobalNumEntries();
+    ApplyFlops_ += NumSweeps_ * numVectors *
+                   (2.0 * numGlobalRows + 2.0 * numGlobalNonzeros + dampingFlops);
+  }
 }
 
 template <class MatrixType>
@@ -2070,15 +2082,17 @@ void Relaxation<MatrixType>::
     }
   }
 
-  const double dampingFlops      = (DampingFactor_ == STS::one()) ? 0.0 : 1.0;
-  const double numVectors        = as<double>(X.getNumVectors());
-  const double numGlobalRows     = as<double>(A_->getGlobalNumRows());
-  const double numGlobalNonzeros = as<double>(A_->getGlobalNumEntries());
-  double ApplyFlops              = NumSweeps_ * numVectors *
-                      (2.0 * numGlobalRows + 2.0 * numGlobalNonzeros + dampingFlops);
-  if (direction == Tpetra::Symmetric)
-    ApplyFlops *= 2.0;
-  ApplyFlops_ += ApplyFlops;
+  if (crsMat->haveGlobalConstants()) {
+    const double dampingFlops      = (DampingFactor_ == STS::one()) ? 0.0 : 1.0;
+    const double numVectors        = as<double>(X.getNumVectors());
+    const double numGlobalRows     = as<double>(A_->getGlobalNumRows());
+    const double numGlobalNonzeros = as<double>(A_->getGlobalNumEntries());
+    double ApplyFlops              = NumSweeps_ * numVectors *
+                        (2.0 * numGlobalRows + 2.0 * numGlobalNonzeros + dampingFlops);
+    if (direction == Tpetra::Symmetric)
+      ApplyFlops *= 2.0;
+    ApplyFlops_ += ApplyFlops;
+  }
 }
 
 template <class MatrixType>
@@ -2173,8 +2187,11 @@ std::string Relaxation<MatrixType>::description() const {
     os << "Matrix: null";
   } else {
     os << "Global matrix dimensions: ["
-       << A_->getGlobalNumRows() << ", " << A_->getGlobalNumCols() << "]"
-       << ", Global nnz: " << A_->getGlobalNumEntries();
+       << A_->getGlobalNumRows() << ", " << A_->getGlobalNumCols() << "]";
+    auto crsMat = Details::getCrsMatrix(A_);
+    if (!crsMat.is_null() && crsMat->haveGlobalConstants()) {
+      os << ", Global nnz: " << A_->getGlobalNumEntries();
+    }
   }
 
   os << "}";
