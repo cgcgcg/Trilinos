@@ -756,10 +756,17 @@ void Map<LocalOrdinal, GlobalOrdinal, Node>::
   const bool callComputeGlobalConstants = params.get() == nullptr ||
                                           params->get("compute global constants", true);
 
-  if (callComputeGlobalConstants)
+  if (callComputeGlobalConstants && (comm->getSize() > 1))
     computeGlobalConstants();
-  else
-    distributed_ = params->get("distributed", true) && (comm->getSize() > 1);
+  else {
+    if (comm->getSize() == 1) {
+      minAllGID_           = minMyGID_;
+      maxAllGID_           = maxMyGID_;
+      distributed_         = false;
+      haveGlobalConstants_ = true;
+    } else
+      distributed_ = params->get("distributed", true);
+  }
 
   // Create the Directory on demand in getRemoteIndexList().
   // setupDirectory ();
@@ -1019,10 +1026,17 @@ Map<LocalOrdinal, GlobalOrdinal, Node>::
   const bool callComputeGlobalConstants = params.get() == nullptr ||
                                           params->get("compute global constants", true);
 
-  if (callComputeGlobalConstants)
+  if (callComputeGlobalConstants && (comm->getSize() > 1))
     computeGlobalConstants();
-  else
-    distributed_ = params->get("distributed", true) && (comm->getSize() > 1);
+  else {
+    if (comm->getSize() == 1) {
+      minAllGID_           = minMyGID_;
+      maxAllGID_           = maxMyGID_;
+      distributed_         = false;
+      haveGlobalConstants_ = true;
+    } else
+      distributed_ = params->get("distributed", true);
+  }
 
   contiguous_ = false;  // "Contiguous" is conservative.
 
@@ -2011,8 +2025,6 @@ Map<LocalOrdinal, GlobalOrdinal, Node>::
     newComm = null;
   }
 
-  TEUCHOS_TEST_FOR_EXCEPTION(!haveGlobalConstants(), std::logic_error, "\"Map::removeEmptyProcesses\" called, but global constants have not been computed with \"Map::computeGlobalConstants\".");
-
   // Create the Map to return.
   if (newComm.is_null()) {
     return null;  // my process does not participate in the new Map
@@ -2051,6 +2063,11 @@ Map<LocalOrdinal, GlobalOrdinal, Node>::
     // make the new Map locally replicated.
     if (!distributed_ || newComm->getSize() == 1) {
       map->distributed_ = false;
+      if (newComm->getSize() == 1) {
+        map->minAllGID_           = map->minMyGID_;
+        map->maxAllGID_           = map->maxMyGID_;
+        map->haveGlobalConstants_ = true;
+      }
     } else {
       const int iOwnAllGids  = (numLocalElements_ == numGlobalElements_) ? 1 : 0;
       int allProcsOwnAllGids = 0;
