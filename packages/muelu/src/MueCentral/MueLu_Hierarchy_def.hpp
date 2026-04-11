@@ -160,6 +160,11 @@ double Hierarchy<Scalar, LocalOrdinal, GlobalOrdinal, Node>::GetOperatorComplexi
       return 0.0;
     }
 
+    if (!Am->haveGlobalConstants()) {
+      GetOStream(Warnings0) << "Some level operators are do not have global constants computed, operator complexity calculation aborted" << std::endl;
+      return 0.0;
+    }
+
     totalNnz += as<double>(Am->getGlobalNumEntries());
     if (i == 0)
       lev0Nnz = totalNnz;
@@ -1260,9 +1265,12 @@ void Hierarchy<Scalar, LocalOrdinal, GlobalOrdinal, Node>::describe(Teuchos::Fan
         rowsPerLevel.push_back(A->getDomainMap()->getGlobalNumElements());
         numProcsPerLevel.push_back(A->getDomainMap()->getComm()->getSize());
       } else {
-        LO storageblocksize       = Am->GetStorageBlockSize();
-        Xpetra::global_size_t nnz = Am->getGlobalNumEntries() * storageblocksize * storageblocksize;
-        nnzPerLevel.push_back(nnz);
+        LO storageblocksize = Am->GetStorageBlockSize();
+        if (Am->haveGlobalConstants()) {
+          Xpetra::global_size_t nnz = Am->getGlobalNumEntries() * storageblocksize * storageblocksize;
+          nnzPerLevel.push_back(nnz);
+        } else
+          nnzPerLevel.push_back(INVALID);
         rowsPerLevel.push_back(Am->getGlobalNumRows() * storageblocksize);
         numProcsPerLevel.push_back(Am->getRowMap()->getComm()->getSize());
       }
