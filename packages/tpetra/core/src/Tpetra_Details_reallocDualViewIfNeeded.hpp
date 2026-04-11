@@ -58,12 +58,12 @@ bool reallocDualViewIfNeeded(Kokkos::DualView<ValueType*, DeviceType>& dv,
 
   // Profiling this matters, because GPU allocations can be expensive.
   using Tpetra::Details::ProfilingRegion;
-  ProfilingRegion region("Tpetra::Details::reallocDualViewIfNeeded");
 
   const size_t curSize = static_cast<size_t>(dv.extent(0));
   if (curSize == newSize) {
     return false;                  // did not reallocate
   } else if (curSize < newSize) {  // too small; need to reallocate
+    ProfilingRegion region("Tpetra::Details::reallocDualView");
     if (needFenceBeforeRealloc) {
       execution_space().fence();  // keep this fence to respect needFenceBeforeRealloc
     }
@@ -72,6 +72,7 @@ bool reallocDualViewIfNeeded(Kokkos::DualView<ValueType*, DeviceType>& dv,
     dv = dual_view_type(curSize == 0 ? newLabel : dv.view_device().label(), newSize);
     return true;  // we did reallocate
   } else {
+    ProfilingRegion region("Tpetra::Details::reallocDualView");
     if (newSize == 0) {  // special case: realloc to 0 means always do it
       if (needFenceBeforeRealloc) {
         execution_space().fence();  // keep this fence to respect needFenceBeforeRealloc

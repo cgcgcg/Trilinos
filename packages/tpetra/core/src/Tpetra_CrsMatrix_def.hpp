@@ -4384,7 +4384,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
                              const Teuchos::RCP<const import_type>& importer,
                              const Teuchos::RCP<const export_type>& exporter,
                              const Teuchos::RCP<Teuchos::ParameterList>& params) {
-  Tpetra::Details::ProfilingRegion all("Tpetra ESFC-all");
+  Tpetra::Details::ProfilingRegion all("Tpetra::CrsMatrix::expertStaticFillComplete");
 
   const char tfecfFuncName[] = "expertStaticFillComplete: ";
   TEUCHOS_TEST_FOR_EXCEPTION_CLASS_FUNC(!isFillActive() || isFillComplete(),
@@ -4394,17 +4394,12 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   TEUCHOS_TEST_FOR_EXCEPTION_CLASS_FUNC(
       myGraph_.is_null(), std::logic_error, "myGraph_ is null.  This is not allowed.");
 
-  {
-    Tpetra::Details::ProfilingRegion graph("Tpetra eSFC-M-Graph");
-    // We will presume globalAssemble is not needed, so we do the ESFC on the graph
-    myGraph_->expertStaticFillComplete(domainMap, rangeMap, importer, exporter, params);
-  }
+  // We will presume globalAssemble is not needed, so we do the ESFC on the graph
+  myGraph_->expertStaticFillComplete(domainMap, rangeMap, importer, exporter, params);
 
-  {
-    Tpetra::Details::ProfilingRegion fLGAM("Tpetra eSFC-M-fLGAM");
-    // Fill the local graph and matrix
-    fillLocalGraphAndMatrix(params);
-  }
+  // Fill the local graph and matrix
+  fillLocalGraphAndMatrix(params);
+
   // FIXME (mfh 28 Aug 2014) "Preserve Local Graph" bool parameter no longer used.
 
   // Now we're fill complete!
