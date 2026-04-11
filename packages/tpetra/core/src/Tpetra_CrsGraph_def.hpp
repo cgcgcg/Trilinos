@@ -896,8 +896,6 @@ CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
   const char tfecfFuncName[] = "getLocalNumEntries: ";
   typedef LocalOrdinal LO;
 
-  Details::ProfilingRegion regionGLNE("Tpetra::CrsGraph::getLocalNumEntries");
-
   if (this->indicesAreAllocated_) {
     const LO lclNumRows = this->getLocalNumRows();
     if (lclNumRows == 0) {
@@ -930,6 +928,8 @@ CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
         typedef typename num_row_entries_type::execution_space
             host_exec_space;
         typedef Kokkos::RangePolicy<host_exec_space, LO> range_type;
+
+        Details::ProfilingRegion regionGLNE("Tpetra::CrsGraph::getLocalNumEntries");
 
         const LO upperLoopBound = lclNumRows < numNumEntPerRow ? lclNumRows : numNumEntPerRow;
         size_t nodeNumEnt       = 0;
@@ -3156,10 +3156,7 @@ void CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
   indicesAreGlobal_ = false;
 
   // set domain/range map: may clear the import/export objects
-  {
-    Tpetra::Details::ProfilingRegion pr("Tpetra ESFC-G-Maps");
-    setDomainRangeMaps(domainMap, rangeMap);
-  }
+  setDomainRangeMaps(domainMap, rangeMap);
 
   // Presume the user sorted and merged the arrays first
   indicesAreSorted_ = true;
@@ -3188,24 +3185,18 @@ void CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
   }
 
   {
-    Tpetra::Details::ProfilingRegion pr("Tpetra ESFC-G-mIXmake");
     Teuchos::Array<int> remotePIDs(0);  // unused output argument
     this->makeImportExport(remotePIDs, false);
   }
 
-  {
-    Tpetra::Details::ProfilingRegion pr("Tpetra ESFC-G-fLG");
-    this->fillLocalGraph(params);
-  }
+  this->fillLocalGraph(params);
 
   const bool callComputeGlobalConstants = params.get() == nullptr ||
                                           params->get("compute global constants", true);
 
   if (callComputeGlobalConstants) {
-    Tpetra::Details::ProfilingRegion pr("Tpetra ESFC-G-cGC (const)");
     this->computeGlobalConstants();
   } else {
-    Tpetra::Details::ProfilingRegion pr("Tpetra ESFC-G-cGC (noconst)");
     this->computeLocalConstants();
   }
 
