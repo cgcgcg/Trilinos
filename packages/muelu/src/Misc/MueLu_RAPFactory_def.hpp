@@ -102,6 +102,8 @@ void RAPFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(Level& fineLev
       return;
     }
 
+    const bool computeGlobalConstantsForAc = IsPrint(Statistics0);
+
     bool isGPU = Node::is_gpu;
 
     if (pL.get<bool>("rap: triple product") == false || isGPU) {
@@ -154,7 +156,7 @@ void RAPFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(Level& fineLev
 
       // We *always* need global constants for the RAP, but not for the temps
       RAPparams->set("compute global constants: temporaries", RAPparams->get("compute global constants: temporaries", false));
-      RAPparams->set("compute global constants", true);
+      RAPparams->set("compute global constants", computeGlobalConstantsForAc);
 
       // Allow optimization of storage.
       // This is necessary for new faster Epetra MM kernels.
@@ -237,7 +239,7 @@ void RAPFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(Level& fineLev
 
       // We *always* need global constants for the RAP, but not for the temps
       RAPparams->set("compute global constants: temporaries", RAPparams->get("compute global constants: temporaries", false));
-      RAPparams->set("compute global constants", true);
+      RAPparams->set("compute global constants", computeGlobalConstantsForAc);
 
       if (pL.get<bool>("transpose: use implicit") == true) {
         Ac = MatrixFactory::Build(P->getDomainMap(), Teuchos::as<LO>(0));
