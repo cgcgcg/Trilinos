@@ -253,7 +253,9 @@ void RepartitionFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(Level&
   RCP<Map> newRowMap;
   {
     SubFactoryMonitor m1(*this, "Map construction", currentLevel);
-    newRowMap = MapFactory ::Build(lib, rowMap->getGlobalNumElements(), myGIDs(), indexBase, origComm);
+    auto mapParams = Teuchos::rcp(new Teuchos::ParameterList);
+    mapParams->set("compute global constants", IsPrint(Statistics0));
+    newRowMap = MapFactory ::Build(lib, rowMap->getGlobalNumElements(), myGIDs(), indexBase, origComm, mapParams);
   }
 
   RCP<const Import> rowMapImporter;
