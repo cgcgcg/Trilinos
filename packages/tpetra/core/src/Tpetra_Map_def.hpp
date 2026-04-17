@@ -331,6 +331,7 @@ Map<LocalOrdinal, GlobalOrdinal, Node>::
   : comm_(comm)
   , uniform_(false)
   , directory_(new Directory<LocalOrdinal, GlobalOrdinal, Node>()) {
+  Tpetra::Details::ProfilingRegion pr("Map(numGlobalElements,numLocalElements,indexBase,comm)");
   using std::endl;
   using Teuchos::as;
   using Teuchos::broadcast;
