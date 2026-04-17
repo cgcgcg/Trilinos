@@ -2002,6 +2002,7 @@ template <class LocalOrdinal, class GlobalOrdinal, class Node>
 Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node>>
 Map<LocalOrdinal, GlobalOrdinal, Node>::
     removeEmptyProcesses() const {
+  Tpetra::Details::ProfilingRegion pr("Map::removeEmptyProcesses");
   using Teuchos::Comm;
   using Teuchos::null;
   using Teuchos::outArg;
