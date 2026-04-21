@@ -99,6 +99,7 @@ TEUCHOS_UNIT_TEST(ML2MueLuParameterTranslator, SA_plus_translate) {
   goldList.sublist("smoother: params").set("relaxation: sweeps", 2);
   goldList.sublist("smoother: params").set("relaxation: damping factor", 1.0);
   goldList.set("coarse: params", dummy);
+  goldList.set("transpose: use implicit", true);
 
   std::cout << "\n-----------------------\n"
             << goldList << std::endl;
