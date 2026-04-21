@@ -78,6 +78,7 @@ void TestTransfer(Teuchos::RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdina
     typedef Tpetra::CrsMatrixStruct<SC, LO, GO, NO> crs_matrix_struct_type;
     typedef Tpetra::CrsMatrix<SC, LO, GO, NO> crs_matrix_type;
     typedef Tpetra::Import<LO, GO, NO> import_type;
+    typedef Tpetra::Map<LO, GO, NO> map_type;
 
     RCP<const crs_matrix_type> Au = toTpetra(A);
     RCP<const crs_matrix_type> Pu = toTpetra(P);
@@ -96,6 +97,8 @@ void TestTransfer(Teuchos::RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdina
     // Naive Transfer
     // ==================
     // Use the columnmap from Aopt and build an importer ex nihilo
+    auto map = Pview.importMatrix->getColMap();
+    Teuchos::rcp_const_cast<map_type>(map)->computeGlobalConstants();
 
     tm       = Teuchos::null;
     auto tm2 = TimeMonitor::getNewTimer("NaiveTransfer: BuildImport");
