@@ -77,7 +77,8 @@ void Jacobi(
   // transfer striding information
   RCP<Xpetra::Matrix<SC, LO, GO, NO> > rcpA = Teuchos::rcp_const_cast<Xpetra::Matrix<SC, LO, GO, NO> >(Teuchos::rcpFromRef(A));
   RCP<Xpetra::Matrix<SC, LO, GO, NO> > rcpB = Teuchos::rcp_const_cast<Xpetra::Matrix<SC, LO, GO, NO> >(Teuchos::rcpFromRef(B));
-  C.CreateView("stridedMaps", rcpA, false, rcpB, false);  // TODO use references instead of RCPs
+  if (A.IsView("stridedMaps") || B.IsView("stridedMaps"))
+    C.CreateView("stridedMaps", rcpA, false, rcpB, false);  // TODO use references instead of RCPs
 }  // end Jacobi
 
 #if defined(HAVE_MUELU_EPETRA) && !defined(XPETRA_EPETRA_NO_32BIT_GLOBAL_INDICES)
@@ -130,7 +131,8 @@ class IteratorOps {
     }
 
     MueLu::Jacobi<Scalar, LocalOrdinal, GlobalOrdinal, Node>(omega, Dinv, A, B, *C, true, true, label, params);
-    C->CreateView("stridedMaps", rcpFromRef(A), false, rcpFromRef(B), false);
+    if (A.IsView("stridedMaps") || B.IsView("stridedMaps"))
+      C->CreateView("stridedMaps", rcpFromRef(A), false, rcpFromRef(B), false);
 
     return C;
   }

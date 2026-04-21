@@ -73,7 +73,7 @@ class MatrixFactory2<double, int, int, Node> {
     if (oldTCrsOp != Teuchos::null) {
       RCP<CrsMatrix> newTCrsOp(new TpetraCrsMatrix(*oldTCrsOp));
       RCP<CrsMatrixWrap> newOp(new CrsMatrixWrap(newTCrsOp));
-      if (setFixedBlockSize)
+      if (setFixedBlockSize && A->IsFixedBlockSizeSet())
         newOp->SetFixedBlockSize(A->GetFixedBlockSize());
       return newOp;
     }
@@ -125,7 +125,7 @@ class MatrixFactory2<double, int, long long, Node> {
     if (oldTCrsOp != Teuchos::null) {
       RCP<CrsMatrix> newTCrsOp(new TpetraCrsMatrix(*oldTCrsOp));
       RCP<CrsMatrixWrap> newOp(new CrsMatrixWrap(newTCrsOp));
-      if (setFixedBlockSize)
+      if (setFixedBlockSize && A->IsFixedBlockSizeSet())
         newOp->SetFixedBlockSize(A->GetFixedBlockSize());
       return newOp;
     }
