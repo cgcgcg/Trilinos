@@ -12,19 +12,18 @@
 
 #include <Xpetra_BlockedCrsMatrix.hpp>
 #include <Xpetra_CrsGraph.hpp>
-#include <Xpetra_CrsGraphFactory.hpp>
 #include <Xpetra_CrsMatrixWrap.hpp>
 #include <Xpetra_CrsMatrix.hpp>
-#include <Xpetra_MultiVectorFactory.hpp>
 #include <Xpetra_VectorFactory.hpp>
 #include <Xpetra_MatrixFactory.hpp>
 #include <Xpetra_Matrix.hpp>
-#include <Xpetra_MatrixMatrix.hpp>
-#include <Xpetra_TripleMatrixMultiply.hpp>
 
-#include <Teuchos_SerialDenseVector.hpp>
-#include <Teuchos_SerialDenseMatrix.hpp>
-#include <Teuchos_SerialQRDenseSolver.hpp>
+#include "Kokkos_Sort.hpp"
+#include "KokkosBlas1_set.hpp"
+#include "KokkosBatched_QR_Decl.hpp"
+#include "KokkosBatched_ApplyQ_Decl.hpp"
+#include "KokkosBatched_Trsv_Decl.hpp"
+#include "KokkosBatched_Util.hpp"
 
 #include "MueLu_Level.hpp"
 #include "MueLu_Monitor.hpp"
@@ -102,9 +101,118 @@ void InverseApproximationFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Bui
   Set(currentLevel, "Ainv", Ainv);
 }
 
+template <class local_matrix_type>
+class LocalSPAIFunctor {
+ private:
+  using scalar_type        = typename local_matrix_type::value_type;
+  using local_ordinal_type = typename local_matrix_type::ordinal_type;
+  using execution_space    = typename local_matrix_type::execution_space;
+  using impl_scalar_type   = typename KokkosKernels::ArithTraits<scalar_type>::val_type;
+  using impl_ATS           = KokkosKernels::ArithTraits<impl_scalar_type>;
+
+ public:
+  using shared_matrix    = Kokkos::View<impl_scalar_type**, typename execution_space::scratch_memory_space, Kokkos::MemoryUnmanaged>;
+  using shared_vector    = Kokkos::View<impl_scalar_type*, typename execution_space::scratch_memory_space, Kokkos::MemoryUnmanaged>;
+  using shared_lo_vector = Kokkos::View<local_ordinal_type*, typename execution_space::scratch_memory_space, Kokkos::MemoryUnmanaged>;
+
+ private:
+  local_matrix_type lclA;
+  local_matrix_type lclAinv;
+  local_ordinal_type maxUniqueColEntries;
+
+ public:
+  LocalSPAIFunctor(local_matrix_type lclA_, local_matrix_type lclAinv_, local_ordinal_type maxUniqueColEntries_)
+    : lclA(lclA_)
+    , lclAinv(lclAinv_)
+    , maxUniqueColEntries(maxUniqueColEntries_) {}
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const typename Kokkos::TeamPolicy<execution_space>::member_type& thread) const {
+    auto k       = thread.league_rank();
+    auto rowAinv = lclAinv.row(k);
+
+    // Loop over entries in row k of Ainv and collect all of A's column indices.
+    shared_lo_vector column_indices(thread.team_shmem(), maxUniqueColEntries);
+    local_ordinal_type numColEntries = 0;
+    for (local_ordinal_type ii = 0; ii < rowAinv.length; ++ii) {
+      auto i    = rowAinv.colidx(ii);
+      auto rowA = lclA.rowConst(i);
+      for (local_ordinal_type jj = 0; jj < rowA.length; ++jj) {
+        auto j                        = rowA.colidx(jj);
+        column_indices(numColEntries) = j;
+        ++numColEntries;
+      }
+    }
+
+    // Get merged list of column indices.
+    Kokkos::sort(Kokkos::subview(column_indices, Kokkos::make_pair(0, numColEntries)));
+    local_ordinal_type numUniqeColEntries = 0;
+    if (numColEntries > 0)
+      ++numUniqeColEntries;
+    local_ordinal_type pos     = 0;
+    local_ordinal_type diagPos = 0;
+    for (local_ordinal_type m = 1; m < numColEntries; ++m) {
+      if (column_indices(pos) != column_indices(m)) {
+        column_indices(pos + 1) = column_indices(m);
+        ++pos;
+        ++numUniqeColEntries;
+        if (column_indices(pos) == k)
+          diagPos = pos;
+      }
+    }
+
+    // Extract local part of A.
+    shared_matrix localA(thread.team_shmem(), numUniqeColEntries, rowAinv.length);
+    KokkosBlas::SerialSet::invoke(impl_ATS::zero(), localA);
+
+    // Now fill localA.
+    for (local_ordinal_type ii = 0; ii < rowAinv.length; ++ii) {
+      auto i    = rowAinv.colidx(ii);
+      auto rowA = lclA.rowConst(i);
+      for (local_ordinal_type jj = 0; jj < rowA.length; ++jj) {
+        auto j = rowA.colidx(jj);
+        auto v = rowA.value(jj);
+        // Determine local index.
+        // Sequential search might not be a great idea.
+        for (local_ordinal_type m = 0; m < numUniqeColEntries; ++m) {
+          if (column_indices(m) == j) {
+            localA(m, ii) = v;
+            break;
+          }
+        }
+      }
+    }
+
+    shared_matrix ek(thread.team_shmem(), numUniqeColEntries, 1);
+    // set to zero, set diagonal entry to one
+    for (local_ordinal_type i = 0; i < numUniqeColEntries; ++i) {
+      ek(i, 0) = (i == diagPos) ? impl_ATS::one() : impl_ATS::zero();
+    }
+
+    // QR solve
+    shared_vector tau(thread.team_shmem(), numUniqeColEntries);
+    shared_vector work(thread.team_shmem(), numUniqeColEntries);
+    // factorize localA = Q*R in-place
+    KokkosBatched::SerialQR<KokkosBatched::Algo::QR::Unblocked>::invoke(localA, tau, work);
+    // ek := Q^T ek
+    KokkosBatched::SerialApplyQ<KokkosBatched::Side::Left, KokkosBatched::Trans::Transpose, KokkosBatched::Algo::ApplyQ::Unblocked>::invoke(localA, tau, ek, work);
+    // ek[:rowLength] := R^{-1} ek[:rowLength]
+    auto sub_A  = Kokkos::subview(localA, Kokkos::make_pair(0, rowAinv.length), Kokkos::ALL());
+    auto sub_ek = Kokkos::subview(ek, Kokkos::make_pair(0, rowAinv.length), 0);
+    KokkosBatched::SerialTrsv<KokkosBatched::Uplo::Upper, KokkosBatched::Trans::NoTranspose, KokkosBatched::Diag::NonUnit, KokkosBatched::Algo::Trsv::Unblocked>::invoke(impl_ATS::one(), sub_A, sub_ek);
+
+    // Set entries of Ainv.
+    for (local_ordinal_type i = 0; i < rowAinv.length; ++i) {
+      rowAinv.value(i) = sub_ek(i);
+    }
+  }
+};
+
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
 InverseApproximationFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::GetSparseInverse(const RCP<Matrix>& Aorg, const RCP<const CrsGraph>& sparsityPattern) const {
+  using execution_space = typename Node::execution_space;
+
   // construct the inverse matrix with the given sparsity pattern
   RCP<Matrix> Ainv = MatrixFactory::Build(sparsityPattern);
   Ainv->resumeFill();
@@ -113,55 +221,34 @@ InverseApproximationFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::GetSpars
   RCP<Import> rowImport = ImportFactory::Build(sparsityPattern->getRowMap(), sparsityPattern->getColMap());
   RCP<Matrix> A         = MatrixFactory::Build(Aorg, *rowImport);
 
-  // loop over all rows of the inverse sparsity pattern (this can be done in parallel)
-  for (size_t k = 0; k < sparsityPattern->getLocalNumRows(); k++) {
-    // 1. get column indices Ik of local row k
-    ArrayView<const LO> Ik;
-    sparsityPattern->getLocalRowView(k, Ik);
+  auto maxRowEntriesAinv   = Ainv->getLocalMaxNumRowEntries();
+  auto maxRowEntriesA      = A->getLocalMaxNumRowEntries();
+  auto maxUniqueColEntries = maxRowEntriesAinv * maxRowEntriesA;
+  {
+    auto lclA    = A->getLocalMatrixDevice();
+    auto lclAinv = Ainv->getLocalMatrixDevice();
 
-    // 2. get all local A(Ik,:) rows
-    Array<ArrayView<const LO>> J(Ik.size());
-    Array<ArrayView<const SC>> Ak(Ik.size());
-    Array<LO> Jk;
-    for (LO i = 0; i < Ik.size(); i++) {
-      A->getLocalRowView(Ik[i], J[i], Ak[i]);
-      for (LO j = 0; j < J[i].size(); j++)
-        Jk.append(J[i][j]);
-    }
-    // set of unique column indices Jk
-    std::sort(Jk.begin(), Jk.end());
-    Jk.erase(std::unique(Jk.begin(), Jk.end()), Jk.end());
-    // create map
-    std::map<LO, LO> G;
-    for (LO i = 0; i < Jk.size(); i++) G.insert(std::pair<LO, LO>(Jk[i], i));
+    LocalSPAIFunctor spaiFunctor(lclA, lclAinv, maxUniqueColEntries);
+    Kokkos::TeamPolicy<execution_space> policy(lclAinv.numRows(), 1);
 
-    // 3. merge rows together
-    Teuchos::SerialDenseMatrix<LO, SC> localA(Jk.size(), Ik.size(), true);
-    for (LO i = 0; i < Ik.size(); i++) {
-      for (LO j = 0; j < J[i].size(); j++) {
-        localA(G.at(J[i][j]), i) = Ak[i][j];
-      }
-    }
+    using shared_matrix    = typename decltype(spaiFunctor)::shared_matrix;
+    using shared_vector    = typename decltype(spaiFunctor)::shared_vector;
+    using shared_lo_vector = typename decltype(spaiFunctor)::shared_lo_vector;
 
-    // 4. get direction-vector
-    // diagonal needs an entry!
-    Teuchos::SerialDenseVector<LO, SC> ek(Jk.size(), true);
-    ek[std::find(Jk.begin(), Jk.end(), k) - Jk.begin()] = Teuchos::ScalarTraits<Scalar>::one();
-    ;
+    int size = shared_matrix::shmem_size(maxUniqueColEntries, maxRowEntriesAinv) + shared_matrix::shmem_size(maxUniqueColEntries, 1) + 2 * shared_vector::shmem_size(maxUniqueColEntries) + shared_lo_vector::shmem_size(maxUniqueColEntries);
 
-    // 5. solve linear system for x
-    Teuchos::SerialDenseVector<LO, SC> localX(Ik.size());
-    Teuchos::SerialQRDenseSolver<LO, SC> qrSolver;
-    qrSolver.setMatrix(Teuchos::rcp(&localA, false));
-    qrSolver.setVectors(Teuchos::rcp(&localX, false), Teuchos::rcp(&ek, false));
-    const int err = qrSolver.solve();
-    TEUCHOS_TEST_FOR_EXCEPTION(err != 0, Exceptions::RuntimeError,
-                               "MueLu::InverseApproximationFactory::GetSparseInverse: Error in serial QR solve.");
+    if (size < policy.scratch_size_max(/*level=*/(int)0))
+      policy.set_scratch_size(/*level=*/(int)0, Kokkos::PerTeam(size));
+    else if (size < policy.scratch_size_max(/*level=*/(int)1))
+      policy.set_scratch_size(/*level=*/(int)1, Kokkos::PerTeam(size));
+    else
+      throw Exceptions::RuntimeError("Neither L0 scratch memory (max size " + std::to_string(policy.scratch_size_max((int)0)) +
+                                     "), nor L1 scratch memory (max size " + std::to_string(policy.scratch_size_max((int)1)) +
+                                     ") is large enough for requested allocation of size " + std::to_string(size));
 
-    // 6. set calculated row into Ainv
-    ArrayView<const SC> Mk(localX.values(), localX.length());
-    Ainv->replaceLocalValues(k, Ik, Mk);
+    Kokkos::parallel_for("MueLu::InverseFactory::LocalSpai", policy, spaiFunctor);
   }
+
   Ainv->fillComplete();
 
   return Ainv;
