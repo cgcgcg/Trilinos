@@ -101,6 +101,47 @@ void InverseApproximationFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Bui
   Set(currentLevel, "Ainv", Ainv);
 }
 
+template <class view_type, class comparator_type>
+KOKKOS_INLINE_FUNCTION void serialHeapSort(view_type& v, comparator_type comparator) {
+  auto N       = v.extent(0);
+  size_t start = N / 2;
+  size_t end   = N;
+  while (end > 1) {
+    if (start > 0)
+      start = start - 1;
+    else {
+      end       = end - 1;
+      auto temp = v(0);
+      v(0)      = v(end);
+      v(end)    = temp;
+    }
+    size_t root = start;
+    while (2 * root + 1 < end) {
+      size_t child = 2 * root + 1;
+      if ((child + 1 < end) and (comparator(v(child), v(child + 1))))
+        ++child;
+
+      if (comparator(v(root), v(child))) {
+        auto temp = v(root);
+        v(root)   = v(child);
+        v(child)  = temp;
+        root      = child;
+      } else
+        break;
+    }
+  }
+}
+
+template <class view_type>
+struct Comparator {
+  view_type view;
+
+  KOKKOS_INLINE_FUNCTION
+  bool operator()(size_t x, size_t y) const {
+    return x < y;
+  }
+};
+
 template <class local_matrix_type>
 class LocalSPAIFunctor {
  private:
@@ -145,7 +186,13 @@ class LocalSPAIFunctor {
     }
 
     // Get merged list of column indices.
-    Kokkos::sort(Kokkos::subview(column_indices, Kokkos::make_pair(0, numColEntries)));
+    // Kokkos::sort(Kokkos::subview(column_indices, Kokkos::make_pair(0, numColEntries)));
+
+    auto temp = Kokkos::subview(column_indices, Kokkos::make_pair(0, numColEntries));
+    Comparator<decltype(temp)> comp{temp};
+    serialHeapSort(temp, comp);
+    // [&column_indices](local_ordinal_type i, local_ordinal_type j) { return column_indices(i)<column_indices(j); }
+
     local_ordinal_type numUniqeColEntries = 0;
     if (numColEntries > 0)
       ++numUniqeColEntries;
