@@ -2061,6 +2061,7 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "sa: calculate eigenvalue estimate", bool, Pparams);
   MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "sa: max eigenvalue", double, Pparams);
   MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "sa: eigenvalue estimate num iterations", int, Pparams);
+  MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "sa: diagonal replacement tolerance", double, Pparams);
   MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "sa: use rowsumabs diagonal scaling", bool, Pparams);
   MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "sa: rowsumabs diagonal replacement tolerance", double, Pparams);
   MUELU_TEST_AND_SET_PARAM_2LIST(paramList, defaultList, "sa: rowsumabs diagonal replacement value", double, Pparams);

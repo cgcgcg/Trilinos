@@ -20,8 +20,12 @@
 #include "MueLu_ConfigDefs.hpp"
 
 #include "MueLu_FactoryManagerBase.hpp"
-//#include "MueLu_HierarchyUtils_fwd.hpp"
+// #include "MueLu_HierarchyUtils_fwd.hpp"
 #include "MueLu_TopRAPFactory_decl.hpp"
+
+// CMS debug
+#include <string>
+#include "Xpetra_IO.hpp"
 
 namespace MueLu {
 
@@ -83,6 +87,10 @@ void TopRAPFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(Level& /* f
       coarseLevel.Set("A", oA, NoFactory::get());
     coarseLevel.AddKeepFlag("A", NoFactory::get(), MueLu::Final);
     coarseLevel.RemoveKeepFlag("A", NoFactory::get(), MueLu::UserData);  // FIXME: This is a hack
+
+    // CMS DEBUG
+    std::string ofs = "matrix." + std::to_string(coarseLevel.GetLevelID()) + ".dat";
+    Xpetra::IO<SC, LO, GO, NO>::Write(ofs, *A, true);
   }
 }
 }  // namespace MueLu
