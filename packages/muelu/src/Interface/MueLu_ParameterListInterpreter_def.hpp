@@ -1025,8 +1025,6 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   ParameterList rParams;
   test_and_set_param_2list<bool>(paramList, defaultList, "repartition: enable", rParams);
   test_and_set_param_2list<bool>(paramList, defaultList, "repartition: use subcommunicators", rParams);
-  test_and_set_param_2list<bool>(paramList, defaultList, "tentative: constant column sums", rParams);
-  test_and_set_param_2list<bool>(paramList, defaultList, "tentative: calculate qr", rParams);
 
   RCP<Factory> rFactory = rcp(new ReitzingerPFactory());
   rFactory->SetParameterList(rParams);
@@ -1034,7 +1032,6 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   // These are all going to be user provided, so NoFactory
   rFactory->SetFactory("Pnodal", NoFactory::getRCP());
   rFactory->SetFactory("NodeAggMatrix", NoFactory::getRCP());
-  // rFactory->SetFactory("NodeMatrix", NoFactory::getRCP());
 
   if (levelID > 1)
     rFactory->SetFactory("D0", this->GetFactoryManager(levelID - 1)->GetFactory("D0"));
@@ -1056,8 +1053,6 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   ParameterList rParams;
   test_and_set_param_2list<bool>(paramList, defaultList, "repartition: enable", rParams);
   test_and_set_param_2list<bool>(paramList, defaultList, "repartition: use subcommunicators", rParams);
-  test_and_set_param_2list<bool>(paramList, defaultList, "tentative: constant column sums", rParams);
-  test_and_set_param_2list<bool>(paramList, defaultList, "tentative: calculate qr", rParams);
 
   RCP<Factory> rFactory = rcp(new ReitzingerPFactory());
   rFactory->SetParameterList(rParams);
@@ -1065,7 +1060,6 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   // These are all going to be user provided, so NoFactory
   rFactory->SetFactory("Pnodal", NoFactory::getRCP());
   rFactory->SetFactory("NodeAggMatrix", NoFactory::getRCP());
-  // rFactory->SetFactory("NodeMatrix", NoFactory::getRCP());
 
   if (levelID > 1)
     rFactory->SetFactory("D0", this->GetFactoryManager(levelID - 1)->GetFactory("D0"));

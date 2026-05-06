@@ -42,8 +42,6 @@ RCP<const ParameterList> ReitzingerPFactory<Scalar, LocalOrdinal, GlobalOrdinal,
 #define SET_VALID_ENTRY(name) validParamList->setEntry(name, MasterList::getEntry(name))
   SET_VALID_ENTRY("repartition: enable");
   SET_VALID_ENTRY("repartition: use subcommunicators");
-  SET_VALID_ENTRY("tentative: calculate qr");
-  SET_VALID_ENTRY("tentative: constant column sums");
 #undef SET_VALID_ENTRY
 
   validParamList->set<RCP<const FactoryBase> >("D0", Teuchos::null, "Generating factory of the matrix D0");
