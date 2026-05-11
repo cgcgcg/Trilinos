@@ -1,0 +1,76 @@
+name: WindowsBuild
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - windowsBuild
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2025
+    defaults:
+      run:
+        shell: bash
+    
+    steps:
+      - name: Clone trilinos
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Pull vcpkg binary cache cache
+        if: always()
+        id: vcpkg-restore
+        uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        with:
+          path: ${{ github.workspace }}/cache
+          key: vcpkg
+
+      - uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Setup MPI
+        uses: mpi4py/setup-mpi@v1
+
+      - name: Install dependencies
+        env:
+          VCPKG_BINARY_SOURCES: "clear;files,${{ github.workspace }}/cache,readwrite"
+        run: |
+          vcpkg install blas
+          vcpkg install lapack
+          vcpkg install msmpi
+          
+      - name: Remove vcpkg cache
+        if: ${{ steps.vcpkg-restore.outputs.cache-hit }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh extension install actions/gh-actions-cache
+          gh actions-cache delete vcpkg --confirm
+        continue-on-error: true
+
+      - name: Push vcpkg cache
+        if: always()
+        uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        with:
+          path: ${{ github.workspace }}/cache
+          key: vcpkg
+          
+      - name: Build Trilinos
+        run: |
+          mkdir build
+          cd build
+          cmake -DCMAKE_TOOLCHAIN_FILE=${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake \
+                -DTPL_ENABLE_MPI=ON \
+                -DTrilinos_ENABLE_Teuchos=ON \
+                -DTrilinos_ENABLE_Tpetra=ON \
+                -DTrilinos_ENABLE_Ifpack2=ON \
+                -DTrilinos_ENABLE_TESTS=ON \
+                -DTrilinos_ENABLE_EXAMPLES=ON \
+                -DTrilinos_ENABLE_ALL_OPTIONAL_PACKAGES=OFF \
+                -G Ninja ..
+          cmake --build .
+          ctest
