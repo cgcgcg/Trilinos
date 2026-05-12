@@ -38,6 +38,11 @@
 #include "MueLu_RepartitionFactory_fwd.hpp"
 #include "MueLu_RebalanceAcFactory_fwd.hpp"
 #include "MueLu_RebalanceTransferFactory_fwd.hpp"
+#include "MueLu_MultiVectorTransferFactory_fwd.hpp"
+
+#ifdef HAVE_MUELU_PAMGEN
+#include "MueLu_RTCFactory_fwd.hpp"
+#endif
 
 #include "MueLu_SmootherFactory_fwd.hpp"
 #include "MueLu_TrilinosSmoother_fwd.hpp"
@@ -552,13 +557,18 @@ class RefMaxwell : public VerboseObject, public Xpetra::Operator<Scalar, LocalOr
   /** Setup an auxiliary nodal prolongator
    *
    * \param[in]  A_nodal
+   * \param[in]  Material_nodal
    * \param[out] P_nodal
    * \param[out] Nullspace_nodal
+   * \param[out] Coords_nodal
+   * \param[out] CoarseMaterial_nodal
    */
   void buildNodalProlongator(const Teuchos::RCP<Matrix> &A_nodal,
+                             const Teuchos::RCP<MultiVector> &Material_nodal,
                              Teuchos::RCP<Matrix> &P_nodal,
                              Teuchos::RCP<MultiVector> &Nullspace_nodal,
-                             Teuchos::RCP<RealValuedMultiVector> &Coords_nodal) const;
+                             Teuchos::RCP<RealValuedMultiVector> &Coords_nodal,
+                             Teuchos::RCP<MultiVector> &CoarseMaterial_nodal) const;
 
   /** Setup a vectorial nodal prolongator
    *
@@ -575,13 +585,16 @@ class RefMaxwell : public VerboseObject, public Xpetra::Operator<Scalar, LocalOr
    * \param[out] edgeProlongator edge prolongator
    * \param[out] coarseEdgeNullspace coarse edge nullspace
    * \param[out] coarseNodalCoords coarse nodal coordinates
+   * \param[out] coarseNodalMaterial coarse nodal material
    */
   void buildProlongator(const int spaceNumber,
                         const Teuchos::RCP<Matrix> &A_nodal_Matrix,
                         const RCP<MultiVector> &EdgeNullspace,
+                        const RCP<MultiVector> &MaterialNodal,
                         Teuchos::RCP<Matrix> &edgeProlongator,
                         Teuchos::RCP<MultiVector> &coarseEdgeNullspace,
-                        Teuchos::RCP<RealValuedMultiVector> &coarseNodalCoords) const;
+                        Teuchos::RCP<RealValuedMultiVector> &coarseNodalCoords,
+                        Teuchos::RCP<MultiVector> &coarseNodalMaterial) const;
 
   /** Construct an addon matrix
    *
@@ -685,6 +698,10 @@ class RefMaxwell : public VerboseObject, public Xpetra::Operator<Scalar, LocalOr
   Teuchos::RCP<MultiVector> NullspaceCoarse11_;
   //! Nullspace for coarse (2,2) problem
   Teuchos::RCP<MultiVector> CoarseNullspace22_;
+  //! Material for coarse (1,1) problem
+  Teuchos::RCP<MultiVector> MaterialCoarse11_;
+  //! Material for coarse (2,2) problem
+  Teuchos::RCP<MultiVector> CoarseMaterial22_;
   //! Importer to coarse (1,1) hierarchy
   Teuchos::RCP<const Import> ImporterCoarse11_, Importer22_;
   bool Dk_1_T_R11_colMapsMatch_, asyncTransfers_;

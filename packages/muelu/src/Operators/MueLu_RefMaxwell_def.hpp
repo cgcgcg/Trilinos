@@ -51,6 +51,11 @@
 #include "MueLu_RepartitionFactory.hpp"
 #include "MueLu_RebalanceAcFactory.hpp"
 #include "MueLu_RebalanceTransferFactory.hpp"
+#include "MueLu_MultiVectorTransferFactory.hpp"
+
+#ifdef HAVE_MUELU_PAMGEN
+#include "MueLu_RTCFactory.hpp"
+#endif
 
 #include "MueLu_Behavior.hpp"
 #include "MueLu_VerbosityLevel.hpp"
@@ -186,6 +191,10 @@ RefMaxwell<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   params->set("aggregation: drop tol", MasterList::getDefault<double>("aggregation: drop tol"));
   params->set("aggregation: drop scheme", MasterList::getDefault<std::string>("aggregation: drop scheme"));
   params->set("aggregation: distance laplacian algo", MasterList::getDefault<std::string>("aggregation: distance laplacian algo"));
+  params->set("aggregation: strength-of-connection: matrix", MasterList::getDefault<std::string>("aggregation: strength-of-connection: matrix"));
+  params->set("aggregation: strength-of-connection: measure", MasterList::getDefault<std::string>("aggregation: strength-of-connection: measure"));
+  params->set("aggregation: distance laplacian metric", MasterList::getDefault<std::string>("aggregation: distance laplacian metric"));
+  params->set("aggregation: backend", MasterList::getDefault<std::string>("aggregation: backend"));
   params->set("aggregation: min agg size", MasterList::getDefault<int>("aggregation: min agg size"));
   params->set("aggregation: max agg size", MasterList::getDefault<int>("aggregation: max agg size"));
   params->set("aggregation: match ML phase1", MasterList::getDefault<bool>("aggregation: match ML phase1"));
@@ -193,6 +202,7 @@ RefMaxwell<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   params->set("aggregation: match ML phase2b", MasterList::getDefault<bool>("aggregation: match ML phase2b"));
   params->set("aggregation: export visualization data", MasterList::getDefault<bool>("aggregation: export visualization data"));
 
+  params->set("material: rtc function", "value = 0");
   return params;
 }
 
@@ -391,7 +401,7 @@ void RefMaxwell<Scalar, LocalOrdinal, GlobalOrdinal, Node>::compute(bool reuse) 
       M1_beta_ = Teuchos::null;
 
       // build special prolongator
-      buildProlongator(spaceNumber_, A11_nodal, Nullspace11_, P11_, NullspaceCoarse11_, CoordsCoarse11_);
+      buildProlongator(spaceNumber_, A11_nodal, Nullspace11_, Material_beta_, P11_, NullspaceCoarse11_, CoordsCoarse11_, MaterialCoarse11_);
 
       dump(P11_, "P11.m");
     }
@@ -425,7 +435,7 @@ void RefMaxwell<Scalar, LocalOrdinal, GlobalOrdinal, Node>::compute(bool reuse) 
       M1_alpha_ = Teuchos::null;
 
       // build special prolongator
-      buildProlongator(spaceNumber_ - 1, A22_nodal, Nullspace22_, P22_, CoarseNullspace22_, Coords22_);
+      buildProlongator(spaceNumber_ - 1, A22_nodal, Nullspace22_, Material_alpha_, P22_, CoarseNullspace22_, Coords22_, CoarseMaterial22_);
 
       dump(P22_, "P22.m");
     }
@@ -466,7 +476,7 @@ void RefMaxwell<Scalar, LocalOrdinal, GlobalOrdinal, Node>::compute(bool reuse) 
   if (!coarseA11_.is_null()) {
     VerbLevel verbosityLevel = VerboseObject::GetDefaultVerbLevel();
     std::string label("coarseA11");
-    setupSubSolve(HierarchyCoarse11_, thyraPrecOpH_, coarseA11_, NullspaceCoarse11_, CoordsCoarse11_, Material_beta_, precList11_, label, reuse);
+    setupSubSolve(HierarchyCoarse11_, thyraPrecOpH_, coarseA11_, NullspaceCoarse11_, CoordsCoarse11_, MaterialCoarse11_, precList11_, label, reuse);
     VerboseObject::SetDefaultVerbLevel(verbosityLevel);
   }
 
@@ -512,6 +522,8 @@ void RefMaxwell<Scalar, LocalOrdinal, GlobalOrdinal, Node>::compute(bool reuse) 
         if (!implicitTranspose_)
           precList22_.sublist("level 1 user data").set("R", R22_);
         precList22_.sublist("level 1 user data").set("Nullspace", CoarseNullspace22_);
+        if (!CoarseMaterial22_.is_null())
+          precList22_.sublist("level 1 user data").set("Material", CoarseMaterial22_);
         precList22_.sublist("level 1 user data").set("Coordinates", Coords22_);
         // A22 is singular, we want to coarsen at least once.
         // So we make sure coarseA22 is not just ignored.
@@ -1691,9 +1703,11 @@ RefMaxwell<Scalar, LocalOrdinal, GlobalOrdinal, Node>::buildProjection(const int
 
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 void RefMaxwell<Scalar, LocalOrdinal, GlobalOrdinal, Node>::buildNodalProlongator(const Teuchos::RCP<Matrix> &A_nodal,
+                                                                                  const Teuchos::RCP<MultiVector> &Material_nodal,
                                                                                   Teuchos::RCP<Matrix> &P_nodal,
                                                                                   Teuchos::RCP<MultiVector> &Nullspace_nodal,
-                                                                                  Teuchos::RCP<RealValuedMultiVector> &CoarseCoords_nodal) const {
+                                                                                  Teuchos::RCP<RealValuedMultiVector> &CoarseCoords_nodal,
+                                                                                  Teuchos::RCP<MultiVector> &CoarseMaterial_nodal) const {
   RCP<Teuchos::TimeMonitor> tm = getTimer("nodal prolongator");
   GetOStream(Runtime0) << solverName_ + "::compute(): building nodal prolongator" << std::endl;
 
@@ -1724,7 +1738,7 @@ void RefMaxwell<Scalar, LocalOrdinal, GlobalOrdinal, Node>::buildNodalProlongato
 
     std::string algo = parameterList_.get<std::string>("multigrid algorithm");
 
-    RCP<Factory> amalgFact, dropFact, UncoupledAggFact, coarseMapFact, TentativePFact, Tfact, SaPFact;
+    RCP<Factory> amalgFact, dropFact, UncoupledAggFact, coarseMapFact, TentativePFact, Tfact, SaPFact, materialTransfer, materialRTC;
     amalgFact        = rcp(new AmalgamationFactory());
     coarseMapFact    = rcp(new CoarseMapFactory());
     Tfact            = rcp(new CoordinatesTransferFactory());
@@ -1740,12 +1754,49 @@ void RefMaxwell<Scalar, LocalOrdinal, GlobalOrdinal, Node>::buildNodalProlongato
       SaPFact = rcp(new SaPFactory());
     dropFact->SetFactory("UnAmalgamationInfo", amalgFact);
 
-    double dropTol           = parameterList_.get<double>("aggregation: drop tol");
-    std::string dropScheme   = parameterList_.get<std::string>("aggregation: drop scheme");
-    std::string distLaplAlgo = parameterList_.get<std::string>("aggregation: distance laplacian algo");
+    double dropTol             = parameterList_.get<double>("aggregation: drop tol");
+    std::string dropScheme     = parameterList_.get<std::string>("aggregation: drop scheme");
+    std::string distLaplAlgo   = parameterList_.get<std::string>("aggregation: distance laplacian algo");
+    std::string distLaplMetric = parameterList_.get<std::string>("aggregation: distance laplacian metric");
+    std::string socMatrix      = parameterList_.get<std::string>("aggregation: strength-of-connection: matrix");
+    std::string socMeasure     = parameterList_.get<std::string>("aggregation: strength-of-connection: measure");
     dropFact->SetParameter("aggregation: drop tol", Teuchos::ParameterEntry(dropTol));
     dropFact->SetParameter("aggregation: drop scheme", Teuchos::ParameterEntry(dropScheme));
     dropFact->SetParameter("aggregation: distance laplacian algo", Teuchos::ParameterEntry(distLaplAlgo));
+    if (useKokkos_) {
+      dropFact->SetParameter("aggregation: distance laplacian metric", Teuchos::ParameterEntry(distLaplMetric));
+      dropFact->SetParameter("aggregation: strength-of-connection: matrix", Teuchos::ParameterEntry(socMatrix));
+      dropFact->SetParameter("aggregation: strength-of-connection: measure", Teuchos::ParameterEntry(socMeasure));
+    }
+
+    if (distLaplMetric == "material") {
+      materialTransfer = rcp(new MultiVectorTransferFactory());
+      if (Material_nodal.is_null()) {
+#ifdef HAVE_MUELU_PAMGEN
+        materialRTC = rcp(new RTCFactory());
+        ParameterList rtcParameters;
+        rtcParameters.set("Output", "Material");
+        std::string funBody = parameterList_.get<std::string>("material: rtc function");
+        rtcParameters.set("RTC function", funBody);
+        materialRTC->SetParameterList(rtcParameters);
+        dropFact->SetFactory("Material", materialRTC);
+
+        materialTransfer->SetFactory("Vector factory", materialRTC);
+#else
+        TEUCHOS_TEST_FOR_EXCEPTION(true, Exceptions::RuntimeError, "Optional Pamgen dependency is not enabled.");
+#endif
+      } else {
+        fineLevel.Set("Material", Material_nodal);
+      }
+
+      ParameterList materialTransferParameters;
+      materialTransferParameters.set("Vector name", "Material");
+      materialTransferParameters.set("Transfer name", "Aggregates");
+      materialTransferParameters.set("Normalize", true);
+      materialTransfer->SetParameterList(materialTransferParameters);
+      materialTransfer->SetFactory("Transfer factory", UncoupledAggFact);
+      materialTransfer->SetFactory("CoarseMap", coarseMapFact);
+    }
 
     UncoupledAggFact->SetFactory("Graph", dropFact);
     int minAggSize = parameterList_.get<int>("aggregation: min agg size");
@@ -1758,6 +1809,8 @@ void RefMaxwell<Scalar, LocalOrdinal, GlobalOrdinal, Node>::buildNodalProlongato
     UncoupledAggFact->SetParameter("aggregation: match ML phase2a", Teuchos::ParameterEntry(matchMLbehavior2a));
     bool matchMLbehavior2b = parameterList_.get<bool>("aggregation: match ML phase2b");
     UncoupledAggFact->SetParameter("aggregation: match ML phase2b", Teuchos::ParameterEntry(matchMLbehavior2b));
+    std::string aggBackend = parameterList_.get<std::string>("aggregation: backend");
+    UncoupledAggFact->SetParameter("aggregation: backend", Teuchos::ParameterEntry(aggBackend));
 
     coarseMapFact->SetFactory("Aggregates", UncoupledAggFact);
 
@@ -1775,6 +1828,11 @@ void RefMaxwell<Scalar, LocalOrdinal, GlobalOrdinal, Node>::buildNodalProlongato
       coarseLevel.Request("P", TentativePFact.get());
     coarseLevel.Request("Nullspace", TentativePFact.get());
     coarseLevel.Request("Coordinates", Tfact.get());
+    if (!materialTransfer.is_null()) {
+      coarseLevel.Request("Material", materialTransfer.get());
+      if (dump_matrices_ && Material_nodal.is_null())
+        fineLevel.Request("Material", materialRTC.get());
+    }
 
     RCP<AggregationExportFactory> aggExport;
     bool exportVizData = parameterList_.get<bool>("aggregation: export visualization data");
@@ -1797,6 +1855,15 @@ void RefMaxwell<Scalar, LocalOrdinal, GlobalOrdinal, Node>::buildNodalProlongato
       coarseLevel.Get("P", P_nodal, TentativePFact.get());
     coarseLevel.Get("Nullspace", Nullspace_nodal, TentativePFact.get());
     coarseLevel.Get("Coordinates", CoarseCoords_nodal, Tfact.get());
+
+    if (!materialTransfer.is_null()) {
+      coarseLevel.Get("Material", CoarseMaterial_nodal, materialTransfer.get());
+      if (dump_matrices_ && Material_nodal.is_null()) {
+        RCP<MultiVector> Material;
+        fineLevel.Get("Material", Material, materialRTC.get());
+        dump(Material, "Material_nodal.m");
+      }
+    }
 
     if (exportVizData)
       aggExport->Build(fineLevel, coarseLevel);
@@ -1874,9 +1941,11 @@ void RefMaxwell<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     buildProlongator(const int spaceNumber,
                      const Teuchos::RCP<Matrix> &A_nodal,
                      const Teuchos::RCP<MultiVector> &Nullspace,
+                     const Teuchos::RCP<MultiVector> &MaterialNodal,
                      Teuchos::RCP<Matrix> &Prolongator,
                      Teuchos::RCP<MultiVector> &coarseNullspace,
-                     Teuchos::RCP<RealValuedMultiVector> &coarseNodalCoords) const {
+                     Teuchos::RCP<RealValuedMultiVector> &coarseNodalCoords,
+                     Teuchos::RCP<MultiVector> &coarseNodalMaterial) const {
   using ATS         = KokkosKernels::ArithTraits<Scalar>;
   using impl_Scalar = typename ATS::val_type;
   using range_type  = Kokkos::RangePolicy<LocalOrdinal, typename Node::execution_space>;
@@ -1912,10 +1981,11 @@ void RefMaxwell<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     RCP<Matrix> P_nodal;
     RCP<MultiVector> coarseNodalNullspace;
 
-    buildNodalProlongator(A_nodal, P_nodal, coarseNodalNullspace, coarseNodalCoords);
+    buildNodalProlongator(A_nodal, MaterialNodal, P_nodal, coarseNodalNullspace, coarseNodalCoords, coarseNodalMaterial);
 
     dump(P_nodal, "P_nodal_" + typeStr + ".m");
     dump(coarseNodalNullspace, "coarseNullspace_nodal_" + typeStr + ".m");
+    dump(coarseNodalMaterial, "coarseMaterial_nodal_" + typeStr + ".m");
 
     RCP<Matrix> vectorP_nodal = buildVectorNodalProlongator(P_nodal);
 
@@ -2808,6 +2878,9 @@ void RefMaxwell<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   dump(invMk_2_invAlpha_, "invMk_2_invAlpha.m");
 
   dumpCoords(NodalCoords_, "coords.m");
+
+  dump(Material_beta, "Material_beta.m");
+  dump(Material_alpha, "Material_alpha.m");
 }
 
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
