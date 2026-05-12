@@ -314,6 +314,9 @@ using ReplicatePFactory [[maybe_unused]] = MueLu::ReplicatePFactory<Scalar, Loca
 #ifdef MUELU_RIGIDBODYMODEFACTORY_SHORT
 using RigidBodyModeFactory [[maybe_unused]] = MueLu::RigidBodyModeFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
 #endif
+#ifdef MUELU_RTCFACTORY_SHORT
+using RTCFactory [[maybe_unused]] = MueLu::RTCFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
+#endif
 #ifdef MUELU_SAPFACTORY_SHORT
 using SaPFactory [[maybe_unused]] = MueLu::SaPFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
 #endif

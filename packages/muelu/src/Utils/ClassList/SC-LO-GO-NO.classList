@@ -99,6 +99,7 @@ RepartitionHeuristicFactory - #ifdef HAVE_MPI
 RepartitionUtilities - #ifdef HAVE_MPI
 ReplicatePFactory
 RigidBodyModeFactory
+RTCFactory - #if defined(HAVE_MUELU_PAMGEN)
 SaPFactory
 ScaledNullspaceFactory
 SchurComplementFactory

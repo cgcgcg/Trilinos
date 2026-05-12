@@ -61,6 +61,9 @@
 #include "MueLu_RepartitionFactory.hpp"
 #include "MueLu_RepartitionHeuristicFactory.hpp"
 #include "MueLu_ReitzingerPFactory.hpp"
+#ifdef HAVE_MUELU_PAMGEN
+#include "MueLu_RTCFactory.hpp"
+#endif
 #include "MueLu_SaPFactory.hpp"
 #include "MueLu_ScaledNullspaceFactory.hpp"
 #include "MueLu_SemiCoarsenPFactory.hpp"
@@ -1616,7 +1619,7 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     UpdateFactoryManager_Material(ParameterList& paramList, const ParameterList& /* defaultList */,
-                                  FactoryManager& manager, int /* levelID */, std::vector<keep_pair>& /* keeps */) const {
+                                  FactoryManager& manager, int levelID, std::vector<keep_pair>& /* keeps */) const {
   bool have_userMaterial = false;
   if (paramList.isParameter("Material") && !paramList.get<RCP<MultiVector>>("Material").is_null())
     have_userMaterial = true;
@@ -1624,7 +1627,16 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   if (useMaterial_) {
     if (have_userMaterial) {
       manager.SetFactory("Material", NoFactory::getRCP());
-    } else {
+    }
+#ifdef HAVE_MUELU_PAMGEN
+    else if (levelID == 0) {
+      RCP<Factory> materialRTC = rcp(new RTCFactory());
+      ParameterList rtcParameters;
+      rtcParameters.set("Output", "Material");
+      manager.SetFactory("Material", materialRTC);
+    }
+#endif
+    else {
       RCP<Factory> materialTransfer = rcp(new MultiVectorTransferFactory());
       ParameterList materialTransferParameters;
       materialTransferParameters.set("Vector name", "Material");

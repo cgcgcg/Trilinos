@@ -48,6 +48,9 @@
 #include "MueLu_RebalanceTransferFactory_fwd.hpp"
 #include "MueLu_RepartitionFactory_fwd.hpp"
 #include "MueLu_ReitzingerPFactory_fwd.hpp"
+#ifdef HAVE_MUELU_PAMGEN
+#include "MueLu_RTCFactory_fwd.hpp"
+#endif
 #include "MueLu_SaPFactory_fwd.hpp"
 #include "MueLu_SemiCoarsenPFactory_fwd.hpp"
 #include "MueLu_SmootherFactory_fwd.hpp"
