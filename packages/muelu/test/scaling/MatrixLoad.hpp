@@ -155,6 +155,10 @@ void MatrixLoad(Teuchos::RCP<const Teuchos::Comm<int> >& comm, Xpetra::Underlyin
       galeriList.set("back boundary", "Neumann");
     }
 
+    {
+      galeriList.set("rtc function", "a = 2; b = 1; c = 1;");
+    }
+
     RCP<Galeri::Xpetra::Problem<Map, CrsMatrixWrap, MultiVector> > Pr =
         Galeri::Xpetra::BuildProblem<SC, LO, GO, Map, CrsMatrixWrap, MultiVector>(galeriParameters.GetMatrixType(), map, galeriList);
     A         = Pr->BuildMatrix();

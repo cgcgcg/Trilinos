@@ -27,8 +27,8 @@ TRIBITS_REPOSITORY_DEFINE_PACKAGES(
   TrilinosSS            packages/common/auxiliarySoftware/SuiteSparse PT # Auxiliary software.
   Thyra                 packages/thyra                    PT
   Xpetra                packages/xpetra                   PT
-  Galeri                packages/galeri                   PT
   Pamgen                packages/pamgen                   PT
+  Galeri                packages/galeri                   PT
   Zoltan2Core           packages/zoltan2/core             PT
   Belos                 packages/belos                    PT
   ShyLU_Node            packages/shylu/shylu_node         PT

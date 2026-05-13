@@ -26,6 +26,10 @@
 #include "Xpetra_TpetraCrsMatrix.hpp"
 #include "Tpetra_Distributor.hpp"
 
+#ifdef HAVE_GALERI_PAMGEN
+#include "RTC_FunctionRTC.hh"
+#endif
+
 namespace Galeri::Xpetra {
 
 /* prototypes */
@@ -230,9 +234,13 @@ class TriDiagStencil {
   using hashmap_type      = typename Kokkos::UnorderedMap<GlobalOrdinal, void, exec_space>;
 
   GlobalOrdinal nx;
-  impl_scalar_type a, b, c;
+  mutable impl_scalar_type a, b, c, x;
   DirBC DirichletBC;
+  bool callPamgen;
   local_map_type lclMap;
+#ifdef HAVE_GALERI_PAMGEN
+  mutable PG_RuntimeCompiler::Function fun;
+#endif
 
   const impl_scalar_type one  = KokkosKernels::ArithTraits<impl_scalar_type>::one();
   const impl_scalar_type zero = KokkosKernels::ArithTraits<impl_scalar_type>::zero();
@@ -249,10 +257,31 @@ class TriDiagStencil {
     , a(a_)
     , b(b_)
     , c(c_)
-    , DirichletBC(DirichletBC_) {
+    , DirichletBC(DirichletBC_)
+    , callPamgen(false) {
     lclMap = map.getLocalMap();
     TEUCHOS_ASSERT((GlobalOrdinal)map.getGlobalNumElements() == nx);
   }
+
+#ifdef HAVE_GALERI_PAMGEN
+  TriDiagStencil(const Map& map, GlobalOrdinal nx_, const std::string &fun_, DirBC DirichletBC_)
+    : nx(nx_)
+    , DirichletBC(DirichletBC_)
+    , callPamgen(true) {
+    lclMap = map.getLocalMap();
+    TEUCHOS_ASSERT((GlobalOrdinal)map.getGlobalNumElements() == nx);
+    fun = PG_RuntimeCompiler::Function();
+    fun.addVar("double", "x");
+    fun.addVar("double", "a");
+    fun.addVar("double", "b");
+    fun.addVar("double", "c");
+    fun.varAddrFill(0, &x);
+    fun.varAddrFill(1, &a);
+    fun.varAddrFill(2, &b);
+    fun.varAddrFill(3, &c);
+    fun.addBody(fun_);
+  }
+#endif
 
   KOKKOS_FORCEINLINE_FUNCTION
   void GetNeighbours(const GlobalOrdinal i,
@@ -299,6 +328,15 @@ class TriDiagStencil {
       // Dirichlet unknown we want to keep
       Galeri_enterValue(rowStart, center, one);
     } else {
+
+#ifdef HAVE_GALERI_PAMGEN
+      if (callPamgen) {
+        x = 1.;
+        fun.execute();
+        std::cout << "HERE " << a << " " << b << " " << c << std::endl;
+      }
+#endif
+      
       Galeri_enterValue(rowStart, left, b);
       Galeri_enterValue(rowStart, right, c);
       Galeri_enterValue(rowStart, center, (IsBoundary(center) && !isDirichlet) ? -offDiagonalSum : a);
@@ -1336,6 +1374,29 @@ TriDiag(const Teuchos::RCP<const Map>& map,
     TriDiagStencil<Scalar, Map, false> stencil(*map,
                                                nx,
                                                a, b, c,
+                                               DirichletBC);
+    return StencilMatrix<Matrix>(map, stencil, label);
+  }
+}
+
+template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Map, typename Matrix>
+Teuchos::RCP<Matrix>
+TriDiag(const Teuchos::RCP<const Map>& map,
+        const GlobalOrdinal nx,
+        const std::string &fun,
+        const DirBC DirichletBC  = 0,
+        const bool keepBCs       = false,
+        const std::string& label = "TriDiag") {
+  if (keepBCs) {
+    TriDiagStencil<Scalar, Map, true> stencil(*map,
+                                              nx,
+                                              fun,
+                                              DirichletBC);
+    return StencilMatrix<Matrix>(map, stencil, label);
+  } else {
+    TriDiagStencil<Scalar, Map, false> stencil(*map,
+                                               nx,
+                                               fun,
                                                DirichletBC);
     return StencilMatrix<Matrix>(map, stencil, label);
   }

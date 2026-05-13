@@ -42,7 +42,15 @@ Teuchos::RCP<Matrix> Laplace1DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, 
     nx = this->Map_->getGlobalNumElements();
 
   bool keepBCs = false;
-  this->A_     = TriDiag<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix>(this->Map_, nx, 2.0, -1.0, -1.0, this->DirichletBC_, keepBCs, "Laplace 1D");
+#ifdef HAVE_GALERI_PAMGEN
+  if (this->list_.template isType<std::string>("rtc function")) {
+    auto fun = this->list_.template get<std::string>("rtc function");
+    this->A_     = TriDiag<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix>(this->Map_, nx, fun, this->DirichletBC_, keepBCs, "Laplace 1D");
+  } else
+#endif
+  {
+    this->A_     = TriDiag<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix>(this->Map_, nx, 2.0, -1.0, -1.0, this->DirichletBC_, keepBCs, "Laplace 1D");
+  }
   this->A_->setObjectLabel(this->getObjectLabel());
   return this->A_;
 }
