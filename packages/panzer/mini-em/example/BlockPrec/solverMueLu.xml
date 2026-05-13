@@ -147,13 +147,14 @@
             <ParameterList name="Preconditioner Types">
               <ParameterList name="MueLuRefMaxwell">
                 <Parameter name="parameterlist: syntax" type="string" value="muelu"/>
-                <Parameter name="use kokkos refactor" type="bool" value="false"/>
+                <Parameter name="use kokkos refactor" type="bool" value="true"/>
+                <!-- <Parameter name="use kokkos refactor" type="bool" value="false"/> -->
                 <Parameter name="verbosity" type="string" value="extreme"/>
                 <Parameter name="refmaxwell: use as preconditioner" type="bool" value="true"/>
                 <Parameter name="refmaxwell: enable reuse" type="bool" value="true"/>
                 <Parameter name="refmaxwell: mode" type="string" value="additive"/>
                 <Parameter name="refmaxwell: disable addon" type="bool" value="false"/>
-                <Parameter name="refmaxwell: dump matrices" type="bool" value="false"/>
+                <Parameter name="refmaxwell: dump matrices" type="bool" value="true"/>
                 <Parameter name="refmaxwell: subsolves on subcommunicators" type="bool" value="true"/>
                 <Parameter name="refmaxwell: subsolves striding" type="int" value="1"/>
 
@@ -166,6 +167,16 @@
                 <Parameter name="aggregation: distance laplacian algo" type="string" value="scaled cut"/>
                 <Parameter name="aggregation: drop tol" type="double" value="0.35"/>
 
+                <!-- <Parameter name="aggregation: export visualization data" type="bool" value="true"/> -->
+                
+                <!-- <Parameter name="aggregation: drop scheme" type="string" value="point-wise"/> -->
+                <!-- <Parameter name="aggregation: strength-of-connection: matrix" type="string" value="distance laplacian"/> -->
+                <!-- <Parameter name="aggregation: strength-of-connection: measure" type="string" value="smoothed aggregation"/> -->
+                <!-- <Parameter name="aggregation: distance laplacian metric" type="string" value="material"/> -->
+                <!-- <Parameter name="aggregation: drop tol" type="double" value="0.02"/> -->
+                <!-- <Parameter name="aggregation: backend" type="string" value="host"/> -->
+                <!-- <Parameter name="material: rtc function" type="string" value="if ((7*x-1e-10) % 2 == 0) {value = 1;} else {value = 1e3;}"/> -->
+                
                 <ParameterList name="matvec params">
                   <!-- <Parameter name="Send type" type="string" value="Send"/> -->
                   <Parameter name="Send type" type="string" value="Isend"/>
@@ -198,9 +209,10 @@
                 <!-- </ParameterList> -->
 
                 <ParameterList name="refmaxwell: 11list">
+                  <!-- <Parameter name="use kokkos refactor" type="bool" value="true"/> -->
                   <Parameter name="use kokkos refactor" type="bool" value="false"/>
                   <Parameter name="verbosity" type="string" value="extreme"/>
-                  <Parameter name="coarse: max size" type="int" value="2500"/>
+                  <Parameter name="coarse: max size" type="int" value="2600"/>
                   <Parameter name="number of equations" type="int" value="3"/>
                   <Parameter name="multigrid algorithm" type="string" value="unsmoothed"/>
 
@@ -210,6 +222,13 @@
                   <Parameter name="aggregation: drop scheme" type="string" value="distance laplacian"/>
                   <Parameter name="aggregation: distance laplacian algo" type="string" value="scaled cut"/>
                   <Parameter name="aggregation: drop tol" type="double" value="0.35"/>
+
+                  <!-- <Parameter name="aggregation: drop scheme" type="string" value="point-wise"/> -->
+                  <!-- <Parameter name="aggregation: strength-of-connection: matrix" type="string" value="distance laplacian"/> -->
+                  <!-- <Parameter name="aggregation: strength-of-connection: measure" type="string" value="smoothed aggregation"/> -->
+                  <!-- <Parameter name="aggregation: distance laplacian metric" type="string" value="material"/> -->
+                  <!-- <Parameter name="aggregation: drop tol" type="double" value="0.02"/> -->
+                  <!-- <Parameter name="aggregation: backend" type="string" value="host"/> -->
 
                   <ParameterList name="matvec params">
                     <!-- <Parameter name="Send type" type="string" value="Send"/> -->
