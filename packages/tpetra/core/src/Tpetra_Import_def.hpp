@@ -100,58 +100,6 @@ std::string toString(const Kokkos::View<const ElementType*, DeviceType>& x) {
 
 namespace Tpetra {
 
-template <class keys_view_type>
-struct LookupComparator {
-  keys_view_type keys;
-
-  LookupComparator(keys_view_type keys_)
-    : keys(keys_) {}
-
-  KOKKOS_INLINE_FUNCTION
-  bool operator()(size_t i, size_t j) const {
-    return keys(i) < keys(j);
-  }
-};
-
-template <class ExecutionSpace, class view_0_type, class view_1_type, class view_2_type>
-void sort3(view_0_type& view_0, view_1_type& view_1, view_2_type& view_2) {
-  using memory_space = view_1_type::memory_space;
-  auto numItems      = view_0.extent(0);
-  if (numItems < 2)
-    return;
-
-  size_t numUnorderedItems;
-  Kokkos::parallel_reduce(
-      Kokkos::RangePolicy<ExecutionSpace>(0, numItems - 1), KOKKOS_LAMBDA(const size_t k, size_t& unorded_items) {
-        if (view_0(k) > view_0(k + 1))
-          ++unorded_items;
-      },
-      numUnorderedItems);
-
-  if (numUnorderedItems == 0)
-    return;
-
-  Kokkos::View<size_t*, memory_space> indices(Kokkos::ViewAllocateWithoutInitializing(""), numItems);
-  Kokkos::parallel_for(
-      Kokkos::RangePolicy<ExecutionSpace>(0, numItems), KOKKOS_LAMBDA(const size_t k) { indices(k) = k; });
-  LookupComparator comparison(view_0);
-  Kokkos::sort(indices, comparison);
-
-  Kokkos::View<typename view_0_type::value_type*, memory_space> view_0_out("view_0_out", view_0.extent(0));
-  Kokkos::View<typename view_1_type::value_type*, memory_space> view_1_out("view_1_out", view_1.extent(0));
-  Kokkos::View<typename view_2_type::value_type*, memory_space> view_2_out("view_2_out", view_2.extent(0));
-  Kokkos::parallel_for(
-      Kokkos::RangePolicy<ExecutionSpace>(0, numItems), KOKKOS_LAMBDA(const size_t k) {
-        auto idx      = indices(k);
-        view_0_out(k) = view_0(idx);
-        view_1_out(k) = view_1(idx);
-        view_2_out(k) = view_2(idx);
-      });
-  Kokkos::deep_copy(view_0, view_0_out);
-  Kokkos::deep_copy(view_1, view_1_out);
-  Kokkos::deep_copy(view_2, view_2_out);
-}
-
 // head:  init(source, target, true, remotePIDs, Teuchos::null);
 
 template <class LocalOrdinal, class GlobalOrdinal, class Node>
@@ -1414,7 +1362,6 @@ void Import<LocalOrdinal, GlobalOrdinal, Node>::
   // Map implementation.
   const size_type numExportIDs = exportGIDs_a.size();
   if (numExportIDs > 0) {
-
     auto exportGIDs_h = Kokkos::View<GO*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>(exportGIDs_a.data(), exportGIDs_a.size());
     auto exportGIDs   = Kokkos::create_mirror_view_and_copy(execution_space(), exportGIDs_h);
 

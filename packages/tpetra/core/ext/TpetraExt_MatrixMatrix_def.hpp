@@ -3083,7 +3083,6 @@ void import_and_extract_views(
 
       auto lclTargetMap = targetMap->getLocalMap();
 
-
       Kokkos::View<GlobalOrdinal*, typename Node::device_type> remoteRows(Kokkos::ViewAllocateWithoutInitializing("remoteRows"), numRemote);
       using execution_space = typename Node::execution_space;
       using range_type      = Kokkos::RangePolicy<execution_space, size_t>;
