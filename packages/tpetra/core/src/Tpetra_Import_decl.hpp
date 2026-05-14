@@ -253,20 +253,20 @@ class Import : public ::Tpetra::Details::Transfer<LocalOrdinal, GlobalOrdinal, N
   /// indices.  {permute} is ordered from smallest ID to largest.  {remote} is
   /// ordered by remote process ID and ID, respectively.  remotePGIDs are
   /// ordered the same as {remote}.
-  void
-  findUnionTargetGIDs(Teuchos::Array<GlobalOrdinal>& unionTgtGIDs,
-                      Teuchos::Array<std::pair<int, GlobalOrdinal>>& remotePGIDs,
+  template <class gids_subview_type>
+  remote_gids_type
+  findUnionTargetGIDs(Teuchos::Array<std::pair<int, GlobalOrdinal>>& remotePGIDs,
                       typename Teuchos::Array<GlobalOrdinal>::size_type& numSameGIDs,
                       typename Teuchos::Array<GlobalOrdinal>::size_type& numPermuteGIDs,
                       typename Teuchos::Array<GlobalOrdinal>::size_type& numRemoteGIDs,
-                      const Teuchos::ArrayView<const GlobalOrdinal>& sameGIDs1,
-                      const Teuchos::ArrayView<const GlobalOrdinal>& sameGIDs2,
-                      Teuchos::Array<GlobalOrdinal>& permuteGIDs1,
-                      Teuchos::Array<GlobalOrdinal>& permuteGIDs2,
-                      Teuchos::Array<GlobalOrdinal>& remoteGIDs1,
-                      Teuchos::Array<GlobalOrdinal>& remoteGIDs2,
-                      Teuchos::Array<int>& remotePIDs1,
-                      Teuchos::Array<int>& remotePIDs2) const;
+                      const gids_subview_type sameGIDs1,
+                      const gids_subview_type sameGIDs2,
+                      remote_gids_type permuteGIDs1,
+                      remote_gids_type permuteGIDs2,
+                      remote_gids_type remoteGIDs1,
+                      remote_gids_type remoteGIDs2,
+                      remote_pids_type remotePIDs1,
+                      remote_pids_type remotePIDs2) const;
 
   /// \brief Return the union of this Import and \c rhs.
   ///
@@ -499,7 +499,7 @@ class Import : public ::Tpetra::Details::Transfer<LocalOrdinal, GlobalOrdinal, N
          remote_lids_type permuteFromLIDs,
          remote_lids_type remoteLIDs,
          remote_lids_type exportLIDs,
-         Teuchos::Array<int>& exportPIDs,
+         remote_pids_type exportPIDs,
          Distributor& distributor,
          const Teuchos::RCP<Teuchos::FancyOStream>& out    = Teuchos::null,
          const Teuchos::RCP<Teuchos::ParameterList>& plist = Teuchos::null);

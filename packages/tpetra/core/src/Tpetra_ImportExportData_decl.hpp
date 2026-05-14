@@ -168,7 +168,7 @@ class ImportExportData {
   Kokkos::DualView<LocalOrdinal*, device_type> exportLIDs_;
 
   //! Ranks of the processes to which the source object sends data.
-  Teuchos::Array<int> exportPIDs_;
+  Kokkos::DualView<int*, device_type> exportPIDs_;
 
   /// \brief Number of initial identical indices.
   ///

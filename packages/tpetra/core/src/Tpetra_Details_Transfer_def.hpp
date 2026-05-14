@@ -217,10 +217,24 @@ Transfer<LO, GO, NT>::
 }
 
 template <class LO, class GO, class NT>
+Kokkos::DualView<const int*, typename Transfer<LO, GO, NT>::device_type>
+Transfer<LO, GO, NT>::
+    getExportPIDs_dv() const {
+  const auto& dv = TransferData_->exportPIDs_;
+  TEUCHOS_TEST_FOR_EXCEPTION(dv.need_sync_device(), std::logic_error,
+                             "Tpetra::Details::Transfer::getExportPIDs_dv: "
+                             "DualView needs sync to device");
+  TEUCHOS_TEST_FOR_EXCEPTION(dv.need_sync_host(), std::logic_error,
+                             "Tpetra::Details::Transfer::getExportPIDs_dv: "
+                             "DualView needs sync to host");
+  return dv;
+}
+
+template <class LO, class GO, class NT>
 Teuchos::ArrayView<const int>
 Transfer<LO, GO, NT>::
     getExportPIDs() const {
-  return TransferData_->exportPIDs_();
+  return makeConstArrayViewFromDualView(TransferData_->exportPIDs_);
 }
 
 template <class LO, class GO, class NT>

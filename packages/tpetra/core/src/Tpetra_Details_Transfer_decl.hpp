@@ -148,6 +148,8 @@ class Transfer : public Teuchos::Describable {
   //! List of entries in the source Map that will be sent to other processes.
   Teuchos::ArrayView<const LO> getExportLIDs() const;
 
+  Kokkos::DualView<const int*, device_type> getExportPIDs_dv() const;
+
   /// \brief List of processes to which entries will be sent.
   ///
   /// The entry with local ID getExportLIDs()[i] will be sent to

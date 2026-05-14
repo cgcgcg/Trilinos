@@ -11,7 +11,13 @@
 #define TPETRA_IMPORT_DEF_HPP
 
 #include <cstddef>
+#include <sstream>
 #include <tuple>
+#include "KokkosCompat_View.hpp"
+#include "Kokkos_DynRankView.hpp"
+#include "Kokkos_Macros.hpp"
+#include "Kokkos_Pair.hpp"
+#include "Kokkos_Sort.hpp"
 #include "Tpetra_Distributor.hpp"
 #include "Tpetra_Map.hpp"
 #include "Tpetra_ImportExportData.hpp"
@@ -100,57 +106,57 @@ std::string toString(const Kokkos::View<const ElementType*, DeviceType>& x) {
 
 namespace Tpetra {
 
-template <class keys_view_type>
-struct LookupComparator {
-  keys_view_type keys;
+// template <class keys_view_type>
+// struct LookupComparator {
+//   keys_view_type keys;
 
-  LookupComparator(keys_view_type keys_)
-    : keys(keys_) {}
+//   LookupComparator(keys_view_type keys_)
+//     : keys(keys_) {}
 
-  KOKKOS_INLINE_FUNCTION
-  bool operator()(size_t i, size_t j) const {
-    return keys(i) < keys(j);
-  }
-};
+//   KOKKOS_INLINE_FUNCTION
+//   bool operator()(size_t i, size_t j) const {
+//     return keys(i) < keys(j);
+//   }
+// };
 
-template <class ExecutionSpace, class view_0_type, class view_1_type, class view_2_type>
-void sort3(view_0_type& view_0, view_1_type& view_1, view_2_type& view_2) {
-  using memory_space = view_1_type::memory_space;
-  auto numItems      = view_0.extent(0);
-  if (numItems < 2)
-    return;
+// template <class ExecutionSpace, class view_0_type, class view_1_type, class view_2_type>
+// void sort3(view_0_type& view_0, view_1_type& view_1, view_2_type& view_2) {
+//   using memory_space = typename view_1_type::memory_space;
+//   auto numItems      = view_0.extent(0);
+//   if (numItems < 2)
+//     return;
 
-  size_t numUnorderedItems;
-  Kokkos::parallel_reduce(
-      Kokkos::RangePolicy<ExecutionSpace>(0, numItems - 1), KOKKOS_LAMBDA(const size_t k, size_t& unorded_items) {
-        if (view_0(k) > view_0(k + 1))
-          ++unorded_items;
-      },
-      numUnorderedItems);
+//   size_t numUnorderedItems;
+//   Kokkos::parallel_reduce(
+//       Kokkos::RangePolicy<ExecutionSpace>(0, numItems - 1), KOKKOS_LAMBDA(const size_t k, size_t& unorded_items) {
+//         if (view_0(k) > view_0(k + 1))
+//           ++unorded_items;
+//       },
+//       numUnorderedItems);
 
-  if (numUnorderedItems == 0)
-    return;
+//   if (numUnorderedItems == 0)
+//     return;
 
-  Kokkos::View<size_t*, memory_space> indices(Kokkos::ViewAllocateWithoutInitializing(""), numItems);
-  Kokkos::parallel_for(
-      Kokkos::RangePolicy<ExecutionSpace>(0, numItems), KOKKOS_LAMBDA(const size_t k) { indices(k) = k; });
-  LookupComparator comparison(view_0);
-  Kokkos::sort(indices, comparison);
+//   Kokkos::View<size_t*, memory_space> indices(Kokkos::ViewAllocateWithoutInitializing(""), numItems);
+//   Kokkos::parallel_for(
+//       Kokkos::RangePolicy<ExecutionSpace>(0, numItems), KOKKOS_LAMBDA(const size_t k) { indices(k) = k; });
+//   LookupComparator comparison(view_0);
+//   Kokkos::sort(indices, comparison);
 
-  Kokkos::View<typename view_0_type::value_type*, memory_space> view_0_out("view_0_out", view_0.extent(0));
-  Kokkos::View<typename view_1_type::value_type*, memory_space> view_1_out("view_1_out", view_1.extent(0));
-  Kokkos::View<typename view_2_type::value_type*, memory_space> view_2_out("view_2_out", view_2.extent(0));
-  Kokkos::parallel_for(
-      Kokkos::RangePolicy<ExecutionSpace>(0, numItems), KOKKOS_LAMBDA(const size_t k) {
-        auto idx      = indices(k);
-        view_0_out(k) = view_0(idx);
-        view_1_out(k) = view_1(idx);
-        view_2_out(k) = view_2(idx);
-      });
-  Kokkos::deep_copy(view_0, view_0_out);
-  Kokkos::deep_copy(view_1, view_1_out);
-  Kokkos::deep_copy(view_2, view_2_out);
-}
+//   Kokkos::View<typename view_0_type::value_type*, memory_space> view_0_out("view_0_out", view_0.extent(0));
+//   Kokkos::View<typename view_1_type::value_type*, memory_space> view_1_out("view_1_out", view_1.extent(0));
+//   Kokkos::View<typename view_2_type::value_type*, memory_space> view_2_out("view_2_out", view_2.extent(0));
+//   Kokkos::parallel_for(
+//       Kokkos::RangePolicy<ExecutionSpace>(0, numItems), KOKKOS_LAMBDA(const size_t k) {
+//         auto idx      = indices(k);
+//         view_0_out(k) = view_0(idx);
+//         view_1_out(k) = view_1(idx);
+//         view_2_out(k) = view_2(idx);
+//       });
+//   Kokkos::deep_copy(view_0, view_0_out);
+//   Kokkos::deep_copy(view_1, view_1_out);
+//   Kokkos::deep_copy(view_2, view_2_out);
+// }
 
 // head:  init(source, target, true, remotePIDs, Teuchos::null);
 
@@ -431,7 +437,8 @@ Import<LocalOrdinal, GlobalOrdinal, Node>::
   tRemotePIDs = newRemotePIDs;
   Details::makeDualViewFromOwningDeviceView(this->TransferData_->remoteLIDs_, newRemoteLIDs);
 
-  this->TransferData_->exportPIDs_ = Teuchos::Array<int>(userExportPIDs);
+  makeDualViewFromArrayView(this->TransferData_->exportPIDs_,
+                            userExportPIDs, "exportPIDs");
   makeDualViewFromArrayView(this->TransferData_->exportLIDs_,
                             userExportLIDs, "exportLIDs");
 
@@ -456,7 +463,7 @@ Import<LocalOrdinal, GlobalOrdinal, Node>::
     auto tRemotePIDs_h       = Kokkos::create_mirror_view(tRemotePIDs);
     Kokkos::deep_copy(tRemotePIDs_h, tRemotePIDs);
     auto tRemotePIDs_a = Kokkos::Compat::getArrayView(tRemotePIDs_h);
-    distributor.createFromSendsAndRecvs(this->TransferData_->exportPIDs_, tRemotePIDs_a);
+    distributor.createFromSendsAndRecvs(this->getExportPIDs(), tRemotePIDs_a);
   }
 
   this->detectRemoteExportLIDsContiguous();
@@ -535,7 +542,9 @@ Import<LocalOrdinal, GlobalOrdinal, Node>::
                             "exportLIDs");
   TEUCHOS_ASSERT(size_t(this->TransferData_->exportLIDs_.extent(0)) ==
                  size_t(exportLIDs.size()));
-  this->TransferData_->exportPIDs_.swap(exportPIDs);
+  makeDualViewFromArrayView(this->TransferData_->exportPIDs_,
+                            exportPIDs().getConst(),
+                            "exportPIDs");
   this->TransferData_->distributor_.swap(distributor);
 
   this->detectRemoteExportLIDsContiguous();
@@ -559,7 +568,7 @@ Import<LocalOrdinal, GlobalOrdinal, Node>::
            remote_lids_type permuteFromLIDs,
            remote_lids_type remoteLIDs,
            remote_lids_type exportLIDs,
-           Teuchos::Array<int>& exportPIDs,
+           remote_pids_type exportPIDs,
            Distributor& distributor,
            const Teuchos::RCP<Teuchos::FancyOStream>& out,
            const Teuchos::RCP<Teuchos::ParameterList>& plist)
@@ -611,7 +620,10 @@ Import<LocalOrdinal, GlobalOrdinal, Node>::
                                    exportLIDs);
   TEUCHOS_ASSERT(size_t(this->TransferData_->exportLIDs_.extent(0)) ==
                  size_t(exportLIDs.extent(0)));
-  this->TransferData_->exportPIDs_.swap(exportPIDs);
+  makeDualViewFromOwningDeviceView(this->TransferData_->exportPIDs_,
+                                   exportPIDs);
+  TEUCHOS_ASSERT(size_t(this->TransferData_->exportPIDs_.extent(0)) ==
+                 size_t(exportPIDs.extent(0)));
   this->TransferData_->distributor_.swap(distributor);
 
   this->detectRemoteExportLIDsContiguous();
@@ -929,6 +941,7 @@ Import<LocalOrdinal, GlobalOrdinal, Node>::
   using Teuchos::rcp;
   using Teuchos::rcpFromRef;
   using ::Tpetra::Details::Behavior;
+  using ::Tpetra::Details::makeDualViewFromArrayView;
   using ::Tpetra::Details::makeDualViewFromOwningHostView;
   using ::Tpetra::Details::makeDualViewFromVector;
   using ::Tpetra::Details::printDualView;
@@ -1003,10 +1016,14 @@ Import<LocalOrdinal, GlobalOrdinal, Node>::
     // remoteGIDs and remotePIDs are input; exportGIDs and
     // exportPIDs are output arrays that createFromRecvs allocates.
     Distributor& distributor = this->TransferData_->distributor_;
+    Teuchos::Array<int> exportPIDs_a;
     distributor.createFromRecvs(remoteGIDs,
                                 remotePIDs,
                                 exportGIDs,
-                                this->TransferData_->exportPIDs_);
+                                exportPIDs_a);
+    makeDualViewFromArrayView(this->TransferData_->exportPIDs_,
+                              exportPIDs_a().getConst(),
+                              "exportPIDs");
     // Find the LIDs corresponding to the (outgoing) GIDs in
     // exportGIDs.  For sparse matrix-vector multiply, this tells
     // the calling process how to index into the source vector to
@@ -1398,10 +1415,14 @@ void Import<LocalOrdinal, GlobalOrdinal, Node>::
     Kokkos::deep_copy(remoteGIDs_h, remoteGIDs);
     auto remoteProcIDs_h = Kokkos::create_mirror_view(remoteProcIDs);
     Kokkos::deep_copy(remoteProcIDs_h, remoteProcIDs);
+    Teuchos::Array<int> exportPIDs_a;
     this->TransferData_->distributor_.createFromRecvs(Kokkos::Compat::getConstArrayView(remoteGIDs_h),
                                                       Kokkos::Compat::getConstArrayView(remoteProcIDs_h),
                                                       exportGIDs_a,
-                                                      this->TransferData_->exportPIDs_);
+                                                      exportPIDs_a);
+    Details::makeDualViewFromArrayView(this->TransferData_->exportPIDs_,
+                                       exportPIDs_a().getConst(),
+                                       "exportPIDs");
   }
   // Find the LIDs corresponding to the (outgoing) GIDs in
   // exportGIDs.  For sparse matrix-vector multiply, this tells the
@@ -1414,7 +1435,6 @@ void Import<LocalOrdinal, GlobalOrdinal, Node>::
   // Map implementation.
   const size_type numExportIDs = exportGIDs_a.size();
   if (numExportIDs > 0) {
-
     auto exportGIDs_h = Kokkos::View<GO*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>(exportGIDs_a.data(), exportGIDs_a.size());
     auto exportGIDs   = Kokkos::create_mirror_view_and_copy(execution_space(), exportGIDs_h);
 
@@ -1438,36 +1458,71 @@ void Import<LocalOrdinal, GlobalOrdinal, Node>::
 }
 
 template <class LocalOrdinal, class GlobalOrdinal, class Node>
-void Import<LocalOrdinal, GlobalOrdinal, Node>::
-    findUnionTargetGIDs(Teuchos::Array<GlobalOrdinal>& unionTgtGIDs,
-                        Teuchos::Array<std::pair<int, GlobalOrdinal>>& remotePGIDs,
+template <class gids_subview_type>
+Import<LocalOrdinal, GlobalOrdinal, Node>::remote_gids_type Import<LocalOrdinal, GlobalOrdinal, Node>::
+    findUnionTargetGIDs(Teuchos::Array<std::pair<int, GlobalOrdinal>>& remotePGIDs,
                         typename Teuchos::Array<GlobalOrdinal>::size_type& numSameGIDs,
                         typename Teuchos::Array<GlobalOrdinal>::size_type& numPermuteGIDs,
                         typename Teuchos::Array<GlobalOrdinal>::size_type& numRemoteGIDs,
-                        const Teuchos::ArrayView<const GlobalOrdinal>& sameGIDs1,
-                        const Teuchos::ArrayView<const GlobalOrdinal>& sameGIDs2,
-                        Teuchos::Array<GlobalOrdinal>& permuteGIDs1,
-                        Teuchos::Array<GlobalOrdinal>& permuteGIDs2,
-                        Teuchos::Array<GlobalOrdinal>& remoteGIDs1,
-                        Teuchos::Array<GlobalOrdinal>& remoteGIDs2,
-                        Teuchos::Array<int>& remotePIDs1,
-                        Teuchos::Array<int>& remotePIDs2) const {
+                        const gids_subview_type sameGIDs1,
+                        const gids_subview_type sameGIDs2,
+                        remote_gids_type permuteGIDs1,
+                        remote_gids_type permuteGIDs2,
+                        remote_gids_type remoteGIDs1,
+                        remote_gids_type remoteGIDs2,
+                        remote_pids_type remotePIDs1,
+                        remote_pids_type remotePIDs2) const {
   typedef GlobalOrdinal GO;
   typedef typename Teuchos::Array<GO>::size_type size_type;
 
-  const size_type numSameGIDs1 = sameGIDs1.size();
-  const size_type numSameGIDs2 = sameGIDs2.size();
+  const size_type numSameGIDs1 = sameGIDs1.extent(0);
+  const size_type numSameGIDs2 = sameGIDs2.extent(0);
 
   // Sort the permute GIDs
-  std::sort(permuteGIDs1.begin(), permuteGIDs1.end());
-  std::sort(permuteGIDs2.begin(), permuteGIDs2.end());
+  Kokkos::sort(permuteGIDs1);
+  Kokkos::sort(permuteGIDs2);
 
   // Get the union of the two target maps
   // Reserve the maximum possible size to guard against reallocations from
   // push_back operations.
-  unionTgtGIDs.reserve(numSameGIDs1 + numSameGIDs2 +
-                       permuteGIDs1.size() + permuteGIDs2.size() +
-                       remoteGIDs1.size() + remoteGIDs2.size());
+  // unionTgtGIDs = remote_gids_type("unionTgtGIDs",
+  //                                 numSameGIDs1 + numSameGIDs2 +
+  //                                 permuteGIDs1.size() + permuteGIDs2.size() +
+  //                                 remoteGIDs1.size() + remoteGIDs2.size());
+  // Teuchos::Array<GlobalOrdinal> unionTgtGIDs_a(numSameGIDs1 + numSameGIDs2 +
+  //                                              permuteGIDs1.extent(0) + permuteGIDs2.extent(0) +
+  //                                              remoteGIDs1.extent(0) + remoteGIDs2.extent(0));
+  Teuchos::Array<GlobalOrdinal> unionTgtGIDs_a(std::max(numSameGIDs1, numSameGIDs2));
+  unionTgtGIDs_a.reserve(numSameGIDs1 + numSameGIDs2 +
+                         permuteGIDs1.extent(0) + permuteGIDs2.extent(0) +
+                         remoteGIDs1.extent(0) + remoteGIDs2.extent(0));
+
+  // TODO: fix
+  auto permuteGIDs1_h = Kokkos::create_mirror_view(permuteGIDs1);
+  Kokkos::deep_copy(permuteGIDs1_h, permuteGIDs1);
+  auto permuteGIDs1_av = Kokkos::Compat::getArrayView(permuteGIDs1_h);
+  Teuchos::Array<GlobalOrdinal> permuteGIDs1_a(permuteGIDs1_av);
+
+  auto permuteGIDs2_h = Kokkos::create_mirror_view(permuteGIDs2);
+  Kokkos::deep_copy(permuteGIDs2_h, permuteGIDs2);
+  auto permuteGIDs2_av = Kokkos::Compat::getArrayView(permuteGIDs2_h);
+  Teuchos::Array<GlobalOrdinal> permuteGIDs2_a(permuteGIDs2_av);
+
+  auto remoteGIDs1_h = Kokkos::create_mirror_view(remoteGIDs1);
+  Kokkos::deep_copy(remoteGIDs1_h, remoteGIDs1);
+  auto remoteGIDs1_av = Kokkos::Compat::getArrayView(remoteGIDs1_h);
+
+  auto remoteGIDs2_h = Kokkos::create_mirror_view(remoteGIDs2);
+  Kokkos::deep_copy(remoteGIDs2_h, remoteGIDs2);
+  auto remoteGIDs2_av = Kokkos::Compat::getArrayView(remoteGIDs2_h);
+
+  auto remotePIDs1_h = Kokkos::create_mirror_view(remotePIDs1);
+  Kokkos::deep_copy(remotePIDs1_h, remotePIDs1);
+  auto remotePIDs1_av = Kokkos::Compat::getArrayView(remotePIDs1_h);
+
+  auto remotePIDs2_h = Kokkos::create_mirror_view(remotePIDs2);
+  Kokkos::deep_copy(remotePIDs2_h, remotePIDs2);
+  auto remotePIDs2_av = Kokkos::Compat::getArrayView(remotePIDs2_h);
 
   // Copy the same GIDs to unionTgtGIDs.  Cases for numSameGIDs1 !=
   // numSameGIDs2 must be treated separately.
@@ -1475,45 +1530,47 @@ void Import<LocalOrdinal, GlobalOrdinal, Node>::
   typename Teuchos::Array<GO>::iterator permuteGIDs2_end;
   if (numSameGIDs2 > numSameGIDs1) {
     numSameGIDs      = numSameGIDs2;
-    permuteGIDs2_end = permuteGIDs2.end();
+    permuteGIDs2_end = permuteGIDs2_a.end();
 
     // Copy the same GIDs from tgtGIDs to the union
-    std::copy(sameGIDs2.begin(), sameGIDs2.end(), std::back_inserter(unionTgtGIDs));
+    Kokkos::View<GlobalOrdinal*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> unionTgtGIDs_h(unionTgtGIDs_a.data(), unionTgtGIDs_a.size());
+    Kokkos::deep_copy(Kokkos::subview(unionTgtGIDs_h, Kokkos::make_pair((decltype(numSameGIDs2))0, numSameGIDs)), sameGIDs2);
 
     // Remove GIDs from permuteGIDs1 that have already been copied in to unionTgtGIDs
     // set_difference allows the last (output) argument to alias the first.
-    permuteGIDs1_end = std::set_difference(permuteGIDs1.begin(), permuteGIDs1.end(),
-                                           unionTgtGIDs.begin() + numSameGIDs1, unionTgtGIDs.end(),
-                                           permuteGIDs1.begin());
+    permuteGIDs1_end = std::set_difference(permuteGIDs1_a.begin(), permuteGIDs1_a.end(),
+                                           unionTgtGIDs_a.begin() + numSameGIDs1, unionTgtGIDs_a.end(),
+                                           permuteGIDs1_a.begin());
 
   } else {
     numSameGIDs      = numSameGIDs1;
-    permuteGIDs1_end = permuteGIDs1.end();
+    permuteGIDs1_end = permuteGIDs1_a.end();
 
     // Copy the same GIDs from tgtGIDs to the union
-    std::copy(sameGIDs1.begin(), sameGIDs1.end(), std::back_inserter(unionTgtGIDs));
+    Kokkos::View<GlobalOrdinal*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> unionTgtGIDs_h(unionTgtGIDs_a.data(), unionTgtGIDs_a.size());
+    Kokkos::deep_copy(Kokkos::subview(unionTgtGIDs_h, Kokkos::make_pair((decltype(numSameGIDs1))0, numSameGIDs)), sameGIDs1);
 
     // Remove GIDs from permuteGIDs2 that have already been copied in to unionTgtGIDs
     // set_difference allows the last (output) argument to alias the first.
-    permuteGIDs2_end = std::set_difference(permuteGIDs2.begin(), permuteGIDs2.end(),
-                                           unionTgtGIDs.begin() + numSameGIDs2, unionTgtGIDs.end(),
-                                           permuteGIDs2.begin());
+    permuteGIDs2_end = std::set_difference(permuteGIDs2_a.begin(), permuteGIDs2_a.end(),
+                                           unionTgtGIDs_a.begin() + numSameGIDs2, unionTgtGIDs_a.end(),
+                                           permuteGIDs2_a.begin());
   }
 
   // Get the union of the permute GIDs and push it back on unionTgtGIDs
-  std::set_union(permuteGIDs1.begin(), permuteGIDs1_end,
-                 permuteGIDs2.begin(), permuteGIDs2_end,
-                 std::back_inserter(unionTgtGIDs));
+  std::set_union(permuteGIDs1_a.begin(), permuteGIDs1_end,
+                 permuteGIDs2_a.begin(), permuteGIDs2_end,
+                 std::back_inserter(unionTgtGIDs_a));
 
   // Sort the PID,GID pairs and find the unique set
   Teuchos::Array<std::pair<int, GO>> remotePGIDs1(remoteGIDs1.size());
   for (size_type k = 0; k < remoteGIDs1.size(); k++)
-    remotePGIDs1[k] = std::make_pair(remotePIDs1[k], remoteGIDs1[k]);
+    remotePGIDs1[k] = std::make_pair(remotePIDs1_av[k], remoteGIDs1_av[k]);
   std::sort(remotePGIDs1.begin(), remotePGIDs1.end());
 
   Teuchos::Array<std::pair<int, GO>> remotePGIDs2(remoteGIDs2.size());
   for (size_type k = 0; k < remoteGIDs2.size(); k++)
-    remotePGIDs2[k] = std::make_pair(remotePIDs2[k], remoteGIDs2[k]);
+    remotePGIDs2[k] = std::make_pair(remotePIDs2_av[k], remoteGIDs2_av[k]);
   std::sort(remotePGIDs2.begin(), remotePGIDs2.end());
 
   remotePGIDs.reserve(remotePGIDs1.size() + remotePGIDs2.size());
@@ -1524,17 +1581,38 @@ void Import<LocalOrdinal, GlobalOrdinal, Node>::
   remotePGIDs.resize(std::distance(remotePGIDs.begin(), it));
 
   // Finally, insert remote GIDs
-  const size_type oldSize = unionTgtGIDs.size();
-  unionTgtGIDs.resize(oldSize + remotePGIDs.size());
+  const size_type oldSize = unionTgtGIDs_a.size();
+  unionTgtGIDs_a.resize(oldSize + remotePGIDs.size());
   for (size_type start = oldSize, k = 0; k < remotePGIDs.size(); k++)
-    unionTgtGIDs[start + k] = remotePGIDs[k].second;
+    unionTgtGIDs_a[start + k] = remotePGIDs[k].second;
 
   // Compute output only quantities
   numRemoteGIDs  = remotePGIDs.size();
-  numPermuteGIDs = unionTgtGIDs.size() - numSameGIDs - numRemoteGIDs;
+  numPermuteGIDs = unionTgtGIDs_a.size() - numSameGIDs - numRemoteGIDs;
 
-  return;
+  Kokkos::View<GlobalOrdinal*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> unionTgtGIDs_h(unionTgtGIDs_a.data(), unionTgtGIDs_a.size());
+  remote_gids_type unionTgtGIDs("unionTgtGIDs", unionTgtGIDs_h.extent(0));
+  Kokkos::deep_copy(unionTgtGIDs, unionTgtGIDs_h);
+
+  return unionTgtGIDs;
 }
+
+namespace Details {
+template <class lid_view_type, class pid_view_type>
+struct SortByPIDandLID {
+  lid_view_type lids;
+  pid_view_type pids;
+
+  SortByPIDandLID(lid_view_type _lids, pid_view_type _pids)
+    : lids(_lids)
+    , pids(_pids) {}
+
+  KOKKOS_FUNCTION
+  bool operator()(const size_t i1, const size_t i2) const {
+    return (pids(i1) == pids(i2)) ? (lids(i1) < lids(i2)) : (pids(i1) < pids(i2));
+  }
+};
+}  // namespace Details
 
 template <class LocalOrdinal, class GlobalOrdinal, class Node>
 Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node>>
@@ -1587,13 +1665,13 @@ Import<LocalOrdinal, GlobalOrdinal, Node>::
   // Alas, the two target Maps are not the same.  That means we have
   // to compute their union, and the union Import object.
 
-  Array<GO> unionTgtGIDs;
-  Array<LO> remoteLIDsUnion;
-  Array<GO> remoteGIDsUnion;
-  Array<int> remotePIDsUnion;
+  remote_gids_type unionTgtGIDs;
+  remote_lids_type remoteLIDsUnion;
+  remote_gids_type remoteGIDsUnion;
+  remote_pids_type remotePIDsUnion;
   size_type numSameIDsUnion, numPermuteIDsUnion, numRemoteIDsUnion;
-  Array<LO> permuteToLIDsUnion;
-  Array<LO> permuteFromLIDsUnion;
+  remote_lids_type permuteToLIDsUnion;
+  remote_lids_type permuteFromLIDsUnion;
   global_size_t unionNumLocalElements;
   global_size_t unionNumGlobalElements;
   std::shared_ptr<Details::CommRequest> req;
@@ -1602,72 +1680,137 @@ Import<LocalOrdinal, GlobalOrdinal, Node>::
 
     // Get the same GIDs (same GIDs are a subview of the first numSame target
     // GIDs)
-    const size_type numSameGIDs1  = this->getNumSameIDs();
-    ArrayView<const GO> sameGIDs1 = (tgtMap1->getLocalElementList())(0, numSameGIDs1);
+    const size_type numSameGIDs1 = this->getNumSameIDs();
+    auto gids1                   = tgtMap1->getMyGlobalIndicesDevice();
+    auto sameGIDs1               = Kokkos::subview(gids1, Kokkos::make_pair((decltype(numSameGIDs1))0, numSameGIDs1));
 
-    const size_type numSameGIDs2  = rhs.getNumSameIDs();
-    ArrayView<const GO> sameGIDs2 = (tgtMap2->getLocalElementList())(0, numSameGIDs2);
+    const size_type numSameGIDs2 = rhs.getNumSameIDs();
+    auto gids2                   = tgtMap2->getMyGlobalIndicesDevice();
+    auto sameGIDs2               = Kokkos::subview(gids2, Kokkos::make_pair((decltype(numSameGIDs2))0, numSameGIDs2));
 
     // Get permute GIDs
-    ArrayView<const LO> permuteToLIDs1 = this->getPermuteToLIDs();
-    Array<GO> permuteGIDs1(permuteToLIDs1.size());
+    auto lclTgtMap1     = tgtMap1->getLocalMap();
+    auto permuteToLIDs1 = this->getPermuteToLIDs_dv().view_device();
+    remote_gids_type permuteGIDs1(Kokkos::ViewAllocateWithoutInitializing("permuteGIDs1"), permuteToLIDs1.extent(0));
     for (size_type k = 0; k < permuteGIDs1.size(); k++)
-      permuteGIDs1[k] = tgtMap1->getGlobalElement(permuteToLIDs1[k]);
+      permuteGIDs1(k) = lclTgtMap1.getGlobalElement(permuteToLIDs1(k));
 
-    ArrayView<const LO> permuteToLIDs2 = rhs.getPermuteToLIDs();
-    Array<GO> permuteGIDs2(permuteToLIDs2.size());
+    auto lclTgtMap2     = tgtMap2->getLocalMap();
+    auto permuteToLIDs2 = rhs.getPermuteToLIDs_dv().view_device();
+    remote_gids_type permuteGIDs2(Kokkos::ViewAllocateWithoutInitializing("permuteGIDs2"), permuteToLIDs2.extent(0));
     for (size_type k = 0; k < permuteGIDs2.size(); k++)
-      permuteGIDs2[k] = tgtMap2->getGlobalElement(permuteToLIDs2[k]);
+      permuteGIDs2(k) = lclTgtMap2.getGlobalElement(permuteToLIDs2(k));
 
     // Get remote GIDs
-    ArrayView<const LO> remoteLIDs1 = this->getRemoteLIDs();
-    Array<GO> remoteGIDs1(remoteLIDs1.size());
+    auto remoteLIDs1 = this->getRemoteLIDs_dv().view_device();
+    remote_gids_type remoteGIDs1(Kokkos::ViewAllocateWithoutInitializing("remoteGIDs1"), remoteLIDs1.extent(0));
     for (size_type k = 0; k < remoteLIDs1.size(); k++)
-      remoteGIDs1[k] = this->getTargetMap()->getGlobalElement(remoteLIDs1[k]);
+      remoteGIDs1(k) = lclTgtMap1.getGlobalElement(remoteLIDs1(k));
 
-    ArrayView<const LO> remoteLIDs2 = rhs.getRemoteLIDs();
-    Array<GO> remoteGIDs2(remoteLIDs2.size());
+    auto remoteLIDs2 = rhs.getRemoteLIDs_dv().view_device();
+    remote_gids_type remoteGIDs2(Kokkos::ViewAllocateWithoutInitializing("remoteGIDs2"), remoteLIDs2.extent(0));
     for (size_type k = 0; k < remoteLIDs2.size(); k++)
-      remoteGIDs2[k] = rhs.getTargetMap()->getGlobalElement(remoteLIDs2[k]);
+      remoteGIDs2(k) = lclTgtMap2.getGlobalElement(remoteLIDs2(k));
 
-    // Get remote PIDs
-    Array<int> remotePIDs1;
-    Tpetra::Import_Util::getRemotePIDs(*this, remotePIDs1);
+    remote_pids_type remotePIDs1;
+    remote_pids_type remotePIDs2;
+    {
+      // Get remote PIDs
+      Array<int> remotePIDs1_a;
+      Tpetra::Import_Util::getRemotePIDs(*this, remotePIDs1_a);
+      Kokkos::View<int*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> remotePIDs1_h(remotePIDs1_a.data(), remotePIDs1_a.size());
+      remotePIDs1 = remote_pids_type("remotePIDs1", remotePIDs1_h.extent(0));
+      Kokkos::deep_copy(remotePIDs1, remotePIDs1_h);
 
-    Array<int> remotePIDs2;
-    Tpetra::Import_Util::getRemotePIDs(rhs, remotePIDs2);
+      Array<int> remotePIDs2_a;
+      Tpetra::Import_Util::getRemotePIDs(rhs, remotePIDs2_a);
+      Kokkos::View<int*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> remotePIDs2_h(remotePIDs2_a.data(), remotePIDs2_a.size());
+      remotePIDs2 = remote_pids_type("remotePIDs2", remotePIDs2_h.extent(0));
+      Kokkos::deep_copy(remotePIDs2, remotePIDs2_h);
+    }
+
+    std::stringstream ss;
+    ss << "sameGIDs1 " << numSameGIDs1 << " : ";
+    for (int k = 0; k < sameGIDs1.extent_int(0); ++k) {
+      ss << " " << sameGIDs1(k);
+    }
+    ss << std::endl;
+    ss << "sameGIDs2 " << numSameGIDs2 << " : ";
+    for (int k = 0; k < sameGIDs2.extent_int(0); ++k) {
+      ss << " " << sameGIDs2(k);
+    }
+    ss << std::endl;
+
+    ss << "permuteGIDs1 ";
+    for (int k = 0; k < permuteGIDs1.extent_int(0); ++k) {
+      ss << " " << permuteGIDs1(k);
+    }
+    ss << std::endl;
+    ss << "permuteGIDs2 ";
+    for (int k = 0; k < permuteGIDs2.extent_int(0); ++k) {
+      ss << " " << permuteGIDs2(k);
+    }
+    ss << std::endl;
+
+    ss << "remoteGIDs1 ";
+    for (int k = 0; k < remoteGIDs1.extent_int(0); ++k) {
+      ss << " " << remoteGIDs1(k);
+    }
+    ss << std::endl;
+    ss << "remoteGIDs2 ";
+    for (int k = 0; k < remoteGIDs2.extent_int(0); ++k) {
+      ss << " " << remoteGIDs2(k);
+    }
+    ss << std::endl;
 
     // Get the union of the target GIDs
     Array<std::pair<int, GO>> remotePGIDs;
-    findUnionTargetGIDs(unionTgtGIDs, remotePGIDs,
-                        numSameIDsUnion, numPermuteIDsUnion, numRemoteIDsUnion,
-                        sameGIDs1, sameGIDs2, permuteGIDs1, permuteGIDs2,
-                        remoteGIDs1, remoteGIDs2, remotePIDs1, remotePIDs2);
+    unionTgtGIDs = findUnionTargetGIDs(remotePGIDs,
+                                       numSameIDsUnion, numPermuteIDsUnion, numRemoteIDsUnion,
+                                       sameGIDs1, sameGIDs2, permuteGIDs1, permuteGIDs2,
+                                       remoteGIDs1, remoteGIDs2, remotePIDs1, remotePIDs2);
+
+    ss << "unionTgtGIDs " << numSameIDsUnion << " " << numPermuteIDsUnion << " " << numRemoteIDsUnion << " : ";
+    for (int k = 0; k < unionTgtGIDs.extent_int(0); ++k) {
+      ss << " " << unionTgtGIDs(k);
+    }
+    for (int p = 0; p < comm->getSize(); ++p) {
+      comm->barrier();
+      if (comm->getRank() == p)
+        std::cout << p << " :: " << ss.str() << std::endl;
+    }
+
     unionNumLocalElements = static_cast<global_size_t>(unionTgtGIDs.size());
     req                   = Details::iallreduce(unionNumLocalElements,
                                                 unionNumGlobalElements, Teuchos::REDUCE_SUM, *comm);
 
     // Extract GIDs and compute LIDS, PIDs for the remotes in the union
-    remoteLIDsUnion                     = Array<LO>(numRemoteIDsUnion);
-    remoteGIDsUnion                     = Array<GO>(numRemoteIDsUnion);
-    remotePIDsUnion                     = Array<int>(numRemoteIDsUnion);
+    remoteLIDsUnion                     = remote_lids_type("remoteLIDsUnion", numRemoteIDsUnion);
+    remoteGIDsUnion                     = remote_gids_type("remoteGIDsUnion", numRemoteIDsUnion);
+    auto remotePIDsUnion_a              = Array<int>(numRemoteIDsUnion);
     const size_type unionRemoteIDsStart = numSameIDsUnion + numPermuteIDsUnion;
     for (size_type k = 0; k < numRemoteIDsUnion; ++k) {
-      remoteLIDsUnion[k] = unionRemoteIDsStart + k;
-      remotePIDsUnion[k] = remotePGIDs[k].first;
-      remoteGIDsUnion[k] = remotePGIDs[k].second;
+      remoteLIDsUnion[k]   = unionRemoteIDsStart + k;
+      remotePIDsUnion_a[k] = remotePGIDs[k].first;
+      remoteGIDsUnion[k]   = remotePGIDs[k].second;
     }
 
     // Compute the permute-to LIDs (in the union target Map).
     // Convert the permute GIDs to permute-from LIDs in the source Map.
-    permuteToLIDsUnion   = Array<LO>(numPermuteIDsUnion);
-    permuteFromLIDsUnion = Array<LO>(numPermuteIDsUnion);
+    permuteToLIDsUnion   = remote_lids_type("permuteToLIDsUnion", numPermuteIDsUnion);
+    permuteFromLIDsUnion = remote_lids_type("permuteFromLIDsUnion", numPermuteIDsUnion);
+
+    auto lclSrcMap = srcMap->getLocalMap();
 
     for (size_type k = 0; k < numPermuteIDsUnion; ++k) {
       size_type idx           = numSameIDsUnion + k;
       permuteToLIDsUnion[k]   = static_cast<LO>(idx);
-      permuteFromLIDsUnion[k] = srcMap->getLocalElement(unionTgtGIDs[idx]);
+      permuteFromLIDsUnion[k] = lclSrcMap.getLocalElement(unionTgtGIDs(idx));
     }
+
+    remotePIDsUnion = remote_pids_type("remotePIDsUnion", remotePIDsUnion_a.size());
+    Kokkos::View<int*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> remotePIDsUnion_h(remotePIDsUnion_a.data(), remotePIDsUnion_a.size());
+    Kokkos::deep_copy(remotePIDsUnion, remotePIDsUnion_h);
   }
 
   RCP<const map_type> unionTgtMap;
@@ -1676,7 +1819,7 @@ Import<LocalOrdinal, GlobalOrdinal, Node>::
     Tpetra::Details::ProfilingRegion prTgtMap("Tpetra::Import::setUnion : Construct Target Map");
     const GO indexBaseUnion = std::min(tgtMap1->getIndexBase(), tgtMap2->getIndexBase());
     req->wait();
-    unionTgtMap = rcp(new map_type(unionNumGlobalElements, unionTgtGIDs(), indexBaseUnion, comm));
+    unionTgtMap = rcp(new map_type(unionNumGlobalElements, unionTgtGIDs, indexBaseUnion, comm));
   }
 
   // Thus far, we have computed the following in the union Import:
@@ -1687,51 +1830,80 @@ Import<LocalOrdinal, GlobalOrdinal, Node>::
   // Now it's time to compute the export IDs and initialize the
   // Distributor.
 
-  Array<LO> exportLIDsUnion;
-  Array<int> exportPIDsUnion;
+  remote_lids_type exportLIDsUnion;
+  remote_pids_type exportPIDsUnion;
   Distributor distributor(comm, this->TransferData_->out_);
   {
-    Tpetra::Details::ProfilingRegion prExportGIDs("Tpetra::Import::setUnion : Export GIDs");
+    using memory_space    = typename Node::memory_space;
+    using execution_space = typename Node::execution_space;
 
-    const size_type numExportIDs1 = this->getNumExportIDs();
-    const size_type numExportIDs2 = rhs.getNumExportIDs();
+    {
+      Tpetra::Details::ProfilingRegion prExportGIDs("Tpetra::Import::setUnion : Export GIDs");
 
-    exportLIDsUnion = Array<LO>(numExportIDs1 + numExportIDs2);
-    exportPIDsUnion = Array<int>(numExportIDs1 + numExportIDs2);
+      const size_type numExportIDs1 = this->getNumExportIDs();
+      const size_type numExportIDs2 = rhs.getNumExportIDs();
 
-    if (numExportIDs1 + numExportIDs2 > 0) {
-      auto exportLIDs1 = this->getExportLIDs();
-      auto exportPIDs1 = this->getExportPIDs();
+      exportLIDsUnion = remote_lids_type(Kokkos::ViewAllocateWithoutInitializing("exportLIDsUnion"), numExportIDs1 + numExportIDs2);
+      exportPIDsUnion = remote_pids_type(Kokkos::ViewAllocateWithoutInitializing("exportPIDsUnion"), numExportIDs1 + numExportIDs2);
 
-      auto exportLIDs2 = rhs.getExportLIDs();
-      auto exportPIDs2 = rhs.getExportPIDs();
+      if (numExportIDs1 + numExportIDs2 > 0) {
+        auto exportLIDs1 = this->getExportLIDs_dv().view_device();
+        auto exportPIDs1 = this->getExportPIDs_dv().view_device();
 
-      std::copy(exportLIDs1.begin(), exportLIDs1.end(), exportLIDsUnion.begin());
-      std::copy(exportLIDs2.begin(), exportLIDs2.end(), exportLIDsUnion.begin() + numExportIDs1);
+        auto exportLIDs2 = rhs.getExportLIDs_dv().view_device();
+        auto exportPIDs2 = rhs.getExportPIDs_dv().view_device();
 
-      std::copy(exportPIDs1.begin(), exportPIDs1.end(), exportPIDsUnion.begin());
-      std::copy(exportPIDs2.begin(), exportPIDs2.end(), exportPIDsUnion.begin() + numExportIDs1);
+        Kokkos::deep_copy(Kokkos::subview(exportLIDsUnion, Kokkos::make_pair((decltype(exportLIDs1.extent(0)))0, exportLIDs1.extent(0))), exportLIDs1);
+        Kokkos::deep_copy(Kokkos::subview(exportLIDsUnion, Kokkos::make_pair(exportLIDs1.extent(0), exportLIDs1.extent(0) + exportLIDs2.extent(0))), exportLIDs2);
 
-      std::vector<LO> idx(numExportIDs1 + numExportIDs2);
-      std::iota(idx.begin(), idx.end(), 0);
-      std::sort(idx.begin(), idx.end(), [&exportPIDsUnion, &exportLIDsUnion](const LO i1, const LO i2) { return (exportPIDsUnion[i1] == exportPIDsUnion[i2]) ? (exportLIDsUnion[i1] < exportLIDsUnion[i2]) : (exportPIDsUnion[i1] < exportPIDsUnion[i2]); });
+        Kokkos::deep_copy(Kokkos::subview(exportPIDsUnion, Kokkos::make_pair((decltype(exportPIDs1.extent(0)))0, exportPIDs1.extent(0))), exportPIDs1);
+        Kokkos::deep_copy(Kokkos::subview(exportPIDsUnion, Kokkos::make_pair(exportPIDs1.extent(0), exportPIDs1.extent(0) + exportPIDs2.extent(0))), exportPIDs2);
 
-      Tpetra::SortDetails::apply_permutation(exportLIDsUnion.begin(), exportLIDsUnion.end(), idx);
-      Tpetra::SortDetails::apply_permutation(exportPIDsUnion.begin(), exportPIDsUnion.end(), idx);
+        remote_lids_type exportLIDsUnion2(Kokkos::ViewAllocateWithoutInitializing("exportLIDsUnion2"), numExportIDs1 + numExportIDs2);
+        remote_pids_type exportPIDsUnion2(Kokkos::ViewAllocateWithoutInitializing("exportPIDsUnion2"), numExportIDs1 + numExportIDs2);
 
-      size_t knew = 0;
-      for (size_type k = 1; k < numExportIDs1 + numExportIDs2; ++k) {
-        if (!((exportPIDsUnion[knew] == exportPIDsUnion[k]) && (exportLIDsUnion[knew] == exportLIDsUnion[k]))) {
-          ++knew;
-          exportLIDsUnion[knew] = exportLIDsUnion[k];
-          exportPIDsUnion[knew] = exportPIDsUnion[k];
-        }
+        Kokkos::RangePolicy<size_t, execution_space> policy(0, numExportIDs1 + numExportIDs2);
+        remote_lids_type idx(Kokkos::ViewAllocateWithoutInitializing("idx"), numExportIDs1 + numExportIDs2);
+        Kokkos::parallel_for(
+            policy, KOKKOS_LAMBDA(const size_t i) { idx(i) = i; });
+
+        Details::SortByPIDandLID cmp(exportLIDsUnion, exportPIDsUnion);
+        Kokkos::sort(execution_space(), idx, cmp);
+        Kokkos::parallel_for(
+            policy, KOKKOS_LAMBDA(const LO i) {
+              exportLIDsUnion2(i) = exportLIDsUnion(idx(i));
+              exportPIDsUnion2(i) = exportPIDsUnion(idx(i));
+            });
+
+        // Kokkos::RangePolicy<size_t, execution_space> policy2(1, numExportIDs1 + numExportIDs2);
+        size_t newSize = 0;
+        Kokkos::parallel_scan(
+            policy, KOKKOS_LAMBDA(const size_t k, size_t& knew, const bool is_final) {
+          if (k == 0) {
+            if (is_final) {
+              exportLIDsUnion(0) = exportLIDsUnion2(0);
+              exportPIDsUnion(0) = exportPIDsUnion2(0);
+            }
+          } else if (!((exportPIDsUnion2(k-1) == exportPIDsUnion2(k)) && (exportLIDsUnion2(k-1) == exportLIDsUnion2(k)))) {
+            ++knew;
+            if (is_final) {
+              exportLIDsUnion(knew) = exportLIDsUnion2(k);
+              exportPIDsUnion(knew) = exportPIDsUnion2(k);
+            }
+          } }, newSize);
+        Kokkos::resize(exportLIDsUnion, newSize);
+        Kokkos::resize(exportPIDsUnion, newSize);
       }
-      exportLIDsUnion.resize(knew + 1);
-      exportPIDsUnion.resize(knew + 1);
-    }
 
-    distributor.createFromSendsAndRecvs(exportPIDsUnion, remotePIDsUnion);
+      {
+        auto exportPIDsUnion_h = Kokkos::create_mirror_view(exportPIDsUnion);
+        Kokkos::deep_copy(exportPIDsUnion_h, exportPIDsUnion);
+        auto remotePIDsUnion_h = Kokkos::create_mirror_view(remotePIDsUnion);
+        Kokkos::deep_copy(remotePIDsUnion_h, remotePIDsUnion);
+        distributor.createFromSendsAndRecvs(Kokkos::Compat::getConstArrayView(exportPIDsUnion_h),
+                                            Kokkos::Compat::getConstArrayView(remotePIDsUnion_h));
+      }
+    }
   }
 
   RCP<const import_type> unionImport;
@@ -1796,7 +1968,9 @@ Import<LocalOrdinal, GlobalOrdinal, Node>::
                        tgtMap->getComm()));
 
   // Exports are trivial (since the sourcemap doesn't change)
-  Array<int> exportPIDsnew(this->getExportPIDs());
+  auto exportPIDs = this->getExportPIDs_dv().view_device();
+  remote_pids_type exportPIDsnew(Kokkos::ViewAllocateWithoutInitializing("exportPIDsnew"), exportPIDs.extent(0));
+  Kokkos::deep_copy(exportPIDsnew, exportPIDs);
   auto exportLIDs = this->getExportLIDs_dv().view_device();
   remote_lids_type exportLIDsnew(Kokkos::ViewAllocateWithoutInitializing("exportLIDsnew"), exportLIDs.extent(0));
   Kokkos::deep_copy(exportLIDsnew, exportLIDs);
@@ -1975,7 +2149,9 @@ Import<LocalOrdinal, GlobalOrdinal, Node>::
   // for most of the LID/PID lists and the Distributor, meaning it
   // ruins the existing object if we pass things in directly.  Hence
   // we copy them first.
-  Teuchos::Array<int> newExportPIDs(this->getExportPIDs());
+  auto exportPIDs = this->getExportPIDs_dv().view_device();
+  remote_pids_type newExportPIDs(Kokkos::ViewAllocateWithoutInitializing("newExportPIDs"), exportPIDs.extent(0));
+  Kokkos::deep_copy(newExportPIDs, exportPIDs);
   auto exportLIDs = this->getExportLIDs_dv().view_device();
   remote_lids_type newExportLIDs(Kokkos::ViewAllocateWithoutInitializing("newExportLIDs"), exportLIDs.extent(0));
   Kokkos::deep_copy(newExportLIDs, exportLIDs);
