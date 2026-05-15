@@ -13,13 +13,10 @@
 #include "Tpetra_Details_Transfer.hpp"
 #include "Tpetra_Export_fwd.hpp"
 #include "Tpetra_Import_fwd.hpp"
-#include "Teuchos_ArrayView.hpp"
 #include "Teuchos_RCP.hpp"
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 namespace Teuchos {
-template <class T>
-class Array;          // forward declaration
 class ParameterList;  // forward declaration
 }  // namespace Teuchos
 #endif  // DOXYGEN_SHOULD_SKIP_THIS
@@ -93,11 +90,11 @@ class Export : public ::Tpetra::Details::Transfer<LocalOrdinal, GlobalOrdinal, N
   //! The specialization of Map used by this class.
   using map_type = ::Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>;
 
-  using execution_space  = typename Node::execution_space;
-  using memory_space     = typename Node::memory_space;
-  using remote_gids_type = Kokkos::View<GlobalOrdinal*, memory_space>;
-  using remote_lids_type = Kokkos::View<LocalOrdinal*, memory_space>;
-  using remote_pids_type = Kokkos::View<int*, memory_space>;
+  using execution_space = typename Node::execution_space;
+  using memory_space    = typename Node::memory_space;
+  using gids_view_type  = Kokkos::View<GlobalOrdinal*, memory_space>;
+  using lids_view_type  = Kokkos::View<LocalOrdinal*, memory_space>;
+  using pids_view_type  = Kokkos::View<int*, memory_space>;
 
   //! @name Constructors, assignment, and destructor
   //@{
@@ -235,10 +232,10 @@ class Export : public ::Tpetra::Details::Transfer<LocalOrdinal, GlobalOrdinal, N
   //! @name Initialization helper functions (called by the constructor)
   //@{
   //! Set up same, permute, and export IDs.
-  remote_gids_type setupSamePermuteExport();
+  gids_view_type setupSamePermuteExport();
 
   //! Set up remote IDs.
-  void setupRemote(remote_gids_type& exportGIDs);
+  void setupRemote(gids_view_type& exportGIDs);
   //@}
 };  // class Export
 
