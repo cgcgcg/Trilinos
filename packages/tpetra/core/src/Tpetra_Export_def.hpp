@@ -423,19 +423,13 @@ Export<LocalOrdinal, GlobalOrdinal, Node>::gids_view_type Export<LocalOrdinal, G
     }
   }
 
-  {
-    this->TransferData_->exportPIDs_.resize(exportPIDs.extent(0));
-    auto& exportPIDs_a = this->TransferData_->exportPIDs_;
-    auto exportPIDs_h  = Kokkos::View<int*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>(exportPIDs_a.data(), exportPIDs_a.size());
-    Kokkos::deep_copy(exportPIDs_h, exportPIDs);
-  }
-
   // FIXME (mfh 03 Feb 2019) These three DualViews could share a
   // single device allocation, in order to avoid high cudaMalloc
   // cost and device memory fragmentation.
   Details::makeDualViewFromOwningDeviceView(this->TransferData_->permuteToLIDs_, permuteToLIDs);
   Details::makeDualViewFromOwningDeviceView(this->TransferData_->permuteFromLIDs_, permuteFromLIDs);
   Details::makeDualViewFromOwningDeviceView(this->TransferData_->exportLIDs_, exportLIDs);
+  Details::makeDualViewFromOwningDeviceView(this->TransferData_->exportPIDs_, exportPIDs);
 
   if (this->verbose()) {
     std::ostringstream os;
@@ -476,18 +470,15 @@ void Export<LocalOrdinal, GlobalOrdinal, Node>::
   // refer to the same thing.
   {
     TEUCHOS_ASSERT(size_t(this->TransferData_->exportLIDs_.extent(0)) ==
-                   size_t(this->TransferData_->exportPIDs_.size()));
+                   size_t(this->TransferData_->exportPIDs_.extent(0)));
     this->TransferData_->exportLIDs_.modify_device();
-    auto exportLIDs    = this->TransferData_->exportLIDs_.view_device();
-    auto& exportPIDs_a = this->TransferData_->exportPIDs_;
-    auto exportPIDs_h  = Kokkos::View<int*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>(exportPIDs_a.data(), exportPIDs_a.size());
-    pids_view_type exportPIDs("exportPIDs", exportPIDs_h.extent(0));
-    Kokkos::deep_copy(exportPIDs, exportPIDs_h);
+    auto exportLIDs = this->TransferData_->exportLIDs_.view_device();
+    this->TransferData_->exportPIDs_.modify_device();
+    auto exportPIDs = this->TransferData_->exportPIDs_.view_device();
     sort3<execution_space>(exportPIDs,
                            exportGIDs,
                            exportLIDs);
     this->TransferData_->exportLIDs_.sync_host();
-    Kokkos::deep_copy(exportPIDs_h, exportPIDs);
     // FIXME (mfh 03 Feb 2019) We actually end up sync'ing
     // exportLIDs_ to device twice, once in setupSamePermuteExport,
     // and once here.  We could avoid the first sync.
@@ -505,9 +496,10 @@ void Export<LocalOrdinal, GlobalOrdinal, Node>::
   // mfh 05 Jan 2012: I understand the above comment as follows:
   // Construct the communication plan from the list of image IDs to
   // which we need to send.
-  auto& exportPIDs          = this->TransferData_->exportPIDs_;
   Distributor& distributor  = this->TransferData_->distributor_;
-  const size_t numRemoteIDs = distributor.createFromSends(exportPIDs());
+  auto exportPIDs_h         = this->TransferData_->exportPIDs_.view_host();
+  auto exportPIDs_av        = Kokkos::Compat::getArrayView(exportPIDs_h);
+  const size_t numRemoteIDs = distributor.createFromSends(exportPIDs_av);
 
   if (this->verbose()) {
     std::ostringstream os;

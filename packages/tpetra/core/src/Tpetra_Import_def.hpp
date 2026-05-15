@@ -379,7 +379,9 @@ Import<LocalOrdinal, GlobalOrdinal, Node>::
   tRemotePIDs = newRemotePIDs;
   Details::makeDualViewFromOwningDeviceView(this->TransferData_->remoteLIDs_, newRemoteLIDs);
 
-  this->TransferData_->exportPIDs_ = Teuchos::Array<int>(userExportPIDs);
+  makeDualViewFromArrayView(this->TransferData_->exportPIDs_,
+                            userExportPIDs().getConst(),
+                            "exportPIDs");
   makeDualViewFromArrayView(this->TransferData_->exportLIDs_,
                             userExportLIDs, "exportLIDs");
 
@@ -404,7 +406,9 @@ Import<LocalOrdinal, GlobalOrdinal, Node>::
     auto tRemotePIDs_h       = Kokkos::create_mirror_view(tRemotePIDs);
     Kokkos::deep_copy(tRemotePIDs_h, tRemotePIDs);
     auto tRemotePIDs_a = Kokkos::Compat::getArrayView(tRemotePIDs_h);
-    distributor.createFromSendsAndRecvs(this->TransferData_->exportPIDs_, tRemotePIDs_a);
+    auto tExportPIDs_h = this->TransferData_->exportPIDs_.view_host();
+    auto tExportPIDs_a = Kokkos::Compat::getArrayView(tExportPIDs_h);
+    distributor.createFromSendsAndRecvs(tExportPIDs_a, tRemotePIDs_a);
   }
 
   this->detectRemoteExportLIDsContiguous();
@@ -483,7 +487,9 @@ Import<LocalOrdinal, GlobalOrdinal, Node>::
                             "exportLIDs");
   TEUCHOS_ASSERT(size_t(this->TransferData_->exportLIDs_.extent(0)) ==
                  size_t(exportLIDs.size()));
-  this->TransferData_->exportPIDs_.swap(exportPIDs);
+  makeDualViewFromArrayView(this->TransferData_->exportPIDs_,
+                            exportPIDs().getConst(),
+                            "exportPIDs");
   this->TransferData_->distributor_.swap(distributor);
 
   this->detectRemoteExportLIDsContiguous();
@@ -559,7 +565,9 @@ Import<LocalOrdinal, GlobalOrdinal, Node>::
                                    exportLIDs);
   TEUCHOS_ASSERT(size_t(this->TransferData_->exportLIDs_.extent(0)) ==
                  size_t(exportLIDs.extent(0)));
-  this->TransferData_->exportPIDs_.swap(exportPIDs);
+  makeDualViewFromArrayView(this->TransferData_->exportPIDs_,
+                            exportPIDs().getConst(),
+                            "exportPIDs");
   this->TransferData_->distributor_.swap(distributor);
 
   this->detectRemoteExportLIDsContiguous();
@@ -951,10 +959,12 @@ Import<LocalOrdinal, GlobalOrdinal, Node>::
     // remoteGIDs and remotePIDs are input; exportGIDs and
     // exportPIDs are output arrays that createFromRecvs allocates.
     Distributor& distributor = this->TransferData_->distributor_;
+    Teuchos::Array<int> exportPIDs_a;
     distributor.createFromRecvs(remoteGIDs,
                                 remotePIDs,
                                 exportGIDs,
-                                this->TransferData_->exportPIDs_);
+                                exportPIDs_a);
+    Details::makeDualViewFromArrayView(this->TransferData_->exportPIDs_, exportPIDs_a().getConst(), "exportPIDs");
     // Find the LIDs corresponding to the (outgoing) GIDs in
     // exportGIDs.  For sparse matrix-vector multiply, this tells
     // the calling process how to index into the source vector to
@@ -1342,10 +1352,12 @@ void Import<LocalOrdinal, GlobalOrdinal, Node>::
     Kokkos::deep_copy(remoteGIDs_h, remoteGIDs);
     auto remoteProcIDs_h = Kokkos::create_mirror_view(remoteProcIDs);
     Kokkos::deep_copy(remoteProcIDs_h, remoteProcIDs);
+    Teuchos::Array<int> exportPIDs_a;
     this->TransferData_->distributor_.createFromRecvs(Kokkos::Compat::getConstArrayView(remoteGIDs_h),
                                                       Kokkos::Compat::getConstArrayView(remoteProcIDs_h),
                                                       exportGIDs_a,
-                                                      this->TransferData_->exportPIDs_);
+                                                      exportPIDs_a);
+    Details::makeDualViewFromArrayView(this->TransferData_->exportPIDs_, exportPIDs_a().getConst(), "exportPIDs");
   }
   // Find the LIDs corresponding to the (outgoing) GIDs in
   // exportGIDs.  For sparse matrix-vector multiply, this tells the

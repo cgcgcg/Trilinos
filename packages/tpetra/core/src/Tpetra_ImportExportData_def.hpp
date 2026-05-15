@@ -12,6 +12,7 @@
 
 #include "Tpetra_Map.hpp"
 #include "Tpetra_Details_makeValidVerboseStream.hpp"
+#include "Tpetra_Details_DualViewUtil.hpp"
 #include "Teuchos_FancyOStream.hpp"
 #include "Teuchos_ParameterList.hpp"
 
@@ -77,7 +78,7 @@ ImportExportData<LocalOrdinal, GlobalOrdinal, Node>::
   // Remotes / exports (easy part)
   tData->exportLIDs_ = remoteLIDs_;
   tData->remoteLIDs_ = exportLIDs_;
-  tData->exportPIDs_.resize(tData->exportLIDs_.extent(0));
+  typename decltype(tData->exportPIDs_)::t_host exportPIDs(Kokkos::ViewAllocateWithoutInitializing("exportPIDs"), tData->exportLIDs_.extent(0));
 
   // Remotes / exports (hard part) - extract the exportPIDs from the remotes of my distributor
   const size_t NumReceives            = distributor_.getNumReceives();
@@ -94,10 +95,12 @@ ImportExportData<LocalOrdinal, GlobalOrdinal, Node>::
       isLocallyComplete = false;
     }
     for (size_t k = 0; k < LengthsFrom[i]; ++k) {
-      tData->exportPIDs_[j] = pid;
+      exportPIDs[j] = pid;
       ++j;
     }
   }
+  Details::makeDualViewFromOwningHostView(tData->exportPIDs_, exportPIDs);
+
   tData->isLocallyComplete_ = isLocallyComplete;
 
   return tData;

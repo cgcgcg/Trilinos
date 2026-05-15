@@ -220,7 +220,7 @@ template <class LO, class GO, class NT>
 Teuchos::ArrayView<const int>
 Transfer<LO, GO, NT>::
     getExportPIDs() const {
-  return TransferData_->exportPIDs_();
+  return makeConstArrayViewFromDualView(TransferData_->exportPIDs_);
 }
 
 template <class LO, class GO, class NT>
