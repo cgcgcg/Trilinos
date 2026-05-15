@@ -93,6 +93,12 @@ class Export : public ::Tpetra::Details::Transfer<LocalOrdinal, GlobalOrdinal, N
   //! The specialization of Map used by this class.
   using map_type = ::Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>;
 
+  using execution_space  = typename Node::execution_space;
+  using memory_space     = typename Node::memory_space;
+  using remote_gids_type = Kokkos::View<GlobalOrdinal*, memory_space>;
+  using remote_lids_type = Kokkos::View<LocalOrdinal*, memory_space>;
+  using remote_pids_type = Kokkos::View<int*, memory_space>;
+
   //! @name Constructors, assignment, and destructor
   //@{
 
@@ -229,10 +235,10 @@ class Export : public ::Tpetra::Details::Transfer<LocalOrdinal, GlobalOrdinal, N
   //! @name Initialization helper functions (called by the constructor)
   //@{
   //! Set up same, permute, and export IDs.
-  void setupSamePermuteExport(Teuchos::Array<GlobalOrdinal>& exportGIDs);
+  remote_gids_type setupSamePermuteExport();
 
   //! Set up remote IDs.
-  void setupRemote(Teuchos::Array<GlobalOrdinal>& exportGIDs);
+  void setupRemote(remote_gids_type& exportGIDs);
   //@}
 };  // class Export
 

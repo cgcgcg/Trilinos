@@ -23,6 +23,41 @@
 #include "Teuchos_ParameterList.hpp"
 #include <memory>
 
+template <class LO>
+struct pair_lo {
+  LO numPermutes;
+  LO numExports;
+
+  KOKKOS_INLINE_FUNCTION
+  pair_lo() {
+    numPermutes = 0;
+    numExports  = 0;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  pair_lo(const pair_lo& rhs) {
+    numPermutes = rhs.numPermutes;
+    numExports  = rhs.numExports;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  pair_lo& operator+=(const pair_lo& src) {
+    numPermutes += src.numPermutes;
+    numExports += src.numExports;
+    return *this;
+  }
+};
+
+namespace Kokkos {
+
+template <class LO>
+struct reduction_identity<pair_lo<LO>> {
+  KOKKOS_FORCEINLINE_FUNCTION static pair_lo<LO> sum() {
+    return pair_lo<LO>();
+  }
+};
+}  // namespace Kokkos
+
 namespace Tpetra {
 
 template <class LocalOrdinal, class GlobalOrdinal, class Node>
@@ -43,8 +78,7 @@ Export<LocalOrdinal, GlobalOrdinal, Node>::
     os << myRank << ": Export ctor" << endl;
     this->verboseOutputStream() << os.str();
   }
-  Teuchos::Array<GlobalOrdinal> exportGIDs;
-  setupSamePermuteExport(exportGIDs);
+  auto exportGIDs = setupSamePermuteExport();
   if (source->isDistributed()) {
     setupRemote(exportGIDs);
   }
@@ -115,16 +149,13 @@ void Export<LocalOrdinal, GlobalOrdinal, Node>::
 }
 
 template <class LocalOrdinal, class GlobalOrdinal, class Node>
-void Export<LocalOrdinal, GlobalOrdinal, Node>::
-    setupSamePermuteExport(Teuchos::Array<GlobalOrdinal>& exportGIDs) {
+Export<LocalOrdinal, GlobalOrdinal, Node>::remote_gids_type Export<LocalOrdinal, GlobalOrdinal, Node>::
+    setupSamePermuteExport() {
   using std::endl;
-  using Teuchos::arcp;
   using Teuchos::Array;
-  using Teuchos::ArrayRCP;
   using Teuchos::ArrayView;
   using Teuchos::as;
   using Teuchos::null;
-  using ::Tpetra::Details::makeDualViewFromOwningHostView;
   using ::Tpetra::Details::ProfilingRegion;
   using ::Tpetra::Details::view_alloc_no_init;
   using LO                   = LocalOrdinal;
@@ -148,20 +179,13 @@ void Export<LocalOrdinal, GlobalOrdinal, Node>::
     this->verboseOutputStream() << os2.str();
   }
 
-  const map_type& source         = *(this->getSourceMap());
-  const map_type& target         = *(this->getTargetMap());
-  ArrayView<const GO> sourceGIDs = source.getLocalElementList();
-  ArrayView<const GO> targetGIDs = target.getLocalElementList();
+  const map_type& source = *(this->getSourceMap());
+  const map_type& target = *(this->getTargetMap());
+  auto sourceGIDs        = source.getMyGlobalIndicesDevice();
+  auto targetGIDs        = target.getMyGlobalIndicesDevice();
 
-#ifdef HAVE_TPETRA_DEBUG
-  ArrayView<const GO> rawSrcGids = sourceGIDs;
-  ArrayView<const GO> rawTgtGids = targetGIDs;
-#else
-  const GO* const rawSrcGids = sourceGIDs.getRawPtr();
-  const GO* const rawTgtGids = targetGIDs.getRawPtr();
-#endif  // HAVE_TPETRA_DEBUG
-  const size_type numSrcGids = sourceGIDs.size();
-  const size_type numTgtGids = targetGIDs.size();
+  const size_type numSrcGids = sourceGIDs.extent(0);
+  const size_type numTgtGids = targetGIDs.extent(0);
   const size_type numGids    = std::min(numSrcGids, numTgtGids);
 
   // Compute numSameIDs_: the number of initial GIDs that are the
@@ -171,10 +195,16 @@ void Export<LocalOrdinal, GlobalOrdinal, Node>::
   // otherwise the source and target Maps are the same.  This allows
   // a fast contiguous copy for the initial "same IDs."
   size_type numSameGids = 0;
-  for (; numSameGids < numGids &&
-         rawSrcGids[numSameGids] == rawTgtGids[numSameGids];
-       ++numSameGids) {
-  }  // third clause of 'for' does everything
+
+  Kokkos::parallel_reduce(
+      Kokkos::RangePolicy<execution_space>(0, numGids), KOKKOS_LAMBDA(const size_type lid, size_type& mySameGids) {
+        if (sourceGIDs(lid) != targetGIDs(lid))
+          mySameGids = Kokkos::min(lid, mySameGids);
+      },
+      Kokkos::Min<size_type>(numSameGids));
+  if (numSameGids == Kokkos::Experimental::finite_max_v<size_type>)
+    numSameGids = numGids;
+
   this->TransferData_->numSameIDs_ = numSameGids;
 
   if (this->verbose()) {
@@ -201,18 +231,22 @@ void Export<LocalOrdinal, GlobalOrdinal, Node>::
   LO numPermutes      = 0;
   LO numExports       = 0;
 
-  for (LO srcLid = numSameGids; srcLid < numSrcLids; ++srcLid) {
-    const GO curSrcGid = rawSrcGids[srcLid];
-    // getLocalElement() returns LINVALID if the GID isn't in the
-    // target Map.  This saves us a lookup (which
-    // isNodeGlobalElement() would do).
-    const LO tgtLid = target.getLocalElement(curSrcGid);
-    if (tgtLid != LINVALID) {  // if target.isNodeGlobalElement (curSrcGid)
-      ++numPermutes;
-    } else {
-      ++numExports;
-    }
-  }
+  auto lclTarget = target.getLocalMap();
+  Kokkos::parallel_reduce(
+      Kokkos::RangePolicy<execution_space>(numSameGids, numSrcLids), KOKKOS_LAMBDA(const LocalOrdinal srcLid, LocalOrdinal& myNumPermutes, LocalOrdinal& myNumExports) {
+        const auto curSrcGid = sourceGIDs(srcLid);
+        // getLocalElement() returns LINVALID if the GID isn't in the
+        // target Map.  This saves us a lookup (which
+        // isNodeGlobalElement() would do).
+        const auto tgtLid = lclTarget.getLocalElement(curSrcGid);
+        if (tgtLid != LINVALID) {  // if target.isNodeGlobalElement (curSrcGid)
+          ++myNumPermutes;
+        } else {
+          ++myNumExports;
+        }
+      },
+      numPermutes, numExports);
+
   if (this->verbose()) {
     std::ostringstream os;
     os << *prefix << "numPermutes: " << numPermutes
@@ -222,36 +256,45 @@ void Export<LocalOrdinal, GlobalOrdinal, Node>::
   TEUCHOS_ASSERT(numPermutes + numExports ==
                  numSrcLids - numSameGids);
 
-  typename decltype(this->TransferData_->permuteToLIDs_)::t_host
+  typename decltype(this->TransferData_->permuteToLIDs_)::t_dev
       permuteToLIDs(view_alloc_no_init("permuteToLIDs"), numPermutes);
-  typename decltype(this->TransferData_->permuteToLIDs_)::t_host
+  typename decltype(this->TransferData_->permuteToLIDs_)::t_dev
       permuteFromLIDs(view_alloc_no_init("permuteFromLIDs"), numPermutes);
-  typename decltype(this->TransferData_->permuteToLIDs_)::t_host
+  typename decltype(this->TransferData_->permuteToLIDs_)::t_dev
       exportLIDs(view_alloc_no_init("exportLIDs"), numExports);
 
-  // FIXME (mfh 03 Feb 2019) Replace with std::unique_ptr of array,
-  // to avoid superfluous initialization on resize.
-  exportGIDs.resize(numExports);
-
+  remote_gids_type exportGIDs(view_alloc_no_init("exportGIDs"), numExports);
   {
-    LO numPermutes2 = 0;
-    LO numExports2  = 0;
-    for (LO srcLid = numSameGids; srcLid < numSrcLids; ++srcLid) {
-      const GO curSrcGid = rawSrcGids[srcLid];
-      const LO tgtLid    = target.getLocalElement(curSrcGid);
-      if (tgtLid != LINVALID) {
-        permuteToLIDs[numPermutes2]   = tgtLid;
-        permuteFromLIDs[numPermutes2] = srcLid;
-        ++numPermutes2;
-      } else {
-        exportGIDs[numExports2] = curSrcGid;
-        exportLIDs[numExports2] = srcLid;
-        ++numExports2;
-      }
-    }
+    using my_pair = pair_lo<LO>;
+    my_pair counts;
+    Kokkos::parallel_scan(
+        Kokkos::RangePolicy<LO, execution_space>(numSameGids, numSrcLids),
+        KOKKOS_LAMBDA(const LO srcLid, my_pair& offsets, const bool is_final) {
+          auto& myNumPermutes  = offsets.numPermutes;
+          auto& myNumExports   = offsets.numExports;
+          const auto curSrcGid = sourceGIDs(srcLid);
+          const auto tgtLid    = lclTarget.getLocalElement(curSrcGid);
+          if (tgtLid != LINVALID) {
+            if (is_final) {
+              permuteToLIDs(myNumPermutes)   = tgtLid;
+              permuteFromLIDs(myNumPermutes) = srcLid;
+            }
+            ++myNumPermutes;
+          } else {
+            if (is_final) {
+              exportGIDs(myNumExports) = curSrcGid;
+              exportLIDs(myNumExports) = srcLid;
+            }
+            ++myNumExports;
+          }
+        },
+        counts);
+    LO numPermutes2 = counts.numPermutes;
+    LO numExports2  = counts.numExports;
+
     TEUCHOS_ASSERT(numPermutes == numPermutes2);
     TEUCHOS_ASSERT(numExports == numExports2);
-    TEUCHOS_ASSERT(size_t(numExports) == size_t(exportGIDs.size()));
+    TEUCHOS_ASSERT(size_t(numExports) == size_t(exportGIDs.extent(0)));
   }
 
   // Defer making this->TransferData_->exportLIDs_ until after
@@ -295,6 +338,7 @@ void Export<LocalOrdinal, GlobalOrdinal, Node>::
   // We only need to do this if the source Map is distributed;
   // otherwise, the Export doesn't have to perform any
   // communication.
+  remote_pids_type exportPIDs;
   if (source.isDistributed()) {
     if (this->verbose()) {
       std::ostringstream os;
@@ -303,13 +347,12 @@ void Export<LocalOrdinal, GlobalOrdinal, Node>::
          << endl;
       this->verboseOutputStream() << os.str();
     }
-    this->TransferData_->exportPIDs_.resize(exportGIDs.size());
     // This call will assign any GID in the target Map with no
     // corresponding process ID a fake process ID of -1.  We'll use
     // this below to remove exports for processses that don't exist.
-    const LookupStatus lookup =
-        target.getRemoteIndexList(exportGIDs(),
-                                  this->TransferData_->exportPIDs_());
+    exportPIDs          = remote_pids_type("exportPIDs", exportGIDs.size());
+    LookupStatus lookup = target.getRemoteIndexList(exportGIDs,
+                                                    exportPIDs);
     // mfh 12 Sep 2016: I disagree that this is "abuse"; it may be
     // correct behavior, depending on the circumstances.
     TPETRA_ABUSE_WARNING(lookup == IDNotPresent, std::runtime_error,
@@ -325,12 +368,15 @@ void Export<LocalOrdinal, GlobalOrdinal, Node>::
       // target Map.
       this->TransferData_->isLocallyComplete_ = false;
 
-      Teuchos::Array<int>& exportPIDs = this->TransferData_->exportPIDs_;
+      const size_type totalNumExports = exportPIDs.extent(0);
+      size_type numInvalidExports;
+      Kokkos::parallel_reduce(
+          Kokkos::RangePolicy<execution_space>(0, exportPIDs.extent(0)), KOKKOS_LAMBDA(const LocalOrdinal e, size_type& myNumInvalidExports) {
+            if (exportPIDs(e) == -1)
+              ++myNumInvalidExports;
+          },
+          numInvalidExports);
 
-      const size_type totalNumExports = exportPIDs.size();
-      const size_type numInvalidExports =
-          std::count_if(exportPIDs.begin(), exportPIDs.end(),
-                        [](const int procId) { return procId == -1; });
       if (this->verbose()) {
         std::ostringstream os;
         os << *prefix << "totalNumExports: " << totalNumExports
@@ -348,43 +394,69 @@ void Export<LocalOrdinal, GlobalOrdinal, Node>::
       // Petra Object Model behavior, but it's a less common case.
 
       if (numInvalidExports == totalNumExports) {
-        exportGIDs.resize(0);
-        exportLIDs = decltype(exportLIDs)();
-        exportPIDs.resize(0);
+        exportGIDs = remote_gids_type();
+        exportLIDs = remote_lids_type();
+        exportPIDs = remote_pids_type();
       } else {
         size_type numValidExports = 0;
-        for (size_type e = 0; e < totalNumExports; ++e) {
-          if (this->TransferData_->exportPIDs_[e] != -1) {
-            exportGIDs[numValidExports] = exportGIDs[e];
-            exportLIDs[numValidExports] = exportLIDs[e];
-            exportPIDs[numValidExports] = exportPIDs[e];
-            ++numValidExports;
-          }
-        }
-        exportGIDs.resize(numValidExports);
-        Kokkos::resize(exportLIDs, numValidExports);
-        exportPIDs.resize(numValidExports);
+
+        // count valid exports
+        Kokkos::parallel_reduce(
+            Kokkos::RangePolicy<execution_space>(0, totalNumExports), KOKKOS_LAMBDA(const size_type e, size_type& myNumValidExports) {
+              if (exportPIDs(e) != -1)
+                ++myNumValidExports;
+            },
+            numValidExports);
+
+        remote_pids_type newExportPIDs("newRemoteProcIDs", numValidExports);
+        remote_gids_type newExportGIDs("newRemoteGIDs", numValidExports);
+        remote_lids_type newExportLIDs("newRemoteLIDs", numValidExports);
+
+        Kokkos::parallel_scan(
+            Kokkos::RangePolicy<execution_space>(0, totalNumExports), KOKKOS_LAMBDA(const size_type e, size_type& myNumValidExports, const bool is_final) {
+              if (exportPIDs(e) != -1) {
+                if (is_final) {
+                  newExportPIDs(myNumValidExports) = exportPIDs(e);
+                  newExportGIDs(myNumValidExports) = exportGIDs(e);
+                  newExportLIDs(myNumValidExports) = exportLIDs(e);
+                }
+                ++myNumValidExports;
+              }
+            });
+
+        exportPIDs = newExportPIDs;
+        exportGIDs = newExportGIDs;
+        exportLIDs = newExportLIDs;
       }
     }
+  }
+
+  {
+    this->TransferData_->exportPIDs_.resize(exportPIDs.extent(0));
+    Array<int>& exportPIDs_a = this->TransferData_->exportPIDs_;
+    auto exportPIDs_h        = Kokkos::View<int*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>(exportPIDs_a.data(), exportPIDs_a.size());
+    Kokkos::deep_copy(exportPIDs_h, exportPIDs);
   }
 
   // FIXME (mfh 03 Feb 2019) These three DualViews could share a
   // single device allocation, in order to avoid high cudaMalloc
   // cost and device memory fragmentation.
-  makeDualViewFromOwningHostView(this->TransferData_->permuteToLIDs_, permuteToLIDs);
-  makeDualViewFromOwningHostView(this->TransferData_->permuteFromLIDs_, permuteFromLIDs);
-  makeDualViewFromOwningHostView(this->TransferData_->exportLIDs_, exportLIDs);
+  Details::makeDualViewFromOwningDeviceView(this->TransferData_->permuteToLIDs_, permuteToLIDs);
+  Details::makeDualViewFromOwningDeviceView(this->TransferData_->permuteFromLIDs_, permuteFromLIDs);
+  Details::makeDualViewFromOwningDeviceView(this->TransferData_->exportLIDs_, exportLIDs);
 
   if (this->verbose()) {
     std::ostringstream os;
     os << *prefix << "Done!" << std::endl;
     this->verboseOutputStream() << os.str();
   }
+
+  return exportGIDs;
 }
 
 template <class LocalOrdinal, class GlobalOrdinal, class Node>
 void Export<LocalOrdinal, GlobalOrdinal, Node>::
-    setupRemote(Teuchos::Array<GlobalOrdinal>& exportGIDs) {
+    setupRemote(remote_gids_type& exportGIDs) {
   using std::endl;
   using Teuchos::Array;
   using ::Tpetra::Details::makeDualViewFromOwningHostView;
@@ -410,18 +482,25 @@ void Export<LocalOrdinal, GlobalOrdinal, Node>::
   TEUCHOS_ASSERT(!this->getTargetMap().is_null());
   const map_type& tgtMap = *(this->getTargetMap());
 
+  auto exportGIDs_h = Kokkos::create_mirror_view(exportGIDs);
+  Kokkos::deep_copy(exportGIDs_h, exportGIDs);
+  Teuchos::ArrayView<GO> exportGIDsView = Kokkos::Compat::getArrayView(exportGIDs_h);
+
   // Sort exportPIDs_ in ascending order, and apply the same
   // permutation to exportGIDs_ and exportLIDs_.  This ensures that
   // exportPIDs_[i], exportGIDs_[i], and exportLIDs_[i] all
   // refer to the same thing.
-  {
+  if (exportGIDsView.size() > 0) {
+    std::cout << "HERE " << size_t(this->TransferData_->exportLIDs_.extent(0)) << size_t(this->TransferData_->exportPIDs_.size()) << std::endl;
     TEUCHOS_ASSERT(size_t(this->TransferData_->exportLIDs_.extent(0)) ==
                    size_t(this->TransferData_->exportPIDs_.size()));
+    // TEUCHOS_ASSERT(size_t(exportGIDsView.size()) ==
+    //                size_t(this->TransferData_->exportPIDs_.size()));
     this->TransferData_->exportLIDs_.modify_host();
     auto exportLIDs = this->TransferData_->exportLIDs_.view_host();
     sort3(this->TransferData_->exportPIDs_.begin(),
           this->TransferData_->exportPIDs_.end(),
-          exportGIDs.getRawPtr(),
+          exportGIDsView.getRawPtr(),
           exportLIDs.data());
     this->TransferData_->exportLIDs_.sync_device();
     // FIXME (mfh 03 Feb 2019) We actually end up sync'ing
