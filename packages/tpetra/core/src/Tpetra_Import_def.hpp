@@ -1150,7 +1150,6 @@ void Import<LocalOrdinal, GlobalOrdinal, Node>::
                 const Teuchos::RCP<Teuchos::ParameterList>& plist) {
   using std::endl;
   using Teuchos::Array;
-  using Teuchos::ArrayView;
   using ::Tpetra::Details::makeDualViewFromOwningHostView;
   using ::Tpetra::Details::view_alloc_no_init;
   using GO = GlobalOrdinal;
@@ -1204,26 +1203,19 @@ void Import<LocalOrdinal, GlobalOrdinal, Node>::
   // processes).  That is, there is at least one GID owned by some
   // process in the target Map, which is not owned by _any_ process
   // in the source Map.
-  Array<int> newRemotePIDs_a;
   LookupStatus lookup = AllIDsPresent;
 
+  pids_view_type remoteProcIDs;
   if (!useRemotePIDs) {
-    auto remoteGIDs_h = Kokkos::create_mirror_view(remoteGIDs);
-    Kokkos::deep_copy(remoteGIDs_h, remoteGIDs);
-    ArrayView<GO> remoteGIDsView = Kokkos::Compat::getArrayView(remoteGIDs_h);
-    ArrayView<int> remoteProcIDsView;
-    newRemotePIDs_a.resize(remoteGIDsView.size());
     if (this->verbose()) {
       std::ostringstream os;
       os << *prefix << "Call sourceMap.getRemoteIndexList" << endl;
       this->verboseOutputStream() << os.str();
     }
-    lookup = source.getRemoteIndexList(remoteGIDsView, newRemotePIDs_a());
-  }
-  Array<int>& remoteProcIDs_a = useRemotePIDs ? userRemotePIDs : newRemotePIDs_a;
-  pids_view_type remoteProcIDs;
-  {
-    auto remoteProcIDs_h = Kokkos::View<int*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>(remoteProcIDs_a.data(), remoteProcIDs_a.size());
+    remoteProcIDs = pids_view_type(view_alloc_no_init("remoteProcIDs"), remoteGIDs.extent(0));
+    lookup        = source.getRemoteIndexList(remoteGIDs, remoteProcIDs);
+  } else {
+    auto remoteProcIDs_h = Kokkos::View<int*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>(userRemotePIDs.data(), userRemotePIDs.size());
     remoteProcIDs        = Kokkos::create_mirror_view_and_copy(execution_space(), remoteProcIDs_h);
   }
 
@@ -1248,9 +1240,13 @@ void Import<LocalOrdinal, GlobalOrdinal, Node>::
     // source Map.  getRemoteIndexList() gives each of these a
     // process ID of -1.
 
-    const size_type numInvalidRemote =
-        std::count_if(remoteProcIDs_a.begin(), remoteProcIDs_a.end(),
-                      std::bind(std::equal_to<int>(), -1, std::placeholders::_1));
+    size_type numInvalidRemote;
+    Kokkos::parallel_reduce(
+        Kokkos::RangePolicy<execution_space>(0, remoteProcIDs.extent(0)), KOKKOS_LAMBDA(const LocalOrdinal r, size_type& myNumInvalidRemote) {
+          if (remoteProcIDs(r) == -1)
+            ++myNumInvalidRemote;
+        },
+        numInvalidRemote);
     TEUCHOS_TEST_FOR_EXCEPTION_CLASS_FUNC(numInvalidRemote == 0, std::logic_error,
                                           "Calling getRemoteIndexList "
                                           "on the source Map returned IDNotPresent, but none of the returned "
