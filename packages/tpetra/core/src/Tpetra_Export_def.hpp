@@ -17,7 +17,6 @@
 #include "Tpetra_Import.hpp"
 #include "Tpetra_Details_DualViewUtil.hpp"
 #include "Tpetra_Details_Profiling.hpp"
-#include "Teuchos_as.hpp"
 #include "Teuchos_Array.hpp"
 #include "Teuchos_FancyOStream.hpp"
 #include "Teuchos_ParameterList.hpp"
@@ -68,7 +67,6 @@ Export<LocalOrdinal, GlobalOrdinal, Node>::
            const Teuchos::RCP<Teuchos::ParameterList>& plist)
   : base_type(source, target, out, plist, "Export") {
   using std::endl;
-  using Teuchos::rcp;
   using ::Tpetra::Details::ProfilingRegion;
   ProfilingRegion regionExport("Tpetra::Export::Export");
 
@@ -154,7 +152,6 @@ Export<LocalOrdinal, GlobalOrdinal, Node>::remote_gids_type Export<LocalOrdinal,
   using std::endl;
   using Teuchos::Array;
   using Teuchos::ArrayView;
-  using Teuchos::as;
   using Teuchos::null;
   using ::Tpetra::Details::ProfilingRegion;
   using ::Tpetra::Details::view_alloc_no_init;
@@ -459,7 +456,6 @@ void Export<LocalOrdinal, GlobalOrdinal, Node>::
     setupRemote(remote_gids_type& exportGIDs) {
   using std::endl;
   using Teuchos::Array;
-  using ::Tpetra::Details::makeDualViewFromOwningHostView;
   using ::Tpetra::Details::view_alloc_no_init;
   using LO = LocalOrdinal;
   using GO = GlobalOrdinal;
@@ -482,27 +478,24 @@ void Export<LocalOrdinal, GlobalOrdinal, Node>::
   TEUCHOS_ASSERT(!this->getTargetMap().is_null());
   const map_type& tgtMap = *(this->getTargetMap());
 
-  auto exportGIDs_h = Kokkos::create_mirror_view(exportGIDs);
-  Kokkos::deep_copy(exportGIDs_h, exportGIDs);
-  Teuchos::ArrayView<GO> exportGIDsView = Kokkos::Compat::getArrayView(exportGIDs_h);
-
   // Sort exportPIDs_ in ascending order, and apply the same
   // permutation to exportGIDs_ and exportLIDs_.  This ensures that
   // exportPIDs_[i], exportGIDs_[i], and exportLIDs_[i] all
   // refer to the same thing.
-  if (exportGIDsView.size() > 0) {
-    std::cout << "HERE " << size_t(this->TransferData_->exportLIDs_.extent(0)) << size_t(this->TransferData_->exportPIDs_.size()) << std::endl;
+  {
     TEUCHOS_ASSERT(size_t(this->TransferData_->exportLIDs_.extent(0)) ==
                    size_t(this->TransferData_->exportPIDs_.size()));
-    // TEUCHOS_ASSERT(size_t(exportGIDsView.size()) ==
-    //                size_t(this->TransferData_->exportPIDs_.size()));
-    this->TransferData_->exportLIDs_.modify_host();
-    auto exportLIDs = this->TransferData_->exportLIDs_.view_host();
-    sort3(this->TransferData_->exportPIDs_.begin(),
-          this->TransferData_->exportPIDs_.end(),
-          exportGIDsView.getRawPtr(),
-          exportLIDs.data());
-    this->TransferData_->exportLIDs_.sync_device();
+    this->TransferData_->exportLIDs_.modify_device();
+    auto exportLIDs    = this->TransferData_->exportLIDs_.view_device();
+    auto& exportPIDs_a = this->TransferData_->exportPIDs_;
+    auto exportPIDs_h  = Kokkos::View<int*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>(exportPIDs_a.data(), exportPIDs_a.size());
+    remote_pids_type exportPIDs("exportPIDs", exportPIDs_h.extent(0));
+    Kokkos::deep_copy(exportPIDs, exportPIDs_h);
+    sort3<execution_space>(exportPIDs,
+                           exportGIDs,
+                           exportLIDs);
+    this->TransferData_->exportLIDs_.sync_host();
+    Kokkos::deep_copy(exportPIDs_h, exportPIDs);
     // FIXME (mfh 03 Feb 2019) We actually end up sync'ing
     // exportLIDs_ to device twice, once in setupSamePermuteExport,
     // and once here.  We could avoid the first sync.
@@ -535,20 +528,19 @@ void Export<LocalOrdinal, GlobalOrdinal, Node>::
   // sending to us and get the proper ordering of GIDs for incoming
   // remote entries (these will be converted to LIDs when done).
 
-  Kokkos::View<const GO*, Kokkos::HostSpace> exportGIDsConst(exportGIDs.data(), exportGIDs.size());
-  Kokkos::View<GO*, Kokkos::HostSpace> remoteGIDs("remoteGIDs", numRemoteIDs);
-  distributor.doPostsAndWaits(exportGIDsConst, 1, remoteGIDs);
+  remote_gids_type remoteGIDs(view_alloc_no_init("remoteGIDs"), numRemoteIDs);
+  distributor.doPostsAndWaits(exportGIDs, 1, remoteGIDs);
 
   // Remote (incoming) IDs come in as GIDs; convert to LIDs.  LIDs
   // tell this process where to store the incoming remote data.
-  using host_remote_lids_type =
-      typename decltype(this->TransferData_->remoteLIDs_)::t_host;
-  host_remote_lids_type remoteLIDs(view_alloc_no_init("remoteLIDs"), numRemoteIDs);
+  remote_lids_type remoteLIDs(view_alloc_no_init("remoteLIDs"), numRemoteIDs);
 
-  for (LO j = 0; j < LO(numRemoteIDs); ++j) {
-    remoteLIDs[j] = tgtMap.getLocalElement(remoteGIDs[j]);
-  }
-  makeDualViewFromOwningHostView(this->TransferData_->remoteLIDs_, remoteLIDs);
+  auto lclTgtMap = tgtMap.getLocalMap();
+  Kokkos::parallel_for(
+      Kokkos::RangePolicy<execution_space>(0, numRemoteIDs), KOKKOS_LAMBDA(const LO j) {
+        remoteLIDs(j) = lclTgtMap.getLocalElement(remoteGIDs(j));
+      });
+  Details::makeDualViewFromOwningDeviceView(this->TransferData_->remoteLIDs_, remoteLIDs);
 
   if (this->verbose()) {
     std::ostringstream os;
