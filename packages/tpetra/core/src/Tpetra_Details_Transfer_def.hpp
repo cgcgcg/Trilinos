@@ -17,6 +17,7 @@
 #include "Teuchos_CommHelpers.hpp"
 #include "Teuchos_TypeNameTraits.hpp"
 #include <sstream>
+#include <stdexcept>
 
 namespace {  // (anonymous)
 
@@ -24,7 +25,7 @@ namespace {  // (anonymous)
 template <class ElementType, class DeviceType>
 Teuchos::ArrayView<const ElementType>
 makeConstArrayViewFromDualView(const Kokkos::DualView<ElementType*, DeviceType>& dv) {
-  TEUCHOS_ASSERT(!dv.need_sync_host());
+  TEUCHOS_TEST_FOR_EXCEPTION(dv.need_sync_host(), std::runtime_error, "DualView needs host sync: " + dv.view_device().label());
   auto hostView   = dv.view_host();
   const auto size = hostView.extent(0);
   return Teuchos::ArrayView<const ElementType>(size == 0 ? nullptr : hostView.data(), size);

@@ -10,6 +10,7 @@
 #ifndef TPETRA_EXPORT_DEF_HPP
 #define TPETRA_EXPORT_DEF_HPP
 
+#include "Tpetra_Export_decl.hpp"
 #include "Tpetra_Distributor.hpp"
 #include "Tpetra_Map.hpp"
 #include "Tpetra_ImportExportData.hpp"
@@ -430,6 +431,7 @@ Export<LocalOrdinal, GlobalOrdinal, Node>::gids_view_type Export<LocalOrdinal, G
   Details::makeDualViewFromOwningDeviceView(this->TransferData_->permuteFromLIDs_, permuteFromLIDs);
   Details::makeDualViewFromOwningDeviceView(this->TransferData_->exportLIDs_, exportLIDs);
   Details::makeDualViewFromOwningDeviceView(this->TransferData_->exportPIDs_, exportPIDs);
+  this->TransferData_->exportPIDs_.sync_host();
 
   if (this->verbose()) {
     std::ostringstream os;
@@ -496,7 +498,8 @@ void Export<LocalOrdinal, GlobalOrdinal, Node>::
   // mfh 05 Jan 2012: I understand the above comment as follows:
   // Construct the communication plan from the list of image IDs to
   // which we need to send.
-  Distributor& distributor  = this->TransferData_->distributor_;
+  Distributor& distributor = this->TransferData_->distributor_;
+  this->TransferData_->exportPIDs_.sync_host();
   auto exportPIDs_h         = this->TransferData_->exportPIDs_.view_host();
   auto exportPIDs_av        = Kokkos::Compat::getArrayView(exportPIDs_h);
   const size_t numRemoteIDs = distributor.createFromSends(exportPIDs_av);

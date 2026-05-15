@@ -228,7 +228,7 @@ class Export : public ::Tpetra::Details::Transfer<LocalOrdinal, GlobalOrdinal, N
   ///   before the next process starts writing.)
   virtual void print(std::ostream& os) const;
   //@}
- private:
+
   //! @name Initialization helper functions (called by the constructor)
   //@{
   //! Set up same, permute, and export IDs.
