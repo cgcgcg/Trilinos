@@ -13,7 +13,6 @@
 #include <Xpetra_Map.hpp>
 #include <Xpetra_MultiVector.hpp>
 #include <Xpetra_Matrix.hpp>
-#include "KokkosBatched_Copy_Internal.hpp"
 #include "Teuchos_Assert.hpp"
 #include "Xpetra_MatrixFactory.hpp"
 #include "Xpetra_MatrixMatrix.hpp"
@@ -25,28 +24,16 @@
 #include "MueLu_Monitor.hpp"
 
 #include "KokkosBlas1_set.hpp"
-#include "KokkosBatched_QR_FormQ_TeamVector_Internal.hpp"
 #include "KokkosBatched_ApplyQ_Decl.hpp"
 #include "KokkosBatched_SetIdentity_Decl.hpp"
-#include "KokkosBatched_SetIdentity_Impl.hpp"
 #include "Kokkos_DualView.hpp"
 #include "Kokkos_Pair.hpp"
 #include "Kokkos_UnorderedMap.hpp"
-#include "KokkosBatched_QR_Decl.hpp"
-#include "KokkosBatched_QR_Serial_Impl.hpp"
-#include "KokkosBatched_QR_TeamVector_Impl.hpp"
-#include "KokkosBatched_QR_FormQ_TeamVector_Internal.hpp"
-#include "KokkosBatched_LU_Decl.hpp"
-#include "KokkosBatched_LU_Team_Impl.hpp"
 #include "KokkosBatched_Trsv_Decl.hpp"
-#include "KokkosBatched_Trsv_TeamVector_Impl.hpp"
 #include "KokkosBatched_Gemm_Decl.hpp"
-#include "KokkosBatched_Gemm_Team_Impl.hpp"
 #include "KokkosBatched_Gemv_Decl.hpp"
-#include "KokkosBatched_Gemv_Team_Impl.hpp"
 #include "KokkosBatched_Copy_Decl.hpp"
-#include "KokkosBatched_Copy_Impl.hpp"
-#include "KokkosBlas1_set.hpp"
+#include "KokkosBatched_SVD_Decl.hpp"
 
 namespace MueLu {
 
@@ -218,15 +205,7 @@ class BlockInverseFunctor {
     auto blockSize = blockRow.length;
 
     shared_matrix lclA(thread.team_shmem(), blockSize, blockSize);
-    shared_matrix lclInvA(thread.team_shmem(), blockSize, blockSize);
-
-    const bool PseudoInverse = (!(singular.extent(0) == 0)) && singular(blockId);
-
-    // Initialize lclA
-    // If PseudoInverse, we shift the constant mode.
-    KokkosBlas::TeamSet<member_type>::invoke(thread, PseudoInverse ? one : zero, lclA);
-    thread.team_barrier();
-
+    KokkosBlas::SerialSet::invoke(zero, lclA);
     // extract block from A
     for (LocalOrdinal ii = 0; ii < blockSize; ++ii) {
       auto i   = blockRow.colidx(ii);
@@ -242,72 +221,33 @@ class BlockInverseFunctor {
       }
     }
 
-    // LU
+    // SVD
     {
-      // LU factorization: lclA = L * U
-      KokkosBatched::TeamLU<member_type, KokkosBlas::Algo::QR::Unblocked>::invoke(thread, lclA);
+      shared_matrix U(thread.team_shmem(), blockSize, blockSize);
+      shared_matrix Vt(thread.team_shmem(), blockSize, blockSize);
+      shared_vector s(thread.team_shmem(), blockSize);
+      shared_vector work(thread.team_shmem(), blockSize);
 
-      // set lclInvA to identity matrix
-      KokkosBatched::TeamSetIdentity<member_type>::invoke(thread, lclInvA);
-      thread.team_barrier();
+      // A = U * diag(s) * Vt
+      KokkosBatched::SerialSVD::invoke(KokkosBatched::SVD_USV_Tag{}, lclA, U, s, Vt, work,
+                                       1000 * ATS::epsilon());
 
-      // // lclInvA = L^{-1}*lclInvA
-      for (LocalOrdinal j = 0; j < blockSize; ++j)
-        KokkosBatched::TeamVectorTrsv<member_type, KokkosBatched::Uplo::Lower, KokkosBatched::Trans::NoTranspose, KokkosBatched::Diag::Unit, KokkosBatched::Algo::Trsv::Unblocked>::invoke(thread, one, lclA, Kokkos::subview(lclInvA, Kokkos::ALL(), j));
-      thread.team_barrier();
-
-      // // lclInvA = R^{-1}*lclInvA
-      for (LocalOrdinal j = 0; j < blockSize; ++j)
-        KokkosBatched::TeamVectorTrsv<member_type, KokkosBatched::Uplo::Upper, KokkosBatched::Trans::NoTranspose, KokkosBatched::Diag::NonUnit, KokkosBatched::Algo::Trsv::Unblocked>::invoke(thread, one, lclA, Kokkos::subview(lclInvA, Kokkos::ALL(), j));
-      thread.team_barrier();
-    }
-
-    // The QR in Kokkos Kernels is broken. Once it gets fixed we can use it and remove LU.
-    //
-    // QR
-    // {
-
-    //   shared_vector tau(thread.team_shmem(), blockSize);
-    //   shared_vector work(thread.team_shmem(), blockSize);
-
-    //   // QR factorization: lclA = Q * R
-    //   KokkosBatched::TeamVectorQR<member_type, KokkosBlas::Algo::QR::Unblocked>::invoke(thread, lclA, tau, work);
-
-    //   // set lclInvA to identity matrix
-    //   KokkosBatched::TeamSetIdentity<member_type>::invoke(thread, lclInvA);
-    //   thread.team_barrier();
-
-    //   // lclInvA = Q^T*lclInvA
-    //   KokkosBatched::TeamVectorApplyQ<member_type, KokkosBatched::Side::Left, KokkosBlas::Trans::Transpose, KokkosBlas::Algo::ApplyQ::Unblocked>::invoke(thread, lclA, tau, lclInvA, work);
-    //   thread.team_barrier();
-
-    //   // lclInvA = R^{-1}*lclInvA
-    //   for (LocalOrdinal j = 0; j < blockSize; ++j)
-    //     KokkosBatched::TeamVectorTrsv<member_type, KokkosBatched::Uplo::Upper, KokkosBatched::Trans::NoTranspose, KokkosBatched::Diag::NonUnit, KokkosBatched::Algo::Trsv::Unblocked>::invoke(thread, one, lclA, Kokkos::subview(lclInvA, Kokkos::ALL(), j));
-    //   thread.team_barrier();
-    // }
-
-    if (PseudoInverse) {
-      // Multiply with projection that removes constant vector
-
-      // Set up projection matrix
-      for (LocalOrdinal ii = 0; ii < blockSize; ++ii) {
-        for (LocalOrdinal kk = 0; kk < blockSize; ++kk) {
-          if (ii == kk) {
-            lclA(ii, kk) = one - one / (scalar_type)blockSize;
-          } else {
-            lclA(ii, kk) = -one / (scalar_type)blockSize;
-          }
+      int k = 0;
+      // invert s and apply diag(1/s) to Vt
+      for (LocalOrdinal i = 0; i < blockSize; ++i) {
+        if (ATS::magnitude(s(i)) > 100 * ATS::epsilon())
+          s(i) = one / s(i);
+        else {
+          ++k;
+          s(i) = zero;
+        }
+        for (LocalOrdinal j = 0; j < blockSize; ++j) {
+          Vt(i, j) *= s(i);
         }
       }
-      // Copy lclInvA to temp
-      shared_matrix temp(thread.team_shmem(), blockSize, blockSize);
-      KokkosBatched::TeamCopy<member_type, KokkosBatched::Trans::NoTranspose>::invoke(thread, lclInvA, temp);
-      thread.team_barrier();
 
-      // lclInvA = proj * lclInvA
-      KokkosBatched::TeamGemm<member_type, KokkosBatched::Trans::NoTranspose, KokkosBatched::Trans::NoTranspose, KokkosBatched::Algo::Gemm::Unblocked>::invoke(thread, one, lclA, temp, zero, lclInvA);
-      thread.team_barrier();
+      // lclA := U * diag(1/s) * Vt
+      KokkosBatched::SerialGemm<KokkosBatched::Trans::NoTranspose, KokkosBatched::Trans::NoTranspose, KokkosBatched::Algo::Gemm::Unblocked>::invoke(one, U, Vt, zero, lclA);
     }
 
     // write inverse of block to invA
@@ -318,7 +258,7 @@ class BlockInverseFunctor {
         auto j = row.colidx(jj);
         for (LocalOrdinal kk = 0; kk < blockSize; ++kk)
           if (blockRow.colidx(kk) == j) {
-            row.value(jj) = lclInvA(ii, kk);
+            row.value(jj) = lclA(ii, kk);
             break;
           }
       }
@@ -552,20 +492,9 @@ void Constraint<Scalar, LocalOrdinal, GlobalOrdinal, Node>::PrepareLeastSquaresS
   // If we pass a view of size 0 to the functor, all blocks are assumed to be non-singular.
   Kokkos::View<bool*, memory_space> block_is_singular;
   LocalOrdinal numSingularBlocks = 0;
-  if (detect_singular_blocks)
-    block_is_singular = Kokkos::View<bool*, memory_space>("block_is_singular", numBlocks);
 
   using functor_type = BlockInverseFunctor<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
   functor_type functor(XXt->getLocalMatrixDevice(), blocks, maxBlocksize, invXXt_->getLocalMatrixDevice(), block_is_singular);
-
-  if (detect_singular_blocks) {
-    SubMonitor m2(*this, "singular block detection");
-    Kokkos::parallel_for("MueLu::Constraint::findSingularBlocks", Kokkos::TeamPolicy<typename Node::execution_space, typename functor_type::TagFindSingularBlocks>(numBlocks, 1), functor);
-
-    if (IsPrint(Statistics0)) {
-      Kokkos::parallel_reduce("MueLu::Constraint::countSingularBlocks", Kokkos::TeamPolicy<typename Node::execution_space, typename functor_type::TagCountSingularBlocks>(numBlocks, 1), functor, numSingularBlocks);
-    }
-  }
 
   {
     SubMonitor m2(*this, "inversion");
