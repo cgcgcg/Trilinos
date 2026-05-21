@@ -47,8 +47,8 @@ RCP<const ParameterList> ReitzingerPFactory<Scalar, LocalOrdinal, GlobalOrdinal,
 #undef SET_VALID_ENTRY
 
   validParamList->set<RCP<const FactoryBase> >("D0", Teuchos::null, "Generating factory of the matrix D0");
-  validParamList->set<RCP<const FactoryBase> >("NodeAggMatrix", Teuchos::null, "Generating factory of the matrix NodeAggMatrix");
-  validParamList->set<RCP<const FactoryBase> >("Pnodal", Teuchos::null, "Generating factory of the matrix P");
+  validParamList->set<RCP<const FactoryBase> >("NodeMatrix", Teuchos::null, "Generating factory of the matrix NodeMatrix");
+  validParamList->set<RCP<const FactoryBase> >("Ptent_nodal", Teuchos::null, "Generating factory of the matrix P");
 
   // Make sure we don't recursively validate options for the matrixmatrix kernels
   ParameterList norecurse;
@@ -61,8 +61,8 @@ RCP<const ParameterList> ReitzingerPFactory<Scalar, LocalOrdinal, GlobalOrdinal,
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 void ReitzingerPFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::DeclareInput(Level& fineLevel, Level& coarseLevel) const {
   Input(fineLevel, "D0");
-  Input(coarseLevel, "NodeAggMatrix");
-  Input(coarseLevel, "Pnodal");
+  Input(coarseLevel, "NodeMatrix");
+  Input(coarseLevel, "Ptent_nodal");
 }
 
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
@@ -131,10 +131,10 @@ void ReitzingerPFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::BuildP(Level
   bool update_communicators = pL.get<bool>("repartition: enable") && pL.get<bool>("repartition: use subcommunicators");
 
   RCP<Matrix> D0 = Get<RCP<Matrix> >(fineLevel, "D0");
-  RCP<Matrix> Pn = Get<RCP<Matrix> >(coarseLevel, "Pnodal");
+  RCP<Matrix> Pn = Get<RCP<Matrix> >(coarseLevel, "Ptent_nodal");
 
   // This needs to be an Operator because if NodeMatrix gets repartitioned away, we get an Operator on the level
-  RCP<Operator> CoarseNodeMatrix = Get<RCP<Operator> >(coarseLevel, "NodeAggMatrix");
+  RCP<Operator> CoarseNodeMatrix = Get<RCP<Operator> >(coarseLevel, "NodeMatrix");
 
   // Matrix matrix params
   RCP<ParameterList> mm_params = rcp(new ParameterList);

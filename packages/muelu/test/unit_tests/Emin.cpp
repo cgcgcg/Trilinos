@@ -289,15 +289,17 @@ void testMaxwellConstraint(const std::string &inputDir,
     fineLevel.Set("D0", D);
 
     // Ptentnodal is used to construct coarse D0
-    coarseLevel.Set("Pnodal", Ptentnodal);
+    coarseLevel.Set("Ptent_nodal", Ptentnodal);
 
     RCP<ReitzingerPFactory> reitzingerFact = rcp(new ReitzingerPFactory());
 
     // PnodalEmin is used to construct pattern for P
     coarseLevel.Set("PnodalEmin", Pnodal);
 
-    fineLevel.Set("NodeAggMatrix", NodeAggMatrix);
-    coarseLevel.Set("NodeAggMatrix", NodeAggMatrixCoarse);
+    fineLevel.Set("AggMatrix", NodeAggMatrix);
+    fineLevel.Set("NodeMatrix", NodeAggMatrix);
+    coarseLevel.Set("AggMatrix", NodeAggMatrixCoarse);
+    coarseLevel.Set("NodeMatrix", NodeAggMatrixCoarse);
 
     RCP<EdgeProlongatorPatternFactory> patternFact = rcp(new EdgeProlongatorPatternFactory());
     patternFact->SetFactory("CoarseD0", reitzingerFact);

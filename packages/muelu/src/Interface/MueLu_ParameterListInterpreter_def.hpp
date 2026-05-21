@@ -1065,9 +1065,8 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   rFactory->SetParameterList(rParams);
 
   // These are all going to be user provided, so NoFactory
-  rFactory->SetFactory("Pnodal", NoFactory::getRCP());
-  rFactory->SetFactory("NodeAggMatrix", NoFactory::getRCP());
-  // rFactory->SetFactory("NodeMatrix", NoFactory::getRCP());
+  rFactory->SetFactory("Ptent_nodal", NoFactory::getRCP());
+  rFactory->SetFactory("NodeMatrix", NoFactory::getRCP());
 
   if (levelID > 1)
     rFactory->SetFactory("D0", this->GetFactoryManager(levelID - 1)->GetFactory("D0"));
@@ -1096,9 +1095,8 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   rFactory->SetParameterList(rParams);
 
   // These are all going to be user provided, so NoFactory
-  rFactory->SetFactory("Pnodal", NoFactory::getRCP());
-  rFactory->SetFactory("NodeAggMatrix", NoFactory::getRCP());
-  // rFactory->SetFactory("NodeMatrix", NoFactory::getRCP());
+  rFactory->SetFactory("Ptent_nodal", NoFactory::getRCP());
+  rFactory->SetFactory("NodeMatrix", NoFactory::getRCP());
 
   if (levelID > 1)
     rFactory->SetFactory("D0", this->GetFactoryManager(levelID - 1)->GetFactory("D0"));

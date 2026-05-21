@@ -209,7 +209,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(ReitzingerPFactory, Setup2Level_Unsmoothed, Sc
     EdgeL->Set("NodeAggMatrix", NodeL->Get<RCP<Matrix> >("A"));
     EdgeL->Set("NodeMatrix", NodeL->Get<RCP<Matrix> >("A"));
     if (i != 0) {
-      EdgeL->Set("Pnodal", NodeL->Get<RCP<Matrix> >("P"));
+      EdgeL->Set("Ptent_nodal", NodeL->Get<RCP<Matrix> >("P"));
 
       RCP<const Matrix> P = NodeL->Get<RCP<Matrix> >("P");
       //      Xpetra::IO<SC,LO,GO,NO>::Write("Pn.mat",*P);
@@ -320,7 +320,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(ReitzingerPFactory, Setup2Level_AlphaSmoothed,
     EdgeL->Set("NodeAggMatrix", NodeL->Get<RCP<Matrix> >("A"));
     EdgeL->Set("NodeMatrix", NodeL->Get<RCP<Matrix> >("A"));
     if (i != 0) {
-      EdgeL->Set("Pnodal", NodeL->Get<RCP<Matrix> >("P"));
+      EdgeL->Set("Ptent_nodal", NodeL->Get<RCP<Matrix> >("P"));
 
       RCP<const Matrix> P = NodeL->Get<RCP<Matrix> >("P");
       //      Xpetra::IO<SC,LO,GO,NO>::Write("Pn.mat",*P);
@@ -449,7 +449,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(ReitzingerPFactory, Setup3Level_AlphaSmoothed,
     EdgeL->Set("NodeAggMatrix", NodeL->Get<RCP<Matrix> >("A"));
     EdgeL->Set("NodeMatrix", NodeL->Get<RCP<Matrix> >("A"));
     if (i != 0) {
-      EdgeL->Set("Pnodal", NodeL->Get<RCP<Matrix> >("P"));
+      EdgeL->Set("Ptent_nodal", NodeL->Get<RCP<Matrix> >("P"));
 
       RCP<const Matrix> P = NodeL->Get<RCP<Matrix> >("P");
       //      Xpetra::IO<SC,LO,GO,NO>::Write("Pn.mat",*P);
@@ -598,7 +598,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(ReitzingerPFactory, Setup3Level_Unsmoothed, Sc
     EdgeL->Set("NodeAggMatrix", NodeL->Get<RCP<Matrix> >("A"));
     EdgeL->Set("NodeMatrix", NodeL->Get<RCP<Matrix> >("A"));
     if (i != 0) {
-      EdgeL->Set("Pnodal", NodeL->Get<RCP<Matrix> >("P"));
+      EdgeL->Set("Ptent_nodal", NodeL->Get<RCP<Matrix> >("P"));
 
       RCP<const Matrix> P = NodeL->Get<RCP<Matrix> >("P");
       //      Xpetra::IO<SC,LO,GO,NO>::Write("Pn.mat",*P);

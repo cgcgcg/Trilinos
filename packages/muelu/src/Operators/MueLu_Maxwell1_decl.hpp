@@ -262,8 +262,8 @@ class Maxwell1 : public VerboseObject, public Xpetra::Operator<Scalar, LocalOrdi
   }
 
  private:
-  //! Generates the Kn matrix
-  Teuchos::RCP<Matrix> generate_kn() const;
+  //! Generates the A22 matrix
+  Teuchos::RCP<Matrix> generate_A22() const;
 
   //! Sets up hiearchy for GMHD matrices that include generalized Ohms law equations
   void GMHDSetupHierarchy(Teuchos::ParameterList& List) const;
@@ -319,7 +319,7 @@ class Maxwell1 : public VerboseObject, public Xpetra::Operator<Scalar, LocalOrdi
   Teuchos::RCP<Hierarchy> Hierarchy11_, Hierarchy22_, HierarchyGmhd_;
 
   //! Various matrices
-  Teuchos::RCP<Matrix> SM_Matrix_, D0_Matrix_, Kn_Matrix_, GmhdA_Matrix_;
+  Teuchos::RCP<Matrix> SM_Matrix_, D0_Matrix_, AggMatrix_, GmhdA_Matrix_;
 
   //! Vectors for BCs
   Kokkos::View<bool*, typename Node::device_type::memory_space> BCrowsKokkos_, BCcolsKokkos_, BCdomainKokkos_;

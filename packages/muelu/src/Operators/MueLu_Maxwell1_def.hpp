@@ -11,10 +11,12 @@
 #define MUELU_MAXWELL1_DEF_HPP
 
 #include <sstream>
+#include "MueLu_Exceptions.hpp"
 #include "MueLu_SmootherBase.hpp"
 
 #include "MueLu_ConfigDefs.hpp"
 
+#include "Teuchos_Assert.hpp"
 #include "Xpetra_CrsMatrixWrap_decl.hpp"
 #include "Xpetra_Map.hpp"
 #include "MueLu_CrsMatrixUtils.hpp"
@@ -231,13 +233,12 @@ template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 void Maxwell1<Scalar, LocalOrdinal, GlobalOrdinal, Node>::compute(bool reuse) {
   /* Algorithm overview for Maxwell1 construction:
 
-     1) Create a nodal auxiliary hierarchy based on (a) the user's nodal matrix or (b) a matrix constructed
-     by D0^T A D0 if the user doesn't provide a nodal matrix.  We call this matrix "NodeAggMatrix."
+     1) Create a nodal auxiliary hierarchy based on (a) the user's nodal matrix ("AggMatrix") and (b) a matrix constructed
+     by A22 = D0^T A D0. If the user doesn't provide AggMatrix we use A22 for both. The AggMatrix is used for constructing
+     the aggregates and the tentative prolongator. A22 is used for everything else (prolongator smoothing, smoothers, etc).
+     This means that we are constructing a preconditioner for A22, using an auxiliary matrix to form aggregates.
 
-     2)  If the user provided a node matrix, we use the prolongators from the auxiliary nodal hierarchy
-     to generate matrices for smoothers on all levels.  We call this "NodeMatrix."  Otherwise NodeMatrix = NodeAggMatrix
-
-     3) We stick all of the nodal P matrices and NodeMatrix objects on the final (1,1) hierarchy and then use the
+     2) We stick all of the nodal P matrices and NodeMatrix objects on the final (1,1) hierarchy and then use the
      ReitzingerPFactory to generate the edge P and A matrices.
    */
 
@@ -252,15 +253,16 @@ void Maxwell1<Scalar, LocalOrdinal, GlobalOrdinal, Node>::compute(bool reuse) {
     timerLabel = "MueLu Maxwell1: compute";
   RCP<Teuchos::TimeMonitor> tmCompute = getTimer(timerLabel);
 
+  // A22 = D0^T A D0
+  RCP<Matrix> A22 = generate_A22();  // generate_A22() will do diagonal repair if requested
+  A22->setObjectLabel("Maxwell1 (2,2)");
+
   ////////////////////////////////////////////////////////////////////////////////
-  // Generate Kn and apply BCs (if needed)
-  bool have_generated_Kn = false;
-  if (Kn_Matrix_.is_null()) {
-    // generate_kn() will do diagonal repair if requested
-    GetOStream(Runtime0) << "Maxwell1::compute(): Kn not provided.  Generating." << std::endl;
-    Kn_Matrix_        = generate_kn();
-    have_generated_Kn = true;
+  // Process AggMatrix and apply BCs (if needed)
+  if (AggMatrix_.is_null()) {
+    precList22_.set("aggregation: use aux matrix", false);
   } else if (parameterList_.get<bool>("rap: fix zero diagonals", true)) {
+    GetOStream(Runtime0) << "Maxwell1::compute(): Using user provided auxiliary nodal matrix for aggregation." << std::endl;
     magnitudeType threshold;
     if (parameterList_.isType<magnitudeType>("rap: fix zero diagonals threshold"))
       threshold = parameterList_.get<magnitudeType>("rap: fix zero diagonals threshold",
@@ -270,12 +272,13 @@ void Maxwell1<Scalar, LocalOrdinal, GlobalOrdinal, Node>::compute(bool reuse) {
                                                                         Teuchos::ScalarTraits<double>::eps()));
     Scalar replacement = Teuchos::as<Scalar>(parameterList_.get<double>("rap: fix zero diagonals replacement",
                                                                         MasterList::getDefault<double>("rap: fix zero diagonals replacement")));
-    Xpetra::MatrixUtils<SC, LO, GO, NO>::CheckRepairMainDiagonal(Kn_Matrix_, true, GetOStream(Warnings1), threshold, replacement);
+    Xpetra::MatrixUtils<SC, LO, GO, NO>::CheckRepairMainDiagonal(AggMatrix_, true, GetOStream(Warnings1), threshold, replacement);
+    precList22_.sublist("user data").set("AggMatrix", AggMatrix_);
+    precList22_.set("aggregation: use aux matrix", true);
   }
 
   ////////////////////////////////////////////////////////////////////////////////
   // Generate the (2,2) Hierarchy
-  Kn_Matrix_->setObjectLabel("Maxwell1 (2,2)");
 
   /* Critical ParameterList changes */
   if (!Coords_.is_null())
@@ -354,7 +357,7 @@ void Maxwell1<Scalar, LocalOrdinal, GlobalOrdinal, Node>::compute(bool reuse) {
     GetOStream(Warnings0) << "\"tentative: calculate qr\" is set to \"true\". There is no guarantee that this will work." << std::endl;
 
   /* We need both nodal Ptent and P for Emin. */
-  if (((parameterList_.sublist("maxwell1: 11list").template get<std::string>("multigrid algorithm") == "smoothed reitzinger") || (parameterList_.sublist("maxwell1: 11list").template get<std::string>("multigrid algorithm") == "emin reitzinger")) &&
+    if (((algo11 == "smoothed reitzinger") || (algo11 == "emin reitzinger")) &&
       (!precList22_.isParameter("sa: keep tentative prolongator") || !precList22_.get<bool>("sa: keep tentative prolongator")))
     precList22_.set("sa: keep tentative prolongator", true);
 
@@ -417,7 +420,6 @@ void Maxwell1<Scalar, LocalOrdinal, GlobalOrdinal, Node>::compute(bool reuse) {
 
   if (IsPrint(Statistics2)) {
     RCP<ParameterList> params = rcp(new ParameterList());
-    ;
     params->set("printLoadBalancingInfo", true);
     params->set("printCommInfo", true);
     GetOStream(Statistics2) << PerfUtils::PrintMatrixInfo(*SM_Matrix_, "SM_Matrix", params);
@@ -458,7 +460,7 @@ void Maxwell1<Scalar, LocalOrdinal, GlobalOrdinal, Node>::compute(bool reuse) {
 
   ////////////////////////////////////////////////////////////////////////////////
   // Build (2,2) hierarchy
-  Hierarchy22_ = MueLu::CreateXpetraPreconditioner(Kn_Matrix_, precList22_);
+  Hierarchy22_ = MueLu::CreateXpetraPreconditioner(A22, precList22_);
 
   ////////////////////////////////////////////////////////////////////////////////
   // Apply boundary conditions to D0 (if needed)
@@ -486,43 +488,28 @@ void Maxwell1<Scalar, LocalOrdinal, GlobalOrdinal, Node>::compute(bool reuse) {
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  // What ML does is generate nodal prolongators with an auxiliary hierarchy based on the
-  // user's (2,2) matrix.  The actual nodal matrices for smoothing are generated by the
-  // Hiptmair smoother construction.  We're not going to do that --- we'll
-  // do as we insert them into the final (1,1) hierarchy.
-
-  // Level 0
-  RCP<Matrix> Kn_Smoother_0;
-  if (have_generated_Kn) {
-    Kn_Smoother_0 = Kn_Matrix_;
-  } else {
-    Kn_Smoother_0 = generate_kn();
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
   // Copy the relevant (2,2) data to the (1,1) hierarchy
   Hierarchy11_ = rcp(new Hierarchy("Maxwell1 (1,1)"));
-  RCP<Matrix> OldSmootherMatrix;
-  RCP<Level> OldEdgeLevel;
   for (int i = 0; i < Hierarchy22_->GetNumLevels(); i++) {
     Hierarchy11_->AddNewLevel();
-    RCP<Level> NodeL          = Hierarchy22_->GetLevel(i);
-    RCP<Level> EdgeL          = Hierarchy11_->GetLevel(i);
-    RCP<Operator> NodeAggOp   = NodeL->Get<RCP<Operator>>("A");
-    RCP<Matrix> NodeAggMatrix = rcp_dynamic_cast<Matrix>(NodeAggOp);
-    std::string labelstr      = FormattingHelper::getColonLabel(EdgeL->getObjectLabel());
+    RCP<Level> NodeL = Hierarchy22_->GetLevel(i);
+    RCP<Level> EdgeL = Hierarchy11_->GetLevel(i);
 
     if (i == 0) {
       EdgeL->Set("A", SM_Matrix_);
       EdgeL->Set("D0", D0_Matrix_);
-
-      EdgeL->Set("NodeAggMatrix", NodeAggMatrix);
-      EdgeL->Set("NodeMatrix", Kn_Smoother_0);
-      OldSmootherMatrix = Kn_Smoother_0;
-      OldEdgeLevel      = EdgeL;
+      EdgeL->Set("NodeMatrix", A22);
     } else {
-      // Set the Nodal P
-      auto NodalP = NodeL->Get<RCP<Matrix>>("P");
+      // Get the nodal matrix
+      auto NodeOp     = NodeL->Get<RCP<Operator>>("A");
+      auto NodeMatrix = rcp_dynamic_cast<Matrix>(NodeOp);
+      // If we repartition a processor away, a RCP<Operator> is stuck
+      // on the level instead of an RCP<Matrix>
+      if (!NodeMatrix.is_null()) {
+        EdgeL->Set("NodeMatrix", NodeMatrix);
+      } else {
+        EdgeL->Set("NodeMatrix", NodeOp);
+      }
 
       // NOTE:  ML uses normalized prolongators for the aggregation hierarchy
       // and then prolongators of all 1's for doing the Reitzinger prolongator
@@ -535,9 +522,9 @@ void Maxwell1<Scalar, LocalOrdinal, GlobalOrdinal, Node>::compute(bool reuse) {
         EdgeL->Set("NodeImporter", importer);
       }
 
-      // We used tentative P to generate the coarse discrete gradient.
+      // We use tentative P to generate the coarse discrete gradient.
       RCP<Matrix> NodalPtent;
-      if (parameterList_.sublist("maxwell1: 22list").template get<std::string>("multigrid algorithm") == "unsmoothed")
+      if (algo22 == "unsmoothed")
         NodalPtent = NodeL->Get<RCP<Matrix>>("P");
       else {
         NodalPtent = NodeL->Get<RCP<Matrix>>("Ptent");
@@ -567,78 +554,19 @@ void Maxwell1<Scalar, LocalOrdinal, GlobalOrdinal, Node>::compute(bool reuse) {
       auto P_for_RS_construction = Utilities::ReplaceNonZerosWithOnes(NodalPtent);
       TEUCHOS_TEST_FOR_EXCEPTION(P_for_RS_construction.is_null(), Exceptions::RuntimeError, "Applying ones to prolongator failed");
 
-      // Pnodal is used by ReitzingerP to generate a coarse discrete gradient D0c and by the Hiptmair smoother
-      EdgeL->Set("Pnodal", P_for_RS_construction);
+      // Ptent_nodal is used by ReitzingerP to generate a coarse discrete gradient D0c and by the Hiptmair smoother
+      EdgeL->Set("Ptent_nodal", P_for_RS_construction);
 
-      if (parameterList_.sublist("maxwell1: 11list").template get<std::string>("multigrid algorithm") == "emin reitzinger") {
+      // Get the nodal prolongator which will be used for Hiptmair smoothing
+      auto NodalP = NodeL->Get<RCP<Matrix>>("P");
+      EdgeL->Set("Pnodal", NodalP);
+
+      if (algo11 == "emin reitzinger") {
         // PnodalEmin is used for the RHS of the sparse constraint in energy minimization:
         // Pe*D0c = D0*PnodalEmin
         EdgeL->Set("PnodalEmin", NodalP);
       }
-
-      // If we repartition a processor away, a RCP<Operator> is stuck
-      // on the level instead of an RCP<Matrix>
-      if (!OldSmootherMatrix.is_null() && !P_for_RS_construction.is_null()) {
-        EdgeL->Set("NodeAggMatrix", NodeAggMatrix);
-        if (!have_generated_Kn) {
-          // The user gave us a Kn on the fine level, so we're using a seperate aggregation
-          // hierarchy from the smoothing hierarchy.
-
-          // ML does a *fixed* 1e-10 diagonal repair on the Nodal Smoothing Matrix
-          // This fix is applied *after* the next level is generated, but before the smoother is.
-          // We can see this behavior from ML, though it isn't 100% clear from the code *how* it happens.
-          // So, here we turn the fix off, then once we've generated the new matrix, we fix the old one.
-
-          // Generate the new matrix
-          Teuchos::ParameterList RAPlist;
-          RAPlist.set("rap: fix zero diagonals", false);
-          RCP<Matrix> NewKn = Maxwell_Utils<SC, LO, GO, NO>::PtAPWrapper(OldSmootherMatrix, P_for_RS_construction, RAPlist, labelstr);
-
-          // If there's an importer, we need to Rebalance the NewKn
-          if (!importer.is_null()) {
-            ParameterList rebAcParams;
-            rebAcParams.set("repartition: use subcommunicators", true);
-            rebAcParams.set("repartition: use subcommunicators in place", true);
-            auto newAfact = rcp(new RebalanceAcFactory());
-            newAfact->SetParameterList(rebAcParams);
-            RCP<const Map> InPlaceMap = NodeAggMatrix.is_null() ? Teuchos::null : NodeAggMatrix->getRowMap();
-
-            Level fLevel, cLevel;
-            cLevel.SetPreviousLevel(Teuchos::rcpFromRef(fLevel));
-            cLevel.Set("InPlaceMap", InPlaceMap);
-            cLevel.Set("A", NewKn);
-            cLevel.Request("A", newAfact.get());
-            newAfact->Build(fLevel, cLevel);
-
-            NewKn = cLevel.Get<RCP<Matrix>>("A", newAfact.get());
-            EdgeL->Set("NodeMatrix", NewKn);
-          } else {
-            EdgeL->Set("NodeMatrix", NewKn);
-          }
-
-          // Fix the old one
-          double thresh = parameterList_.get("maxwell1: nodal smoother fix zero diagonal threshold", 1e-10);
-          if (thresh > 0.0) {
-            GetOStream(Runtime0) << "Maxwell1::compute(): Fixing zero diagonal for nodal smoother matrix" << std::endl;
-            Scalar replacement = Teuchos::ScalarTraits<Scalar>::one();
-            Xpetra::MatrixUtils<SC, LO, GO, NO>::CheckRepairMainDiagonal(OldSmootherMatrix, true, GetOStream(Warnings1), thresh, replacement);
-          }
-          OldEdgeLevel->Set("NodeMatrix", OldSmootherMatrix);
-
-          OldSmootherMatrix = NewKn;
-        } else {
-          // The user didn't give us a Kn, so we aggregate and smooth with the same matrix
-          EdgeL->Set("NodeMatrix", NodeAggMatrix);
-        }
-      } else {
-        // We've partitioned things away.
-        EdgeL->Set("NodeMatrix", NodeAggOp);
-        EdgeL->Set("NodeAggMatrix", NodeAggOp);
-      }
-
-      OldEdgeLevel = EdgeL;
     }
-
   }  // end Hierarchy22 loop
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -726,15 +654,16 @@ void Maxwell1<Scalar, LocalOrdinal, GlobalOrdinal, Node>::compute(bool reuse) {
 #ifdef MUELU_MAXWELL1_DEBUG
 
   for (int i = 0; i < Hierarchy11_->GetNumLevels(); i++) {
-    RCP<Level> L              = Hierarchy11_->GetLevel(i);
-    RCP<Matrix> EdgeMatrix    = rcp_dynamic_cast<Matrix>(L->Get<RCP<Operator>>("A"));
-    RCP<Matrix> NodeMatrix    = rcp_dynamic_cast<Matrix>(L->Get<RCP<Operator>>("NodeMatrix"));
-    RCP<Matrix> NodeAggMatrix = rcp_dynamic_cast<Matrix>(L->Get<RCP<Operator>>("NodeAggMatrix"));
-    RCP<Matrix> D0            = rcp_dynamic_cast<Matrix>(L->Get<RCP<Operator>>("D0"));
+    RCP<Level> L           = Hierarchy11_->GetLevel(i);
+    RCP<Level> L22         = Hierarchy22_->GetLevel(i);
+    RCP<Matrix> EdgeMatrix = rcp_dynamic_cast<Matrix>(L->Get<RCP<Operator>>("A"));
+    RCP<Matrix> NodeMatrix = rcp_dynamic_cast<Matrix>(L->Get<RCP<Operator>>("NodeMatrix"));
+    RCP<Matrix> AggMatrix  = rcp_dynamic_cast<Matrix>(L22->Get<RCP<Operator>>("AggMatrix"));
+    RCP<Matrix> D0         = rcp_dynamic_cast<Matrix>(L->Get<RCP<Operator>>("D0"));
 
     auto nrmE  = EdgeMatrix->getFrobeniusNorm();
     auto nrmN  = NodeMatrix->getFrobeniusNorm();
-    auto nrmNa = NodeAggMatrix->getFrobeniusNorm();
+    auto nrmNa = AggMatrix->getFrobeniusNorm();
     auto nrmD0 = D0->getFrobeniusNorm();
 
     std::cout << "DEBUG: Norms on Level " << i << " E/N/NA/D0 = " << nrmE << " / " << nrmN << " / " << nrmNa << " / " << nrmD0 << std::endl;
@@ -744,7 +673,7 @@ void Maxwell1<Scalar, LocalOrdinal, GlobalOrdinal, Node>::compute(bool reuse) {
 }
 
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>> Maxwell1<Scalar, LocalOrdinal, GlobalOrdinal, Node>::generate_kn() const {
+RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>> Maxwell1<Scalar, LocalOrdinal, GlobalOrdinal, Node>::generate_A22() const {
   // This is important, as we'll be doing diagonal repair *after* the next-level matrix is generated, not before
   Teuchos::ParameterList RAPlist;
   RAPlist.set("rap: fix zero diagonals", false);
@@ -1031,7 +960,7 @@ void Maxwell1<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   if (check_D0_scaling_)
     scaleD0(*D0_Matrix_);
 
-  Kn_Matrix_ = Kn_Matrix;
+  AggMatrix_ = Kn_Matrix;
   Coords_    = Coords;
   Material_  = Material;
   Nullspace_ = Nullspace;
@@ -1042,9 +971,10 @@ void Maxwell1<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   }
 
   dump(*D0_Matrix_, "D0.m");
-  if (!Kn_Matrix_.is_null()) dump(*Kn_Matrix_, "Kn.m");
+  if (!AggMatrix_.is_null()) dump(*AggMatrix_, "AggMatrix.m");
   if (!Nullspace_.is_null()) dump(*Nullspace_, "nullspace.m");
   if (!Coords_.is_null()) dumpCoords(*Coords_, "coords.m");
+  if (!Material_.is_null()) dump(*Material_, "material.m");
 }
 
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
@@ -1056,7 +986,7 @@ void Maxwell1<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 
 #ifdef HAVE_MPI
   int root;
-  if (!Kn_Matrix_.is_null())
+  if (!AggMatrix_.is_null())
     root = comm->getRank();
   else
     root = -1;
@@ -1096,10 +1026,10 @@ void Maxwell1<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   oss << "block " << std::setw(rowspacer) << " rows " << std::setw(nnzspacer) << " nnz " << std::setw(9) << " nnz/row" << std::endl;
   oss << "(1, 1)" << std::setw(rowspacer) << numRows << std::setw(nnzspacer) << nnz << std::setw(9) << as<double>(nnz) / numRows << std::endl;
 
-  if (!Kn_Matrix_.is_null()) {
+  if (!AggMatrix_.is_null()) {
     // ToDo: make sure that this is printed correctly
-    numRows = Kn_Matrix_->getGlobalNumRows();
-    nnz     = Kn_Matrix_->getGlobalNumEntries();
+    numRows = AggMatrix_->getGlobalNumRows();
+    nnz     = AggMatrix_->getGlobalNumEntries();
 
     oss << "(2, 2)" << std::setw(rowspacer) << numRows << std::setw(nnzspacer) << nnz << std::setw(9) << as<double>(nnz) / numRows << std::endl;
   }
@@ -1145,7 +1075,7 @@ void Maxwell1<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 #endif
 
     char status = 0;
-    if (!Kn_Matrix_.is_null())
+    if (!AggMatrix_.is_null())
       status += 1;
     std::vector<char> states(numProcs, 0);
 #ifdef HAVE_MPI
