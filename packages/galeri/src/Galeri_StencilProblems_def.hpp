@@ -13,6 +13,11 @@
 #include "Galeri_StencilProblems_decl.hpp"
 #include "Galeri_XpetraMatrixTypes.hpp"
 #include "Galeri_XpetraUtils.hpp"
+#include "Tpetra_Access.hpp"
+
+#ifdef HAVE_GALERI_PAMGEN
+#include "RTC_FunctionRTC.hh"
+#endif
 
 namespace Galeri::Xpetra {
 
@@ -26,6 +31,54 @@ Teuchos::RCP<MultiVector> ScalarProblem<Map, Matrix, MultiVector>::BuildNullspac
   this->Nullspace_ = MultiVectorTraits<Map, MultiVector>::Build(this->Map_, 1);
   this->Nullspace_->putScalar(Teuchos::ScalarTraits<typename MultiVector::scalar_type>::one());
   return this->Nullspace_;
+}
+
+template <typename Map, typename Matrix, typename MultiVector>
+Teuchos::RCP<MultiVector> ScalarProblem<Map, Matrix, MultiVector>::BuildMaterial() {
+#ifdef HAVE_GALERI_PAMGEN
+  std::string funBody = this->list_.template get<std::string>("material_rtc");
+  const bool useRTC   = (funBody != "value = 1");
+  if (useRTC) {
+    auto material = MultiVectorTraits<Map, MultiVector>::Build(this->Map_, 1);
+
+    if (this->Coords_.is_null())
+      this->BuildCoords();
+    {
+      int dim = this->Coords_->getNumVectors();
+      double value;
+      double x, y, z;
+      auto fun = PG_RuntimeCompiler::Function();
+      fun.addVar("double", "value");
+      fun.varAddrFill(0, &value);
+      fun.addVar("double", "x");
+      fun.varAddrFill(1, &x);
+      if (dim >= 2) {
+        fun.addVar("double", "y");
+        fun.varAddrFill(2, &y);
+      }
+      if (dim >= 3) {
+        fun.addVar("double", "z");
+        fun.varAddrFill(3, &z);
+      }
+      fun.addBody(funBody);
+
+      auto lclCoords   = this->Coords_->getLocalViewHost(Tpetra::Access::ReadOnly);
+      auto lclMaterial = material->getLocalViewHost(Tpetra::Access::OverwriteAll);
+
+      for (typename Map::local_ordinal_type i = 0; i < lclCoords.extent(0); ++i) {
+        x = lclCoords(i, 0);
+        if (dim >= 2)
+          y = lclCoords(i, 1);
+        if (dim >= 3)
+          z = lclCoords(i, 2);
+        fun.execute();
+        lclMaterial(i, 0) = value;
+      }
+    }
+    this->Material_ = material;
+  }
+#endif
+  return this->Material_;
 }
 
 // =============================================  Laplace1D  =============================================
@@ -42,7 +95,58 @@ Teuchos::RCP<Matrix> Laplace1DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, 
     nx = this->Map_->getGlobalNumElements();
 
   bool keepBCs = false;
-  this->A_     = TriDiag<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix>(this->Map_, nx, 2.0, -1.0, -1.0, this->DirichletBC_, keepBCs, "Laplace 1D");
+
+#ifdef HAVE_GALERI_PAMGEN
+  std::string funBody = this->list_.template get<std::string>("material_rtc");
+  const bool useRTC   = (funBody != "value = 1");
+  if (useRTC) {
+    auto coeffs   = MultiVectorTraits<Map, MultiVector>::Build(this->Map_, 3);
+
+    if (this->Material_.is_null())
+      this->BuildMaterial();
+    {
+      double value;
+      double x;
+      auto fun = PG_RuntimeCompiler::Function();
+      fun.addVar("double", "value");
+      fun.addVar("double", "x");
+      fun.varAddrFill(0, &value);
+      fun.varAddrFill(1, &x);
+      fun.addBody(funBody);
+
+      auto lclMaterial = this->Material_->getLocalViewHost(Tpetra::Access::ReadOnly);
+      auto lclCoeffs   = coeffs->getLocalViewHost(Tpetra::Access::OverwriteAll);
+
+      for (LocalOrdinal i = 0; i < lclCoeffs.extent(0); ++i) {
+        if (i == 0) {
+          value = lclMaterial(i, 0);
+
+          lclCoeffs(i, 0) += value;
+          lclCoeffs(i, 1) -= value;
+        }
+
+        if (i + 1 == lclCoeffs.extent(0)) {
+          value = lclMaterial(i, 0);
+          lclCoeffs(i, 0) += value;
+          lclCoeffs(i, 2) -= value;
+        }
+
+        if (i + 1 < lclCoeffs.extent(0)) {
+          value = 0.5 * (lclMaterial(i, 0) + lclMaterial(i + 1, 0));
+          lclCoeffs(i, 0) += value;
+          lclCoeffs(i + 1, 0) += value;
+          lclCoeffs(i + 1, 1) -= value;
+          lclCoeffs(i, 2) -= value;
+        }
+      }
+    }
+
+    this->A_        = TriDiag<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix>(this->Map_, nx, coeffs, this->DirichletBC_, keepBCs, "Laplace 1D");
+  } else
+#endif
+  {
+    this->A_ = TriDiag<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix>(this->Map_, nx, 2.0, -1.0, -1.0, this->DirichletBC_, keepBCs, "Laplace 1D");
+  }
   this->A_->setObjectLabel(this->getObjectLabel());
   return this->A_;
 }
@@ -888,19 +992,13 @@ Teuchos::RCP<Matrix> Recirc2DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, M
   LocalOrdinal numMyElements                               = map->getLocalNumElements();
   Teuchos::ArrayView<const GlobalOrdinal> myGlobalElements = map->getLocalElementList();
 
-  auto A = MultiVectorTraits<Map, MultiVector>::Build(map, 1);
-  auto B = MultiVectorTraits<Map, MultiVector>::Build(map, 1);
-  auto C = MultiVectorTraits<Map, MultiVector>::Build(map, 1);
-  auto D = MultiVectorTraits<Map, MultiVector>::Build(map, 1);
-  auto E = MultiVectorTraits<Map, MultiVector>::Build(map, 1);
-
   double zero = Teuchos::ScalarTraits<double>::zero();
-
-  A->putScalar(zero);
-  B->putScalar(zero);
-  C->putScalar(zero);
-  D->putScalar(zero);
-  E->putScalar(zero);
+  auto coeffs = MultiVectorTraits<Map, MultiVector>::Build(map, 5);
+  auto A      = coeffs->getVectorNonConst(0);
+  auto B      = coeffs->getVectorNonConst(1);
+  auto C      = coeffs->getVectorNonConst(2);
+  auto D      = coeffs->getVectorNonConst(3);
+  auto E      = coeffs->getVectorNonConst(4);
 
   auto Adata = A->getDataNonConst(0);
   auto Bdata = B->getDataNonConst(0);
@@ -947,7 +1045,7 @@ Teuchos::RCP<Matrix> Recirc2DProblem<Scalar, LocalOrdinal, GlobalOrdinal, Map, M
   }
   Adata = Bdata = Cdata = Ddata = Edata = Teuchos::null;
 
-  this->A_ = Cross2D<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix>(this->Map_, nx, ny, A, B, C, D, E);
+  this->A_ = Cross2D<Scalar, LocalOrdinal, GlobalOrdinal, Map, Matrix>(this->Map_, nx, ny, coeffs, 0, false, "Recirc2D");
   this->A_->setObjectLabel(this->getObjectLabel());
   return this->A_;
 }  // Recirc2DProblem

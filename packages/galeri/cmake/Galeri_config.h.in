@@ -39,6 +39,8 @@
 #cmakedefine HAVE_TESTS
 
 /* Optional Deps */
+#cmakedefine HAVE_GALERI_PAMGEN
+
 #cmakedefine HAVE_GALERI_XPETRA
 
 /* Define to `__inline__' or `__inline' if that's what the C compiler

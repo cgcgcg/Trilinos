@@ -214,9 +214,11 @@ class ScaledIdentityStencil {
   }
 };
 
-template <class Scalar, class Map, bool keepBCs>
+template <class Scalar, class Map, bool keepBCs, class coeff_view_type = int>
 class TriDiagStencil {
   //  b a c
+
+  static constexpr bool variableCoefficients = !std::is_same_v<coeff_view_type, int>;
 
   using ATS               = KokkosKernels::ArithTraits<Scalar>;
   using impl_scalar_type  = typename ATS::val_type;
@@ -234,6 +236,7 @@ class TriDiagStencil {
 
   GlobalOrdinal nx;
   impl_scalar_type a, b, c;
+  coeff_view_type coeffs;
   DirBC DirichletBC;
   local_map_type lclMap;
 
@@ -253,8 +256,19 @@ class TriDiagStencil {
     , b(b_)
     , c(c_)
     , DirichletBC(DirichletBC_) {
+    static_assert(!variableCoefficients);
     lclMap = map.getLocalMap();
     TEUCHOS_ASSERT((GlobalOrdinal)map.getGlobalNumElements() == nx);
+  }
+
+  TriDiagStencil(const Map& map, GlobalOrdinal nx_, coeff_view_type coeffs_, DirBC DirichletBC_)
+    : nx(nx_)
+    , coeffs(coeffs_)
+    , DirichletBC(DirichletBC_) {
+    static_assert(variableCoefficients);
+    lclMap = map.getLocalMap();
+    TEUCHOS_ASSERT(lclMap.getLocalNumElements() == coeffs.extent(0));
+    TEUCHOS_ASSERT(coeffs.extent(1) == 3);
   }
 
   KOKKOS_FORCEINLINE_FUNCTION
@@ -302,18 +316,26 @@ class TriDiagStencil {
       // Dirichlet unknown we want to keep
       Galeri_enterValue(rowStart, center, one);
     } else {
-      Galeri_enterValue(rowStart, left, b);
-      Galeri_enterValue(rowStart, right, c);
-      Galeri_enterValue(rowStart, center, (IsBoundary(center) && !isDirichlet) ? -offDiagonalSum : a);
+      if constexpr (variableCoefficients) {
+        Galeri_enterValue(rowStart, center, coeffs(i, 0));
+        Galeri_enterValue(rowStart, left, coeffs(i, 1));
+        Galeri_enterValue(rowStart, right, coeffs(i, 2));
+      } else {
+        Galeri_enterValue(rowStart, left, b);
+        Galeri_enterValue(rowStart, right, c);
+        Galeri_enterValue(rowStart, center, (IsBoundary(center) && !isDirichlet) ? -offDiagonalSum : a);
+      }
     }
   }
 };
 
-template <class Scalar, class Map, bool keepBCs>
+template <class Scalar, class Map, bool keepBCs, class coeff_view_type = int>
 class Cross2DStencil {
   //    e
   //  b a c
   //    d
+
+  static constexpr bool variableCoefficients = !std::is_same_v<coeff_view_type, int>;
 
   using ATS               = KokkosKernels::ArithTraits<Scalar>;
   using impl_scalar_type  = typename ATS::val_type;
@@ -331,6 +353,7 @@ class Cross2DStencil {
 
   GlobalOrdinal nx, ny;
   impl_scalar_type a, b, c, d, e;
+  coeff_view_type coeffs;
   DirBC DirichletBC;
   local_map_type lclMap;
 
@@ -353,7 +376,19 @@ class Cross2DStencil {
     , d(d_)
     , e(e_)
     , DirichletBC(DirichletBC_) {
+    static_assert(!variableCoefficients);
     lclMap = map.getLocalMap();
+  }
+
+  Cross2DStencil(const Map& map, GlobalOrdinal nx_, GlobalOrdinal ny_, coeff_view_type coeffs_, DirBC DirichletBC_)
+    : nx(nx_)
+    , ny(ny_)
+    , coeffs(coeffs_)
+    , DirichletBC(DirichletBC_) {
+    static_assert(variableCoefficients);
+    lclMap = map.getLocalMap();
+    TEUCHOS_ASSERT(lclMap.getLocalNumElements() == coeffs.extent(0));
+    TEUCHOS_ASSERT(coeffs.extent(1) == 5);
   }
 
   KOKKOS_FORCEINLINE_FUNCTION
@@ -408,11 +443,19 @@ class Cross2DStencil {
       // Dirichlet unknown we want to keep
       Galeri_enterValue(rowStart, center, one);
     } else {
-      Galeri_enterValue(rowStart, left, b);
-      Galeri_enterValue(rowStart, right, c);
-      Galeri_enterValue(rowStart, bottom, d);
-      Galeri_enterValue(rowStart, top, e);
-      Galeri_enterValue(rowStart, center, (IsBoundary(center) && !isDirichlet) ? -offDiagonalSum : a);
+      if constexpr (variableCoefficients) {
+        Galeri_enterValue(rowStart, center, coeffs(i, 0));
+        Galeri_enterValue(rowStart, left, coeffs(i, 1));
+        Galeri_enterValue(rowStart, right, coeffs(i, 2));
+        Galeri_enterValue(rowStart, bottom, coeffs(i, 3));
+        Galeri_enterValue(rowStart, top, coeffs(i, 4));
+      } else {
+        Galeri_enterValue(rowStart, left, b);
+        Galeri_enterValue(rowStart, right, c);
+        Galeri_enterValue(rowStart, bottom, d);
+        Galeri_enterValue(rowStart, top, e);
+        Galeri_enterValue(rowStart, center, (IsBoundary(center) && !isDirichlet) ? -offDiagonalSum : a);
+      }
     }
   }
 };
@@ -1113,79 +1156,6 @@ class Scalar3D_27PtStencil {
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////
-/* ****************************************************************************************************** *
- *    Recirc 2D
- * ****************************************************************************************************** */
-template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Map, typename Matrix, typename Vector>
-Teuchos::RCP<Matrix>
-Cross2D(const Teuchos::RCP<const Map>& map, const GlobalOrdinal nx, const GlobalOrdinal ny,
-        const Vector& A, const Vector& B, const Vector& C,
-        const Vector& D, const Vector& E) {
-  using Teuchos::RCP;
-  using Teuchos::rcp;
-  using Teuchos::TimeMonitor;
-
-  LocalOrdinal nnz = 5;
-  RCP<Matrix> mtx  = MatrixTraits<Map, Matrix>::Build(map, nnz);
-
-  LocalOrdinal numMyElements                               = map->getLocalNumElements();
-  Teuchos::ArrayView<const GlobalOrdinal> myGlobalElements = map->getLocalElementList();
-
-  GlobalOrdinal left, right, lower, upper;
-  std::vector<Scalar> Values(nnz);
-  std::vector<GlobalOrdinal> Indices(nnz);
-
-  auto Adata = A->getData(0);
-  auto Bdata = B->getData(0);
-  auto Cdata = C->getData(0);
-  auto Ddata = D->getData(0);
-  auto Edata = E->getData(0);
-
-  RCP<TimeMonitor> tm = rcp(new TimeMonitor(*TimeMonitor::getNewTimer("Galeri: Recirc 2D Generation")));
-  for (int i = 0; i < numMyElements; i++) {
-    int NumEntries = 0;
-    GetNeighboursCartesian2d(myGlobalElements[i], nx, ny, left, right, lower, upper);
-
-    if (left != -1) {
-      Indices[NumEntries] = left;
-      Values[NumEntries]  = Bdata[i];
-      ++NumEntries;
-    }
-    if (right != -1) {
-      Indices[NumEntries] = right;
-      Values[NumEntries]  = Cdata[i];
-      ++NumEntries;
-    }
-    if (lower != -1) {
-      Indices[NumEntries] = lower;
-      Values[NumEntries]  = Ddata[i];
-      ++NumEntries;
-    }
-    if (upper != -1) {
-      Indices[NumEntries] = upper;
-      Values[NumEntries]  = Edata[i];
-      ++NumEntries;
-    }
-
-    Indices[NumEntries] = myGlobalElements[i];
-    Values[NumEntries]  = Adata[i];
-    ++NumEntries;
-
-    Teuchos::ArrayView<GlobalOrdinal> inds(Indices.data(), NumEntries);
-    Teuchos::ArrayView<Scalar> vals(Values.data(), NumEntries);
-    mtx->insertGlobalValues(myGlobalElements[i], inds, vals);
-  }
-  tm = Teuchos::null;
-
-  tm = rcp(new TimeMonitor(*TimeMonitor::getNewTimer("Galeri: Recirc2D FillComplete")));
-  mtx->fillComplete();
-  tm = Teuchos::null;
-
-  return (mtx);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////
 
 /* ****************************************************************************************************** *
  *    Star2D
@@ -1682,6 +1652,30 @@ TriDiag(const Teuchos::RCP<const Map>& map,
   }
 }
 
+template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Map, typename Matrix, typename MV>
+Teuchos::RCP<Matrix>
+TriDiag(const Teuchos::RCP<const Map>& map,
+        const GlobalOrdinal nx,
+        const MV& coeffs,
+        const DirBC DirichletBC  = 0,
+        const bool keepBCs       = false,
+        const std::string& label = "TriDiag") {
+  auto lclCoeffs = coeffs->getLocalViewDevice(Tpetra::Access::ReadOnly);
+  if (keepBCs) {
+    TriDiagStencil<Scalar, Map, true, decltype(lclCoeffs)> stencil(*map,
+                                                                   nx,
+                                                                   lclCoeffs,
+                                                                   DirichletBC);
+    return StencilMatrix<Matrix>(map, stencil, label);
+  } else {
+    TriDiagStencil<Scalar, Map, false, decltype(lclCoeffs)> stencil(*map,
+                                                                    nx,
+                                                                    lclCoeffs,
+                                                                    DirichletBC);
+    return StencilMatrix<Matrix>(map, stencil, label);
+  }
+}
+
 template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Map, typename Matrix>
 Teuchos::RCP<Matrix>
 Cross2D(const Teuchos::RCP<const Map>& map,
@@ -1702,6 +1696,30 @@ Cross2D(const Teuchos::RCP<const Map>& map,
                                                nx, ny,
                                                a, b, c, d, e,
                                                DirichletBC);
+    return StencilMatrix<Matrix>(map, stencil, label);
+  }
+}
+
+template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Map, typename Matrix, typename MV>
+Teuchos::RCP<Matrix>
+Cross2D(const Teuchos::RCP<const Map>& map,
+        const GlobalOrdinal nx, const GlobalOrdinal ny,
+        const MV& coeffs,
+        const DirBC DirichletBC  = 0,
+        const bool keepBCs       = false,
+        const std::string& label = "Cross2D") {
+  auto lclCoeffs = coeffs->getLocalViewDevice(Tpetra::Access::ReadOnly);
+  if (keepBCs) {
+    Cross2DStencil<Scalar, Map, true, decltype(lclCoeffs)> stencil(*map,
+                                                                   nx, ny,
+                                                                   lclCoeffs,
+                                                                   DirichletBC);
+    return StencilMatrix<Matrix>(map, stencil, label);
+  } else {
+    Cross2DStencil<Scalar, Map, false, decltype(lclCoeffs)> stencil(*map,
+                                                                    nx, ny,
+                                                                    lclCoeffs,
+                                                                    DirichletBC);
     return StencilMatrix<Matrix>(map, stencil, label);
   }
 }

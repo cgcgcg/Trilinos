@@ -22,7 +22,8 @@ Parameters<GO>::Parameters(Teuchos::CommandLineProcessor& clp, GO nx, GO ny, GO 
                            double h, double delta,
                            int PMLXL, int PMLXR, int PMLYL, int PMLYR, int PMLZL, int PMLZR,
                            double omega, double shift, GO mx, GO my, GO mz, int model,
-                           double lx, double ly, double lz, double conv, double diff)
+                           double lx, double ly, double lz, double conv, double diff,
+                           const std::string &material)
   : nx_(nx)
   , ny_(ny)
   , nz_(nz)
@@ -54,7 +55,8 @@ Parameters<GO>::Parameters(Teuchos::CommandLineProcessor& clp, GO nx, GO ny, GO 
   , ly_(ly)
   , lz_(lz)
   , conv_(conv)
-  , diff_(diff) {
+  , diff_(diff)
+  , material_(material) {
   clp.setOption("nx", &nx_, "mesh points in x-direction.");
   clp.setOption("ny", &ny_, "mesh points in y-direction.");
   clp.setOption("nz", &nz_, "mesh points in z-direction.");
@@ -90,6 +92,7 @@ Parameters<GO>::Parameters(Teuchos::CommandLineProcessor& clp, GO nx, GO ny, GO 
   clp.setOption("lz", &lz_, "length in z-direction");
   clp.setOption("convection", &conv_, "convection coefficient");
   clp.setOption("diffusion", &diff_, "diffusion coefficient");
+  clp.setOption("material_rtc", &material_, "material coefficient");
 }
 
 template <class GO>
@@ -188,6 +191,7 @@ Teuchos::ParameterList& Parameters<GO>::GetParameterList() const {
   paramList_->set("lz", lz_);
   paramList_->set("convection", conv_);
   paramList_->set("diffusion", diff_);
+  paramList_->set("material_rtc", material_);
 
   check();
 
@@ -250,6 +254,11 @@ void Parameters<GO>::describe(Teuchos::FancyOStream& out, const Teuchos::EVerbos
       double dt  = paramList.get<double>("dt");
       out << "K  = [[ " << Kxx << ", " << Kxy << " ], [ " << Kxy << ", " << Kyy << " ]]" << std::endl;
       out << "dt = " << dt << std::endl;
+    }
+
+    if ((matrixType == "Laplace1D") && paramList.get<std::string>("material_rtc") != "value = 1") {
+      auto material = paramList.get<std::string>("material_rtc");
+      out << "material rtc = " << material << std::endl;
     }
   }
 }

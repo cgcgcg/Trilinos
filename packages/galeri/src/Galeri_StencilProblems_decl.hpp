@@ -24,6 +24,7 @@ class ScalarProblem : public Problem<Map, Matrix, MultiVector> {
 
   ScalarProblem(Teuchos::ParameterList& list, const Teuchos::RCP<const Map>& map);
   Teuchos::RCP<MultiVector> BuildNullspace();
+  Teuchos::RCP<MultiVector> BuildMaterial();
 };
 
 // =============================================  Laplace1D  =============================================
