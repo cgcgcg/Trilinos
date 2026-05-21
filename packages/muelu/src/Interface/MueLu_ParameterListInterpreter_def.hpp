@@ -1623,22 +1623,47 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 // =====================================================================================================
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
-    UpdateFactoryManager_Material(ParameterList& paramList, const ParameterList& /* defaultList */,
+    UpdateFactoryManager_Material(ParameterList& paramList, const ParameterList& defaultList,
                                   FactoryManager& manager, int levelID, std::vector<keep_pair>& /* keeps */) const {
-  bool have_userMaterial = false;
-  if (paramList.isParameter("Material") && !paramList.get<RCP<MultiVector>>("Material").is_null())
-    have_userMaterial = true;
-
   if (useMaterial_) {
+    bool have_userMaterial = false;
+    if (paramList.isParameter("Material") && !paramList.get<RCP<MultiVector>>("Material").is_null())
+      have_userMaterial = true;
+
     if (have_userMaterial) {
       manager.SetFactory("Material", NoFactory::getRCP());
     }
 #ifdef HAVE_MUELU_PAMGEN
-    else if (levelID == 0) {
+    else if (levelID == 1) {
       RCP<Factory> materialRTC = rcp(new RTCFactory());
       ParameterList rtcParameters;
       rtcParameters.set("Output", "Material");
+      auto rtcFun = set_var_2list<std::string>(paramList, defaultList, "material: rtc function");
+      rtcParameters.set("RTC function", rtcFun);
+      materialRTC->SetParameterList(rtcParameters);
       manager.SetFactory("Material", materialRTC);
+      rcp_dynamic_cast<CoalesceDropFactory_kokkos>(manager.GetFactoryNonConst("Graph"), true)->SetFactory("Material", materialRTC);
+
+      {
+        RCP<Factory> materialTransfer = rcp(new MultiVectorTransferFactory());
+        ParameterList materialTransferParameters;
+        materialTransferParameters.set("Vector name", "Material");
+        materialTransferParameters.set("Transfer name", "Aggregates");
+        materialTransferParameters.set("Normalize", true);
+        materialTransfer->SetParameterList(materialTransferParameters);
+        materialTransfer->SetFactory("Transfer factory", manager.GetFactory("Aggregates"));
+        materialTransfer->SetFactory("CoarseMap", manager.GetFactory("CoarseMap"));
+        materialTransfer->SetFactory("Vector factory", materialRTC);
+        manager.SetFactory("Material", materialTransfer);
+
+        auto RAP = rcp_const_cast<RAPFactory>(rcp_dynamic_cast<const RAPFactory>(manager.GetFactory("A")));
+        if (!RAP.is_null()) {
+          RAP->AddTransferFactory(materialTransfer);
+        } else {
+          auto RAPs = rcp_const_cast<RAPShiftFactory>(rcp_dynamic_cast<const RAPShiftFactory>(manager.GetFactory("A")));
+          RAPs->AddTransferFactory(materialTransfer);
+        }
+      }
     }
 #endif
     else {
@@ -1654,10 +1679,10 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 
       auto RAP = rcp_const_cast<RAPFactory>(rcp_dynamic_cast<const RAPFactory>(manager.GetFactory("A")));
       if (!RAP.is_null()) {
-        RAP->AddTransferFactory(manager.GetFactory("Material"));
+        RAP->AddTransferFactory(materialTransfer);
       } else {
         auto RAPs = rcp_const_cast<RAPShiftFactory>(rcp_dynamic_cast<const RAPShiftFactory>(manager.GetFactory("A")));
-        RAPs->AddTransferFactory(manager.GetFactory("Material"));
+        RAPs->AddTransferFactory(materialTransfer);
       }
     }
   }

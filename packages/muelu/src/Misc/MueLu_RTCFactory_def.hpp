@@ -31,7 +31,7 @@ RCP<const ParameterList> RTCFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   RCP<ParameterList> validParamList = rcp(new ParameterList());
 
   validParamList->set<std::string>("RTC function", "value = 0", "RTC function that is evaluated on the coordinates.");
-  validParamList->set<std::string>("Output", "Material", "Name of the output");
+  validParamList->set<std::string>("Output", "Undefined", "Name of the output");
 
   validParamList->set<RCP<const FactoryBase>>("Coordinates", Teuchos::null, "Generating factory of the coordinates");
 
@@ -46,17 +46,16 @@ void RTCFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::DeclareInput(Level& 
 
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 void RTCFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(Level& currentLevel) const {
-  FactoryMonitor m(*this, "RTC factory", currentLevel);
-
   const ParameterList& pL = GetParameterList();
+  auto funBody            = pL.get<std::string>("RTC function");
+  auto outputName         = pL.get<std::string>("Output");
+
+  FactoryMonitor m(*this, "RTC factory \"" + funBody + "\"", currentLevel);
 
   RCP<RealValuedMultiVector> Coords = Get<RCP<RealValuedMultiVector>>(currentLevel, "Coordinates");
   RCP<MultiVector> Values           = MultiVectorFactory::Build(Coords->getMap(), 1, false);
 
   int dim = Coords->getNumVectors();
-
-  auto funBody    = pL.get<std::string>("RTC function");
-  auto outputName = pL.get<std::string>("Output");
 
   auto fun = PG_RuntimeCompiler::Function();
   fun.addVar("double", "value");

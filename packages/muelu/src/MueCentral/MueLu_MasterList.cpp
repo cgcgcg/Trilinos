@@ -263,6 +263,7 @@ namespace MueLu {
   "<Parameter name=\"use kokkos refactor\" type=\"bool\" value=\"false\"/>"
   "<Parameter name=\"synchronize factory timers\" type=\"bool\" value=\"false\"/>"
   "<Parameter name=\"rap: triple product\" type=\"bool\" value=\"false\"/>"
+  "<Parameter name=\"material: rtc function\" type=\"string\" value=\"value = 1\"/>"
   "<Parameter name=\"multigrid algorithm\" type=\"string\" value=\"sa\"/>"
   "<Parameter name=\"toggle: mode\" type=\"string\" value=\"semicoarsen\"/>"
   "<Parameter name=\"semicoarsen: coarsen rate\" type=\"int\" value=\"3\"/>"
@@ -806,6 +807,8 @@ namespace MueLu {
          ("synchronize factory timers","synchronize factory timers")
       
          ("rap: triple product","rap: triple product")
+      
+         ("material: rtc function","material: rtc function")
       
          ("energy minimization: enable","multigrid algorithm")
       
