@@ -279,6 +279,15 @@ Teko::LinearOp FullMaxwellPreconditionerFactory::buildPreconditionerOperator(Tek
          S_E_prec_pl.sublist("Preconditioner Types").sublist(S_E_prec_type_).set("CurlCurl",curl_curl);
        }
 
+       // AggMatrix := D0^T M1(1/mu) D0
+       {
+         auto temp = getRequestHandler()->request<Teko::LinearOp>(Teko::RequestMesg("Mass Matrix weighted AUXILIARY_EDGE"));
+         auto T = getRequestHandler()->request<Teko::LinearOp>(Teko::RequestMesg("Discrete Gradient"));
+         auto Tt = Teko::explicitTranspose(T);
+         auto Kn = Teko::explicitMultiply(Tt, Teko::explicitMultiply(temp, T));
+         S_E_prec_pl.sublist("Preconditioner Types").sublist(S_E_prec_type_).set("Kn",Kn);
+       }
+
        {
          Teko::InverseLibrary myInvLib = invLib;
          S_E_prec_pl.sublist("Preconditioner Types").sublist(S_E_prec_type_).set("Type",S_E_prec_type_);

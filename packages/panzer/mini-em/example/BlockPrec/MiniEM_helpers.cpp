@@ -521,7 +521,33 @@ namespace mini_em {
       massNodePL.set("Integration Order", 2);
       auxPhysicsBlocksPL.sublist("Auxiliary Node Mass Physics"+opPostfix) = massNodePL;
 
-    } else if (physics == DARCY &&
+    }
+    else if ((physics == MAXWELL) && ((solver == MAXWELL1_RS) || (solver == MAXWELL1_EMIN))) {
+      std::string auxNodalField, auxEdgeField, opPostfix;
+      if (basis_order != 1) {
+        auxNodalField = "AUXILIARY_NODE_" + std::to_string(1);
+        auxEdgeField = "AUXILIARY_EDGE_" + std::to_string(1);
+        opPostfix = " "+std::to_string(1);
+      } else {
+        auxNodalField = "AUXILIARY_NODE";
+        auxEdgeField = "AUXILIARY_EDGE";
+        opPostfix = "";
+      }
+
+      // Edge mass matrix with 1/mu weight
+      auto massEdgeWeightedPL = Teuchos::ParameterList();
+      massEdgeWeightedPL.set("Type", "Auxiliary Mass Matrix");
+      massEdgeWeightedPL.set("DOF Name", auxEdgeField);
+      massEdgeWeightedPL.set("Basis Type", "HCurl");
+      massEdgeWeightedPL.set("Model ID", auxModelID);
+      massEdgeWeightedPL.set("Field Multipliers", "1/mu");
+      massEdgeWeightedPL.set("Basis Order", 1);
+      massEdgeWeightedPL.set("Integration Order", 2);
+      massEdgeWeightedPL.set("Operator Label", "weighted ");
+      auxPhysicsBlocksPL.sublist("Auxiliary Edge Mass Physics weighted"+opPostfix) = massEdgeWeightedPL;
+
+    }
+    else if (physics == DARCY &&
                (solver == MUELU || solver == ML)) {
 
       std::string auxEdgeField, auxFaceField, auxNodalField, opPostfix;
