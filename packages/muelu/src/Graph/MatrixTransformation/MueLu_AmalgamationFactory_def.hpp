@@ -99,7 +99,7 @@ void AmalgamationFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(Level
                          << " found fullblocksize=" << fullblocksize << " and stridedblocksize=" << stridedblocksize << " from strided maps. offset=" << offset << std::endl;
 
   } else {
-    GetOStream(Warnings0) << "AmalagamationFactory::Build(): no striding information available. Use blockdim=1 with offset=0" << std::endl;
+    GetOStream(Runtime1) << "AmalagamationFactory::Build(): no striding information available. Use blockdim=1 with offset=0" << std::endl;
   }
 
   // build node row map (uniqueMap) and node column map (nonUniqueMap)
