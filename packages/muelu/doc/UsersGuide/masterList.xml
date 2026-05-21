@@ -1017,6 +1017,15 @@
       <comment-ML>parameter not existing in ML</comment-ML>
     </parameter>
 
+    <parameter>
+      <name>aggregation: use aux matrix</name>
+      <type>bool</type>
+      <default>false</default>
+      <visible>false</visible>
+      <description>Use a different matrix for aggregation. The matrix to be used for aggregation is passed via the "user data" list using the name "AggMatrix".</description>
+      <comment-ML>parameter not existing in ML</comment-ML>
+    </parameter>
+
 
   </aggregation>
 

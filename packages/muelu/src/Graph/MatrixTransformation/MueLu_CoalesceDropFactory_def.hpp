@@ -106,6 +106,7 @@ RCP<const ParameterList> CoalesceDropFactory<Scalar, LocalOrdinal, GlobalOrdinal
   SET_VALID_ENTRY("aggregation: distance laplacian algo");
   SET_VALID_ENTRY("aggregation: classical algo");
   SET_VALID_ENTRY("aggregation: coloring: localize color graph");
+  SET_VALID_ENTRY("aggregation: use aux matrix");
 #undef SET_VALID_ENTRY
   validParamList->set<bool>("lightweight wrap", true, "Experimental option for lightweight graph access");
 
@@ -152,9 +153,15 @@ void CoalesceDropFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(Level
   if (predrop_ != Teuchos::null)
     GetOStream(Parameters0) << predrop_->description();
 
-  RCP<Matrix> realA              = Get<RCP<Matrix>>(currentLevel, "A");
+  const ParameterList& pL = GetParameterList();
+  RCP<Matrix> realA;
+  if (!pL.get<bool>("aggregation: use aux matrix"))
+    realA = Get<RCP<Matrix>>(currentLevel, "A");
+  else {
+    GetOStream(Runtime1) << "Using auxiliary matrix for aggregation." << std::endl;
+    realA = currentLevel.Get<RCP<Matrix>>("AggMatrix", GetFactory("A").get());
+  }
   RCP<AmalgamationInfo> amalInfo = Get<RCP<AmalgamationInfo>>(currentLevel, "UnAmalgamationInfo");
-  const ParameterList& pL        = GetParameterList();
   bool doExperimentalWrap        = pL.get<bool>("lightweight wrap");
 
   GetOStream(Parameters0) << "lightweight wrap = " << doExperimentalWrap << std::endl;

@@ -722,9 +722,12 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   UpdateFactoryManager_Repartition(paramList, defaultList, manager, levelID, keeps, nullSpaceFactory);
 
   // === Auxiliary mass matrix for MinvA ===
-  auto socMatrix = set_var_2list<std::string>(paramList, defaultList, "aggregation: strength-of-connection: matrix");
+  auto socMatrix        = set_var_2list<std::string>(paramList, defaultList, "aggregation: strength-of-connection: matrix");
+  auto doAuxAggregation = set_var_2list<bool>(paramList, defaultList, "aggregation: use aux matrix");
   if (socMatrix == "MinvA") {
     UpdateFactoryManager_MatrixTransfer("M", paramList, defaultList, manager, levelID, keeps);
+  } else if (doAuxAggregation) {
+    UpdateFactoryManager_MatrixTransfer("AggMatrix", paramList, defaultList, manager, levelID, keeps);
   }
 
   // === Lower precision transfers ===
@@ -1203,6 +1206,8 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     test_and_set_param_2list<Teuchos::Array<double>>(paramList, defaultList, "aggregation: distance laplacian directional weights", dropParams);
     test_and_set_param_2list<bool>(paramList, defaultList, "aggregation: coloring: localize color graph", dropParams);
     test_and_set_param_2list<bool>(paramList, defaultList, "aggregation: dropping may create Dirichlet", dropParams);
+
+    test_and_set_param_2list<bool>(paramList, defaultList, "aggregation: use aux matrix", dropParams);
     if (useKokkos_) {
       test_and_set_param_2list<bool>(paramList, defaultList, "aggregation: use blocking", dropParams);
       test_and_set_param_2list<bool>(paramList, defaultList, "aggregation: symmetrize graph after dropping", dropParams);

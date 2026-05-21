@@ -240,7 +240,8 @@ void Hierarchy<Scalar, LocalOrdinal, GlobalOrdinal, Node>::SetMatvecParams(RCP<P
     const std::list<std::string> matrices = {"P", "R", "D0", "NodeMatrix"};
     for (auto it = matrices.begin(); it != matrices.end(); ++it) {
       if (level->IsAvailable(*it)) {
-        RCP<Matrix> mat = level->Get<RCP<Matrix>>(*it);
+        auto op  = level->Get<RCP<Operator>>(*it);
+        auto mat = rcp_dynamic_cast<Matrix>(op);
         if (!mat.is_null()) {
           RCP<const Import> xpImporter = mat->getCrsGraph()->getImporter();
           if (!xpImporter.is_null()) {

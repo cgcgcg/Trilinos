@@ -67,6 +67,7 @@ RCP<const ParameterList> CoalesceDropFactory_kokkos<Scalar, LocalOrdinal, Global
   SET_VALID_ENTRY("aggregation: symmetrize graph after dropping");
   SET_VALID_ENTRY("aggregation: coloring: use color graph");
   SET_VALID_ENTRY("aggregation: coloring: localize color graph");
+  SET_VALID_ENTRY("aggregation: use aux matrix");
 
   SET_VALID_ENTRY("filtered matrix: use lumping");
   SET_VALID_ENTRY("filtered matrix: reuse graph");
@@ -291,11 +292,18 @@ std::tuple<GlobalOrdinal, typename MueLu::LWGraph_kokkos<LocalOrdinal, GlobalOrd
   typedef Teuchos::ScalarTraits<Scalar> STS;
   const magnitudeType zero = Teuchos::ScalarTraits<magnitudeType>::zero();
 
-  auto A = Get<RCP<Matrix>>(currentLevel, "A");
+  const ParameterList& pL = GetParameterList();
+
+  RCP<Matrix> A;
+  if (!pL.get<bool>("aggregation: use aux matrix"))
+    A = Get<RCP<Matrix>>(currentLevel, "A");
+  else {
+    GetOStream(Runtime1) << "Using auxiliary matrix for aggregation." << std::endl;
+    A = currentLevel.Get<RCP<Matrix>>("AggMatrix", GetFactory("A").get());
+  }
 
   //////////////////////////////////////////////////////////////////////
   // Process parameterlist
-  const ParameterList& pL = GetParameterList();
 
   // Boundary detection
   const magnitudeType dirichletThreshold       = STS::magnitude(as<SC>(pL.get<double>("aggregation: Dirichlet threshold")));
@@ -656,7 +664,15 @@ std::tuple<GlobalOrdinal, typename MueLu::LWGraph_kokkos<LocalOrdinal, GlobalOrd
   typedef Teuchos::ScalarTraits<Scalar> STS;
   const magnitudeType zero = Teuchos::ScalarTraits<magnitudeType>::zero();
 
-  auto A = Get<RCP<Matrix>>(currentLevel, "A");
+  const ParameterList& pL = GetParameterList();
+
+  RCP<Matrix> A;
+  if (!pL.get<bool>("aggregation: use aux matrix"))
+    A = Get<RCP<Matrix>>(currentLevel, "A");
+  else {
+    GetOStream(Runtime1) << "Using auxiliary matrix for aggregation." << std::endl;
+    A = currentLevel.Get<RCP<Matrix>>("AggMatrix", GetFactory("A").get());
+  }
 
   /* NOTE: storageblocksize (from GetStorageBlockSize()) is the size of a block in the chosen storage scheme.
      blkSize is the number of storage blocks that must kept together during the amalgamation process.
@@ -724,7 +740,6 @@ std::tuple<GlobalOrdinal, typename MueLu::LWGraph_kokkos<LocalOrdinal, GlobalOrd
 
   //////////////////////////////////////////////////////////////////////
   // Process parameterlist
-  const ParameterList& pL = GetParameterList();
 
   // Boundary detection
   const magnitudeType dirichletThreshold       = STS::magnitude(as<SC>(pL.get<double>("aggregation: Dirichlet threshold")));

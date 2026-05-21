@@ -205,7 +205,7 @@ const RCP<const FactoryBase> FactoryManager<Scalar, LocalOrdinal, GlobalOrdinal,
     // NOTE: These are user data, but we might want to print them, so they need a default factory
     if (varName == "Pnodal") return NoFactory::getRCP();
     if (varName == "NodeMatrix") return NoFactory::getRCP();
-    if (varName == "NodeAggMatrix") return NoFactory::getRCP();
+    if (varName == "AggMatrix") return NoFactory::getRCP();
 
     TEUCHOS_TEST_FOR_EXCEPTION(true, MueLu::Exceptions::RuntimeError, "MueLu::FactoryManager::GetDefaultFactory(): No default factory available for building '" + varName + "'.");
   }

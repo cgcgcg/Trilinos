@@ -242,6 +242,7 @@ namespace MueLu {
   "<Parameter name=\"aggregation: coarsening order\" type=\"int\" value=\"0\"/>"
   "<Parameter name=\"aggregation: pairwise: size\" type=\"int\" value=\"8\"/>"
   "<Parameter name=\"aggregation: pairwise: tie threshold\" type=\"double\" value=\"1e-6\"/>"
+  "<Parameter name=\"aggregation: use aux matrix\" type=\"bool\" value=\"false\"/>"
   "<Parameter name=\"aggregate qualities: check symmetry\" type=\"bool\" value=\"false\"/>"
   "<Parameter name=\"aggregate qualities: good aggregate threshold\" type=\"double\" value=\"100.0\"/>"
   "<Parameter name=\"aggregate qualities: file output\" type=\"bool\" value=\"false\"/>"
@@ -763,6 +764,8 @@ namespace MueLu {
          ("aggregation: pairwise: size","aggregation: pairwise: size")
       
          ("aggregation: pairwise: tie threshold","aggregation: pairwise: tie threshold")
+      
+         ("aggregation: use aux matrix","aggregation: use aux matrix")
       
          ("aggregate qualities: check symmetry","aggregate qualities: check symmetry")
       
