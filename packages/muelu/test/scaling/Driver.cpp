@@ -506,7 +506,7 @@ int main_(Teuchos::CommandLineProcessor& clp, Xpetra::UnderlyingLib& lib, int ar
       }
     }
 
-    if (material.is_null() && !coordinates.is_null()) {
+    if (material.is_null() && (!paramList.isParameter("material: rtc function")) && !coordinates.is_null()) {
       size_t dim = coordinates->getNumVectors();
       if (tensorMaterialCoefficient) {
         material = MultiVectorFactory::Build(map, dim * dim);

@@ -96,7 +96,7 @@
       <!-- Permittivity -->
       <ParameterList name="epsilon">
         <Parameter name="Type" type="string" value="RTC"/>
-        <Parameter name="body" type="string" value="value = 1"/>
+        <Parameter name="body" type="string" value="value = 1e-3"/>
         <Parameter name="DoF Name" type="string" value="E_edge"/>
       </ParameterList>
       <!-- Conductivity -->
@@ -111,12 +111,14 @@
       <!-- Permeability -->
       <ParameterList name="mu">
         <Parameter name="Type" type="string" value="RTC"/>
-        <Parameter name="body" type="string" value="if ((7*x-1e-10) % 2 == 0) {value = 1;} else {value = 1e-3;}"/>
+        <!-- <Parameter name="body" type="string" value="if ((7*x-1e-10) % 2 == 0) {value = 1;} else {value = 1e-3;}"/> -->
+        <Parameter name="body" type="string" value="if (x &lt; 0.533333) {value = 1;} else {value = 1e-3;}"/>
         <Parameter name="DoF Name" type="string" value="E_edge"/>
       </ParameterList>
       <ParameterList name="1/mu">
         <Parameter name="Type" type="string" value="RTC"/>
-        <Parameter name="body" type="string" value="if ((7*x-1e-10) % 2 == 0) {value = 1;} else {value = 1e3;}"/>
+        <!-- <Parameter name="body" type="string" value="if ((7*x-1e-10) % 2 == 0) {value = 1;} else {value = 1e3;}"/> -->
+        <Parameter name="body" type="string" value="if (x &lt; 0.533333) {value = 1;} else {value = 1e3;}"/>
         <Parameter name="DoF Name" type="string" value="E_edge"/>
       </ParameterList>
     </ParameterList>

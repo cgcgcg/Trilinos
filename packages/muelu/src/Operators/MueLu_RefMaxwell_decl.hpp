@@ -552,7 +552,7 @@ class RefMaxwell : public VerboseObject, public Xpetra::Operator<Scalar, LocalOr
   RCP<MultiVector> buildNullspace(const int spaceNumber, const Kokkos::View<bool *, typename Node::device_type> &bcs, const bool applyBCs);
 
   //! Builds a projection from a vector values space into a vector valued nodal space
-  Teuchos::RCP<Matrix> buildProjection(const int spaceNumber, const RCP<MultiVector> &EdgeNullspace) const;
+  Teuchos::RCP<Matrix> buildProjection(const int spaceNumber, const RCP<MultiVector> &EdgeNullspace, const RCP<MultiVector> &MaterialNodal, const RCP<MultiVector> &Material) const;
 
   /** Setup an auxiliary nodal prolongator
    *

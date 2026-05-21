@@ -17,6 +17,7 @@
 #include <Xpetra_MultiVector.hpp>
 #include <Xpetra_Vector.hpp>
 #include <Xpetra_Matrix.hpp>
+#include "Xpetra_MatrixFactory.hpp"
 
 // Belos
 #ifdef HAVE_MUELU_BELOS
@@ -134,6 +135,11 @@ void PreconditionerSetup(Teuchos::RCP<Xpetra::Matrix<Scalar, LocalOrdinal, Globa
         out << "*** WARNING ***\nLacking a mass matrix, we are using the system matrix to construct the inverse of the mass matrix.\n";
         userParamList.set("M", A);
       }
+
+      auto aggMatrix = Xpetra::MatrixFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::BuildCopy(A);
+      aggMatrix->scale(0.);
+      userParamList.set<RCP<Matrix>>("NodeAggMatrix", aggMatrix);
+
       H = MueLu::CreateXpetraPreconditioner(A, mueluList);
     }
   }

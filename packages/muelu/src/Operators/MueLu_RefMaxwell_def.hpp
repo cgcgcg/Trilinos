@@ -15,6 +15,7 @@
 #include "MueLu_ConfigDefs.hpp"
 
 #include "Teuchos_CompilerCodeTweakMacros.hpp"
+#include "Tpetra_Access.hpp"
 #include "Tpetra_CrsMatrix.hpp"
 #include "Xpetra_CrsMatrix.hpp"
 #include "Xpetra_Map.hpp"
@@ -1577,7 +1578,7 @@ RCP<Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>> RefMaxwell<S
 
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 Teuchos::RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
-RefMaxwell<Scalar, LocalOrdinal, GlobalOrdinal, Node>::buildProjection(const int spaceNumber, const RCP<MultiVector> &Nullspace) const {
+RefMaxwell<Scalar, LocalOrdinal, GlobalOrdinal, Node>::buildProjection(const int spaceNumber, const RCP<MultiVector> &Nullspace, const RCP<MultiVector> &MaterialNodal, const RCP<MultiVector> &Material) const {
   using ATS         = KokkosKernels::ArithTraits<Scalar>;
   using impl_Scalar = typename ATS::val_type;
   using impl_ATS    = KokkosKernels::ArithTraits<impl_Scalar>;
@@ -1648,6 +1649,24 @@ RefMaxwell<Scalar, LocalOrdinal, GlobalOrdinal, Node>::buildProjection(const int
   } else
     TEUCHOS_ASSERT(false);
 
+  // {
+  // #ifdef HAVE_MUELU_PAMGEN
+
+  //     RCP<MultiVector> Coords = MultiVectorFactory(incidence->getRangeMap(), NodalCoords_->getNumVectors());
+  //     incidence->apply(*NodalCoords_, *Coords);
+
+  //     materialRTC = rcp(new RTCFactory());
+  //     ParameterList rtcParameters;
+  //     rtcParameters.set("Output", "Material");
+  //     std::string funBody = parameterList_.get<std::string>("material: rtc function");
+  //     rtcParameters.set("RTC function", funBody);
+  //     materialRTC->SetParameterList(rtcParameters);
+  //     materialRTC->SetFactory("Coordinates", Coords);
+  // #else
+  //     TEUCHOS_TEST_FOR_EXCEPTION(true, Exceptions::RuntimeError, "Optional Pamgen dependency is not enabled.");
+  // #endif
+  //   }
+
   size_t dim = dim_;
 
   // Create maps
@@ -1673,22 +1692,73 @@ RefMaxwell<Scalar, LocalOrdinal, GlobalOrdinal, Node>::buildProjection(const int
 
   auto localNullspace = Nullspace->getLocalViewDevice(Tpetra::Access::ReadOnly);
 
-  // set column indices and values
-  magnitudeType tol = 1e-5;
-  Kokkos::parallel_for(
-      solverName_ + "::buildProjection_enterValues_" + spaceLabel,
-      range_type(0, numLocalRows),
-      KOKKOS_LAMBDA(const size_t f) {
-        for (size_t jj = localIncidence.graph.row_map(f); jj < localIncidence.graph.row_map(f + 1); jj++) {
-          for (size_t k = 0; k < dim; k++) {
-            colind(dim * jj + k) = dim * localIncidence.graph.entries(jj) + k;
-            if (impl_ATS::magnitude(localIncidence.values(jj)) > tol)
-              vals(dim * jj + k) = impl_half * localNullspace(f, k);
-            else
-              vals(dim * jj + k) = impl_SC_ZERO;
+  const bool useMaterial = ((!MaterialNodal.is_null()) && (!Material.is_null()) && (spaceNumber_ == 1));
+
+  if (!useMaterial) {
+    // set column indices and values
+    magnitudeType tol = 1e-5;
+    Kokkos::parallel_for(
+        solverName_ + "::buildProjection_enterValues_" + spaceLabel,
+        range_type(0, numLocalRows),
+        KOKKOS_LAMBDA(const size_t f) {
+          for (size_t jj = localIncidence.graph.row_map(f); jj < localIncidence.graph.row_map(f + 1); jj++) {
+            for (size_t k = 0; k < dim; k++) {
+              colind(dim * jj + k) = dim * localIncidence.graph.entries(jj) + k;
+              if (impl_ATS::magnitude(localIncidence.values(jj)) > tol)
+                vals(dim * jj + k) = impl_half * localNullspace(f, k);
+              else
+                vals(dim * jj + k) = impl_SC_ZERO;
+            }
           }
-        }
-      });
+        });
+
+  } else {
+    auto lclMaterialNodal = MaterialNodal->getLocalViewDevice(Tpetra::Access::ReadOnly);
+    auto lclMaterial      = Material->getLocalViewDevice(Tpetra::Access::ReadOnly);
+
+    // set column indices and values
+    magnitudeType tol = 1e-5;
+    Kokkos::parallel_for(
+        solverName_ + "::buildProjection_enterValues_" + spaceLabel,
+        range_type(0, numLocalRows),
+        KOKKOS_LAMBDA(const size_t f) {
+          LocalOrdinal nnz = 0;
+          for (size_t jj = localIncidence.graph.row_map(f); jj < localIncidence.graph.row_map(f + 1); jj++) {
+            if (impl_ATS::magnitude(localIncidence.values(jj)) > tol) {
+              ++nnz;
+            }
+          }
+
+          impl_Scalar kappa;
+
+          // if (nnz <= 1)
+          //   kappa = impl_half;
+          // else {
+          //   auto material      = lclMaterial(f, 0);
+          //   auto start         = localIncidence.graph.entries(localIncidence.graph.row_map(f));
+          //   auto end           = localIncidence.graph.entries(localIncidence.graph.row_map(f) + 1);
+          //   auto materialStart = lclMaterialNodal(start, 0);
+          //   auto materialEnd   = lclMaterialNodal(end, 0);
+
+          //   if (impl_ATS::magnitude(materialEnd - materialStart) < impl_ATS::epsilon()) {
+          //     kappa = 0.5;
+          //   } else {
+          //     kappa = Kokkos::max(impl_SC_ZERO, Kokkos::min(impl_SC_ONE, (material - materialStart) / (materialEnd - materialStart)));
+          //   }
+          // }
+
+          // for (size_t jj = localIncidence.graph.row_map(f); jj < localIncidence.graph.row_map(f + 1); jj++) {
+          //   for (size_t k = 0; k < dim; k++) {
+          //     colind(dim * jj + k) = dim * localIncidence.graph.entries(jj) + k;
+          //     if (impl_ATS::magnitude(localIncidence.values(jj)) > tol)
+          //       vals(dim * jj + k) = kappa * localNullspace(f, k);
+          //     else
+          //       vals(dim * jj + k) = impl_SC_ZERO;
+          //   }
+          //   kappa = impl_SC_ONE - kappa;
+          // }
+        });
+  }
 
   // Create matrix
   typename CrsMatrix::local_matrix_device_type lclProjection("local projection " + spaceLabel,
@@ -1974,7 +2044,8 @@ void RefMaxwell<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     GetOStream(Runtime0) << solverName_ + "::compute(): building special " + typeStr + " prolongator" << std::endl;
   }
 
-  RCP<Matrix> projection = buildProjection(spaceNumber, Nullspace);
+  RCP<MultiVector> Material;
+  RCP<Matrix> projection = buildProjection(spaceNumber, Nullspace, MaterialNodal, Material);
   dump(projection, typeStr + "Projection.m");
 
   if (skipFirstLevel) {

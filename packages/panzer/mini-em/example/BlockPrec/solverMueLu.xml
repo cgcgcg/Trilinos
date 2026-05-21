@@ -386,7 +386,17 @@
 
                   <!-- "multigrid algorithm" gets set at runtime -->
 
+                  <!-- <Parameter name="aggregation: drop tol" type="double" value="0.02"/> -->
+
+                  <Parameter name="use kokkos refactor" type="bool" value="true"/>
+                  <Parameter name="aggregation: drop scheme" type="string" value="point-wise"/>
+                  <Parameter name="aggregation: strength-of-connection: matrix" type="string" value="distance laplacian"/>
+                  <Parameter name="aggregation: strength-of-connection: measure" type="string" value="smoothed aggregation"/>
+                  <Parameter name="aggregation: distance laplacian metric" type="string" value="material"/>
                   <Parameter name="aggregation: drop tol" type="double" value="0.02"/>
+                  <Parameter name="aggregation: backend" type="string" value="host"/>
+                  <!-- <Parameter name="material: rtc function" type="string" value="if ((7*x-1e-10) % 2 == 0) {value = 1;} else {value = 1e3;}"/> -->
+                  <Parameter name="material: rtc function" type="string" value="if (x &lt; 0.532) {value = 1;} else {value = 1e3;}"/>
 
                   <Parameter name="repartition: enable" type="bool" value="true"/>
                   <Parameter name="repartition: partitioner" type="string" value="zoltan2"/>
@@ -398,6 +408,24 @@
                   <Parameter name="repartition: print partition distribution" type="bool" value="true"/>
                   <ParameterList name="repartition: params">
                     <Parameter name="algorithm" type="string" value="multijagged"/>
+                  </ParameterList>
+
+                  <!-- <ParameterList name="export data"> -->
+                  <!--   <Parameter name="A" type="string" value="{0,1,2}"/> -->
+                  <!--   <Parameter name="P" type="string" value="{0,1,2}"/> -->
+                  <!--   <Parameter name="Material" type="string" value="{0,1,2}"/> -->
+                  <!--   <Parameter name="Coordinates" type="string" value="{0,1,2}"/> -->
+                  <!-- </ParameterList> -->
+                  
+                  <ParameterList name="level 1">
+                    <Parameter name="aggregation: export visualization data" type="bool" value="true"/>
+                    <Parameter name="aggregation: output filename" type="string" value="aggs1.vtk"/>
+                    <Parameter name="aggregation: output file: agg style" type="string" value="Jacks"/>
+                  </ParameterList>
+                  <ParameterList name="level 2">
+                    <Parameter name="aggregation: export visualization data" type="bool" value="true"/>
+                    <Parameter name="aggregation: output filename" type="string" value="aggs2.vtk"/>
+                    <Parameter name="aggregation: output file: agg style" type="string" value="Jacks"/>
                   </ParameterList>
                 </ParameterList>
               </ParameterList>
