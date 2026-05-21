@@ -52,7 +52,7 @@ RTC<EvalT,Traits>::RTC(const std::string & name,
   fun_.addVar("double","value");
   fun_.addBody(funBody);
 
-  std::string n = "RTC: "+name;
+  std::string n = "RTC: "+name+" ("+funBody+")";
   this->setName(n);
 }
 
@@ -69,19 +69,25 @@ void RTC<EvalT,Traits>::evaluateFields(typename Traits::EvalData workset)
     fun_.varAddrFill(2, &z);
     fun_.varAddrFill(3, &value);
     for (index_t cell = 0; cell < workset.num_cells; ++cell) {
+      x = 0;
+      y = 0;
+      z = 0;
       for (int point = 0; point < values.extent_int(1); ++point) {
-
         if constexpr(Sacado::IsADType<typename EvalT::ScalarT>::value) {
-          x = coords(cell,point,0).val();
-          y = coords(cell,point,1).val();
-          z = coords(cell,point,2).val();
+          x += coords(cell,point,0).val();
+          y += coords(cell,point,1).val();
+          z += coords(cell,point,2).val();
         } else {
-          x = coords(cell,point,0);
-          y = coords(cell,point,1);
-          z = coords(cell,point,2);
+          x += coords(cell,point,0);
+          y += coords(cell,point,1);
+          z += coords(cell,point,2);
         }
-
-        fun_.execute();
+      }
+      x /= (double)values.extent_int(1);
+      y /= (double)values.extent_int(1);
+      z /= (double)values.extent_int(1);
+      fun_.execute();
+      for (int point = 0; point < values.extent_int(1); ++point) {
         values(cell,point) = value;
       }
     }
@@ -90,18 +96,21 @@ void RTC<EvalT,Traits>::evaluateFields(typename Traits::EvalData workset)
     fun_.varAddrFill(1, &y);
     fun_.varAddrFill(2, &value);
     for (index_t cell = 0; cell < workset.num_cells; ++cell) {
+      x = 0;
+      y = 0;
       for (int point = 0; point < values.extent_int(1); ++point) {
-
         if constexpr(Sacado::IsADType<typename EvalT::ScalarT>::value) {
-          x = coords(cell,point,0).val();
-          y = coords(cell,point,1).val();
+          x += coords(cell,point,0).val();
+          y += coords(cell,point,1).val();
         } else {
-          x = coords(cell,point,0);
-          y = coords(cell,point,1);
+          x += coords(cell,point,0);
+          y += coords(cell,point,1);
         }
-
-        fun_.execute();
-
+      }
+      x /= (double)values.extent_int(1);
+      y /= (double)values.extent_int(1);
+      fun_.execute();
+      for (int point = 0; point < values.extent_int(1); ++point) {
         values(cell,point) = value;
       }
     }
