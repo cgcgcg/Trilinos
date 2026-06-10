@@ -135,9 +135,20 @@ int main(int argc, char* argv[])
     RCP<Thyra::LinearOpWithSolveBase<Scalar> >
       lowsA = Thyra::linearOpWithSolve<Scalar>(*lowsFactory, A);
 
-   // Solve the linear system 
-   Thyra::SolveStatus<double> status; 
-   status = Thyra::solve<double>(*lowsA, Thyra::NOTRANS, *b, x0.ptr());
+    lowsA->setReporter("belos");
+    auto reporter = lowsA->getReporter();
+    reporter->setReportingEnabled(true);
+
+    // Solve the linear system
+    Thyra::SolveStatus<double> status;
+    status = Thyra::solve<double>(*lowsA, Thyra::NOTRANS, *b, x0.ptr());
+
+    *out << *reporter->getData() << std::endl;
+
+    *out << lowsFactory->getParameterList()->toJSON().dump(4) << std::endl;
+    *out << reporter->toJSON().dump(4) << std::endl;
+    auto j = reporter->toJSON();
+    *out << Teuchos::fromJSON(j) << std::endl;
 
     success = (status.solveStatus == Thyra::SOLVE_STATUS_CONVERGED ? true : false);
 

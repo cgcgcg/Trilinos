@@ -22,6 +22,7 @@
 #include "Teuchos_as.hpp"
 #include "Teuchos_StackedTimer.hpp"
 #include "Teuchos_ScalarTraits.hpp"
+#include "Teuchos_Reporter.hpp"
 
 #include "Kokkos_View_Fad.hpp"
 #include <Tpetra_KokkosCompat_ClassicNodeAPI_Wrapper.hpp>
@@ -112,6 +113,9 @@ int main_(Teuchos::CommandLineProcessor &clp, int argc,char * argv[])
   Teuchos::RCP<Teuchos::StackedTimer> stacked_timer;
   bool use_stacked_timer;
   std::string test_name = "MiniEM 3D RefMaxwell";
+
+  auto &reporter = Teuchos::getReporter();
+  reporter.setReportingEnabled(true);
 
   // Figure of merit data for acceptance testing
   bool print_fom;
@@ -306,6 +310,13 @@ int main_(Teuchos::CommandLineProcessor &clp, int argc,char * argv[])
       (*out) << "dt = " << dt << std::endl << std::endl;
       if (dt <= 0.0)
         throw;
+
+      auto timestepping_report = reporter.addReport("time stepping");
+      if (!timestepping_report.is_null()) {
+        timestepping_report->set("time step", dt);
+        timestepping_report->set("num time steps", numTimeSteps);
+        timestepping_report->set("final time", finalTime);
+      }
     }
 
     RCP<Teuchos::ParameterList> lin_solver_pl = mini_em::getSolverParameters(linAlgebra, physics, solver, dim, comm, out, xml, basis_order, preferTPLs, useBarriers, truncateMueLuHierarchy);
@@ -772,6 +783,13 @@ int main_(Teuchos::CommandLineProcessor &clp, int argc,char * argv[])
       std::string fom_timer_name = "Mini-EM@Mini-EM: Total Time@Mini-EM: timestepper@Mini-EM: Advance Time Step@Stratimikos: BelosLOWS";
       double fom_time = stacked_timer->getMpiAverageTime(fom_timer_name);
       double fom_count = stacked_timer->getMpiAverageCount(fom_timer_name);
+      auto fom_report = reporter.addReport("FOM");
+      if (!fom_report.is_null()) {
+        fom_report->set("time", fom_time);
+        fom_report->set("num time steps", fom_count);
+        fom_report->set("num cells", fom_num_cells);
+        fom_report->set("k-cell-steps per second", double(fom_num_cells) * fom_count / fom_time / 1000.0);
+      }
 
       *out << "\n=================================\n";
       *out << "FOM Calculation\n";
@@ -789,6 +807,7 @@ int main_(Teuchos::CommandLineProcessor &clp, int argc,char * argv[])
   } else {
     Teuchos::TimeMonitor::summarize(*out,false,true,false,Teuchos::Union,"",true);
   }
+  *out << reporter.toJSON().dump(4) << std::endl;
 
   return EXIT_SUCCESS;
 }

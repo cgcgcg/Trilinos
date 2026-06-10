@@ -46,6 +46,7 @@ The source code is not MueLu specific and can be used with any Stratimikos strat
 
 // Galeri includes
 #include <Galeri_XpetraParameters.hpp>
+#include "Teuchos_Reporter.hpp"
 
 template <typename Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 int main_(Teuchos::CommandLineProcessor &clp, Xpetra::UnderlyingLib lib, int argc, char *argv[]) {
@@ -467,6 +468,9 @@ int main_(Teuchos::CommandLineProcessor &clp, Xpetra::UnderlyingLib lib, int arg
       solver = Thyra::linearOpWithSolve(*solverFactory, A);
     }
 
+    auto &reporter = Teuchos::getReporter();
+    reporter.setReportingEnabled(true);
+
     // Solve Ax = b.
     auto status = Thyra::solve(*solver, Thyra::NOTRANS, B, X);
     success     = (status.solveStatus == Thyra::SOLVE_STATUS_CONVERGED);
@@ -479,6 +483,8 @@ int main_(Teuchos::CommandLineProcessor &clp, Xpetra::UnderlyingLib lib, int arg
       status  = Thyra::solve(*solver, Thyra::NOTRANS, B, X);
       success = success && (status.solveStatus == Thyra::SOLVE_STATUS_CONVERGED);
     }
+
+    out << reporter.toJSON().dump(4) << std::endl;
 
     // print timings
     if (printTimings) {

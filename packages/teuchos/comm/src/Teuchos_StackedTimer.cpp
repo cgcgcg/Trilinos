@@ -8,6 +8,7 @@
 // @HEADER
 
 #include "Teuchos_StackedTimer.hpp"
+#include "Teuchos_Reporter.hpp"
 #include "Teuchos_SystemInformation.hpp"
 #include <limits>
 #include <ctime>
@@ -18,7 +19,7 @@
 #include <sstream>
 
 #include "Trilinos_git_sha.h"
-
+#include "Teuchos_StrUtils.hpp"
 
 namespace Teuchos {
 
@@ -733,6 +734,12 @@ StackedTimer::report(std::ostream &os, Teuchos::RCP<const Teuchos::Comm<int> > c
     std::vector<bool> printed(flat_names_.size(), false);
     printLevel("", 0, os, printed, 0., options);
   }
+
+  auto &reporter = Teuchos::getReporter();
+  if (reporter.isReportingEnabled()) {
+    getTimingsAsParameterList(comm,
+                              Teuchos::rcpFromRef(reporter.getData()));
+  }
 }
 
 void
@@ -843,6 +850,28 @@ StackedTimer::reportWatchrXML(const std::string& name, Teuchos::RCP<const Teucho
     os << "</performance-report>\n";
   }
   return fullFile;
+}
+
+void
+StackedTimer::getTimingsAsParameterList (Teuchos::RCP<const Teuchos::Comm<int> > comm,
+                                         Teuchos::RCP<Teuchos::ParameterList> pl)
+{
+  if (!global_mpi_aggregation_called_)
+    aggregateMpiData(comm);
+
+  if (rank(*comm) != 0 )
+    return;
+
+  for (int i=0; i<flat_names_.size(); ++i) {
+    auto names = Teuchos::StrUtils::splitString(flat_names_[i], '@');
+    auto lvlPL = pl;
+    for (auto lvl : names)
+      lvlPL = sublist(lvlPL, lvl);
+    lvlPL = sublist(lvlPL, "timer");
+    lvlPL->set("average time", sum_[i]/active_[i]);
+    lvlPL->set("count", count_[i] / active_[i]);
+    lvlPL->set("active", active_[i]);
+  }
 }
 
 void StackedTimer::enableVerbose(const bool enable_verbose)

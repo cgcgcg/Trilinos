@@ -873,6 +873,9 @@ public:
    */
   std::string reportWatchrXML(const std::string& name, Teuchos::RCP<const Teuchos::Comm<int> > comm);
 
+  void getTimingsAsParameterList(Teuchos::RCP<const Teuchos::Comm<int> > comm,
+                                 Teuchos::RCP<Teuchos::ParameterList> pl);
+
   /// If set to true, print timer start/stop to verbose ostream.
   void enableVerbose(const bool enable_verbose);
 

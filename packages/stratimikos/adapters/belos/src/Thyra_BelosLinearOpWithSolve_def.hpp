@@ -729,8 +729,8 @@ BelosLinearOpWithSolve<Scalar>::solveImpl(
   }
 
   auto &reporter = Teuchos::getReporter();
-  auto report = reporter.addReport((label_ != "") ? (label_+" solve") : "solve");
-  if (!report.is_null()) {
+  if (reporter.isReportingEnabled()) {
+    auto report = reporter.addReport((label_ != "") ? (label_+" solve") : "solve");
     report->set("number of equations", B.range()->dim());
     report->set("number of rhs vectors", B.domain()->dim());
     report->set("iteration count", iterativeSolver_->getNumIters());
