@@ -572,6 +572,69 @@ void ParameterList::reconcileParameterList(ParameterList & valid_pl,
 }
 
 
+#ifdef HAVE_TEUCHOSPARAMETERLIST_JSON
+  nlohmann::json ParameterList::toJSON(nlohmann::json &j) const {
+    for (ParameterList::ConstIterator i=begin(); i!=end(); ++i){
+      RCP<const ParameterEntry> entry = getEntryRCP(i->first);
+      auto paramName = name(i);
+      if(entry->isList()) {
+        auto pl = getValue<ParameterList>(entry);
+        auto numParams = pl.numParams();
+        bool isList = true;
+        for (auto k = numParams-1; k >= 0; --k) {
+          if (!pl.isParameter(std::to_string(k))) {
+            isList = false;
+            break;
+          }
+        }
+
+        if (isList) {
+          auto list = nlohmann::json::array();
+          for (int k = 0; k<numParams; ++k)
+            list.push_back(pl.sublist(std::to_string(k)).toJSON());
+          j[paramName] = list;
+        } else {
+          // regular sublist
+          j[paramName] = {};
+          pl.toJSON(j[paramName]);
+        }
+      }
+      else {
+        if (entry->isType<bool>())
+          j[paramName] = getValue<bool>(*entry);
+        else if (entry->isType<char>())
+          j[paramName] = getValue<char>(*entry);
+        else if (entry->isType<short>())
+          j[paramName] = getValue<short>(*entry);
+        else if (entry->isType<int>())
+          j[paramName] = getValue<int>(*entry);
+        else if (entry->isType<long>())
+          j[paramName] = getValue<long>(*entry);
+        else if (entry->isType<long long>())
+          j[paramName] = getValue<long long>(*entry);
+        else if (entry->isType<size_t>())
+          j[paramName] = getValue<size_t>(*entry);
+        else if (entry->isType<float>())
+          j[paramName] = getValue<float>(*entry);
+        else if (entry->isType<double>())
+          j[paramName] = getValue<double>(*entry);
+        else if (entry->isType<std::string>())
+          j[paramName] = getValue<std::string>(*entry);
+        else {
+          // nothing
+        }
+      }
+    }
+    return j;
+  }
+
+  nlohmann::json ParameterList::toJSON() const {
+    nlohmann::json j;
+    return toJSON(j);
+  }
+#endif
+
+
 void ParameterList::validateParametersAndSetDefaults(
   ParameterList const& validParamList,
   int const depth
@@ -953,6 +1016,30 @@ bool Teuchos::haveSameValuesSorted( const ParameterList& list1, const ParameterL
   }
   return true;
 }
+
+#ifdef HAVE_TEUCHOSPARAMETERLIST_JSON
+void Teuchos::fromJSON(Teuchos::ParameterList& pl, nlohmann::json &j) {
+  for (auto it = j.begin(); it != j.end(); ++it) {
+    if (it->is_object()) {
+      Teuchos::fromJSON(pl.sublist(it.key()), it.value());
+    } else if (it->is_array()) {
+      auto L = it.value();
+      for (int k = 0; k<L.size(); ++k) {
+        Teuchos::fromJSON(pl.sublist(it.key()+" "+std::to_string(k)), L[k]);
+      }
+    } else {
+      pl.set(it.key(), it.value());
+    }
+  }
+}
+
+Teuchos::ParameterList Teuchos::fromJSON(nlohmann::json &j) {
+  Teuchos::ParameterList pl;
+  Teuchos::fromJSON(pl, j);
+  return pl;
+}
+
+#endif
 
 template Teuchos::ParameterList& Teuchos::ParameterList::set<std::string&>(std::string const&, std::string& , std::string const& ,
   Teuchos::RCP<const Teuchos::ParameterEntryValidator> const& );

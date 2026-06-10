@@ -23,6 +23,9 @@
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_Array.hpp"
 #include "Teuchos_map.hpp"
+#ifdef HAVE_TEUCHOSPARAMETERLIST_JSON
+#include "nlohmann/json.hpp"
+#endif
 
 
 /** \example ParameterList/cxx_main.cpp
@@ -729,6 +732,13 @@ public:
    */
   void reconcileParameterList(ParameterList &validParamList,
       const bool left_to_right = true);
+
+
+#ifdef HAVE_TEUCHOSPARAMETERLIST_JSON
+  nlohmann::json toJSON(nlohmann::json &j) const;
+
+  nlohmann::json toJSON() const;
+#endif
 
   //@}
   
@@ -1591,6 +1601,12 @@ inline std::ostream& operator<<(std::ostream& os, const ParameterList& l)
   return l.print(os);
 }
 
+
+#ifdef HAVE_TEUCHOSPARAMETERLIST_JSON
+void fromJSON(ParameterList& pl, nlohmann::json &j);
+
+ParameterList fromJSON(nlohmann::json &j);
+#endif
   
 } // end of Teuchos namespace
 
