@@ -16,6 +16,7 @@
 #include "Teuchos_DebugDefaultAsserts.hpp"
 #include "Teuchos_Assert.hpp"
 #include "Teuchos_TimeMonitor.hpp"
+#include "Teuchos_Reporter.hpp"
 #include "Stratimikos_Config.h"
 #ifdef HAVE_STRATIMIKOS_THYRATPETRAADAPTERS
 #  include "Thyra_TpetraThyraWrappers.hpp"
@@ -725,6 +726,16 @@ BelosLinearOpWithSolve<Scalar>::solveImpl(
       break;
     }
     TEUCHOS_SWITCH_DEFAULT_DEBUG_ASSERT();
+  }
+
+  auto &reporter = Teuchos::getReporter();
+  auto report = reporter.addReport((label_ != "") ? (label_+" solve") : "solve");
+  if (!report.is_null()) {
+    report->set("number of equations", B.range()->dim());
+    report->set("number of rhs vectors", B.domain()->dim());
+    report->set("iteration count", iterativeSolver_->getNumIters());
+    report->set("status", toString(solveStatus.solveStatus));
+    report->set("achieved tolerance", solveStatus.achievedTol);
   }
 
   std::ostringstream ossmessage;
