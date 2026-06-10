@@ -583,6 +583,10 @@ public:
     return timer_.get_full_name();
   }
 
+  std::string getRunningTimerName() {
+    return top_->get_full_name();
+  }
+
   /**
    * Start the base level timer only
    */

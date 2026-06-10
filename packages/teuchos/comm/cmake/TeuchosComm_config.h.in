@@ -3,4 +3,6 @@
 
 #cmakedefine HAVE_TEUCHOSCOMM_MAGISTRATE
 
+#cmakedefine HAVE_TEUCHOSCOMM_JSON
+
 #endif
