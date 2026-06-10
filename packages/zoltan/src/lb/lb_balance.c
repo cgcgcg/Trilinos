@@ -23,6 +23,7 @@ extern "C" {
 #ifdef ZOLTAN_OVIS
 #include "ha_ovis.h"
 #endif
+#include <assert.h>
 
 /*****************************************************************************/
 /*****************************************************************************/
@@ -1069,6 +1070,7 @@ void Zoltan_PartDist_MPIOp(
   int *len, 
   MPI_Datatype *dptr)
 {
+  assert(*len == 6);
 int *int_in = (int *) in;
 int *int_inout = (int *) inout;
 
