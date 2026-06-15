@@ -312,11 +312,9 @@ int main_(Teuchos::CommandLineProcessor &clp, int argc,char * argv[])
         throw;
 
       auto timestepping_report = reporter.addReport("time stepping");
-      if (!timestepping_report.is_null()) {
-        timestepping_report->set("time step", dt);
-        timestepping_report->set("num time steps", numTimeSteps);
-        timestepping_report->set("final time", finalTime);
-      }
+      timestepping_report.set<Teuchos::None>("time step", dt);
+      timestepping_report.set<Teuchos::None>("num time steps", numTimeSteps);
+      timestepping_report.set<Teuchos::None>("final time", finalTime);
     }
 
     RCP<Teuchos::ParameterList> lin_solver_pl = mini_em::getSolverParameters(linAlgebra, physics, solver, dim, comm, out, xml, basis_order, preferTPLs, useBarriers, truncateMueLuHierarchy);
@@ -772,6 +770,7 @@ int main_(Teuchos::CommandLineProcessor &clp, int argc,char * argv[])
   // Output timer data
   if (use_stacked_timer) {
     stacked_timer->stop("Mini-EM");
+    reporter.setReportingEnabled(false);
     Teuchos::StackedTimer::OutputOptions options;
     options.output_fraction = options.output_histogram = options.output_minmax = true;
     stacked_timer->report(*out, comm, options);
@@ -784,12 +783,10 @@ int main_(Teuchos::CommandLineProcessor &clp, int argc,char * argv[])
       double fom_time = stacked_timer->getMpiAverageTime(fom_timer_name);
       double fom_count = stacked_timer->getMpiAverageCount(fom_timer_name);
       auto fom_report = reporter.addReport("FOM");
-      if (!fom_report.is_null()) {
-        fom_report->set("time", fom_time);
-        fom_report->set("num time steps", fom_count);
-        fom_report->set("num cells", fom_num_cells);
-        fom_report->set("k-cell-steps per second", double(fom_num_cells) * fom_count / fom_time / 1000.0);
-      }
+      fom_report.set<Teuchos::None>("time", fom_time);
+      fom_report.set<Teuchos::None>("num time steps", fom_count);
+      fom_report.set<Teuchos::None>("num cells", fom_num_cells);
+      fom_report.set<Teuchos::None>("k-cell-steps per second", double(fom_num_cells) * fom_count / fom_time / 1000.0);
 
       *out << "\n=================================\n";
       *out << "FOM Calculation\n";
@@ -807,7 +804,13 @@ int main_(Teuchos::CommandLineProcessor &clp, int argc,char * argv[])
   } else {
     Teuchos::TimeMonitor::summarize(*out,false,true,false,Teuchos::Union,"",true);
   }
-  *out << reporter.toJSON().dump(4) << std::endl;
+
+  reporter.applyMpiReductions(comm);
+  if (comm->getRank() == 0) {
+    reporter.setPrintFormatting("timing", "@indentation@@name@: @time mean@ - [@calls mean@] {min=@time min@, max=@time max@, std dev=@time stddev@}\n");
+    reporter.setPrintFormatting("linear solve", "@indentation@@name@ iterations: @iteration count@\n");
+    reporter.print(*out);
+}
 
   return EXIT_SUCCESS;
 }

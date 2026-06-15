@@ -26,6 +26,8 @@ void AddKokkosDeepCopyToTimeMonitor(bool force = false);
 // This is used for unit testing the capability
 void AddKokkosFenceToTimeMonitor(bool force = false);
 
+void AddKokkosFencesToReport(bool force = false);
+
 // The force option overrides the environment variable control via TPETRA_TIME_KOKKOS_FUNCTIONS
 // This is used for unit testing the capability
 void AddKokkosFunctionsToTimeMonitor(bool force = false);

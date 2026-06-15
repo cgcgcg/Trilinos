@@ -85,49 +85,6 @@ namespace Teuchos {
         }
     }
 
-    // \brief Send an array of strings.
-    //
-    // Teuchos::send() (or rather, Teuchos::SerializationTraits)
-    // doesn't know how to send an array of strings.  This function
-    // packs an array of strings into a single string with an offsets
-    // array, and sends the offsets array (and the packed string, if
-    // it is not empty).
-    void
-    sendStrings (const Comm<int>& comm, // in
-                 const Array<std::string>& strings, // in
-                 const int destRank) // in
-    {
-      // Pack the string array into the packed string, and compute
-      // offsets.
-      std::string packedString;
-      Array<size_t> offsets;
-      packStringsForSend (packedString, offsets, strings);
-      TEUCHOS_TEST_FOR_EXCEPTION(offsets.size() == 0, std::logic_error,
-                         "packStringsForSend() returned a zero-length offsets "
-                         "array on MPI Proc " << comm.getRank() << ", to be "
-                         "sent to Proc " << destRank << ".  The offsets array "
-                         "should always have positive length.  Please report "
-                         "this bug to the Teuchos developers.");
-
-      // Send the count of offsets.
-      send (comm, offsets.size(), destRank);
-
-      // Send the array of offsets.  There is always at least one
-      // element in the offsets array, so we can always take the
-      // address of the first element.
-      const int offsetsSendCount = static_cast<int> (offsets.size());
-      send (comm, offsetsSendCount, &offsets[0], destRank);
-
-      // Now send the packed string.  It may be empty if the strings
-      // array has zero elements or if all the strings in the array
-      // are empty.  If the packed string is empty, we don't send
-      // anything, since the receiving process already knows (from the
-      // offsets array) not to expect anything.
-      const int stringSendCount = static_cast<int> (packedString.size());
-      if (stringSendCount > 0)
-        send (comm, stringSendCount, &packedString[0], destRank);
-    }
-
     void
     unpackStringsAfterReceive (Array<std::string>& strings,
                                const std::string& packedString,
@@ -167,41 +124,6 @@ namespace Teuchos {
           strings[k] = packedString.substr (start, end - start);
         }
     }
-
-    // Function corresponding to \c sendStrings() that receives an
-    // array of strings (Array<std::string>) in packed form.
-    void
-    receiveStrings (const Comm<int>& comm,
-                    const int sourceRank,
-                    Array<std::string>& strings)
-    {
-      // Receive the number of offsets.  There should always be at
-      // least 1 offset.
-      Array<size_t>::size_type numOffsets = 0;
-      receive (comm, sourceRank, &numOffsets);
-      TEUCHOS_TEST_FOR_EXCEPTION(numOffsets == 0, std::logic_error,
-                         "Invalid number of offsets numOffsets=" << numOffsets
-                         << " received on MPI Rank " << comm.getRank()
-                         << " from Rank " << sourceRank << ".  Please report "
-                         "this bug to the Teuchos developers.");
-
-      // Receive the array of offsets.
-      Array<size_t> offsets (numOffsets);
-      const int offsetsRecvCount = static_cast<int> (numOffsets);
-      receive (comm, sourceRank, offsetsRecvCount, &offsets[0]);
-
-      // If the packed string is nonempty, receive the packed string,
-      // and unpack it.  The last entry of offsets is the length of
-      // the packed string.
-      std::string packedString (offsets.back(), ' ');
-      const int stringRecvCount = static_cast<int> (offsets.back());
-      if (stringRecvCount > 0)
-        {
-          receive (comm, sourceRank, stringRecvCount, &packedString[0]);
-          unpackStringsAfterReceive (strings, packedString, offsets);
-        }
-    }
-
 
     void
     broadcastStringsHelper (const Comm<int>& comm,
@@ -431,6 +353,83 @@ namespace Teuchos {
     }
 
   } // namespace (anonymous)
+
+  // \brief Send an array of strings.
+  //
+  // Teuchos::send() (or rather, Teuchos::SerializationTraits)
+  // doesn't know how to send an array of strings.  This function
+  // packs an array of strings into a single string with an offsets
+  // array, and sends the offsets array (and the packed string, if
+  // it is not empty).
+  void
+  sendStrings (const Comm<int>& comm, // in
+               const Array<std::string>& strings, // in
+               const int destRank) // in
+  {
+    // Pack the string array into the packed string, and compute
+    // offsets.
+    std::string packedString;
+    Array<size_t> offsets;
+    packStringsForSend (packedString, offsets, strings);
+    TEUCHOS_TEST_FOR_EXCEPTION(offsets.size() == 0, std::logic_error,
+                               "packStringsForSend() returned a zero-length offsets "
+                               "array on MPI Proc " << comm.getRank() << ", to be "
+                                                                         "sent to Proc " << destRank << ".  The offsets array "
+                                                                                                        "should always have positive length.  Please report "
+                                                                                                        "this bug to the Teuchos developers.");
+
+    // Send the count of offsets.
+    send (comm, offsets.size(), destRank);
+
+    // Send the array of offsets.  There is always at least one
+    // element in the offsets array, so we can always take the
+    // address of the first element.
+    const int offsetsSendCount = static_cast<int> (offsets.size());
+    send (comm, offsetsSendCount, &offsets[0], destRank);
+
+    // Now send the packed string.  It may be empty if the strings
+    // array has zero elements or if all the strings in the array
+    // are empty.  If the packed string is empty, we don't send
+    // anything, since the receiving process already knows (from the
+    // offsets array) not to expect anything.
+    const int stringSendCount = static_cast<int> (packedString.size());
+    if (stringSendCount > 0)
+      send (comm, stringSendCount, &packedString[0], destRank);
+  }
+
+  // Function corresponding to \c sendStrings() that receives an
+  // array of strings (Array<std::string>) in packed form.
+  void
+  receiveStrings (const Comm<int>& comm,
+                  const int sourceRank,
+                  Array<std::string>& strings)
+  {
+    // Receive the number of offsets.  There should always be at
+    // least 1 offset.
+    Array<size_t>::size_type numOffsets = 0;
+    receive (comm, sourceRank, &numOffsets);
+    TEUCHOS_TEST_FOR_EXCEPTION(numOffsets == 0, std::logic_error,
+                               "Invalid number of offsets numOffsets=" << numOffsets
+                               << " received on MPI Rank " << comm.getRank()
+                               << " from Rank " << sourceRank << ".  Please report "
+                                                                 "this bug to the Teuchos developers.");
+
+    // Receive the array of offsets.
+    Array<size_t> offsets (numOffsets);
+    const int offsetsRecvCount = static_cast<int> (numOffsets);
+    receive (comm, sourceRank, offsetsRecvCount, &offsets[0]);
+
+    // If the packed string is nonempty, receive the packed string,
+    // and unpack it.  The last entry of offsets is the length of
+    // the packed string.
+    std::string packedString (offsets.back(), ' ');
+    const int stringRecvCount = static_cast<int> (offsets.back());
+    if (stringRecvCount > 0)
+      {
+        receive (comm, sourceRank, stringRecvCount, &packedString[0]);
+        unpackStringsAfterReceive (strings, packedString, offsets);
+      }
+  }
 
   /**
    * merge for unsorted lists.  New entries are at the bottom of the list

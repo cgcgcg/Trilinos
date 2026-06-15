@@ -81,6 +81,7 @@ void initializeKokkos(int* argc, char*** argv, int myRank) {
   // Add Kokkos calls to the TimeMonitor if the environment says so
   Tpetra::Details::AddKokkosDeepCopyToTimeMonitor();
   Tpetra::Details::AddKokkosFenceToTimeMonitor();
+  Tpetra::Details::AddKokkosFencesToReport();
   Tpetra::Details::AddKokkosFunctionsToTimeMonitor();
 
   // Now that the Kokkos backend(s) are initialized,

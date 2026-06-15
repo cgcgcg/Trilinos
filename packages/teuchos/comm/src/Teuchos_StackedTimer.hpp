@@ -19,6 +19,7 @@
 #include "Teuchos_EnvVariables.hpp"
 #include "Teuchos_PerformanceMonitorBase.hpp"
 #include "Teuchos_Behavior.hpp"
+#include "Teuchos_Reporter.hpp"
 #include "TeuchosComm_config.h" // for HAVE_TEUCHOSCOMM_MAGISTRATE
 #ifdef HAVE_TEUCHOSCOMM_MAGISTRATE
 #include "checkpoint/checkpoint.h"
@@ -101,6 +102,8 @@ public:
   void start(){
     if (running_)
       error_out("Base_Timer:start Failed timer already running");
+    auto &reporter = Teuchos::getReporter();
+    auto report = reporter.addReport("timing", true);
     start_time_ = Clock::now();
 
     count_started_++;
@@ -115,6 +118,23 @@ public:
     accumulation_ += elapsed;
     accumulationSquared_ += elapsed*elapsed;
     running_ = false;
+
+    auto &reporter = Teuchos::getReporter();
+    auto report = reporter.addReport("timing", true);
+    report.set<None, Sum>("active", 1, "active processes");
+    report.set<Sum, Mean>("calls", 1, "calls mean");
+
+    report.set<Min, Min>("call time local min", elapsed, "call time min");
+    report.set<Max, Max>("call time local max", elapsed, "call time max");
+
+    report.set<Sum>("time local", elapsed);
+    report.addReduction("time local", Mean, "time mean");
+    report.addReduction("time local", Min, "time min");
+    report.addReduction("time local", Max, "time max");
+    report.addReduction("time local", StdDev, "time stddev");
+    report.addReduction("time local", ArgMin, "proc min");
+    report.addReduction("time local", ArgMax, "proc max");
+    report.addReduction("time local", Gather, "proc times");
   }
 
   /// Increment the total number of items updated between a start stop

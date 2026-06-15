@@ -29,6 +29,7 @@
 #include "BelosStatusTestOutputFactory.hpp"
 #include "BelosOutputManager.hpp"
 #include "Teuchos_LAPACK.hpp"
+#include "Teuchos_Reporter.hpp"
 #ifdef BELOS_TEUCHOS_TIME_MONITOR
 #include "Teuchos_TimeMonitor.hpp"
 #endif
@@ -965,6 +966,14 @@ ReturnType PseudoBlockCGSolMgr<ScalarType,MV,OP,true>::solve ()
     compute_condnum_tridiag_sym(diag,offdiag,eigenEstimates_,l_min,l_max,condEstimate_);
     condEstPerf = true;
   }
+
+  auto &reporter = Teuchos::getReporter();
+  auto report = reporter.addReport("linear solve", true);
+  // report.set<Teuchos::None>("number of equations", B.range()->dim());
+  // report.set<Teuchos::None>("number of rhs vectors", B.domain()->dim());
+  report.set<Teuchos::Gather>("iteration count", numIters_);
+  // report.set<Teuchos::Gather>("converged", isConverged);
+  report.set<Teuchos::Gather>("achieved tolerance", achievedTol_);
 
   if (! isConverged) {
     return Unconverged; // return from PseudoBlockCGSolMgr::solve()

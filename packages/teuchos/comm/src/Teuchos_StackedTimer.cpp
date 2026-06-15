@@ -735,11 +735,11 @@ StackedTimer::report(std::ostream &os, Teuchos::RCP<const Teuchos::Comm<int> > c
     printLevel("", 0, os, printed, 0., options);
   }
 
-  auto &reporter = Teuchos::getReporter();
-  if (reporter.isReportingEnabled()) {
-    getTimingsAsParameterList(comm,
-                              Teuchos::rcpFromRef(reporter.getData()));
-  }
+  // auto &reporter = Teuchos::getReporter();
+  // if (reporter.isReportingEnabled()) {
+  //   getTimingsAsParameterList(comm,
+  //                             Teuchos::rcpFromRef(reporter.getData()));
+  // }
 }
 
 void

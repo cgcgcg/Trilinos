@@ -14,6 +14,7 @@
 #include "Teuchos_TimeMonitor.hpp"
 #include "Teuchos_Time.hpp"
 #include "Teuchos_RCP.hpp"
+#include "Teuchos_Reporter.hpp"
 #ifdef HAVE_TEUCHOS_ADD_TIME_MONITOR_TO_STACKED_TIMER
 #include "Teuchos_StackedTimer.hpp"
 #include <sstream>
@@ -218,6 +219,46 @@ void AddKokkosFenceToTimeMonitor(bool force) {
       Kokkos::Tools::Experimental::set_end_fence_callback(FenceTimerInjection::kokkosp_end_fence);
       FenceTimerInjection::initialized_ = true;
     }
+  }
+}
+
+namespace FenceCounterInjection {
+bool initialized_ = false;
+uint64_t active_handle;
+std::string label_ = "";
+
+void kokkosp_begin_fence(const char* name, const uint32_t deviceId,
+                         uint64_t* handle) {
+  // Nested fences are not allowed
+  if (!label_.empty())
+    return;
+
+  active_handle = (active_handle + 1) % 1024;
+  *handle       = active_handle;
+
+  std::string device_label = deviceIdToString(deviceId);
+
+  label_         = std::string("Kokkos::fence ") + name + " " + device_label;
+  auto& reporter = Teuchos::getReporter();
+  auto report    = reporter.addReport("fences", true);
+  report.set<Teuchos::Sum, Teuchos::Mean>(label_ + " (local)", 1, label_);
+}
+
+void kokkosp_end_fence(const uint64_t handle) {
+  if (handle == active_handle) {
+  }
+  // Else: We've nested our fences, and we need to ignore the inner fences
+}
+
+}  // namespace FenceCounterInjection
+
+void AddKokkosFencesToReport(bool force) {
+  if (!FenceCounterInjection::initialized_) {
+    // if (force || Tpetra::Details::Behavior::timeKokkosFence()) {
+    Kokkos::Tools::Experimental::set_begin_fence_callback(FenceCounterInjection::kokkosp_begin_fence);
+    Kokkos::Tools::Experimental::set_end_fence_callback(FenceCounterInjection::kokkosp_end_fence);
+    FenceCounterInjection::initialized_ = true;
+    // }
   }
 }
 

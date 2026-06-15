@@ -7,7 +7,6 @@ ADD_SUBDIRECTORIES(
   FancyOutputting
   FunctionObjects
   ObjectBuilder
-  Reporter
   Validators
   XML
   XMLParser

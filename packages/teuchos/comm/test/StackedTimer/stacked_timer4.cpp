@@ -7,6 +7,7 @@
 // *****************************************************************************
 // @HEADER
 
+#include "Teuchos_Reporter.hpp"
 #include "Teuchos_UnitTestHarness.hpp"
 #include "Teuchos_UnitTestRepository.hpp"
 #include "Teuchos_GlobalMPISession.hpp"
@@ -31,6 +32,9 @@
 
 TEUCHOS_UNIT_TEST(StackedTimer, minmax_hist)
 {
+  auto &reporter = Teuchos::getReporter();
+  reporter.setReportingEnabled(true);
+
   Teuchos::StackedTimer timer("L0");
   timer.stopBaseTimer();
 
@@ -63,6 +67,7 @@ TEUCHOS_UNIT_TEST(StackedTimer, minmax_hist)
   TEST_THROW(timer.getMpiAverageCount("L0@T1"),std::runtime_error);
   TEST_THROW(timer.isTimer("L0@T1"),std::runtime_error);
 
+  reporter.setReportingEnabled(false);
   Teuchos::StackedTimer::OutputOptions options;
 
   out << "\n### Printing default report ###" << std::endl;
@@ -72,6 +77,11 @@ TEUCHOS_UNIT_TEST(StackedTimer, minmax_hist)
   options.num_histogram=2;
   options.output_fraction=false;
   timer.report(out, comm, options);
+
+  reporter.applyMpiReductions(comm);
+  if (comm->getRank() == 0)
+    out << "EHER "<< reporter.getData() << std::endl;
+
   {
     std::ostringstream os;
     timer.report(os, comm, options);

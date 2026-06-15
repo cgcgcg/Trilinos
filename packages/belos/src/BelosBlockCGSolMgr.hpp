@@ -31,6 +31,7 @@
 #include "BelosOutputManager.hpp"
 #include "Teuchos_LAPACK.hpp"
 #include "Teuchos_RCPDecl.hpp"
+#include "Teuchos_Reporter.hpp"
 #ifdef BELOS_TEUCHOS_TIME_MONITOR
 #  include "Teuchos_TimeMonitor.hpp"
 #endif
@@ -1074,19 +1075,29 @@ ReturnType BlockCGSolMgr<ScalarType,MV,OP,true>::solve() {
       rcp_dynamic_cast<conv_test_type>(convTest_)->getTestValue();
 
     TEUCHOS_TEST_FOR_EXCEPTION(pTestValues == NULL, std::logic_error,
-      "Belos::BlockCGSolMgr::solve(): The convergence test's getTestValue() "
-      "method returned NULL.  Please report this bug to the Belos developers.");
+                               "Belos::BlockCGSolMgr::solve(): The convergence test's getTestValue() "
+                               "method returned NULL.  Please report this bug to the Belos developers.");
 
     TEUCHOS_TEST_FOR_EXCEPTION(pTestValues->size() < 1, std::logic_error,
-      "Belos::BlockCGSolMgr::solve(): The convergence test's getTestValue() "
-      "method returned a vector of length zero.  Please report this bug to the "
-      "Belos developers.");
+                               "Belos::BlockCGSolMgr::solve(): The convergence test's getTestValue() "
+                               "method returned a vector of length zero.  Please report this bug to the "
+                               "Belos developers.");
 
     // FIXME (mfh 12 Dec 2011) Does pTestValues really contain the
     // achieved tolerances for all vectors in the current solve(), or
     // just for the vectors from the last deflation?
     achievedTol_ = *std::max_element (pTestValues->begin(), pTestValues->end());
   }
+
+  auto &reporter = Teuchos::getReporter();
+  auto report = reporter.addReport("linear solve", true);
+  // report.set<Teuchos::None>("number of equations", B.range()->dim());
+  // report.set<Teuchos::None>("number of rhs vectors", B.domain()->dim());
+  report.set<Teuchos::Gather>("iteration count", numIters_);
+  // report.set<Teuchos::Gather>("converged", isConverged);
+  report.set<Teuchos::Gather>("achieved tolerance", achievedTol_);
+
+  std::cout << "HERE " << report.getName() << " " << report.getContext() << std::endl;
 
   if (!isConverged) {
     return Unconverged; // return from BlockCGSolMgr::solve()

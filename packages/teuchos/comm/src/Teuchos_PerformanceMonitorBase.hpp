@@ -32,6 +32,16 @@ namespace Teuchos
   /// the global set of timers.
   enum ECounterSetOp { Intersection, Union };
 
+  void
+  sendStrings (const Comm<int>& comm, // in
+               const Array<std::string>& strings, // in
+               const int destRank);
+
+  void
+  receiveStrings (const Comm<int>& comm,
+                  const int sourceRank,
+                  Array<std::string>& strings);
+
   /// \brief Merge counter names over all processors.
   ///
   /// Different MPI processes may have created different sets of

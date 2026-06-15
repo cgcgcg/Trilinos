@@ -728,16 +728,6 @@ BelosLinearOpWithSolve<Scalar>::solveImpl(
     TEUCHOS_SWITCH_DEFAULT_DEBUG_ASSERT();
   }
 
-  auto &reporter = Teuchos::getReporter();
-  if (reporter.isReportingEnabled()) {
-    auto report = reporter.addReport((label_ != "") ? (label_+" solve") : "solve");
-    report->set("number of equations", B.range()->dim());
-    report->set("number of rhs vectors", B.domain()->dim());
-    report->set("iteration count", iterativeSolver_->getNumIters());
-    report->set("status", toString(solveStatus.solveStatus));
-    report->set("achieved tolerance", solveStatus.achievedTol);
-  }
-
   std::ostringstream ossmessage;
   ossmessage
     << "The Belos solver " << (label_ != "" ? ("\"" + label_  + "\" ") : "")

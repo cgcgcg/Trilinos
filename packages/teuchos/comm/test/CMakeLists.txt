@@ -3,6 +3,7 @@ ADD_SUBDIRECTORIES(
   Comm
   MpiTypeTraits
   ParameterList
+  Reporter
   Time
   TimeMonitor
   StackedTimer
