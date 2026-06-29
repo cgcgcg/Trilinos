@@ -95,7 +95,7 @@ class ReitzingerPFactory : public PFactory {
 
   //! Utility method
   //@{
-  void CheckCommutingProperty(const Matrix& Pe, const Matrix& D0_c, const Matrix& D0_f, const Matrix& Pn) const;
+  void CheckCommutingProperty(const Matrix& Pnext, const Matrix& Dc, const Matrix& D, const Matrix& P) const;
   //@}
 
  private:

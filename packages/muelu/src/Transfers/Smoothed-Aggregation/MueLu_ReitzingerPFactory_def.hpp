@@ -17,11 +17,10 @@
 #include <Xpetra_MatrixMatrix.hpp>
 #include <Xpetra_MultiVector.hpp>
 #include <Xpetra_VectorFactory.hpp>
-#include <Xpetra_Import.hpp>
-#include <Xpetra_ImportFactory.hpp>
 #include <Xpetra_CrsMatrixWrap.hpp>
 // #include <Xpetra_IO.hpp>
 
+#include "Kokkos_UnorderedMap.hpp"
 #include "MueLu_ReitzingerPFactory_decl.hpp"
 
 #include <Teuchos_ScalarTraits.hpp>
@@ -29,11 +28,92 @@
 #include "MueLu_MasterList.hpp"
 #include "MueLu_Monitor.hpp"
 #include "MueLu_Utilities.hpp"
-#include "MueLu_ImportUtils.hpp"
 
 #include "MueLu_Behavior.hpp"
+#include "Teuchos_Assert.hpp"
+#include "Teuchos_TestForException.hpp"
 
 namespace MueLu {
+
+template <class LocalOrdinal, int dim>
+struct my_tuple_type {
+  LocalOrdinal data[dim];
+  static constexpr int my_dim = dim;
+};
+
+template <class tuple_type, class RowType>
+KOKKOS_FUNCTION
+    tuple_type
+    makeTuple(RowType& row) {
+  tuple_type t;
+  for (int k = 0; k < tuple_type::my_dim; ++k)
+    t.data[k] = row.colidx(k);
+  return t;
+}
+
+template <class rowptr_type, class colidx_type, class values_type,
+          class map_type, class local_matrix_type, class local_ordinal_type>
+class RegularCoarseningFunctor {
+  using tuple_type = typename map_type::key_type;
+
+ public:
+  RegularCoarseningFunctor(map_type& map_, local_matrix_type& mat_, local_ordinal_type sizeCoarsenedEntity_) {
+    map                 = map_;
+    mat                 = mat_;
+    sizeCoarsenedEntity = sizeCoarsenedEntity_;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const local_ordinal_type rlid, local_ordinal_type& ne) const {
+    auto row = mat.rowConst(rlid);
+    if (row.length == sizeCoarsenedEntity) {
+      auto entity = makeTuple<tuple_type>(row);
+      if (!map.exists(entity)) {
+        map.insert(entity, rlid);
+        ++ne;
+      }
+    }
+  }
+
+  void setViews(rowptr_type& rowptr_, colidx_type& colidx_, values_type& values_) {
+    rowptr = rowptr_;
+    colidx = colidx_;
+    values = values_;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const uint32_t i, local_ordinal_type& ne, const bool update) const {
+    if (map.valid_at(i)) {
+      if (!update) {
+        // First pass: figure out offsets for entries.
+        ++ne;
+      } else {
+        // Second pass: enter entries
+        // initialize
+        if (ne == 0)
+          rowptr(0) = 0;
+
+        auto rlid = map.value_at(i);
+        auto row  = mat.rowConst(rlid);
+        for (int k = 0; k < sizeCoarsenedEntity; ++k) {
+          colidx(sizeCoarsenedEntity * ne + k) = row.colidx(k);
+          values(sizeCoarsenedEntity * ne + k) = row.value(k);
+        }
+        ++ne;
+        rowptr(ne) = sizeCoarsenedEntity * ne;
+      }
+    }
+  }
+
+ private:
+  map_type map;
+  local_matrix_type mat;
+  local_ordinal_type sizeCoarsenedEntity;
+
+  rowptr_type rowptr;
+  colidx_type colidx;
+  values_type values;
+};
 
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 RCP<const ParameterList> ReitzingerPFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::GetValidParameterList() const {
@@ -88,13 +168,14 @@ void ReitzingerPFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::BuildP(Level
   using execution_space = typename Node::execution_space;
   using memory_space    = typename Node::memory_space;
 
-  const auto one_Scalar      = Teuchos::ScalarTraits<Scalar>::one();
-  const auto one_impl_scalar = ATS::one();
-  const auto zero_LO         = KokkosKernels::ArithTraits<LocalOrdinal>::zero();
-  const auto one_LO          = KokkosKernels::ArithTraits<LocalOrdinal>::one();
-  const auto one_mag         = magATS::one();
-  const auto eps_mag         = magATS::epsilon();
-  const auto INVALID_GO      = Teuchos::OrdinalTraits<GlobalOrdinal>::invalid();
+  const auto one_Scalar       = Teuchos::ScalarTraits<Scalar>::one();
+  const auto one_impl_scalar  = ATS::one();
+  const auto one_LO           = KokkosKernels::ArithTraits<LocalOrdinal>::one();
+  const auto one_mag          = magATS::one();
+  const auto eps_mag          = magATS::epsilon();
+  const auto INVALID_GO       = Teuchos::OrdinalTraits<GlobalOrdinal>::invalid();
+  const auto REGULAR_ENTITY   = KokkosKernels::ArithTraits<LocalOrdinal>::zero();
+  const auto DIRICHLET_ENTITY = KokkosKernels::ArithTraits<LocalOrdinal>::one();
 
   // Using a prolongator P and the discrete differential operator matrix D, this factory constructs
   // a coarse discrete differential operator matrix Dc and an prolongator Pnext such that the commuting
@@ -104,33 +185,30 @@ void ReitzingerPFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::BuildP(Level
   //
   // holds.
 
-  // The construction of the coarse discrete differential operator Dc works as follows.
-  // We create edges between aggregates that contain at least one pair of connected nodes.
-  // This boils down to computing the matrix
-  //
-  //  Z := (D*P)^T * (D*P).
-  //
-  // If Z_ij != 0 we create an edge e between the nodal aggregates i and j.
-  // Z is clearly symmetric. We only create a single edge between i and j.
-  // In the distributed case, we also need to decide which rank owns the coarse edge e.
-  // If both endpoints i and j live on process proc0 then proc0 should obiously own the edge e.
-  // If i lives on proc0 and j lives on proc1, we tie-break based on the rule
-  //
-  //  min{proc0, proc1} if proc0+proc1 is odd,
-  //  max{proc0, proc1} if proc0+proc1 is even.
-  //
-  // The orientation of the edge (encoded in the values 1 and -1) is determined by the GIDs of the endpoints.
-  // All edges point from smaller GID to larger GID, i.e. i < j.
+  // We call the rows of D the "fine entities" and the rows of Dc the "coarse entities".
+  // We call the columns of D the "fine preceding entities" and the columns of Dc the "coarse preceding entities".
+  // When D is the discrete gradient, the entities are edges and the preceding entities are nodes (or nodal aggregates).
 
-  // We also perform detection of boundary condtions and add additional edges to the coarse discrete gradient.
-  // We detect all edges in D that only connect to a single node.
+  // The construction of the coarse discrete differential operator Dc works as follows.
+  // We form
+  //
+  //     T := D*P
+  //
+  // and get all unique sets of column indices of T of size sizeCoarsenedEntity, where sizeCoarsenedEntity is the maximum
+  // number of entries per row of D. By "unique" we mean that we do not care about the ordering of the column indices.
+  // We then form coarse entities (i.e. edges, faces or volumes) out of the unique index sets.
+
+  // We also perform detection of boundary condtions and add additional entities to the coarse discrete operator.
+  // We detect all entities in D that connect to fewer than sizeCoarsenedEntity preceding entities.
 
   Teuchos::FancyOStream& out0 = GetBlackHole();
   const ParameterList& pL     = GetParameterList();
 
   bool update_communicators = pL.get<bool>("repartition: enable") && pL.get<bool>("repartition: use subcommunicators");
 
-  RCP<Matrix> D = Get<RCP<Matrix> >(fineLevel, "D0");
+  const std::string D_name = "D0";
+
+  RCP<Matrix> D = Get<RCP<Matrix> >(fineLevel, D_name);
   RCP<Matrix> P = Get<RCP<Matrix> >(coarseLevel, "Ptent_nodal");
 
   // This needs to be an Operator because if NodeMatrix gets repartitioned away, we get an Operator on the level
@@ -168,141 +246,56 @@ void ReitzingerPFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::BuildP(Level
 
   RCP<Matrix> D_P;
   RCP<Matrix> Dc;
-  LocalOrdinal numCoarseEdges          = 0;
-  LocalOrdinal numCoarseRegularEdges   = 0;
-  LocalOrdinal numCoarseDirichletEdges = 0;
-  auto isDirichletFineEdge             = Xpetra::VectorFactory<LocalOrdinal, LocalOrdinal, GlobalOrdinal, Node>::Build(D->getRowMap(), false);
-  auto numFineEdges                    = isDirichletFineEdge->getMap()->getLocalNumElements();
+  LocalOrdinal numCoarseEntities          = 0;
+  LocalOrdinal numCoarseRegularEntities   = 0;
+  LocalOrdinal numCoarseDirichletEntities = 0;
+  auto isDirichletFineEntity              = Xpetra::VectorFactory<LocalOrdinal, LocalOrdinal, GlobalOrdinal, Node>::Build(D->getRangeMap(), false);
+  auto numFineEntities                    = D->getRangeMap()->getLocalNumElements();
+  auto sizeCoarsenedEntity                = (LocalOrdinal)D->getLocalMaxNumRowEntries();
   {
-    // Construct D*P and Z := (D*P)^T * (D*P)
+    // Construct D*P
     RCP<Matrix> dummy;
-    D_P           = XMM::Multiply(*D, false, *P, false, dummy, GetOStream(Runtime0), true, true);
-    RCP<Matrix> Z = XMM::Multiply(*D_P, true, *D_P, false, dummy, GetOStream(Runtime0), true, true);
+    D_P = XMM::Multiply(*D, false, *P, false, dummy, GetOStream(Runtime0), true, true);
 
-    auto rowMap       = Z->getRowMap();
-    auto colMap       = Z->getColMap();
-    auto lclRowMap    = rowMap->getLocalMap();
-    auto lclColMap    = colMap->getLocalMap();
-    auto lclZ         = Z->getLocalMatrixDevice();
-    auto numLocalRows = lclZ.numRows();
-
-    if (Behavior::debug()) {
-      TEUCHOS_ASSERT(Utilities::MapsAreNested(*rowMap, *colMap));
-    }
-
-    auto importer = Z->getCrsGraph()->getImporter();
-    // TODO: replace with Kokkos once PID data lives on device
-    Teuchos::Array<int> Z_col_pids;
-    Kokkos::View<int*, memory_space> Z_col_pids_d;
-    if (!importer.is_null()) {
-      MueLu::ImportUtils<LO, GO, NO> utils;
-      utils.getPids(*importer, Z_col_pids, false);
-      Kokkos::View<int*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> > Z_col_pids_h(Z_col_pids.data(), Z_col_pids.size());
-      Z_col_pids_d = Kokkos::View<int*, memory_space>("Z_col_pids_d", Z_col_pids.size());
-      Kokkos::deep_copy(Z_col_pids_d, Z_col_pids_h);
-    }
-
-    int myProcId = rowMap->getComm()->getRank();
-
-    // Tie-break criterion for owner of coarse edges
-    auto tie_break = KOKKOS_LAMBDA(int proc0, int proc1) {
-      if ((proc0 + proc1) % 2 == 1) {
-        return Kokkos::min(proc0, proc1);
-      } else {
-        return Kokkos::max(proc0, proc1);
-      }
-    };
-
-    // Utility function to determine whether we need to add a coarse edge for entry
-    // (rlid, clid) of Z.
-    auto add_edge = KOKKOS_LAMBDA(LocalOrdinal rlid, LocalOrdinal clid) {
-      if (clid < numLocalRows) {
-        // Both row and column index are local, this process owns the new edge.
-        // Only create one edge between rlid and clid and ignore the transposed entry.
-        return (rlid < clid);
-      } else {
-        // Column index is nonlocal. Need to decide if this process owns the new edge.
-        int otherProcId = Z_col_pids_d(clid);
-        int owner       = tie_break(myProcId, otherProcId);
-        return (owner == myProcId);
-      }
-    };
-
-    // Count up how many coarse regular edges we are creating.
-    Kokkos::parallel_reduce(
-        Kokkos::RangePolicy<execution_space>(0, numLocalRows), KOKKOS_LAMBDA(const LocalOrdinal rlid, LocalOrdinal& ne) {
-          auto row = lclZ.rowConst(rlid);
-          // Loop over entries in row of Z
-          for (LocalOrdinal k = 0; k < row.length; ++k) {
-            auto clid = row.colidx(k);
-            if (add_edge(rlid, clid))
-              ++ne;
-          }
-        },
-        numCoarseRegularEdges);
+    auto rowMap    = D_P->getRowMap();
+    auto colMap    = D_P->getColMap();
+    auto lclRowMap = rowMap->getLocalMap();
+    auto lclColMap = colMap->getLocalMap();
 
     // Mark as singleParents any D edges with only one node (so these are
     // edges that connect an interior node with a Dirichlet node).
     // isDirichletFineEdge is 1 for edges with a single endpoint and 0 otherwise.
-    using LOMatrix = Tpetra::CrsMatrix<LocalOrdinal, LocalOrdinal, GlobalOrdinal, Node>;
-    RCP<LOMatrix> D_LocalOrdinal;
+
+    // Flag fine Dirichlet entities
     {
-      // We want to do a apply using D on vectors with Scalar=LocalOrdinal.
-      // Something like this could work and would not require any memory allocations, but it requires
-      // "convert" to be ETI'd for all possible scalar types.
-
-      // toTpetra(D)->template convert<LocalOrdinal>()->apply(*toTpetra(oneVec), *toTpetra(isDirichletFineEdge), Teuchos::NO_TRANS);
-
-      using lo_local_matrix_type = typename LOMatrix::local_matrix_device_type;
-
-      auto lclGraph = D->getCrsGraph()->getLocalGraphDevice();
-      Kokkos::View<LocalOrdinal*, memory_space> values(Kokkos::ViewAllocateWithoutInitializing("values_LocalOrdinal"), D->getLocalNumEntries());
-      {
-        auto values_scalar = D->getLocalMatrixDevice().values;
-        Kokkos::parallel_for(
-            "MueLu::ReitzingerPFactory::convert", Kokkos::RangePolicy<execution_space>(0, values.extent(0)), KOKKOS_LAMBDA(const size_t i) {
-              if (values_scalar(i) == one_impl_scalar)
-                values(i) = one_LO;
-              else if (values_scalar(i) == -one_impl_scalar)
-                values(i) = -one_LO;
-              else
-                Kokkos::abort("D contains bad values");
-            });
-      }
-      lo_local_matrix_type lclMatrix("D_LocalOrdinal", D->getLocalMatrixDevice().numCols(), values, lclGraph);
-
-      D_LocalOrdinal = rcp(new LOMatrix(lclMatrix, toTpetra(D->getRowMap()), toTpetra(D->getColMap()), toTpetra(D->getDomainMap()), toTpetra(D->getRangeMap())));
-    }
-    {
-      auto oneVec = Xpetra::VectorFactory<LocalOrdinal, LocalOrdinal, GlobalOrdinal, Node>::Build(D->getDomainMap(), false);
-      oneVec->putScalar(KokkosKernels::ArithTraits<LocalOrdinal>::one());
-      D_LocalOrdinal->apply(*toTpetra(oneVec), *toTpetra(isDirichletFineEdge), Teuchos::NO_TRANS);
-
-      auto lcl_isDirichletFineEdge = isDirichletFineEdge->getLocalViewDevice(Tpetra::Access::ReadWrite);
-      auto lcl_D_P                 = D_P->getLocalMatrixDevice();
+      isDirichletFineEntity->putScalar(DIRICHLET_ENTITY);
+      auto lcl_isDirichletFineEntity = isDirichletFineEntity->getLocalViewDevice(Tpetra::Access::ReadWrite);
+      auto lcl_D                     = D->getLocalMatrixDevice();
       Kokkos::parallel_for(
-          Kokkos::RangePolicy<execution_space>(0, lcl_isDirichletFineEdge.extent(0)), KOKKOS_LAMBDA(const LocalOrdinal i) {
-            if (ATS::magnitude(ATS::magnitude(lcl_isDirichletFineEdge(i, 0)) - one_mag) > eps_mag) {
-              // This is a regular edge with two end points.
-              lcl_isDirichletFineEdge(i, 0) = zero_LO;
+          Kokkos::RangePolicy<execution_space>(0, lcl_isDirichletFineEntity.extent(0)), KOKKOS_LAMBDA(const LocalOrdinal i) {
+            auto row = lcl_D.rowConst(i);
+            if (row.length == sizeCoarsenedEntity) {
+              // This is a regular entity.
+              lcl_isDirichletFineEntity(i, 0) = REGULAR_ENTITY;
             } else {
-              // This is an edge with one endpoint.
-              lcl_isDirichletFineEdge(i, 0) = one_LO;
+              // This is a Dirichlet entity.
+              lcl_isDirichletFineEntity(i, 0) = DIRICHLET_ENTITY;
             }
           });
     }
 
-    // Count the number of fine Dirichlet edges that are connected to every coarse nodal aggregate via
+    // Count the number of fine Dirichlet entities that are connected to every coarse preceding entity via
     // the graph of D*P.
     auto numberConnectedFineDirichletEdgesToCoarseNode = Xpetra::VectorFactory<LocalOrdinal, LocalOrdinal, GlobalOrdinal, Node>::Build(D_P->getDomainMap(), false);
     {
-      auto abs_D_P = LOMatrix(toTpetra(D_P->getCrsGraph()));
+      using LOMatrix = Tpetra::CrsMatrix<LocalOrdinal, LocalOrdinal, GlobalOrdinal, Node>;
+      auto abs_D_P   = LOMatrix(toTpetra(D_P->getCrsGraph()));
       abs_D_P.fillComplete(toTpetra(D_P->getDomainMap()), toTpetra(D_P->getRangeMap()));
-      abs_D_P.setAllToScalar(KokkosKernels::ArithTraits<LocalOrdinal>::one());
-      abs_D_P.apply(*toTpetra(isDirichletFineEdge), *toTpetra(numberConnectedFineDirichletEdgesToCoarseNode), Teuchos::TRANS);
+      abs_D_P.setAllToScalar(one_LO);
+      abs_D_P.apply(*toTpetra(isDirichletFineEntity), *toTpetra(numberConnectedFineDirichletEdgesToCoarseNode), Teuchos::TRANS);
     }
 
-    // Count local Dirichlet coarse edges
+    // Count local Dirichlet coarse entities
     {
       auto lcl_numberConnectedFineDirichletEdgesToCoarseNode = numberConnectedFineDirichletEdgesToCoarseNode->getLocalViewDevice(Tpetra::Access::ReadOnly);
 
@@ -313,69 +306,49 @@ void ReitzingerPFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::BuildP(Level
               ++ne;
             }
           },
-          numCoarseDirichletEdges);
+          numCoarseDirichletEntities);
     }
 
-    if (IsPrint(Statistics0)) {
-      LocalOrdinal numGlobalRegularEdges;
-      LocalOrdinal numGlobalDirichletEdges;
-      MueLu_sumAll(rowMap->getComm(), numCoarseRegularEdges, numGlobalRegularEdges);
-      MueLu_sumAll(rowMap->getComm(), numCoarseDirichletEdges, numGlobalDirichletEdges);
-      GetOStream(Statistics0) << "regular edges: " << numGlobalRegularEdges << ", Dirichlet edges: " << numGlobalDirichletEdges << std::endl;
+    // Make sure that rows with identical column indices are sorted in the same way.
+    TEUCHOS_ASSERT(toTpetra(D_P->getCrsGraph())->isSorted());
+    auto lcl_D_P = D_P->getLocalMatrixDevice();
+
+    // Count up how many coarse regular entities we are creating.
+    auto numLocalRows = lcl_D_P.numRows();
+
+    LocalOrdinal nnzRegular;
+    LocalOrdinal nnzDirichlet;
+    LocalOrdinal nnz;
+    rowptr_type rowptr;
+    colidx_type colidx;
+    values_type values;
+    if (sizeCoarsenedEntity == 2) {
+      using tuple_type    = my_tuple_type<LocalOrdinal, 2>;
+      using set_type      = Kokkos::UnorderedMap<tuple_type, LocalOrdinal, execution_space>;
+      set_type Dc_entries = set_type(numLocalRows);
+
+      RegularCoarseningFunctor<rowptr_type, colidx_type, values_type, set_type, decltype(lcl_D_P), LocalOrdinal> functor(Dc_entries, lcl_D_P, sizeCoarsenedEntity);
+
+      Kokkos::parallel_reduce(Kokkos::RangePolicy<execution_space>(0, numLocalRows), functor, numCoarseRegularEntities);
+
+      numCoarseEntities = numCoarseRegularEntities + numCoarseDirichletEntities;
+      rowptr            = rowptr_type(Kokkos::ViewAllocateWithoutInitializing("rowptr Dc"), numCoarseEntities + 1);
+      // sizeCoarsenedEntity entries per regular entity, 1 entry per Dirichlet edge
+      nnzRegular   = sizeCoarsenedEntity * numCoarseRegularEntities;
+      nnzDirichlet = numCoarseDirichletEntities;
+      nnz          = nnzRegular + nnzDirichlet;
+      colidx       = colidx_type(Kokkos::ViewAllocateWithoutInitializing("colidx Dc"), nnz);
+      values       = values_type(Kokkos::ViewAllocateWithoutInitializing("values Dc"), nnz);
+
+      functor.setViews(rowptr, colidx, values);
+
+      // Fill regular entities
+      Kokkos::parallel_scan(Kokkos::RangePolicy<execution_space>(0, Dc_entries.capacity()), functor);
+    } else {
+      TEUCHOS_TEST_FOR_EXCEPTION(true, std::runtime_error, "Not implemented");
     }
 
-    numCoarseEdges = numCoarseRegularEdges + numCoarseDirichletEdges;
-    rowptr_type rowptr(Kokkos::ViewAllocateWithoutInitializing("rowptr Dc"), numCoarseEdges + 1);
-    // 2 entries per regular edge, 1 entry per Dirichlet edge
-    LocalOrdinal nnz = 2 * numCoarseRegularEdges + numCoarseDirichletEdges;
-    colidx_type colidx(Kokkos::ViewAllocateWithoutInitializing("colidx Dc"), nnz);
-    values_type values(Kokkos::ViewAllocateWithoutInitializing("values Dc"), nnz);
-
-    // Fill regular edges
-    Kokkos::parallel_scan(
-        Kokkos::RangePolicy<execution_space>(0, numLocalRows),
-        KOKKOS_LAMBDA(const LocalOrdinal rlid, LocalOrdinal& ne, const bool update) {
-          auto row = lclZ.rowConst(rlid);
-          if (!update) {
-            // First pass: figure out offsets for entries.
-            for (LocalOrdinal k = 0; k < row.length; ++k) {
-              auto clid = row.colidx(k);
-              if (add_edge(rlid, clid))
-                ++ne;
-            }
-          } else {
-            // Second pass: enter entries
-
-            // initialize
-            if (rlid == 0)
-              rowptr(rlid) = 0;
-
-            auto rgid  = lclRowMap.getGlobalElement(rlid);
-            auto rclid = lclColMap.getLocalElement(rgid);
-
-            // loop over entries in row of Z
-            for (LocalOrdinal k = 0; k < row.length; ++k) {
-              auto clid = row.colidx(k);
-              if (add_edge(rlid, clid)) {
-                auto cgid = lclColMap.getGlobalElement(clid);
-                // enter the two end-points of the edge, orient edge based on GIDs of nodal endpoints
-                colidx(2 * ne)     = rclid;
-                colidx(2 * ne + 1) = clid;
-                if (rgid < cgid) {
-                  values(2 * ne)     = -one_impl_scalar;
-                  values(2 * ne + 1) = one_impl_scalar;
-                } else {
-                  values(2 * ne)     = one_impl_scalar;
-                  values(2 * ne + 1) = -one_impl_scalar;
-                }
-                ++ne;
-                rowptr(ne) = 2 * ne;
-              }
-            }
-          }
-        });
-
-    // Fill Dirichlet edges
+    // Fill Dirichlet entities
     // Create one coarse Dirichlet edge for every nodal aggregate that is connected to at least one fine Dirichlet edge.
     {
       auto lcl_numberConnectedFineDirichletEdgesToCoarseNode = numberConnectedFineDirichletEdgesToCoarseNode->getLocalViewDevice(Tpetra::Access::ReadOnly);
@@ -388,110 +361,83 @@ void ReitzingerPFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::BuildP(Level
                 ++ne;
               } else {
                 // Second pass: fill
-                colidx(2 * numCoarseRegularEdges + ne) = agg_lid;
-                values(2 * numCoarseRegularEdges + ne) = one_impl_scalar;
+                colidx(nnzRegular + ne) = agg_lid;
+                values(nnzRegular + ne) = one_impl_scalar;
                 ++ne;
-                rowptr(numCoarseRegularEdges + ne) = 2 * numCoarseRegularEdges + ne;
+                rowptr(numCoarseRegularEntities + ne) = nnzRegular + ne;
               }
             }
           });
     }
 
-    auto Dc_rowmap = MapFactory::Build(rowMap->lib(), INVALID_GO, numCoarseEdges, 0, rowMap->getComm());
-    auto lclDc     = local_matrix_type("Dc", numCoarseEdges, colMap->getLocalNumElements(), nnz, values, rowptr, colidx);
+    auto Dc_rowmap = MapFactory::Build(rowMap->lib(), INVALID_GO, numCoarseEntities, 0, rowMap->getComm());
+    auto lclDc     = local_matrix_type("Dc", numCoarseEntities, colMap->getLocalNumElements(), nnz, values, rowptr, colidx);
 
     // Construct distributed matrix
-    Dc = MatrixFactory::Build(lclDc, Dc_rowmap, colMap, Z->getDomainMap(), Dc_rowmap);
+    Dc = MatrixFactory::Build(lclDc, Dc_rowmap, colMap, P->getDomainMap(), Dc_rowmap);
+
+    if (IsPrint(Statistics0)) {
+      LocalOrdinal numGlobalRegularEntities;
+      LocalOrdinal numGlobalDirichletEntities;
+      MueLu_sumAll(rowMap->getComm(), numCoarseRegularEntities, numGlobalRegularEntities);
+      MueLu_sumAll(rowMap->getComm(), numCoarseDirichletEntities, numGlobalDirichletEntities);
+      GetOStream(Statistics0) << "regular entities: " << numGlobalRegularEntities << ", Dirichlet entities: " << numGlobalDirichletEntities << std::endl;
+    }
   }
 
   const bool needToBuildPnext = (coarseLevel.IsRequested("P", this) ||
                                  coarseLevel.IsRequested("Ptent", this));
   RCP<Matrix> Pnext;
   if (needToBuildPnext) {
-    // Create the Pnext matrix, but with the extra entries.  From ML's notes:
-    /* The general idea is that the matrix                              */
-    /*                        D P Dc^*                                  */
-    /* is almost Pnext. If we make sure that P contains 1's and -1's, the*/
-    /* matrix triple product will yield a matrix with +/- 1 and +/- 2's.*/
-    /* If we remove all the 1's and divide the 2's by 2. we arrive at Pnext*/
-
-    // Here, we generalize the algorithm so that it can support other spaces on the deRham complex.
-    // We still construct
-    //                      D P Dc^*,
-    // but then we only keep entries with value +-numEntriesPerRow and divide by numEntriesPerRow.
-    // Here numEntriesPerRow is the maximum number of entries per row in D. In the usual construction of a
-    // prolongator for H(curl) we have that numEntriesPerRow=2.
+    // We construct
+    //                      D P Dc^T,
+    // but then we only keep entries with value +-sizeCoarsenedEntity and divide by sizeCoarsenedEntity.
+    // Here sizeCoarsenedEntity is the maximum number of entries per row in D. In the usual construction of a
+    // prolongator for H(curl) we have that sizeCoarsenedEntity=2.
 
     RCP<Matrix> D_P_DcT;
     {
       SubFactoryMonitor m2(*this, "Generate Pnext (pre-fix)", coarseLevel);
-#if 0
-      {
-        // If you're concerned about processor / rank mismatches, this debugging code might help
-        int rank =  D->getRowMap()->getComm()->getRank();
-        int fine_level = fineLevel.GetLevelID();
-        printf("[%d] Level %d Checkpoint #2 P = %d/%d/%d/%d Dc = %d/%d/%d/%d D = %d/%d/%d/%d\n",rank,fine_level,
-               P->getRangeMap()->getComm()->getSize(),
-               P->getRowMap()->getComm()->getSize(),
-               P->getColMap()->getComm()->getSize(),
-               P->getDomainMap()->getComm()->getSize(),
-               Dc->getRangeMap()->getComm()->getSize(),
-               Dc->getRowMap()->getComm()->getSize(),
-               Dc->getColMap()->getComm()->getSize(),
-               Dc->getDomainMap()->getComm()->getSize(),
-               D->getRangeMap()->getComm()->getSize(),
-               D->getRowMap()->getComm()->getSize(),
-               D->getColMap()->getComm()->getSize(),
-               D->getDomainMap()->getComm()->getSize());
-        fflush(stdout);
-        D->getRowMap()->getComm()->barrier();
-      }
-#endif
       RCP<Matrix> dummy;
-
-      // We don't want this guy getting accidently used later
-      if (!mm_params.is_null()) mm_params->remove("importer", false);
-
-      D_P_DcT = XMM::Multiply(*D_P, false, *Dc, true, dummy, out0, true, true, "(D*P)*Dc'", mm_params);
+      D_P_DcT = XMM::Multiply(*D_P, false, *Dc, true, dummy, out0, true, true, "(D*P)*Dc^T");
     }
 
     {
-      auto numEntriesPerRow        = D->getLocalMaxNumRowEntries();
       auto lcl_D_P                 = D_P->getLocalMatrixDevice();
       auto lcl_D_P_DcT             = D_P_DcT->getLocalMatrixDevice();
-      auto lcl_isDirichletFineEdge = isDirichletFineEdge->getLocalViewDevice(Tpetra::Access::ReadOnly);
+      auto lcl_isDirichletFineEdge = isDirichletFineEntity->getLocalViewDevice(Tpetra::Access::ReadOnly);
 
       auto lcl_colmap_D_P_DcT = D_P_DcT->getColMap()->getLocalMap();
 
-      const auto normalization = one_impl_scalar / ((Scalar)numEntriesPerRow);
+      const auto normalization = one_impl_scalar / ((Scalar)sizeCoarsenedEntity);
 
       // overallocate by 1 to allow for easier counting
-      rowptr_type Pnext_rowptr("Pnext_rowptr", numFineEdges + 2);
+      rowptr_type Pnext_rowptr("Pnext_rowptr", numFineEntities + 2);
 
       // count entries per row
       Kokkos::parallel_for(
-          "Pnext_count_entries", Kokkos::RangePolicy<execution_space>(0, numFineEdges), KOKKOS_LAMBDA(const LocalOrdinal fineEdge) {
-            if (lcl_isDirichletFineEdge(fineEdge, 0) != one_LO) {
-              // regular fine edge
-              auto row = lcl_D_P_DcT.rowConst(fineEdge);
+          "Pnext_count_entries", Kokkos::RangePolicy<execution_space>(0, numFineEntities), KOKKOS_LAMBDA(const LocalOrdinal fineEntity) {
+            if (lcl_isDirichletFineEdge(fineEntity, 0) == REGULAR_ENTITY) {
+              // regular fine entity
+              auto row = lcl_D_P_DcT.rowConst(fineEntity);
               for (int k = 0; k < row.length; ++k) {
                 auto val = row.value(k);
-                // filter out entries that are not +-numEntriesPerRow
-                if (ATS::magnitude((ATS::magnitude(val) - numEntriesPerRow)) < eps_mag) {
-                  // add entry (fineEdge, clid) -> val * normalization.
-                  ++Pnext_rowptr(fineEdge + 2);
+                // filter out entries that are not +-sizeCoarsenedEntity
+                if (ATS::magnitude((ATS::magnitude(val) - sizeCoarsenedEntity)) < eps_mag) {
+                  // add entry (fineEntity, clid) -> val * normalization.
+                  ++Pnext_rowptr(fineEntity + 2);
                 }
               }
             } else {
-              // Dirichlet interior fine edge
-              ++Pnext_rowptr(fineEdge + 2);
+              // Dirichlet interior fine entity
+              ++Pnext_rowptr(fineEntity + 2);
             }
           });
 
       // prefix sum
       LocalOrdinal Pnext_nnz;
       Kokkos::parallel_scan(
-          "Pnext_prefix_sum", Kokkos::RangePolicy<execution_space>(0, numFineEdges + 2), KOKKOS_LAMBDA(const LocalOrdinal rlid, LocalOrdinal& nnz, const bool update) {
+          "Pnext_prefix_sum", Kokkos::RangePolicy<execution_space>(0, numFineEntities + 2), KOKKOS_LAMBDA(const LocalOrdinal rlid, LocalOrdinal& nnz, const bool update) {
             nnz += Pnext_rowptr(rlid);
             if (update) {
               Pnext_rowptr(rlid) = nnz;
@@ -511,8 +457,8 @@ void ReitzingerPFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::BuildP(Level
           auto lcl_map_coarseEdges_rowMap_Dc_to_coarseEdges = map_coarseEdges_rowMap_Dc_to_coarseEdges->getLocalViewDevice(Tpetra::Access::OverwriteAll);
           auto lclMap                                       = Dc->getRowMap()->getLocalMap();
           Kokkos::parallel_for(
-              Kokkos::RangePolicy<execution_space>(numCoarseRegularEdges, numCoarseEdges), KOKKOS_LAMBDA(const LocalOrdinal coarseEdge) {
-                lcl_map_coarseEdges_rowMap_Dc_to_coarseEdges(coarseEdge, 0) = lclMap.getGlobalElement(coarseEdge);
+              Kokkos::RangePolicy<execution_space>(numCoarseRegularEntities, numCoarseEntities), KOKKOS_LAMBDA(const LocalOrdinal coarseEntity) {
+                lcl_map_coarseEdges_rowMap_Dc_to_coarseEdges(coarseEntity, 0) = lclMap.getGlobalElement(coarseEntity);
               });
         }
         auto map_coarseNodes_domainMap_D_P_to_coarseEdges = Xpetra::VectorFactory<GlobalOrdinal, LocalOrdinal, GlobalOrdinal, Node>::Build(Dc->getDomainMap());
@@ -550,48 +496,48 @@ void ReitzingerPFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::BuildP(Level
 
         // fill
         Kokkos::parallel_for(
-            "Pnext_fill", Kokkos::RangePolicy<execution_space>(0, numFineEdges), KOKKOS_LAMBDA(const LocalOrdinal fineEdge_lid) {
-              if (lcl_isDirichletFineEdge(fineEdge_lid, 0) != one_LO) {
-                // regular fine edge
-                auto row = lcl_D_P_DcT.rowConst(fineEdge_lid);
+            "Pnext_fill", Kokkos::RangePolicy<execution_space>(0, numFineEntities), KOKKOS_LAMBDA(const LocalOrdinal fineEntity_lid) {
+              if (lcl_isDirichletFineEdge(fineEntity_lid, 0) == REGULAR_ENTITY) {
+                // regular fine entity
+                auto row = lcl_D_P_DcT.rowConst(fineEntity_lid);
                 for (int k = 0; k < row.length; ++k) {
                   auto val = row.value(k);
-                  // filter out entries that are not +-numEntriesPerRow
-                  if (ATS::magnitude((ATS::magnitude(val) - numEntriesPerRow)) < eps_mag) {
+                  // filter out entries that are not +-sizeCoarsenedEntity
+                  if (ATS::magnitude((ATS::magnitude(val) - sizeCoarsenedEntity)) < eps_mag) {
                     auto clid = row.colidx(k);
-                    // add entry (fineEdge_lid, clid) -> val*normalization.
-                    auto offset          = Pnext_rowptr(fineEdge_lid + 1);
+                    // add entry (fineEntity_lid, clid) -> val*normalization.
+                    auto offset          = Pnext_rowptr(fineEntity_lid + 1);
                     Pnext_colidx(offset) = clid;
                     Pnext_values(offset) = val * normalization;
-                    ++Pnext_rowptr(fineEdge_lid + 1);
+                    ++Pnext_rowptr(fineEntity_lid + 1);
                   }
                 }
               } else {
-                // Dirichlet interior fine edge
-                // Only one nonzero entry in row of D_P: (fineEdge_lid, coarseNode_lid_D_P) -> val_D_P
-                for (auto offset_D_P = lcl_D_P.graph.row_map(fineEdge_lid); offset_D_P < lcl_D_P.graph.row_map(fineEdge_lid + 1); ++offset_D_P) {
+                // Dirichlet interior fine entity
+                // Only one nonzero entry in row of D_P: (fineEntity_lid, coarseNode_lid_D_P) -> val_D_P
+                for (auto offset_D_P = lcl_D_P.graph.row_map(fineEntity_lid); offset_D_P < lcl_D_P.graph.row_map(fineEntity_lid + 1); ++offset_D_P) {
                   LocalOrdinal coarseNode_lid_D_P = lcl_D_P.graph.entries(offset_D_P);
                   impl_scalar_type val_D_P        = lcl_D_P.values(offset_D_P);
                   if (ATS::magnitude(val_D_P) > eps_mag) {
-                    GlobalOrdinal coarseEdge_gid = lcl_map_coarseNodes_colMap_D_P_to_coarseEdges(coarseNode_lid_D_P, 0);
+                    GlobalOrdinal coarseEntity_gid = lcl_map_coarseNodes_colMap_D_P_to_coarseEdges(coarseNode_lid_D_P, 0);
 
-                    auto coarseEdge_lid_D_P_DcT = lcl_colmap_D_P_DcT.getLocalElement(coarseEdge_gid);
+                    auto coarseEntity_lid_D_P_DcT = lcl_colmap_D_P_DcT.getLocalElement(coarseEntity_gid);
 
                     // We rely on the fact that all coarse interior edges have been created with value 1.
                     const auto val_Dc = one_impl_scalar;
 
-                    // add entry (fineEdge_lid, coarseEdge) -> val_D_P/val_Dc to edge prolongator
-                    auto offset_Pnext          = Pnext_rowptr(fineEdge_lid + 1);
-                    Pnext_colidx(offset_Pnext) = coarseEdge_lid_D_P_DcT;
+                    // add entry (fineEntity_lid, coarseEntity) -> val_D_P/val_Dc to next prolongator
+                    auto offset_Pnext          = Pnext_rowptr(fineEntity_lid + 1);
+                    Pnext_colidx(offset_Pnext) = coarseEntity_lid_D_P_DcT;
                     Pnext_values(offset_Pnext) = val_D_P / val_Dc;
-                    ++Pnext_rowptr(fineEdge_lid + 1);
+                    ++Pnext_rowptr(fineEntity_lid + 1);
                     break;
                   }
                 }
               }
             });
       }
-      auto lclPnext = local_matrix_type("Pnext", numFineEdges, D_P_DcT->getColMap()->getLocalNumElements(), Pnext_nnz, Pnext_values, Kokkos::subview(Pnext_rowptr, Kokkos::make_pair((decltype(numFineEdges))0, numFineEdges + 1)), Pnext_colidx);
+      auto lclPnext = local_matrix_type("Pnext", numFineEntities, D_P_DcT->getColMap()->getLocalNumElements(), Pnext_nnz, Pnext_values, Kokkos::subview(Pnext_rowptr, Kokkos::make_pair((decltype(numFineEntities))0, numFineEntities + 1)), Pnext_colidx);
 
       // Construct distributed matrix
       Pnext = MatrixFactory::Build(lclPnext, D->getRowMap(), D_P_DcT->getColMap(), Dc->getRangeMap(), D->getRangeMap());
@@ -625,12 +571,12 @@ void ReitzingerPFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::BuildP(Level
   if (coarseLevel.IsRequested("Ptent", this))
     Set(coarseLevel, "Ptent", Pnext);
 
-  Set(coarseLevel, "D0", Dc);
+  Set(coarseLevel, D_name, Dc);
 
   /* This needs to be kept for the smoothers */
-  coarseLevel.Set("D0", Dc, NoFactory::get());
-  coarseLevel.AddKeepFlag("D0", NoFactory::get(), MueLu::Final);
-  coarseLevel.RemoveKeepFlag("D0", NoFactory::get(), MueLu::UserData);
+  coarseLevel.Set(D_name, Dc, NoFactory::get());
+  coarseLevel.AddKeepFlag(D_name, NoFactory::get(), MueLu::Final);
+  coarseLevel.RemoveKeepFlag(D_name, NoFactory::get(), MueLu::UserData);
 
 #if 0
   {
@@ -654,21 +600,21 @@ void ReitzingerPFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::BuildP(Level
 
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 void ReitzingerPFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
-    CheckCommutingProperty(const Matrix& Pe, const Matrix& D0_c, const Matrix& D0_f, const Matrix& Pn) const {
+    CheckCommutingProperty(const Matrix& Pnext, const Matrix& Dc, const Matrix& D, const Matrix& P) const {
   if (IsPrint(Statistics0)) {
     using XMM = MatrixMatrix;
     auto one  = Teuchos::ScalarTraits<SC>::one();
 
     RCP<Matrix> dummy;
-    RCP<Matrix> left  = XMM::Multiply(Pe, false, D0_c, false, dummy, GetOStream(Runtime0));
-    RCP<Matrix> right = XMM::Multiply(D0_f, false, Pn, false, dummy, GetOStream(Runtime0));
+    RCP<Matrix> left  = XMM::Multiply(Pnext, false, Dc, false, dummy, GetOStream(Runtime0));
+    RCP<Matrix> right = XMM::Multiply(D, false, P, false, dummy, GetOStream(Runtime0));
 
     RCP<Matrix> summation;
     XMM::TwoMatrixAdd(*left, false, one, *right, false, -one, summation, GetOStream(Runtime0));
     summation->fillComplete(left->getDomainMap(), left->getRangeMap());
 
     auto norm = summation->getFrobeniusNorm();
-    GetOStream(Statistics0) << "CheckCommutingProperty: || Pe D0_c - D0_f Pn || = " << norm << std::endl;
+    GetOStream(Statistics0) << "CheckCommutingProperty: || Pnext Dc - D P || = " << norm << std::endl;
   }
 
 }  // end CheckCommutingProperty
