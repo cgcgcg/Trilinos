@@ -443,15 +443,11 @@ void ReitzingerPFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::BuildP(Level
       }
 #endif
       RCP<Matrix> dummy;
-      RCP<Matrix> Pn_D0cT = XMM::Multiply(*Pn, false, *D0H, true, dummy, out0, true, true, "Pn*D0c'", mm_params);
 
       // We don't want this guy getting accidently used later
       if (!mm_params.is_null()) mm_params->remove("importer", false);
 
-      D0_Pn_D0HT = XMM::Multiply(*D0, false, *Pn_D0cT, false, dummy, out0, true, true, "D0*(Pn*D0c')", mm_params);
-
-      // TODO: Something like this *might* work.  But this specifically, doesn't
-      // Pe = XMM::Multiply(*D0_Pn_nonghosted,false,*D0H,true,dummy,out0,true,true,"(D0*Pn)*D0c'",mm_params);
+      D0_Pn_D0HT = XMM::Multiply(*D0_Pn, false, *D0H, true, dummy, out0, true, true, "(D0*Pn)*D0c'", mm_params);
     }
 
     {
