@@ -23,6 +23,7 @@
 #include "MueLu_Level_fwd.hpp"
 #include "MueLu_PFactory.hpp"
 #include "MueLu_Utilities_fwd.hpp"
+#include "Teuchos_FancyOStream_decl.hpp"
 
 namespace MueLu {
 
@@ -93,8 +94,11 @@ class ReitzingerPFactory : public PFactory {
 
   //@}
 
-  //! Utility method
+  //! Utility methods
   //@{
+
+  static typename Teuchos::ScalarTraits<Scalar>::magnitudeType ComputeCommutingPropertyResidualNorm(const Matrix& Pnext, const Matrix& Dc, const Matrix& D, const Matrix& P, Teuchos::FancyOStream& out);
+
   void CheckCommutingProperty(const Matrix& Pnext, const Matrix& Dc, const Matrix& D, const Matrix& P) const;
   //@}
 

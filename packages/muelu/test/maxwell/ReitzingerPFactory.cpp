@@ -54,10 +54,10 @@ template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 typename Teuchos::ScalarTraits<Scalar>::magnitudeType
 CheckCommutingProperty(MueLu::Level& nodeLevel_coarse, MueLu::Level& edgeLevel_fine, MueLu::Level& edgeLevel_coarse) {
 #include <MueLu_UseShortNames.hpp>
-  RCP<Matrix> Pn   = nodeLevel_coarse.Get<RCP<Matrix> >("P");
-  RCP<Matrix> Pe   = edgeLevel_coarse.Get<RCP<Matrix> >("P");
-  RCP<Matrix> D0_f = edgeLevel_fine.Get<RCP<Matrix> >("D0");
-  RCP<Matrix> D0_c = edgeLevel_coarse.Get<RCP<Matrix> >("D0");
+  RCP<Matrix> Pn   = nodeLevel_coarse.Get<RCP<Matrix>>("P");
+  RCP<Matrix> Pe   = edgeLevel_coarse.Get<RCP<Matrix>>("P");
+  RCP<Matrix> D0_f = edgeLevel_fine.Get<RCP<Matrix>>("D0");
+  RCP<Matrix> D0_c = edgeLevel_coarse.Get<RCP<Matrix>>("D0");
 
   using XMM = Xpetra::MatrixMatrix<SC, LO, GO, NO>;
   using MT  = typename Teuchos::ScalarTraits<SC>::magnitudeType;
@@ -81,12 +81,12 @@ CheckCommutingProperty(MueLu::Level& nodeLevel_coarse, MueLu::Level& edgeLevel_f
 }
 
 template <typename Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-void read_matrix(Xpetra::UnderlyingLib& lib, RCP<const Teuchos::Comm<int> >& comm,
-                 RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node> >& SM_Matrix,
-                 RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node> >& S_Matrix,
-                 RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node> >& D0_Matrix,
-                 RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node> >& Kn_Matrix,
-                 RCP<Xpetra::MultiVector<typename Teuchos::ScalarTraits<Scalar>::magnitudeType, LocalOrdinal, GlobalOrdinal, Node> >& coords) {
+void read_matrix(Xpetra::UnderlyingLib& lib, RCP<const Teuchos::Comm<int>>& comm,
+                 RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>& SM_Matrix,
+                 RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>& S_Matrix,
+                 RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>& D0_Matrix,
+                 RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>& Kn_Matrix,
+                 RCP<Xpetra::MultiVector<typename Teuchos::ScalarTraits<Scalar>::magnitudeType, LocalOrdinal, GlobalOrdinal, Node>>& coords) {
 #include <MueLu_UseShortNames.hpp>
   RCP<Teuchos::FancyOStream> out = Teuchos::fancyOStream(Teuchos::rcpFromRef(std::cout));
 
@@ -152,11 +152,11 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(ReitzingerPFactory, Setup2Level_Unsmoothed, Sc
 #include <MueLu_UseShortNames.hpp>
   MUELU_TESTING_SET_OSTREAM;
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
-  RCP<const Teuchos::Comm<int> > comm = TestHelpers::Parameters::getDefaultComm();
-  Xpetra::UnderlyingLib lib           = MueLuTests::TestHelpers::Parameters::getLib();
+  RCP<const Teuchos::Comm<int>> comm = TestHelpers::Parameters::getDefaultComm();
+  Xpetra::UnderlyingLib lib          = MueLuTests::TestHelpers::Parameters::getLib();
 
   RCP<Matrix> SM_Matrix, S_Matrix, D0_Matrix, Kn_Matrix;
-  RCP<Xpetra::MultiVector<typename Teuchos::ScalarTraits<Scalar>::magnitudeType, LO, GO, NO> > coords;
+  RCP<Xpetra::MultiVector<typename Teuchos::ScalarTraits<Scalar>::magnitudeType, LO, GO, NO>> coords;
   read_matrix<SC, LO, GO, NO>(lib, comm, SM_Matrix, S_Matrix, D0_Matrix, Kn_Matrix, coords);
 
   int NumLevels = 2;
@@ -206,12 +206,12 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(ReitzingerPFactory, Setup2Level_Unsmoothed, Sc
     RCP<Level> NodeL = NodeH.GetLevel(i);
     RCP<Level> EdgeL = EdgeH.GetLevel(i);
 
-    EdgeL->Set("NodeAggMatrix", NodeL->Get<RCP<Matrix> >("A"));
-    EdgeL->Set("NodeMatrix", NodeL->Get<RCP<Matrix> >("A"));
+    EdgeL->Set("NodeAggMatrix", NodeL->Get<RCP<Matrix>>("A"));
+    EdgeL->Set("NodeMatrix", NodeL->Get<RCP<Matrix>>("A"));
     if (i != 0) {
-      EdgeL->Set("Ptent_nodal", NodeL->Get<RCP<Matrix> >("P"));
+      EdgeL->Set("Ptent_nodal", NodeL->Get<RCP<Matrix>>("P"));
 
-      RCP<const Matrix> P = NodeL->Get<RCP<Matrix> >("P");
+      RCP<const Matrix> P = NodeL->Get<RCP<Matrix>>("P");
       //      Xpetra::IO<SC,LO,GO,NO>::Write("Pn.mat",*P);
     }
 
@@ -256,7 +256,11 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(ReitzingerPFactory, Setup2Level_Unsmoothed, Sc
   Teuchos::Array<MT> norm(1), norm0(1);
   norm0[0] = Teuchos::ScalarTraits<MT>::zero();
 
-  norm[0] = CheckCommutingProperty<SC, LO, GO, NO>(*node_l1, *l0, *l1);
+  norm[0] = ReitzingerPFactory::ComputeCommutingPropertyResidualNorm(*l1->Get<RCP<Matrix>>("P"),
+                                                                     *l1->Get<RCP<Matrix>>("D0"),
+                                                                     *l0->Get<RCP<Matrix>>("D0"),
+                                                                     *node_l1->Get<RCP<Matrix>>("P"),
+                                                                     out);
   TEST_COMPARE_FLOATING_ARRAYS(norm, norm0, Teuchos::ScalarTraits<MT>::eps() * 100)
 }
 
@@ -264,11 +268,11 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(ReitzingerPFactory, Setup2Level_AlphaSmoothed,
 #include <MueLu_UseShortNames.hpp>
   MUELU_TESTING_SET_OSTREAM;
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
-  RCP<const Teuchos::Comm<int> > comm = TestHelpers::Parameters::getDefaultComm();
-  Xpetra::UnderlyingLib lib           = MueLuTests::TestHelpers::Parameters::getLib();
+  RCP<const Teuchos::Comm<int>> comm = TestHelpers::Parameters::getDefaultComm();
+  Xpetra::UnderlyingLib lib          = MueLuTests::TestHelpers::Parameters::getLib();
 
   RCP<Matrix> SM_Matrix, S_Matrix, D0_Matrix, Kn_Matrix;
-  RCP<Xpetra::MultiVector<typename Teuchos::ScalarTraits<Scalar>::magnitudeType, LO, GO, NO> > coords;
+  RCP<Xpetra::MultiVector<typename Teuchos::ScalarTraits<Scalar>::magnitudeType, LO, GO, NO>> coords;
   read_matrix<SC, LO, GO, NO>(lib, comm, SM_Matrix, S_Matrix, D0_Matrix, Kn_Matrix, coords);
 
   int NumLevels = 2;
@@ -317,12 +321,12 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(ReitzingerPFactory, Setup2Level_AlphaSmoothed,
     RCP<Level> NodeL = NodeH.GetLevel(i);
     RCP<Level> EdgeL = EdgeH.GetLevel(i);
 
-    EdgeL->Set("NodeAggMatrix", NodeL->Get<RCP<Matrix> >("A"));
-    EdgeL->Set("NodeMatrix", NodeL->Get<RCP<Matrix> >("A"));
+    EdgeL->Set("NodeAggMatrix", NodeL->Get<RCP<Matrix>>("A"));
+    EdgeL->Set("NodeMatrix", NodeL->Get<RCP<Matrix>>("A"));
     if (i != 0) {
-      EdgeL->Set("Ptent_nodal", NodeL->Get<RCP<Matrix> >("P"));
+      EdgeL->Set("Ptent_nodal", NodeL->Get<RCP<Matrix>>("P"));
 
-      RCP<const Matrix> P = NodeL->Get<RCP<Matrix> >("P");
+      RCP<const Matrix> P = NodeL->Get<RCP<Matrix>>("P");
       //      Xpetra::IO<SC,LO,GO,NO>::Write("Pn.mat",*P);
     }
 
@@ -360,7 +364,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(ReitzingerPFactory, Setup2Level_AlphaSmoothed,
   RCP<Level> l1 = EdgeH.GetLevel(1);
 
   {
-    RCP<const Matrix> Pe = l1->Get<RCP<Matrix> >("P");
+    RCP<const Matrix> Pe = l1->Get<RCP<Matrix>>("P");
     //    Xpetra::IO<SC,LO,GO,NO>::Write("Pe.mat",*Pe);
   }
   TEST_EQUALITY(l0->IsAvailable("A", MueLu::NoFactory::get()), true);
@@ -372,11 +376,11 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(ReitzingerPFactory, Setup3Level_AlphaSmoothed,
 #include <MueLu_UseShortNames.hpp>
   MUELU_TESTING_SET_OSTREAM;
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
-  RCP<const Teuchos::Comm<int> > comm = TestHelpers::Parameters::getDefaultComm();
-  Xpetra::UnderlyingLib lib           = MueLuTests::TestHelpers::Parameters::getLib();
+  RCP<const Teuchos::Comm<int>> comm = TestHelpers::Parameters::getDefaultComm();
+  Xpetra::UnderlyingLib lib          = MueLuTests::TestHelpers::Parameters::getLib();
 
   RCP<Matrix> SM_Matrix, S_Matrix, D0_Matrix, Kn_Matrix;
-  RCP<Xpetra::MultiVector<typename Teuchos::ScalarTraits<Scalar>::magnitudeType, LO, GO, NO> > coords;
+  RCP<Xpetra::MultiVector<typename Teuchos::ScalarTraits<Scalar>::magnitudeType, LO, GO, NO>> coords;
   read_matrix<SC, LO, GO, NO>(lib, comm, SM_Matrix, S_Matrix, D0_Matrix, Kn_Matrix, coords);
 
   int NumLevels = 3;
@@ -446,12 +450,12 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(ReitzingerPFactory, Setup3Level_AlphaSmoothed,
     RCP<Level> NodeL = NodeH.GetLevel(i);
     RCP<Level> EdgeL = EdgeH.GetLevel(i);
 
-    EdgeL->Set("NodeAggMatrix", NodeL->Get<RCP<Matrix> >("A"));
-    EdgeL->Set("NodeMatrix", NodeL->Get<RCP<Matrix> >("A"));
+    EdgeL->Set("NodeAggMatrix", NodeL->Get<RCP<Matrix>>("A"));
+    EdgeL->Set("NodeMatrix", NodeL->Get<RCP<Matrix>>("A"));
     if (i != 0) {
-      EdgeL->Set("Ptent_nodal", NodeL->Get<RCP<Matrix> >("P"));
+      EdgeL->Set("Ptent_nodal", NodeL->Get<RCP<Matrix>>("P"));
 
-      RCP<const Matrix> P = NodeL->Get<RCP<Matrix> >("P");
+      RCP<const Matrix> P = NodeL->Get<RCP<Matrix>>("P");
       //      Xpetra::IO<SC,LO,GO,NO>::Write("Pn.mat",*P);
     }
 
@@ -521,11 +525,11 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(ReitzingerPFactory, Setup3Level_Unsmoothed, Sc
 #include <MueLu_UseShortNames.hpp>
   MUELU_TESTING_SET_OSTREAM;
   MUELU_TESTING_LIMIT_SCOPE(Scalar, GlobalOrdinal, Node);
-  RCP<const Teuchos::Comm<int> > comm = TestHelpers::Parameters::getDefaultComm();
-  Xpetra::UnderlyingLib lib           = MueLuTests::TestHelpers::Parameters::getLib();
+  RCP<const Teuchos::Comm<int>> comm = TestHelpers::Parameters::getDefaultComm();
+  Xpetra::UnderlyingLib lib          = MueLuTests::TestHelpers::Parameters::getLib();
 
   RCP<Matrix> SM_Matrix, S_Matrix, D0_Matrix, Kn_Matrix;
-  RCP<Xpetra::MultiVector<typename Teuchos::ScalarTraits<Scalar>::magnitudeType, LO, GO, NO> > coords;
+  RCP<Xpetra::MultiVector<typename Teuchos::ScalarTraits<Scalar>::magnitudeType, LO, GO, NO>> coords;
   read_matrix<SC, LO, GO, NO>(lib, comm, SM_Matrix, S_Matrix, D0_Matrix, Kn_Matrix, coords);
 
   int NumLevels = 3;
@@ -595,12 +599,12 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(ReitzingerPFactory, Setup3Level_Unsmoothed, Sc
     RCP<Level> NodeL = NodeH.GetLevel(i);
     RCP<Level> EdgeL = EdgeH.GetLevel(i);
 
-    EdgeL->Set("NodeAggMatrix", NodeL->Get<RCP<Matrix> >("A"));
-    EdgeL->Set("NodeMatrix", NodeL->Get<RCP<Matrix> >("A"));
+    EdgeL->Set("NodeAggMatrix", NodeL->Get<RCP<Matrix>>("A"));
+    EdgeL->Set("NodeMatrix", NodeL->Get<RCP<Matrix>>("A"));
     if (i != 0) {
-      EdgeL->Set("Ptent_nodal", NodeL->Get<RCP<Matrix> >("P"));
+      EdgeL->Set("Ptent_nodal", NodeL->Get<RCP<Matrix>>("P"));
 
-      RCP<const Matrix> P = NodeL->Get<RCP<Matrix> >("P");
+      RCP<const Matrix> P = NodeL->Get<RCP<Matrix>>("P");
       //      Xpetra::IO<SC,LO,GO,NO>::Write("Pn.mat",*P);
     }
 
@@ -669,9 +673,17 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(ReitzingerPFactory, Setup3Level_Unsmoothed, Sc
   Teuchos::Array<MT> norm(1), norm0(1);
   norm0[0] = Teuchos::ScalarTraits<MT>::zero();
 
-  norm[0] = CheckCommutingProperty<SC, LO, GO, NO>(*node_l1, *l0, *l1);
+  norm[0] = ReitzingerPFactory::ComputeCommutingPropertyResidualNorm(*l1->Get<RCP<Matrix>>("P"),
+                                                                     *l1->Get<RCP<Matrix>>("D0"),
+                                                                     *l0->Get<RCP<Matrix>>("D0"),
+                                                                     *node_l1->Get<RCP<Matrix>>("P"),
+                                                                     out);
   TEST_COMPARE_FLOATING_ARRAYS(norm, norm0, Teuchos::ScalarTraits<MT>::eps() * 100);
-  norm[0] = CheckCommutingProperty<SC, LO, GO, NO>(*node_l2, *l1, *l2);
+  norm[0] = ReitzingerPFactory::ComputeCommutingPropertyResidualNorm(*l2->Get<RCP<Matrix>>("P"),
+                                                                     *l2->Get<RCP<Matrix>>("D0"),
+                                                                     *l1->Get<RCP<Matrix>>("D0"),
+                                                                     *node_l2->Get<RCP<Matrix>>("P"),
+                                                                     out);
   TEST_COMPARE_FLOATING_ARRAYS(norm, norm0, Teuchos::ScalarTraits<MT>::eps() * 100);
 }
 
@@ -700,7 +712,7 @@ int main(int argc, char* argv[]) {
     // Xpetra parameters are added to the Teuchos::CommandLineProcessor of Teuchos::UnitTestRepository in MueLu_TestHelpers.cpp
 
 #ifdef ParallelDebug
-    RCP<const Teuchos::Comm<int> > comm = Teuchos::DefaultComm<int>::getComm();
+    RCP<const Teuchos::Comm<int>> comm = Teuchos::DefaultComm<int>::getComm();
 
     int mypid = comm->getRank();
 

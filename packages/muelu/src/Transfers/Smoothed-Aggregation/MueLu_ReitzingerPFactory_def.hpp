@@ -599,21 +599,29 @@ void ReitzingerPFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::BuildP(Level
 }  // end Build
 
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+typename Teuchos::ScalarTraits<Scalar>::magnitudeType ReitzingerPFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
+    ComputeCommutingPropertyResidualNorm(const Matrix& Pnext, const Matrix& Dc, const Matrix& D, const Matrix& P, Teuchos::FancyOStream& out) {
+  using XMM = MatrixMatrix;
+  auto one  = Teuchos::ScalarTraits<SC>::one();
+
+  RCP<Matrix> dummy;
+  RCP<Matrix> left  = XMM::Multiply(Pnext, false, Dc, false, dummy, out);
+  RCP<Matrix> right = XMM::Multiply(D, false, P, false, dummy, out);
+
+  RCP<Matrix> summation;
+  XMM::TwoMatrixAdd(*left, false, one, *right, false, -one, summation, out);
+  summation->fillComplete(left->getDomainMap(), left->getRangeMap());
+
+  auto norm = summation->getFrobeniusNorm();
+
+  return norm;
+}  // end ComputeCommutingPropertyResidualNorm
+
+template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 void ReitzingerPFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     CheckCommutingProperty(const Matrix& Pnext, const Matrix& Dc, const Matrix& D, const Matrix& P) const {
   if (IsPrint(Statistics0)) {
-    using XMM = MatrixMatrix;
-    auto one  = Teuchos::ScalarTraits<SC>::one();
-
-    RCP<Matrix> dummy;
-    RCP<Matrix> left  = XMM::Multiply(Pnext, false, Dc, false, dummy, GetOStream(Runtime0));
-    RCP<Matrix> right = XMM::Multiply(D, false, P, false, dummy, GetOStream(Runtime0));
-
-    RCP<Matrix> summation;
-    XMM::TwoMatrixAdd(*left, false, one, *right, false, -one, summation, GetOStream(Runtime0));
-    summation->fillComplete(left->getDomainMap(), left->getRangeMap());
-
-    auto norm = summation->getFrobeniusNorm();
+    auto norm = ComputeCommutingPropertyResidualNorm(Pnext, Dc, D, P, GetOStream(Runtime0));
     GetOStream(Statistics0) << "CheckCommutingProperty: || Pnext Dc - D P || = " << norm << std::endl;
   }
 
