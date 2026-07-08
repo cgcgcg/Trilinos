@@ -1,5 +1,7 @@
 <ParameterList name="Linear Solver">
-  <Parameter name="Linear Solver Type" type="string" value="Belos"/>
+  <Parameter name="Linear Solver Type" type="string" value="Full Maxwell Solver"/>
+  
+  <!-- <Parameter name="Linear Solver Type" type="string" value="Belos"/> -->
   <ParameterList name="Linear Solver Types">
     <ParameterList name="Belos">
       <Parameter name="Solver Type" type="string" value="Block GMRES"/>

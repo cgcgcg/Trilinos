@@ -8,6 +8,7 @@
 // *****************************************************************************
 // @HEADER
 
+#include "Teko_InverseFactory.hpp"
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_TimeMonitor.hpp"
 #include "Teuchos_DefaultComm.hpp"
@@ -29,6 +30,7 @@
 #include "Panzer_NodeType.hpp"
 #include "Panzer_ResponseLibrary.hpp"
 #include "Panzer_BlockedTpetraLinearObjFactory.hpp"
+#include "Thyra_LinearSolverBuilderBase.hpp"
 #ifdef PANZER_HAVE_EPETRA_STACK
 # include "Panzer_BlockedEpetraLinearObjFactory.hpp"
 #endif
@@ -52,11 +54,14 @@
 #include "MiniEM_ClosureModel_Factory_TemplateBuilder.hpp"
 #include "MiniEM_OperatorRequestCallback.hpp"
 #include "MiniEM_FullMaxwellPreconditionerFactory.hpp"
+#include "MiniEM_FullMaxwellSolverFactory.hpp"
 #include "MiniEM_HigherOrderMaxwellPreconditionerFactory.hpp"
 #include "MiniEM_FullMaxwellPreconditionerFactory_Augmentation.hpp"
 #include "MiniEM_FullDarcyPreconditionerFactory.hpp"
 #include "MiniEM_Interpolation.hpp"
 #include "MiniEM_helpers.hpp"
+
+#include "Teuchos_AbstractFactoryStd.hpp"
 
 #include <string>
 #include <iostream>
@@ -438,6 +443,14 @@ int main_(Teuchos::CommandLineProcessor &clp, int argc,char * argv[])
     panzer::ClosureModelFactory_TemplateManager<panzer::Traits> cm_factory;
     mini_em::ClosureModelFactory_TemplateBuilder cm_builder;
     cm_factory.buildObjects(cm_builder);
+
+    // add full maxwell solver
+    Stratimikos::LinearSolverBuilder<Scalar> linearSolverBuilder;
+    using Impl = mini_em::FullMaxwellSolverFactory;
+    using Base = Thyra::LinearOpWithSolveFactoryBase<double>;
+    linearSolverBuilder.setLinearSolveStrategyFactory(Teuchos::abstractFactoryStd<Base, Impl>(), "Full Maxwell Solver");
+    // RCP<Teko::Cloneable> cloneSolver = rcp(new Teko::AutoClone<mini_em::FullMaxwellSolverFactory>());
+    // Teko::InverseFactory::addInverseFactory("Full Maxwell Solver",cloneSolver);
 
     // add full maxwell preconditioner to teko
     RCP<Teko::Cloneable> clone = rcp(new Teko::AutoClone<mini_em::FullMaxwellPreconditionerFactory>());

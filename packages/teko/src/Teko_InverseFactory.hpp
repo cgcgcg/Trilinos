@@ -19,6 +19,7 @@
 
 #include "Teko_Config.h"
 #include "Teko_Utilities.hpp"
+#include "Teko_CloneFactory.hpp"
 #include "Teko_PreconditionerState.hpp"
 #include "Teko_RequestHandler.hpp"
 #include "Teko_RequestHandlerContainer.hpp"
@@ -179,6 +180,14 @@ class InverseFactory : public RequestHandlerContainer {
 
   //! Get the request handler with pointers to the appropriate callbacks
   Teuchos::RCP<RequestHandler> getRequestHandler() const { return callbackHandler_; }
+
+  static void addInverseFactory(const std::string& name, const Teuchos::RCP<Cloneable>& clone);
+
+ private:
+  //! for creating the preconditioner factories objects
+  static CloneFactory<InverseFactory> invFactoryBuilder_;
+
+  static void initializeInvFactoryBuilder();
 
  protected:
   //! For handling requests and send requests back to the user

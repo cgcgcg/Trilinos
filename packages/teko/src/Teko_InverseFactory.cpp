@@ -77,6 +77,24 @@ using Teuchos::rcp_dynamic_cast;
 
 namespace Teko {
 
+CloneFactory<InverseFactory> InverseFactory::invFactoryBuilder_;
+
+void InverseFactory::addInverseFactory(const std::string& name, const RCP<Cloneable>& clone) {
+  // initialize the defaults if necessary
+  if (invFactoryBuilder_.cloneCount() == 0) initializeInvFactoryBuilder();
+
+  // add clone to builder
+  invFactoryBuilder_.addClone(name, clone);
+}
+
+void InverseFactory::initializeInvFactoryBuilder() {
+  RCP<Cloneable> clone;
+
+  // add various preconditioners to factory
+  // clone = rcp(new AutoClone<LU2x2PreconditionerFactory>());
+  // precFactoryBuilder_.addClone("Block LU2x2", clone);
+}
+
 //! Build an inverse operator using a factory and a linear operator
 InverseLinearOp buildInverse(const InverseFactory& factory, const LinearOp& A) {
   InverseLinearOp inv;
