@@ -1,0 +1,29 @@
+SET(ENABLE_CLANG_TIDY OFF CACHE BOOL "Enable clang-tidy")
+SET(CLANG_TIDY_APPLY_FIXES OFF CACHE BOOL "Automatically fix issues found by clang-tidy")
+SET(CLANG_TIDY_EXECUTABLE_NAME "clang-tidy" CACHE STRING "Name of the clang-tidy executable")
+
+IF (${ENABLE_CLANG_TIDY})
+
+  FIND_PROGRAM(CLANG_TIDY_EXECUTABLE ${CLANG_TIDY_EXECUTABLE_NAME})
+
+  IF (CLANG_TIDY_EXECUTABLE)
+
+    SET(CLANG_TIDY_COMMAND
+      ${CLANG_TIDY_EXECUTABLE}
+      --config-file=${CMAKE_CURRENT_SOURCE_DIR}/.clang-tidy
+    )
+
+    IF (${CLANG_TIDY_APPLY_FIXES})
+      LIST(APPEND CLANG_TIDY_COMMAND
+        --fix)
+      MESSAGE("Enabled clang-tidy fixes")
+    ENDIF()
+
+    SET(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND}")
+
+  ELSE()
+
+    MESSAGE(FATAL_ERROR "Did not find executable \"${CLANG_TIDY_EXECUTABLE_NAME}\"")
+
+  ENDIF()
+ENDIF()

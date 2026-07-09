@@ -17,6 +17,9 @@ PROJECT(${PROJECT_NAME} NONE)
 # Set up to use ccache
 include("${CMAKE_CURRENT_LIST_DIR}/cmake/UseCCache.cmake")
 
+# Set up to use clang-tidy
+include("${CMAKE_CURRENT_LIST_DIR}/cmake/ClangTidy.cmake")
+
 # Set an env so we know we are in configure
 set(ENV{CMAKE_IS_IN_CONFIGURE_MODE} 1)
 
