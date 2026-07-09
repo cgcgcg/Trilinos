@@ -29,7 +29,6 @@
 #include <unordered_set>
 #include <vector>
 #include <sstream>
-#include <iostream>
 
 namespace {
 void warn_cmd_line_arg_ignored_when_kokkos_tools_disabled(char const* arg) {
@@ -1068,7 +1067,6 @@ void set_input_values(size_t contextId, size_t count, VariableValue* values) {
   (void)values;
 #endif
 }
-#include <iostream>
 void request_output_values(size_t contextId, size_t count,
                            VariableValue* values) {
 #ifdef KOKKOS_ENABLE_TUNING
