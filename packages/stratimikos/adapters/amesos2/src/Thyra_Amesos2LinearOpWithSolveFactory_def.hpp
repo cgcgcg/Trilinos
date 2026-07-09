@@ -26,7 +26,6 @@
 #include "Teuchos_TimeMonitor.hpp"
 #include "Teuchos_TypeNameTraits.hpp"
 #include "Teuchos_VerboseObjectParameterListHelpers.hpp"
-#include "Teuchos_StandardParameterEntryValidators.hpp"
 
 namespace Thyra {
 

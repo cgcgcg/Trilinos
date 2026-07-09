@@ -21,7 +21,7 @@
 
 bool Thyra::test_tpetra_stratimikos_solver(
   Teuchos::ParameterList *paramList_inout
-  ,const bool dumpAll
+  ,const bool  /*dumpAll*/
   ,Teuchos::FancyOStream *out
   )
 {
