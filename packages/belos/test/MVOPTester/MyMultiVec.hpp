@@ -313,7 +313,7 @@ public:
 
 
   void MvNorm ( std::vector<typename Teuchos::ScalarTraits<ScalarType>::magnitudeType>& normvec,
-                Belos::NormType type = Belos::TwoNorm ) const
+                Belos::NormType  /*type*/ = Belos::TwoNorm ) const
   {
     assert (NumberVecs_ <= (int)normvec.size());
 

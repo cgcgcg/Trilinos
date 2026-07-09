@@ -142,8 +142,8 @@ Systems," SIAM Journal on Scientific Computing, 28(5), pp. 1651-1674,
     GCRODRSolMgr () :
       base_type ()
     {}
-    GCRODRSolMgr (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> >& problem,
-                  const Teuchos::RCP<Teuchos::ParameterList>& pl) :
+    GCRODRSolMgr (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> >&  /*problem*/,
+                  const Teuchos::RCP<Teuchos::ParameterList>&  /*pl*/) :
       base_type ()
     {}
     virtual ~GCRODRSolMgr () {}

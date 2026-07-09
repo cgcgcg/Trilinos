@@ -107,9 +107,9 @@ public:
   /// instead of performing a linear solve.  
 
   void apply( const Tpetra_MultiVector &X, Tpetra_MultiVector &Y, 
-           Teuchos::ETransp mode = Teuchos::NO_TRANS,
-           Scalar alpha = Teuchos::ScalarTraits<Scalar>::one(),
-           Scalar beta = Teuchos::ScalarTraits<Scalar>::zero()) const override
+           Teuchos::ETransp  /*mode*/ = Teuchos::NO_TRANS,
+           Scalar  /*alpha*/ = Teuchos::ScalarTraits<Scalar>::one(),
+           Scalar  /*beta*/ = Teuchos::ScalarTraits<Scalar>::zero()) const override
   {
     Teuchos::RCP<const Tpetra_MultiVector> vec_X = Teuchos::rcpFromRef( X );
     Teuchos::RCP<Tpetra_MultiVector> vec_Y = Teuchos::rcpFromRef( Y );

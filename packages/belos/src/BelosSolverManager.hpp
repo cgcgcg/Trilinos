@@ -236,15 +236,15 @@ namespace Details {
       TEUCHOS_TEST_FOR_EXCEPTION( true, std::logic_error,
         "This solver is not implemented for complex ScalarType." );
     }
-    virtual void setProblem (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > &problem) {
+    virtual void setProblem (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > & /*problem*/) {
       TEUCHOS_TEST_FOR_EXCEPTION( true, std::logic_error,
         "This solver is not implemented for complex ScalarType." );
     }
-    virtual void setParameters (const Teuchos::RCP<Teuchos::ParameterList>& params) {
+    virtual void setParameters (const Teuchos::RCP<Teuchos::ParameterList>&  /*params*/) {
       TEUCHOS_TEST_FOR_EXCEPTION( true, std::logic_error,
         "This solver is not implemented for complex ScalarType." );
     }
-    virtual void reset (const ResetType type) {
+    virtual void reset (const ResetType  /*type*/) {
       TEUCHOS_TEST_FOR_EXCEPTION( true, std::logic_error,
         "This solver is not implemented for complex ScalarType." );
     }
@@ -370,19 +370,19 @@ namespace Details {
          " types for which Teuchos::LAPACK does not have a valid implementation.  "
          "ScalarType = " << Teuchos::TypeNameTraits<ScalarType>::name () << ".");
     }
-    virtual void setProblem (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > &problem) {
+    virtual void setProblem (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > & /*problem*/) {
       TEUCHOS_TEST_FOR_EXCEPTION
         (true, std::logic_error, "This solver is not implemented for ScalarType"
          " types for which Teuchos::LAPACK does not have a valid implementation.  "
          "ScalarType = " << Teuchos::TypeNameTraits<ScalarType>::name () << ".");
     }
-    virtual void setParameters (const Teuchos::RCP<Teuchos::ParameterList>& params) {
+    virtual void setParameters (const Teuchos::RCP<Teuchos::ParameterList>&  /*params*/) {
       TEUCHOS_TEST_FOR_EXCEPTION
         (true, std::logic_error, "This solver is not implemented for ScalarType"
          " types for which Teuchos::LAPACK does not have a valid implementation.  "
          "ScalarType = " << Teuchos::TypeNameTraits<ScalarType>::name () << ".");
     }
-    virtual void reset (const ResetType type) {
+    virtual void reset (const ResetType  /*type*/) {
       TEUCHOS_TEST_FOR_EXCEPTION
         (true, std::logic_error, "This solver is not implemented for ScalarType"
          " types for which Teuchos::LAPACK does not have a valid implementation.  "
@@ -483,14 +483,14 @@ namespace Details {
          "does not have a valid implementation."
          "ScalarType = " << Teuchos::TypeNameTraits<ScalarType>::name () << ".");
     }
-    virtual void setParameters (const Teuchos::RCP<Teuchos::ParameterList>& params) {
+    virtual void setParameters (const Teuchos::RCP<Teuchos::ParameterList>&  /*params*/) {
       TEUCHOS_TEST_FOR_EXCEPTION
         (true, std::logic_error, "This solver is not implemented for complex "
          "ScalarType types, or for ScalarType types for which Teuchos::LAPACK "
          "does not have a valid implementation."
          "ScalarType = " << Teuchos::TypeNameTraits<ScalarType>::name () << ".");
     }
-    virtual void reset (const ResetType type) {
+    virtual void reset (const ResetType  /*type*/) {
       TEUCHOS_TEST_FOR_EXCEPTION
         (true, std::logic_error, "This solver is not implemented for complex "
          "ScalarType types, or for ScalarType types for which Teuchos::LAPACK "

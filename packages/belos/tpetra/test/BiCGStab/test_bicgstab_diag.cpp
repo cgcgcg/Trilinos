@@ -194,9 +194,9 @@ class Trilinos_Interface : public OP
 template<class OP, class ST, class MP, class MV>
 void Trilinos_Interface<OP, ST, MP, MV>::apply (const MV &X,
             MV &Y,
-            Teuchos::ETransp mode,
-            ST alpha,
-            ST beta) const {
+            Teuchos::ETransp  /*mode*/,
+            ST  /*alpha*/,
+            ST  /*beta*/) const {
     (*pA)(X,Y);
 }
 
@@ -232,7 +232,7 @@ class Iterative_Inverse_Operator : public Vector_Operator<MV>
 };
 
 template<class OP, class ST, class MP, class MV>
-Iterative_Inverse_Operator<OP,ST,MP,MV>::Iterative_Inverse_Operator(int n_in, int blocksize,
+Iterative_Inverse_Operator<OP,ST,MP,MV>::Iterative_Inverse_Operator(int n_in, int  /*blocksize*/,
     const RCP<Vector_Operator<MV>>& pA_in,
     std::string opString, bool print_in)
 : Vector_Operator<MV>(n_in, n_in),      // square operator

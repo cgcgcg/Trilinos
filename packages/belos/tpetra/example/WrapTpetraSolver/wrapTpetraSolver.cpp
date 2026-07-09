@@ -538,15 +538,15 @@ public:
     TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "Not implemented");
   }
 
-  void setProblem (const Teuchos::RCP<Belos::LinearProblem<ScalarType,MV,OP> >& problem) override {
+  void setProblem (const Teuchos::RCP<Belos::LinearProblem<ScalarType,MV,OP> >&  /*problem*/) override {
     TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "Not implemented");
   }
 
-  void setParameters (const Teuchos::RCP<Teuchos::ParameterList>& params) override {
+  void setParameters (const Teuchos::RCP<Teuchos::ParameterList>&  /*params*/) override {
     TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "Not implemented");
   }
 
-  void reset (const Belos::ResetType type) override {
+  void reset (const Belos::ResetType  /*type*/) override {
     TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "Not implemented");
   }
 

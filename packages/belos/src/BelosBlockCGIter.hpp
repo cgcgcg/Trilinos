@@ -116,7 +116,7 @@ public:
     TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "Stub");
   }
 
-  void setState(Teuchos::RCP<CGIterationStateBase<ScalarType,MV> > state) {
+  void setState(Teuchos::RCP<CGIterationStateBase<ScalarType,MV> >  /*state*/) {
     TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "Stub");
   }
 
@@ -124,7 +124,7 @@ public:
     TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "Stub");
   }
 
-  void resetNumIters( int iter=0 ) {
+  void resetNumIters( int  /*iter*/=0 ) {
     TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "Stub");
   }
 
@@ -145,7 +145,7 @@ public:
     TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "Stub");
   }
 
-  void setBlockSize(int blockSize) {
+  void setBlockSize(int  /*blockSize*/) {
     TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "Stub");
   }
 
@@ -153,7 +153,7 @@ public:
     TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "Stub");
   }
 
-  void setDoCondEst(bool val){
+  void setDoCondEst(bool  /*val*/){
     TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "Stub");
   }
 

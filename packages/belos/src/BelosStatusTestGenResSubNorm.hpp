@@ -122,7 +122,7 @@ class StatusTestGenResSubNorm: public StatusTestResNorm<ScalarType,MV,OP> {
   //! Set the block index of which we want to check the norm of the sub-residuals
   /*! It does not really make sense to change/reset the index during the solution process
    */
-  int setSubIdx ( size_t subIdx ) { return 0;}
+  int setSubIdx ( size_t  /*subIdx*/ ) { return 0;}
 
   //! Sets the number of residuals that must pass the convergence test before Passed is returned.
   //! \note If \c quorum=-1 then all residuals must pass the convergence test before Passed is returned.
@@ -214,7 +214,7 @@ class StatusTestGenResSubNorm: public StatusTestResNorm<ScalarType,MV,OP> {
    * After this function is called <tt>getScaledNormValue()</tt> can be called
    * to get the scaling std::vector.
    */
-  StatusType firstCallCheckStatusSetup(Iteration<ScalarType,MV,OP>* iSolver) {
+  StatusType firstCallCheckStatusSetup(Iteration<ScalarType,MV,OP>*  /*iSolver*/) {
     return Undefined;
   }
   //@}

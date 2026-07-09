@@ -64,7 +64,7 @@ namespace details {
     ///   The specific parameter keys that are read depend on the TSQR
     ///   implementation.  For details, call \c getValidParameters()
     ///   and examine the documentation embedded therein.
-    StubTsqrAdapter (const Teuchos::RCP<Teuchos::ParameterList>& plist)
+    StubTsqrAdapter (const Teuchos::RCP<Teuchos::ParameterList>&  /*plist*/)
     {
       TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "TSQR adapter for "
         "multivector type \"" << Teuchos::TypeNameTraits<MV>::name()
@@ -99,7 +99,7 @@ namespace details {
 
     //! Set parameters (stub; throws std::logic_error).
     void
-    setParameterList (const Teuchos::RCP<Teuchos::ParameterList>& plist)
+    setParameterList (const Teuchos::RCP<Teuchos::ParameterList>&  /*plist*/)
     {
       TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "TSQR adapter for "
         "multivector type \"" << Teuchos::TypeNameTraits<MV>::name()
@@ -108,10 +108,10 @@ namespace details {
 
     //! Compute QR factorization [Q,R] = qr(A,0) (stub; throws std::logic_error).
     void
-    factorExplicit (MV& A,
-		    MV& Q,
-		    dense_matrix_type& R,
-		    const bool forceNonnegativeDiagonal=false)
+    factorExplicit (MV&  /*A*/,
+		    MV&  /*Q*/,
+		    dense_matrix_type&  /*R*/,
+		    const bool  /*forceNonnegativeDiagonal*/=false)
     {
       TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "TSQR adapter for "
         "multivector type \"" << Teuchos::TypeNameTraits<MV>::name()
@@ -120,9 +120,9 @@ namespace details {
 
     //! Rank-revealing decomposition (stub; does nothing).
     int
-    revealRank (MV& Q,
-		dense_matrix_type& R,
-		const magnitude_type& tol)
+    revealRank (MV&  /*Q*/,
+		dense_matrix_type&  /*R*/,
+		const magnitude_type&  /*tol*/)
     {
       // mfh 07 Sep 2012: In order to prevent compiler warnings on
       // some platforms, we simply return some value.  This code can

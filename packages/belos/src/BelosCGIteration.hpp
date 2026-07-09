@@ -33,7 +33,7 @@ namespace Belos {
   class CGIterationStateBase {
 
   public:
-    virtual void initialize(Teuchos::RCP<const MV> tmp, int _numVectors) {
+    virtual void initialize(Teuchos::RCP<const MV>  /*tmp*/, int _numVectors) {
       TEUCHOS_ASSERT(!R.is_null());
       TEUCHOS_ASSERT(!Z.is_null());
       TEUCHOS_ASSERT(!P.is_null());

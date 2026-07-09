@@ -87,7 +87,7 @@ private:
                                            const SolverInput<SC>& input, 
                                            MV& Q,
                                            dense_matrix_type& H,
-                                           dense_matrix_type& WORK) const
+                                           dense_matrix_type&  /*WORK*/) const
   {
     const real_type eps = STS::eps ();
     const real_type tolFactor = static_cast<real_type> (0.0);

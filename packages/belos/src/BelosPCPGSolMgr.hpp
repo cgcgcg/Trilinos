@@ -125,8 +125,8 @@ namespace Belos {
     PCPGSolMgr () :
       base_type ()
     {}
-    PCPGSolMgr (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > &problem,
-                const Teuchos::RCP<Teuchos::ParameterList> &pl) :
+    PCPGSolMgr (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > & /*problem*/,
+                const Teuchos::RCP<Teuchos::ParameterList> & /*pl*/) :
       base_type ()
     {}
     virtual ~PCPGSolMgr () {}

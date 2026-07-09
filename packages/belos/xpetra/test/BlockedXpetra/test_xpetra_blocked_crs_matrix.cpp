@@ -76,7 +76,7 @@ BuildCartesianMap(const RCP<const Teuchos::Comm<int>> &comm,
 // ============================================================================
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>> BuildLaplace2D(
-    const RCP<const Teuchos::Comm<int>> &comm, Xpetra::UnderlyingLib lib,
+    const RCP<const Teuchos::Comm<int>> &comm, Xpetra::UnderlyingLib  /*lib*/,
     GlobalOrdinal nx, GlobalOrdinal ny,
     const RCP<const Xpetra::Map<LocalOrdinal, GlobalOrdinal, Node>> &map) {
   using Map = Xpetra::Map<LocalOrdinal, GlobalOrdinal, Node>;

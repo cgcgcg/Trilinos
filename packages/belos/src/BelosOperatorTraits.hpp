@@ -88,10 +88,10 @@ namespace Belos {
     /// trans != NOTRANS, or if there is some other error in applying
     /// the operator, this method throws a subclass of std::exception.
     static void 
-    Apply (const OP& Op, 
-	   const MV& x, 
-	   MV& y, 
-	   ETrans trans = NOTRANS)
+    Apply (const OP&  /*Op*/, 
+	   const MV&  /*x*/, 
+	   MV&  /*y*/, 
+	   ETrans  /*trans*/ = NOTRANS)
     { 
       // This will result in a deliberate compile-time error, if a
       // specialization of OperatorTraits has not been defined for the
@@ -116,7 +116,7 @@ namespace Belos {
     /// of OperatorTraits for OP to advertise that operators of type
     /// OP may implement applying the transpose, override the default
     /// implementation in the specialization.
-    static bool HasApplyTranspose (const OP& Op) {
+    static bool HasApplyTranspose (const OP&  /*Op*/) {
       return false;
     }
   };

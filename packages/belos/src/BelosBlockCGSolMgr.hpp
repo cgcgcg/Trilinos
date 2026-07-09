@@ -87,8 +87,8 @@ namespace Belos {
     BlockCGSolMgr () :
       base_type ()
     {}
-    BlockCGSolMgr (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> >& problem,
-                  const Teuchos::RCP<Teuchos::ParameterList>& pl) :
+    BlockCGSolMgr (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> >&  /*problem*/,
+                  const Teuchos::RCP<Teuchos::ParameterList>&  /*pl*/) :
       base_type ()
     {}
     virtual ~BlockCGSolMgr () = default;

@@ -195,8 +195,8 @@ public:
   LSQRSolMgr () :
     base_type ()
   {}
-  LSQRSolMgr (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > &problem,
-              const Teuchos::RCP<Teuchos::ParameterList> &pl) :
+  LSQRSolMgr (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > & /*problem*/,
+              const Teuchos::RCP<Teuchos::ParameterList> & /*pl*/) :
     base_type ()
   {}
   virtual ~LSQRSolMgr () {}

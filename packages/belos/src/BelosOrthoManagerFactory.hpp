@@ -67,7 +67,7 @@ namespace Belos {
     /// Return true if and only if the given MatOrthoManager name is
     /// that of a MatOrthoManager subclass with rank-revealing
     /// capability.
-    static bool isRankRevealing (const std::string& name) {
+    static bool isRankRevealing (const std::string&  /*name*/) {
 #ifdef HAVE_BELOS_TSQR
       // Currently only TSQR has a full rank-revealing capability.
       return (name == "TSQR");

@@ -182,7 +182,7 @@ public:
   load (Teuchos::RCP<map_type>& map,
         Teuchos::RCP<matrix_type>& M,
         const Teuchos::RCP<const Teuchos::Comm<int> >& comm,
-        std::ostream& debugOut)
+        std::ostream&  /*debugOut*/)
   {
     TEUCHOS_TEST_FOR_EXCEPTION(
       filename != "", std::logic_error, "Sorry, reading in a Harwell-Boeing "

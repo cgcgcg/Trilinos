@@ -192,9 +192,9 @@ class Trilinos_Interface : public OP
 template<class OP, class ST, class MP, class MV>
 void Trilinos_Interface<OP, ST, MP, MV>::apply (const MV &X,
             MV &Y,
-            Teuchos::ETransp mode,
-            ST alpha,
-            ST beta) const {
+            Teuchos::ETransp  /*mode*/,
+            ST  /*alpha*/,
+            ST  /*beta*/) const {
     (*pA)(X,Y);
 }
 
