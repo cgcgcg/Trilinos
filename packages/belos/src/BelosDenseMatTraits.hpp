@@ -199,11 +199,11 @@ View(const pointer_type &ptr, const IntType&... indices)
     { UndefinedDenseMatTraits<ScalarType, DM>::notDefined(); }
 
     //!  \brief Returns the Frobenius norm of the dense matrix.
-    static typename Teuchos::ScalarTraits<ScalarType>::magnitudeType NormFrobenius( DM& dm)
+    static typename Teuchos::ScalarTraits<ScalarType>::magnitudeType NormFrobenius(const DM& dm)
     { UndefinedDenseMatTraits<ScalarType, DM>::notDefined(); }
 
     //!  \brief Returns the one-norm of the dense matrix.
-    static typename Teuchos::ScalarTraits<ScalarType>::magnitudeType NormOne( DM& dm)
+    static typename Teuchos::ScalarTraits<ScalarType>::magnitudeType NormOne(const DM& dm)
     { UndefinedDenseMatTraits<ScalarType, DM>::notDefined(); }
 
     //@}

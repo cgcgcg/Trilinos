@@ -35,7 +35,7 @@ template <class ScalarType, class MV, class OP, class DM>
 class StatusTest;
 
 
-template<class ScalarType, class MV, class OP, class DM = Teuchos::SerialDenseMatrix<int,ScalarType>>
+template<class ScalarType, class MV, class OP, class DM = DefaultDenseMatrix<int,ScalarType>>
 class SolverManager : virtual public Teuchos::Describable {
 
   public:
@@ -59,7 +59,7 @@ class SolverManager : virtual public Teuchos::Describable {
   //@{
 
   //! Return a reference to the linear problem being solved by this solver manager.
-  virtual const LinearProblem<ScalarType,MV,OP>& getProblem() const = 0;
+  virtual const LinearProblem<ScalarType,MV,OP,DM>& getProblem() const = 0;
 
   //! Return the valid parameters for this solver manager.
   virtual Teuchos::RCP<const Teuchos::ParameterList> getValidParameters() const = 0;
@@ -96,7 +96,7 @@ class SolverManager : virtual public Teuchos::Describable {
   //@{
 
   //! Set the linear problem that needs to be solved.
-  virtual void setProblem( const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > &problem ) = 0;
+  virtual void setProblem( const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > &problem ) = 0;
 
   /// \brief Set the parameters to use when solving the linear problem.
   ///
@@ -186,7 +186,7 @@ namespace Details {
   template<class ScalarType,
            class MV,
            class OP,
-           class DM = Teuchos::SerialDenseMatrix<int, ScalarType>,
+           class DM = DefaultDenseMatrix<int, ScalarType>,
            const bool isComplex = Teuchos::ScalarTraits<ScalarType>::isComplex>
   class RealSolverManager;
 
@@ -216,7 +216,7 @@ namespace Details {
     }
     virtual ~RealSolverManager () {}
 
-    virtual const LinearProblem<ScalarType,MV,OP>& getProblem() const {
+    virtual const LinearProblem<ScalarType,MV,OP,DM>& getProblem() const {
       TEUCHOS_TEST_FOR_EXCEPTION( true, std::logic_error,
         "This solver is not implemented for complex ScalarType." );
     }
@@ -236,7 +236,7 @@ namespace Details {
       TEUCHOS_TEST_FOR_EXCEPTION( true, std::logic_error,
         "This solver is not implemented for complex ScalarType." );
     }
-    virtual void setProblem (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > &problem) {
+    virtual void setProblem (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > &problem) {
       TEUCHOS_TEST_FOR_EXCEPTION( true, std::logic_error,
         "This solver is not implemented for complex ScalarType." );
     }
@@ -306,7 +306,7 @@ namespace Details {
   template<class ScalarType,
            class MV,
            class OP,
-           class DM = Teuchos::SerialDenseMatrix<int, ScalarType>,
+           class DM = DefaultDenseMatrix<int, ScalarType>,
            const bool lapackSupportsScalarType =
            Belos::Details::LapackSupportsScalar<ScalarType>::value>
   class SolverManagerRequiresLapack;
@@ -341,7 +341,7 @@ namespace Details {
     }
     virtual ~SolverManagerRequiresLapack () {}
 
-    virtual const LinearProblem<ScalarType,MV,OP>& getProblem() const {
+    virtual const LinearProblem<ScalarType,MV,OP,DM>& getProblem() const {
       TEUCHOS_TEST_FOR_EXCEPTION
         (true, std::logic_error, "This solver is not implemented for ScalarType"
          " types for which Teuchos::LAPACK does not have a valid implementation.  "
@@ -371,7 +371,7 @@ namespace Details {
          " types for which Teuchos::LAPACK does not have a valid implementation.  "
          "ScalarType = " << Teuchos::TypeNameTraits<ScalarType>::name () << ".");
     }
-    virtual void setProblem (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > &problem) {
+    virtual void setProblem (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > &problem) {
       TEUCHOS_TEST_FOR_EXCEPTION
         (true, std::logic_error, "This solver is not implemented for ScalarType"
          " types for which Teuchos::LAPACK does not have a valid implementation.  "
@@ -404,7 +404,7 @@ namespace Details {
   template<class ScalarType,
            class MV,
            class OP,
-           class DM = Teuchos::SerialDenseMatrix<int, ScalarType>,
+           class DM = DefaultDenseMatrix<int, ScalarType>,
            const bool supportsScalarType =
              Belos::Details::LapackSupportsScalar<ScalarType>::value &&
              ! Teuchos::ScalarTraits<ScalarType>::isComplex>
@@ -442,7 +442,7 @@ namespace Details {
     }
     virtual ~SolverManagerRequiresRealLapack () {}
 
-    virtual const LinearProblem<ScalarType,MV,OP>& getProblem() const {
+    virtual const LinearProblem<ScalarType,MV,OP,DM>& getProblem() const {
       TEUCHOS_TEST_FOR_EXCEPTION
         (true, std::logic_error, "This solver is not implemented for complex "
          "ScalarType types, or for ScalarType types for which Teuchos::LAPACK "
@@ -478,7 +478,7 @@ namespace Details {
          "ScalarType = " << Teuchos::TypeNameTraits<ScalarType>::name () << ".");
     }
     virtual void
-    setProblem (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> >& /* problem */) {
+    setProblem (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> >& /* problem */) {
       TEUCHOS_TEST_FOR_EXCEPTION
         (true, std::logic_error, "This solver is not implemented for complex "
          "ScalarType types, or for ScalarType types for which Teuchos::LAPACK "

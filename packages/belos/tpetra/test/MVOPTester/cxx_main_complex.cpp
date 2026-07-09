@@ -136,8 +136,7 @@ namespace {
   TEUCHOS_UNIT_TEST_TEMPLATE_3_DECL( MultiVector, MVTestDistKokkos, O1, O2, Scalar )
   {
     typedef Tpetra::MultiVector<Scalar,O1,O2> MV;
-    typedef typename MV::impl_scalar_type IST;
-    typedef Kokkos::DualView<IST**,Kokkos::LayoutLeft> DM;
+    typedef typename MV::wrapped_dual_view_type::DVT DM;
     const O2 dim = 500;
     const Teuchos_Ordinal numVecs = 5;
     // Create an output manager to handle the I/O from the solver
@@ -159,8 +158,7 @@ namespace {
   TEUCHOS_UNIT_TEST_TEMPLATE_3_DECL( MultiVector, MVTestLocalKokkos, O1, O2, Scalar )
   {
     typedef Tpetra::MultiVector<Scalar,O1,O2> MV;
-    typedef typename MV::impl_scalar_type IST;
-    typedef Kokkos::DualView<IST**,Kokkos::LayoutLeft> DM;
+    typedef typename MV::wrapped_dual_view_type::DVT DM;
     const O2 dim = 500;
     const Teuchos_Ordinal numVecs = 5;
     // Create an output manager to handle the I/O from the solver
@@ -249,8 +247,7 @@ namespace {
   TEUCHOS_UNIT_TEST_TEMPLATE_3_DECL( MultiVector, DenseTestKokkos, O1, O2, Scalar )
   {
     typedef Tpetra::MultiVector<Scalar,O1,O2> MV;
-    typedef typename MV::impl_scalar_type IST;
-    typedef Kokkos::DualView<IST**,Kokkos::LayoutLeft> DM;
+    typedef typename MV::wrapped_dual_view_type::DVT DM;
     // Create an output manager to handle the I/O from the solver
     RCP<OutputManager<Scalar> > MyOM = rcp( new OutputManager<Scalar>(Warnings,rcp(&out,false)) );
     // get a comm

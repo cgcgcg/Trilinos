@@ -38,7 +38,7 @@ namespace Belos {
     The frequency and occasion of the printing can be dictated according to some parameters passed to 
     StatusTestResNormOutput::StatusTestResNormOutput().
   */
-template <class ScalarType, class MV, class OP, class DM = Teuchos::SerialDenseMatrix<int,ScalarType>>
+template <class ScalarType, class MV, class OP, class DM = DefaultDenseMatrix<int,ScalarType>>
 class StatusTestResNormOutput : public StatusTestOutput<ScalarType,MV,OP,DM> {
 
   typedef MultiVecTraits<ScalarType,MV,DM> MVT;
@@ -117,7 +117,7 @@ class StatusTestResNormOutput : public StatusTestOutput<ScalarType,MV,OP,DM> {
     state_ = test_->checkStatus(solver);
 
     // Update some information for the header, if it has not printed or the linear system has changed.
-    LinearProblem<ScalarType,MV,OP> currProb = solver->getProblem();
+    LinearProblem<ScalarType,MV,OP,DM> currProb = solver->getProblem();
     //if (!headerPrinted_ || currLSNum_ != currProb.getLSNumber()) {
     if (currLSNum_ != currProb.getLSNumber()) {
       currLSNum_ = currProb.getLSNumber();

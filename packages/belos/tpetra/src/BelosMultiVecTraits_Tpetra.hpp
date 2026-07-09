@@ -238,6 +238,7 @@ namespace Belos {
   template<class Scalar, class LO, class GO, class Node>
   class TpetraMVGeneralTraits {
     typedef ::Tpetra::MultiVector<Scalar, LO, GO, Node> MV;
+    using IST = typename MV::impl_scalar_type;
   public:
     /// \brief Create a new MultiVector with \c numVecs columns.
     ///
@@ -952,22 +953,22 @@ namespace Belos {
   //==============================================================
   template<class Scalar, class LO, class GO, class Node >
   class MultiVecTraits<Scalar, ::Tpetra::MultiVector<Scalar,LO,GO,Node>, 
-        Kokkos::DualView<typename ::Tpetra::MultiVector<Scalar,LO,GO,Node>::impl_scalar_type**,Kokkos::LayoutLeft>> {
+        typename ::Tpetra::MultiVector<Scalar,LO,GO,Node>::wrapped_dual_view_type::DVT> {
 
-    typedef ::Tpetra::MultiVector<Scalar, LO, GO, Node> MV;
-    typedef typename MV::impl_scalar_type IST;
-    typedef TpetraMVGeneralTraits<Scalar,LO,GO,Node> MVGen;
+    using MV = ::Tpetra::MultiVector<Scalar, LO, GO, Node>;
+    using IST = typename MV::impl_scalar_type;
+    using DM = typename ::Tpetra::MultiVector<Scalar,LO,GO,Node>::wrapped_dual_view_type::DVT;
+    using MVGen = TpetraMVGeneralTraits<Scalar,LO,GO,Node> ;
 
   public:
     //==============================================================
     //Two functions here specialized for Kokkos::DualView
     //==============================================================
 
-    // NOTE: Must call SyncHostToDevice if B has new information and is bigger than 1x1. 
     static void
     MvTimesMatAddMv (Scalar alpha,
                      const MV& A,
-                     const Kokkos::DualView<IST**,Kokkos::LayoutLeft>& B,
+                     const DM& B,
                      Scalar beta,
                      MV& mv)
     {
@@ -978,41 +979,9 @@ namespace Belos {
 #endif // HAVE_BELOS_TPETRA_TIMERS
 
       // Give mv = alpha * A * B + beta * mv. 
-    /*  const size_t B_numRows = B.extent(0);
-      const size_t B_numCols = B.extent(1);
-
-      // Check if B is 1-by-1, in which case we can just call update()
-      if (B_numRows == size_t (1) && B_numCols == size_t (1)) {
-        // We have to call B.sync_host() here in case this is run
-        // after a call to MvTransMv. 
-        //
-        // Belos solver developer isn't responsible for syncing before 
-        // this case because
-        // a) This would cost a lot of extra syncs.
-        // b) solver developer only has to worry about syncing before
-        // calling other DenseMatTraits functions. 
-        mv.update (alpha*B.view_host()(0,0), A, beta); 
-        if(dm.need_sync_host()){
-          dm.sync_host();
-        } 
-        //TODO: Later can evaluate if it would be cheaper
-        // to throw this directly to Tpetra multiply (would need
-        // to investigate how KK handles the gemm call underneath)
-        // to see if we could avoid the host sync. But just because
-        // we avoid the host sync doesn't necessarily mean that will
-        // be cheaper, so that would need detailed testing. 
-      }
-      else {*/
-        // Note: This is ONLY moment in all of Belos where 
-        // the dense matrix needs to be synced to device. :) 
-        //
-        // Note: No need to explicitly call sync to device here because 
-        // Tpetra multiply takes care of this with the wrapped
-        // dualView-multivector. 
-        MV B_mv = impl::makeStaticLocalMultiVector (A, B);
-        mv.multiply (Teuchos::NO_TRANS, Teuchos::NO_TRANS,
-                     alpha, A, B_mv, beta);
-      //}
+      MV B_mv = impl::makeStaticLocalMultiVector (A, B);
+      mv.multiply (Teuchos::NO_TRANS, Teuchos::NO_TRANS,
+                   alpha, A, B_mv, beta);
       // Note: B is const here, never modified, so no need to sync
       // back to host. 
     }
@@ -1023,7 +992,7 @@ namespace Belos {
     MvTransMv (const Scalar alpha,
                const MV& A,
                const MV& B,
-               Kokkos::DualView<IST**,Kokkos::LayoutLeft>& C)
+               DM& C)
     {
 #ifdef HAVE_BELOS_TPETRA_TIMERS 
       const std::string timerName ("Belos::MVT::MvTransMv");
@@ -1032,50 +1001,29 @@ namespace Belos {
 #endif // HAVE_BELOS_TPETRA_TIMERS
 
       const Scalar ZERO = Teuchos::ScalarTraits<Scalar>::zero();
-      const size_t numRowsC = C.extent(0);
-      const size_t numColsC = C.extent(1);
 
       // Return C = alpha * A^(conj trans) * B
 
-      // If numRowsC == numColsC == 1, then we can call dot().
-      if (numRowsC == size_t (1) && numColsC == size_t (1)) {
-        if (alpha == ZERO) {
-          // Short-circuit, as required by BLAS semantics.
-          C.view_host()(0,0) = IST(alpha);
+      if (alpha == ZERO) {
+        // Short-circuit, as required by BLAS semantics.
+        if (C.need_sync_device()) {
+          Kokkos::deep_copy(C.view_host(), IST(alpha));
           C.modify_host();
-          C.sync_device(); //TODO should this be counted somehow? Not in a DMT interface.
-          return;
+          C.sync_device();
+        } else {
+          Kokkos::deep_copy(C.view_device(), IST(alpha));
+          C.modify_device();
         }
-        //TODO This case has build problems. Pushing to multiply for now.
-        //LATER: Check performance. Should we be calling do instead? 
-        //
-        /*auto subview1d = Kokkos::subview(C.view_host(),Kokkos::ALL,1);
-        A.dot (B, subview1d);
-        C.modify_host();
-        if (alpha != Teuchos::ScalarTraits<Scalar>::one()) {
-          C.view_host()(0,0) *= alpha;
-        }
-        return;*/
+        return;
       }
       MV C_mv = impl::makeStaticLocalMultiVector(A,C);
       // Filling with zero should be unnecessary, in theory, but not
       // in practice, alas (Issue_3235 test fails).
       // TODO: double-check what was going on here in that issue.
       // TODO: Is the put zero still necessary?
-      C_mv.putScalar(ZERO);
+      // C_mv.putScalar(ZERO);
 
-      //C_mv = ZERO*C_mv + alpha*A(conjtrans)*B
-      //Data in C is overwritten, so there is no need to sync to device before this call.
-      //
-      //  TODO: 
-      // NOTE: Need to make special case in Tpetra multiply for scalar=Zero to get read-only access.
-      // Line 4192 of Tpetra_MultiVector_def.hpp 
-      // There exists a Tpetra unit test that counts number of syncs... Can use this to verify
-      // improvements in code!
-      // Use ascicgpu30 31 32 33 quad V100s
-      // SEMS build modules probably best. Copy ones from PR testing??
-      //
-      // Note: Multiply does all the right things, syncing data if it needs to.
+      // C_mv = ZERO*C_mv + alpha*A(conjtrans)*B
       C_mv.multiply(Teuchos::CONJ_TRANS, Teuchos::NO_TRANS, alpha, A, B, ZERO);
       C.modify_device();
     }
@@ -1198,7 +1146,7 @@ namespace Belos {
     /// \typedef tsqr_adaptor_type
     /// \brief TsqrAdaptor specialization for Tpetra::MultiVector
    typedef ::Tpetra::TsqrAdaptor< ::Tpetra::MultiVector<Scalar, LO, GO, Node>, 
-                                  Kokkos::DualView<IST**,Kokkos::LayoutLeft> > tsqr_adaptor_type;
+                                  DM > tsqr_adaptor_type;
 #endif // HAVE_BELOS_TSQR
 
   };//end Kokkos dense specialized. 

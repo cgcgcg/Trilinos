@@ -28,6 +28,7 @@
 #include "BelosStatusTestOutputFactory.hpp"
 #include "BelosOutputManager.hpp"
 #include "BelosTeuchosDenseAdapter.hpp"
+#include "BelosKokkosDenseAdapter.hpp"
 #ifdef BELOS_TEUCHOS_TIME_MONITOR
 #  include "Teuchos_TimeMonitor.hpp"
 #endif
@@ -56,7 +57,7 @@ namespace Belos {
     FixedPointSolMgrLinearProblemFailure(const std::string& what_arg) : BelosError(what_arg)
     {}};
 
-  template<class ScalarType, class MV, class OP, class DM = Teuchos::SerialDenseMatrix<int, ScalarType>>
+  template<class ScalarType, class MV, class OP, class DM = DefaultDenseMatrix<int, ScalarType>>
   class FixedPointSolMgr : public SolverManager<ScalarType,MV,OP,DM> {
 
   private:
@@ -95,7 +96,7 @@ namespace Belos {
      *                                         information is printed. Default: false
      *   - "Timer Label" - a \c std::string to use as a prefix for the timer labels.  Default: "Belos"
      */
-    FixedPointSolMgr( const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > &problem,
+    FixedPointSolMgr( const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > &problem,
                    const Teuchos::RCP<Teuchos::ParameterList> &pl );
 
     //! Destructor.
@@ -110,7 +111,7 @@ namespace Belos {
     //! @name Accessor methods
     //@{ 
     
-    const LinearProblem<ScalarType,MV,OP>& getProblem() const override {
+    const LinearProblem<ScalarType,MV,OP,DM>& getProblem() const override {
       return *problem_;
     }
 
@@ -154,7 +155,7 @@ namespace Belos {
     //@{
    
     //! Set the linear problem that needs to be solved. 
-    void setProblem( const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > &problem ) override { problem_ = problem; }
+    void setProblem( const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > &problem ) override { problem_ = problem; }
    
     //! Set the parameters the solver manager should use to solve the linear problem. 
     void setParameters( const Teuchos::RCP<Teuchos::ParameterList> &params ) override;
@@ -219,7 +220,7 @@ namespace Belos {
   private:
 
     //! The linear problem to solve.
-    Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > problem_;
+    Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > problem_;
 
     //! Output manager, that handles printing of different kinds of messages.
     Teuchos::RCP<OutputManager<ScalarType> > printer_;
@@ -310,7 +311,7 @@ FixedPointSolMgr<ScalarType,MV,OP,DM>::FixedPointSolMgr() :
 // Basic Constructor
 template<class ScalarType, class MV, class OP, class DM>
 FixedPointSolMgr<ScalarType,MV,OP,DM>::
-FixedPointSolMgr(const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > &problem,
+FixedPointSolMgr(const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > &problem,
               const Teuchos::RCP<Teuchos::ParameterList> &pl) :
   problem_(problem),
   outputStream_(Teuchos::rcpFromRef(std::cout)),

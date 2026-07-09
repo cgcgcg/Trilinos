@@ -14,14 +14,14 @@
   \brief Test routines for MultiVecTraits and OperatorTraits conformity.
 */
 
-#include "BelosConfigDefs.hpp"//TODO is this needed?
-#include "BelosTypes.hpp"//TODO is this needed?
+#include "BelosConfigDefs.hpp"
+#include "BelosTypes.hpp"
 
 #include "BelosOutputManager.hpp"
 #include "BelosDenseMatTraits.hpp"
 
 #include "Teuchos_RCP.hpp"
-#include "Teuchos_SetScientific.hpp"//TODO is this needed?
+#include "Teuchos_SetScientific.hpp"
 
 namespace Belos {
 
@@ -116,7 +116,7 @@ namespace Belos {
       }
 
       //Try to change a value.
-      DMT::Value(*dm1,0,0) = (ScalarType)5.0; //TODO: Does this compile? Is an lvalue?
+      DMT::Value(*dm1,0,0) = (ScalarType)5.0;
       if(DMT::ValueConst(*dm1,0,0) != (ScalarType)5.0){
         om->stream(Warnings)
           << "*** ERROR *** DenseMatTraits::Value" << endl

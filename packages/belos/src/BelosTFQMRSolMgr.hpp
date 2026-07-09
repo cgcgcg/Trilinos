@@ -27,6 +27,7 @@
 #include "BelosStatusTestOutputFactory.hpp"
 #include "BelosOutputManager.hpp"
 #include "BelosTeuchosDenseAdapter.hpp"
+#include "BelosKokkosDenseAdapter.hpp"
 
 #ifdef BELOS_TEUCHOS_TIME_MONITOR
 #include "Teuchos_TimeMonitor.hpp"
@@ -63,7 +64,7 @@ namespace Belos {
     TFQMRSolMgrLinearProblemFailure(const std::string& what_arg) : BelosError(what_arg)
     {}};
 
-  template<class ScalarType, class MV, class OP, class DM = Teuchos::SerialDenseMatrix<int, ScalarType>>
+  template<class ScalarType, class MV, class OP, class DM = DefaultDenseMatrix<int, ScalarType>>
   class TFQMRSolMgr : public SolverManager<ScalarType,MV,OP,DM> {
 
   private:
@@ -101,7 +102,7 @@ namespace Belos {
      *                          outputted.  Default: -1 (never)
      *   - "Timer Label" - a \c std::string to use as a prefix for the timer labels.  Default: "Belos"
      */
-    TFQMRSolMgr( const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > &problem,
+    TFQMRSolMgr( const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > &problem,
                  const Teuchos::RCP<Teuchos::ParameterList> &pl );
 
     //! Destructor.
@@ -116,7 +117,7 @@ namespace Belos {
     //! @name Accessor methods
     //@{ 
     
-    const LinearProblem<ScalarType,MV,OP>& getProblem() const override {
+    const LinearProblem<ScalarType,MV,OP,DM>& getProblem() const override {
       return *problem_;
     }
 
@@ -165,7 +166,7 @@ namespace Belos {
     //@{
     
     //! Set the linear problem that needs to be solved. 
-    void setProblem( const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > &problem ) override { problem_ = problem; }
+    void setProblem( const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > &problem ) override { problem_ = problem; }
     
     //! Set the parameters the solver manager should use to solve the linear problem. 
     void setParameters( const Teuchos::RCP<Teuchos::ParameterList> &params ) override;
@@ -217,7 +218,7 @@ namespace Belos {
     bool checkStatusTest();
 
     // Linear problem.
-    Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > problem_;
+    Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > problem_;
 
     // Output manager.
     Teuchos::RCP<OutputManager<ScalarType> > printer_;
@@ -285,7 +286,7 @@ TFQMRSolMgr<ScalarType,MV,OP,DM>::TFQMRSolMgr() :
 // Basic Constructor
 template<class ScalarType, class MV, class OP, class DM>
 TFQMRSolMgr<ScalarType,MV,OP,DM>::TFQMRSolMgr(
-                                             const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > &problem,
+                                             const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > &problem,
                                              const Teuchos::RCP<Teuchos::ParameterList> &pl ) :
   problem_(problem),
   outputStream_(Teuchos::rcpFromRef(std::cout)),

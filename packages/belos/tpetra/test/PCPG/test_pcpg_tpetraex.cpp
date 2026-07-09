@@ -36,6 +36,7 @@
 #include <BelosPCPGSolMgr.hpp>
 #include <BelosLinearProblem.hpp>
 #include <BelosTpetraAdapter.hpp>
+#include "BelosTpetraTestFramework.hpp"
 
 // Tpetra
 #include <Tpetra_Core.hpp>
@@ -56,9 +57,8 @@
 #include <Teuchos_StandardCatchMacros.hpp>
 #include <Teuchos_CommandLineProcessor.hpp>
 
-
-template<typename ScalarType>
-int run(int argc, char *argv[]) {
+template <class ScalarType, class DM>
+int run(Teuchos::CommandLineProcessor& cmdp, int argc, char *argv[]) {
     using ST = typename Tpetra::Vector<ScalarType>::scalar_type;
     using LO = typename Tpetra::Vector<>::local_ordinal_type;
     using GO = typename Tpetra::Vector<>::global_ordinal_type;
@@ -119,7 +119,6 @@ int run(int argc, char *argv[]) {
         // UH tells me that Anasazi::SVQBOrthoManager is available;  I need it for Belos
         MT tol = 1.0e-8;           // relative residual tolerance
         // How do command line parsers work?
-        Teuchos::CommandLineProcessor cmdp(false,true);
 
         cmdp.setOption("verbose","quiet",&verbose,"Print messages and results");
         cmdp.setOption("frequency",&frequency,"Solvers frequency for printing residuals (#iters)");
@@ -179,7 +178,7 @@ int run(int argc, char *argv[]) {
             pos_arr[0] = node;
             Stiff->insertGlobalValues(node, pos_arr.view(0,1), k_arr.view(0,1)); // global row ID, global col ID, value
             Mass->insertGlobalValues(node, pos_arr.view(0,1), m_arr.view(0,1)); // init guess violates hom Dir bc
-            valueLHS = sin( pi*h*((ST) iX+1) )*cos( 2.0 * pi*h*((ST) iY+1) );
+            valueLHS = sin( pi*h*((MT) iX+1) )*cos( 2.0 * pi*h*((MT) iY+1) );
             vecLHS->replaceGlobalValue(node, valueLHS);
 
             if (iY > 0) {
@@ -276,8 +275,8 @@ int run(int argc, char *argv[]) {
         //  Construct /*Preconditioned*/ Linear Problem  //
         ///////////////////////////////////////////////////
 
-        RCP<Belos::LinearProblem<ST,MV,OP> > problem
-            = rcp( new Belos::LinearProblem<ST,MV,OP>( A, LHS, RHS ) );
+        RCP<Belos::LinearProblem<ST,MV,OP,DM> > problem
+          = rcp( new Belos::LinearProblem<ST,MV,OP,DM>( A, LHS, RHS ) );
 
         // problem->setLeftPrec( Prec ); // for Preconditioned Problem
 
@@ -290,8 +289,8 @@ int run(int argc, char *argv[]) {
         }
 
         // Create an iterative solver manager.
-        RCP< Belos::SolverManager<ST,MV,OP> > solver
-        = rcp( new Belos::PCPGSolMgr<ST,MV,OP>(problem, rcp(&belosList,false)) );
+        RCP< Belos::SolverManager<ST,MV,OP,DM> > solver
+        = rcp( new Belos::PCPGSolMgr<ST,MV,OP,DM>(problem, rcp(&belosList,false)) );
 
         ////////////////////////////////////////////////////
         //                  Iterate PCPG                  //
@@ -317,7 +316,7 @@ int run(int argc, char *argv[]) {
                 return -1;
             }
         } // if time_step
-        std::vector<ST> rhs_norm(numrhs);
+        std::vector<MT> rhs_norm(numrhs);
         MVT::MvNorm(*RHS, rhs_norm);
         std::cout << "\t\t\t\tRHS norm is ... " << rhs_norm[0] << std::endl;
 
@@ -328,7 +327,7 @@ int run(int argc, char *argv[]) {
         // Compute actual residuals.
 
         badRes = false;
-        std::vector<ST> actual_resids(numrhs);
+        std::vector<MT> actual_resids(numrhs);
         tmultivector_t resid(Map, numrhs);
         OPT::Apply( *A, *LHS, resid );
         MVT::MvAddMv( -1.0, resid, 1.0, *RHS, resid );
@@ -339,7 +338,7 @@ int run(int argc, char *argv[]) {
         if (proc_verbose) {
             std::cout<< "---------- Actual Residuals (normalized) ----------"<<std::endl<<std::endl;
             for ( int i=0; i<numrhs; i++) {
-                ST actRes = actual_resids[i]/rhs_norm[i];
+                MT actRes = actual_resids[i]/rhs_norm[i];
                 std::cout<<"Problem "<<i<<" : \t"<< actRes <<std::endl;
                 if (actRes > tol) badRes = true;
             }
@@ -363,8 +362,8 @@ int run(int argc, char *argv[]) {
     return (success ? EXIT_SUCCESS : EXIT_FAILURE);
 } // run
 
-int main(int argc, char *argv[]) {
-    // run with different ST
-    run<double>(argc, argv);
-    // run<float>(argc, argv); // FAILS -- will need to change tolerance
+#include "BelosTpetraTestMain.hpp"
+
+int main(int argc, char* argv[]) {
+  return common_main(argc, argv);
 }

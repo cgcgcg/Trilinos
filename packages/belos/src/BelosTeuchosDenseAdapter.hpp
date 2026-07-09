@@ -319,12 +319,12 @@ namespace Belos {
     }
 
     //!  \brief Returns the Frobenius norm of the dense matrix.
-    static typename Teuchos::ScalarTraits<ScalarType>::magnitudeType NormFrobenius(Teuchos::SerialDenseMatrix<int,ScalarType>& dm) { 
+    static typename Teuchos::ScalarTraits<ScalarType>::magnitudeType NormFrobenius(const Teuchos::SerialDenseMatrix<int,ScalarType>& dm) {
       return dm.normFrobenius(); 
     }
 
     //!  \brief Returns the one-norm of the dense matrix.
-    static typename Teuchos::ScalarTraits<ScalarType>::magnitudeType NormOne( Teuchos::SerialDenseMatrix<int,ScalarType>& dm) { 
+    static typename Teuchos::ScalarTraits<ScalarType>::magnitudeType NormOne(const Teuchos::SerialDenseMatrix<int,ScalarType>& dm) {
       return dm.normOne();
     }
     //@}

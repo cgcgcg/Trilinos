@@ -21,6 +21,7 @@
 #include "BelosSolverManager.hpp"
 #include "BelosDenseMatTraits.hpp"
 #include "BelosTeuchosDenseAdapter.hpp"
+#include "BelosKokkosDenseAdapter.hpp"
 
 #include "BelosGmresIteration.hpp"
 #include "BelosBlockGmresIter.hpp"
@@ -94,7 +95,7 @@ class BlockGmresSolMgrOrthoFailure : public BelosError {public:
  * PseudoBlockGmresSolMgr.  If you want Flexible GMRES, use this class
  * with the "Flexible Gmres" parameter set to true.
  */
-template<class ScalarType, class MV, class OP, class DM = Teuchos::SerialDenseMatrix<int, ScalarType>>
+template<class ScalarType, class MV, class OP, class DM = DefaultDenseMatrix<int, ScalarType>>
 class BlockGmresSolMgr : public SolverManager<ScalarType,MV,OP,DM> {
 
 private:
@@ -137,7 +138,7 @@ public:
    *                    <hr />
    *                    \endhtmlonly
    */
-  BlockGmresSolMgr( const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > &problem,
+  BlockGmresSolMgr( const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > &problem,
     const Teuchos::RCP<Teuchos::ParameterList> &pl );
 
   //! Destructor.
@@ -154,7 +155,7 @@ public:
 
   /*! \brief Get current linear problem being solved for in this object.
    */
-  const LinearProblem<ScalarType,MV,OP>& getProblem() const override {
+  const LinearProblem<ScalarType,MV,OP,DM>& getProblem() const override {
     return *problem_;
   }
 
@@ -205,7 +206,7 @@ public:
   //@{
 
   //! Set the linear problem that needs to be solved.
-  void setProblem( const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > &problem ) override { problem_ = problem; isSTSet_ = false; needsIterRebuild_ = true; }
+  void setProblem( const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > &problem ) override { problem_ = problem; isSTSet_ = false; needsIterRebuild_ = true; }
 
   //! Set the parameters the solver manager should use to solve the linear problem.
   void setParameters( const Teuchos::RCP<Teuchos::ParameterList> &params ) override;
@@ -273,7 +274,7 @@ private:
   bool checkStatusTest();
 
   // Linear problem.
-  Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > problem_;
+  Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > problem_;
 
   // Output manager.
   Teuchos::RCP<OutputManager<ScalarType> > printer_;
@@ -367,7 +368,7 @@ BlockGmresSolMgr<ScalarType,MV,OP,DM>::BlockGmresSolMgr() :
 // Basic Constructor
 template<class ScalarType, class MV, class OP, class DM>
 BlockGmresSolMgr<ScalarType,MV,OP,DM>::
-BlockGmresSolMgr (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > &problem,
+BlockGmresSolMgr (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > &problem,
                   const Teuchos::RCP<Teuchos::ParameterList> &pl) :
   problem_(problem),
   outputStream_(Teuchos::rcpFromRef(std::cout)),

@@ -19,6 +19,7 @@
 #include "BelosLinearProblem.hpp"
 #include "BelosSolverManager.hpp"
 #include "BelosTeuchosDenseAdapter.hpp"
+#include "BelosKokkosDenseAdapter.hpp"
 
 #include "BelosLSQRIteration.hpp"
 #include "BelosLSQRIter.hpp"
@@ -183,7 +184,7 @@ public:
 // Partial specialization for complex ScalarType.
 // This contains a trivial implementation.
 // See discussion in the class documentation above.
-template<class ScalarType, class MV, class OP, class DM = Teuchos::SerialDenseMatrix<int,ScalarType>,
+template<class ScalarType, class MV, class OP, class DM = DefaultDenseMatrix<int,ScalarType>,
          const bool scalarTypeIsComplex = Teuchos::ScalarTraits<ScalarType>::isComplex>
 class LSQRSolMgr :
     public Details::RealSolverManager<ScalarType, MV, OP, DM,
@@ -196,7 +197,7 @@ public:
   LSQRSolMgr () :
     base_type ()
   {}
-  LSQRSolMgr (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > &problem,
+  LSQRSolMgr (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > &problem,
               const Teuchos::RCP<Teuchos::ParameterList> &pl) :
     base_type ()
   {}
@@ -262,7 +263,7 @@ public:
    * step convergence property.  Without either blocks or
    * reorthogonalization, there is nothing to "Orthogonalize."
    */
-  LSQRSolMgr (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> >& problem,
+  LSQRSolMgr (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> >& problem,
               const Teuchos::RCP<Teuchos::ParameterList>& pl);
 
   //! Destructor (declared virtual for memory safety of base classes).
@@ -278,7 +279,7 @@ public:
 
   /*! \brief Get current linear problem being solved for in this object.
    */
-  const LinearProblem<ScalarType,MV,OP>& getProblem () const override {
+  const LinearProblem<ScalarType,MV,OP,DM>& getProblem () const override {
     return *problem_;
   }
 
@@ -355,7 +356,7 @@ public:
   //@{
 
   //! Set the linear problem that needs to be solved.
-  void setProblem (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> >& problem) override {
+  void setProblem (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> >& problem) override {
     problem_ = problem;
   }
 
@@ -412,7 +413,7 @@ public:
 private:
 
   //! The linear problem to solve.
-  Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > problem_;
+  Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > problem_;
   //! The output manager.
   Teuchos::RCP<OutputManager<ScalarType> > printer_;
   //! Output stream to which to write status output.
@@ -480,7 +481,7 @@ LSQRSolMgr<ScalarType,MV,OP,DM,false>::LSQRSolMgr () :
 
 template<class ScalarType, class MV, class OP, class DM>
 LSQRSolMgr<ScalarType,MV,OP,DM,false>::
-LSQRSolMgr (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> >& problem,
+LSQRSolMgr (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> >& problem,
             const Teuchos::RCP<Teuchos::ParameterList>& pl) :
   problem_ (problem),
   lambda_ (STM::zero ()),

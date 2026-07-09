@@ -126,7 +126,7 @@ Spandan Maiti.  "Recycling Krylov Subspaces for Sequences of Linear
 Systems," SIAM Journal on Scientific Computing, 28(5), pp. 1651-1674,
 2006.*/
 
-  template<class ScalarType, class MV, class OP, class DM = Teuchos::SerialDenseMatrix<int,ScalarType>,
+  template<class ScalarType, class MV, class OP, class DM = DefaultDenseMatrix<int,ScalarType>,
            const bool lapackSupportsScalarType =
            Belos::Details::LapackSupportsScalar<ScalarType>::value>
   class GCRODRSolMgr :
@@ -141,7 +141,7 @@ Systems," SIAM Journal on Scientific Computing, 28(5), pp. 1651-1674,
     GCRODRSolMgr () :
       base_type ()
     {}
-    GCRODRSolMgr (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> >& problem,
+    GCRODRSolMgr (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> >& problem,
                   const Teuchos::RCP<Teuchos::ParameterList>& pl) :
       base_type ()
     {}
@@ -266,7 +266,7 @@ Systems," SIAM Journal on Scientific Computing, 28(5), pp. 1651-1674,
      *   orthogonalization. Ignored unless DGKS orthogonalization is
      *   used. DGKS decides the default value.
      */
-    GCRODRSolMgr (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > &problem,
+    GCRODRSolMgr (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > &problem,
                   const Teuchos::RCP<Teuchos::ParameterList> &pl);
 
     //! Destructor.
@@ -283,7 +283,7 @@ Systems," SIAM Journal on Scientific Computing, 28(5), pp. 1651-1674,
 
     /*! \brief Get current linear problem being solved for in this object.
      */
-    const LinearProblem<ScalarType,MV,OP>& getProblem() const override {
+    const LinearProblem<ScalarType,MV,OP,DM>& getProblem() const override {
       return *problem_;
     }
 
@@ -330,7 +330,7 @@ Systems," SIAM Journal on Scientific Computing, 28(5), pp. 1651-1674,
     //@{
 
     //! Set the linear problem that needs to be solved.
-    void setProblem( const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > &problem ) override {
+    void setProblem( const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > &problem ) override {
       problem_ = problem;
     }
 
@@ -429,7 +429,7 @@ Systems," SIAM Journal on Scientific Computing, 28(5), pp. 1651-1674,
     Teuchos::LAPACK<int,ScalarType> lapack;
 
     // Linear problem.
-    Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > problem_;
+    Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > problem_;
 
     // Output manager.
     Teuchos::RCP<OutputManager<ScalarType> > printer_;
@@ -529,7 +529,7 @@ GCRODRSolMgr<ScalarType,MV,OP,DM,true>::GCRODRSolMgr():
 // Basic Constructor
 template<class ScalarType, class MV, class OP, class DM>
 GCRODRSolMgr<ScalarType,MV,OP,DM,true>::
-GCRODRSolMgr(const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> >& problem,
+GCRODRSolMgr(const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> >& problem,
              const Teuchos::RCP<Teuchos::ParameterList>& pl):
   achievedTol_(0.0),
   numIters_(0)
