@@ -24,7 +24,7 @@ namespace Xpetra {
 
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 RCP<Xpetra::Matrix<typename Teuchos::ScalarTraits<Scalar>::halfPrecision, LocalOrdinal, GlobalOrdinal, Node>>
-convertToHalfPrecision(RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>& A) {
+convertToHalfPrecision(RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>& /*A*/) {
 #if defined(HAVE_TPETRA_INST_DOUBLE) && defined(HAVE_TPETRA_INST_FLOAT)
   using HalfScalar = typename Teuchos::ScalarTraits<Scalar>::halfPrecision;
   typedef typename Xpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node> XpCrs;
@@ -45,7 +45,7 @@ convertToHalfPrecision(RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, N
 
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 RCP<Xpetra::MultiVector<typename Teuchos::ScalarTraits<Scalar>::halfPrecision, LocalOrdinal, GlobalOrdinal, Node>>
-convertToHalfPrecision(RCP<Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>& X) {
+convertToHalfPrecision(RCP<Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>& /*X*/) {
 #if defined(HAVE_TPETRA_INST_DOUBLE) && defined(HAVE_TPETRA_INST_FLOAT)
   using HalfScalar = typename Teuchos::ScalarTraits<Scalar>::halfPrecision;
 
