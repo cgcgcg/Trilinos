@@ -164,7 +164,7 @@ namespace Intrepid2
     // Provide the shared memory capacity.
     // This function takes the team_size as an argument,
     // which allows team_size-dependent allocations.
-    size_t team_shmem_size (int team_size) const
+    size_t team_shmem_size (int  /*team_size*/) const
     {
       // we want to use shared memory to create a fast buffer that we can use for basis computations
       size_t shmem_size = 0;

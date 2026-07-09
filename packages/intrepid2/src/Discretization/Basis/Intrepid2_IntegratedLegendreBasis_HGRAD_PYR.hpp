@@ -617,7 +617,7 @@ namespace Intrepid2
     // Provide the shared memory capacity.
     // This function takes the team_size as an argument,
     // which allows team_size-dependent allocations.
-    size_t team_shmem_size (int team_size) const
+    size_t team_shmem_size (int  /*team_size*/) const
     {
       // we use shared memory to create a fast buffer for basis computations
       // for the (integrated) Legendre computations, we just need p+1 values stored.  For interior functions on the pyramid, we have up to 3 scratch arrays with (integrated) Legendre values stored, for each of the 3 directions (i,j,k indices): a total of 9.

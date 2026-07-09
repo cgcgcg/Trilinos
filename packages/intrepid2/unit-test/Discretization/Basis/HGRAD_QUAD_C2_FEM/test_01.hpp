@@ -689,7 +689,7 @@ namespace Intrepid2 {
       struct FuncD3 {
         KOKKOS_INLINE_FUNCTION
         ValueType
-        operator()(const ValueType& x, const ValueType& y, const int comp=0) {
+        operator()(const ValueType&  /*x*/, const ValueType&  /*y*/, const int comp=0) {
           switch (comp) {
           case 0:
             return  0;

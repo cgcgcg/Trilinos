@@ -256,8 +256,8 @@ public:
       degree of the basis, the output array is filled with the appropriate number of zeros.
   */
   virtual
-  void getValues( OutputViewType outputValues, const PointViewType  inputPoints,
-                 const EOperator operatorType = OPERATOR_VALUE ) const override
+  void getValues( OutputViewType  /*outputValues*/, const PointViewType   /*inputPoints*/,
+                 const EOperator  /*operatorType*/ = OPERATOR_VALUE ) const override
   {
     INTREPID2_TEST_FOR_EXCEPTION( true, std::logic_error,
                                   ">>> ERROR (Basis::getValues): this method is not supported by SerendipityBasis (use the getValues() method that accepts a BasisValues object instead).");

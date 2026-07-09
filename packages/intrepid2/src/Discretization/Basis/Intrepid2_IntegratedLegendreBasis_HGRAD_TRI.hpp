@@ -305,7 +305,7 @@ namespace Intrepid2
     // Provide the shared memory capacity.
     // This function takes the team_size as an argument,
     // which allows team_size-dependent allocations.
-    size_t team_shmem_size (int team_size) const
+    size_t team_shmem_size (int  /*team_size*/) const
     {
       // we will use shared memory to create a fast buffer for basis computations
       size_t shmem_size = 0;
@@ -573,7 +573,7 @@ namespace Intrepid2
         \return pointer to the subCell basis of dimension subCellDim and position subCellOrd
      */
     BasisPtr<DeviceType,OutputScalar,PointScalar>
-      getSubCellRefBasis(const ordinal_type subCellDim, const ordinal_type subCellOrd) const override{
+      getSubCellRefBasis(const ordinal_type subCellDim, const ordinal_type  /*subCellOrd*/) const override{
       if(subCellDim == 1) {
         return Teuchos::rcp(new
             IntegratedLegendreBasis_HGRAD_LINE<DeviceType,OutputScalar,PointScalar>

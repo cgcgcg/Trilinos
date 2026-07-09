@@ -272,7 +272,7 @@ class Basis_HDIV_TET_In_FEM
         \return pointer to the subCell basis of dimension subCellDim and position subCellOrd
      */
     BasisPtr<DeviceType,outputValueType,pointValueType>
-      getSubCellRefBasis(const ordinal_type subCellDim, const ordinal_type subCellOrd) const override{
+      getSubCellRefBasis(const ordinal_type subCellDim, const ordinal_type  /*subCellOrd*/) const override{
 
      if(subCellDim == 2) {
         return Teuchos::rcp(new

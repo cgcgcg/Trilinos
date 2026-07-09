@@ -121,7 +121,7 @@ namespace Intrepid2 {
     }
     
     KOKKOS_INLINE_FUNCTION
-    void operator()(const int arg0) const
+    void operator()(const int  /*arg0*/) const
     {
       auto & result      = this_underlying_(0);
       const auto & A_val = A_underlying_(0);
@@ -165,7 +165,7 @@ public:
            class ArgExtractorThis, class ArgExtractorA, class ArgExtractorB>
   static void storeInPlaceCombination(PolicyType &policy, ThisUnderlyingViewType &this_underlying,
                                       AUnderlyingViewType &A_underlying, BUnderlyingViewType &B_underlying,
-                                      BinaryOperator &binaryOperator, ArgExtractorThis argThis, ArgExtractorA argA, ArgExtractorB argB)
+                                      BinaryOperator &binaryOperator, ArgExtractorThis  /*argThis*/, ArgExtractorA  /*argA*/, ArgExtractorB  /*argB*/)
   {
     using Functor = InPlaceCombinationFunctor<BinaryOperator, ThisUnderlyingViewType, AUnderlyingViewType, BUnderlyingViewType, ArgExtractorThis, ArgExtractorA, ArgExtractorB>;
     Functor functor(this_underlying, A_underlying, B_underlying, binaryOperator);

@@ -45,7 +45,7 @@ namespace Intrepid2
   
   template<>
   KOKKOS_INLINE_FUNCTION
-  void getDkEnumerationInverse<1>(Kokkos::Array<int,1> &entries, const ordinal_type dkEnum, const ordinal_type operatorOrder)
+  void getDkEnumerationInverse<1>(Kokkos::Array<int,1> &entries, const ordinal_type  /*dkEnum*/, const ordinal_type operatorOrder)
   {
     entries[0] = operatorOrder;
   }
@@ -1731,9 +1731,9 @@ struct OperatorTensorDecomposition
      
      Note that the three-argument implementation handles the OPERATOR_Dn operators directly; that is, subclasses can omit any consideration of OPERATOR_Dn operators in their implementation of the five-argument version.
     */
-    virtual void getValues(OutputViewType outputValues, const EOperator operatorType,
-                           const PointViewType  inputPoints1, const PointViewType  inputPoints2,
-                           bool tensorPoints) const
+    virtual void getValues(OutputViewType  /*outputValues*/, const EOperator  /*operatorType*/,
+                           const PointViewType   /*inputPoints1*/, const PointViewType   /*inputPoints2*/,
+                           bool  /*tensorPoints*/) const
     {
       INTREPID2_TEST_FOR_EXCEPTION(true, std::invalid_argument, "one-operator, two-inputPoints getValues should be overridden by TensorBasis subclasses");
     }

@@ -202,8 +202,8 @@ namespace Intrepid2 {
   void 
   Basis_HGRAD_TET_C1_FEM<DT,OT,PT>::getScratchSpaceSize(       
                                     ordinal_type& perThreadSpaceSize,
-                              const PointViewType inputPoints,
-                              const EOperator operatorType) const {
+                              const PointViewType  /*inputPoints*/,
+                              const EOperator  /*operatorType*/) const {
     perThreadSpaceSize = 0;
   }
 

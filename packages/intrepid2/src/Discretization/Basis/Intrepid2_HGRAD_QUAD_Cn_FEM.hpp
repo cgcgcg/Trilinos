@@ -240,7 +240,7 @@ namespace Intrepid2 {
     }
 
     ordinal_type
-    getWorkSizePerPoint(const EOperator operatorType) const { 
+    getWorkSizePerPoint(const EOperator  /*operatorType*/) const { 
       return 3*getPnCardinality<1>(this->basisDegree_); 
     }
     
@@ -253,7 +253,7 @@ namespace Intrepid2 {
         \return pointer to the subCell basis of dimension subCellDim and position subCellOrd
      */
     BasisPtr<DeviceType,outputValueType,pointValueType>
-      getSubCellRefBasis(const ordinal_type subCellDim, const ordinal_type subCellOrd) const override{
+      getSubCellRefBasis(const ordinal_type subCellDim, const ordinal_type  /*subCellOrd*/) const override{
       if(subCellDim == 1) {
         return Teuchos::rcp(new
             Basis_HGRAD_LINE_Cn_FEM<DeviceType,outputValueType,pointValueType>

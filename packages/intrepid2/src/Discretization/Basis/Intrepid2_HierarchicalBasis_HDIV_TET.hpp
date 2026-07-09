@@ -274,7 +274,7 @@ namespace Intrepid2
                            const OutputScalar &vectorWeight_x, // x component of s0 (grad s1 x grad s2) + s1 (grad s2 x grad s0) + s2 (grad s0 x grad s1)
                            const OutputScalar &vectorWeight_y, // y component
                            const OutputScalar &vectorWeight_z, // z component
-                           const PointScalar* lambda) const
+                           const PointScalar*  /*lambda*/) const
     {
       const auto &P_i      = P(i);
       const auto &P_2ip1_j = P_2ip1(j);
@@ -352,7 +352,7 @@ namespace Intrepid2
                          const OutputScratchView &P,      // container in which shiftedScaledLegendreValues have been computed for the appropriate face
                          const OutputScratchView &P_2ip1, // container in which shiftedScaledJacobiValues have been computed for (2i+1) for the appropriate face
                          const OutputScalar &divWeight,   // grad s0 \dot (grad s1 x grad s2)
-                         const PointScalar* lambda) const
+                         const PointScalar*  /*lambda*/) const
     {
       const auto &P_i      = P(i);
       const auto &P_2ip1_j = P_2ip1(j);
@@ -366,10 +366,10 @@ namespace Intrepid2
                                       OutputScalar &L_2ipjp1_dy,
                                       OutputScalar &L_2ipjp1_dz,
                                       const ordinal_type &zeroBasedFamilyOrdinal,
-                                      const ordinal_type &j,
+                                      const ordinal_type & /*j*/,
                                       const ordinal_type &k,
                                       const OutputScratchView &P_2ipjp1, // container in which shiftedScaledJacobiValues have been computed for alpha=2(i+j+1), t0=1-lambda_m, t1=lambda_m
-                                      const PointScalar* lambda,
+                                      const PointScalar*  /*lambda*/,
                                       const PointScalar* lambda_dx,
                                       const PointScalar* lambda_dy,
                                       const PointScalar* lambda_dz) const
@@ -671,7 +671,7 @@ namespace Intrepid2
     // Provide the shared memory capacity.
     // This function takes the team_size as an argument,
     // which allows team_size-dependent allocations.
-    size_t team_shmem_size (int team_size) const
+    size_t team_shmem_size (int  /*team_size*/) const
     {
       // we will use shared memory to create a fast buffer for basis computations
       size_t shmem_size = 0;
@@ -718,7 +718,7 @@ namespace Intrepid2
         \param [in] polyOrder - the polynomial order of the basis.
         \param [in] pointType - point type for nodal basis.  Ignored here (irrelevant for hierarchical/modal basis).
      */
-    HierarchicalBasis_HDIV_TET(int polyOrder, const EPointType pointType=POINTTYPE_DEFAULT)
+    HierarchicalBasis_HDIV_TET(int polyOrder, const EPointType  /*pointType*/=POINTTYPE_DEFAULT)
     :
     polyOrder_(polyOrder)
     {
@@ -925,7 +925,7 @@ namespace Intrepid2
         \return pointer to the subCell basis of dimension subCellDim and position subCellOrd
      */
     BasisPtr<DeviceType,OutputScalar,PointScalar>
-      getSubCellRefBasis(const ordinal_type subCellDim, const ordinal_type subCellOrd) const override
+      getSubCellRefBasis(const ordinal_type subCellDim, const ordinal_type  /*subCellOrd*/) const override
     {
       using HVOL_Tri = LegendreBasis_HVOL_TRI<DeviceType,OutputScalar,PointScalar>;
       if (subCellDim == 2)

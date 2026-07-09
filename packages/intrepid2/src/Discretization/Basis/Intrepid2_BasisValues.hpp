@@ -293,7 +293,7 @@ namespace Intrepid2
     
     //! operator() for (C,F,P,D) data, which arises in CVFEM; at present unimplemented, and only declared here to allow a generic setJacobian() method in CellTools to compile.
     KOKKOS_INLINE_FUNCTION
-    Scalar operator()(const int &cellOrdinal, const int &fieldOrdinal, const int &pointOrdinal, const int &dim) const
+    Scalar operator()(const int & /*cellOrdinal*/, const int & /*fieldOrdinal*/, const int & /*pointOrdinal*/, const int & /*dim*/) const
     {
       INTREPID2_TEST_FOR_EXCEPTION_DEVICE_SAFE(true, std::invalid_argument, "CVFEM support not yet implemented in BasisValues");
       return 0;

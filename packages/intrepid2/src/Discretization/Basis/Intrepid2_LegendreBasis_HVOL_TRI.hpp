@@ -123,7 +123,7 @@ namespace Intrepid2
     // Provide the shared memory capacity.
     // This function takes the team_size as an argument,
     // which allows team_size-dependent allocations.
-    size_t team_shmem_size (int team_size) const
+    size_t team_shmem_size (int  /*team_size*/) const
     {
       // TODO: edit this to match scratch that we actually need.  (What's here is copied from H^1 basis on triangles…)
       // we will use shared memory to create a fast buffer for basis computations
@@ -306,7 +306,7 @@ namespace Intrepid2
         \return pointer to the subCell basis of dimension subCellDim and position subCellOrd
      */
     BasisPtr<DeviceType,OutputScalar,PointScalar>
-      getSubCellRefBasis(const ordinal_type subCellDim, const ordinal_type subCellOrd) const override{
+      getSubCellRefBasis(const ordinal_type  /*subCellDim*/, const ordinal_type  /*subCellOrd*/) const override{
       // no subcell ref basis for HVOL
       INTREPID2_TEST_FOR_EXCEPTION(true,std::invalid_argument,"Input parameters out of bounds");
     }

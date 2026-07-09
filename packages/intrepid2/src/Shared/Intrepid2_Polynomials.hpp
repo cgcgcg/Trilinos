@@ -74,7 +74,7 @@ namespace Intrepid2
         These are defined for x in [-1,1].
      */
     template<typename OutputValueViewType, typename ScalarType>
-    KOKKOS_INLINE_FUNCTION void legendreDerivativeValues(OutputValueViewType outputValues, const OutputValueViewType legendreValues, Intrepid2::ordinal_type n, ScalarType x)
+    KOKKOS_INLINE_FUNCTION void legendreDerivativeValues(OutputValueViewType outputValues, const OutputValueViewType legendreValues, Intrepid2::ordinal_type n, ScalarType  /*x*/)
     {
       if (n >= 0) outputValues(0) = 0.0;
       if (n >= 1) outputValues(1) = 1.0;
@@ -336,7 +336,7 @@ namespace Intrepid2
      */
     template<typename OutputValueViewType, typename ScalarType, typename ScalarTypeForScaling>
     KOKKOS_INLINE_FUNCTION void shiftedScaledIntegratedLegendreValues_dt(OutputValueViewType outputValues, const OutputValueViewType shiftedScaledLegendreValues,
-                                                                         Intrepid2::ordinal_type n, ScalarType x, ScalarTypeForScaling t)
+                                                                         Intrepid2::ordinal_type n, ScalarType  /*x*/, ScalarTypeForScaling t)
     {
       // reduced flops version: rely on previously computed P_i
       if (n >= 0) outputValues(0) = 0.0;
@@ -515,7 +515,7 @@ namespace Intrepid2
      */
     template<typename OutputValueViewType, typename ScalarType, typename ScalarTypeForScaling>
     KOKKOS_INLINE_FUNCTION void shiftedScaledIntegratedJacobiValues_dt(OutputValueViewType outputValues, const OutputValueViewType jacobiValues,
-                                                                       double alpha, Intrepid2::ordinal_type n, ScalarType x, ScalarTypeForScaling t)
+                                                                       double alpha, Intrepid2::ordinal_type n, ScalarType  /*x*/, ScalarTypeForScaling t)
     {
       // reduced flops version: rely on previously computed P_i
       if (n >= 0) outputValues(0) = 0.0;

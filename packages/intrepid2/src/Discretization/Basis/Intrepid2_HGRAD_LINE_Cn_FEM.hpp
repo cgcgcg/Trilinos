@@ -252,7 +252,7 @@ namespace Intrepid2 {
     }
 
     ordinal_type
-    getWorkSizePerPoint(const EOperator operatorType) const {
+    getWorkSizePerPoint(const EOperator  /*operatorType*/) const {
       return getPnCardinality<1>(this->basisDegree_);
     }
 

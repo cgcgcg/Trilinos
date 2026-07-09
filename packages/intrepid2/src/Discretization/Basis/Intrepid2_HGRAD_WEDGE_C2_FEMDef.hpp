@@ -1080,8 +1080,8 @@ namespace Intrepid2 {
   void 
   Basis_HGRAD_WEDGE_DEG2_FEM<serendipity,DT,OT,PT>::getScratchSpaceSize(       
                                     ordinal_type& perThreadSpaceSize,
-                              const PointViewType inputPoints,
-                              const EOperator operatorType) const {
+                              const PointViewType  /*inputPoints*/,
+                              const EOperator  /*operatorType*/) const {
     perThreadSpaceSize = 0;
   }
 

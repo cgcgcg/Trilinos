@@ -189,7 +189,7 @@ namespace Intrepid2
       \param [in] pointType - type of lattice used for creating the DoF coordinates.
      */
   template<class BasisFamily>
-  static typename BasisFamily::BasisPtr getHypercubeBasis_HGRAD(int polyOrder, int spaceDim, const EPointType pointType=POINTTYPE_DEFAULT)
+  static typename BasisFamily::BasisPtr getHypercubeBasis_HGRAD(int polyOrder, int spaceDim, const EPointType  /*pointType*/=POINTTYPE_DEFAULT)
   {
     using Teuchos::rcp;
     
@@ -213,7 +213,7 @@ namespace Intrepid2
       \param [in] pointType - type of lattice used for creating the DoF coordinates.
      */
   template<class BasisFamily>
-  static typename BasisFamily::BasisPtr getHypercubeBasis_HVOL(int polyOrder, int spaceDim, const EPointType pointType=POINTTYPE_DEFAULT)
+  static typename BasisFamily::BasisPtr getHypercubeBasis_HVOL(int polyOrder, int spaceDim, const EPointType  /*pointType*/=POINTTYPE_DEFAULT)
   {
     using Teuchos::rcp;
     

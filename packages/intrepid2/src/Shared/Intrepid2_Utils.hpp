@@ -943,7 +943,7 @@ namespace Intrepid2 {
     template<typename T>
     void operator()(T* ptr) {
       Kokkos::parallel_for(Kokkos::RangePolicy<typename Device::execution_space>(0,1),
-                           KOKKOS_LAMBDA (const int i) { ptr->~T(); });
+                           KOKKOS_LAMBDA (const int  /*i*/) { ptr->~T(); });
       typename Device::execution_space().fence();
       Kokkos::kokkos_free<typename Device::memory_space>(ptr);
     }
@@ -958,7 +958,7 @@ namespace Intrepid2 {
   {
     auto* p = static_cast<Derived*>(Kokkos::kokkos_malloc<typename Device::memory_space>(sizeof(Derived)));
     Kokkos::parallel_for(Kokkos::RangePolicy<typename Device::execution_space>(0,1),
-                         KOKKOS_LAMBDA (const int i) {new (p) Derived(host_source); });
+                         KOKKOS_LAMBDA (const int  /*i*/) {new (p) Derived(host_source); });
     typename Device::execution_space().fence();
     return std::unique_ptr<Derived,DeviceDeleter<Device>>(p);
   }

@@ -276,8 +276,8 @@ namespace Intrepid2 {
   void 
   Basis_HCURL_WEDGE_I1_FEM<DT,OT,PT>::getScratchSpaceSize(       
                                     ordinal_type& perThreadSpaceSize,
-                              const PointViewType inputPoints,
-                              const EOperator operatorType) const {
+                              const PointViewType  /*inputPoints*/,
+                              const EOperator  /*operatorType*/) const {
     perThreadSpaceSize = 0;
   }
 

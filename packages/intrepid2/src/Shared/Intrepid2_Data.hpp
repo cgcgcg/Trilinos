@@ -118,7 +118,7 @@ public:
     
     //! //! Returns flattened index of the specified (i,j) matrix entry, assuming that i,j ≤ lastNondiagonal.  Only applicable for BLOCK_PLUS_DIAGONAL DataVariationType.
     KOKKOS_INLINE_FUNCTION
-    static int blockPlusDiagonalBlockEntryIndex(const int &lastNondiagonal, const int &numNondiagonalEntries, const int &i, const int &j)
+    static int blockPlusDiagonalBlockEntryIndex(const int &lastNondiagonal, const int & /*numNondiagonalEntries*/, const int &i, const int &j)
     {
       return i * (lastNondiagonal + 1) + j;
     }

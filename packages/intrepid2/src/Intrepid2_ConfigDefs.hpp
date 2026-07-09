@@ -65,8 +65,6 @@
 #include <cmath>
 #include <vector>
 #include <map>
-#include <string>
-#include <iomanip>
 
 /*
  * Intrepid_Version() method

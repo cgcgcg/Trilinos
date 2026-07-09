@@ -377,7 +377,7 @@ namespace Intrepid2 {
   Basis_HDIV_QUAD_In_FEM<DT,OT,PT>::getScratchSpaceSize(        
                                     ordinal_type& perThreadSpaceSize,
                               const PointViewType inputPoints,
-                              const EOperator operatorType) const {
+                              const EOperator  /*operatorType*/) const {
     using ScalarType = typename ScalarTraits<typename PointViewType::value_type>::scalar_type;
     using ScratchViewType = Kokkos::DynRankView<ScalarType, typename DT::execution_space::scratch_memory_space, Kokkos::MemoryTraits<Kokkos::Unmanaged> >;
     perThreadSpaceSize = ScratchViewType::shmem_size((2*this->vinvLine_.extent(0)+this->vinvBubble_.extent(0))*get_dimension_scalar(inputPoints));

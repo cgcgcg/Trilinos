@@ -250,7 +250,7 @@ namespace Intrepid2 {
         \return pointer to the subCell basis of dimension subCellDim and position subCellOrd
      */
     BasisPtr<DeviceType,outputValueType,pointValueType>
-    getSubCellRefBasis(const ordinal_type subCellDim, const ordinal_type subCellOrd) const override{
+    getSubCellRefBasis(const ordinal_type subCellDim, const ordinal_type  /*subCellOrd*/) const override{
       if(subCellDim == 1)
         return Teuchos::rcp( new
           Basis_HVOL_C0_FEM<DeviceType,outputValueType,pointValueType>(shards::getCellTopologyData<shards::Line<2> >()));

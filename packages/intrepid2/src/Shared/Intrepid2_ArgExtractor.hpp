@@ -30,7 +30,7 @@ namespace Intrepid2 {
   struct ConstantArgExtractor
   {
     template<class ViewType, class ...IntArgs>
-    static KOKKOS_INLINE_FUNCTION reference_type get(const ViewType &view, const IntArgs&... intArgs)
+    static KOKKOS_INLINE_FUNCTION reference_type get(const ViewType &view, const IntArgs&...  /*intArgs*/)
     {
       return view(0);
     }
@@ -69,7 +69,7 @@ namespace Intrepid2 {
     template<class ViewType, class int_type, class ...IntArgs, int M=whichArg>
     static KOKKOS_INLINE_FUNCTION
     enable_if_t<M == 0>
-    get(const ViewType &view, const int_type &i0, const IntArgs&... intArgs)
+    get(const ViewType &view, const int_type &i0, const IntArgs&...  /*intArgs*/)
     {
       return view(i0);
     }
@@ -77,7 +77,7 @@ namespace Intrepid2 {
     template<class ViewType, class int_type, int M=whichArg>
     static KOKKOS_INLINE_FUNCTION
     enable_if_t<M == 1>
-    get(const ViewType &view, const int_type &i0, const int_type &i1)
+    get(const ViewType &view, const int_type & /*i0*/, const int_type &i1)
     {
       return view(i1);
     }
@@ -85,7 +85,7 @@ namespace Intrepid2 {
     template<class ViewType, class int_type, class ...IntArgs, int M=whichArg>
     static KOKKOS_INLINE_FUNCTION
     enable_if_t<M == 1>
-    get(const ViewType &view, const int_type &i0, const int_type &i1, const IntArgs&... intArgs)
+    get(const ViewType &view, const int_type & /*i0*/, const int_type &i1, const IntArgs&...  /*intArgs*/)
     {
       return view(i1);
     }
@@ -93,7 +93,7 @@ namespace Intrepid2 {
     template<class ViewType, class int_type, int M=whichArg>
     static KOKKOS_INLINE_FUNCTION
     enable_if_t<M == 2>
-    get(const ViewType &view, const int_type &i0, const int_type &i1, const int_type &i2)
+    get(const ViewType &view, const int_type & /*i0*/, const int_type & /*i1*/, const int_type &i2)
     {
       return view(i2);
     }
@@ -101,7 +101,7 @@ namespace Intrepid2 {
     template<class ViewType, class int_type, class ...IntArgs, int M=whichArg>
     static KOKKOS_INLINE_FUNCTION
     enable_if_t<M == 2>
-    get(const ViewType &view, const int_type &i0, const int_type &i1, const int_type &i2, const IntArgs&... intArgs)
+    get(const ViewType &view, const int_type & /*i0*/, const int_type & /*i1*/, const int_type &i2, const IntArgs&...  /*intArgs*/)
     {
       return view(i2);
     }
@@ -109,7 +109,7 @@ namespace Intrepid2 {
     template<class ViewType, class int_type, int M=whichArg>
     static KOKKOS_INLINE_FUNCTION
     enable_if_t<M == 3>
-    get(const ViewType &view, const int_type &i0, const int_type &i1, const int_type &i2, const int_type &i3)
+    get(const ViewType &view, const int_type & /*i0*/, const int_type & /*i1*/, const int_type & /*i2*/, const int_type &i3)
     {
       return view(i3);
     }
@@ -117,7 +117,7 @@ namespace Intrepid2 {
     template<class ViewType, class int_type, class ...IntArgs, int M=whichArg>
     static KOKKOS_INLINE_FUNCTION
     enable_if_t<M == 3>
-    get(const ViewType &view, const int_type &i0, const int_type &i1, const int_type &i2, const int_type &i3, const IntArgs&... intArgs)
+    get(const ViewType &view, const int_type & /*i0*/, const int_type & /*i1*/, const int_type & /*i2*/, const int_type &i3, const IntArgs&...  /*intArgs*/)
     {
       return view(i3);
     }
@@ -125,7 +125,7 @@ namespace Intrepid2 {
     template<class ViewType, class int_type, int M=whichArg>
     static KOKKOS_INLINE_FUNCTION
     enable_if_t<M == 4>
-    get(const ViewType &view, const int_type &i0, const int_type &i1, const int_type &i2, const int_type &i3, const int_type &i4)
+    get(const ViewType &view, const int_type & /*i0*/, const int_type & /*i1*/, const int_type & /*i2*/, const int_type & /*i3*/, const int_type &i4)
     {
       return view(i4);
     }
@@ -133,7 +133,7 @@ namespace Intrepid2 {
     template<class ViewType, class int_type, class ...IntArgs, int M=whichArg>
     static KOKKOS_INLINE_FUNCTION
     enable_if_t<M == 4>
-    get(const ViewType &view, const int_type &i0, const int_type &i1, const int_type &i2, const int_type &i3, const int_type &i4, const IntArgs&... intArgs)
+    get(const ViewType &view, const int_type & /*i0*/, const int_type & /*i1*/, const int_type & /*i2*/, const int_type & /*i3*/, const int_type &i4, const IntArgs&...  /*intArgs*/)
     {
       return view(i4);
     }
@@ -141,7 +141,7 @@ namespace Intrepid2 {
     template<class ViewType, class int_type, int M=whichArg>
     static KOKKOS_INLINE_FUNCTION
     enable_if_t<M == 5>
-    get(const ViewType &view, const int_type &i0, const int_type &i1, const int_type &i2, const int_type &i3, const int_type &i4, const int_type &i5)
+    get(const ViewType &view, const int_type & /*i0*/, const int_type & /*i1*/, const int_type & /*i2*/, const int_type & /*i3*/, const int_type & /*i4*/, const int_type &i5)
     {
       return view(i5);
     }
@@ -149,7 +149,7 @@ namespace Intrepid2 {
     template<class ViewType, class int_type, class ...IntArgs, int M=whichArg>
     static KOKKOS_INLINE_FUNCTION
     enable_if_t<M == 5>
-    get(const ViewType &view, const int_type &i0, const int_type &i1, const int_type &i2, const int_type &i3, const int_type &i4, const int_type &i5, const IntArgs&... intArgs)
+    get(const ViewType &view, const int_type & /*i0*/, const int_type & /*i1*/, const int_type & /*i2*/, const int_type & /*i3*/, const int_type & /*i4*/, const int_type &i5, const IntArgs&...  /*intArgs*/)
     {
       return view(i5);
     }
@@ -169,7 +169,7 @@ namespace Intrepid2 {
     template<class ViewType, class ...IntArgs>
     static KOKKOS_INLINE_FUNCTION
     enable_if_t<whichArg >= sizeof...(IntArgs), reference_type>
-    get(const ViewType &view, const IntArgs&... intArgs)
+    get(const ViewType &view, const IntArgs&...  /*intArgs*/)
     {
       INTREPID2_TEST_FOR_EXCEPTION_DEVICE_SAFE(true,std::invalid_argument,"calling SingleArgExtractor with out-of-bounds argument");
       Kokkos::abort("Intrepid2::SingleArgExtractor: calling SingleArgExtractor with out-of-bounds argument\n");

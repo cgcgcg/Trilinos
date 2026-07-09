@@ -393,9 +393,9 @@ using HostBasisPtr = BasisPtr<typename Kokkos::HostSpace::device_type, OutputTyp
         
     */
     virtual
-    void getScratchSpaceSize(       ordinal_type& perThreadSpaceSize,
-                                const PointViewType inputPoints,
-                                const EOperator operatorType = OPERATOR_VALUE) const {
+    void getScratchSpaceSize(       ordinal_type&  /*perThreadSpaceSize*/,
+                                const PointViewType  /*inputPoints*/,
+                                const EOperator  /*operatorType*/ = OPERATOR_VALUE) const {
       INTREPID2_TEST_FOR_EXCEPTION_DEVICE_SAFE( true, std::logic_error,
                                     ">>> ERROR (Basis::getValuesScratchSpace): this method is not supported or should be overridden accordingly by derived classes.");
     }
@@ -426,10 +426,10 @@ using HostBasisPtr = BasisPtr<typename Kokkos::HostSpace::device_type, OutputTyp
     void getValues(       OutputViewType /* outputValues */,
                     const PointViewType  /* inputPoints */,
                     const EOperator /* operatorType */,
-                    const typename Kokkos::TeamPolicy<ExecutionSpace>::member_type& teamMember,
-                    const int threadScratchLevel, 
-                    const ordinal_type subcellDim=-1,
-                    const ordinal_type subcellOrdinal=-1) const {
+                    const typename Kokkos::TeamPolicy<ExecutionSpace>::member_type&  /*teamMember*/,
+                    const int  /*threadScratchLevel*/, 
+                    const ordinal_type  /*subcellDim*/=-1,
+                    const ordinal_type  /*subcellOrdinal*/=-1) const {
       INTREPID2_TEST_FOR_EXCEPTION_DEVICE_SAFE( true, std::logic_error,
                                     ">>> ERROR (Basis::getValues): this method is not supported or should be overridden accordingly by derived classes.");
     }
@@ -975,7 +975,7 @@ using HostBasisPtr = BasisPtr<typename Kokkos::HostSpace::device_type, OutputTyp
         \return pointer to the subCell basis of dimension subCellDim and position subCellOrd
      */
     virtual BasisPtr<DeviceType, OutputValueType, PointValueType>
-      getSubCellRefBasis(const ordinal_type subCellDim, const ordinal_type subCellOrd) const {
+      getSubCellRefBasis(const ordinal_type  /*subCellDim*/, const ordinal_type  /*subCellOrd*/) const {
       INTREPID2_TEST_FOR_EXCEPTION( true, std::logic_error,
                                     ">>> ERROR (Basis::getSubCellRefBasis): this method is not supported or should be overridden accordingly by derived classes.");
     }

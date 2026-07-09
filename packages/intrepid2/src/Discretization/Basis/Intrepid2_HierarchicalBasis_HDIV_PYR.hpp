@@ -155,7 +155,7 @@ namespace Intrepid2
     void E_E_CURL(Kokkos::Array<OutputScalar,3> &curl_EE,
                   const ordinal_type &i,
                   const OutputScratchView &PHom,
-                  const PointScalar &s0, const PointScalar &s1,
+                  const PointScalar & /*s0*/, const PointScalar & /*s1*/,
                   const Kokkos::Array<PointScalar,3> &s0_grad,
                   const Kokkos::Array<PointScalar,3> &s1_grad) const
     {
@@ -275,7 +275,7 @@ namespace Intrepid2
     //! See Fuentes et al. (p. 455), definition of V_{ij}^{\trianglerighteq}
     KOKKOS_INLINE_FUNCTION
     void V_RIGHT_TRI(Kokkos::Array<OutputScalar,3> &VRIGHTTRI,
-                     const OutputScalar &mu1,    const Kokkos::Array<OutputScalar,3> &mu1_grad,
+                     const OutputScalar & /*mu1*/,    const Kokkos::Array<OutputScalar,3> &mu1_grad,
                      const OutputScalar &phi_i,  const Kokkos::Array<OutputScalar,3> &phi_i_grad,
                      const OutputScalar &t0,     const Kokkos::Array<OutputScalar,3> &t0_grad) const {
       Kokkos::Array<OutputScalar,3> left_vector; // left vector in the cross product we take below.
@@ -362,8 +362,8 @@ namespace Intrepid2
     void V_TRI_B42_DIV(OutputScalar &div_VTRI_mus0_mus1_s2_over_mu,
                        const Kokkos::Array<OutputScalar,3> &VTRI_00_s0_s1_s2,
                        const Kokkos::Array<OutputScalar,3> &EE_0_s0_s1,
-                       const OutputScalar &s2, const Kokkos::Array<OutputScalar,3> &s2_grad,
-                       const OutputScalar &mu, const Kokkos::Array<OutputScalar,3> &mu_grad,
+                       const OutputScalar & /*s2*/, const Kokkos::Array<OutputScalar,3> &s2_grad,
+                       const OutputScalar & /*mu*/, const Kokkos::Array<OutputScalar,3> &mu_grad,
                        const ordinal_type &i, // i >= 0
                        const ordinal_type &j, // j >= 0
                        const OutputScratchView &P_mus0_mus1,      // container in which shiftedScaledLegendreValues have been computed for the appropriate face, with arguments (mu s0, mu s1)
@@ -1223,7 +1223,7 @@ namespace Intrepid2
     // Provide the shared memory capacity.
     // This function takes the team_size as an argument,
     // which allows team_size-dependent allocations.
-    size_t team_shmem_size (int team_size) const
+    size_t team_shmem_size (int  /*team_size*/) const
     {
       // we use shared memory to create a fast buffer for basis computations
       size_t shmem_size = 0;
