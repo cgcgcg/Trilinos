@@ -14,8 +14,6 @@
 #include "KokkosSparse_spgemm.hpp"
 #include "KokkosSparse_CrsMatrix.hpp"
 
-#include <gtest/gtest.h>
-#include <Kokkos_Core.hpp>
 
 #include <KokkosKernels_IOUtils.hpp>
 #include <KokkosSparse_IOUtils.hpp>

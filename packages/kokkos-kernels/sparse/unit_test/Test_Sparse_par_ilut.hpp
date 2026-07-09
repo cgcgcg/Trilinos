@@ -18,7 +18,6 @@
 
 #include "Test_vector_fixtures.hpp"
 
-#include <gtest/gtest.h>
 
 using namespace KokkosSparse;
 using namespace KokkosSparse::Experimental;

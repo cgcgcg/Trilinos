@@ -15,7 +15,6 @@
 
 #ifdef KOKKOSKERNELS_ENABLE_SUPERNODAL_SPTRSV
 // Enable supernodal sptrsv
-#include "KokkosSparse_spmv.hpp"
 #include "KokkosBatched_Util.hpp"
 #include "KokkosBlas2_team_gemv_spec.hpp"
 #endif

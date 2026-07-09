@@ -14,7 +14,6 @@
 #include "KokkosSparse_gmres.hpp"
 #include "KokkosSparse_MatrixPrec.hpp"
 
-#include <gtest/gtest.h>
 
 using namespace KokkosSparse;
 using namespace KokkosSparse::Experimental;

@@ -455,7 +455,6 @@ struct BsrMatrixSpMVTensorCoreDispatcher {
 #include "KokkosBatched_Gemm_Serial_Internal.hpp"
 #include "KokkosBatched_Gemm_TeamVector_Internal.hpp"
 #include "KokkosBlas1_team_scal_impl.hpp"
-#include "KokkosKernels_ExecSpaceUtils.hpp"
 
 namespace KokkosSparse {
 namespace Impl {

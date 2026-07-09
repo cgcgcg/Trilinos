@@ -9,7 +9,6 @@
 
 #include <string>
 #include <unordered_map>
-#include <string>
 #include "KokkosKernels_config.h"
 #include "KokkosKernels_tpl_handles_decl.hpp"
 

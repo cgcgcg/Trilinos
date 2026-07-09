@@ -17,7 +17,6 @@
 #include "KokkosSparse_sptrsv_supernode.hpp"
 #endif
 
-#include <gtest/gtest.h>
 
 using namespace KokkosSparse;
 using namespace KokkosSparse::Experimental;
