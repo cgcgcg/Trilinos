@@ -97,7 +97,7 @@ auto extract_adaptive_preconditioner_factory(Teuchos::RCP<Teko::InverseFactory>&
 }
 
 auto extract_build_counts(Teuchos::RCP<Teko::InverseFactory>& inverse,
-                          RCP<Teko::InverseLibrary>& invLibrary) {
+                          RCP<Teko::InverseLibrary>& /*invLibrary*/) {
   auto adapt      = extract_adaptive_preconditioner_factory(inverse);
   auto jacobi_inv = adapt->get_inverses()[0];
   auto direct_inv = adapt->get_inverses()[1];

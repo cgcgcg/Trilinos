@@ -39,9 +39,6 @@
 #include "Tpetra_Map.hpp"
 #include "Tpetra_CrsMatrix.hpp"
 #include "Thyra_TpetraLinearOp.hpp"
-#include "Teko_TpetraHelpers.hpp"
-#include "Teko_TpetraOperatorWrapper.hpp"
-#include "Teko_TpetraBlockPreconditioner.hpp"
 
 // Test-rig
 #include "Test_Utils.hpp"

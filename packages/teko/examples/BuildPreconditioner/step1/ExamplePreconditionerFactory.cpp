@@ -41,7 +41,7 @@ ExamplePreconditionerFactory /*@ \label{lne1:begin-constructor} @*/
 // Use the factory to build the preconditioner (this is where the work goes)
 Teko::LinearOp ExamplePreconditionerFactory /*@ \label{lne1:begin-bpo} @*/
     ::buildPreconditionerOperator(Teko::BlockedLinearOp& blockOp,
-                                  Teko::BlockPreconditionerState& state) const {
+                                  Teko::BlockPreconditionerState& /*state*/) const {
   int rows = Teko::blockRowCount(blockOp); /*@ \label{lne1:begin-extraction} @*/
   int cols = Teko::blockColCount(blockOp);
 

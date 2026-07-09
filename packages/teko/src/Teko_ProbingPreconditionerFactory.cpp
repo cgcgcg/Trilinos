@@ -287,7 +287,7 @@ namespace Teko {
 ProbingPreconditionerFactory::ProbingPreconditionerFactory() {}
 
 LinearOp ProbingPreconditionerFactory::buildPreconditionerOperator(
-    LinearOp& lo, PreconditionerState& state) const {
+    LinearOp& lo, PreconditionerState& /*state*/) const {
   RCP<Tpetra::CrsMatrix<ST, LO, GO, NT> > probedMat = probe(lo);
 
   LinearOp probedOp = Thyra::tpetraLinearOp<ST, LO, GO, NT>(

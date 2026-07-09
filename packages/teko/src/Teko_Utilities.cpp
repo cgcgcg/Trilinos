@@ -20,7 +20,6 @@
 #include "Thyra_DefaultZeroLinearOp.hpp"
 #include "Thyra_DefaultProductMultiVector.hpp"
 #include "Thyra_DefaultProductVectorSpace.hpp"
-#include "Thyra_MultiVectorStdOps.hpp"
 #include "Thyra_VectorStdOps.hpp"
 #include "Thyra_SpmdVectorBase.hpp"
 #include <utility>
@@ -594,7 +593,7 @@ bool isZeroOp(const LinearOp op) {
   return test != Teuchos::null;
 }
 
-std::pair<ModifiableLinearOp, bool> getAbsRowSumMatrixEpetra(const LinearOp &op) {
+std::pair<ModifiableLinearOp, bool> getAbsRowSumMatrixEpetra(const LinearOp & /*op*/) {
 #ifndef TEKO_HAVE_EPETRA
   return std::make_pair(ModifiableLinearOp{}, false);
 #else
@@ -840,7 +839,7 @@ ModifiableLinearOp getInvLumpedMatrix(const LinearOp &op) {
   return rcp(new Thyra::DefaultDiagonalLinearOp<ST>(diag));
 }
 
-const std::pair<ModifiableLinearOp, bool> getDiagonalOpEpetra(const LinearOp &op) {
+const std::pair<ModifiableLinearOp, bool> getDiagonalOpEpetra(const LinearOp & /*op*/) {
 #ifndef TEKO_HAVE_EPETRA
   return std::make_pair(ModifiableLinearOp{}, false);
 #else
@@ -2236,7 +2235,8 @@ const ModifiableLinearOp explicitAdd(const LinearOp &opl_in, const LinearOp &opr
  *
  * \returns Matrix sum with a Epetra_CrsMatrix implementation
  */
-const ModifiableLinearOp explicitSum(const LinearOp &op, const ModifiableLinearOp &destOp) {
+const ModifiableLinearOp explicitSum(const LinearOp & /*op*/,
+                                     const ModifiableLinearOp & /*destOp*/) {
 #ifdef TEKO_HAVE_EPETRA
   // convert operators to Epetra_CrsMatrix
   const RCP<const Epetra_CrsMatrix> epetraOp =

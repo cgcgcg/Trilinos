@@ -31,7 +31,6 @@
 #include "Thyra_TpetraLinearOp.hpp"
 #include "Thyra_LinearOpTester.hpp"
 #include "Thyra_DefaultBlockedLinearOp.hpp"
-#include "Thyra_LinearOpTester.hpp"
 
 #include "Teuchos_AbstractFactoryStd.hpp"
 

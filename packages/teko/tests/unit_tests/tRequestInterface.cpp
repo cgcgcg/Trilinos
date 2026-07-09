@@ -40,8 +40,8 @@ class TestFactory : public Teko::PreconditionerFactory {
   mutable std::string string_;
 };
 
-Teko::LinearOp TestFactory::buildPreconditionerOperator(Teko::LinearOp& lo,
-                                                        Teko::PreconditionerState& state) const {
+Teko::LinearOp TestFactory::buildPreconditionerOperator(
+    Teko::LinearOp& /*lo*/, Teko::PreconditionerState& /*state*/) const {
   Teko::RequestMesg pcdMesg("PCD Op"), tsMesg("timestep"), strMesg("name");
 
   pcdOp_    = callbackHandler_->request<Teko::LinearOp>(pcdMesg);

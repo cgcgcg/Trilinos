@@ -13,7 +13,6 @@
 #include "Teko_NeumannSeriesPreconditionerFactoryDecl.hpp"
 
 #include "Thyra_DefaultPreconditioner.hpp"
-#include "Thyra_DefaultPreconditioner.hpp"
 #include "Thyra_DefaultScaledAdjointLinearOp.hpp"
 #include "Thyra_DefaultAddedLinearOp.hpp"
 #include "Thyra_DefaultMultipliedLinearOp.hpp"

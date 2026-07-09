@@ -25,7 +25,6 @@
 #include "Thyra_PreconditionerFactoryHelpers.hpp"
 #include "Thyra_DetachedVectorView.hpp"
 #include "Thyra_OperatorVectorTypes.hpp"
-#include "Thyra_VectorStdOps.hpp"
 
 #include "Teko_Utilities.hpp"
 
@@ -249,7 +248,7 @@ const Teuchos::RCP<const Thyra::LinearOpBase<double> > DiagMatrix(int cnt, doubl
 #endif
 
 const Teuchos::RCP<const Thyra::LinearOpBase<double> > DiagMatrix_tpetra(GO cnt, ST* vec,
-                                                                         std::string label) {
+                                                                         std::string /*label*/) {
   const RCP<const Teuchos::Comm<int> > comm = Tpetra::getDefaultComm();
   const RCP<const Tpetra::Map<LO, GO, NT> > map =
       rcp(new const Tpetra::Map<LO, GO, NT>(cnt, 0, comm));

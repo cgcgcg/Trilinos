@@ -321,7 +321,7 @@ int tSIMPLEPreconditionerFactory_tpetra::runTest(int verbosity, std::ostream& st
   return failcount;
 }
 
-bool tSIMPLEPreconditionerFactory_tpetra::test_createPrec(int verbosity, std::ostream& os) {
+bool tSIMPLEPreconditionerFactory_tpetra::test_createPrec(int /*verbosity*/, std::ostream& os) {
   const RCP<const Thyra::PreconditionerFactoryBase<double> > fact =
       rcp(new SIMPLEPreconditionerFactory(invF_, 0.9));
 
@@ -337,7 +337,7 @@ bool tSIMPLEPreconditionerFactory_tpetra::test_createPrec(int verbosity, std::os
   return true;
 }
 
-bool tSIMPLEPreconditionerFactory_tpetra::test_initializePrec(int verbosity, std::ostream& os,
+bool tSIMPLEPreconditionerFactory_tpetra::test_initializePrec(int /*verbosity*/, std::ostream& os,
                                                               int use_blocking) {
   bool status    = false;
   bool allPassed = true;
@@ -424,11 +424,13 @@ bool tSIMPLEPreconditionerFactory_tpetra::test_initializePrec(int verbosity, std
   return allPassed;
 }
 
-bool tSIMPLEPreconditionerFactory_tpetra::test_uninitializePrec(int verbosity, std::ostream& os) {
+bool tSIMPLEPreconditionerFactory_tpetra::test_uninitializePrec(int /*verbosity*/,
+                                                                std::ostream& /*os*/) {
   return true;
 }
 
-bool tSIMPLEPreconditionerFactory_tpetra::test_isCompatable(int verbosity, std::ostream& os) {
+bool tSIMPLEPreconditionerFactory_tpetra::test_isCompatable(int /*verbosity*/,
+                                                            std::ostream& /*os*/) {
   return true;
 }
 

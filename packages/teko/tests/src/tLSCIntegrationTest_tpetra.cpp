@@ -54,7 +54,7 @@ void tLSCIntegrationTest_tpetra::initializeTest() {
       rcp(new Tpetra::Map<LO, GO, NT>(769 + 5890, 0, GetComm_tpetra()));  // map of pressure space
 }
 
-void tLSCIntegrationTest_tpetra::solveList(Teuchos::ParameterList& paramList, int vcycles) {
+void tLSCIntegrationTest_tpetra::solveList(Teuchos::ParameterList& paramList, int /*vcycles*/) {
   paramList.set("Linear Solver Type", "Belos");
   paramList.sublist("Linear Solver Types").sublist("Belos").set("Solver Type", "Block GMRES");
   Teuchos::ParameterList& gmresList = paramList.sublist("Linear Solver Types")

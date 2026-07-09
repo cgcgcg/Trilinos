@@ -18,7 +18,6 @@
 // #include "Thyra_LinearOperator.hpp"
 #include "Thyra_BlockedLinearOpBase.hpp"
 #include "Thyra_ProductVectorSpaceBase.hpp"
-#include "Thyra_TpetraLinearOp.hpp"
 
 #include "Teko_TpetraThyraConverter.hpp"
 #include "Teuchos_Ptr.hpp"

@@ -9,7 +9,6 @@
 
 #include "tJacobi2x2PreconditionerFactory_tpetra.hpp"
 #include "Teko_JacobiPreconditionerFactory.hpp"
-#include "Teko_JacobiPreconditionerFactory.hpp"
 
 #include "Teko_InverseLibrary.hpp"
 #include "Teko_PreconditionerInverseFactory.hpp"
@@ -236,7 +235,7 @@ int tJacobi2x2PreconditionerFactory_tpetra::runTest(int verbosity, std::ostream&
   return failcount;
 }
 
-bool tJacobi2x2PreconditionerFactory_tpetra::test_createPrec(int verbosity, std::ostream& os) {
+bool tJacobi2x2PreconditionerFactory_tpetra::test_createPrec(int /*verbosity*/, std::ostream& os) {
   RCP<JacobiPreconditionerFactory> fact = rcp(new JacobiPreconditionerFactory(invF_, invC_));
 
   try {
@@ -254,7 +253,8 @@ bool tJacobi2x2PreconditionerFactory_tpetra::test_createPrec(int verbosity, std:
   return true;
 }
 
-bool tJacobi2x2PreconditionerFactory_tpetra::test_initializePrec(int verbosity, std::ostream& os) {
+bool tJacobi2x2PreconditionerFactory_tpetra::test_initializePrec(int /*verbosity*/,
+                                                                 std::ostream& os) {
   bool status    = false;
   bool allPassed = true;
 
@@ -307,12 +307,13 @@ bool tJacobi2x2PreconditionerFactory_tpetra::test_initializePrec(int verbosity, 
   return allPassed;
 }
 
-bool tJacobi2x2PreconditionerFactory_tpetra::test_uninitializePrec(int verbosity,
-                                                                   std::ostream& os) {
+bool tJacobi2x2PreconditionerFactory_tpetra::test_uninitializePrec(int /*verbosity*/,
+                                                                   std::ostream& /*os*/) {
   return true;
 }
 
-bool tJacobi2x2PreconditionerFactory_tpetra::test_isCompatable(int verbosity, std::ostream& os) {
+bool tJacobi2x2PreconditionerFactory_tpetra::test_isCompatable(int /*verbosity*/,
+                                                               std::ostream& /*os*/) {
   return true;
 }
 
@@ -715,7 +716,7 @@ Teuchos::RCP<const T> getPrecFactory(const RCP<const InverseFactory>& invFact) {
       rcp_dynamic_cast<const PreconditionerInverseFactory>(invFact)->getPrecFactory());
 }
 
-bool tJacobi2x2PreconditionerFactory_tpetra::test_initializeFromParameterList(int verbosity,
+bool tJacobi2x2PreconditionerFactory_tpetra::test_initializeFromParameterList(int /*verbosity*/,
                                                                               std::ostream& os) {
   bool status    = false;
   bool allPassed = true;

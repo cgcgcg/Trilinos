@@ -207,7 +207,7 @@ int tLU2x2PreconditionerFactory_tpetra::runTest(int verbosity, std::ostream& std
   return failcount;
 }
 
-bool tLU2x2PreconditionerFactory_tpetra::test_createPrec(int verbosity, std::ostream& os) {
+bool tLU2x2PreconditionerFactory_tpetra::test_createPrec(int /*verbosity*/, std::ostream& os) {
   RCP<LU2x2PreconditionerFactory> fact = rcp(new LU2x2PreconditionerFactory(invF_, invS_));
 
   try {
@@ -225,7 +225,7 @@ bool tLU2x2PreconditionerFactory_tpetra::test_createPrec(int verbosity, std::ost
   return true;
 }
 
-bool tLU2x2PreconditionerFactory_tpetra::test_initializePrec(int verbosity, std::ostream& os) {
+bool tLU2x2PreconditionerFactory_tpetra::test_initializePrec(int /*verbosity*/, std::ostream& os) {
   bool status    = false;
   bool allPassed = true;
 
@@ -278,11 +278,13 @@ bool tLU2x2PreconditionerFactory_tpetra::test_initializePrec(int verbosity, std:
   return allPassed;
 }
 
-bool tLU2x2PreconditionerFactory_tpetra::test_uninitializePrec(int verbosity, std::ostream& os) {
+bool tLU2x2PreconditionerFactory_tpetra::test_uninitializePrec(int /*verbosity*/,
+                                                               std::ostream& /*os*/) {
   return true;
 }
 
-bool tLU2x2PreconditionerFactory_tpetra::test_isCompatable(int verbosity, std::ostream& os) {
+bool tLU2x2PreconditionerFactory_tpetra::test_isCompatable(int /*verbosity*/,
+                                                           std::ostream& /*os*/) {
   return true;
 }
 

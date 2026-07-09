@@ -220,7 +220,7 @@ int tLSCStablePreconditionerFactory_tpetra::runTest(int verbosity, std::ostream&
   return failcount;
 }
 
-bool tLSCStablePreconditionerFactory_tpetra::test_createPrec(int verbosity, std::ostream& os) {
+bool tLSCStablePreconditionerFactory_tpetra::test_createPrec(int /*verbosity*/, std::ostream& os) {
   // RCP<LSCStablePreconditionerFactory> fact = rcp(new
   // LSCStablePreconditionerFactory(invF_,invBQBt_));
   const RCP<const Thyra::PreconditionerFactoryBase<ST> > fact =
@@ -241,7 +241,8 @@ bool tLSCStablePreconditionerFactory_tpetra::test_createPrec(int verbosity, std:
   return true;
 }
 
-bool tLSCStablePreconditionerFactory_tpetra::test_initializePrec(int verbosity, std::ostream& os) {
+bool tLSCStablePreconditionerFactory_tpetra::test_initializePrec(int /*verbosity*/,
+                                                                 std::ostream& os) {
   bool status    = false;
   bool allPassed = true;
 
@@ -296,12 +297,13 @@ bool tLSCStablePreconditionerFactory_tpetra::test_initializePrec(int verbosity, 
   return allPassed;
 }
 
-bool tLSCStablePreconditionerFactory_tpetra::test_uninitializePrec(int verbosity,
-                                                                   std::ostream& os) {
+bool tLSCStablePreconditionerFactory_tpetra::test_uninitializePrec(int /*verbosity*/,
+                                                                   std::ostream& /*os*/) {
   return true;
 }
 
-bool tLSCStablePreconditionerFactory_tpetra::test_isCompatable(int verbosity, std::ostream& os) {
+bool tLSCStablePreconditionerFactory_tpetra::test_isCompatable(int /*verbosity*/,
+                                                               std::ostream& /*os*/) {
   return true;
 }
 

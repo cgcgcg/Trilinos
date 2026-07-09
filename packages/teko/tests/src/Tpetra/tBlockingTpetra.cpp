@@ -348,7 +348,7 @@ bool tBlockingTpetra::test_many2one(int verbosity, std::ostream& os) {
   return allPassed;
 }
 
-bool tBlockingTpetra::test_buildSubBlock(int verbosity, std::ostream& os) {
+bool tBlockingTpetra::test_buildSubBlock(int /*verbosity*/, std::ostream& /*os*/) {
   bool allPassed = true;
 
   int numProc   = GetComm_tpetra()->getSize();

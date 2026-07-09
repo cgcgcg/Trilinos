@@ -18,7 +18,6 @@
 #include "Teko_InverseLibrary.hpp"
 #include "Teko_Preconditioner.hpp"
 #include "Teko_Utilities.hpp"
-#include "Teko_InverseLibrary.hpp"
 #include "Teko_ReorderedLinearOp.hpp"
 
 #include "Teko_ConfigDefs.hpp"

@@ -24,7 +24,6 @@
 #include "MatrixMarket_Tpetra.hpp"
 #include "Tpetra_Map.hpp"
 #include "Tpetra_CrsMatrix.hpp"
-#include "Thyra_TpetraLinearOp.hpp"
 
 // Test-rig
 #include "Test_Utils.hpp"
@@ -101,7 +100,7 @@ int tParallelInverse_tpetra::runTest(int verbosity, std::ostream& stdstrm, std::
   return failcount;
 }
 
-bool tParallelInverse_tpetra::test_inverse(int verbosity, std::ostream& os) {
+bool tParallelInverse_tpetra::test_inverse(int /*verbosity*/, std::ostream& /*os*/) {
   // bool status = false;
   bool allPassed = true;
 
