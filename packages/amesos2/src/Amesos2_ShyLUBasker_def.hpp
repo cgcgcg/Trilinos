@@ -766,7 +766,7 @@ ShyLUBasker<Matrix,Vector>::loadA_impl(EPhase current_phase)
 template <class Matrix, class Vector>
 void
 ShyLUBasker<Matrix,Vector>::describe_impl(Teuchos::FancyOStream &out,
-                                          const Teuchos::EVerbosityLevel verbLevel) const
+                                          const Teuchos::EVerbosityLevel  /*verbLevel*/) const
 {
   out << " ShyLUBasker current parameters:" << std::endl;
   out << "  > IsContiguous       = " << (is_contiguous_ ? "YES" : "NO") << std::endl;

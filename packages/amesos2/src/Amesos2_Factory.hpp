@@ -354,9 +354,9 @@ template < template <class,class> class ConcreteSolver,
            class Matrix,
            class Vector >
 struct throw_no_scalar_support_exception {
-  static Teuchos::RCP<Solver<Matrix,Vector> > apply(Teuchos::RCP<const Matrix> A,
-                                                    Teuchos::RCP<Vector>       X,
-                                                    Teuchos::RCP<const Vector> B )
+  static Teuchos::RCP<Solver<Matrix,Vector> > apply(Teuchos::RCP<const Matrix>  /*A*/,
+                                                    Teuchos::RCP<Vector>        /*X*/,
+                                                    Teuchos::RCP<const Vector>  /*B*/ )
   {
     // typedef ConcreteSolver<Matrix,Vector> concretesolver_matrix_vector;
     typedef typename MatrixTraits<Matrix>::scalar_t scalar_t;
@@ -374,9 +374,9 @@ template < template <class,class> class ConcreteSolver,
            class Matrix,
            class Vector >
 struct throw_no_matrix_support_exception {
-  static Teuchos::RCP<Solver<Matrix,Vector> > apply(Teuchos::RCP<const Matrix> A,
-                                                    Teuchos::RCP<Vector>       X,
-                                                    Teuchos::RCP<const Vector> B )
+  static Teuchos::RCP<Solver<Matrix,Vector> > apply(Teuchos::RCP<const Matrix>  /*A*/,
+                                                    Teuchos::RCP<Vector>        /*X*/,
+                                                    Teuchos::RCP<const Vector>  /*B*/ )
   {
     TEUCHOS_TEST_FOR_EXCEPTION( true,
                         std::invalid_argument,

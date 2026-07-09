@@ -306,7 +306,7 @@ namespace Amesos2 {
     MultiVector<Scalar,
                 LocalOrdinal,
                 GlobalOrdinal,
-                Node> >::get1dViewNonConst (bool local)
+                Node> >::get1dViewNonConst (bool  /*local*/)
   {
     // FIXME (mfh 22 Jan 2014) When I first found this routine, all of
     // its code was commented out, and it didn't return anything.  The
@@ -594,7 +594,7 @@ namespace Amesos2 {
                                  host_ordinal_type_array &perm_g2l,
                                  host_ordinal_type_array &recvCountRows,
                                  host_ordinal_type_array &recvDisplRows,
-                                 EDistribution distribution) const
+                                 EDistribution  /*distribution*/) const
   {
     using Teuchos::as;
     using mv_scalar_t = typename KV::non_const_value_type;
@@ -654,7 +654,7 @@ namespace Amesos2 {
                                   host_ordinal_type_array &perm_g2l,
                                   host_ordinal_type_array &sendCountRows,
                                   host_ordinal_type_array &sendDisplRows,
-                                  EDistribution distribution) const
+                                  EDistribution  /*distribution*/) const
   {
     using Teuchos::as;
     using mv_scalar_t = typename KV::non_const_value_type;

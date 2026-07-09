@@ -134,7 +134,7 @@ namespace Amesos2 {
   template <typename Scalar, typename LocalOrdinal, typename ExecutionSpace>
   size_t
   ConcreteMatrixAdapter<
-    KokkosSparse::CrsMatrix<Scalar,LocalOrdinal,ExecutionSpace>>::getLocalRowNNZ_impl(local_ordinal_t row) const
+    KokkosSparse::CrsMatrix<Scalar,LocalOrdinal,ExecutionSpace>>::getLocalRowNNZ_impl(local_ordinal_t  /*row*/) const
   {
     TEUCHOS_TEST_FOR_EXCEPTION( true,
                         std::runtime_error,
@@ -145,7 +145,7 @@ namespace Amesos2 {
   template <typename Scalar, typename LocalOrdinal, typename ExecutionSpace>
   size_t
   ConcreteMatrixAdapter<
-    KokkosSparse::CrsMatrix<Scalar,LocalOrdinal,ExecutionSpace>>::getGlobalColNNZ_impl(global_ordinal_t col) const
+    KokkosSparse::CrsMatrix<Scalar,LocalOrdinal,ExecutionSpace>>::getGlobalColNNZ_impl(global_ordinal_t  /*col*/) const
   {
     TEUCHOS_TEST_FOR_EXCEPTION( true,
                         std::runtime_error,
@@ -156,7 +156,7 @@ namespace Amesos2 {
   template <typename Scalar, typename LocalOrdinal, typename ExecutionSpace>
   size_t
   ConcreteMatrixAdapter<
-    KokkosSparse::CrsMatrix<Scalar,LocalOrdinal,ExecutionSpace>>::getLocalColNNZ_impl(local_ordinal_t col) const
+    KokkosSparse::CrsMatrix<Scalar,LocalOrdinal,ExecutionSpace>>::getLocalColNNZ_impl(local_ordinal_t  /*col*/) const
   {
     TEUCHOS_TEST_FOR_EXCEPTION( true,
                         std::runtime_error,
@@ -186,7 +186,7 @@ namespace Amesos2 {
   Teuchos::RCP<const MatrixAdapter<KokkosSparse::CrsMatrix<Scalar,LocalOrdinal,ExecutionSpace>>>
   ConcreteMatrixAdapter<
     KokkosSparse::CrsMatrix<Scalar,LocalOrdinal,ExecutionSpace>
-    >::reindex_impl(Teuchos::RCP<const map_t> &contigRowMap, Teuchos::RCP<const map_t> &contigColMap, const EPhase current_phase) const
+    >::reindex_impl(Teuchos::RCP<const map_t> & /*contigRowMap*/, Teuchos::RCP<const map_t> & /*contigColMap*/, const EPhase  /*current_phase*/) const
   {
     TEUCHOS_TEST_FOR_EXCEPTION(true, std::runtime_error, "KokkosCrsMatrixAdapter has not implemented reindex_impl.");
     return RCP (this);
@@ -197,12 +197,12 @@ namespace Amesos2 {
   LocalOrdinal
   ConcreteMatrixAdapter<
     KokkosSparse::CrsMatrix<Scalar,LocalOrdinal,ExecutionSpace>
-    >::gather_impl(KV_S& nzvals, KV_GO& indices, KV_GS& pointers,
-                   host_ordinal_type_array &perm_g2l,
-                   host_ordinal_type_array &recvCountRows, host_ordinal_type_array &recvDisplRows,
-                   host_ordinal_type_array &recvCounts, host_ordinal_type_array &recvDispls,
-                   host_ordinal_type_array &transpose_map, host_scalar_type_array &nzvals_t,
-                   bool column_major, EPhase current_phase) const
+    >::gather_impl(KV_S&  /*nzvals*/, KV_GO&  /*indices*/, KV_GS&  /*pointers*/,
+                   host_ordinal_type_array & /*perm_g2l*/,
+                   host_ordinal_type_array & /*recvCountRows*/, host_ordinal_type_array & /*recvDisplRows*/,
+                   host_ordinal_type_array & /*recvCounts*/, host_ordinal_type_array & /*recvDispls*/,
+                   host_ordinal_type_array & /*transpose_map*/, host_scalar_type_array & /*nzvals_t*/,
+                   bool  /*column_major*/, EPhase  /*current_phase*/) const
   {
     //TEUCHOS_TEST_FOR_EXCEPTION(true, std::runtime_error, "KokkosCrsMatrixAdapter has not been implemented gather_impl.");
     return -1;
@@ -214,7 +214,7 @@ namespace Amesos2 {
   ConcreteMatrixAdapter<
     KokkosSparse::CrsMatrix<Scalar,LocalOrdinal,ExecutionSpace>
     >::describe (Teuchos::FancyOStream& os,
-                   const Teuchos::EVerbosityLevel verbLevel) const
+                   const Teuchos::EVerbosityLevel  /*verbLevel*/) const
   {
     size_t m = this->mat_->numRows();
     size_t n = this->mat_->numCols();

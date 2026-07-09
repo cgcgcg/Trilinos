@@ -14,9 +14,9 @@ template <typename T>
 struct KLU_ScalarTraits
 {
     typedef T magnitudeType ;
-    static inline double reciprocal (double c) {return 0;}
-    static inline double divide (double a, double b) {return 0.0;}
-    static inline double divideConjugate (double a, double b) {return 0.0;}
+    static inline double reciprocal (double  /*c*/) {return 0;}
+    static inline double divide (double  /*a*/, double  /*b*/) {return 0.0;}
+    static inline double divideConjugate (double  /*a*/, double  /*b*/) {return 0.0;}
     static inline magnitudeType approxABS (double a)
     {
     }

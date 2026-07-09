@@ -587,7 +587,7 @@ KLU2<Matrix,Vector>::loadA_impl(EPhase current_phase)
 template <class Matrix, class Vector>
 void
 KLU2<Matrix,Vector>::describe_impl(Teuchos::FancyOStream &out,
-                                   const Teuchos::EVerbosityLevel verbLevel) const
+                                   const Teuchos::EVerbosityLevel  /*verbLevel*/) const
 {
   out << " KLU2 current parameters:" << std::endl;
   out << "  > Trans = " << transFlag_ << std::endl;

@@ -778,9 +778,9 @@ namespace Amesos2 {
 
     template<class row_ptr_view_t, class cols_view_t, class per_view_t>
     void
-    reorder(row_ptr_view_t & row_ptr, cols_view_t & cols,
-            per_view_t & perm, per_view_t & peri, size_t & nnz,
-            bool permute_matrix)
+    reorder(row_ptr_view_t &  /*row_ptr*/, cols_view_t &  /*cols*/,
+            per_view_t &  /*perm*/, per_view_t &  /*peri*/, size_t &  /*nnz*/,
+            bool  /*permute_matrix*/)
     {
       #ifndef HAVE_AMESOS2_METIS
         TEUCHOS_TEST_FOR_EXCEPTION(true, std::runtime_error,
@@ -905,7 +905,7 @@ namespace Amesos2 {
     reorder_values(values_view_t & values, const row_ptr_view_t & orig_row_ptr,
       const row_ptr_view_t & new_row_ptr,
       const cols_view_t & orig_cols, const per_view_t & perm, const per_view_t & peri,
-      size_t nnz)
+      size_t  /*nnz*/)
     {
         typedef typename cols_view_t::value_type ordinal_type;
         typedef typename cols_view_t::execution_space exec_space_t;
@@ -992,7 +992,7 @@ namespace Amesos2 {
     template<class map_type, class MAT>
     Teuchos::RCP<MAT>
     readCrsMatrixFromFile (const std::string& matrixFilename,
-                           Teuchos::RCP<Teuchos::FancyOStream> & fos,
+                           Teuchos::RCP<Teuchos::FancyOStream> &  /*fos*/,
                            const Teuchos::RCP<const map_type>& rowMap,
                            const Teuchos::RCP<const map_type>& domainMap,
                            const Teuchos::RCP<const map_type>& rangeMap,

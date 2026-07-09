@@ -53,12 +53,12 @@ namespace Amesos2 {
   template <typename Scalar, typename ExecutionSpace >
   void
   MultiVecAdapter<
-    Kokkos::View<Scalar**, Kokkos::LayoutLeft, ExecutionSpace> >::get1dCopy(const Teuchos::ArrayView<scalar_t>& av,
-    size_t lda,
+    Kokkos::View<Scalar**, Kokkos::LayoutLeft, ExecutionSpace> >::get1dCopy(const Teuchos::ArrayView<scalar_t>&  /*av*/,
+    size_t  /*lda*/,
     Teuchos::Ptr<
       const Tpetra::Map<local_ordinal_t, global_ordinal_t,
-                      MultiVecAdapter<Kokkos::View<Scalar**, Kokkos::LayoutLeft, ExecutionSpace>>::node_t>> distribution_map,
-                      EDistribution distribution) const
+                      MultiVecAdapter<Kokkos::View<Scalar**, Kokkos::LayoutLeft, ExecutionSpace>>::node_t>>  /*distribution_map*/,
+                      EDistribution  /*distribution*/) const
   {
     TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "get1dCopy for kokkos not implemented.");
   }
@@ -66,7 +66,7 @@ namespace Amesos2 {
   template <typename Scalar, typename ExecutionSpace >
   Teuchos::ArrayRCP<Scalar>
   MultiVecAdapter<
-    Kokkos::View<Scalar**, Kokkos::LayoutLeft, ExecutionSpace> >::get1dViewNonConst (bool local)
+    Kokkos::View<Scalar**, Kokkos::LayoutLeft, ExecutionSpace> >::get1dViewNonConst (bool  /*local*/)
   {
     TEUCHOS_TEST_FOR_EXCEPTION(
       true, std::logic_error, "Amesos2::MultiVecAdapter::get1dViewNonConst: "
@@ -77,11 +77,11 @@ namespace Amesos2 {
   void
   MultiVecAdapter<
     Kokkos::View<Scalar**, Kokkos::LayoutLeft, ExecutionSpace> >::put1dData(
-      const Teuchos::ArrayView<const scalar_t>& new_data,
-      size_t lda,
+      const Teuchos::ArrayView<const scalar_t>&  /*new_data*/,
+      size_t  /*lda*/,
       Teuchos::Ptr<
         const Tpetra::Map<local_ordinal_t, global_ordinal_t,
-                      MultiVecAdapter<Kokkos::View<Scalar**, Kokkos::LayoutLeft, ExecutionSpace>>::node_t> > source_map,
+                      MultiVecAdapter<Kokkos::View<Scalar**, Kokkos::LayoutLeft, ExecutionSpace>>::node_t> >  /*source_map*/,
                       EDistribution /* distribution */) const
   {
     TEUCHOS_TEST_FOR_EXCEPTION(
@@ -94,11 +94,11 @@ namespace Amesos2 {
   int
   MultiVecAdapter<
     Kokkos::View<Scalar**, Kokkos::LayoutLeft, ExecutionSpace> >::gather (
-      KV& kokkos_new_view,
-      host_ordinal_type_array &perm_g2l,
-      host_ordinal_type_array &recvCountRows,
-      host_ordinal_type_array &recvDisplRows,
-      EDistribution distribution ) const
+      KV&  /*kokkos_new_view*/,
+      host_ordinal_type_array & /*perm_g2l*/,
+      host_ordinal_type_array & /*recvCountRows*/,
+      host_ordinal_type_array & /*recvDisplRows*/,
+      EDistribution  /*distribution*/ ) const
   {
     return -1;
   }
@@ -108,11 +108,11 @@ namespace Amesos2 {
   int
   MultiVecAdapter<
     Kokkos::View<Scalar**, Kokkos::LayoutLeft, ExecutionSpace> >::scatter (
-      KV& kokkos_new_view,
-      host_ordinal_type_array &perm_g2l,
-      host_ordinal_type_array &recvCountRows,
-      host_ordinal_type_array &recvDisplRows,
-      EDistribution distribution ) const
+      KV&  /*kokkos_new_view*/,
+      host_ordinal_type_array & /*perm_g2l*/,
+      host_ordinal_type_array & /*recvCountRows*/,
+      host_ordinal_type_array & /*recvDisplRows*/,
+      EDistribution  /*distribution*/ ) const
   {
     return -1;
   }
@@ -136,7 +136,7 @@ namespace Amesos2 {
   void
   MultiVecAdapter<
     Kokkos::View<Scalar**, Kokkos::LayoutLeft, ExecutionSpace> >::describe (Teuchos::FancyOStream& os,
-                                   const Teuchos::EVerbosityLevel verbLevel) const
+                                   const Teuchos::EVerbosityLevel  /*verbLevel*/) const
   {
     size_t m = mv_->extent(0);
     size_t n = mv_->extent(1);

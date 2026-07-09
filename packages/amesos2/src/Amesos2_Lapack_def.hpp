@@ -276,7 +276,7 @@ namespace Amesos2 {
   template <class Matrix, class Vector>
   void
   Lapack<Matrix,Vector>::describe_impl(Teuchos::FancyOStream &out,
-                                       const Teuchos::EVerbosityLevel verbLevel) const
+                                       const Teuchos::EVerbosityLevel  /*verbLevel*/) const
   {
     out << " LAPACK current parameters:" << std::endl;
     out << "  > IsContiguous = " << (is_contiguous_ ? "YES" : "NO") << std::endl;

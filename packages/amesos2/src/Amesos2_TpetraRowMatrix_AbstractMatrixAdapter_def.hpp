@@ -191,7 +191,7 @@ namespace Amesos2 {
                       LocalOrdinal,
                       GlobalOrdinal,
                       Node>,
-    DerivedMat>::getGlobalColNNZ_impl(global_ordinal_t col) const
+    DerivedMat>::getGlobalColNNZ_impl(global_ordinal_t  /*col*/) const
   {
     TEUCHOS_TEST_FOR_EXCEPTION( true,
                         std::runtime_error,
@@ -210,7 +210,7 @@ namespace Amesos2 {
                       LocalOrdinal,
                       GlobalOrdinal,
                       Node>,
-    DerivedMat>::getLocalColNNZ_impl(local_ordinal_t col) const
+    DerivedMat>::getLocalColNNZ_impl(local_ordinal_t  /*col*/) const
   {
     TEUCHOS_TEST_FOR_EXCEPTION( true,
                         std::runtime_error,
