@@ -219,7 +219,7 @@ void MappingProblem<Adapter, MachineRep>::createMappingProblem(
 
 ////////////////////////////////////////////////////////////////////////
 template <typename Adapter, typename MachineRep>
-void MappingProblem<Adapter, MachineRep>::solve(bool newData)
+void MappingProblem<Adapter, MachineRep>::solve(bool  /*newData*/)
 {
   HELLO;
 

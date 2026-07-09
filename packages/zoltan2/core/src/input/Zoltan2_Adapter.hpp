@@ -152,7 +152,7 @@ public:
       \param hostIds will on return point to the list of the global Ids for
         this process.
    */
-  virtual void getIDsHostView(ConstIdsHostView& hostIds) const {
+  virtual void getIDsHostView(ConstIdsHostView&  /*hostIds*/) const {
     Z2_THROW_NOT_IMPLEMENTED
   }
 
@@ -160,7 +160,7 @@ public:
       \param deviceIds will on return point to the list of the global Ids for
         this process.
    */
-  virtual void getIDsDeviceView(ConstIdsDeviceView &deviceIds) const {
+  virtual void getIDsDeviceView(ConstIdsDeviceView & /*deviceIds*/) const {
     Z2_THROW_NOT_IMPLEMENTED
   }
 
@@ -215,14 +215,14 @@ public:
       \param hostWgts on return a Kokkos view of the weights for this idx
       \param idx  the weight index, zero or greater
    */
-  virtual void getWeightsHostView(WeightsHostView1D& hostWgts, int idx = 0) const {
+  virtual void getWeightsHostView(WeightsHostView1D&  /*hostWgts*/, int  /*idx*/ = 0) const {
     Z2_THROW_NOT_IMPLEMENTED
   }
 
   /*! \brief Provide a Kokkos view (Host side) of the weights.
       \param hostWgts on return a Kokkos view of all the weights
    */
-  virtual void getWeightsHostView(WeightsHostView& hostWgts) const {
+  virtual void getWeightsHostView(WeightsHostView&  /*hostWgts*/) const {
     Z2_THROW_NOT_IMPLEMENTED
   }
 
@@ -230,14 +230,14 @@ public:
       \param deviceWgts on return a Kokkos view of the weights for this idx
       \param idx  the weight index, zero or greater
    */
-  virtual void getWeightsDeviceView(WeightsDeviceView1D& deviceWgts, int idx = 0) const {
+  virtual void getWeightsDeviceView(WeightsDeviceView1D&  /*deviceWgts*/, int  /*idx*/ = 0) const {
     Z2_THROW_NOT_IMPLEMENTED
   }
 
   /*! \brief Provide a Kokkos view (Device side) of the weights.
       \param deviceWgts on return a Kokkos view of all the weights
    */
-  virtual void getWeightsDeviceView(WeightsDeviceView& deviceWgts) const {
+  virtual void getWeightsDeviceView(WeightsDeviceView&  /*deviceWgts*/) const {
     Z2_THROW_NOT_IMPLEMENTED
   }
 
@@ -256,11 +256,11 @@ public:
     inputPart = NULL;
   }
 
-  virtual void getPartsHostView(Kokkos::View<part_t*, host_t> &inputPart) const {
+  virtual void getPartsHostView(Kokkos::View<part_t*, host_t> & /*inputPart*/) const {
     Z2_THROW_NOT_IMPLEMENTED
   }
 
-  virtual void getPartsDeviceView(Kokkos::View<part_t*, device_t> &inputPart) const {
+  virtual void getPartsDeviceView(Kokkos::View<part_t*, device_t> & /*inputPart*/) const {
     Z2_THROW_NOT_IMPLEMENTED
   }
 
@@ -282,8 +282,8 @@ public:
    *  \return   Returns the number of local Ids in the new partition.
    */
   template <typename Adapter>
-    void applyPartitioningSolution(const User &in, User *&out,
-      const PartitioningSolution<Adapter> &solution) const {
+    void applyPartitioningSolution(const User & /*in*/, User *& /*out*/,
+      const PartitioningSolution<Adapter> & /*solution*/) const {
     Z2_THROW_NOT_IMPLEMENTED
   }
 
@@ -319,7 +319,7 @@ public:
   virtual void getCoordinatesHostView(CoordsHostView &) const {
     Z2_THROW_NOT_IMPLEMENTED
   }
-  virtual void getCoordinatesDeviceView(CoordsDeviceView &elements) const {
+  virtual void getCoordinatesDeviceView(CoordsDeviceView & /*elements*/) const {
     Z2_THROW_NOT_IMPLEMENTED
   }
 };

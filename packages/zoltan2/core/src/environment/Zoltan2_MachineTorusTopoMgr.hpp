@@ -150,7 +150,7 @@ public:
 
   int getRealMachineDim() const { return networkDim; }
 
-  bool getMachineExtent(int *nxyz) const {
+  bool getMachineExtent(int * /*nxyz*/) const {
 #if defined (CMK_BLUEGENEQ)
     int dim = 0;
     if (dim < transformed_network_dim)
@@ -183,7 +183,7 @@ public:
   }
 
   // MD TODO: Not always it has wrap-around links.
-  bool getMachineExtentWrapArounds(bool *wrap_around) const {
+  bool getMachineExtentWrapArounds(bool * /*wrap_around*/) const {
 #if defined (CMK_BLUEGENEQ)
     // Leave it as this for now, figure out if there is a way to 
     // determine tourus from topomanager.
@@ -222,7 +222,7 @@ public:
     return true;
   }
 
-  bool getMyActualMachineCoordinate(pcoord_t *xyz) {
+  bool getMyActualMachineCoordinate(pcoord_t * /*xyz*/) {
 #if defined (CMK_BLUEGENEQ)
     int a,b,c,d,e,t;
     tmgr.rankToCoordinates(this->myRank, a,b,c,d,e,t);
@@ -263,13 +263,13 @@ public:
       wrap_around[dim++] = true;
     return true;
   }
-  inline bool getMachineCoordinate(const int rank,
-                                   pcoord_t *xyz) const {
+  inline bool getMachineCoordinate(const int  /*rank*/,
+                                   pcoord_t * /*xyz*/) const {
     return false;
   }
 
 
-  bool getMachineCoordinate(const char *nodename, pcoord_t *xyz) {
+  bool getMachineCoordinate(const char * /*nodename*/, pcoord_t * /*xyz*/) {
     return false;  // cannot yet return from nodename
   }
 

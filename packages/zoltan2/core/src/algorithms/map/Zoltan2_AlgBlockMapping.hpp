@@ -51,10 +51,10 @@ public:
    */
   AlgBlockMapping(
     const Teuchos::RCP <const Teuchos::Comm<int> > &comm_,
-    const Teuchos::RCP <const MachineRep> &machine_,
+    const Teuchos::RCP <const MachineRep> & /*machine_*/,
     const Teuchos::RCP <const Adapter> &adapter_,
     const Teuchos::RCP <const Zoltan2::PartitioningSolution<Adapter> > &psoln_,
-    const Teuchos::RCP <const Environment> &envConst):
+    const Teuchos::RCP <const Environment> & /*envConst*/):
     nRanks(comm_->getSize()), myRank(comm_->getRank()),
     nMyParts(0), myParts(Teuchos::null)
   { 

@@ -388,7 +388,7 @@ public:
   }
 
 
-  bool getMachineCoordinate(const char *nodename, pcoord_t *xyz) {
+  bool getMachineCoordinate(const char * /*nodename*/, pcoord_t * /*xyz*/) {
     return false;  // cannot yet return from nodename
   }
 

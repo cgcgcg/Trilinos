@@ -68,8 +68,8 @@ struct XpetraTraits
    *  return a new user object with the new distribution.
    */
 
-  static RCP<User> doMigration(const User &from,
-      size_t numLocalRows, const gno_t *myNewRows)
+  static RCP<User> doMigration(const User & /*from*/,
+      size_t  /*numLocalRows*/, const gno_t * /*myNewRows*/)
   {
     return Teuchos::null;
   }

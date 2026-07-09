@@ -344,7 +344,7 @@ static void zoltanHGSizeCS_withMatrixAdapter(void *data,
 // ZOLTAN_HG_CS_FN
 template <typename Adapter>
 static void zoltanHGCS_withMatrixAdapter(void *data, int nGidEnt, int nLists, 
-                                         int nPins, int format, 
+                                         int nPins, int  /*format*/, 
                                          ZOLTAN_ID_PTR listIds, int *listIdx,
                                          ZOLTAN_ID_PTR pinIds, int *ierr
 )
@@ -607,7 +607,7 @@ static void zoltanHGSizeCS_withModel(void *data, int *nEdges, int *nPins,
 // ZOLTAN_HG_CS_FN
 template <typename Adapter>
 static void zoltanHGCS_withModel(void *data, int nGidEnt, int nEdges, int nPins,
-                                 int format, ZOLTAN_ID_PTR edgeIds, 
+                                 int  /*format*/, ZOLTAN_ID_PTR edgeIds, 
                                  int *edgeIdx, ZOLTAN_ID_PTR pinIds, int *ierr
 )
 {

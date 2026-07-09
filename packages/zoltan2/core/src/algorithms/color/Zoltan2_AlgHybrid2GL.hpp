@@ -643,7 +643,7 @@ class AlgTwoGhostLayer : public Algorithm<Adapter> {
     //                 process IDs which have a ghost copy of that vertex.
     //
     double doOwnedToGhosts(RCP<const map_t> mapOwnedPlusGhosts,
-                           size_t nVtx,
+                           size_t  /*nVtx*/,
 			   typename Kokkos::View<lno_t*,device_type>::host_mirror_type verts_to_send,
 			   typename Kokkos::View<size_t*,device_type>::host_mirror_type verts_to_send_size,
                            Teuchos::RCP<femv_t> femv,

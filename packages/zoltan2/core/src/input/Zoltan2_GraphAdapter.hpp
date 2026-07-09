@@ -115,7 +115,7 @@ public:
      Ids
    */
   virtual void
-  getVertexIDsDeviceView(typename Base::ConstIdsDeviceView &vertexIds) const {
+  getVertexIDsDeviceView(typename Base::ConstIdsDeviceView & /*vertexIds*/) const {
     Z2_THROW_NOT_IMPLEMENTED
   }
 
@@ -123,7 +123,7 @@ public:
       \param vertexIds will on return a host Kokkos::View with vertex global Ids
    */
   virtual void
-  getVertexIDsHostView(typename Base::ConstIdsHostView &vertexIds) const {
+  getVertexIDsHostView(typename Base::ConstIdsHostView & /*vertexIds*/) const {
     Z2_THROW_NOT_IMPLEMENTED
   }
 
@@ -149,8 +149,8 @@ public:
      vertex.
    */
   virtual void
-  getEdgesDeviceView(typename Base::ConstOffsetsDeviceView &offsets,
-                     typename Base::ConstIdsDeviceView &adjIds) const {
+  getEdgesDeviceView(typename Base::ConstOffsetsDeviceView & /*offsets*/,
+                     typename Base::ConstIdsDeviceView & /*adjIds*/) const {
     Z2_THROW_NOT_IMPLEMENTED
   }
 
@@ -162,8 +162,8 @@ public:
          The last element of offsets is the size of the adjIds array.
       \param adjIds Host Kokkos::View of adjacent vertices for for each vertex.
    */
-  virtual void getEdgesHostView(typename Base::ConstOffsetsHostView &offsets,
-                                typename Base::ConstIdsHostView &adjIds) const {
+  virtual void getEdgesHostView(typename Base::ConstOffsetsHostView & /*offsets*/,
+                                typename Base::ConstIdsHostView & /*adjIds*/) const {
     Z2_THROW_NOT_IMPLEMENTED
   }
 
@@ -190,7 +190,7 @@ public:
       \param idx ranges from zero to one less than getNumWeightsPerVertex().
    */
   virtual void
-  getVertexWeightsDeviceView(typename Base::WeightsDeviceView1D &weights,
+  getVertexWeightsDeviceView(typename Base::WeightsDeviceView1D & /*weights*/,
                              int /* idx */ = 0) const {
     Z2_THROW_NOT_IMPLEMENTED
   }
@@ -199,7 +199,7 @@ public:
       \param weights is the view of all the weights for the vertices returned in getVertexIDsView().
    */
   virtual void
-  getVertexWeightsDeviceView(typename Base::WeightsDeviceView &weights) const {
+  getVertexWeightsDeviceView(typename Base::WeightsDeviceView & /*weights*/) const {
     Z2_THROW_NOT_IMPLEMENTED
   }
 
@@ -209,7 +209,7 @@ public:
       \param idx ranges from zero to one less than getNumWeightsPerVertex().
    */
   virtual void
-  getVertexWeightsHostView(typename Base::WeightsHostView1D &weights,
+  getVertexWeightsHostView(typename Base::WeightsHostView1D & /*weights*/,
                            int /* idx */ = 0) const {
     Z2_THROW_NOT_IMPLEMENTED
   }
@@ -218,7 +218,7 @@ public:
       \param weights is the list of all the weights for the vertices returned in getVertexIDsView()
    */
   virtual void
-  getVertexWeightsHostView(typename Base::WeightsHostView &weights) const {
+  getVertexWeightsHostView(typename Base::WeightsHostView & /*weights*/) const {
     Z2_THROW_NOT_IMPLEMENTED
   }
 
@@ -250,7 +250,7 @@ public:
       \param idx ranges from zero to one less than getNumWeightsPerEdge().
    */
   virtual void
-  getEdgeWeightsDeviceView(typename Base::WeightsDeviceView1D &weights,
+  getEdgeWeightsDeviceView(typename Base::WeightsDeviceView1D & /*weights*/,
                            int /* idx */ = 0) const {
     Z2_THROW_NOT_IMPLEMENTED
   }
@@ -259,7 +259,7 @@ public:
       \param weights is the list of weights for the edges returned in getEdgeView().
    */
   virtual void
-  getEdgeWeightsDeviceView(typename Base::WeightsDeviceView &weights) const {
+  getEdgeWeightsDeviceView(typename Base::WeightsDeviceView & /*weights*/) const {
     Z2_THROW_NOT_IMPLEMENTED
   }
 
@@ -269,7 +269,7 @@ public:
       \param idx ranges from zero to one less than getNumWeightsPerEdge().
    */
   virtual void
-  getEdgeWeightsHostView(typename Base::WeightsHostView1D &weights,
+  getEdgeWeightsHostView(typename Base::WeightsHostView1D & /*weights*/,
                          int /* idx */ = 0) const {
     Z2_THROW_NOT_IMPLEMENTED
   }
@@ -278,7 +278,7 @@ public:
       \param weights is the list of weights for the edges returned in getEdgeView().
    */
   virtual void
-  getEdgeWeightsHostView(typename Base::WeightsHostView &weights) const {
+  getEdgeWeightsHostView(typename Base::WeightsHostView & /*weights*/) const {
     Z2_THROW_NOT_IMPLEMENTED
   }
 

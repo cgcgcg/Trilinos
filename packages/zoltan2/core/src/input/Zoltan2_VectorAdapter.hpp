@@ -97,7 +97,7 @@ public:
          represents the vector for which data is being requested.
    */
   virtual void getEntriesView(const scalar_t *&elements,
-    int &stride, int idx = 0) const {
+    int &stride, int  /*idx*/ = 0) const {
     // If adapter does not define getEntriesView, getEntriesKokkosView is called.
     // If adapter does not define getEntriesKokkosView, getEntriesView is called.
     // Allows forward and backwards compatibility.
@@ -143,7 +143,7 @@ public:
       \param elements will on return point to the vector values
         corresponding to the global Ids.
    */
-  virtual void getEntriesHostView(typename AdapterWithCoords<User>::CoordsHostView & elements) const {
+  virtual void getEntriesHostView(typename AdapterWithCoords<User>::CoordsHostView &  /*elements*/) const {
       Z2_THROW_NOT_IMPLEMENTED
 
   }
@@ -152,7 +152,7 @@ public:
       \param elements will on return point to the vector values
         corresponding to the global Ids.
    */
-  virtual void getEntriesDeviceView(typename AdapterWithCoords<User>::CoordsDeviceView& elements) const {
+  virtual void getEntriesDeviceView(typename AdapterWithCoords<User>::CoordsDeviceView&  /*elements*/) const {
       Z2_THROW_NOT_IMPLEMENTED
   }
 

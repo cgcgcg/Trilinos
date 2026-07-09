@@ -1552,7 +1552,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t, mj_node_t>::
   auto local_part_xadj = this->part_xadj;
   Kokkos::parallel_for(
     Kokkos::RangePolicy<typename mj_node_t::execution_space, int> (0, 1),
-    KOKKOS_LAMBDA (int dummy) {
+    KOKKOS_LAMBDA (int  /*dummy*/) {
     local_part_xadj(0) = static_cast<mj_lno_t>(num_selected_coords);
   });
 
@@ -1713,7 +1713,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t, mj_node_t>::
           auto set_max = coord_dim_maxs[coordInd];
           Kokkos::parallel_for(
             Kokkos::RangePolicy<typename mj_node_t::execution_space, int>
-              (0, 1), KOKKOS_LAMBDA (int dummy) {
+              (0, 1), KOKKOS_LAMBDA (int  /*dummy*/) {
             local_process_local_min_max_coord_total_weight(kk) = set_min;
             local_process_local_min_max_coord_total_weight(
               kk + current_concurrent_num_parts) = set_max;
@@ -1949,7 +1949,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t, mj_node_t>::
             auto local_new_part_xadj = this->new_part_xadj;
             Kokkos::parallel_for(
               Kokkos::RangePolicy<typename mj_node_t::execution_space, int>
-                (0, 1), KOKKOS_LAMBDA (int dummy) {
+                (0, 1), KOKKOS_LAMBDA (int  /*dummy*/) {
               local_new_part_xadj(output_part_index + output_array_shift)
                 = part_size;
             });
@@ -2013,7 +2013,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t, mj_node_t>::
           mj_part_t get_single;
           Kokkos::parallel_reduce("Read new_part_xadj",
             Kokkos::RangePolicy<typename mj_node_t::execution_space, int>(0, 1),
-            KOKKOS_LAMBDA(int dummy, mj_part_t & set_single) {
+            KOKKOS_LAMBDA(int  /*dummy*/, mj_part_t & set_single) {
             set_single = local_new_part_xadj(output_part_index + num_parts - 1);
           }, get_single);;
 
@@ -2904,7 +2904,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t, mj_node_t>::
     // single write
     Kokkos::parallel_for(
       Kokkos::RangePolicy<typename mj_node_t::execution_space, mj_part_t>
-      (0, 1), KOKKOS_LAMBDA (int dummy) {
+      (0, 1), KOKKOS_LAMBDA (int  /*dummy*/) {
       local_process_local_min_max_coord_total_weight(kk) =
         my_min_coord;
       local_process_local_min_max_coord_total_weight(
@@ -3235,7 +3235,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t,mj_node_t>::mj_1D_part(
 
   Kokkos::parallel_for(
     Kokkos::RangePolicy<typename mj_node_t::execution_space, int> (0, 1),
-    KOKKOS_LAMBDA (int dummy) {
+    KOKKOS_LAMBDA (int  /*dummy*/) {
 
     // these need to be initialized
     view_rectilinear_cut_count(0) = 0;
@@ -3304,7 +3304,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t,mj_node_t>::mj_1D_part(
       size_t host_view_total_reduction_size;
       Kokkos::parallel_reduce("Read single",
         Kokkos::RangePolicy<typename mj_node_t::execution_space, int> (0, 1),
-        KOKKOS_LAMBDA(int dummy, size_t & set_single) {
+        KOKKOS_LAMBDA(int  /*dummy*/, size_t & set_single) {
         set_single = view_total_reduction_size(0);
       }, host_view_total_reduction_size);
 
@@ -3476,7 +3476,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t,mj_node_t>::mj_1D_part(
   if(current_cut_coordinates != local_temp_cut_coords) {
     Kokkos::parallel_for(
       Kokkos::RangePolicy<typename mj_node_t::execution_space, int>
-      (0, 1), KOKKOS_LAMBDA(int dummy) {
+      (0, 1), KOKKOS_LAMBDA(int  /*dummy*/) {
       mj_part_t next = 0;
       for(mj_part_t i = 0; i < current_concurrent_num_parts; ++i) {
         mj_part_t num_parts = -1;
@@ -4265,7 +4265,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t, mj_node_t>::
     device_num_partitioning_in_current_dim;
   Kokkos::parallel_for(
     Kokkos::RangePolicy<typename mj_node_t::execution_space, int>(0,1),
-    KOKKOS_LAMBDA (int dummy) {
+    KOKKOS_LAMBDA (int  /*dummy*/) {
 
     size_t tlr_array_shift = 0;
     mj_part_t cut_shift = 0;
@@ -4639,7 +4639,7 @@ mj_create_new_partitions(
 
   Kokkos::parallel_for(
     Kokkos::RangePolicy<typename mj_node_t::execution_space, int> (0, 1),
-    KOKKOS_LAMBDA(int dummy) {
+    KOKKOS_LAMBDA(int  /*dummy*/) {
 
       if(local_distribute_points_on_cut_lines) {
         for(int i = 0; i < num_cuts; ++i) {
@@ -4770,7 +4770,7 @@ mj_create_new_partitions(
   bool uniform_weights0 = this->mj_uniform_weights(0);
   Kokkos::parallel_for(
     Kokkos::RangePolicy<typename mj_node_t::execution_space, int> (0, 1),
-    KOKKOS_LAMBDA (int dummy) {
+    KOKKOS_LAMBDA (int  /*dummy*/) {
 
     for(int j = 0; j < total_on_cut; ++j) {
       int ii = track_on_cuts(j);
@@ -4941,7 +4941,7 @@ mj_create_new_partitions(
   // then the rest should be the sum of all the priors
   Kokkos::parallel_for(
     Kokkos::RangePolicy<typename mj_node_t::execution_space, int> (0, 1),
-    KOKKOS_LAMBDA (int dummy) {
+    KOKKOS_LAMBDA (int  /*dummy*/) {
     int num_sets = point_counter.size() / num_parts;
     for(int set = num_sets - 1; set >= 1; set -=1) {
       int base = set * num_parts;
@@ -5366,7 +5366,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t,
   mj_part_t rectilinear_cut_count;
   Kokkos::parallel_reduce("Read bDoingWork",
     Kokkos::RangePolicy<typename mj_node_t::execution_space, int>(0, 1),
-    KOKKOS_LAMBDA(int dummy, int & set_single) {
+    KOKKOS_LAMBDA(int  /*dummy*/, int & set_single) {
     set_single = view_rectilinear_cut_count(0);
   }, rectilinear_cut_count);
 
@@ -5393,7 +5393,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t,
 
     Kokkos::parallel_for("finish up mj_get_new_cut_coordinates",
       Kokkos::RangePolicy<typename mj_node_t::execution_space, int> (0, 1),
-      KOKKOS_LAMBDA(int dummy) {
+      KOKKOS_LAMBDA(int  /*dummy*/) {
       for(mj_part_t i = 0; i < num_cuts; ++i) {
         // if cut line weight to be distributed.
         if(local_global_rectilinear_cut_weight(i) > 0) {
@@ -6805,7 +6805,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t, mj_node_t>::
     auto local_num_local_coords = this->num_local_coords;
     Kokkos::parallel_for(
       Kokkos::RangePolicy<typename mj_node_t::execution_space, int> (0,1),
-      KOKKOS_LAMBDA(int dummy) {
+      KOKKOS_LAMBDA(int  /*dummy*/) {
       local_new_part_xadj(0) = local_num_local_coords;
     });
   }
@@ -6826,7 +6826,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t, mj_node_t>::
 
     Kokkos::parallel_for(
       Kokkos::RangePolicy<typename mj_node_t::execution_space, int> (0,1),
-      KOKKOS_LAMBDA(int dummy) {
+      KOKKOS_LAMBDA(int  /*dummy*/) {
 
       for(mj_lno_t i = 0; i < local_num_local_coords; ++i) {
         mj_part_t ii = local_assigned_part_ids(i);
@@ -7047,7 +7047,7 @@ template <typename mj_scalar_t, typename mj_lno_t, typename mj_gno_t,
 void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t, mj_node_t>::
   create_consistent_chunks(
   mj_part_t num_parts,
-  Kokkos::View<mj_scalar_t *, device_t> & mj_current_dim_coords,
+  Kokkos::View<mj_scalar_t *, device_t> &  /*mj_current_dim_coords*/,
   Kokkos::View<mj_scalar_t *, device_t> & current_concurrent_cut_coordinate,
   mj_lno_t coordinate_begin,
   mj_lno_t coordinate_end,
@@ -7104,7 +7104,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t, mj_node_t>::
       auto local_significance_mul = significance_mul;
       Kokkos::parallel_for(
         Kokkos::RangePolicy<typename mj_node_t::execution_space, int>
-        (0, 1), KOKKOS_LAMBDA (int dummy) {
+        (0, 1), KOKKOS_LAMBDA (int  /*dummy*/) {
         // this is a special case. If cutlines share the same coordinate,
         // their weights are equal.
         // we need to adjust the ratio for that.
@@ -7900,7 +7900,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t, mj_node_t>::
         device_num_partitioning_in_current_dim;
       Kokkos::parallel_reduce("Read bDoingWork",
         Kokkos::RangePolicy<typename mj_node_t::execution_space, int> (0, 1),
-        KOKKOS_LAMBDA(int dummy, int & set_single) {
+        KOKKOS_LAMBDA(int  /*dummy*/, int & set_single) {
         set_single = 0;
         for(int kk = 0; kk < current_concurrent_num_parts; ++kk) {
           if(local_device_num_partitioning_in_current_dim(
@@ -8102,7 +8102,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t, mj_node_t>::
                 mj_scalar_t temp_get_val;
                 Kokkos::parallel_reduce("Read single",
                   Kokkos::RangePolicy<typename mj_node_t::execution_space, int> (0, 1),
-                  KOKKOS_LAMBDA(int dummy, mj_scalar_t & set_single) {
+                  KOKKOS_LAMBDA(int  /*dummy*/, mj_scalar_t & set_single) {
                   set_single = current_concurrent_cut_coordinate(j);
                 }, temp_get_val);
                 (*output_part_boxes)
@@ -8146,7 +8146,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t, mj_node_t>::
             auto local_new_part_xadj = this->new_part_xadj;
             Kokkos::parallel_for(
               Kokkos::RangePolicy<typename mj_node_t::execution_space, int>
-              (0, 1), KOKKOS_LAMBDA (int dummy) {
+              (0, 1), KOKKOS_LAMBDA (int  /*dummy*/) {
               local_new_part_xadj(
                 output_part_index + output_array_shift) = part_size;
             });
@@ -8193,7 +8193,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t, mj_node_t>::
           mj_part_t temp_get;
           Kokkos::parallel_reduce("Read single",
             Kokkos::RangePolicy<typename mj_node_t::execution_space, int> (0, 1),
-            KOKKOS_LAMBDA(int dummy, mj_part_t & set_single) {
+            KOKKOS_LAMBDA(int  /*dummy*/, mj_part_t & set_single) {
             set_single =
               local_new_part_xadj(output_part_index + num_parts - 1);
           }, temp_get);
@@ -8687,17 +8687,17 @@ public:
 template <typename Adapter>
 std::pair<bool, RCP<Tpetra::Distributor>> Zoltan2_AlgMJ<Adapter>::mj_premigrate_to_subset(
   int used_num_ranks,
-  int migration_selection_option,
+  int  /*migration_selection_option*/,
   RCP<const Environment> mj_env_,
   RCP<const Comm<int> > mj_problemComm_,
-  int coord_dim_,
+  int  /*coord_dim_*/,
   mj_lno_t num_local_coords_,
-  mj_gno_t num_global_coords_, size_t num_global_parts_,
+  mj_gno_t  /*num_global_coords_*/, size_t  /*num_global_parts_*/,
   Kokkos::View<const mj_gno_t*, device_t> & initial_mj_gnos_,
   // coordinates in MJ are LayoutLeft since Tpetra Multivector gives LayoutLeft
-  Kokkos::View<mj_scalar_t**, Kokkos::LayoutLeft, device_t> & mj_coordinates_,
-  int num_weights_per_coord_,
-  Kokkos::View<mj_scalar_t**, device_t> & mj_weights_,
+  Kokkos::View<mj_scalar_t**, Kokkos::LayoutLeft, device_t> &  /*mj_coordinates_*/,
+  int  /*num_weights_per_coord_*/,
+  Kokkos::View<mj_scalar_t**, device_t> &  /*mj_weights_*/,
   //results
   RCP<const Comm<int> > & result_problemComm_,
   mj_lno_t &result_num_local_coords_,
@@ -9609,7 +9609,7 @@ typename Adapter::part_t Zoltan2_AlgMJ<Adapter>::pointAssign(
 
 template <typename Adapter>
 void Zoltan2_AlgMJ<Adapter>::getCommunicationGraph(
-  const PartitioningSolution<Adapter> *solution,
+  const PartitioningSolution<Adapter> * /*solution*/,
   ArrayRCP<typename Zoltan2_AlgMJ<Adapter>::mj_part_t> &comXAdj,
   ArrayRCP<typename Zoltan2_AlgMJ<Adapter>::mj_part_t> &comAdj)
 {

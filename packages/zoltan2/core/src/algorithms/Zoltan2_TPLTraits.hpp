@@ -201,8 +201,8 @@ struct TPL_Traits<ZOLTAN_ID_PTR, second_t> {
     }
   }
 
-  static inline void SAVE_ARRAYRCP(ArrayRCP<ZOLTAN_ID_PTR> *a, second_t *b, 
-                                         size_t size)
+  static inline void SAVE_ARRAYRCP(ArrayRCP<ZOLTAN_ID_PTR> * /*a*/, second_t * /*b*/, 
+                                         size_t  /*size*/)
   {
     throw std::runtime_error(
                "TPL_Traits::SAVE_ARRAYRCP<ZOLTAN_ID_PTR,second_t> "
@@ -255,7 +255,7 @@ struct TPL_Traits<first_t, ZOLTAN_ID_PTR> {
     }
   }
 
-  static inline void ASSIGN_ARRAY(first_t *a, ArrayView<ZOLTAN_ID_PTR> &b)
+  static inline void ASSIGN_ARRAY(first_t * /*a*/, ArrayView<ZOLTAN_ID_PTR> & /*b*/)
   {
     throw std::runtime_error(
                "TPL_Traits::ASSIGN_ARRAY<first_t,ZOLTAN_ID_PTR> "

@@ -119,10 +119,10 @@ public:
   }
 
   // IdentifierAdapter
-  CoordinateModel(const RCP<const IdentifierAdapter<user_t> > &ia,
-                  const RCP<const Environment> &env,
-                  const RCP<const Comm<int> > &comm,
-                  modelFlag_t &flags)
+  CoordinateModel(const RCP<const IdentifierAdapter<user_t> > & /*ia*/,
+                  const RCP<const Environment> & /*env*/,
+                  const RCP<const Comm<int> > & /*comm*/,
+                  modelFlag_t & /*flags*/)
   {
     throw std::logic_error(
       "A coordinate model can not be build from an IdentifierAdapter");

@@ -253,12 +253,12 @@ class Zoltan2_Directory {
     virtual void user_to_raw(const user_t & src, user_t * pRaw) const {};
     virtual void raw_to_user(const user_t * pRaw, user_t & dst) const {};
     virtual size_t size_of_value_type() const                         { return 0; };
-    virtual size_t get_update_msg_size(const user_t & data) const     { return 0; };
-    virtual size_t get_update_msg_size(const user_t * pRaw) const     { return 0; };
-    virtual size_t get_local_find_msg_size(gid_t *gid,
-      bool throw_if_missing = true) const                             { return 0; };
+    virtual size_t get_update_msg_size(const user_t &  /*data*/) const     { return 0; };
+    virtual size_t get_update_msg_size(const user_t *  /*pRaw*/) const     { return 0; };
+    virtual size_t get_local_find_msg_size(gid_t * /*gid*/,
+      bool  /*throw_if_missing*/ = true) const                             { return 0; };
     virtual size_t get_incoming_find_msg_size(
-      Zoltan2_DD_Find_Msg<gid_t,lid_t>* msg) const                    { return 0; };
+      Zoltan2_DD_Find_Msg<gid_t,lid_t>*  /*msg*/) const                    { return 0; };
 
   private:
     void rehash_node_map(size_t new_hash_size) {
@@ -337,24 +337,24 @@ class Zoltan2_Directory_Simple : public Zoltan2_Directory<gid_t, lid_t, user_t> 
     virtual size_t size_of_value_type() const { return sizeof(user_t); }
 
     // for this class, update_msg_size is simple (not variable length)
-    virtual size_t get_update_msg_size(const user_t & data) const {
+    virtual size_t get_update_msg_size(const user_t &  /*data*/) const {
       return this->update_msg_size;
     }
 
     // for this class, update_msg_size is simple (not variable length)
-    virtual size_t get_update_msg_size(const user_t * pRaw) const {
+    virtual size_t get_update_msg_size(const user_t *  /*pRaw*/) const {
       return this->update_msg_size;
     }
 
     // for this class, find_msg_size is simple (not variable length)
-    virtual size_t get_local_find_msg_size(gid_t *gid,
-      bool throw_if_missing = true) const {
+    virtual size_t get_local_find_msg_size(gid_t * /*gid*/,
+      bool  /*throw_if_missing*/ = true) const {
       return this->find_msg_size;
     }
 
     // for this class, find_msg_size is simple (not variable length)
     virtual size_t get_incoming_find_msg_size(
-      Zoltan2_DD_Find_Msg<gid_t,lid_t>* msg) const {
+      Zoltan2_DD_Find_Msg<gid_t,lid_t>*  /*msg*/) const {
       return this->find_msg_size;
     }
 };

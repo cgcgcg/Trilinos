@@ -781,7 +781,7 @@ void PartitioningProblem<Adapter>::processAlgorithmName(
 }
 
 template <typename Adapter>
-void PartitioningProblem<Adapter>::createPartitioningProblem(bool newData)
+void PartitioningProblem<Adapter>::createPartitioningProblem(bool  /*newData*/)
 {
   this->env_->debug(DETAILED_STATUS,
     "PartitioningProblem::createPartitioningProblem");

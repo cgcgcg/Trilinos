@@ -145,7 +145,7 @@ private:
 
 ////////////////////////////////////////////////////////////////////////
 template <typename Adapter>
-void ColoringProblem<Adapter>::solve(bool newData)
+void ColoringProblem<Adapter>::solve(bool  /*newData*/)
 {
   HELLO;
 

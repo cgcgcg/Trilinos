@@ -75,7 +75,7 @@ class AlgPartialDistance2 : public AlgTwoGhostLayer<Adapter> {
 		       Teuchos::RCP<femv_t> femv,
 		       Kokkos::View<lno_t*, Kokkos::Device<ExecutionSpace, MemorySpace>> vertex_list,
 		       size_t vertex_list_size = 0,
-		       bool use_vertex_based_coloring = false){
+		       bool  /*use_vertex_based_coloring*/ = false){
       using KernelHandle = KokkosKernels::Experimental::KokkosKernelsHandle
 	      <offset_t, lno_t, lno_t, ExecutionSpace, MemorySpace, MemorySpace>;
       KernelHandle kh;

@@ -141,7 +141,7 @@ public:
       \param Types will on return point to the list of entity topology types
       for this process.
   */
-  virtual void getTopologyViewOf(MeshEntityType etype,
+  virtual void getTopologyViewOf(MeshEntityType  /*etype*/,
                                  enum EntityTopologyType const *&Types) const
   {
     Types = NULL;
@@ -153,7 +153,7 @@ public:
    *   If the number of weights is zero, then we assume that the entities
    *   are equally weighted.
    */
-  virtual int getNumWeightsPerOf(MeshEntityType etype) const { return 0; }
+  virtual int getNumWeightsPerOf(MeshEntityType  /*etype*/) const { return 0; }
 
   /*! \brief Provide a pointer to one of the number of this process'
                 optional entity weights.
@@ -168,8 +168,8 @@ public:
       \param idx is a value ranging from zero to one less than
                    getNumWeightsPerEntityID()
   */
-  virtual void getWeightsViewOf(MeshEntityType etype,
-     const scalar_t *&weights, int &stride, int idx = 0) const
+  virtual void getWeightsViewOf(MeshEntityType  /*etype*/,
+     const scalar_t *&weights, int &stride, int  /*idx*/ = 0) const
   {
     weights = NULL;
     stride = 0;
@@ -197,8 +197,8 @@ public:
          getEntityCoordinateDimension() specifying which dimension is
          being provided in the coords list.
   */
-  virtual void getCoordinatesViewOf(MeshEntityType etype,
-    const scalar_t *&coords, int &stride, int coordDim) const
+  virtual void getCoordinatesViewOf(MeshEntityType  /*etype*/,
+    const scalar_t *&coords, int &stride, int  /*coordDim*/) const
   {
     coords = NULL;
     stride = 0;
@@ -208,15 +208,15 @@ public:
 
   /*! \brief Returns whether a first adjacency combination is available.
    */
-  virtual bool availAdjs(MeshEntityType source, MeshEntityType target) const {
+  virtual bool availAdjs(MeshEntityType  /*source*/, MeshEntityType  /*target*/) const {
     return false;
   }
 
 
   /*! \brief Returns the number of first adjacencies on this process.
    */
-  virtual size_t getLocalNumAdjs(MeshEntityType source,
-                                 MeshEntityType target) const { return 0;}
+  virtual size_t getLocalNumAdjs(MeshEntityType  /*source*/,
+                                 MeshEntityType  /*target*/) const { return 0;}
 
 
   /*! \brief Sets pointers to this process' mesh first adjacencies.
@@ -229,7 +229,7 @@ public:
       \param adjacencyIds on return will point to the global first adjacency
          Ids for each entity.
   */
-  virtual void getAdjsView(MeshEntityType source, MeshEntityType target,
+  virtual void getAdjsView(MeshEntityType  /*source*/, MeshEntityType  /*target*/,
      const offset_t *&offsets, const gno_t *& adjacencyIds) const
   {
     offsets = NULL;
@@ -242,8 +242,8 @@ public:
    *   If combination is not available in the MeshAdapter, Zoltan2 will
    *   compute them, using A^T A, where A is matrix of first adjacencies.
    */
-  virtual bool avail2ndAdjs(MeshEntityType sourcetarget,
-                            MeshEntityType through) const
+  virtual bool avail2ndAdjs(MeshEntityType  /*sourcetarget*/,
+                            MeshEntityType  /*through*/) const
   {
     return false;
   }
@@ -251,8 +251,8 @@ public:
   /*! \brief if avail2ndAdjs(), returns the number of second adjacencies
    *   on this process.
    */
-  virtual size_t getLocalNum2ndAdjs(MeshEntityType sourcetarget,
-                                    MeshEntityType through) const
+  virtual size_t getLocalNum2ndAdjs(MeshEntityType  /*sourcetarget*/,
+                                    MeshEntityType  /*through*/) const
   {
     return 0;
   }
@@ -267,8 +267,8 @@ public:
       \param adjacencyIds on return will point to the global second adjacency
          Ids for each entity.
    */
-  virtual void get2ndAdjsView(MeshEntityType sourcetarget,
-                              MeshEntityType through,
+  virtual void get2ndAdjsView(MeshEntityType  /*sourcetarget*/,
+                              MeshEntityType  /*through*/,
                               const offset_t *&offsets,
                               const gno_t *&adjacencyIds) const
   {
@@ -280,8 +280,8 @@ public:
   /*! \brief Returns the number (0 or greater) of weights per second adjacency.
    *  Note:  second-adjacency weights may be used only if avail2ndAdjs().
    */
-  virtual int getNumWeightsPer2ndAdj(MeshEntityType sourcetarget,
-                                     MeshEntityType through) const { return 0;}
+  virtual int getNumWeightsPer2ndAdj(MeshEntityType  /*sourcetarget*/,
+                                     MeshEntityType  /*through*/) const { return 0;}
 
 
   /*! \brief  Provide a pointer to the second adjacency weights, if any.
@@ -293,11 +293,11 @@ public:
       \param idx ranges from zero to one less than
                    getNumWeightsPer2ndAdj().
    */
-  virtual void get2ndAdjWeightsView(MeshEntityType sourcetarget,
-                                    MeshEntityType through,
+  virtual void get2ndAdjWeightsView(MeshEntityType  /*sourcetarget*/,
+                                    MeshEntityType  /*through*/,
                                     const scalar_t *&weights,
                                     int &stride,
-                                    int idx) const
+                                    int  /*idx*/) const
   {
     weights = NULL;
     stride = 0;
@@ -403,7 +403,7 @@ public:
    *  to be set as the number of neighbors (the degree) of the entity
    *  Default is false; user can change in his MeshAdapter implementation.
    */
-  virtual bool useDegreeAsWeightOf(MeshEntityType etype, int idx) const
+  virtual bool useDegreeAsWeightOf(MeshEntityType  /*etype*/, int  /*idx*/) const
   {
     return false;
   }

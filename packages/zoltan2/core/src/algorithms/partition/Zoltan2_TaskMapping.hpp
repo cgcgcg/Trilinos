@@ -1247,7 +1247,7 @@ public:
       ArrayRCP <part_t> &rcp_proc_to_task_xadj,
       ArrayRCP <part_t> &rcp_proc_to_task_adj,
       ArrayRCP <part_t> &rcp_task_to_proc,
-      const Teuchos::RCP <const Teuchos::Comm<int> > comm_
+      const Teuchos::RCP <const Teuchos::Comm<int> >  /*comm_*/
   ) const {
 
     rcp_proc_to_task_xadj = ArrayRCP <part_t>(this->no_procs + 1);
@@ -3356,7 +3356,7 @@ void coordinateTaskMapperInterface(
 template <typename proc_coord_t, typename v_lno_t>
 inline void visualize_mapping(int myRank,
     const int machine_coord_dim,
-    const int num_ranks,
+    const int  /*num_ranks*/,
     proc_coord_t **machine_coords,
     const v_lno_t num_tasks,
     const v_lno_t *task_communication_xadj,

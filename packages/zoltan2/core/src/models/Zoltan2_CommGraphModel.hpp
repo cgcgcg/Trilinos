@@ -82,7 +82,7 @@ public:
 
   CommGraphModel(const RCP<const MatrixAdapter<user_t,userCoord_t> > &/* ia */,
 		 const RCP<const Environment> &/* env */, const RCP<const Comm<int> > &/* comm */,
-     const modelFlag_t &modelflags = modelFlag_t())
+     const modelFlag_t & /*modelflags*/ = modelFlag_t())
   {
     throw std::runtime_error("CommGraphModel is not implemented for MatrixAdapter yet.");
   }
@@ -93,21 +93,21 @@ public:
 
   CommGraphModel(const RCP<const MeshAdapter<user_t> > &/* ia */,
 		 const RCP<const Environment> &/* env */, const RCP<const Comm<int> > &/* comm */,
-     const modelFlag_t &modelflags = modelFlag_t())
+     const modelFlag_t & /*modelflags*/ = modelFlag_t())
   {
     throw std::runtime_error("CommGraphModel is not implemented for MeshAdapter yet.");
   }
 
   CommGraphModel(const RCP<const VectorAdapter<userCoord_t> > &/* ia */,
 		 const RCP<const Environment> &/* env */, const RCP<const Comm<int> > &/* comm */,
-     const modelFlag_t &modelflags = modelFlag_t())
+     const modelFlag_t & /*modelflags*/ = modelFlag_t())
   {
     throw std::runtime_error("cannot build CommGraphModel from VectorAdapter");
   }
 
   CommGraphModel(const RCP<const IdentifierAdapter<user_t> > &/* ia */,
 		 const RCP<const Environment> &/* env */, const RCP<const Comm<int> > &/* comm */,
-     const modelFlag_t &modelflags = modelFlag_t())
+     const modelFlag_t & /*modelflags*/ = modelFlag_t())
   {
     throw std::runtime_error("cannot build GraphModel from IdentifierAdapter");
   }

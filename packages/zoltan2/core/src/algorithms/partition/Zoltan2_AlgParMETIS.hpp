@@ -34,7 +34,7 @@ public:
     AlgParMETIS(const RCP<const Environment> &,
                 const RCP<const Comm<int> > &,
                 const RCP<const typename Adapter::base_adapter_t> &,
-                const modelFlag_t& graphFlags_ = modelFlag_t())
+                const modelFlag_t&  /*graphFlags_*/ = modelFlag_t())
   {
     throw std::runtime_error(
           "BUILD ERROR:  ParMETIS requested but not compiled into Zoltan2.\n"

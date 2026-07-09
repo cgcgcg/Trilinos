@@ -62,8 +62,8 @@ void globalWeightedByPart(
     const ArrayView<const typename Adapter::part_t> &parts,
     typename Adapter::part_t &numParts,
     ArrayRCP<RCP<BaseClassMetrics<typename Adapter::scalar_t> > > &metrics,
-    ArrayRCP<typename Adapter::scalar_t> &globalSums,
-    bool bMessages = true,
+    ArrayRCP<typename Adapter::scalar_t> & /*globalSums*/,
+    bool  /*bMessages*/ = true,
     const RCP <const MachineRep> machine = Teuchos::null) { 
 
   env->timerStart(MACRO_TIMERS, "globalWeightedByPart");

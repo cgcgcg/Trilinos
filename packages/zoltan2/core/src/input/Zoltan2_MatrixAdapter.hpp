@@ -125,12 +125,12 @@ public:
     Z2_THROW_NOT_IMPLEMENTED
   }
 
-  virtual void getRowIDsHostView(typename BaseAdapter<User>::ConstIdsHostView& rowIds) const
+  virtual void getRowIDsHostView(typename BaseAdapter<User>::ConstIdsHostView&  /*rowIds*/) const
   {
     Z2_THROW_NOT_IMPLEMENTED
   }
 
-  virtual void getRowIDsDeviceView(typename BaseAdapter<User>::ConstIdsDeviceView& rowIds) const
+  virtual void getRowIDsDeviceView(typename BaseAdapter<User>::ConstIdsDeviceView&  /*rowIds*/) const
   {
     Z2_THROW_NOT_IMPLEMENTED
   }
@@ -154,14 +154,14 @@ public:
     Z2_THROW_NOT_IMPLEMENTED
   }
 
-  virtual void getCRSHostView(typename BaseAdapter<User>::ConstOffsetsHostView& offsets,
-                              typename BaseAdapter<User>::ConstIdsHostView& colIds) const
+  virtual void getCRSHostView(typename BaseAdapter<User>::ConstOffsetsHostView&  /*offsets*/,
+                              typename BaseAdapter<User>::ConstIdsHostView&  /*colIds*/) const
   {
       Z2_THROW_NOT_IMPLEMENTED
   }
 
-  virtual void getCRSDeviceView(typename BaseAdapter<User>::ConstOffsetsDeviceView& offsets,
-                                typename BaseAdapter<User>::ConstIdsDeviceView& colIds) const
+  virtual void getCRSDeviceView(typename BaseAdapter<User>::ConstOffsetsDeviceView&  /*offsets*/,
+                                typename BaseAdapter<User>::ConstIdsDeviceView&  /*colIds*/) const
   {
       Z2_THROW_NOT_IMPLEMENTED
   }
@@ -192,16 +192,16 @@ public:
     Z2_THROW_NOT_IMPLEMENTED
   }
 
-  virtual void getCRSHostView(typename BaseAdapter<User>::ConstOffsetsHostView& offsets,
-                              typename BaseAdapter<User>::ConstIdsHostView& colIds,
-                              typename BaseAdapter<User>::ConstScalarsHostView& values) const
+  virtual void getCRSHostView(typename BaseAdapter<User>::ConstOffsetsHostView&  /*offsets*/,
+                              typename BaseAdapter<User>::ConstIdsHostView&  /*colIds*/,
+                              typename BaseAdapter<User>::ConstScalarsHostView&  /*values*/) const
   {
       Z2_THROW_NOT_IMPLEMENTED
   }
 
-  virtual void getCRSDeviceView(typename BaseAdapter<User>::ConstOffsetsDeviceView& offsets,
-                                typename BaseAdapter<User>::ConstIdsDeviceView& colIds,
-                                typename BaseAdapter<User>::ConstScalarsDeviceView& values) const
+  virtual void getCRSDeviceView(typename BaseAdapter<User>::ConstOffsetsDeviceView&  /*offsets*/,
+                                typename BaseAdapter<User>::ConstIdsDeviceView&  /*colIds*/,
+                                typename BaseAdapter<User>::ConstScalarsDeviceView&  /*values*/) const
   {
       Z2_THROW_NOT_IMPLEMENTED
   }
@@ -219,7 +219,7 @@ public:
       \param idx ranges from zero to one less than getNumWeightsPerRow().
    */
   virtual void getRowWeightsView(const scalar_t *&weights, int &stride,
-                                 int idx = 0) const
+                                 int  /*idx*/ = 0) const
   {
     // Default implementation
     weights = NULL;
@@ -227,28 +227,28 @@ public:
     Z2_THROW_NOT_IMPLEMENTED
   }
 
-  virtual void getRowWeightsHostView(typename BaseAdapter<User>::WeightsHostView1D& weights,
+  virtual void getRowWeightsHostView(typename BaseAdapter<User>::WeightsHostView1D&  /*weights*/,
                                      int /* idx */ = 0) const {
       Z2_THROW_NOT_IMPLEMENTED
   }
 
-  virtual void getRowWeightsHostView(typename BaseAdapter<User>::WeightsHostView &weights) const {
+  virtual void getRowWeightsHostView(typename BaseAdapter<User>::WeightsHostView & /*weights*/) const {
     Z2_THROW_NOT_IMPLEMENTED
   }
 
-  virtual void getRowWeightsDeviceView(typename BaseAdapter<User>::WeightsDeviceView1D& weights,
+  virtual void getRowWeightsDeviceView(typename BaseAdapter<User>::WeightsDeviceView1D&  /*weights*/,
                                        int /* idx */ = 0) const {
       Z2_THROW_NOT_IMPLEMENTED
   }
 
-  virtual void getRowWeightsDeviceView(typename BaseAdapter<User>::WeightsDeviceView &weights) const {
+  virtual void getRowWeightsDeviceView(typename BaseAdapter<User>::WeightsDeviceView & /*weights*/) const {
     Z2_THROW_NOT_IMPLEMENTED
   }
 
   /*! \brief Indicate whether row weight with index idx should be the
    *         global number of nonzeros in the row.
    */
-  virtual bool useNumNonzerosAsRowWeight(int idx) const
+  virtual bool useNumNonzerosAsRowWeight(int  /*idx*/) const
   {
     Z2_THROW_NOT_IMPLEMENTED
   }
@@ -269,12 +269,12 @@ public:
     Z2_THROW_NOT_IMPLEMENTED
   }
 
-  virtual void getColumnIDsHostView(typename BaseAdapter<User>::ConstIdsHostView& colIds) const
+  virtual void getColumnIDsHostView(typename BaseAdapter<User>::ConstIdsHostView&  /*colIds*/) const
   {
     Z2_THROW_NOT_IMPLEMENTED
   }
 
-  virtual void getColumnIDsDeviceView(typename BaseAdapter<User>::ConstIdsDeviceView& colIds) const
+  virtual void getColumnIDsDeviceView(typename BaseAdapter<User>::ConstIdsDeviceView&  /*colIds*/) const
   {
     Z2_THROW_NOT_IMPLEMENTED
   }
@@ -336,7 +336,7 @@ public:
       \param idx ranges from zero to one less than getNumWeightsPerColumn().
    */
   virtual void getColumnWeightsView(const scalar_t *&weights, int &stride,
-                                    int idx = 0) const
+                                    int  /*idx*/ = 0) const
   {
     // Default implementation
     weights = NULL;
@@ -344,28 +344,28 @@ public:
     Z2_THROW_NOT_IMPLEMENTED
   }
 
-  virtual void getColumnWeightsHostView(typename BaseAdapter<User>::WeightsHostView1D& weights,
+  virtual void getColumnWeightsHostView(typename BaseAdapter<User>::WeightsHostView1D&  /*weights*/,
                                      int /* idx */ = 0) const {
       Z2_THROW_NOT_IMPLEMENTED
   }
 
-  virtual void getColumnWeightsHostView(typename BaseAdapter<User>::WeightsHostView &weights) const {
+  virtual void getColumnWeightsHostView(typename BaseAdapter<User>::WeightsHostView & /*weights*/) const {
     Z2_THROW_NOT_IMPLEMENTED
   }
 
-  virtual void getColumnWeightsDeviceView(typename BaseAdapter<User>::WeightsDeviceView1D& weights,
+  virtual void getColumnWeightsDeviceView(typename BaseAdapter<User>::WeightsDeviceView1D&  /*weights*/,
                                        int /* idx */ = 0) const {
       Z2_THROW_NOT_IMPLEMENTED
   }
 
-  virtual void getColumnWeightsDeviceView(typename BaseAdapter<User>::WeightsDeviceView &weights) const {
+  virtual void getColumnWeightsDeviceView(typename BaseAdapter<User>::WeightsDeviceView & /*weights*/) const {
     Z2_THROW_NOT_IMPLEMENTED
   }
 
   /*! \brief Indicate whether column weight with index idx should be the
    *         global number of nonzeros in the column.
    */
-  virtual bool useNumNonzerosAsColumnWeight(int idx) const { return 0; }
+  virtual bool useNumNonzerosAsColumnWeight(int  /*idx*/) const { return 0; }
 
 #ifdef FUTURE_FEATURE
   /*! method saying whether the matrix is using symmetric storage; that is,

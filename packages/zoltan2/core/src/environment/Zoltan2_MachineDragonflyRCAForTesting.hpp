@@ -122,7 +122,7 @@ public:
 
   // No necessary wrap arounds for dragonfly networks. Groups
   // have wrap around, but group all-to-all connection makes unneccessary.
-  virtual bool getMachineExtentWrapArounds(bool *wrap_around) const {
+  virtual bool getMachineExtentWrapArounds(bool * /*wrap_around*/) const {
     return false;
   }
 
@@ -537,7 +537,7 @@ public:
     return true;   
   }
 
-  bool getMachineCoordinate(const char *nodename, pcoord_t *xyz) {
+  bool getMachineCoordinate(const char * /*nodename*/, pcoord_t * /*xyz*/) {
     return false;  // cannot yet return from nodename
   }
 

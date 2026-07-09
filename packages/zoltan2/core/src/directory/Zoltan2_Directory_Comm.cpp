@@ -1591,7 +1591,7 @@ int Zoltan2_Directory_Comm::exchange_sizes(
   int       nrecvs,		                /* number of messages I receive */
   int      *total_recv_size,	        /* (returned) sum of all incoming sizes */
   int       my_proc,		              /* my processor number */
-  int       tag,			                /* message tag I can use */
+  int        /*tag*/,			                /* message tag I can use */
   Teuchos::RCP<const Teuchos::Comm<int> > /* comm */) {		/* communicator */
 
   /* If sizes vary, then I need to communicate messaaage lengths */

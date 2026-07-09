@@ -52,7 +52,7 @@ public:
     gatherMachineCoordinates(comm);
   }
 
-  MachineForTesting(const Teuchos::Comm<int> &comm, const Teuchos::ParameterList &pl):
+  MachineForTesting(const Teuchos::Comm<int> &comm, const Teuchos::ParameterList & /*pl*/):
     Machine<pcoord_t,part_t>(comm),
     networkDim(3),
     procCoords(NULL)
@@ -114,7 +114,7 @@ public:
     return true;
   }
 
-  bool getMachineCoordinate(const char *nodename, pcoord_t *xyz) {
+  bool getMachineCoordinate(const char * /*nodename*/, pcoord_t * /*xyz*/) {
     return false;  // cannot yet return from nodename
   }
 

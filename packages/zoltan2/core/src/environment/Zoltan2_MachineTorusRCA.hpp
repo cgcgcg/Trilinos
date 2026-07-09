@@ -307,7 +307,7 @@ public:
     }
   }
 
-  bool getRealMachineExtent(int *nxyz) const {
+  bool getRealMachineExtent(int * /*nxyz*/) const {
 #if defined (HAVE_ZOLTAN2_RCALIB)
     mesh_coord_t mxyz;
     rca_get_max_dimension(&mxyz);
@@ -344,7 +344,7 @@ public:
     return true;
   }
 
-  bool getMyActualMachineCoordinate(pcoord_t *xyz) {
+  bool getMyActualMachineCoordinate(pcoord_t * /*xyz*/) {
 #if defined (HAVE_ZOLTAN2_RCALIB)
     rs_node_t nodeInfo;  /* Cray node info for node running this function */
     rca_get_nodeid(&nodeInfo);
@@ -373,7 +373,7 @@ public:
   }
 
 
-  bool getMachineCoordinate(const char *nodename, pcoord_t *xyz) {
+  bool getMachineCoordinate(const char * /*nodename*/, pcoord_t * /*xyz*/) {
     return false;  // cannot yet return from nodename
   }
 

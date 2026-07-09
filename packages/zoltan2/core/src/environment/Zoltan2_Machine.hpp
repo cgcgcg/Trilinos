@@ -50,14 +50,14 @@ public:
     /*! \brief sets the number of unique coordinates in each machine dimension
      *  return true if coordinates are available
      */
-    bool getMachineExtent(int *nxyz) const {
+    bool getMachineExtent(int * /*nxyz*/) const {
       return false;  // Extent not available in this machine
     }
 
     /*! \brief if the machine has a wrap-around tourus link in each dimension.
      *  return true if the information is available
      */
-    bool getMachineExtentWrapArounds(bool *wrap_around) const {
+    bool getMachineExtentWrapArounds(bool * /*wrap_around*/) const {
       return false;  // Extent not available in this machine
     }
 
@@ -65,7 +65,7 @@ public:
      *  set the machine coordinate xyz of the current process
      *  return true if current process' coordinates are available
      */
-    bool getMyMachineCoordinate(pcoord_t *xyz) const { 
+    bool getMyMachineCoordinate(pcoord_t * /*xyz*/) const { 
       return false;  // Coordinates not available in this machine
     }
 
@@ -73,7 +73,7 @@ public:
      *  set the machine coordinate xyz of any rank process
      *  return true if coordinates are available by rank
      */
-    bool getMachineCoordinate(const int rank, pcoord_t *xyz) const {
+    bool getMachineCoordinate(const int  /*rank*/, pcoord_t * /*xyz*/) const {
       return false;  // Coordinates not available by rank
     }
 
@@ -81,7 +81,7 @@ public:
      *  set the machine coordinate xyz of any node by nodename
      *  return true if coordinates are available by nodename
      */
-    bool getMachineCoordinate(const char *nodename, pcoord_t *xyz) const {
+    bool getMachineCoordinate(const char * /*nodename*/, pcoord_t * /*xyz*/) const {
       return false;  // Coordinates not available by nodename
     }
 
@@ -91,7 +91,7 @@ public:
      *  is the i-th dimensional coordinate for rank j.
      *  return true if coordinates are available for all ranks
      */
-    bool getAllMachineCoordinatesView(pcoord_t **allCoords) const { 
+    bool getAllMachineCoordinatesView(pcoord_t ** /*allCoords*/) const { 
       return false;  // Coordinates not available in this machine
     }
 
@@ -104,7 +104,7 @@ public:
      *  set hops between rank1 and rank2
      *  return true if coordinates are available 
      */
-    virtual bool getHopCount(int rank1, int rank2, pcoord_t &hops) const {
+    virtual bool getHopCount(int  /*rank1*/, int  /*rank2*/, pcoord_t & /*hops*/) const {
       return false;
     }
 
@@ -134,7 +134,7 @@ public:
      *  thru "problems/Zoltan2_MappingProblem.hpp".
      *  return true if group_count is available
      */
-    virtual bool getGroupCount(part_t *grp_count) const {
+    virtual bool getGroupCount(part_t * /*grp_count*/) const {
       return false;
     }
 

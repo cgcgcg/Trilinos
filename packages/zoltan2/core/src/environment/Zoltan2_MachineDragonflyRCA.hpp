@@ -173,7 +173,7 @@ public:
 
   // No necessary wrap arounds for dragonfly networks. Groups
   // have wrap around, but group all-to-all connection makes unneccessary.
-  virtual bool getMachineExtentWrapArounds(bool *wrap_around) const {
+  virtual bool getMachineExtentWrapArounds(bool * /*wrap_around*/) const {
     return false;
   }
 
@@ -406,7 +406,7 @@ public:
   }
 
   // Return the actual RCA maximum machine extents
-  bool getActualMachineExtent(int *nxyz) const {
+  bool getActualMachineExtent(int * /*nxyz*/) const {
 #if defined (HAVE_ZOLTAN2_RCALIB)
     mesh_coord_t mxyz;
     rca_get_max_dimension(&mxyz);
@@ -502,7 +502,7 @@ public:
   }
 
   // Return actual RCA coord for this rank
-  bool getMyActualMachineCoordinate(pcoord_t *xyz) {
+  bool getMyActualMachineCoordinate(pcoord_t * /*xyz*/) {
 #if defined (HAVE_ZOLTAN2_RCALIB)
     // Cray node info for current node
     rs_node_t nodeInfo; 
@@ -560,7 +560,7 @@ public:
     return true;   
   }
 
-  bool getMachineCoordinate(const char *nodename, pcoord_t *xyz) {
+  bool getMachineCoordinate(const char * /*nodename*/, pcoord_t * /*xyz*/) {
     return false;  // cannot yet return from nodename
   }
  

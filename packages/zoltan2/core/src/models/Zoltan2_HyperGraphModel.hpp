@@ -81,16 +81,16 @@ public:
    *  \todo document the model flags that might be set
    */
   
-  HyperGraphModel(const RCP<const MatrixAdapter<user_t,userCoord_t> > &ia,
-    const RCP<const Environment> &env, const RCP<const Comm<int> > &comm,
-    modelFlag_t &modelFlags, CentricView view)
+  HyperGraphModel(const RCP<const MatrixAdapter<user_t,userCoord_t> > & /*ia*/,
+    const RCP<const Environment> & /*env*/, const RCP<const Comm<int> > & /*comm*/,
+    modelFlag_t & /*modelFlags*/, CentricView  /*view*/)
   {
     throw std::runtime_error("Building HyperGraphModel from MatrixAdapter not implemented yet");
   }
 
-  HyperGraphModel(const RCP<const GraphAdapter<user_t,userCoord_t> > &ia,
-    const RCP<const Environment> &env, const RCP<const Comm<int> > &comm,
-    modelFlag_t &modelFlags, CentricView view)
+  HyperGraphModel(const RCP<const GraphAdapter<user_t,userCoord_t> > & /*ia*/,
+    const RCP<const Environment> & /*env*/, const RCP<const Comm<int> > & /*comm*/,
+    modelFlag_t & /*modelFlags*/, CentricView  /*view*/)
   {
     throw std::runtime_error("Building HyperGraphModel from GraphAdapter not implemented yet");
   }
@@ -99,16 +99,16 @@ public:
     const RCP<const Environment> &env, const RCP<const Comm<int> > &comm,
                   modelFlag_t &modelflags, CentricView view);
   
-  HyperGraphModel(const RCP<const VectorAdapter<userCoord_t> > &ia,
-    const RCP<const Environment> &env, const RCP<const Comm<int> > &comm,
-    modelFlag_t &flags, CentricView view)
+  HyperGraphModel(const RCP<const VectorAdapter<userCoord_t> > & /*ia*/,
+    const RCP<const Environment> & /*env*/, const RCP<const Comm<int> > & /*comm*/,
+    modelFlag_t & /*flags*/, CentricView  /*view*/)
   {
     throw std::runtime_error("cannot build HyperGraphModel from VectorAdapter");
   }
 
-  HyperGraphModel(const RCP<const IdentifierAdapter<user_t> > &ia,
-    const RCP<const Environment> &env, const RCP<const Comm<int> > &comm,
-    modelFlag_t &flags, CentricView view)
+  HyperGraphModel(const RCP<const IdentifierAdapter<user_t> > & /*ia*/,
+    const RCP<const Environment> & /*env*/, const RCP<const Comm<int> > & /*comm*/,
+    modelFlag_t & /*flags*/, CentricView  /*view*/)
   {
     throw std::runtime_error("cannot build HyperGraphModel from IdentifierAdapter");
   }
@@ -336,7 +336,7 @@ HyperGraphModel<Adapter>::HyperGraphModel(
   const RCP<const MeshAdapter<user_t> > &ia,
   const RCP<const Environment> &env,
   const RCP<const Comm<int> > &comm,
-  modelFlag_t &modelFlags,
+  modelFlag_t & /*modelFlags*/,
   CentricView view):
        env_(env),
        comm_(comm),

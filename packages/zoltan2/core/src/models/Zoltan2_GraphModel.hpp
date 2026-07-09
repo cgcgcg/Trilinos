@@ -89,9 +89,9 @@ public:
     throw std::runtime_error("cannot build GraphModel from VectorAdapter");
   }
 
-  GraphModel(const RCP<const IdentifierAdapter<user_t> > &ia,
-    const RCP<const Environment> &env, const RCP<const Comm<int> > &comm,
-    modelFlag_t &flags)
+  GraphModel(const RCP<const IdentifierAdapter<user_t> > & /*ia*/,
+    const RCP<const Environment> & /*env*/, const RCP<const Comm<int> > & /*comm*/,
+    modelFlag_t & /*flags*/)
   {
     throw std::runtime_error("cannot build GraphModel from IdentifierAdapter");
   }
