@@ -58,7 +58,7 @@ template <class ExecutionSpace,
           class keys_view_type_out,
           class values_view_type_in,
           class values_view_type_out>
-void sort_by_key(const ExecutionSpace& exec,
+void sort_by_key(const ExecutionSpace& /*exec*/,
                  const keys_view_type_in& keys_in,
                  const values_view_type_in& values_in,
                  const keys_view_type_out& keys_out,

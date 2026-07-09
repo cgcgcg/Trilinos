@@ -132,7 +132,7 @@ bool Operator<Scalar, LocalOrdinal, GlobalOrdinal, Node>::hasDiagonal() const {
 }
 
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-void Operator<Scalar, LocalOrdinal, GlobalOrdinal, Node>::getLocalDiagCopy(Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node> &diag) const {
+void Operator<Scalar, LocalOrdinal, GlobalOrdinal, Node>::getLocalDiagCopy(Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node> & /*diag*/) const {
   TEUCHOS_ASSERT(false);
 }
 

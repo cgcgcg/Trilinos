@@ -418,7 +418,7 @@ size_t DistributorPlan::createFromSends(const Teuchos::ArrayView<const int>& exp
   return totalReceiveLength_;
 }
 
-void DistributorPlan::createFromRecvs(const Teuchos::ArrayView<const int>& remoteProcIDs) {
+void DistributorPlan::createFromRecvs(const Teuchos::ArrayView<const int>& /*remoteProcIDs*/) {
   *this           = *getReversePlan();
   howInitialized_ = Details::DISTRIBUTOR_INITIALIZED_BY_CREATE_FROM_RECVS;
 }

@@ -47,7 +47,7 @@ class TeuchosMessenger : public MessengerBase<Datum> {
   send(const Datum sendData[],
        const int sendCount,
        const int destProc,
-       const int tag) {
+       const int /*tag*/) {
     // NOTE (mfh 14 June 2010): Teuchos generates "tag" arguments to
     // MPI calls internally, so we ignore the tag here.  I don't use
     // tags for anything in TSQR, so it doesn't matter.
@@ -64,7 +64,7 @@ class TeuchosMessenger : public MessengerBase<Datum> {
   recv(Datum recvData[],
        const int recvCount,
        const int srcProc,
-       const int tag) {
+       const int /*tag*/) {
     // NOTE (mfh 14 June 2010): Teuchos generates "tag" arguments to
     // MPI calls internally, so we ignore the tag here.  I don't use
     // tags for anything in TSQR, so it doesn't matter.
@@ -94,7 +94,7 @@ class TeuchosMessenger : public MessengerBase<Datum> {
            Datum recvData[],
            const int sendRecvCount,
            const int destProc,
-           const int tag) {
+           const int /*tag*/) {
     if (destProc == rank()) {
       // If the sending and receiving processes are the same,
       // then all we need to do is copy the data.  Hopefully in

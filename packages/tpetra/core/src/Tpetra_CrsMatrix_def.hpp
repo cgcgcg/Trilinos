@@ -303,7 +303,7 @@ template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     CrsMatrix(CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& matrix,
               const Teuchos::RCP<const crs_graph_type>& graph,
-              const Teuchos::RCP<Teuchos::ParameterList>& params)
+              const Teuchos::RCP<Teuchos::ParameterList>& /*params*/)
   : dist_object_type(graph->getRowMap())
   , staticGraph_(graph)
   , storageStatus_(matrix.storageStatus_) {
@@ -6895,7 +6895,7 @@ void CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
                                buffer_device_type>& importLIDs,
         Kokkos::DualView<char*, buffer_device_type> imports,
         Kokkos::DualView<size_t*, buffer_device_type> numPacketsPerLID,
-        const size_t constantNumPackets,
+        const size_t /*constantNumPackets*/,
         const CombineMode combineMode) {
   using Details::Behavior;
   using Details::castAwayConstDualView;

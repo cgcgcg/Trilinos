@@ -46,7 +46,7 @@ void DistributorActor::doWaitsSend(const DistributorPlan& plan) {
   }
 }
 
-void DistributorActor::doWaitsIalltofewv(const DistributorPlan& plan) {
+void DistributorActor::doWaitsIalltofewv(const DistributorPlan& /*plan*/) {
 #ifdef HAVE_TPETRA_MPI
   if (ialltofewv_.req) {
     ProfilingRegion ws("Tpetra::Distributor::doWaitsIalltofewv");

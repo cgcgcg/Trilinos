@@ -25,9 +25,9 @@ size_t count_same      = 0;
 size_t count_different = 0;
 bool count_active      = false;
 
-void kokkosp_begin_deep_copy(Kokkos::Tools::SpaceHandle dst_handle, const char *dst_name, const void *dst_ptr,
-                             Kokkos::Tools::SpaceHandle src_handle, const char *src_name, const void *src_ptr,
-                             uint64_t size) {
+void kokkosp_begin_deep_copy(Kokkos::Tools::SpaceHandle dst_handle, const char * /*dst_name*/, const void * /*dst_ptr*/,
+                             Kokkos::Tools::SpaceHandle src_handle, const char * /*src_name*/, const void * /*src_ptr*/,
+                             uint64_t /*size*/) {
   if (count_active) {
     if (strcmp(dst_handle.name, src_handle.name))
       count_different++;
@@ -71,8 +71,8 @@ std::vector<size_t> count_instance;
 std::vector<size_t> count_global;
 int num_devices = 0;
 
-void kokkosp_begin_fence(const char *name, const uint32_t deviceId,
-                         uint64_t *handle) {
+void kokkosp_begin_fence(const char * /*name*/, const uint32_t deviceId,
+                         uint64_t * /*handle*/) {
   if (count_active) {
     using namespace Kokkos::Tools::Experimental;
     ExecutionSpaceIdentifier eid = identifier_from_devid(deviceId);

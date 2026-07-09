@@ -135,7 +135,7 @@ void benchmark(std::ostream& out,
 // Warning: Call only on (MPI) Process 0.  Otherwise, you'll run the
 //   test routine on every MPI process simultaneously, but only
 //   report results on Process 0.
-void verify(std::ostream& out, const TestParameters& params) {
+void verify(const TestParameters& params) {
   constexpr bool simulateSequentialTsqr = false;
   constexpr bool debug                  = false;
 
@@ -315,7 +315,7 @@ int main(int argc, char* argv[]) {
     }
     // We allow the same run to do both benchmark and verify.
     if (params.verify) {
-      verify(cout, params);
+      verify(params);
     }
     success = true;
     if (params.printTrilinosTestStuff) {

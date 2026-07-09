@@ -57,8 +57,8 @@ class Distribution1D : public Distribution<gno_t, scalar_t> {
 
   // Return whether this rank owns nonzero (i,j)
   // Vector map and row map are the same in 1D distribution.
-  inline bool Mine(gno_t i, gno_t j) { return VecMine(i); }
-  inline bool Mine(gno_t i, gno_t j, int p) { return VecMine(i); }
+  inline bool Mine(gno_t i, gno_t /*j*/) { return VecMine(i); }
+  inline bool Mine(gno_t i, gno_t /*j*/, int /*p*/) { return VecMine(i); }
 };
 
 /////////////////////////////////////////////////////////////////////////////

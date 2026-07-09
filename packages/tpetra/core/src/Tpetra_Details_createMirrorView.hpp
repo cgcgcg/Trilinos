@@ -138,8 +138,8 @@ class CreateMirrorViewFromUnmanagedHostArray<ValueType, OutputDeviceType, false,
   static output_view_type
   doIt(ValueType* inPtr,
        const size_t inSize,
-       const bool copy    = true,
-       const char label[] = "") {
+       const bool copy        = true,
+       const char /*label*/[] = "") {
     typedef typename OutputDeviceType::memory_space out_mem_space;
     typedef typename OutputDeviceType::execution_space out_exec_space;
     static_assert(!std::is_const<ValueType>::value,

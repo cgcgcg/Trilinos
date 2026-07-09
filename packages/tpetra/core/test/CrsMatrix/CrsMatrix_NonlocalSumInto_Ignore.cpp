@@ -12,7 +12,6 @@
 #include <Tpetra_ConfigDefs.hpp>
 
 #include <Teuchos_UnitTestHarness.hpp>
-#include <Tpetra_ConfigDefs.hpp>
 #include <TpetraCore_ETIHelperMacros.h>
 #include <Tpetra_TestingUtilities.hpp>
 

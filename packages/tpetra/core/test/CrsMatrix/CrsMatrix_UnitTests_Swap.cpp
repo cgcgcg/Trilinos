@@ -422,8 +422,8 @@ class crsMatrix_Swap_Tester {
                      const Teuchos::RCP<Tpetra::CrsGraph<LocalOrdinal, GlobalOrdinal, Node>>& graph,
                      const std::vector<std::tuple<GlobalOrdinal, GlobalOrdinal, Scalar>>& gbl_wgt_edges,
                      const std::vector<std::pair<GlobalOrdinal, int>>& gbl_row_owners,
-                     const size_t gbl_num_columns,
-                     const bool do_fillComplete = true) {
+                     const size_t /*gbl_num_columns*/,
+                     const bool /*do_fillComplete*/ = true) {
     using Teuchos::Comm;
     using Teuchos::RCP;
 
@@ -589,7 +589,7 @@ class crsMatrix_Swap_Tester {
     }
   }
 
-  bool compare_crsmatrix(const Teuchos::RCP<const Teuchos::Comm<int>>& comm,
+  bool compare_crsmatrix(const Teuchos::RCP<const Teuchos::Comm<int>>& /*comm*/,
                          Teuchos::FancyOStream& out,
                          const Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& matrix1,
                          const Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& matrix2) {

@@ -24,7 +24,7 @@ void TrivialTimer::verifyConcept() {
   TSQR::Test::verifyTimerConcept<TrivialTimer>();
 }
 
-void TrivialTimer::start(bool reset) {
+void TrivialTimer::start(bool /*reset*/) {
   isRunning_ = true;
 }
 

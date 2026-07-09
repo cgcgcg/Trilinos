@@ -15,7 +15,6 @@
 #include <Tpetra_Details_Behavior.hpp>
 #include <Teuchos_UnitTestHarness.hpp>
 #include <Teuchos_CommHelpers.hpp>
-#include <cstdlib>  // std::getenv
 
 namespace {
 

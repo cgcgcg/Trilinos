@@ -23,7 +23,6 @@
 #include "Tpetra_Details_computeOffsets.hpp"
 #include "Tpetra_Details_Behavior.hpp"
 #include "Tpetra_Details_makeColMap.hpp"
-#include "Tpetra_ConfigDefs.hpp"
 #include "Tpetra_Map.hpp"
 #include "Tpetra_Export.hpp"
 #include "Tpetra_Import_Util.hpp"

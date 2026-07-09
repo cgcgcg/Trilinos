@@ -946,12 +946,12 @@ void jacobi_A_B_newmatrix_MultiplyScaleAddKernel(typename Teuchos::ScalarTraits<
                                                  const Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Dinv,
                                                  CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Aview,
                                                  CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Bview,
-                                                 const LocalOrdinalViewType& Acol2Brow,
-                                                 const LocalOrdinalViewType& Acol2Irow,
-                                                 const LocalOrdinalViewType& Bcol2Ccol,
-                                                 const LocalOrdinalViewType& Icol2Ccol,
+                                                 const LocalOrdinalViewType& /*Acol2Brow*/,
+                                                 const LocalOrdinalViewType& /*Acol2Irow*/,
+                                                 const LocalOrdinalViewType& /*Bcol2Ccol*/,
+                                                 const LocalOrdinalViewType& /*Icol2Ccol*/,
                                                  CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& C,
-                                                 Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node> > Cimport,
+                                                 Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node> > /*Cimport*/,
                                                  const std::string& label,
                                                  const Teuchos::RCP<Teuchos::ParameterList>& params) {
 #ifdef HAVE_TPETRA_MMM_TIMINGS

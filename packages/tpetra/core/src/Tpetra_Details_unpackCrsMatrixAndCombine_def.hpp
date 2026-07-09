@@ -975,7 +975,7 @@ void unpackAndCombineIntoCrsArrays(
     const typename PackTraits<int>::output_array_type& tgt_pids,
     const size_t num_same_ids,
     const size_t tgt_num_rows,
-    const size_t tgt_num_nonzeros,
+    const size_t /*tgt_num_nonzeros*/,
     const int my_tgt_pid,
     const size_t bytes_per_value) {
   using Kokkos::MemoryUnmanaged;

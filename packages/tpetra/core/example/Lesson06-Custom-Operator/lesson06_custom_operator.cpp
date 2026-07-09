@@ -172,9 +172,9 @@ class MyOp : public Tpetra::Operator<> {
   void
   apply(const MV& X,
         MV& Y,
-        Teuchos::ETransp mode = Teuchos::NO_TRANS,
-        scalar_type alpha     = Teuchos::ScalarTraits<scalar_type>::one(),
-        scalar_type beta      = Teuchos::ScalarTraits<scalar_type>::zero()) const {
+        Teuchos::ETransp /*mode*/ = Teuchos::NO_TRANS,
+        scalar_type alpha         = Teuchos::ScalarTraits<scalar_type>::one(),
+        scalar_type beta          = Teuchos::ScalarTraits<scalar_type>::zero()) const {
     using std::cout;
     using std::endl;
     using Teuchos::RCP;

@@ -421,13 +421,13 @@ bool BlockMultiVector<Scalar, LO, GO, Node>::
 
 template <class Scalar, class LO, class GO, class Node>
 void BlockMultiVector<Scalar, LO, GO, Node>::
-    copyAndPermute(const SrcDistObject& src,
-                   const size_t numSameIDs,
+    copyAndPermute(const SrcDistObject& /*src*/,
+                   const size_t /*numSameIDs*/,
                    const Kokkos::DualView<const local_ordinal_type*,
-                                          buffer_device_type>& permuteToLIDs,
+                                          buffer_device_type>& /*permuteToLIDs*/,
                    const Kokkos::DualView<const local_ordinal_type*,
-                                          buffer_device_type>& permuteFromLIDs,
-                   const CombineMode CM) {
+                                          buffer_device_type>& /*permuteFromLIDs*/,
+                   const CombineMode /*CM*/) {
   TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error,
                              "Tpetra::BlockMultiVector::copyAndPermute: Do NOT use this "
                              "instead, create a point importer using makePointMap function.");
@@ -435,15 +435,15 @@ void BlockMultiVector<Scalar, LO, GO, Node>::
 
 template <class Scalar, class LO, class GO, class Node>
 void BlockMultiVector<Scalar, LO, GO, Node>::
-    packAndPrepare(const SrcDistObject& src,
+    packAndPrepare(const SrcDistObject& /*src*/,
                    const Kokkos::DualView<const local_ordinal_type*,
-                                          buffer_device_type>& exportLIDs,
+                                          buffer_device_type>& /*exportLIDs*/,
                    Kokkos::DualView<packet_type*,
-                                    buffer_device_type>& exports,
+                                    buffer_device_type>& /*exports*/,
                    Kokkos::DualView<size_t*,
                                     buffer_device_type>
-                       numPacketsPerLID,
-                   size_t& constantNumPackets) {
+                   /*numPacketsPerLID*/,
+                   size_t& /*constantNumPackets*/) {
   TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error,
                              "Tpetra::BlockMultiVector::packAndPrepare: Do NOT use this; "
                              "instead, create a point importer using makePointMap function.");
@@ -452,15 +452,15 @@ void BlockMultiVector<Scalar, LO, GO, Node>::
 template <class Scalar, class LO, class GO, class Node>
 void BlockMultiVector<Scalar, LO, GO, Node>::
     unpackAndCombine(const Kokkos::DualView<const local_ordinal_type*,
-                                            buffer_device_type>& importLIDs,
+                                            buffer_device_type>& /*importLIDs*/,
                      Kokkos::DualView<packet_type*,
                                       buffer_device_type>
-                         imports,
+                     /*imports*/,
                      Kokkos::DualView<size_t*,
                                       buffer_device_type>
-                         numPacketsPerLID,
-                     const size_t constantNumPackets,
-                     const CombineMode combineMode) {
+                     /*numPacketsPerLID*/,
+                     const size_t /*constantNumPackets*/,
+                     const CombineMode /*combineMode*/) {
   TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error,
                              "Tpetra::BlockMultiVector::unpackAndCombine: Do NOT use this; "
                              "instead, create a point importer using makePointMap function.");

@@ -162,7 +162,7 @@ void FECrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
     setup(const Teuchos::RCP<const map_type>& ownedRowMap,
           const Teuchos::RCP<const map_type>& ownedPlusSharedRowMap,
           const Teuchos::RCP<const map_type>& ownedPlusSharedColMap,
-          const Teuchos::RCP<Teuchos::ParameterList>& params) {
+          const Teuchos::RCP<Teuchos::ParameterList>& /*params*/) {
   const char tfecfFuncName[] = "FECrsGraph::setup(): ";
 
   TEUCHOS_TEST_FOR_EXCEPTION_CLASS_FUNC(ownedRowMap.is_null(), std::runtime_error, "ownedRowMap is null.");

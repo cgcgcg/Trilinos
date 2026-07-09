@@ -34,7 +34,7 @@ buildDistribution(
     std::string &distribution,             // string indicating whether to use 1D, 2D or
                                            // file-based matrix distribution
     size_t nRow,                           // Number of global matrix rows
-    size_t nCol,                           // Number of global matrix rows
+    size_t /*nCol*/,                       // Number of global matrix rows
     const Teuchos::ParameterList &params,  // Parameters to the file reading
     const Teuchos::RCP<const Teuchos::Comm<int> > &comm
     // communicator to be used in maps
@@ -754,7 +754,7 @@ readPerProcessBinary(
     const Teuchos::ParameterList &params,
     size_t &nRow,
     size_t &nCol,
-    typename Distribution<global_ordinal_type, scalar_type>::LocalNZmap_t &localNZ,
+    typename Distribution<global_ordinal_type, scalar_type>::LocalNZmap_t & /*localNZ*/,
     Teuchos::RCP<Distribution<global_ordinal_type, scalar_type> > &dist,
     unsigned int *&buffer,
     size_t &nNz) {

@@ -114,7 +114,7 @@ class Transform {
     : origObj_(src.origObj_)
     , newObj_(src.newObj_) {}
 
-  Transform<T, U>& operator=(const Transform<T, U>& src) {
+  Transform<T, U>& operator=(const Transform<T, U>& /*src*/) {
     // Not currently supported.
     Teuchos::GlobalMPISession::abort();
     return (*this);

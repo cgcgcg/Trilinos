@@ -4210,7 +4210,7 @@ template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 template <class T>
 Teuchos::ArrayRCP<T>
 MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
-    getSubArrayRCP(Teuchos::ArrayRCP<T> arr,
+    getSubArrayRCP(Teuchos::ArrayRCP<T> /*arr*/,
                    size_t j) const {
   typedef Kokkos::DualView<impl_scalar_type*,
                            typename dual_view_type::array_layout,

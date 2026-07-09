@@ -28,7 +28,7 @@ template <class Scalar,
           class Node>
 RowMatrixTransposer<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     RowMatrixTransposer(const Teuchos::RCP<const crs_matrix_type>& origMatrix,
-                        const std::string& label)
+                        const std::string& /*label*/)
   : origMatrix_(origMatrix) {}
 
 template <class Scalar,
@@ -180,7 +180,7 @@ template <class Scalar,
           class Node>
 BlockCrsMatrixTransposer<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     BlockCrsMatrixTransposer(const Teuchos::RCP<const bcrs_matrix_type>& origMatrix,
-                             const std::string& label)
+                             const std::string& /*label*/)
   : origMatrix_(origMatrix) {}
 
 template <class Scalar,
@@ -227,7 +227,7 @@ template <class Scalar,
           class Node>
 Teuchos::RCP<BlockCrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node> >
 BlockCrsMatrixTransposer<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
-    createTransposeLocal(const Teuchos::RCP<Teuchos::ParameterList>& params) {
+    createTransposeLocal(const Teuchos::RCP<Teuchos::ParameterList>& /*params*/) {
   using Teuchos::Array;
   using Teuchos::ArrayRCP;
   using Teuchos::ArrayView;

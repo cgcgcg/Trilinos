@@ -467,7 +467,7 @@ template <class LocalOrdinal, class GlobalOrdinal, class Node>
 CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::
     CrsGraph(CrsGraph<local_ordinal_type, global_ordinal_type, node_type>& originalGraph,
              const Teuchos::RCP<const map_type>& rowMap,
-             const Teuchos::RCP<Teuchos::ParameterList>& params)
+             const Teuchos::RCP<Teuchos::ParameterList>& /*params*/)
   : dist_object_type(rowMap)
   , rowMap_(rowMap)
   , colMap_(originalGraph.colMap_)
@@ -7245,7 +7245,7 @@ void CrsGraph<LocalOrdinal, GlobalOrdinal, Node>::copyAndPermuteNew(
                            buffer_device_type>& permuteToLIDs,
     const Kokkos::DualView<const local_ordinal_type*,
                            buffer_device_type>& permuteFromLIDs,
-    const CombineMode CM) {
+    const CombineMode /*CM*/) {
   using std::endl;
   using LO                   = local_ordinal_type;
   using GO                   = global_ordinal_type;

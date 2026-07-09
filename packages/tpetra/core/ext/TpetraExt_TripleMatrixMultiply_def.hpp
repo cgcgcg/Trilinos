@@ -19,7 +19,6 @@
 #include "Tpetra_CrsMatrix.hpp"
 #include "TpetraExt_MMHelpers_def.hpp"
 #include "Tpetra_RowMatrixTransposer.hpp"
-#include "Tpetra_ConfigDefs.hpp"
 #include "Tpetra_Map.hpp"
 #include "Tpetra_Export.hpp"
 #include "Tpetra_Import_Util.hpp"
@@ -1125,9 +1124,9 @@ void KernelWrappers3<Scalar, LocalOrdinal, GlobalOrdinal, Node, LocalOrdinalView
                                                                                                                        const LocalOrdinalViewType& Pcol2Accol_dev,
                                                                                                                        const LocalOrdinalViewType& PIcol2Accol_dev,
                                                                                                                        CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Ac,
-                                                                                                                       Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node> > Acimport,
-                                                                                                                       const std::string& label,
-                                                                                                                       const Teuchos::RCP<Teuchos::ParameterList>& params) {
+                                                                                                                       Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node> > /*Acimport*/,
+                                                                                                                       const std::string& /*label*/,
+                                                                                                                       const Teuchos::RCP<Teuchos::ParameterList>& /*params*/) {
 #ifdef HAVE_TPETRA_MMM_TIMINGS
   std::string prefix_mmm = std::string("TpetraExt ") + label + std::string(": ");
   using Teuchos::TimeMonitor;

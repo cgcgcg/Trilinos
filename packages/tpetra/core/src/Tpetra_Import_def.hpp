@@ -66,7 +66,7 @@ void Import<LocalOrdinal, GlobalOrdinal, Node>::
          const Teuchos::RCP<const map_type>& /* target */,
          bool useRemotePIDs,
          Teuchos::Array<int>& remotePIDs,
-         const Teuchos::RCP<Teuchos::ParameterList>& plist) {
+         const Teuchos::RCP<Teuchos::ParameterList>& /*plist*/) {
   using std::endl;
   using Teuchos::Array;
   using Teuchos::null;
@@ -989,7 +989,7 @@ void Import<LocalOrdinal, GlobalOrdinal, Node>::
     setupExport(Teuchos::Array<GlobalOrdinal>& remoteGIDs,
                 bool useRemotePIDs,
                 Teuchos::Array<int>& userRemotePIDs,
-                const Teuchos::RCP<Teuchos::ParameterList>& plist) {
+                const Teuchos::RCP<Teuchos::ParameterList>& /*plist*/) {
   using std::endl;
   using Teuchos::Array;
   using Teuchos::ArrayView;

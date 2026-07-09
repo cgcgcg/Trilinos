@@ -307,7 +307,7 @@ class WrappedDualView {
 
   template <class TargetDeviceType>
   typename std::remove_reference<decltype(std::declval<DualViewType>().template view<TargetDeviceType>())>::type::const_type
-  getView(Access::ReadOnlyStruct s DEBUG_UVM_REMOVAL_ARGUMENT) const {
+  getView(Access::ReadOnlyStruct /*s*/ DEBUG_UVM_REMOVAL_ARGUMENT) const {
     using ReturnViewType        = typename std::remove_reference<decltype(std::declval<DualViewType>().template view<TargetDeviceType>())>::type::const_type;
     using ReturnDeviceType      = typename ReturnViewType::device_type;
     constexpr bool returnDevice = std::is_same<ReturnDeviceType, DeviceType>::value;
@@ -330,7 +330,7 @@ class WrappedDualView {
 
   template <class TargetDeviceType>
   typename std::remove_reference<decltype(std::declval<DualViewType>().template view<TargetDeviceType>())>::type
-  getView(Access::ReadWriteStruct s DEBUG_UVM_REMOVAL_ARGUMENT) const {
+  getView(Access::ReadWriteStruct /*s*/ DEBUG_UVM_REMOVAL_ARGUMENT) const {
     using ReturnViewType        = typename std::remove_reference<decltype(std::declval<DualViewType>().template view<TargetDeviceType>())>::type;
     using ReturnDeviceType      = typename ReturnViewType::device_type;
     constexpr bool returnDevice = std::is_same<ReturnDeviceType, DeviceType>::value;
@@ -360,7 +360,7 @@ class WrappedDualView {
 
   template <class TargetDeviceType>
   typename std::remove_reference<decltype(std::declval<DualViewType>().template view<TargetDeviceType>())>::type
-  getView(Access::OverwriteAllStruct s DEBUG_UVM_REMOVAL_ARGUMENT) const {
+  getView(Access::OverwriteAllStruct /*s*/ DEBUG_UVM_REMOVAL_ARGUMENT) const {
     using ReturnViewType   = typename std::remove_reference<decltype(std::declval<DualViewType>().template view<TargetDeviceType>())>::type;
     using ReturnDeviceType = typename ReturnViewType::device_type;
 

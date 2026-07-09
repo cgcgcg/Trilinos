@@ -105,7 +105,6 @@ int parseCmdLineOpts(Teuchos::CommandLineProcessor& clp, int argc, char* argv[])
 // argument in its original order (starting with 1) as the error code.
 // Print informative error messages to the given output stream \c out.
 int checkCmdLineOpts(std::ostream& out,
-                     const Teuchos::Comm<int>& comm,
                      const CmdLineOpts& opts) {
   int err = 0;
 
@@ -211,8 +210,7 @@ getTpetraGraph(const Teuchos::RCP<const Teuchos::Comm<int> >& comm,
 // parseCmdLineOpts.
 Teuchos::RCP<Tpetra::CrsMatrix<> >
 getTpetraCrsMatrix(Teuchos::FancyOStream& out,
-                   const Teuchos::RCP<const Tpetra::CrsGraph<> >& graph,
-                   const CmdLineOpts& opts) {
+                   const Teuchos::RCP<const Tpetra::CrsGraph<> >& graph) {
   using std::endl;
   using Teuchos::RCP;
   using Teuchos::rcp;
@@ -290,7 +288,7 @@ int main(int argc, char* argv[]) {
       } else if (result == -1) {  // parse error
         return EXIT_FAILURE;
       }
-      result = checkCmdLineOpts(out, *comm, opts);
+      result = checkCmdLineOpts(out, opts);
       if (result != 0) {
         return EXIT_FAILURE;
       }
@@ -311,7 +309,7 @@ int main(int argc, char* argv[]) {
       timer = TimeMonitor::getNewCounter("Tpetra CrsMatrix Benchmark: getCrsMatrix");
       {
         TimeMonitor timeMon(*timer);
-        A = getTpetraCrsMatrix(out, G, opts);
+        A = getTpetraCrsMatrix(out, G);
       }
     } else {
       auto timer = TimeMonitor::getNewCounter("Tpetra CrsMatrix Benchmark: readCrsMatrix");

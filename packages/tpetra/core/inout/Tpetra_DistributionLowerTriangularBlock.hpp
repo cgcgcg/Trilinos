@@ -178,7 +178,7 @@ class DistributionLowerTriangularBlock : public Distribution<gno_t, scalar_t> {
       return initialDist.Mine(i, j);
   }
 
-  inline bool Mine(gno_t i, gno_t j, int p) { return Mine(i, j); }
+  inline bool Mine(gno_t i, gno_t j, int /*p*/) { return Mine(i, j); }
 
   // How to redistribute according to chunk-based row distribution
   void Redistribute(LocalNZmap_t &localNZ) {
@@ -473,7 +473,7 @@ class LowerTriangularBlockOperator : public Tpetra::Operator<scalar_t, Tpetra::M
     diag->doExport(diagByRowMap, exporter, Tpetra::ADD);
   }
 
-  void apply(const mvector_t &x, mvector_t &y, Teuchos::ETransp mode,
+  void apply(const mvector_t &x, mvector_t &y, Teuchos::ETransp /*mode*/,
              scalar_t alpha, scalar_t beta) const {
     scalar_t ZERO = Teuchos::ScalarTraits<scalar_t>::zero();
     scalar_t ONE  = Teuchos::ScalarTraits<scalar_t>::one();

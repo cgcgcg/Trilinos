@@ -20,8 +20,6 @@
 #endif
 #include <string>
 
-#include "Tpetra_Details_Behavior.hpp"
-
 namespace {
 // Get a useful label from the deviceId
 // NOTE: Relevant code is in: kokkos/core/src/impl/Kokkos_Profiling_Interface.hpp
@@ -83,8 +81,8 @@ Teuchos::RCP<Teuchos::Time> timer_;
 std::string label_;
 bool initialized_ = false;
 
-void kokkosp_begin_deep_copy(Kokkos::Tools::SpaceHandle dst_handle, const char* dst_name, const void* dst_ptr,
-                             Kokkos::Tools::SpaceHandle src_handle, const char* src_name, const void* src_ptr,
+void kokkosp_begin_deep_copy(Kokkos::Tools::SpaceHandle dst_handle, const char* dst_name, const void* /*dst_ptr*/,
+                             Kokkos::Tools::SpaceHandle src_handle, const char* src_name, const void* /*src_ptr*/,
                              uint64_t size) {
   // In verbose mode, we add the src/dst names as well
   std::string extra_label;
@@ -227,7 +225,7 @@ bool initialized_ = false;
 std::string label_;
 
 void kokkosp_begin_kernel(const char* kernelName, const char* kernelPrefix, const uint32_t devID,
-                          uint64_t* kernelID) {
+                          uint64_t* /*kernelID*/) {
   // Nested fences are not allowed
   if (timer_ != Teuchos::null)
     return;
@@ -260,7 +258,7 @@ void kokkosp_begin_reduce(const char* kernelPrefix, const uint32_t devID, uint64
   kokkosp_begin_kernel("parallel_reduce", kernelPrefix, devID, kernelID);
 }
 
-void kokkosp_end_kernel(const uint64_t handle) {
+void kokkosp_end_kernel(const uint64_t /*handle*/) {
 #ifdef HAVE_TEUCHOS_ADD_TIME_MONITOR_TO_STACKED_TIMER
   if (!Teuchos::TimeMonitor::stackedTimerNameIsDefault()) {
     try {

@@ -15,7 +15,6 @@
 #include "Tpetra_BlockVector.hpp"
 #include "Tpetra_BlockView.hpp"
 #include "Tpetra_RowMatrixTransposer.hpp"
-#include "Tpetra_Details_gathervPrint.hpp"
 
 namespace {
 using std::endl;

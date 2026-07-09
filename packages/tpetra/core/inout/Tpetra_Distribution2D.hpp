@@ -176,7 +176,7 @@ class Distribution2DLinear : public Distribution2D<gno_t, scalar_t> {
     return ((mypRow == Distribution2D<gno_t, scalar_t>::TWODPROW(idx))  // RowMine
             && (j >= myFirstCol && j <= myLastCol));                    // ColMine
   }
-  inline bool Mine(gno_t i, gno_t j, int p) { return Mine(i, j); }
+  inline bool Mine(gno_t i, gno_t j, int /*p*/) { return Mine(i, j); }
 
   inline bool VecMine(gno_t i) {
     return (i >= entries[me] && i < entries[me + 1]);
@@ -210,7 +210,7 @@ class Distribution2DRandom : public Distribution2D<gno_t, scalar_t> {
     return ((mypRow == this->TWODPROW(this->HashToProc(i))) &&  // RowMine
             (mypCol == this->TWODPCOL(this->HashToProc(j))));   // ColMine
   }
-  inline bool Mine(gno_t i, gno_t j, int p) { return Mine(i, j); }
+  inline bool Mine(gno_t i, gno_t j, int /*p*/) { return Mine(i, j); }
 
   inline bool VecMine(gno_t i) { return (me == this->HashToProc(i)); }
 };
@@ -278,7 +278,7 @@ class Distribution2DVec : public Distribution2D<gno_t, scalar_t> {
   bool Mine(gno_t i, gno_t j) {
     return (me == (vecpart[i] % npRows + (vecpart[j] / npRows) * npRows));
   }
-  inline bool Mine(gno_t i, gno_t j, int p) { return Mine(i, j); }
+  inline bool Mine(gno_t i, gno_t j, int /*p*/) { return Mine(i, j); }
 
   inline bool VecMine(gno_t i) { return (vecpart[i] == me); }
 

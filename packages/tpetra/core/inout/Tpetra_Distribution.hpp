@@ -46,7 +46,7 @@ class Distribution {
  public:
   Distribution(size_t nrows_,
                const Teuchos::RCP<const Teuchos::Comm<int> > &comm_,
-               const Teuchos::ParameterList &params)
+               const Teuchos::ParameterList & /*params*/)
     : comm(comm_)
     , me(comm_->getRank())
     , np(comm_->getSize())

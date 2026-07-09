@@ -49,7 +49,7 @@ class DistributionMMFile : public Distribution<gno_t, scalar_t> {
 
   inline enum DistributionType DistType() { return MMFile; }
 
-  bool Mine(gno_t i, gno_t j) {
+  bool Mine(gno_t /*i*/, gno_t /*j*/) {
     std::cout << "Invalid call to Mine(i,j); "
               << "MMFile-distribution requires use of Mine(i,j,p) providing "
               << "process assignment p." << std::endl;

@@ -4570,7 +4570,7 @@ MatrixMarketReader<Scalar, LocalOrdinal, GlobalOrdinal, Node>::readSparsePerRank
                                                                                  Teuchos::RCP<const typename MatrixMarketReader<Scalar, LocalOrdinal, GlobalOrdinal, Node>::map_type>& colMap,
                                                                                  const Teuchos::RCP<const typename MatrixMarketReader<Scalar, LocalOrdinal, GlobalOrdinal, Node>::map_type>& domainMap,
                                                                                  const Teuchos::RCP<const typename MatrixMarketReader<Scalar, LocalOrdinal, GlobalOrdinal, Node>::map_type>& rangeMap,
-                                                                                 const bool callFillComplete,
+                                                                                 const bool /*callFillComplete*/,
                                                                                  const bool tolerant,
                                                                                  const int ranksToReadAtOnce,
                                                                                  const bool debug) {
@@ -7164,7 +7164,7 @@ void MatrixMarketWriter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::writeSparseP
                                                                                        const std::string& matrixName,
                                                                                        const std::string& matrixDescription,
                                                                                        const int ranksToWriteAtOnce,
-                                                                                       const bool debug) {
+                                                                                       const bool /*debug*/) {
   using ST = scalar_type;
   // using LO = local_ordinal_type;
   using GO  = global_ordinal_type;

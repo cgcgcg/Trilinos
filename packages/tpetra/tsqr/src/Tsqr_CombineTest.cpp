@@ -598,7 +598,7 @@ void verifyCombine(const int numRows,
                    const int numCols,
                    const bool testReal,
                    const bool testComplex,
-                   const bool printFieldNames,
+                   const bool /*printFieldNames*/,
                    const bool simulateSequentialTsqr,
                    const bool debug) {
   using std::cerr;
