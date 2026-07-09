@@ -271,7 +271,7 @@ template <typename T> struct LapackTeam {
   static KOKKOS_INLINE_FUNCTION void sytrf(const MemberType &member, const char uplo, const int m,
                                            /* */ T *KOKKOS_RESTRICT A, const int lda,
                                            /* */ int *KOKKOS_RESTRICT P,
-                                           /* */ T *KOKKOS_RESTRICT W, int *info) {
+                                           /* */ T *KOKKOS_RESTRICT  /*W*/, int *info) {
     switch (uplo) {
     case 'U':
     case 'u': {
@@ -420,7 +420,7 @@ template <typename T> struct LapackTeam {
   }
 
     template <typename MemberType>
-    static KOKKOS_INLINE_FUNCTION void sytrf_nopiv(const MemberType &member, const char uplo, const bool conjugate, const int m,
+    static KOKKOS_INLINE_FUNCTION void sytrf_nopiv(const MemberType &member, const char  /*uplo*/, const bool conjugate, const int m,
                                                    T *KOKKOS_RESTRICT A, const int lda, int *info) {
       *info = 0;
       if (m <= 0)

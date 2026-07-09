@@ -83,7 +83,7 @@ template <typename ArgUplo, typename ArgTrans> struct Herk<ArgUplo, ArgTrans, Al
 #endif
 
   template <typename MemberType, typename ScalarType, typename ViewTypeA, typename ViewTypeC>
-  inline static int invoke(MemberType &member, const ScalarType alpha, const ViewTypeA &A, const ScalarType beta,
+  inline static int invoke(MemberType & /*member*/, const ScalarType alpha, const ViewTypeA &A, const ScalarType beta,
                            const ViewTypeC &C) {
     typedef typename ViewTypeA::non_const_value_type value_type;
     typedef typename ViewTypeC::non_const_value_type value_type_c;

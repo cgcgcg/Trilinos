@@ -505,11 +505,11 @@ namespace BaskerNS
   BASKER_INLINE
   int Basker<Int,Entry,Exe_Space>::Factor
   (
-   Int nrow, 
+   Int  /*nrow*/, 
    Int ncol,
    Int nnz, 
-   Int *col_ptr, 
-   Int *row_idx, 
+   Int * /*col_ptr*/, 
+   Int * /*row_idx*/, 
    Entry *val
   ) 
   {
@@ -1967,7 +1967,7 @@ namespace BaskerNS
 
   template <class Int, class Entry, class Exe_Space>
   BASKER_INLINE
-  int Basker<Int, Entry, Exe_Space>::Solve(ENTRY_1DARRAY b, ENTRY_1DARRAY x, bool transpose)
+  int Basker<Int, Entry, Exe_Space>::Solve(ENTRY_1DARRAY  /*b*/, ENTRY_1DARRAY  /*x*/, bool  /*transpose*/)
   {
     printf("Basker: This solve call not implemented\n");
     return -1;
@@ -1976,7 +1976,7 @@ namespace BaskerNS
 
   template <class Int, class Entry, class Exe_Space>
   BASKER_INLINE
-  int Basker<Int, Entry, Exe_Space>::Solve(Int _nrhs, Entry *b, Entry *x, Int option, bool transpose)
+  int Basker<Int, Entry, Exe_Space>::Solve(Int  /*_nrhs*/, Entry * /*b*/, Entry * /*x*/, Int  /*option*/, bool  /*transpose*/)
   {    
     int err = 0;
     printf("Basker: This solve call not implemented\n");

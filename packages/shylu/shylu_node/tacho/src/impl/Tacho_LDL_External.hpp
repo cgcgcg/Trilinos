@@ -50,7 +50,7 @@ template <> struct LDL<Uplo::Lower, Algo::External> {
   }
 
   template <typename MemberType, typename ViewTypeA, typename ViewTypeP, typename ViewTypeW>
-  KOKKOS_INLINE_FUNCTION static int invoke(MemberType &member, const ViewTypeA &A, const ViewTypeP &P,
+  KOKKOS_INLINE_FUNCTION static int invoke(MemberType & /*member*/, const ViewTypeA &A, const ViewTypeP &P,
                                            const ViewTypeW &W) {
 
     static constexpr bool runOnHost = run_tacho_on_host_v<typename ViewTypeA::execution_space>;
@@ -152,7 +152,7 @@ template <> struct LDL<Uplo::Lower, Algo::External> {
   }
 
   template <typename MemberType, typename ViewTypeA, typename ViewTypeP, typename ViewTypeD>
-  KOKKOS_INLINE_FUNCTION static int modify(MemberType &member, const ViewTypeA &A, const ViewTypeP &P,
+  KOKKOS_INLINE_FUNCTION static int modify(MemberType & /*member*/, const ViewTypeA &A, const ViewTypeP &P,
                                            const ViewTypeD &D) {
 
     static constexpr bool runOnHost = run_tacho_on_host_v<typename ViewTypeA::execution_space>;

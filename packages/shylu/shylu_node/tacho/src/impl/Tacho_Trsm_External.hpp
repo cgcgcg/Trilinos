@@ -49,7 +49,7 @@ struct Trsm<ArgSide, ArgUplo, ArgTransA, Algo::External> {
   }
 
   template <typename MemberType, typename DiagType, typename ScalarType, typename ViewTypeA, typename ViewTypeB>
-  KOKKOS_INLINE_FUNCTION static int invoke(MemberType &member, const DiagType diagA, const ScalarType alpha,
+  KOKKOS_INLINE_FUNCTION static int invoke(MemberType & /*member*/, const DiagType diagA, const ScalarType alpha,
                                            const ViewTypeA &A, const ViewTypeB &B) {
 
     static constexpr bool runOnHost = run_tacho_on_host_v<typename ViewTypeA::execution_space>;

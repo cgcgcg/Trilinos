@@ -44,11 +44,11 @@ namespace BaskerNS
   int Basker<Int,Entry,Exe_Space>::t_upper_col_factor
   (
    Int kid,
-   Int team_leader,
+   Int  /*team_leader*/,
    Int lvl,
    Int l,
    Int k, 
-   BASKER_BOOL sep_flg
+   BASKER_BOOL  /*sep_flg*/
   )
   {
     const Entry zero (0.0);
@@ -368,9 +368,9 @@ namespace BaskerNS
   (
    Int kid,
    Int team_leader,
-   Int lvl, 
+   Int  /*lvl*/, 
    Int l,
-   Int k, 
+   Int  /*k*/, 
    Int top,
    Int xnnz
   )
@@ -463,11 +463,11 @@ namespace BaskerNS
   int Basker<Int, Entry, Exe_Space>::t_lower_col_factor
   (
    Int kid,
-   Int team_leader,
+   Int  /*team_leader*/,
    Int lvl,
    Int l, 
    Int k, 
-   Entry &opivot
+   Entry & /*opivot*/
   )
   {
     using STS = Teuchos::ScalarTraits<Entry>;
@@ -983,7 +983,7 @@ namespace BaskerNS
 
   //This has been replace with t_basker_barrier in thread.hpp
   template <class Int, class Entry, class Exe_Space>
-  int Basker<Int,Entry,Exe_Space>::t_col_barrier(Int kid)
+  int Basker<Int,Entry,Exe_Space>::t_col_barrier(Int  /*kid*/)
   {
     return 0;
   }//end t_col_barrier()

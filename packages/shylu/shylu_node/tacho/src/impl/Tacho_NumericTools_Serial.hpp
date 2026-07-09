@@ -478,7 +478,7 @@ public:
   /// main interface
   ///
   inline void factorize(const value_type_array &ax, const bool /* store_transpose */,
-                        const mag_type shift, const mag_type pivot_tol = 0.0,
+                        const mag_type shift, const mag_type  /*pivot_tol*/ = 0.0,
                         const ordinal_type verbose = 0) override {
     {
       const bool test = !std::is_same<exec_memory_space, Kokkos::HostSpace>::value;

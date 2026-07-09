@@ -61,7 +61,7 @@ namespace BaskerNS
   
   template <class Int, class Entry, class Exe_Space>
   BASKER_INLINE
-  int Basker<Int, Entry, Exe_Space>::factor_notoken(Int option)
+  int Basker<Int, Entry, Exe_Space>::factor_notoken(Int  /*option*/)
   {
 
     //printf("factor no token called \n");

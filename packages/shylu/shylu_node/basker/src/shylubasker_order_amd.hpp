@@ -31,11 +31,11 @@ namespace BaskerNS
   BASKER_INLINE
   int my_amesos_csymamd
   (
-   Int n, 
-   Int *Ap,
-   Int *Ai,
-   Int *p, 
-   Int *cmember
+   Int  /*n*/, 
+   Int * /*Ap*/,
+   Int * /*Ai*/,
+   Int * /*p*/, 
+   Int * /*cmember*/
   )
   {
     return -1;
@@ -160,13 +160,13 @@ namespace BaskerNS
   BASKER_INLINE
   int trilinos_colamd
   (
-   Int n_row, 
-   Int n_col,
-   Int Alen,
-   Int *A,
-   Int *p,
-   double *knobs, 
-   Int *stats
+   Int  /*n_row*/, 
+   Int  /*n_col*/,
+   Int  /*Alen*/,
+   Int * /*A*/,
+   Int * /*p*/,
+   double * /*knobs*/, 
+   Int * /*stats*/
   )
   {
     return -1;

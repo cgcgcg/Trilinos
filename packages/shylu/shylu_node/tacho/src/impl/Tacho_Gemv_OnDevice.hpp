@@ -90,7 +90,7 @@ template <typename ArgTrans> struct Gemv<ArgTrans, Algo::OnDevice> {
 #endif
 
   template <typename MemberType, typename ScalarType, typename ViewTypeA, typename ViewTypeB, typename ViewTypeC>
-  inline static int invoke(MemberType &member, const ScalarType alpha, const ViewTypeA &A, const ViewTypeB &B,
+  inline static int invoke(MemberType & /*member*/, const ScalarType alpha, const ViewTypeA &A, const ViewTypeB &B,
                            const ScalarType beta, const ViewTypeC &C) {
     typedef typename ViewTypeA::non_const_value_type value_type;
     typedef typename ViewTypeB::non_const_value_type value_type_b;

@@ -52,7 +52,7 @@ template <typename ArgUplo, typename ArgTransA> struct Trsv<ArgUplo, ArgTransA, 
   }
 
   template <typename MemberType, typename DiagType, typename ViewTypeA, typename ViewTypeB>
-  KOKKOS_INLINE_FUNCTION static int invoke(MemberType &member, const DiagType diagA, const ViewTypeA &A,
+  KOKKOS_INLINE_FUNCTION static int invoke(MemberType & /*member*/, const DiagType diagA, const ViewTypeA &A,
                                            const ViewTypeB &B) {
 
     static constexpr bool runOnHost = run_tacho_on_host_v<typename ViewTypeA::execution_space>;

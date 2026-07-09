@@ -152,10 +152,10 @@ namespace BaskerNS
     BASKER_INLINE
     void basic_convert
     (
-     Int _m, 
-     Int *_perm, 
+     Int  /*_m*/, 
+     Int * /*_perm*/, 
      Int _nblks,
-     Int _parts, 
+     Int  /*_parts*/, 
      Int *_row_tabs, 
      Int *_col_tabs,
      Int *_treetab

@@ -25,11 +25,11 @@ namespace BaskerNS
   struct Basker_ScalarTraits
   {
     typedef T magnitudeType;
-    static inline double reciprocal(double c ){return 0;}
-    static inline double divide(double a, double b){return 0;}
-    static inline magnitudeType approxABS(double a){return 0;}
-    static inline magnitudeType abs(double a){return 0;}
-    static inline bool gt (double a, double b){return 0;}  
+    static inline double reciprocal(double  /*c*/ ){return 0;}
+    static inline double divide(double  /*a*/, double  /*b*/){return 0;}
+    static inline magnitudeType approxABS(double  /*a*/){return 0;}
+    static inline magnitudeType abs(double  /*a*/){return 0;}
+    static inline bool gt (double  /*a*/, double  /*b*/){return 0;}  
   };
   
   //double

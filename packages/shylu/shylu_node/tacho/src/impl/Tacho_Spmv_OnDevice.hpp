@@ -521,9 +521,9 @@ public:
 
   template <typename size_type_array_host, typename ordinal_type_array_host, typename supernode_type_array_host>
   int Release(const bool release_all, const bool verbose,
-              const size_type_array_host &h_level_ptr,
-              const ordinal_type_array_host &h_level_sids,
-              const supernode_type_array_host &h_supernodes) {
+              const size_type_array_host & /*h_level_ptr*/,
+              const ordinal_type_array_host & /*h_level_sids*/,
+              const supernode_type_array_host & /*h_supernodes*/) {
     int r_val(0);
     if (verbose) {
       printf("LevelSetTools:releaseCRS\n");
@@ -582,12 +582,12 @@ public:
             const size_type_array_host &h_level_ptr,
             const ordinal_type_array &level_sids,
             const ordinal_type_array_host &h_level_sids,
-            const ordinal_type_array_host &h_solve_mode,
+            const ordinal_type_array_host & /*h_solve_mode*/,
             const supernode_info_type &supernode_info,
             const supernode_type_array_host &h_supernodes,
             const ordinal_type_array &solve_mode,
             ordinal_type_array &piv,
-	    const stream_type &stream_0,
+	    const stream_type & /*stream_0*/,
             multi_vectors_type &_w_vec) {
     using range_type = Kokkos::pair<ordinal_type, ordinal_type>;
     int r_val(0);
@@ -789,13 +789,13 @@ public:
            const size_type_array_host &h_level_ptr,
            const ordinal_type_array &level_sids,
            const ordinal_type_array_host &h_level_sids,
-           const ordinal_type_array_host &h_solve_mode,
+           const ordinal_type_array_host & /*h_solve_mode*/,
            const supernode_info_type &supernode_info,
            const supernode_type_array_host &h_supernodes,
            const ordinal_type_array &solve_mode,
            ordinal_type_array &piv,
-	   const stream_type &stream_0,
-           multi_vectors_type &_w_vec) {
+	   const stream_type & /*stream_0*/,
+           multi_vectors_type & /*_w_vec*/) {
     using range_type = Kokkos::pair<ordinal_type, ordinal_type>;
     const bool lu = (method == 3);
     const bool ldl = (method == 2);

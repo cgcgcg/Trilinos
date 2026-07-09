@@ -49,7 +49,7 @@ template <> struct ApplyPivots<PivotMode::Flame, Side::Left, Direct::Forward, Al
   }
 
   template <typename MemberType, typename ViewTypeP, typename ViewTypeA>
-  KOKKOS_INLINE_FUNCTION static int invoke(MemberType &member, const ViewTypeP &P, const ViewTypeA &A) {
+  KOKKOS_INLINE_FUNCTION static int invoke(MemberType & /*member*/, const ViewTypeP &P, const ViewTypeA &A) {
     KOKKOS_IF_ON_DEVICE((
     typedef typename ViewTypeA::non_const_value_type value_type;
 
@@ -111,7 +111,7 @@ template <> struct ApplyPivots<PivotMode::Flame, Side::Left, Direct::Backward, A
   }
 
   template <typename MemberType, typename ViewTypeP, typename ViewTypeA>
-  KOKKOS_INLINE_FUNCTION static int invoke(MemberType &member, const ViewTypeP &P, const ViewTypeA &A) {
+  KOKKOS_INLINE_FUNCTION static int invoke(MemberType & /*member*/, const ViewTypeP &P, const ViewTypeA &A) {
     KOKKOS_IF_ON_DEVICE((
     typedef typename ViewTypeA::non_const_value_type value_type;
 

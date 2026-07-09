@@ -19,7 +19,7 @@ namespace Tacho {
 
 template <> struct Copy<Algo::Internal> {
   template <typename MemberType, typename ViewTypeA, typename ViewTypeB>
-  KOKKOS_INLINE_FUNCTION static int invoke(MemberType &member, const ViewTypeA &A, const ViewTypeB &B) {
+  KOKKOS_INLINE_FUNCTION static int invoke(MemberType & /*member*/, const ViewTypeA &A, const ViewTypeB &B) {
     typedef typename ViewTypeA::non_const_value_type value_type;
     typedef typename ViewTypeB::non_const_value_type value_type_b;
     static_assert(std::is_same<value_type, value_type_b>::value, "A and B does not have the value_type.");
@@ -55,7 +55,7 @@ template <> struct Copy<Algo::Internal> {
   }
 
   template <typename MemberType, typename UploType, typename DiagType, typename ViewTypeA, typename ViewTypeB>
-  KOKKOS_INLINE_FUNCTION static int invoke(MemberType &member, const ViewTypeA &A, const UploType uploB,
+  KOKKOS_INLINE_FUNCTION static int invoke(MemberType & /*member*/, const ViewTypeA &A, const UploType uploB,
                                            const DiagType diagB, const ViewTypeB &B) {
     using value_type = typename ViewTypeA::non_const_value_type;
     using value_type_b = typename ViewTypeB::non_const_value_type;

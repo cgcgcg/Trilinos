@@ -288,7 +288,7 @@ static int basker_sort_matrix_col(const void *arg1, const void *arg2)
 
   template <class Int, class Entry, class Exe_Space>
   BASKER_INLINE
-  int Basker<Int, Entry,Exe_Space>::partition(int option)
+  int Basker<Int, Entry,Exe_Space>::partition(int  /*option*/)
   {
     //Option does nothing right now
     if(Options.btf == BASKER_FALSE)
@@ -1052,7 +1052,7 @@ static int basker_sort_matrix_col(const void *arg1, const void *arg2)
    INT_1DARRAY   p, 
    Int n,  //n = size(vec) //n > m 
    Int m,  //m = size(p) 
-   Int start
+   Int  /*start*/
   )
   {
 

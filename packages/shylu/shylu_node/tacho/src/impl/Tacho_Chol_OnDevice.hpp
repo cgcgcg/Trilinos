@@ -75,7 +75,7 @@ template <typename ArgUplo> struct Chol<ArgUplo, Algo::OnDevice> {
 #endif
 
   template <typename MemberType, typename ViewTypeA, typename ViewTypeW>
-  inline static int invoke(MemberType &member, const ViewTypeA &A, const ViewTypeW &W) {
+  inline static int invoke(MemberType & /*member*/, const ViewTypeA &A, const ViewTypeW & /*W*/) {
     typedef typename ViewTypeA::non_const_value_type value_type;
     typedef typename ViewTypeW::non_const_value_type value_type_w;
 

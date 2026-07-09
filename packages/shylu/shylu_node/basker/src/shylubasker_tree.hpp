@@ -14,7 +14,6 @@
 //#include "shylubasker_decl.hpp"
 #include "shylubasker_types.hpp"
 #include "shylubasker_util.hpp"
-#include "shylubasker_types.hpp"
 #include "shylubasker_structs.hpp"
 
 //C++ includes
@@ -421,7 +420,7 @@ namespace BaskerNS
   BASKER_INLINE
   int Basker<Int,Entry, Exe_Space>::init_tree_thread
   (
-   Int *perm, Int nblks, 
+   Int * /*perm*/, Int nblks, 
    Int parts,Int *row_tabs, Int *col_tabs, Int *treetab
   )
   {
@@ -712,13 +711,13 @@ namespace BaskerNS
   BASKER_INLINE
   int Basker<Int,Entry,Exe_Space>::init_tree_lvl
   (
-   Int *perm, 
-   Int nblks, 
-   Int parts,
-   Int *row_tabs, 
-   Int *col_tabs, 
-   Int *treetab, 
-   Int lvls
+   Int * /*perm*/, 
+   Int  /*nblks*/, 
+   Int  /*parts*/,
+   Int * /*row_tabs*/, 
+   Int * /*col_tabs*/, 
+   Int * /*treetab*/, 
+   Int  /*lvls*/
   )
   {
     return -1;
@@ -745,7 +744,7 @@ namespace BaskerNS
   //function to update the local pinv into paren -- reformat
   template <class Int, class Entry, class Exe_Space>
   BASKER_INLINE
-  int Basker<Int, Entry, Exe_Space>::update_lpinv_tree(Int start, Int end)
+  int Basker<Int, Entry, Exe_Space>::update_lpinv_tree(Int  /*start*/, Int  /*end*/)
   {
     return -1;
   }//end update_lpinv_tree

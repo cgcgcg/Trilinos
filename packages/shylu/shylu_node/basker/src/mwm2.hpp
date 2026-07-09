@@ -529,12 +529,12 @@ namespace mwm_order
   int mwm_bn_init
   (
    Int n,
-   Int nnz,
+   Int  /*nnz*/,
    Int *col_ptr,
    Int *row_idx,
    Entry *val,
    Int *pr,
-   Int *L,
+   Int * /*L*/,
    Mag *d,
    Int *iperm,
    Int *jperm,
@@ -703,7 +703,7 @@ namespace mwm_order
   int mwm_bn
   (
    Int n,
-   Int nnz,
+   Int  /*nnz*/,
    Int *col_ptr,
    Int *row_idx,
    Entry  *val,

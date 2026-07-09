@@ -65,7 +65,7 @@ struct Trsm<ArgSide, ArgUplo, ArgTransA, Algo::OnDevice> {
 #endif
 
   template <typename MemberType, typename DiagType, typename ScalarType, typename ViewTypeA, typename ViewTypeB>
-  inline static int invoke(MemberType &member, const DiagType diagA, const ScalarType alpha, const ViewTypeA &A,
+  inline static int invoke(MemberType & /*member*/, const DiagType diagA, const ScalarType alpha, const ViewTypeA &A,
                            const ViewTypeB &B) {
     typedef typename ViewTypeA::non_const_value_type value_type;
     typedef typename ViewTypeB::non_const_value_type value_type_b;

@@ -47,7 +47,7 @@ template <typename ArgUplo, typename ArgTrans> struct Herk<ArgUplo, ArgTrans, Al
   }
 
   template <typename MemberType, typename ScalarType, typename ViewTypeA, typename ViewTypeC>
-  KOKKOS_INLINE_FUNCTION static int invoke(MemberType &member, const ScalarType alpha, const ViewTypeA &A,
+  KOKKOS_INLINE_FUNCTION static int invoke(MemberType & /*member*/, const ScalarType alpha, const ViewTypeA &A,
                                            const ScalarType beta, const ViewTypeC &C) {
 
     static constexpr bool runOnHost = run_tacho_on_host_v<typename ViewTypeA::execution_space>;

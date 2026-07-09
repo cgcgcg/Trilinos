@@ -64,7 +64,7 @@ template <typename T> struct BlasTeam {
     }
 
     template <typename MemberType>
-    static KOKKOS_INLINE_FUNCTION void set_upper(MemberType &member, int m, int n, int offset, const T alpha,
+    static KOKKOS_INLINE_FUNCTION void set_upper(MemberType &member, int  /*m*/, int n, int offset, const T alpha,
                                                  /* */ T *KOKKOS_RESTRICT a, int as0, int as1) {
       Kokkos::parallel_for(Kokkos::TeamThreadRange(member, n), [&](const int &j) {
         Kokkos::parallel_for(Kokkos::ThreadVectorRange(member, j + 1 - offset),
@@ -73,7 +73,7 @@ template <typename T> struct BlasTeam {
     }
 
     template <typename MemberType>
-    static KOKKOS_INLINE_FUNCTION void scale_upper(MemberType &member, int m, int n, int offset, const T alpha,
+    static KOKKOS_INLINE_FUNCTION void scale_upper(MemberType &member, int  /*m*/, int n, int offset, const T alpha,
                                                    /* */ T *KOKKOS_RESTRICT a, int as0, int as1) {
       Kokkos::parallel_for(Kokkos::TeamThreadRange(member, n), [&](const int &j) {
         Kokkos::parallel_for(Kokkos::ThreadVectorRange(member, j + 1 - offset),
@@ -82,7 +82,7 @@ template <typename T> struct BlasTeam {
     }
 
     template <typename MemberType>
-    static KOKKOS_INLINE_FUNCTION void set_lower(MemberType &member, int m, int n, int offset, const T alpha,
+    static KOKKOS_INLINE_FUNCTION void set_lower(MemberType &member, int  /*m*/, int n, int offset, const T alpha,
                                                  /* */ T *KOKKOS_RESTRICT a, int as0, int as1) {
       Kokkos::parallel_for(Kokkos::TeamThreadRange(member, n), [&](const int &j) {
         const int jj = j + offset;
@@ -95,7 +95,7 @@ template <typename T> struct BlasTeam {
     }
 
     template <typename MemberType>
-    static KOKKOS_INLINE_FUNCTION void scale_lower(MemberType &member, int m, int n, int offset, const T alpha,
+    static KOKKOS_INLINE_FUNCTION void scale_lower(MemberType &member, int  /*m*/, int n, int offset, const T alpha,
                                                    /* */ T *KOKKOS_RESTRICT a, int as0, int as1) {
       Kokkos::parallel_for(Kokkos::TeamThreadRange(member, n), [&](const int &j) {
         const int jj = j + offset;

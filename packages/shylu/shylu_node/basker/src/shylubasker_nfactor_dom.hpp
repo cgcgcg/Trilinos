@@ -991,7 +991,7 @@ namespace BaskerNS
   void Basker<Int,Entry,Exe_Space>::t_local_reach_short
   (
    const Int kid, 
-   const Int lvl,
+   const Int  /*lvl*/,
    const Int l,
    const Int j,
    Int &top
@@ -1022,7 +1022,7 @@ namespace BaskerNS
   (
    const Int kid,
    const Int lvl, 
-   const Int l, 
+   const Int  /*l*/, 
    const Int k, 
    const Int pivotrow 
    )
@@ -1278,7 +1278,7 @@ namespace BaskerNS
    Int kid, 
    Int lvl,
    Int l,
-   Int k, Int top,
+   Int  /*k*/, Int top,
    Int xnnz)
   {
     const Int      b = S(lvl)(kid);
@@ -1333,7 +1333,7 @@ namespace BaskerNS
   template <class Int, class Entry, class Exe_Space>
   BASKER_INLINE
   int Basker<Int,Entry,Exe_Space>::t_dense_move_offdiag_L
-  (Int kid,
+  (Int  /*kid*/,
    Int blkcol, Int blkrow,
    Int X_col, Int X_row,
    Int k, Entry pivot)
@@ -1508,10 +1508,10 @@ namespace BaskerNS
   template <class Int, class Entry, class Exe_Space>
   int Basker<Int,Entry,Exe_Space>::t_dense_back_solve_offdiag
   (
-   Int kid, 
+   Int  /*kid*/, 
    Int blkcol, Int blkrow,
    Int X_col,  Int X_row,
-   Int k,      Int &view_offset,
+   Int k,      Int & /*view_offset*/,
    ENTRY_1DARRAY x, 
    INT_1DARRAY   x_idx,
    Int x_size, Int x_offset,
@@ -1650,7 +1650,7 @@ namespace BaskerNS
   template <class Int, class Entry, class Exe_Space>
   int Basker<Int,Entry,Exe_Space>::t_back_solve_offdiag
   (
-   Int kid, 
+   Int  /*kid*/, 
    Int blkcol, Int blkrow,
    Int X_col,  Int X_row,
    Int col,

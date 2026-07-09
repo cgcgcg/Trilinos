@@ -48,7 +48,7 @@ template <> struct LU<Algo::Serial> {
   }
 
   template <typename MemberType, typename ViewTypeA, typename ViewTypeP>
-  inline static int invoke(MemberType &member, const ViewTypeA &A, const ViewTypeP &P) {
+  inline static int invoke(MemberType & /*member*/, const ViewTypeA &A, const ViewTypeP &P) {
 
     static constexpr bool runOnHost = run_tacho_on_host_v<typename ViewTypeA::execution_space>;
 
@@ -106,7 +106,7 @@ template <> struct LU<Algo::Serial> {
   }
 
   template <typename MemberType, typename ViewTypeP>
-  inline static int modify(MemberType &member, ordinal_type m, const ViewTypeP &P) {
+  inline static int modify(MemberType & /*member*/, ordinal_type m, const ViewTypeP &P) {
 
     static constexpr bool runOnHost = run_tacho_on_host_v<typename ViewTypeP::execution_space>;
 

@@ -29,13 +29,13 @@ namespace BaskerNS
     inline
     int strong_component
     (
-     Int           &n,
-     Int           *col_ptr,
-     Int           *row_idx,
-     Int           &nblks,
-     Int           *perm,
-     Int           *perm_in,
-     Int           *CC
+     Int           & /*n*/,
+     Int           * /*col_ptr*/,
+     Int           * /*row_idx*/,
+     Int           & /*nblks*/,
+     Int           * /*perm*/,
+     Int           * /*perm_in*/,
+     Int           * /*CC*/
      )
     {
       return -1;
@@ -45,10 +45,10 @@ namespace BaskerNS
     inline
     int amd_order
     (
-     Int        n,
-     Int       *col_ptr,
-     Int       *row_ptr,
-     Int       *p
+     Int         /*n*/,
+     Int       * /*col_ptr*/,
+     Int       * /*row_ptr*/,
+     Int       * /*p*/
      )
     {
       return -1;
@@ -58,12 +58,12 @@ namespace BaskerNS
     inline
     int amd_order
     (
-     Int        n,
-     Int       *col_ptr,
-     Int       *row_ptr,
-     Int       *p,
-     double    &l_nnz,
-     double    &lu_work
+     Int         /*n*/,
+     Int       * /*col_ptr*/,
+     Int       * /*row_ptr*/,
+     Int       * /*p*/,
+     double    & /*l_nnz*/,
+     double    & /*lu_work*/
      )
     {
       return -1;

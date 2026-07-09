@@ -357,7 +357,7 @@ class FastILUPrec
   template <bool Block, typename View1, typename View2, typename F = IdentityFunctor<typename View1::non_const_value_type> >
   KOKKOS_INLINE_FUNCTION
   static typename std::enable_if<!Block, void>::type
-  assign_block(View1& vals_dest, const View2& vals_src, const Ordinal dest, const Ordinal src, const Ordinal blockCrsSize, const F& lam = F())
+  assign_block(View1& vals_dest, const View2& vals_src, const Ordinal dest, const Ordinal src, const Ordinal  /*blockCrsSize*/, const F& lam = F())
   {
     assert(blockCrsSize == 1);
     vals_dest[dest] = lam(vals_src[src]);
@@ -377,7 +377,7 @@ class FastILUPrec
   template <bool Block, typename View1>
   KOKKOS_INLINE_FUNCTION
   static typename std::enable_if<!Block, void>::type
-  assign_block(View1& vals_dest, const Ordinal dest, const Scalar value, const Ordinal blockCrsSize)
+  assign_block(View1& vals_dest, const Ordinal dest, const Scalar value, const Ordinal  /*blockCrsSize*/)
   {
     assert(blockCrsSize == 1);
     vals_dest[dest] = value;
@@ -404,7 +404,7 @@ class FastILUPrec
   template <bool Block, typename View1, typename View2, typename LO, typename F = IdentityFunctor<typename View1::non_const_value_type> >
   KOKKOS_INLINE_FUNCTION
   static typename std::enable_if<!Block, void>::type
-  assign_block_cond(View1& vals_dest, const View2& vals_src, const Ordinal dest, const Ordinal src, const LO& ordinal_lam, const Ordinal blockCrsSize, const F& lam = F())
+  assign_block_cond(View1& vals_dest, const View2& vals_src, const Ordinal dest, const Ordinal src, const LO&  /*ordinal_lam*/, const Ordinal  /*blockCrsSize*/, const F& lam = F())
   {
     vals_dest(dest) = lam(vals_src(src));
   }
@@ -432,7 +432,7 @@ class FastILUPrec
   template <bool Block, typename View1, typename View2, typename LO>
   KOKKOS_INLINE_FUNCTION
   static typename std::enable_if<!Block, void>::type
-  assign_block_cond_val(View1& vals_dest, const View2& vals_src, const Ordinal dest, const Ordinal src, const LO& value_lam, const Ordinal blockCrsSize)
+  assign_block_cond_val(View1& vals_dest, const View2& vals_src, const Ordinal dest, const Ordinal src, const LO&  /*value_lam*/, const Ordinal  /*blockCrsSize*/)
   {
     vals_dest[dest] = vals_src[src];
   }
@@ -458,7 +458,7 @@ class FastILUPrec
   template <bool Block, typename View1, typename LO>
   KOKKOS_INLINE_FUNCTION
   static typename std::enable_if<!Block, void>::type
-  assign_block_cond_val(View1& vals_dest, const Ordinal dest, const Scalar value, const LO& value_lam, const Ordinal blockCrsSize)
+  assign_block_cond_val(View1& vals_dest, const Ordinal dest, const Scalar value, const LO&  /*value_lam*/, const Ordinal  /*blockCrsSize*/)
   {
     vals_dest[dest] = value;
   }
@@ -485,7 +485,7 @@ class FastILUPrec
   template <bool Block, typename View1, typename View2, typename LO>
   KOKKOS_INLINE_FUNCTION
   static typename std::enable_if<!Block, void>::type
-  assign_block_cond_trans(View1& vals_dest, const View2& vals_src, const Ordinal dest, const Ordinal src, const LO& ordinal_lam, const Ordinal blockCrsSize)
+  assign_block_cond_trans(View1& vals_dest, const View2& vals_src, const Ordinal dest, const Ordinal src, const LO&  /*ordinal_lam*/, const Ordinal  /*blockCrsSize*/)
   {
     vals_dest(dest) = vals_src(src);
   }
@@ -510,7 +510,7 @@ class FastILUPrec
   template <bool Block, typename View1, typename View2>
   KOKKOS_INLINE_FUNCTION
   static typename std::enable_if<!Block, void>::type
-  assign_block_trans(View1& vals_dest, const View2& vals_src, const Ordinal dest, const Ordinal src, const Ordinal blockCrsSize)
+  assign_block_trans(View1& vals_dest, const View2& vals_src, const Ordinal dest, const Ordinal src, const Ordinal  /*blockCrsSize*/)
   {
     vals_dest(dest) = vals_src(src);
   }
@@ -529,7 +529,7 @@ class FastILUPrec
   template <bool Block, typename View1, typename View2, typename F = IdentityFunctor<typename View1::non_const_value_type> >
   KOKKOS_INLINE_FUNCTION
   static typename std::enable_if<!Block, void>::type
-  assign_diag_from_block(View1& diag_dest, const View2& vals_src, const Ordinal dest, const Ordinal src, const Ordinal blockCrsSize, const F& lam = F())
+  assign_diag_from_block(View1& diag_dest, const View2& vals_src, const Ordinal dest, const Ordinal src, const Ordinal  /*blockCrsSize*/, const F& lam = F())
   {
     diag_dest(dest) = lam(vals_src(src));
   }
@@ -548,7 +548,7 @@ class FastILUPrec
   template <bool Block, typename View1>
   KOKKOS_INLINE_FUNCTION
   static typename std::enable_if<!Block, void>::type
-  assign_block_diag_only(View1& vals_dest, const Ordinal dest, typename View1::const_value_type value, const Ordinal blockCrsSize)
+  assign_block_diag_only(View1& vals_dest, const Ordinal dest, typename View1::const_value_type value, const Ordinal  /*blockCrsSize*/)
   {
     vals_dest[dest] = value;
   }
@@ -566,7 +566,7 @@ class FastILUPrec
   template <bool Block, typename View1, typename View2, typename F = IdentityFunctor<typename View1::non_const_value_type> >
   KOKKOS_INLINE_FUNCTION
   static typename std::enable_if<!Block, void>::type
-  assign_diag_from_diag(View1& diag_dest, const View2& diag_src, const Ordinal dest, const Ordinal src, const Ordinal blockCrsSize, const F& lam = F())
+  assign_diag_from_diag(View1& diag_dest, const View2& diag_src, const Ordinal dest, const Ordinal src, const Ordinal  /*blockCrsSize*/, const F& lam = F())
   {
     diag_dest(dest) = lam(diag_src(src));
   }
@@ -591,7 +591,7 @@ class FastILUPrec
   template <bool Block, typename View1, typename View2, typename View3, typename L>
   KOKKOS_INLINE_FUNCTION
   static typename std::enable_if<!Block, void>::type
-  assign_block_from_2diags(View1& vals, View2& diag_src1, View3& diag_src2, const Ordinal dest, const Ordinal src1, const Ordinal src2, const Ordinal blockCrsSize, const L& lam)
+  assign_block_from_2diags(View1& vals, View2& diag_src1, View3& diag_src2, const Ordinal dest, const Ordinal src1, const Ordinal src2, const Ordinal  /*blockCrsSize*/, const L& lam)
   {
     vals(dest) = lam(vals(dest), diag_src1(src1), diag_src2(src2));
   }
@@ -1901,7 +1901,7 @@ class FastILUPrec
         }
 
         template <typename CRS>
-        void sptrsv_impl(ScalarArray &x, ScalarArray &y, CRS& crsmatL, CRS& crsmatU)
+        void sptrsv_impl(ScalarArray & /*x*/, ScalarArray &y, CRS& crsmatL, CRS& crsmatU)
         {
             const Scalar one(1.0);
             const Scalar minus_one(-1.0);
@@ -2442,7 +2442,7 @@ class FastILUFunctor
                 ordinal_array_type Ap, ordinal_array_type Ai, ordinal_array_type Aj, scalar_array_type Ax,
                 ordinal_array_type Lp, ordinal_array_type Li, scalar_array_type Lx,
                 ordinal_array_type Up, ordinal_array_type Ui, scalar_array_type Ux,
-                scalar_array_type diag, Scalar omega, Ordinal blockCrsSize, Ordinal level)
+                scalar_array_type diag, Scalar omega, Ordinal blockCrsSize, Ordinal  /*level*/)
             :
                 nnz(nNZ), blk_size(bs), _Ap(Ap), _Ai(Ai), _Aj(Aj),  _Lp(Lp), _Li(Li),_Up(Up),
                 _Ui(Ui), _Ax(Ax), _Lx(Lx), _Ux(Ux), _diag(diag), _omega(omega), _blockCrsSize(blockCrsSize)
@@ -2728,7 +2728,7 @@ class JacobiIterFunctor
         typedef Kokkos::View<Ordinal *, ExecSpace> ordinal_array_type;
         typedef Kokkos::View<Scalar *, ExecSpace> scalar_array_type;
 
-        JacobiIterFunctor (Ordinal n, ordinal_array_type aI, ordinal_array_type aJ,
+        JacobiIterFunctor (Ordinal  /*n*/, ordinal_array_type aI, ordinal_array_type aJ,
                 scalar_array_type aVal, scalar_array_type b, scalar_array_type xNew,
                 scalar_array_type xOld, scalar_array_type diag)
             :

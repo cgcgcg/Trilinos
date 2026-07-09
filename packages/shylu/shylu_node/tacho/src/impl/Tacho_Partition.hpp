@@ -189,7 +189,7 @@ KOKKOS_INLINE_FUNCTION void Part_1x2_to_1x3(const MatView AL, const MatView AR, 
 }
 
 template <typename MatView>
-KOKKOS_INLINE_FUNCTION void Merge_2x2(const MatView ATL, const MatView ATR, const MatView ABL, const MatView ABR,
+KOKKOS_INLINE_FUNCTION void Merge_2x2(const MatView ATL, const MatView  /*ATR*/, const MatView  /*ABL*/, const MatView ABR,
                                       MatView &A) {
   A.set_view(ATL, ATL.offset_0(), ATL.extent(0) + ABR.extent(0), ATL.offset_1(), ATL.extent(1) + ABR.extent(1));
 }

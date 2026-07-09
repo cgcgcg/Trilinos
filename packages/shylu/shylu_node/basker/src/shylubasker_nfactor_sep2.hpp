@@ -529,11 +529,11 @@ namespace BaskerNS
   void Basker<Int,Entry, Exe_Space>::t_dense_blk_col_copy_atomic2
   (
    const Int kid,
-   const Int NOT_USED,
-   const Int lvl,
+   const Int  /*NOT_USED*/,
+   const Int  /*lvl*/,
    const Int sl,
    const Int l,
-   const Int k,
+   const Int  /*k*/,
    const BASKER_BOOL lower
    )
   {
@@ -650,7 +650,7 @@ namespace BaskerNS
   void Basker<Int,Entry,Exe_Space>::t_dense_copy_update_matrix2
   (
    const Int kid,
-   const Int team_leader,
+   const Int  /*team_leader*/,
    const Int lvl,
    const Int l, 
    const Int k

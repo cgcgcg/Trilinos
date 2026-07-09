@@ -261,7 +261,7 @@ namespace BaskerNS
   BASKER_INLINE
   void BaskerMatrix<Int, Entry, Exe_Space>::init_matrix
   (
-   std::string _label,
+   std::string  /*_label*/,
    Int _sr, Int _m,
    Int _sc, Int _n,
    Int _nnz

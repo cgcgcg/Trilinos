@@ -45,7 +45,7 @@ template <> struct ApplyPermutation<Side::Left, Trans::NoTranspose, Algo::Intern
   }
 
   template <typename MemberType, typename ViewTypeA, typename ViewTypeP, typename ViewTypeB>
-  KOKKOS_INLINE_FUNCTION static int invoke(const MemberType &member, const ViewTypeA &A, const ViewTypeP &P,
+  KOKKOS_INLINE_FUNCTION static int invoke(const MemberType & /*member*/, const ViewTypeA &A, const ViewTypeP &P,
                                            const ViewTypeB &B) {
     KOKKOS_IF_ON_DEVICE((
     if (A.extent(0) == P.extent(0)) {

@@ -946,7 +946,7 @@ namespace BaskerNS
    BASKER_MATRIX &L,
    Int root_j, 
    Int &top,
-   Int c, Int k
+   Int  /*c*/, Int  /*k*/
   )
   {
     //printf("=======LOCAL REACH BTF CALLED =====\n");
@@ -1072,11 +1072,11 @@ namespace BaskerNS
   int Basker<Int, Entry,Exe_Space>::t_back_solve
   (
    Int kid,
-   Int c,
+   Int  /*c*/,
    BASKER_MATRIX &L,
-   Int lvl,
-   Int l,
-   Int k, 
+   Int  /*lvl*/,
+   Int  /*l*/,
+   Int  /*k*/, 
    Int top,
    Int xnnz
   )
@@ -1128,7 +1128,7 @@ namespace BaskerNS
   inline
   void Basker<Int, Entry, Exe_Space>::t_prune_btf
   (
-   const Int kid,
+   const Int  /*kid*/,
    const BASKER_MATRIX &L,
    const BASKER_MATRIX &U,
    const Int k,

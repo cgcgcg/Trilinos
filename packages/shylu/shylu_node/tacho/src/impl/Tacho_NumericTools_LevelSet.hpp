@@ -52,7 +52,6 @@
 #include "Tacho_Trsm_OnDevice.hpp"
 #include "Tacho_Trsv_OnDevice.hpp"
 
-#include "Tacho_SupernodeInfo.hpp"
 #include "Tacho_TeamFunctor_ExtractCRS.hpp"
 
 #include "Tacho_TeamFunctor_FactorizeChol.hpp"
@@ -2538,7 +2537,7 @@ public:
     return num_device_calls;
   }
 
-  inline int solveNoPivotLDLUpperOnDevice(const ordinal_type lvl, const ordinal_type nlvls,
+  inline int solveNoPivotLDLUpperOnDevice(const ordinal_type lvl, const ordinal_type  /*nlvls*/,
                                           const ordinal_type pbeg, const ordinal_type pend,
                                           const size_type_array_host &h_buf_solve_ptr, const value_type_matrix &t) {
     if (variant == 0)
@@ -2716,7 +2715,7 @@ public:
     return num_device_calls;
   }
 
-  inline int solveCholeskyLowerOnDevice(const ordinal_type lvl, const ordinal_type nlvls,
+  inline int solveCholeskyLowerOnDevice(const ordinal_type lvl, const ordinal_type  /*nlvls*/,
                                         const ordinal_type pbeg, const ordinal_type pend,
                                         const size_type_array_host &h_buf_solve_ptr, const value_type_matrix &t) {
     if (variant == 0)
@@ -2896,7 +2895,7 @@ public:
     return num_device_calls;
   }
 
-  inline int solveCholeskyUpperOnDevice(const ordinal_type lvl, const ordinal_type nlvls,
+  inline int solveCholeskyUpperOnDevice(const ordinal_type lvl, const ordinal_type  /*nlvls*/,
                                         const ordinal_type pbeg, const ordinal_type pend,
                                         const size_type_array_host &h_buf_solve_ptr, const value_type_matrix &t) {
     if (variant == 0)
@@ -3082,7 +3081,7 @@ public:
     }
   }
 
-  inline void solveLDL_LowerOnDevice(const ordinal_type lvl, const ordinal_type nlvls,
+  inline void solveLDL_LowerOnDevice(const ordinal_type lvl, const ordinal_type  /*nlvls*/,
                                      const ordinal_type pbeg, const ordinal_type pend,
                                      const size_type_array_host &h_buf_solve_ptr, const value_type_matrix &t) {
     if (variant == 0)
@@ -3280,7 +3279,7 @@ public:
   }
 
   inline void solveLDL_DiagOnDevice(const ordinal_type pbeg, const ordinal_type pend,
-                                    const size_type_array_host &h_buf_solve_ptr, const value_type_matrix &t) {
+                                    const size_type_array_host & /*h_buf_solve_ptr*/, const value_type_matrix &t) {
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
     ordinal_type q(0);
 #endif
@@ -3312,7 +3311,7 @@ public:
     }
   }
 
-  inline void solveLDL_UpperOnDevice(const ordinal_type lvl, const ordinal_type nlvls,
+  inline void solveLDL_UpperOnDevice(const ordinal_type lvl, const ordinal_type  /*nlvls*/,
                                      const ordinal_type pbeg, const ordinal_type pend,
                                      const size_type_array_host &h_buf_solve_ptr, const value_type_matrix &t) {
     if (variant == 0) {
@@ -3504,7 +3503,7 @@ public:
     return num_device_calls;
   }
 
-  inline int solveLU_LowerOnDevice(const ordinal_type lvl, const ordinal_type nlvls,
+  inline int solveLU_LowerOnDevice(const ordinal_type lvl, const ordinal_type  /*nlvls*/,
                                    const ordinal_type pbeg, const ordinal_type pend,
                                    const size_type_array_host &h_buf_solve_ptr, const value_type_matrix &t) {
     if (variant == 0)
@@ -3670,7 +3669,7 @@ public:
     return num_device_calls;
   }
 
-  inline int solveLU_UpperOnDevice(const ordinal_type lvl, const ordinal_type nlvls,
+  inline int solveLU_UpperOnDevice(const ordinal_type lvl, const ordinal_type  /*nlvls*/,
                                    const ordinal_type pbeg, const ordinal_type pend,
                                    const size_type_array_host &h_buf_solve_ptr, const value_type_matrix &t) {
     if (variant == 0)

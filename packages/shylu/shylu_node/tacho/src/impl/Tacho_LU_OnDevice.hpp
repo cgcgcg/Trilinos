@@ -71,7 +71,7 @@ template <> struct LU<Algo::OnDevice> {
 #endif
 
   template <typename MemberType, typename ViewTypeA, typename ViewTypeP, typename ViewTypeW>
-  inline static int invoke(MemberType &member, const ViewTypeA &A, const ViewTypeP &P, const ViewTypeW &W) {
+  inline static int invoke(MemberType & /*member*/, const ViewTypeA &A, const ViewTypeP &P, const ViewTypeW & /*W*/) {
     typedef typename ViewTypeA::non_const_value_type value_type;
     typedef typename ViewTypeW::non_const_value_type value_type_w;
 
@@ -154,7 +154,7 @@ template <> struct LU<Algo::OnDevice> {
 #endif
 
   template <typename MemberType, typename ViewTypeP>
-  inline static int modify(MemberType &member, const ordinal_type m, const ViewTypeP &P) {
+  inline static int modify(MemberType & /*member*/, const ordinal_type m, const ViewTypeP &P) {
     typedef typename ViewTypeP::memory_space memory_space;
 
     static_assert(ViewTypeP::rank == 1, "P is not rank 1 view.");

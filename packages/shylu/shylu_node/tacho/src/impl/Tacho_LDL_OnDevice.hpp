@@ -73,7 +73,7 @@ template <> struct LDL<Uplo::Lower, Algo::OnDevice> {
 #endif
 
   template <typename MemberType, typename ViewTypeA, typename ViewTypeP, typename ViewTypeW>
-  inline static int invoke(MemberType &member, const ViewTypeA &A, const ViewTypeP &P, const ViewTypeW &W) {
+  inline static int invoke(MemberType & /*member*/, const ViewTypeA &A, const ViewTypeP &P, const ViewTypeW &W) {
     typedef typename ViewTypeA::non_const_value_type value_type;
     typedef typename ViewTypeW::non_const_value_type value_type_w;
 
@@ -222,7 +222,7 @@ template <> struct LDL<Uplo::Lower, Algo::OnDevice> {
   }
 #endif
   template <typename MemberType, typename ViewTypeA, typename ViewTypeP, typename ViewTypeD>
-  inline static int modify(MemberType &member, const ViewTypeA &A, const ViewTypeP &P, const ViewTypeD &D, bool conjugate) {
+  inline static int modify(MemberType & /*member*/, const ViewTypeA &A, const ViewTypeP &P, const ViewTypeD &D, bool  /*conjugate*/) {
     typedef typename ViewTypeA::non_const_value_type value_type;
     typedef typename ViewTypeD::non_const_value_type value_type_d;
 

@@ -148,7 +148,7 @@ static void clear(char *buf, size_type bufsize) {
 }
 
 template <typename MemberType>
-KOKKOS_FORCEINLINE_FUNCTION static void clear(MemberType &member, char *buf, size_type bufsize) {
+KOKKOS_FORCEINLINE_FUNCTION static void clear(MemberType & /*member*/, char *buf, size_type bufsize) {
   KOKKOS_IF_ON_HOST(( memset(buf, 0, bufsize); ))
   KOKKOS_IF_ON_DEVICE((
     const ordinal_type team_index_range = (bufsize / CudaVectorSize) + (bufsize % CudaVectorSize > 0);

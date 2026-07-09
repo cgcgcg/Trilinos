@@ -195,7 +195,7 @@ template <typename T> struct LapackSerial {
 #endif
 
   // uplo = upper
-  inline static int potrf(const char uplo, const int m, T *A, const int lda, int *info) {
+  inline static int potrf(const char  /*uplo*/, const int m, T *A, const int lda, int *info) {
 
     *info = 0;
     if (m <= 0)
@@ -231,7 +231,7 @@ template <typename T> struct LapackSerial {
   }
 
   // uplo = upper
-  inline static int sytrf_nopiv(const char uplo, const bool conjugate, const int m, T *A, const int lda, int *info) {
+  inline static int sytrf_nopiv(const char  /*uplo*/, const bool conjugate, const int m, T *A, const int lda, int *info) {
       
     *info = 0; 
     if (m <= 0) 

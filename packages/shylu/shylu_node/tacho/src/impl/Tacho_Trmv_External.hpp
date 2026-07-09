@@ -62,7 +62,7 @@ template <typename ArgUplo, typename ArgTrans> struct Trmv<ArgUplo, ArgTrans, Al
   }
 
   template <typename MemberType, typename DiagType, typename ScalarType, typename ViewTypeA, typename ViewTypeB, typename ViewTypeC>
-  KOKKOS_INLINE_FUNCTION static int invoke(MemberType &member, const DiagType diag,
+  KOKKOS_INLINE_FUNCTION static int invoke(MemberType & /*member*/, const DiagType diag,
                                            const ScalarType alpha, const ViewTypeA &A,
                                                                    const ViewTypeB &B,
                                            const ScalarType beta,  const ViewTypeC &C) {

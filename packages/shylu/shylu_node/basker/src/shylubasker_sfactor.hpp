@@ -1069,8 +1069,8 @@ int Basker<Int, Entry, Exe_Space>::sfactor()
   (
    BASKER_MATRIX &MV,
    BASKER_SYMBOLIC_TREE &ST,
-   INT_1DARRAY gcol,
-   INT_1DARRAY grow, 
+   INT_1DARRAY  /*gcol*/,
+   INT_1DARRAY  /*grow*/, 
    Int off_diag
   )
   {
@@ -1432,8 +1432,8 @@ int Basker<Int, Entry, Exe_Space>::sfactor()
   (
    BASKER_MATRIX &MV,
    BASKER_SYMBOLIC_TREE &ST,
-   INT_1DARRAY gcol, 
-   INT_1DARRAY grow
+   INT_1DARRAY  /*gcol*/, 
+   INT_1DARRAY  /*grow*/
   )
   {
 

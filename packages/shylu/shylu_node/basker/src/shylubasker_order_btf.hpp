@@ -25,9 +25,9 @@ namespace BaskerNS
   BASKER_INLINE
   void Basker<Int,Entry,Exe_Space>::find_btf_schedule
   (
-   BASKER_MATRIX &M,
+   BASKER_MATRIX & /*M*/,
    Int           nblks,
-   INT_1DARRAY  _btf_tabs
+   INT_1DARRAY   /*_btf_tabs*/
   )
   {
     //Find total work estimate

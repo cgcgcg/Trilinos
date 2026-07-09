@@ -269,7 +269,7 @@ template <typename ArgUplo, typename ArgTransA> struct Trmv<ArgUplo, ArgTransA, 
 #endif
 
   template <typename MemberType, typename DiagType, typename ViewTypeA, typename ViewTypeB, typename ViewTypeC>
-  inline static int invoke(MemberType &member, const DiagType diagA, const ViewTypeA &A, const ViewTypeB &B, const ViewTypeC &C) {
+  inline static int invoke(MemberType & /*member*/, const DiagType diagA, const ViewTypeA &A, const ViewTypeB &B, const ViewTypeC &C) {
     typedef typename ViewTypeA::non_const_value_type value_type;
     typedef typename ViewTypeB::non_const_value_type value_type_b;
 

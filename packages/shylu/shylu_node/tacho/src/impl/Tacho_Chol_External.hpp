@@ -44,7 +44,7 @@ template <typename ArgUplo> struct Chol<ArgUplo, Algo::External> {
   }
 
   template <typename MemberType, typename ViewTypeA>
-  KOKKOS_INLINE_FUNCTION static int invoke(MemberType &member, const ViewTypeA &A) {
+  KOKKOS_INLINE_FUNCTION static int invoke(MemberType & /*member*/, const ViewTypeA &A) {
 
     static constexpr bool runOnHost = run_tacho_on_host_v<typename ViewTypeA::execution_space>;
 
@@ -60,7 +60,7 @@ template <typename ArgUplo> struct Chol<ArgUplo, Algo::External> {
   }
 
   template <typename MemberType, typename ViewTypeA>
-  KOKKOS_INLINE_FUNCTION static int invoke(MemberType &member, const double /*tol*/, const ViewTypeA &A) {
+  KOKKOS_INLINE_FUNCTION static int invoke(MemberType & /*member*/, const double /*tol*/, const ViewTypeA &A) {
 
     // Same as no tol
     static constexpr bool runOnHost = run_tacho_on_host_v<typename ViewTypeA::execution_space>;

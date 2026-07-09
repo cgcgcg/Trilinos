@@ -44,7 +44,7 @@ template <typename ArgTransA, typename ArgTransB> struct Gemm<ArgTransA, ArgTran
   }
 
   template <typename MemberType, typename ScalarType, typename ViewTypeA, typename ViewTypeB, typename ViewTypeC>
-  inline static int invoke(MemberType &member, const ScalarType alpha, const ViewTypeA &A,
+  inline static int invoke(MemberType & /*member*/, const ScalarType alpha, const ViewTypeA &A,
                            const ViewTypeB &B, const ScalarType beta, const ViewTypeC &C) {
 
     static constexpr bool runOnHost = run_tacho_on_host_v<typename ViewTypeA::execution_space>;

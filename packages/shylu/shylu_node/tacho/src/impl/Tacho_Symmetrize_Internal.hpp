@@ -19,7 +19,7 @@ namespace Tacho {
 
 template <> struct Symmetrize<Uplo::Upper, Algo::Internal> {
   template <typename MemberType, typename ViewTypeA>
-  KOKKOS_INLINE_FUNCTION static int invoke(MemberType &member, const ViewTypeA &A, const bool conjugate) {
+  KOKKOS_INLINE_FUNCTION static int invoke(MemberType & /*member*/, const ViewTypeA &A, const bool conjugate) {
     using value_type = typename ViewTypeA::non_const_value_type;
     using arith_traits = ArithTraits<value_type>;
 
@@ -44,7 +44,7 @@ template <> struct Symmetrize<Uplo::Upper, Algo::Internal> {
 
 template <> struct Symmetrize<Uplo::Lower, Algo::Internal> {
   template <typename MemberType, typename ViewTypeA>
-  KOKKOS_INLINE_FUNCTION static int invoke(MemberType &member, const ViewTypeA &A, const bool conjugate) {
+  KOKKOS_INLINE_FUNCTION static int invoke(MemberType & /*member*/, const ViewTypeA &A, const bool conjugate) {
     using value_type = typename ViewTypeA::non_const_value_type;
     using arith_traits = ArithTraits<value_type>;
 

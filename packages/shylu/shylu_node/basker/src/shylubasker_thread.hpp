@@ -179,7 +179,7 @@ namespace BaskerNS
     }
 
     //Atomic
-    BaskerBarrier(volatile Int &value_in, volatile Int &value_out,
+    BaskerBarrier(volatile Int &value_in, volatile Int & /*value_out*/,
                   const Int l_size )
     {
       //jdb value ->value_in
@@ -234,7 +234,7 @@ namespace BaskerNS
     void atomic_barrier
     (
      volatile Int &value_in, 
-     volatile Int &value_out,
+     volatile Int & /*value_out*/,
      const Int l_size
     )
     {    

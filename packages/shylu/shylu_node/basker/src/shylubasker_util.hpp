@@ -567,7 +567,7 @@ namespace BaskerNS
   BASKER_INLINE
   void Basker<Int, Entry, Exe_Space>::t_init_2DA
   (
-   Int kid, BASKER_BOOL alloc, BASKER_BOOL keep_zeros
+   Int kid, BASKER_BOOL alloc, BASKER_BOOL  /*keep_zeros*/
   )
   {
     /*if (kid == 1) {

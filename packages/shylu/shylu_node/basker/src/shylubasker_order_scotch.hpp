@@ -363,10 +363,10 @@ namespace BaskerNS
   template <class Int, class Entry, class Exe_Space>
   int Basker<Int,Entry,Exe_Space>::nested_dissect_metis
   (
-   BASKER_MATRIX &M,
-   BASKER_TREE &BT,
+   BASKER_MATRIX & /*M*/,
+   BASKER_TREE & /*BT*/,
    Int num_domains,
-   partition_graph<graph_integral_type>& sg
+   partition_graph<graph_integral_type>&  /*sg*/
   )
   {
     Int num_levels = num_domains; 
@@ -1198,10 +1198,10 @@ namespace BaskerNS
   template <class Int, class Entry, class Exe_Space>
   int Basker<Int,Entry,Exe_Space>::nested_dissect_scotch
   (
-   BASKER_MATRIX &M,
-   BASKER_TREE &BT,
-   Int num_domains,
-   partition_graph<graph_integral_type>& sg
+   BASKER_MATRIX & /*M*/,
+   BASKER_TREE & /*BT*/,
+   Int  /*num_domains*/,
+   partition_graph<graph_integral_type>&  /*sg*/
   )
   {
     #if !defined(HAVE_SHYLU_NODEBASKER_SCOTCH)
