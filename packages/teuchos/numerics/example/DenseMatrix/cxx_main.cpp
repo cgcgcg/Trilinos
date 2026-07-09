@@ -13,7 +13,7 @@
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_Version.hpp"
 
-int main(int argc, char* argv[])
+int main(int  /*argc*/, char*  /*argv*/[])
 {
   std::cout << Teuchos::Teuchos_Version() << std::endl << std::endl;
 
@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
   (void)d; // Not used!
 
   // The pointer to the array of matrix values can be obtained:
-  double *My_Array=0, *My_Column=0;
+  double *My_Array=nullptr, *My_Column=nullptr;
   My_Array = My_Matrix.values();   // pointer to matrix values
   My_Column = My_Matrix[2];        // pointer to third column values
   (void)My_Array; // Not used!

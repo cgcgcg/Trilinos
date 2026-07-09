@@ -237,12 +237,12 @@ void gatherAll(
 /// \param comm [in] The communicator over which to scatter.
 template<typename Ordinal, typename Packet>
 void
-scatter (const Packet sendBuf[],
-         const Ordinal sendCount,
-         Packet recvBuf[],
-         const Ordinal recvCount,
-         const Ordinal root,
-         const Comm<Ordinal>& comm)
+scatter (const Packet  /*sendBuf*/[],
+         const Ordinal  /*sendCount*/,
+         Packet  /*recvBuf*/[],
+         const Ordinal  /*recvCount*/,
+         const Ordinal  /*root*/,
+         const Comm<Ordinal>&  /*comm*/)
 {
   // See Bug 6375; Tpetra does not actually need any specializations
   // other than Ordinal = int and Packet = int.  We may add them later
@@ -257,13 +257,13 @@ scatter (const Packet sendBuf[],
 
 template<typename Ordinal, typename Packet>
 void
-scatterv (const Packet sendBuf[],
-         const Ordinal sendCounts[],
-         const Ordinal displs[],
-         Packet recvBuf[],
-         const Ordinal recvCount,
-         const Ordinal root,
-         const Comm<Ordinal>& comm)
+scatterv (const Packet  /*sendBuf*/[],
+         const Ordinal  /*sendCounts*/[],
+         const Ordinal  /*displs*/[],
+         Packet  /*recvBuf*/[],
+         const Ordinal  /*recvCount*/,
+         const Ordinal  /*root*/,
+         const Comm<Ordinal>&  /*comm*/)
 {
   // See Bug 6375; Tpetra does not actually need any specializations
   // other than Ordinal = int and Packet = int.  We may add them later
@@ -1335,13 +1335,13 @@ Teuchos::gather (const Packet sendBuf[],
 
 template<typename Ordinal, typename Packet>
 void
-Teuchos::gatherv (const Packet sendBuf[],
-                  const Ordinal sendCount,
-                  Packet recvBuf[],
-                  const Ordinal recvCounts[],
-                  const Ordinal displs[],
-                  const int root,
-                  const Comm<Ordinal>& comm)
+Teuchos::gatherv (const Packet  /*sendBuf*/[],
+                  const Ordinal  /*sendCount*/,
+                  Packet  /*recvBuf*/[],
+                  const Ordinal  /*recvCounts*/[],
+                  const Ordinal  /*displs*/[],
+                  const int  /*root*/,
+                  const Comm<Ordinal>&  /*comm*/)
 {
   // Ordinal totalRecvCount = 0;
 
@@ -1369,9 +1369,9 @@ Teuchos::gatherv (const Packet sendBuf[],
 
 template<typename Ordinal, typename Packet>
 void Teuchos::gatherAll(
-  const Comm<Ordinal>& comm, const Serializer<Ordinal,Packet> &serializer,
-  const Ordinal sendCount, const Packet*const sendBuffer[],
-  const Ordinal recvCount, Packet*const recvBuffer[]
+  const Comm<Ordinal>&  /*comm*/, const Serializer<Ordinal,Packet> & /*serializer*/,
+  const Ordinal  /*sendCount*/, const Packet*const  /*sendBuffer*/[],
+  const Ordinal  /*recvCount*/, Packet*const  /*recvBuffer*/[]
   )
 {
   TEUCHOS_TEST_FOR_EXCEPT(true); // ToDo: Implement and test when needed!
@@ -1403,12 +1403,12 @@ void Teuchos::gatherAll(
 
 template<typename Ordinal, typename Packet>
 void
-Teuchos::reduce (const Packet sendBuf[],
-                 Packet recvBuf[],
-                 const Ordinal count,
-                 const EReductionType reductType,
-                 const Ordinal root,
-                 const Comm<Ordinal>& comm)
+Teuchos::reduce (const Packet  /*sendBuf*/[],
+                 Packet  /*recvBuf*/[],
+                 const Ordinal  /*count*/,
+                 const EReductionType  /*reductType*/,
+                 const Ordinal  /*root*/,
+                 const Comm<Ordinal>&  /*comm*/)
 {
   // See Bug 6375; Tpetra does not actually need any specializations
   // other than Ordinal = int and Packet = int.  We may add them later
@@ -2287,9 +2287,9 @@ void Teuchos::scan(
 
 template<typename Ordinal, typename Packet>
 void Teuchos::scan(
-  const Comm<Ordinal>& comm, const Serializer<Ordinal,Packet> &serializer,
-  const ReferenceTypeReductionOp<Ordinal,Packet> &reductOp,
-  const Ordinal count, const Packet*const sendBuffer[], Packet*const scanReducts[]
+  const Comm<Ordinal>&  /*comm*/, const Serializer<Ordinal,Packet> & /*serializer*/,
+  const ReferenceTypeReductionOp<Ordinal,Packet> & /*reductOp*/,
+  const Ordinal  /*count*/, const Packet*const  /*sendBuffer*/[], Packet*const  /*scanReducts*/[]
   )
 {
   TEUCHOS_TEST_FOR_EXCEPT(true); // ToDo: Implement and test when needed!
@@ -2442,8 +2442,8 @@ void Teuchos::ssend(
 
 template<typename Ordinal, typename Packet>
 void Teuchos::send(
-  const Comm<Ordinal>& comm, const Serializer<Ordinal,Packet> &serializer,
-  const Ordinal count, const Packet*const sendBuffer[], const int destRank
+  const Comm<Ordinal>&  /*comm*/, const Serializer<Ordinal,Packet> & /*serializer*/,
+  const Ordinal  /*count*/, const Packet*const  /*sendBuffer*/[], const int  /*destRank*/
   )
 {
   TEUCHOS_TEST_FOR_EXCEPT(true); // ToDo: Implement and test when needed!
@@ -2501,8 +2501,8 @@ int Teuchos::receive(
 
 template<typename Ordinal, typename Packet>
 int Teuchos::receive(
-  const Comm<Ordinal>& comm, const Serializer<Ordinal,Packet> &serializer,
-  const int sourceRank, const Ordinal count, Packet*const recvBuffer[]
+  const Comm<Ordinal>&  /*comm*/, const Serializer<Ordinal,Packet> & /*serializer*/,
+  const int  /*sourceRank*/, const Ordinal  /*count*/, Packet*const  /*recvBuffer*/[]
   )
 {
   TEUCHOS_TEST_FOR_EXCEPT(true); // ToDo: Implement and test when needed!

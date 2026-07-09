@@ -202,7 +202,7 @@ inline bool operator!=(const FilteredIterator<IteratorType,Predicate>& itr1,
  * \relates FilteredIterator
  */
 template<class IteratorType, class Predicate>
-std::ostream& operator<<(std::ostream &out, const FilteredIterator<IteratorType,Predicate>& itr)
+std::ostream& operator<<(std::ostream &out, const FilteredIterator<IteratorType,Predicate>&  /*itr*/)
 {
   out << "FilteredIterator{current=???, end=???, pred="<<TypeNameTraits<Predicate>::name()<<"}";
   return out;

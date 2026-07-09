@@ -148,7 +148,7 @@ public:
     const char     option_true[]
     ,const char    option_false[]
     ,bool          *option_val
-    ,const char    documentation[] = NULL
+    ,const char    documentation[] = nullptr
     );
 
   /** \brief Set an integer option.
@@ -164,7 +164,7 @@ public:
   void setOption(
     const char     option_name[]
     ,int           *option_val
-    ,const char    documentation[] = NULL
+    ,const char    documentation[] = nullptr
     ,const bool    required        = false
     );
 
@@ -181,7 +181,7 @@ public:
   void setOption(
     const char     option_name[]
     ,long int      *option_val
-    ,const char    documentation[] = NULL
+    ,const char    documentation[] = nullptr
     ,const bool    required        = false
     );
 
@@ -198,7 +198,7 @@ public:
   void setOption(
     const char     option_name[]
     ,size_t        *option_val
-    ,const char    documentation[] = NULL
+    ,const char    documentation[] = nullptr
     ,const bool    required        = false
     );
 
@@ -215,7 +215,7 @@ public:
   void setOption(
     const char     option_name[]
     ,long long int *option_val
-    ,const char    documentation[] = NULL
+    ,const char    documentation[] = nullptr
     ,const bool    required        = false
     );
 
@@ -232,7 +232,7 @@ public:
   void setOption(
     const char     option_name[]
     ,double        *option_val
-    ,const char    documentation[] = NULL
+    ,const char    documentation[] = nullptr
     ,const bool    required        = false
     );
 
@@ -249,7 +249,7 @@ public:
   void setOption(
     const char     option_name[]
     ,float         *option_val
-    ,const char    documentation[] = NULL
+    ,const char    documentation[] = nullptr
     ,const bool    required        = false
     );
 
@@ -266,7 +266,7 @@ public:
   void setOption(
     const char     option_name[]
     ,std::string   *option_val
-    ,const char    documentation[] = NULL
+    ,const char    documentation[] = nullptr
     ,const bool    required        = false
     );
 
@@ -464,7 +464,7 @@ private:
   //
   struct enum_opt_data_t {
     enum_opt_data_t()
-      :enum_option_val(NULL), num_enum_opt_values(0)
+      :enum_option_val(nullptr), num_enum_opt_values(0)
       {}
     enum_opt_data_t(
       int* _enum_option_val

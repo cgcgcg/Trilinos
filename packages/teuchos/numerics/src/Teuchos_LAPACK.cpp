@@ -281,7 +281,7 @@ namespace Teuchos
 
   void LAPACK<int, float>::GEES(const char& JOBVS, const int& n, float* A, const int& lda, int* sdim, float* WR, float* WI, float* VS, const int& ldvs, float* WORK, const int& lwork, float* /* RWORK */, int* BWORK, int* info) const
   {
-    int (*nullfptr)(float*,float*) = NULL;
+    int (*nullfptr)(float*,float*) = nullptr;
     const char sort = 'N';
     SGEES_F77(CHAR_MACRO(JOBVS), CHAR_MACRO(sort), nullfptr, &n, A, &lda, sdim, WR, WI, VS, &ldvs, WORK, &lwork, BWORK, info);
   }
@@ -660,7 +660,7 @@ namespace Teuchos
   void LAPACK<int, double>::GEES(const char& JOBVS, const int& n, double* A, const int& lda, int* sdim, double* WR, double* WI, double* VS, const int& ldvs, double* WORK, const int& lwork, double* /* RWORK */, int* BWORK, int* info) const
   {
     //int (*nullfptr)(double*,double*) = NULL;
-    gees_nullfptr_t nullfptr = 0;
+    gees_nullfptr_t nullfptr = nullptr;
     const char sort = 'N';
     DGEES_F77(CHAR_MACRO(JOBVS), CHAR_MACRO(sort), nullfptr, &n, A, &lda, sdim, WR, WI, VS, &ldvs, WORK, &lwork, BWORK, info);
   }

@@ -58,7 +58,7 @@ public:
   ~ArcpReinterpretCastEmbeddedObj()
     { freeMemory(); }
   ArcpReinterpretCastEmbeddedObj&
-  operator=(const ArcpReinterpretCastEmbeddedObj& arceo)
+  operator=(const ArcpReinterpretCastEmbeddedObj&  /*arceo*/)
     {
       assert(is_null(arceo.arcp_pod_)); // Can only be a catestrophic programming error!
       freeMemory();

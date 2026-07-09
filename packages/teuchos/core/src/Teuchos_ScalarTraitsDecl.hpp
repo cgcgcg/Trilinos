@@ -97,31 +97,31 @@ struct ScalarTraits
   //! Overflow theshold - \c (base^emax)*(1-eps)
   static inline magnitudeType rmax()  { return UndefinedScalarTraits<T>::notDefined(); }
   //! Returns the magnitudeType of the scalar type \c a.
-  static inline magnitudeType magnitude(T a) { return UndefinedScalarTraits<T>::notDefined(); }
+  static inline magnitudeType magnitude(T  /*a*/) { return UndefinedScalarTraits<T>::notDefined(); }
   //! Returns representation of zero for this scalar type.
   static inline T zero()                     { return UndefinedScalarTraits<T>::notDefined(); }
   //! Returns representation of one for this scalar type.
   static inline T one()                      { return UndefinedScalarTraits<T>::notDefined(); }
   //! Returns the real part of the scalar type \c a.
-  static inline magnitudeType real(T a) { return UndefinedScalarTraits<T>::notDefined(); }
+  static inline magnitudeType real(T  /*a*/) { return UndefinedScalarTraits<T>::notDefined(); }
   //! Returns the imaginary part of the scalar type \c a.
-  static inline magnitudeType imag(T a) { return UndefinedScalarTraits<T>::notDefined(); }
+  static inline magnitudeType imag(T  /*a*/) { return UndefinedScalarTraits<T>::notDefined(); }
   //! Returns the conjugate of the scalar type \c a.
-  static inline T conjugate(T a) { return UndefinedScalarTraits<T>::notDefined(); }
+  static inline T conjugate(T  /*a*/) { return UndefinedScalarTraits<T>::notDefined(); }
   //! Returns a number that represents NaN.
   static inline T nan()                      { return UndefinedScalarTraits<T>::notDefined(); }
   //! Returns <tt>true</tt> if <tt>x</tt> is NaN or Inf.
-  static inline bool isnaninf(const T& x)     { return UndefinedScalarTraits<T>::notDefined(); }
+  static inline bool isnaninf(const T&  /*x*/)     { return UndefinedScalarTraits<T>::notDefined(); }
   //! Seed the random number generator returned by <tt>random()</tt>.
-  static inline void seedrandom(unsigned int s) { int i; T t = &i; }
+  static inline void seedrandom(unsigned int  /*s*/) { int i; T t = &i; }
   //! Returns a random number (between -one() and +one()) of this scalar type.
   static inline T random()                   { return UndefinedScalarTraits<T>::notDefined(); }
   //! Returns the name of this scalar type.
   static inline std::string name()           { (void)UndefinedScalarTraits<T>::notDefined(); return std::string(); }
   //! Returns a number of magnitudeType that is the square root of this scalar type \c x.
-  static inline T squareroot(T x) { return UndefinedScalarTraits<T>::notDefined(); }
+  static inline T squareroot(T  /*x*/) { return UndefinedScalarTraits<T>::notDefined(); }
   //! Returns the result of raising one scalar \c x to the power \c y.
-  static inline T pow(T x, T y) { return UndefinedScalarTraits<T>::notDefined(); }
+  static inline T pow(T  /*x*/, T  /*y*/) { return UndefinedScalarTraits<T>::notDefined(); }
   //! Returns the value of PI.
   static inline T pi() { return UndefinedScalarTraits<T>::notDefined();}
 };

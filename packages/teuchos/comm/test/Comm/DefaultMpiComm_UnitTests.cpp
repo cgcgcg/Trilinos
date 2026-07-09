@@ -13,7 +13,6 @@
 #include "Teuchos_DefaultSerialComm.hpp"
 #include "Teuchos_CommHelpers.hpp"
 #include "Teuchos_DefaultComm.hpp"
-#include "Teuchos_DefaultSerialComm.hpp"
 #include "Teuchos_getConst.hpp"
 #include "Teuchos_as.hpp"
 

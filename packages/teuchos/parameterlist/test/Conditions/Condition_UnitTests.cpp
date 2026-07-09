@@ -12,7 +12,6 @@
 #include "Teuchos_ParameterList.hpp"
 #include "Teuchos_StandardConditions.hpp"
 #include "Teuchos_StandardParameterEntryValidators.hpp"
-#include "Teuchos_StandardConditions.hpp"
 
 namespace Teuchos{
 

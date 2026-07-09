@@ -64,10 +64,10 @@ reduceAllImpl (const Comm<int>& comm,
   // SerialComm or an MpiComm.  If it's something else, we fall back
   // to the most general implementation.
   const MpiComm<int>* mpiComm = dynamic_cast<const MpiComm<int>* > (&comm);
-  if (mpiComm == NULL) {
+  if (mpiComm == nullptr) {
     // Is it a SerialComm?
     const SerialComm<int>* serialComm = dynamic_cast<const SerialComm<int>* > (&comm);
-    if (serialComm == NULL) {
+    if (serialComm == nullptr) {
       // We don't know what kind of Comm we have, so fall back to the
       // most general implementation.
 #ifdef HAVE_TEUCHOSCORE_CXX11
@@ -135,10 +135,10 @@ gatherImpl (const T sendBuf[],
   // SerialComm or an MpiComm.  If it's something else, we fall back
   // to the most general implementation.
   const MpiComm<int>* mpiComm = dynamic_cast<const MpiComm<int>* > (&comm);
-  if (mpiComm == NULL) {
+  if (mpiComm == nullptr) {
     // Is it a SerialComm?
     const SerialComm<int>* serialComm = dynamic_cast<const SerialComm<int>* > (&comm);
-    if (serialComm == NULL) {
+    if (serialComm == nullptr) {
       // We don't know what kind of Comm we have, so fall back to the
       // most general implementation.
       gather<int, T> (sendBuf, sendCount, recvBuf, recvCount, root, comm);
@@ -189,10 +189,10 @@ scatterImpl (const T sendBuf[],
   // SerialComm or an MpiComm.  If it's something else, we fall back
   // to the most general implementation.
   const MpiComm<int>* mpiComm = dynamic_cast<const MpiComm<int>* > (&comm);
-  if (mpiComm == NULL) {
+  if (mpiComm == nullptr) {
     // Is it a SerialComm?
     const SerialComm<int>* serialComm = dynamic_cast<const SerialComm<int>* > (&comm);
-    if (serialComm == NULL) {
+    if (serialComm == nullptr) {
       // We don't know what kind of Comm we have, so fall back to the
       // most general implementation.
       scatter<int, T> (sendBuf, sendCount, recvBuf, recvCount, root, comm);
@@ -237,10 +237,10 @@ scattervImpl (const T sendBuf[],
   // SerialComm or an MpiComm.  If it's something else, we fall back
   // to the most general implementation.
   const MpiComm<int>* mpiComm = dynamic_cast<const MpiComm<int>* > (&comm);
-  if (mpiComm == NULL) {
+  if (mpiComm == nullptr) {
     // Is it a SerialComm?
     const SerialComm<int>* serialComm = dynamic_cast<const SerialComm<int>* > (&comm);
-    if (serialComm == NULL) {
+    if (serialComm == nullptr) {
       // We don't know what kind of Comm we have, so fall back to the
       // most general implementation.
       scatterv<int, T> (sendBuf, sendCounts, displs, recvBuf, recvCount, root, comm);
@@ -292,10 +292,10 @@ reduceImpl (const T sendBuf[],
   // SerialComm or an MpiComm.  If it's something else, we fall back
   // to the most general implementation.
   const MpiComm<int>* mpiComm = dynamic_cast<const MpiComm<int>* > (&comm);
-  if (mpiComm == NULL) {
+  if (mpiComm == nullptr) {
     // Is it a SerialComm?
     const SerialComm<int>* serialComm = dynamic_cast<const SerialComm<int>* > (&comm);
-    if (serialComm == NULL) {
+    if (serialComm == nullptr) {
       // We don't know what kind of Comm we have, so fall back to the
       // most general implementation.
       reduce<int, T> (sendBuf, recvBuf, count, reductType, root, comm);
@@ -345,10 +345,10 @@ gathervImpl (const T sendBuf[],
   // SerialComm or an MpiComm.  If it's something else, we fall back
   // to the most general implementation.
   const MpiComm<int>* mpiComm = dynamic_cast<const MpiComm<int>* > (&comm);
-  if (mpiComm == NULL) {
+  if (mpiComm == nullptr) {
     // Is it a SerialComm?
     const SerialComm<int>* serialComm = dynamic_cast<const SerialComm<int>* > (&comm);
-    if (serialComm == NULL) {
+    if (serialComm == nullptr) {
       // We don't know what kind of Comm we have, so fall back to the
       // most general implementation.
       gatherv<int, T> (sendBuf, sendCount, recvBuf, recvCounts, displs, root, comm);
@@ -468,10 +468,10 @@ ireceiveImpl (const Comm<int>& comm,
   // MpiComm.  If it's something else, we fall back to the most
   // general implementation.
   const MpiComm<int>* mpiComm = dynamic_cast<const MpiComm<int>* > (&comm);
-  if (mpiComm == NULL) {
+  if (mpiComm == nullptr) {
     // Is it a SerialComm?
     const SerialComm<int>* serialComm = dynamic_cast<const SerialComm<int>* > (&comm);
-    if (serialComm == NULL) {
+    if (serialComm == nullptr) {
       // We don't know what kind of Comm we have, so fall back to the
       // most general implementation.
       return ireceiveGeneral<T> (comm, recvBuffer, sourceRank);
@@ -537,10 +537,10 @@ ireceiveImpl (const ArrayRCP<T>& recvBuffer,
   // MpiComm.  If it's something else, we fall back to the most
   // general implementation.
   const MpiComm<int>* mpiComm = dynamic_cast<const MpiComm<int>* > (&comm);
-  if (mpiComm == NULL) {
+  if (mpiComm == nullptr) {
     // Is it a SerialComm?
     const SerialComm<int>* serialComm = dynamic_cast<const SerialComm<int>* > (&comm);
-    if (serialComm == NULL) {
+    if (serialComm == nullptr) {
       // We don't know what kind of Comm we have, so fall back to the
       // most general implementation.
       return ireceiveGeneral<T> (recvBuffer, sourceRank, tag, comm);
@@ -645,10 +645,10 @@ sendImpl (const Comm<int>& comm,
   // MpiComm.  If it's something else, we fall back to the most
   // general implementation.
   const MpiComm<int>* mpiComm = dynamic_cast<const MpiComm<int>* > (&comm);
-  if (mpiComm == NULL) {
+  if (mpiComm == nullptr) {
     // Is it a SerialComm?
     const SerialComm<int>* serialComm = dynamic_cast<const SerialComm<int>* > (&comm);
-    if (serialComm == NULL) {
+    if (serialComm == nullptr) {
       // We don't know what kind of Comm we have, so fall back to the
       // most general implementation.
       sendGeneral<T> (comm, count, sendBuffer, destRank);
@@ -700,10 +700,10 @@ sendImpl (const T sendBuffer[],
   // MpiComm.  If it's something else, we fall back to the most
   // general implementation.
   const MpiComm<int>* mpiComm = dynamic_cast<const MpiComm<int>* > (&comm);
-  if (mpiComm == NULL) {
+  if (mpiComm == nullptr) {
     // Is it a SerialComm?
     const SerialComm<int>* serialComm = dynamic_cast<const SerialComm<int>* > (&comm);
-    if (serialComm == NULL) {
+    if (serialComm == nullptr) {
       // We don't know what kind of Comm we have, so fall back to the
       // most general implementation.
       sendGeneral<T> (sendBuffer, count, destRank, tag, comm);
@@ -797,10 +797,10 @@ isendImpl (const ArrayRCP<const T>& sendBuffer,
   // MpiComm.  If it's something else, we fall back to the most
   // general implementation.
   const MpiComm<int>* mpiComm = dynamic_cast<const MpiComm<int>* > (&comm);
-  if (mpiComm == NULL) {
+  if (mpiComm == nullptr) {
     // Is it a SerialComm?
     const SerialComm<int>* serialComm = dynamic_cast<const SerialComm<int>* > (&comm);
-    if (serialComm == NULL) {
+    if (serialComm == nullptr) {
       // We don't know what kind of Comm we have, so fall back to the
       // most general implementation.
       return isendGeneral<T> (sendBuffer, destRank, tag, comm);

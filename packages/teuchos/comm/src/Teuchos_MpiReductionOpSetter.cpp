@@ -66,7 +66,7 @@ MPI_Op theMpiOp_ = MPI_OP_NULL;
 //
 // This static variable is _NOT_ persistent.  It does not need
 // deallocation.
-const Teuchos::Details::MpiReductionOpBase* theReductOp_ = NULL;
+const Teuchos::Details::MpiReductionOpBase* theReductOp_ = nullptr;
 
 // Free the given MPI_Op, and return the error code returned by MPI_Op_free.
 int
@@ -77,7 +77,7 @@ freeMpiOp (MPI_Op* op)
   // MPI functions.  Thus, we don't need to check if MPI is
   // initialized.
   int err = MPI_SUCCESS;
-  if (op != NULL) {
+  if (op != nullptr) {
     err = MPI_Op_free (op);
     if (err == MPI_SUCCESS) {
       // No externally visible side effects unless the above function succeeded.
@@ -138,7 +138,7 @@ void createReductOp ()
   // 'key' is an output argument of MPI_Comm_create_keyval.
   int key = MPI_KEYVAL_INVALID;
   err = MPI_Comm_create_keyval (MPI_COMM_NULL_COPY_FN, freeMpiOpCallback,
-                                &key, NULL);
+                                &key, nullptr);
   if (err != MPI_SUCCESS) {
     // Attempt to clean up by freeing the newly created MPI_Op.  If
     // cleaning up fails, just let it slide, since we're already in
@@ -226,7 +226,7 @@ Teuchos_MPI_reduction_op (void* invec,
                           int* len,
                           MPI_Datatype* datatype)
 {
-  if (theReductOp_ != NULL) {
+  if (theReductOp_ != nullptr) {
     theReductOp_->reduce (invec, inoutvec, len, datatype);
   }
 }

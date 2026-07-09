@@ -122,7 +122,7 @@ class TEUCHOSCORE_LIB_DLL_EXPORT RCPNode {
 public:
   /** \brief . */
   RCPNode(bool has_ownership_in)
-    : has_ownership_(has_ownership_in), extra_data_map_(NULL)
+    : has_ownership_(has_ownership_in), extra_data_map_(nullptr)
 #ifdef TEUCHOS_DEBUG
     ,insertion_number_(-1)
 #endif // TEUCHOS_DEBUG
@@ -572,20 +572,20 @@ public:
   /** \brief . */
   virtual bool is_valid_ptr() const
     {
-      return ptr_ != 0;
+      return ptr_ != nullptr;
     }
   /** \brief Delete the underlying object.
    * Will abort if an exception is detected in the destructor.
    */
   virtual void delete_obj()
     {
-      if (ptr_!= 0) {
+      if (ptr_!= nullptr) {
         this->pre_delete_extra_data(); // Should not throw!
         T* tmp_ptr = ptr_;
 #ifdef TEUCHOS_DEBUG
         deleted_ptr_ = tmp_ptr;
 #endif
-        ptr_ = 0;
+        ptr_ = nullptr;
         if (has_ownership()) {
 #ifdef TEUCHOS_DEBUG
           try {
@@ -699,7 +699,7 @@ class TEUCHOSCORE_LIB_DLL_EXPORT RCPNodeHandle {
 public:
   //! Default constructor
   RCPNodeHandle (ENull null_arg = null)
-    : node_ (0), strength_ (RCP_STRONG)
+    : node_ (nullptr), strength_ (RCP_STRONG)
   {
     (void) null_arg; // Silence "unused variable" compiler warning.
   }
@@ -764,7 +764,7 @@ public:
   RCPNodeHandle (RCPNodeHandle&& node_ref)
     : node_ (node_ref.node_), strength_ (node_ref.strength_)
   {
-    node_ref.node_ = 0;
+    node_ref.node_ = nullptr;
     node_ref.strength_ = RCP_STRONG;
   }
 
@@ -783,7 +783,7 @@ public:
   /// any user-visible state.
   RCPNodeHandle& operator= (ENull) {
     unbind(); // May throw in some cases
-    node_ = 0;
+    node_ = nullptr;
     strength_ = RCP_STRONG;
     return *this;
   }
@@ -814,7 +814,7 @@ public:
     unbind(); // May throw in some cases
     node_ = node_ref.node_;
     strength_ = node_ref.strength_;
-    node_ref.node_ = 0;
+    node_ref.node_ = nullptr;
     node_ref.strength_ = RCP_STRONG;
     return *this;
   }
@@ -855,7 +855,7 @@ public:
   }
   //! Whether the underlying RCPNode is NULL.
   bool is_node_null() const {
-    return node_==0;
+    return node_==nullptr;
   }
   /// \brief Whether the underlying pointer is valid.
   ///
@@ -1039,7 +1039,7 @@ std::ostream& operator<<(std::ostream& out, const RCPNodeHandle& node)
   // prints 0.  Thus, we test if the pointer is NULL and print 0 in
   // that case.  This is important for MueLu tests, which compare
   // string print-outs.
-  if (node.node_ptr () == NULL) {
+  if (node.node_ptr () == nullptr) {
     out << "0";
   } else {
     out << node.node_ptr ();
@@ -1084,7 +1084,7 @@ public:
   /** \brief Releaes the RCPNode pointer before the destructor is called. */
   void release()
     {
-      node_ = 0;
+      node_ = nullptr;
     }
 private:
   RCPNode *node_;

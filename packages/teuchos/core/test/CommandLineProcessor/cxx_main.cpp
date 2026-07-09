@@ -184,7 +184,7 @@ int main( int argc, char* argv[] )
     char *aux_argv[aux_argc];
 
     std::stringbuf  buffer1, buffer2;;
-    std::streambuf* oldbuffer = NULL;
+    std::streambuf* oldbuffer = nullptr;
 
     // help before args
     aux_argv[0] = &arg_c[0];

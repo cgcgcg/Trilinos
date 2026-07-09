@@ -20,7 +20,7 @@ namespace Teuchos {
 RCP<FancyOStream>& VerboseObjectBase::privateDefaultOStream()
 {
   static RCP<FancyOStream> defaultOStream;
-  if (defaultOStream.get()==NULL) {
+  if (defaultOStream.get()==nullptr) {
     defaultOStream = fancyOStream(rcpFromRef(std::cout));
     defaultOStream->setOutputToRootOnly(0);
 //    if(GlobalMPISession::getNProc()>1)

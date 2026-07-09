@@ -22,7 +22,6 @@
 #include <sstream>
 #include <map>
 #include <stdexcept>
-#include <string>
 #include <vector>
 
 #include "Teuchos_StrUtils.hpp"

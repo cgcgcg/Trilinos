@@ -235,7 +235,7 @@ bool ParameterList::remove(
   }
   // Parameter does not exist
   if (throwIfNotExists) {
-    validateEntryExists("get", name_in, 0); // Will throw
+    validateEntryExists("get", name_in, nullptr); // Will throw
   }
   return false; // Param does not exist but that is okay
 }
@@ -433,7 +433,7 @@ void ParameterList::validateParameters(
     }
     else {
       const bool validType =
-        ( validEntry!=NULL
+        ( validEntry!=nullptr
           ? theEntry.getAny(false).type() == validEntry->getAny(false).type()
           : false
           );
@@ -617,7 +617,7 @@ void ParameterList::validateParametersAndSetDefaults(
       }
       else {
         const bool validType =
-          ( validEntry!=NULL
+          ( validEntry!=nullptr
             ? theEntry.getAny(false).type() == validEntry->getAny(false).type()
             : false
             );
@@ -725,7 +725,7 @@ void ParameterList::validateEntryExists(
   ) const
 {
   TEUCHOS_TEST_FOR_EXCEPTION_PURE_MSG(
-    entry_in==NULL, Exceptions::InvalidParameterName
+    entry_in==nullptr, Exceptions::InvalidParameterName
     ,"Error!  The parameter \""<<name_in<<"\" does not exist"\
     "\nin the parameter (sub)list \""<<this->name()<<"\"."
     "\n\nThe current parameters set in (sub)list \""<<this->name()<<"\" are:\n\n"

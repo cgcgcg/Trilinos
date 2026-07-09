@@ -24,14 +24,14 @@ namespace Teuchos {
 
 template<class T> inline
 ArrayView<T>::ArrayView( ENull )
-  : ptr_(0), size_(0)
+  : ptr_(nullptr), size_(0)
 {
   setUpIterators();
 }
 
 template<class T> inline
 ArrayView<const T>::ArrayView( ENull )
-  : ptr_(0), size_(0)
+  : ptr_(nullptr), size_(0)
 {
   setUpIterators();
 }

@@ -12,7 +12,6 @@
 #include "Teuchos_StandardDependencies.hpp"
 #include "Teuchos_DependencySheet.hpp"
 #include "Teuchos_StandardConditions.hpp"
-#include "Teuchos_StandardDependencies.hpp"
 #include "Teuchos_UnitTestHarness.hpp"
 #include "Teuchos_DependencyXMLConverterDB.hpp"
 #include "Teuchos_StandardDependencyXMLConverters.hpp"

@@ -61,7 +61,7 @@ Teuchos::getValidVerboseObjectSublist()
 
 void Teuchos::setupVerboseObjectSublist( ParameterList* paramList )
 {
-  TEUCHOS_TEST_FOR_EXCEPT(0==paramList);
+  TEUCHOS_TEST_FOR_EXCEPT(nullptr==paramList);
   paramList->sublist(VerboseObject_name).setParameters(
     *getValidVerboseObjectSublist()
     ).disableRecursiveValidation();
@@ -74,9 +74,9 @@ void Teuchos::readVerboseObjectSublist(
   )
 {
   // Validate input
-  TEUCHOS_TEST_FOR_EXCEPT(0==paramList);
-  TEUCHOS_TEST_FOR_EXCEPT(0==oStream);
-  TEUCHOS_TEST_FOR_EXCEPT(0==verbLevel);
+  TEUCHOS_TEST_FOR_EXCEPT(nullptr==paramList);
+  TEUCHOS_TEST_FOR_EXCEPT(nullptr==oStream);
+  TEUCHOS_TEST_FOR_EXCEPT(nullptr==verbLevel);
   ParameterList
     &voSublist = paramList->sublist(VerboseObject_name);
   voSublist.validateParameters(*getValidVerboseObjectSublist());

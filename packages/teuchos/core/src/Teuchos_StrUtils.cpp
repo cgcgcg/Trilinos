@@ -273,11 +273,11 @@ std::string StrUtils::before(const std::string& str, char sub)
 
 std::string StrUtils::before(const std::string& str, const std::string& sub)
 {
-  TEUCHOS_TEST_FOR_EXCEPTION(sub.c_str()==0,
+  TEUCHOS_TEST_FOR_EXCEPTION(sub.c_str()==nullptr,
     std::runtime_error, "String::before: arg is null pointer");
 
   char* p = std::strstr((char*) str.c_str(), (char*) sub.c_str());
-  if (p==0) return str;
+  if (p==nullptr) return str;
   int subLen = static_cast<int>(p-str.c_str());
   std::string rtn(str.c_str(), subLen);
   return rtn;
@@ -286,13 +286,13 @@ std::string StrUtils::before(const std::string& str, const std::string& sub)
 
 std::string StrUtils::after(const std::string& str, const std::string& sub)
 {
-  TEUCHOS_TEST_FOR_EXCEPTION(sub.c_str()==0,
+  TEUCHOS_TEST_FOR_EXCEPTION(sub.c_str()==nullptr,
     std::runtime_error, "String::after: arg is null pointer");
 
   // find beginning of substring
   char* p = std::strstr((char*) str.c_str(), (char*) sub.c_str()) ;
   // if substring not found, return empty std::string
-  if (p==0) return std::string();
+  if (p==nullptr) return std::string();
   // offset to end of substring
   p+= std::strlen(sub.c_str());
   return std::string(p);
@@ -302,7 +302,7 @@ std::string StrUtils::after(const std::string& str, const std::string& sub)
 int StrUtils::find(const std::string& str, const std::string& sub)
 {
   char* p = std::strstr((char*) str.c_str(), (char*) sub.c_str());
-  if (p==0) return -1;
+  if (p==nullptr) return -1;
   return static_cast<int>(p-str.c_str());
 }
 

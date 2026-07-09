@@ -17,7 +17,7 @@
 namespace Teuchos
 {
 
-CompObject::CompObject() : flopCounter_(0)
+CompObject::CompObject() : flopCounter_(nullptr)
 {
 }
 
@@ -31,7 +31,7 @@ CompObject::CompObject(const CompObject& source) : flopCounter_(source.flopCount
 
 CompObject::~CompObject()
 {
-  flopCounter_ = 0;
+  flopCounter_ = nullptr;
 }
 
 } // namespace Teuchos

@@ -145,7 +145,7 @@ TEUCHOS_UNIT_TEST( SimpleObjectDB, storeNonconstObjNull1 )
 TEUCHOS_UNIT_TEST( SimpleObjectDB, storeNonconstObjNull2 )
 {
   ECHO(SimpleObjectDB<A> sot);
-  ECHO(A *a=NULL);
+  ECHO(A *a=nullptr);
   TEST_THROW(sot.storeNonconstObj(rcp(a)), NullReferenceError);
   TEST_EQUALITY_CONST(sot.tableSize(), 0);
   TEST_EQUALITY_CONST(sot.numFreeIndexes(), 0);
@@ -336,7 +336,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_2_DECL( SimpleObjectDB, storeCastedNonconstObj, T1, T
   ECHO(SimpleObjectDB<T2> sot);
   ECHO(RCP<T1> rcpT1 = rcp(new T1));
   ECHO(T2 *pT2 = dynamic_cast<T2*>(rcpT1.get()));
-  if (pT2 == NULL) {
+  if (pT2 == nullptr) {
     TEST_THROW(sot.storeCastedNonconstObj(rcpT1), m_bad_cast);
   } else {
     ECHO(int id = sot.storeCastedNonconstObj(rcpT1));

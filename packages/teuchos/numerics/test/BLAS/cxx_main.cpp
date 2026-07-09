@@ -222,7 +222,7 @@ int main(int argc, char *argv[])
   SType2 convertTo = ScalarTraits<SType2>::zero();
   SType2 TOL = 1e-5;
 
-  std::srand(time(NULL));
+  std::srand(time(nullptr));
 
   //--------------------------------------------------------------------------------
   // BEGIN LEVEL 1 BLAS TESTS
@@ -1877,7 +1877,7 @@ bool CompareMatrices(TYPE1* Matrix1, TYPE2* Matrix2, OType Rows, OType Columns, 
 
 
 template<typename TYPE1, typename TYPE2>
-TYPE2 ConvertType(TYPE1 T1, TYPE2 T2)
+TYPE2 ConvertType(TYPE1 T1, TYPE2  /*T2*/)
 {
   return static_cast<TYPE2>(T1);
 }

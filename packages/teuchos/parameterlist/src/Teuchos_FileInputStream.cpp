@@ -15,7 +15,7 @@ using namespace Teuchos;
 FileInputStream::FileInputStream(const std::string& filename)
 	: XMLInputStream(), file_(std::fopen(filename.c_str(), "rb"))
 {
-  TEUCHOS_TEST_FOR_EXCEPTION(file_ == NULL,
+  TEUCHOS_TEST_FOR_EXCEPTION(file_ == nullptr,
                      std::runtime_error,
                      "FileInputStream ctor failed to open file: "
                      << filename);

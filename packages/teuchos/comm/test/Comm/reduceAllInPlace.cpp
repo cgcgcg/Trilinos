@@ -31,7 +31,7 @@ getRawMpiCommFromTeuchosComm (const ::Teuchos::Comm<int>& comm)
 
   const Comm<int>* commPtr = &comm;
   const MpiComm<int>* mpiCommPtr = dynamic_cast<const MpiComm<int>* > (commPtr);
-  if (mpiCommPtr == NULL) {
+  if (mpiCommPtr == nullptr) {
     return MPI_COMM_SELF;
   }
   else {

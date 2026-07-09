@@ -116,7 +116,7 @@ public:
     ParameterEntry * entry
     ) const
     {
-      TEUCHOS_TEST_FOR_EXCEPT(0==entry);
+      TEUCHOS_TEST_FOR_EXCEPT(nullptr==entry);
       this->validate(*entry,paramName,sublistName);
     }
 

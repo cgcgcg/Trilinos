@@ -15,7 +15,6 @@
 #include "Teuchos_Assert.hpp"
 #include "Teuchos_VerboseObject.hpp"
 #include "Teuchos_CommandLineProcessor.hpp"
-#include "Teuchos_Assert.hpp"
 #include "Teuchos_Time.hpp"
 #include "Teuchos_StandardCatchMacros.hpp"
 

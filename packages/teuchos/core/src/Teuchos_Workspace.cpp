@@ -52,9 +52,9 @@ namespace Teuchos {
 // WorkspaceStore
 
 WorkspaceStore::WorkspaceStore(size_t num_bytes)
-  : workspace_begin_(NULL)
-  , workspace_end_(NULL)
-  , curr_ws_ptr_(NULL)
+  : workspace_begin_(nullptr)
+  , workspace_end_(nullptr)
+  , curr_ws_ptr_(nullptr)
   , num_static_allocations_(0)
   , num_dyn_allocations_(0)
   , num_current_bytes_total_(0)
@@ -107,9 +107,9 @@ RawWorkspace::RawWorkspace(WorkspaceStore* workspace_store, size_t num_bytes_in)
     }
   }
   else {
-    workspace_store_ = NULL;
-    workspace_begin_ = NULL;
-    workspace_end_   = NULL;
+    workspace_store_ = nullptr;
+    workspace_begin_ = nullptr;
+    workspace_end_   = nullptr;
     owns_memory_     = false;
   }
   if(workspace_store_) {

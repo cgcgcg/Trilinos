@@ -184,7 +184,7 @@ void BoolParameterEntryValidator::validateAndModify(
   ParameterEntry * entry
   ) const
 {
-  TEUCHOS_TEST_FOR_EXCEPT(0==entry);
+  TEUCHOS_TEST_FOR_EXCEPT(nullptr==entry);
   entry->setValue(getBool(*entry,paramName,sublistName,false), false);
 }
 
@@ -436,7 +436,7 @@ void AnyNumberParameterEntryValidator::validateAndModify(
   ParameterEntry * entry
   ) const
 {
-  TEUCHOS_TEST_FOR_EXCEPT(0==entry);
+  TEUCHOS_TEST_FOR_EXCEPT(nullptr==entry);
   switch(preferredType_) {
     case PREFER_INT:
       entry->setValue(
@@ -611,7 +611,7 @@ RCP<FileNameValidator> DummyObjectGetter<FileNameValidator>::getDummyObject(){
 
 
 StringValidator::StringValidator()
-  : ParameterEntryValidator(), validStrings_(NULL)
+  : ParameterEntryValidator(), validStrings_(nullptr)
 {}
 
 
@@ -747,7 +747,7 @@ void Teuchos::setIntParameter(
   AnyNumberParameterEntryValidator::AcceptedTypes const& acceptedTypes
   )
 {
-  TEUCHOS_TEST_FOR_EXCEPT(0==paramList);
+  TEUCHOS_TEST_FOR_EXCEPT(nullptr==paramList);
   const RCP<const ParameterEntryValidator> paramEntryValidator =
     anyNumberParameterEntryValidator(
       AnyNumberParameterEntryValidator::PREFER_INT, acceptedTypes
@@ -763,7 +763,7 @@ void Teuchos::setLongLongParameter(
   AnyNumberParameterEntryValidator::AcceptedTypes const& acceptedTypes
   )
 {
-  TEUCHOS_TEST_FOR_EXCEPT(0==paramList);
+  TEUCHOS_TEST_FOR_EXCEPT(nullptr==paramList);
   const RCP<const ParameterEntryValidator> paramEntryValidator =
     anyNumberParameterEntryValidator(
       AnyNumberParameterEntryValidator::PREFER_LONG_LONG, acceptedTypes
@@ -779,7 +779,7 @@ void Teuchos::setDoubleParameter(
   AnyNumberParameterEntryValidator::AcceptedTypes const& acceptedTypes
   )
 {
-  TEUCHOS_TEST_FOR_EXCEPT(0==paramList);
+  TEUCHOS_TEST_FOR_EXCEPT(nullptr==paramList);
   const RCP<const ParameterEntryValidator> paramEntryValidator =
     anyNumberParameterEntryValidator(
       AnyNumberParameterEntryValidator::PREFER_DOUBLE, acceptedTypes
@@ -795,7 +795,7 @@ void Teuchos::setNumericStringParameter(
   AnyNumberParameterEntryValidator::AcceptedTypes const& acceptedTypes
   )
 {
-  TEUCHOS_TEST_FOR_EXCEPT(0==paramList);
+  TEUCHOS_TEST_FOR_EXCEPT(nullptr==paramList);
   const RCP<const ParameterEntryValidator> paramEntryValidator =
     anyNumberParameterEntryValidator(
       AnyNumberParameterEntryValidator::PREFER_STRING, acceptedTypes

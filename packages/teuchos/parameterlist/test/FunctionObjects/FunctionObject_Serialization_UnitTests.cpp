@@ -36,7 +36,7 @@ TEUCHOS_UNIT_TEST(Teuchos_Functions, SubtractionTests){
     FunctionObjectXMLConverterDB::convertXML(subFuncXML);
   RCP<SubtractionFunction<int> > readInCasted =
     rcp_dynamic_cast<SubtractionFunction<int> >(readIn);
-  TEST_ASSERT(readInCasted.get() != NULL);
+  TEST_ASSERT(readInCasted.get() != nullptr);
   TEST_ASSERT(
     readInCasted->getModifiyingOperand()
     ==
@@ -61,7 +61,7 @@ TEUCHOS_UNIT_TEST(Teuchos_Functions, AdditionTests){
     FunctionObjectXMLConverterDB::convertXML(addFuncXML);
   RCP<AdditionFunction<int> > readInCasted =
     rcp_dynamic_cast<AdditionFunction<int> >(readIn);
-  TEST_ASSERT(readInCasted.get() != NULL);
+  TEST_ASSERT(readInCasted.get() != nullptr);
   TEST_ASSERT(
     readInCasted->getModifiyingOperand()
     ==
@@ -86,7 +86,7 @@ TEUCHOS_UNIT_TEST(Teuchos_Functions, MultiplicationTests){
     FunctionObjectXMLConverterDB::convertXML(multiFuncXML);
   RCP<MultiplicationFunction<int> > readInCasted =
     rcp_dynamic_cast<MultiplicationFunction<int> >(readIn);
-  TEST_ASSERT(readInCasted.get() != NULL);
+  TEST_ASSERT(readInCasted.get() != nullptr);
   TEST_ASSERT(
     readInCasted->getModifiyingOperand()
     ==
@@ -111,7 +111,7 @@ TEUCHOS_UNIT_TEST(Teuchos_Functions, DivisionTests){
     FunctionObjectXMLConverterDB::convertXML(divisFuncXML);
   RCP<DivisionFunction<int> > readInCasted =
     rcp_dynamic_cast<DivisionFunction<int> >(readIn);
-  TEST_ASSERT(readInCasted.get() != NULL);
+  TEST_ASSERT(readInCasted.get() != nullptr);
   TEST_ASSERT(
     readInCasted->getModifiyingOperand()
     ==

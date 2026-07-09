@@ -32,7 +32,7 @@ int main()
     f();
 
     // This will segfault:
-    char *p = NULL; *p = 0;
+    char *p = nullptr; *p = 0;
 
     return 0;
 }

@@ -15,7 +15,6 @@
 #include <Teuchos_ParameterList.hpp>
 #include <Teuchos_Exceptions.hpp>
 #include <Teuchos_YamlParser_decl.hpp>
-#include <Teuchos_Exceptions.hpp>
 #include <Teuchos_RCP.hpp>
 #include <Teuchos_DefaultComm.hpp>
 

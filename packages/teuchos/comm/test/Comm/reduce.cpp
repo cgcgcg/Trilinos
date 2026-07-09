@@ -54,7 +54,7 @@ testReduceSum (bool& success, std::ostream& out,
 
   const MpiComm<int>* mpiComm = dynamic_cast<const MpiComm<int>* > (&comm);
   TEUCHOS_TEST_FOR_EXCEPTION
-    (mpiComm == NULL, std::logic_error, "Building with MPI, but default "
+    (mpiComm == nullptr, std::logic_error, "Building with MPI, but default "
      "communicator is not a Teuchos::MpiComm!");
   MPI_Comm rawMpiComm = * (mpiComm->getRawMpiComm ());
 

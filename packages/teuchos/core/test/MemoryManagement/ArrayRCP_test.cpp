@@ -384,7 +384,7 @@ int main( int argc, char* argv[] )
     *out << "\nchar_ptr2 = " << char_ptr2 << "\n";
 
     TEUCHOS_TEST_FOR_EXCEPT( !(char_ptr2.size() == 0) );
-    TEUCHOS_TEST_FOR_EXCEPT( !(char_ptr2.get() == NULL) );
+    TEUCHOS_TEST_FOR_EXCEPT( !(char_ptr2.get() == nullptr) );
     TEUCHOS_TEST_FOR_EXCEPT( !(char_ptr2.strong_count() == 0) );
     TEUCHOS_TEST_FOR_EXCEPT( !(char_ptr2.weak_count() == 0) );
     TEUCHOS_TEST_FOR_EXCEPT( !(char_ptr2.total_count() == 0) );
@@ -406,7 +406,7 @@ int main( int argc, char* argv[] )
     char_ptr2b = null;
 
     TEUCHOS_TEST_FOR_EXCEPT( !(char_ptr2b.size() == 0) );
-    TEUCHOS_TEST_FOR_EXCEPT( !(char_ptr2.get() == NULL) );
+    TEUCHOS_TEST_FOR_EXCEPT( !(char_ptr2.get() == nullptr) );
     TEUCHOS_TEST_FOR_EXCEPT( !(char_ptr2b.strong_count() == 0) );
     TEUCHOS_TEST_FOR_EXCEPT( !(char_ptr1.strong_count() == 1) );
 

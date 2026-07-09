@@ -29,7 +29,7 @@ class basic_oblackholestream
 {
 public:
   /** \brief . */
-	explicit basic_oblackholestream() : std::basic_ostream<_CharT, _Traits>(NULL) {}
+	explicit basic_oblackholestream() : std::basic_ostream<_CharT, _Traits>(nullptr) {}
 }; // end class basic_oblackholestream
 
 } // end namespace Teuchos

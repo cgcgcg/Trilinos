@@ -65,7 +65,7 @@ std::string runCommandAndCaptureOutput(const std::string &command) {
   if (!pipe)
     return "command \"" + command + "\"failed";
   try {
-    while (fgets(buffer, sizeof buffer, pipe) != NULL) {
+    while (fgets(buffer, sizeof buffer, pipe) != nullptr) {
       result += buffer;
     }
   } catch (...) {

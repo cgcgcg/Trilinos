@@ -52,7 +52,7 @@ using Teuchos::RCPNodeTracer;
 TEUCHOS_UNIT_TEST( DeallocNull, free )
 {
   Teuchos::DeallocNull<A> d;
-  d.free(0);
+  d.free(nullptr);
 }
 
 
@@ -236,21 +236,21 @@ TEUCHOS_UNIT_TEST( RCP, getConst )
 
 TEUCHOS_UNIT_TEST( RCP, explicit_null )
 {
-  RCP<A> a_rcp(0);
+  RCP<A> a_rcp(nullptr);
   TEST_ASSERT(is_null(a_rcp));
 }
 
 
 TEUCHOS_UNIT_TEST( RCP, explicit_dealloc_null )
 {
-  RCP<A> a_rcp = rcpWithDealloc(static_cast<A*>(0), Teuchos::DeallocNull<A>(), false);
+  RCP<A> a_rcp = rcpWithDealloc(static_cast<A*>(nullptr), Teuchos::DeallocNull<A>(), false);
   TEST_ASSERT(is_null(a_rcp));
 }
 
 
 TEUCHOS_UNIT_TEST( RCP, explicit_null_null )
 {
-  RCP<A> a_rcp(0, null);
+  RCP<A> a_rcp(nullptr, null);
   TEST_ASSERT(is_null(a_rcp));
 }
 
@@ -900,7 +900,7 @@ TEUCHOS_UNIT_TEST( RCP, danglingPtr1 )
 TEUCHOS_UNIT_TEST( RCP, danglingPtr2 )
 {
   ECHO(Ptr<A> a_ptr);
-  ECHO(A *badPtr = 0);
+  ECHO(A *badPtr = nullptr);
   {
     ECHO(RCP<A> a_rcp = rcp(new A));
     ECHO(badPtr = a_rcp.getRawPtr());
@@ -919,7 +919,7 @@ TEUCHOS_UNIT_TEST( RCP, danglingPtr2 )
 TEUCHOS_UNIT_TEST( RCP, danglingPtr3 )
 {
   ECHO(Ptr<A> a_ptr);
-  ECHO(A *badPtr = 0);
+  ECHO(A *badPtr = nullptr);
   {
     ECHO(RCP<A> a_rcp = rcp(new A));
     ECHO(badPtr = a_rcp.getRawPtr());
@@ -940,7 +940,7 @@ TEUCHOS_UNIT_TEST( RCP, danglingPtr3 )
 TEUCHOS_UNIT_TEST( RCP, danglingPtr4 )
 {
   ECHO(Ptr<A> a_ptr);
-  ECHO(A *badPtr = 0);
+  ECHO(A *badPtr = nullptr);
   {
     ECHO(RCP<C> c_rcp = rcp(new C));
     ECHO(badPtr = c_rcp.getRawPtr());

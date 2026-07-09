@@ -25,7 +25,7 @@ TEUCHOSCORE_LIB_DLL_EXPORT void throw_null( const std::string &type_name );
 
 template<class T> inline
 Ptr<T>::Ptr( ENull /*null_in*/ )
-  : ptr_(0)
+  : ptr_(nullptr)
 {}
 
 

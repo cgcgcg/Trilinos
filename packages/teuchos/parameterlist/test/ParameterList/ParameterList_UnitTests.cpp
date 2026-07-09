@@ -318,8 +318,8 @@ TEUCHOS_UNIT_TEST( ParameterList, param_isParameter_isSublist_isType )
   TEST_EQUALITY_CONST(pl.isSublist("Does not exist"), false);
   TEST_EQUALITY_CONST(pl.isType<int>("my int"), true);
   TEST_EQUALITY_CONST(pl.isType<double>("my int"), false);
-  TEST_EQUALITY_CONST(pl.isType("my int", static_cast<int*>(0)), true);
-  TEST_EQUALITY_CONST(pl.isType("my int", static_cast<double*>(0)), false);
+  TEST_EQUALITY_CONST(pl.isType("my int", static_cast<int*>(nullptr)), true);
+  TEST_EQUALITY_CONST(pl.isType("my int", static_cast<double*>(nullptr)), false);
 }
 
 
@@ -334,8 +334,8 @@ TEUCHOS_UNIT_TEST( ParameterList, sublist_isParameter_isSublist_isType )
   TEST_EQUALITY_CONST(pl.isSublist("my sublist"), true);
   TEST_EQUALITY_CONST(pl.isType<ParameterList>("my sublist"), true);
   TEST_EQUALITY_CONST(pl.isType<double>("my sublist"), false);
-  TEST_EQUALITY_CONST(pl.isType("my sublist", static_cast<ParameterList*>(0)), true);
-  TEST_EQUALITY_CONST(pl.isType("my sublist", static_cast<double*>(0)), false);
+  TEST_EQUALITY_CONST(pl.isType("my sublist", static_cast<ParameterList*>(nullptr)), true);
+  TEST_EQUALITY_CONST(pl.isType("my sublist", static_cast<double*>(nullptr)), false);
 }
 
 
@@ -389,7 +389,7 @@ TEUCHOS_UNIT_TEST( ParameterList, set_get_entry )
   ECHO(pl.setEntry("my int", ParameterEntry(as<int>(3), true, true, "Some doc", rcp(new DummyValidator))));
   ECHO(const ParameterEntry& my_int_param = getConst(pl).getEntry("my int"));
   TEST_EQUALITY_CONST(my_int_param.docString(), "Some doc");
-  ECHO(const int my_int_1 = my_int_param.getValue<int>(0));
+  ECHO(const int my_int_1 = my_int_param.getValue<int>(nullptr));
   TEST_EQUALITY_CONST(my_int_1, 3);
   TEST_EQUALITY_CONST(my_int_param.isUsed(), true);
   TEST_EQUALITY_CONST(my_int_param.isList(), false); // The isList entry is ignored!
@@ -509,8 +509,8 @@ TEUCHOS_UNIT_TEST( ParameterList, get_nonexisting_param )
   TEST_THROW(pl.getEntry("Does not exist 1"), Exceptions::InvalidParameterName);
   TEST_THROW(pl.get<int>("Does not exist 2"), Exceptions::InvalidParameterName);
   TEST_THROW(getConst(pl).get<int>("Does not exist 3"), Exceptions::InvalidParameterName);
-  TEST_EQUALITY(pl.getPtr<int>("Does not exist 4"), static_cast<int*>(0));
-  TEST_EQUALITY(getConst(pl).getPtr<int>("Does not exist 5"), static_cast<const int*>(0));
+  TEST_EQUALITY(pl.getPtr<int>("Does not exist 4"), static_cast<int*>(nullptr));
+  TEST_EQUALITY(getConst(pl).getPtr<int>("Does not exist 5"), static_cast<const int*>(nullptr));
   ECHO(char raw_str[] = "dummy");
   TEST_EQUALITY_CONST(pl.get("Does not exist 6", raw_str), "dummy");
   ECHO(const char raw_c_str[] = "dummy");
@@ -519,8 +519,8 @@ TEUCHOS_UNIT_TEST( ParameterList, get_nonexisting_param )
   TEST_EQUALITY_CONST(pl.get("Does not exist 8", str), "dummy");
   TEST_THROW(pl.getEntry("Does not exist 9"), Exceptions::InvalidParameterName);
   TEST_THROW(getConst(pl).getEntry("Does not exist 10"), Exceptions::InvalidParameterName);
-  TEST_EQUALITY(pl.getEntryPtr("Does not exist 11"), static_cast<ParameterEntry*>(0));
-  TEST_EQUALITY(getConst(pl).getEntryPtr("Does not exist 12"), static_cast<const ParameterEntry*>(0));
+  TEST_EQUALITY(pl.getEntryPtr("Does not exist 11"), static_cast<ParameterEntry*>(nullptr));
+  TEST_EQUALITY(getConst(pl).getEntryPtr("Does not exist 12"), static_cast<const ParameterEntry*>(nullptr));
   TEST_EQUALITY(pl.getEntryRCP("Does not exist 13"), RCP<ParameterEntry>());
   TEST_EQUALITY(getConst(pl).getEntryRCP("Does not exist 14"), RCP<const ParameterEntry>());
 }
@@ -539,14 +539,14 @@ TEUCHOS_UNIT_TEST( ParameterList, getPtr )
 {
   ParameterList pl;
   pl.set("my int", 4);
-  TEST_EQUALITY_CONST(pl.getPtr<int>("Does not Exist"), static_cast<int*>(0));
-  TEST_INEQUALITY_CONST(pl.getPtr<int>("my int"), static_cast<int*>(0));
+  TEST_EQUALITY_CONST(pl.getPtr<int>("Does not Exist"), static_cast<int*>(nullptr));
+  TEST_INEQUALITY_CONST(pl.getPtr<int>("my int"), static_cast<int*>(nullptr));
   TEST_EQUALITY_CONST(*pl.getPtr<int>("my int"), 4);
-  TEST_EQUALITY_CONST(pl.getPtr<double>("my int"), static_cast<double*>(0));
-  TEST_EQUALITY_CONST(getConst(pl).getPtr<int>("Does not Exist"), static_cast<const int*>(0));
-  TEST_INEQUALITY_CONST(getConst(pl).getPtr<int>("my int"), static_cast<int*>(0));
+  TEST_EQUALITY_CONST(pl.getPtr<double>("my int"), static_cast<double*>(nullptr));
+  TEST_EQUALITY_CONST(getConst(pl).getPtr<int>("Does not Exist"), static_cast<const int*>(nullptr));
+  TEST_INEQUALITY_CONST(getConst(pl).getPtr<int>("my int"), static_cast<int*>(nullptr));
   TEST_EQUALITY_CONST(*getConst(pl).getPtr<int>("my int"), 4);
-  TEST_EQUALITY_CONST(getConst(pl).getPtr<double>("my int"), static_cast<const double*>(0));
+  TEST_EQUALITY_CONST(getConst(pl).getPtr<double>("my int"), static_cast<const double*>(nullptr));
 }
 
 
@@ -556,10 +556,10 @@ TEUCHOS_UNIT_TEST( ParameterList, getEntryRCP )
   pl.set("my int", 4);
   TEST_EQUALITY_CONST(pl.getEntryRCP("Does not Exist"), null);
   TEST_INEQUALITY_CONST(pl.getEntryRCP("my int"), null);
-  TEST_EQUALITY_CONST(pl.getEntryRCP("my int")->getValue<int>(0), 4);
+  TEST_EQUALITY_CONST(pl.getEntryRCP("my int")->getValue<int>(nullptr), 4);
   TEST_EQUALITY_CONST(getConst(pl).getEntryRCP("Does not Exist"), null);
   TEST_INEQUALITY_CONST(getConst(pl).getEntryRCP("my int"), null);
-  TEST_EQUALITY_CONST(getConst(pl).getEntryRCP("my int")->getValue<int>(0), 4);
+  TEST_EQUALITY_CONST(getConst(pl).getEntryRCP("my int")->getValue<int>(nullptr), 4);
 }
 
 
@@ -605,7 +605,7 @@ TEUCHOS_UNIT_TEST( ParameterList, get_nonexisting_sublist_default )
   TEST_EQUALITY_CONST(sublistParam.isList(), true);
   TEST_EQUALITY_CONST(sublistParam.isDefault(), false);
   TEST_EQUALITY_CONST(sublistParam.docString(), "");
-  TEST_EQUALITY_CONST(sublistParam.getValue<ParameterList>(0).name(), "Base->my sublist");
+  TEST_EQUALITY_CONST(sublistParam.getValue<ParameterList>(nullptr).name(), "Base->my sublist");
 }
 
 
@@ -618,7 +618,7 @@ TEUCHOS_UNIT_TEST( ParameterList, get_nonexisting_sublist_docString )
   TEST_EQUALITY_CONST(sublistParam.isList(), true);
   TEST_EQUALITY_CONST(sublistParam.isDefault(), false);
   TEST_EQUALITY_CONST(sublistParam.docString(), "My great sublist");
-  TEST_EQUALITY_CONST(sublistParam.getValue<ParameterList>(0).name(), "Base->my sublist");
+  TEST_EQUALITY_CONST(sublistParam.getValue<ParameterList>(nullptr).name(), "Base->my sublist");
 }
 
 
@@ -751,13 +751,13 @@ TEUCHOS_UNIT_TEST( ParameterList, iterator_params )
   pl.set("b", 3);
   ConstIter pl_itr = pl.begin();
   TEST_EQUALITY_CONST(pl_itr->first, "c");
-  TEST_EQUALITY_CONST(pl_itr->second.getValue<int>(0), 1);
+  TEST_EQUALITY_CONST(pl_itr->second.getValue<int>(nullptr), 1);
   ECHO(++pl_itr);
   TEST_EQUALITY_CONST(pl_itr->first, "a");
-  TEST_EQUALITY_CONST(pl_itr->second.getValue<int>(0), 2);
+  TEST_EQUALITY_CONST(pl_itr->second.getValue<int>(nullptr), 2);
   ECHO(++pl_itr);
   TEST_EQUALITY_CONST(pl_itr->first, "b");
-  TEST_EQUALITY_CONST(pl_itr->second.getValue<int>(0), 3);
+  TEST_EQUALITY_CONST(pl_itr->second.getValue<int>(nullptr), 3);
   ECHO(++pl_itr);
   TEST_ITER_EQUALITY(pl_itr, pl.end());
 }
@@ -772,13 +772,13 @@ TEUCHOS_UNIT_TEST( ParameterList, iterator_params_sublists )
   pl.set("b", 3);
   ConstIter pl_itr = pl.begin();
   TEST_EQUALITY_CONST(pl_itr->first, "c");
-  TEST_EQUALITY_CONST(pl_itr->second.getValue<int>(0), 1);
+  TEST_EQUALITY_CONST(pl_itr->second.getValue<int>(nullptr), 1);
   ECHO(++pl_itr);
   TEST_EQUALITY_CONST(pl_itr->first, "a");
-  TEST_EQUALITY_CONST(pl_itr->second.getValue<ParameterList>(0).name(), "base->a");
+  TEST_EQUALITY_CONST(pl_itr->second.getValue<ParameterList>(nullptr).name(), "base->a");
   ECHO(++pl_itr);
   TEST_EQUALITY_CONST(pl_itr->first, "b");
-  TEST_EQUALITY_CONST(pl_itr->second.getValue<int>(0), 3);
+  TEST_EQUALITY_CONST(pl_itr->second.getValue<int>(nullptr), 3);
   ECHO(++pl_itr);
   TEST_ITER_EQUALITY(pl_itr, pl.end());
 }

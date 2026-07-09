@@ -1139,7 +1139,7 @@ ParameterList::getEntryPtr(const std::string& name_in)
   if (param_idx != SIOVOCB::getInvalidOrdinal()) {
     return &*params_.getNonconstObjPtr(param_idx);
   }
-  return 0;
+  return nullptr;
 }
 
 
@@ -1152,7 +1152,7 @@ ParameterList::getEntryPtr(const std::string& name_in) const
   if (param_idx != SIOVOCB::getInvalidOrdinal()) {
     return &*params_.getObjPtr(param_idx);
   }
-  return 0;
+  return nullptr;
 }
 
 

@@ -148,15 +148,15 @@ mpiDatatypeIsSame (MPI_Datatype t1, MPI_Datatype t2)
 
       // This does not exist in MPI 1.1, but does exist in MPI 2.0.
       err = MPI_Type_get_contents (t1, numInts1, numAddrs1, numTypes1,
-                                   numInts1 == 0 ? NULL : &theInts1[0],
-                                   numAddrs1 == 0 ? NULL : &theAddrs1[0],
-                                   numTypes1 == 0 ? NULL : &theTypes1[0]);
+                                   numInts1 == 0 ? nullptr : &theInts1[0],
+                                   numAddrs1 == 0 ? nullptr : &theAddrs1[0],
+                                   numTypes1 == 0 ? nullptr : &theTypes1[0]);
       REPORT_MPI_ERR(err, "MPI_Type_get_contents");
       // This does not exist in MPI 1.1, but does exist in MPI 2.0.
       err = MPI_Type_get_contents (t2, numInts2, numAddrs2, numTypes2,
-                                   numInts2 == 0 ? NULL : &theInts2[0],
-                                   numAddrs2 == 0 ? NULL : &theAddrs2[0],
-                                   numTypes2 == 0 ? NULL : &theTypes2[0]);
+                                   numInts2 == 0 ? nullptr : &theInts2[0],
+                                   numAddrs2 == 0 ? nullptr : &theAddrs2[0],
+                                   numTypes2 == 0 ? nullptr : &theTypes2[0]);
       REPORT_MPI_ERR(err, "MPI_Type_get_contents");
       TEUCHOS_TEST_FOR_EXCEPTION
         (err != MPI_SUCCESS, std::logic_error, "MPI_Type_get_contents "

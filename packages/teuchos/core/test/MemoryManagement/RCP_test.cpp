@@ -122,8 +122,8 @@ int main( int argc, char* argv[] ) {
     RCP<D> d_ptr1 = rcp(new E);
     TEUCHOS_TEST_FOR_EXCEPT( d_ptr1.shares_resource(a_ptr1) );
     TEUCHOS_TEST_FOR_EXCEPT( d_ptr1.strong_count() != 1 );
-    TEUCHOS_TEST_FOR_EXCEPT( d_ptr1.get() == NULL);
-    TEUCHOS_TEST_FOR_EXCEPT( d_ptr1.getRawPtr() == NULL);
+    TEUCHOS_TEST_FOR_EXCEPT( d_ptr1.get() == nullptr);
+    TEUCHOS_TEST_FOR_EXCEPT( d_ptr1.getRawPtr() == nullptr);
 
     {
 

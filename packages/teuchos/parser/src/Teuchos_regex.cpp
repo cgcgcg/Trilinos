@@ -20,7 +20,6 @@
 #include "Teuchos_string.hpp"
 #include "Teuchos_chartab.hpp"
 #include "Teuchos_Reader.hpp"
-#include "Teuchos_chartab.hpp"
 
 namespace Teuchos {
 namespace regex {

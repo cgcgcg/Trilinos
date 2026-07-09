@@ -71,7 +71,7 @@ typedef std::multimap<const void*, RCPNodeInfo> rcp_node_list_t;
 
 rcp_node_list_t*& rcp_node_list()
 {
-  static rcp_node_list_t *s_rcp_node_list = 0;
+  static rcp_node_list_t *s_rcp_node_list = nullptr;
   // Here we must let the ActiveRCPNodesSetup constructor and destructor handle
   // the creation and destruction of this map object.  This will ensure that
   // this map object will be valid when any global/static RCP objects are
@@ -187,7 +187,7 @@ void RCPNode::set_extra_data(
   )
 {
   (void)force_unique;
-  if(extra_data_map_==NULL) {
+  if(extra_data_map_==nullptr) {
     extra_data_map_ = new extra_data_map_t;
   }
   const std::string type_and_name( extra_data.typeName() + std::string(":") + name );
@@ -233,12 +233,12 @@ any& RCPNode::get_extra_data( const std::string& type_name, const std::string& n
 any* RCPNode::get_optional_extra_data( const std::string& type_name,
   const std::string& name )
 {
-  if( extra_data_map_ == NULL ) return NULL;
+  if( extra_data_map_ == nullptr ) return nullptr;
   const std::string type_and_name( type_name + std::string(":") + name );
   extra_data_map_t::iterator itr = extra_data_map_->find(type_and_name);
   if(itr != extra_data_map_->end())
     return &(*itr).second.extra_data;
-  return NULL;
+  return nullptr;
 }
 
 
@@ -252,12 +252,12 @@ void throw_invalid_obj_exception_free_fun( const std::string& rcp_type_name,
 #endif
     const std::string& type_name)
 {
-  TEUCHOS_TEST_FOR_EXCEPT_MSG( ptr_!=0, "Internal coding error!" );
+  TEUCHOS_TEST_FOR_EXCEPT_MSG( ptr_!=nullptr, "Internal coding error!" );
   const void* deleted_ptr =
 #ifdef TEUCHOS_DEBUG
   deleted_ptr_
 #else
-  0
+  nullptr
 #endif
   ;
   TEUCHOS_ASSERT(rcp_node_ptr);
@@ -328,7 +328,7 @@ void RCPNodeTracer::setTracingActiveRCPNodes(bool tracingActiveNodes)
 int RCPNodeTracer::numActiveRCPNodes()
 {
   // This list always exists, no matter debug or not so just access it.
-  TEUCHOS_TEST_FOR_EXCEPT(0==rcp_node_list());
+  TEUCHOS_TEST_FOR_EXCEPT(nullptr==rcp_node_list());
   return static_cast<int>(rcp_node_list()->size());
 }
 
@@ -386,7 +386,7 @@ void RCPNodeTracer::printActiveRCPNodes(std::ostream &out)
     << " rcp_node_list.size() = " << rcp_node_list().size() << "\n";
 #endif // TEUCHOS_SHOW_ACTIVE_REFCOUNTPTR_NODE_TRACE
   if (loc_isTracingActiveRCPNodes()) {
-    TEUCHOS_TEST_FOR_EXCEPT(0==rcp_node_list());
+    TEUCHOS_TEST_FOR_EXCEPT(nullptr==rcp_node_list());
     if (rcp_node_list()->size() > 0) {
       out << getActiveRCPNodeHeaderString();
       // Create a sorted-by-insertionNumber list
@@ -459,7 +459,7 @@ void RCPNodeTracer::addNewRCPNode( RCPNode* rcp_node, const std::string &info )
       << convertRCPNodeToString(rcp_node) << " ...\n";
 #endif
 
-    TEUCHOS_TEST_FOR_EXCEPT(0==rcp_node_list());
+    TEUCHOS_TEST_FOR_EXCEPT(nullptr==rcp_node_list());
 
     const void * const map_key_void_ptr = get_map_key_void_ptr(rcp_node);
 
@@ -468,7 +468,7 @@ void RCPNodeTracer::addNewRCPNode( RCPNode* rcp_node, const std::string &info )
     typedef std::pair<itr_t, itr_t> itr_itr_t;
     const itr_itr_t itr_itr = rcp_node_list()->equal_range(map_key_void_ptr);
     const bool rcp_node_already_exists = itr_itr.first != itr_itr.second;
-    RCPNode *previous_rcp_node = 0;
+    RCPNode *previous_rcp_node = nullptr;
     bool previous_rcp_node_has_ownership = false;
     for (itr_t itr = itr_itr.first; itr != itr_itr.second; ++itr) {
       previous_rcp_node = itr->second.nodePtr;
@@ -595,7 +595,7 @@ RCPNode* RCPNodeTracer::getExistingRCPNodeGivenLookupKey(const void* p)
   typedef rcp_node_list_t::iterator itr_t;
   typedef std::pair<itr_t, itr_t> itr_itr_t;
   if (!p)
-    return 0;
+    return nullptr;
 
 #ifdef USE_MUTEX_TO_PROTECT_NODE_TRACING
   // lock_guard will unlock in the event of an exception
@@ -609,7 +609,7 @@ RCPNode* RCPNodeTracer::getExistingRCPNodeGivenLookupKey(const void* p)
       return rcpNode;
     }
   }
-  return 0;
+  return nullptr;
   // NOTE: Above, we return the first RCPNode added that has the given key
   // value.
 }
@@ -711,7 +711,7 @@ ActiveRCPNodesSetup::~ActiveRCPNodesSetup()
       RCPNodeTracer::printActiveRCPNodes(std::cerr);
     }
     delete rcp_node_list();
-    rcp_node_list() = 0;
+    rcp_node_list() = nullptr;
 
 #ifdef USE_MUTEX_TO_PROTECT_NODE_TRACING
   delete rcp_node_list_mutex();
@@ -748,7 +748,7 @@ void RCPNodeHandle::unbindOneStrong()
 void RCPNodeHandle::unbindOneTotal()
 {
   delete node_;
-  node_ = 0;
+  node_ = nullptr;
 }
 
 } // namespace Teuchos

@@ -134,7 +134,7 @@ public:
   std::string footer() const;
 
   //! Find out if a node is empty
-  bool isEmpty() const { return ptr_.get()==0;}
+  bool isEmpty() const { return ptr_.get()==nullptr;}
 
   //! Check that a tag is equal to an expected std::string
   void checkTag(const std::string& expected) const ;

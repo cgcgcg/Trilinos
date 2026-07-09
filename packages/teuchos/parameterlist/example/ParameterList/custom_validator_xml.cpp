@@ -25,7 +25,7 @@
 * validator that isn't part of the standard set of validators, then
 * you'll get an error. You need to add a converter for it.
 */
-int main(int argc, char* argv[])
+int main(int  /*argc*/, char*  /*argv*/[])
 {
   std::cout << Teuchos::Teuchos_Version() << std::endl << std::endl;
 

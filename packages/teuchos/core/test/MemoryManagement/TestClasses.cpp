@@ -25,7 +25,7 @@ void deallocHandleA(A** handle)
   std::cout << "\nCalled deallocHandleA(...)!\n";
   A *ptr = *handle;
   delete ptr;
-  *handle = 0;
+  *handle = nullptr;
 }
 
 
@@ -52,7 +52,7 @@ void destroyOpaque( Opaque_handle * opaque )
 {
   std::cout << "\nCalled destroyOpaque(...)!\n";
   delete *opaque;
-  *opaque = 0;
+  *opaque = nullptr;
 }
 
 
@@ -79,5 +79,5 @@ void destroyOpaque2( Opaque2_handle * opaque )
 {
   std::cout << "\nCalled destroyOpaque2(...)!\n";
   delete *opaque;
-  *opaque = 0;
+  *opaque = nullptr;
 }

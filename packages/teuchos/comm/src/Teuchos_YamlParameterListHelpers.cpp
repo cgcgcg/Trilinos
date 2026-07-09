@@ -35,7 +35,7 @@ void Teuchos::updateParametersFromYamlFileAndBroadcast(
       std::string yamlString(stream_iter, stream_end);
       int strsize = yamlString.size();
       broadcast<int, int>(comm, 0, &strsize);
-      char* ptr = (strsize) ? (&yamlString[0]) : 0;
+      char* ptr = (strsize) ? (&yamlString[0]) : nullptr;
       broadcast<int, char>(comm, 0, strsize, ptr);
       updateParametersFromYamlString(yamlString, paramList,overwrite, yamlFileName);
     }
@@ -44,7 +44,7 @@ void Teuchos::updateParametersFromYamlFileAndBroadcast(
       broadcast<int, int>(comm, 0, &strsize);
       std::string yamlString;
       yamlString.resize(strsize);
-      char* ptr = (strsize) ? (&yamlString[0]) : 0;
+      char* ptr = (strsize) ? (&yamlString[0]) : nullptr;
       broadcast<int, char>(comm, 0, strsize, ptr);
       updateParametersFromYamlString(yamlString, paramList,overwrite);
     }

@@ -239,7 +239,7 @@ main (int argc, char *argv[])
   using std::endl;
   using Teuchos::CommandLineProcessor;
 
-  Teuchos::GlobalMPISession mpiSession (&argc, &argv, NULL);
+  Teuchos::GlobalMPISession mpiSession (&argc, &argv, nullptr);
   const int myRank = mpiSession.getRank();
   Teuchos::oblackholestream blackHole;
   std::ostream& out = (myRank == 0) ? std::cout : blackHole;

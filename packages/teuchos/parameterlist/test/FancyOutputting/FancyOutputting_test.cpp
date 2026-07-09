@@ -23,7 +23,7 @@
 // different features of FancyOStream
 //
 
-void doAlgorithmStuff( Teuchos::ParameterList *algoParams = 0 )
+void doAlgorithmStuff( Teuchos::ParameterList *algoParams = nullptr )
 {
 
   // Here I just create the algorithm object that derives from VerboseObject.

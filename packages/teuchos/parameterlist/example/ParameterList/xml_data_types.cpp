@@ -70,7 +70,7 @@ std::istream& operator>>(std::istream &in, CustomDataType &object){
  * to serialize another data type, you must create and converter, something
  * which we will demonstrate in this example.
  */
-int main(int argc, char* argv[])
+int main(int  /*argc*/, char*  /*argv*/[])
 {
 
   using Teuchos::tuple;

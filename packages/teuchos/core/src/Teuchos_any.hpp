@@ -124,7 +124,7 @@ class TEUCHOSCORE_LIB_DLL_EXPORT any
 public:
   //! Empty constructor
   any()
-    : content(0)
+    : content(nullptr)
     {}
 
   //! Templated constructor (excluded for any/any& to prevent infinite recursion via holder<any>)
@@ -136,7 +136,7 @@ public:
 
   //! Copy constructor
   any(const any & other)
-    : content(other.content ? other.content->clone() : 0)
+    : content(other.content ? other.content->clone() : nullptr)
     {}
 
   //! Move constructor.

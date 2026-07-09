@@ -22,15 +22,15 @@ std::string Teuchos::demangleName( const std::string &mangledName )
 {
 #if defined(HAVE_GCC_ABI_DEMANGLE) && defined(HAVE_TEUCHOS_DEMANGLE)
   int status;
-  char* _demangledName = abi::__cxa_demangle (mangledName.c_str (), 0, 0, &status);
-  if (status != 0 || 0 == _demangledName) {
+  char* _demangledName = abi::__cxa_demangle (mangledName.c_str (), nullptr, nullptr, &status);
+  if (status != 0 || nullptr == _demangledName) {
 #ifdef TEUCHOS_DEBUG
     // In a debug build, we check if demangling succeeded.
     std::string nullstr ("NULL");
     const char* demangle_output = _demangledName ? _demangledName : nullstr.c_str ();
     using std::endl;
 #endif // TEUCHOS_DEBUG
-    if (_demangledName != NULL) {
+    if (_demangledName != nullptr) {
       // The C library standard requires that free() do the right
       // thing with NULL input, but it doesn't hurt to check.
       free (_demangledName);

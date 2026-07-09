@@ -126,7 +126,7 @@ int main( int argc, char *argv[] )
     Teuchos::OSTab tab(cout);
     const Teuchos::ParameterEntry
       *paramEntry = PL_Main.getEntryPtr("Direction");
-    TEUCHOS_TEST_FOR_EXCEPT(0==paramEntry);
+    TEUCHOS_TEST_FOR_EXCEPT(nullptr==paramEntry);
     const std::string extracted_Direction_Doc = paramEntry->docString();
     if (verbose) tab.o() << "Expected doc std::string = \"" << Direction_Doc << "\"\n";
     if (verbose) tab.o() << "Extracted doc std::string = \"" << extracted_Direction_Doc << "\"\n";
@@ -395,8 +395,8 @@ int main( int argc, char *argv[] )
     // (This will be tested using the INVALID_TEMPLATE_QUALIFIER which indicates whether a
     //  non-templated code needs ".template" before the method name )
     //-----------------------------------------------------------
-    int *max_iters_ptr = 0;
-    const int *max_iters_ptr_again = 0;
+    int *max_iters_ptr = nullptr;
+    const int *max_iters_ptr_again = nullptr;
     std::string* nonlin_solver_ptr;
 
     max_iters_ptr = PL_My_Polynomial.INVALID_TEMPLATE_QUALIFIER getPtr<int>("Max Iters");
@@ -428,7 +428,7 @@ int main( int argc, char *argv[] )
     // (This will be tested using the INVALID_TEMPLATE_QUALIFIER which indicates whether a
     //  non-templated code needs ".template" before the method name )
     //-----------------------------------------------------------
-    float* mbf_ptr = 0;
+    float* mbf_ptr = nullptr;
 
     mbf_ptr = PL_LinSol.INVALID_TEMPLATE_QUALIFIER getPtr<float>( "Tol" );
 

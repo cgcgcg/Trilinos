@@ -157,8 +157,8 @@ int main(int argc, char *argv[]) {
   //
   // Create pointers to necessary matrices/vectors.
   //
-  SType1 *H1=0, *b1=0;
-  SType2 *H2=0, *b2=0;
+  SType1 *H1=nullptr, *b1=nullptr;
+  SType2 *H2=nullptr, *b2=nullptr;
   //
   while ( compSType1>0 || compSType2>0 || convSType1>0 || convSType2>0 ) {
 
@@ -178,8 +178,8 @@ int main(int argc, char *argv[]) {
 	std::cout << typeid( result1 ).name() << " -- Cholesky factorization failed (negative diagonal) at row "<<-compSType1<< std::endl;
       //
       // Clean up always;
-      delete [] H1; H1 = 0;
-      delete [] b1; b1 = 0;
+      delete [] H1; H1 = nullptr;
+      delete [] b1; b1 = nullptr;
     }
     if (compSType2 > 0) {
       H2 = new SType2[ n*n ];
@@ -197,8 +197,8 @@ int main(int argc, char *argv[]) {
 	std::cout << typeid( result2 ).name() << " -- Cholesky factorization failed (negative diagonal) at row "<<-compSType2<< std::endl;
       //
       // Clean up always.
-      delete [] H2; H2 = 0;
-      delete [] b2; b2 = 0;
+      delete [] H2; H2 = nullptr;
+      delete [] b2; b2 = nullptr;
     }
     if (convSType2 > 0) {
       //
@@ -225,10 +225,10 @@ int main(int argc, char *argv[]) {
       //
       // Clean up
       //
-      delete [] H2; H2 = 0;
-      delete [] b2; b2 = 0;
-      delete [] H1; H1 = 0;
-      delete [] b1; b1 = 0;
+      delete [] H2; H2 = nullptr;
+      delete [] b2; b2 = nullptr;
+      delete [] H1; H1 = nullptr;
+      delete [] b1; b1 = nullptr;
     }
     if (convSType1 > 0) {
       //
@@ -255,10 +255,10 @@ int main(int argc, char *argv[]) {
       //
       // Clean up
       //
-      delete [] H1; H1 = 0;
-      delete [] b1; b1 = 0;
-      delete [] H2; H2 = 0;
-      delete [] b2; b2 = 0;
+      delete [] H1; H1 = nullptr;
+      delete [] b1; b1 = nullptr;
+      delete [] H2; H2 = nullptr;
+      delete [] b2; b2 = nullptr;
     }
     if (verbose && (compSType1>0 || compSType2>0 || convSType1>0 || convSType2>0) ) {
       std::cout << "***************************************************" << std::endl;

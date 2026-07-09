@@ -321,7 +321,7 @@ Ptr<const T> constPtr( T& arg )
 template<class T> inline
 bool is_null( const Ptr<T> &p )
 {
-  return p.get() == 0;
+  return p.get() == nullptr;
 }
 
 
@@ -332,7 +332,7 @@ bool is_null( const Ptr<T> &p )
 template<class T> inline
 bool nonnull( const Ptr<T> &p )
 {
-  return p.get() != 0;
+  return p.get() != nullptr;
 }
 
 

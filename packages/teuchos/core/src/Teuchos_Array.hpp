@@ -20,7 +20,6 @@
 #include "Teuchos_ArrayRCP.hpp"
 #include "Teuchos_Tuple.hpp"
 #include "Teuchos_Utils.hpp"
-#include "Teuchos_Assert.hpp"
 
 #if defined(HAVE_TEUCHOSCORE_CXX11) && defined(HAVE_TEUCHOS_ARRAY_BOUNDSCHECK) && defined(HAVE_TEUCHOS_THREAD_SAFE) && !defined(REMOVE_THREAD_PROTECTION_FOR_ARRAY)
 #include <mutex>

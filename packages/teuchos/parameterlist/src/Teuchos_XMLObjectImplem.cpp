@@ -21,7 +21,7 @@ XMLObjectImplem::XMLObjectImplem(const std::string& tag)
 XMLObjectImplem* XMLObjectImplem::deepCopy() const
 {
   XMLObjectImplem* rtn = new XMLObjectImplem(tag_);
-  TEUCHOS_TEST_FOR_EXCEPTION(rtn==0, std::runtime_error, "XMLObjectImplem::deepCopy()");
+  TEUCHOS_TEST_FOR_EXCEPTION(rtn==nullptr, std::runtime_error, "XMLObjectImplem::deepCopy()");
   rtn->attributes_ = attributes_;
   rtn->content_ = content_;
 	

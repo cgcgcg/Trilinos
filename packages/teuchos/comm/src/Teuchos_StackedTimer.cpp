@@ -647,7 +647,7 @@ static void printXMLEscapedString(std::ostream& os, const std::string& str)
 }
 
 double
-StackedTimer::printLevelXML (std::string prefix, int print_level, std::ostream& os, std::vector<bool> &printed, double parent_time, const std::string& rootName)
+StackedTimer::printLevelXML (std::string prefix, int print_level, std::ostream& os, std::vector<bool> &printed, double  /*parent_time*/, const std::string& rootName)
 {
   constexpr int indSpaces = 2;
   int indent = indSpaces * print_level;

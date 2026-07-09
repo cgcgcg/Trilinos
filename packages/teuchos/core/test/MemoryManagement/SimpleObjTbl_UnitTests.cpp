@@ -40,7 +40,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_1_DECL( SimpleObjectTable, storeNew, T )
 TEUCHOS_UNIT_TEST( SimpleObjectTable, storeNewNull )
 {
   ECHO(SimpleObjectTable<A> sot);
-  TEST_THROW(sot.storeNew(NULL), NullReferenceError);
+  TEST_THROW(sot.storeNew(nullptr), NullReferenceError);
 }
 
 
@@ -70,7 +70,7 @@ TEUCHOS_UNIT_TEST( SimpleObjectTable, storeRCPNull1 )
 TEUCHOS_UNIT_TEST( SimpleObjectTable, storeRCPNull2 )
 {
   ECHO(SimpleObjectTable<A> sot);
-  ECHO(A *a=NULL);
+  ECHO(A *a=nullptr);
   TEST_THROW(sot.storeRCP(rcp(a)), NullReferenceError);
 }
 
@@ -175,7 +175,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_2_DECL( SimpleObjectTable, storeCastedRCP, T1, T2 )
   ECHO(SimpleObjectTable<T2> sot);
   ECHO(RCP<T1> rcpT1 = rcp(new T1));
   ECHO(T2 *pT2 = dynamic_cast<T2*>(rcpT1.get()));
-  if (pT2 == NULL) {
+  if (pT2 == nullptr) {
     TEST_THROW(sot.storeCastedRCP(rcpT1), m_bad_cast);
   } else {
     ECHO(int id = sot.storeCastedRCP(rcpT1));

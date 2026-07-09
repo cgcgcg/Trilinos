@@ -14,7 +14,7 @@
 #include "Teuchos_as.hpp"
 #include "Teuchos_StandardCatchMacros.hpp"
 
-int main(int argc, char* argv[])
+int main(int  /*argc*/, char*  /*argv*/[])
 {
   using Teuchos::ParameterList;
   using Teuchos::RCP;

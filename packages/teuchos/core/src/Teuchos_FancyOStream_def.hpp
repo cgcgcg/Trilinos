@@ -57,7 +57,7 @@ tab(
   const std::basic_string<CharT,Traits> linePrefix
   )
 {
-  if(out.get()==NULL)
+  if(out.get()==nullptr)
     return Teuchos::null;
   RCP<basic_FancyOStream<CharT,Traits> > fancyOut = out;
   set_extra_data(
@@ -487,7 +487,7 @@ basic_FancyOStream<CharT,Traits>::basic_FancyOStream(
   ,const bool showTabCount
   ,const bool showProcRank
   )
-  :ostream_t(NULL),
+  :ostream_t(nullptr),
    streambuf_(oStream,tabIndentStr,startingTab,showLinePrefix,
      maxLenLinePrefix,showTabCount,showProcRank)
 {

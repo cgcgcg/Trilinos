@@ -293,7 +293,7 @@ public:
   static const T* convertFromCharPtr( const char* ptr )
     { return reinterpret_cast<const T*>(ptr); }
   // Indirect serialization
-  static Ordinal fromCountToIndirectBytes(const Ordinal count, const T buffer[])
+  static Ordinal fromCountToIndirectBytes(const Ordinal count, const T  /*buffer*/[])
     { return fromCountToDirectBytes(count); }
   static void serialize(
     const Ordinal count, const T buffer[], const Ordinal bytes, char charBuffer[]
@@ -308,10 +308,10 @@ public:
       std::copy(_buffer,_buffer+bytes,charBuffer);
     }
   static Ordinal fromIndirectBytesToCount(const Ordinal bytes,
-                                          const char charBuffer[])
+                                          const char  /*charBuffer*/[])
     { return fromDirectBytesToCount(bytes); }
   static void deserialize(
-    const Ordinal bytes, const char charBuffer[], const Ordinal count, T buffer[]
+    const Ordinal bytes, const char charBuffer[], const Ordinal  /*count*/, T buffer[]
     )
     {
 #ifdef TEUCHOS_DEBUG

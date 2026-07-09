@@ -505,43 +505,43 @@ namespace Teuchos
 
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::PTTRF(const OrdinalType& n, MagnitudeType* d, ScalarType* e, OrdinalType* info) const
+  void LAPACK<OrdinalType, ScalarType>::PTTRF(const OrdinalType&  /*n*/, MagnitudeType*  /*d*/, ScalarType*  /*e*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::PTTRS(const OrdinalType& n, const OrdinalType& nrhs, const MagnitudeType* d, const ScalarType* e, ScalarType* B, const OrdinalType& ldb, OrdinalType* info) const
+  void LAPACK<OrdinalType, ScalarType>::PTTRS(const OrdinalType&  /*n*/, const OrdinalType&  /*nrhs*/, const MagnitudeType*  /*d*/, const ScalarType*  /*e*/, ScalarType*  /*B*/, const OrdinalType&  /*ldb*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::POTRF(const char& UPLO, const OrdinalType& n, ScalarType* A, const OrdinalType& lda, OrdinalType* info) const
+  void LAPACK<OrdinalType, ScalarType>::POTRF(const char&  /*UPLO*/, const OrdinalType&  /*n*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::POTRS(const char& UPLO, const OrdinalType& n, const OrdinalType& nrhs, const ScalarType* A, const OrdinalType& lda, ScalarType* B, const OrdinalType& ldb, OrdinalType* info) const
+  void LAPACK<OrdinalType, ScalarType>::POTRS(const char&  /*UPLO*/, const OrdinalType&  /*n*/, const OrdinalType&  /*nrhs*/, const ScalarType*  /*A*/, const OrdinalType&  /*lda*/, ScalarType*  /*B*/, const OrdinalType&  /*ldb*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::POTRI(const char& UPLO, const OrdinalType& n, ScalarType* A, const OrdinalType& lda, OrdinalType* info) const
+  void LAPACK<OrdinalType, ScalarType>::POTRI(const char&  /*UPLO*/, const OrdinalType&  /*n*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::POCON(const char& UPLO, const OrdinalType& n, const ScalarType* A, const OrdinalType& lda, const ScalarType& anorm, ScalarType* rcond, ScalarType* WORK, OrdinalType* IWORK, OrdinalType* info) const
+  void LAPACK<OrdinalType, ScalarType>::POCON(const char&  /*UPLO*/, const OrdinalType&  /*n*/, const ScalarType*  /*A*/, const OrdinalType&  /*lda*/, const ScalarType&  /*anorm*/, ScalarType*  /*rcond*/, ScalarType*  /*WORK*/, OrdinalType*  /*IWORK*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::POSV(const char& UPLO, const OrdinalType& n, const OrdinalType& nrhs, ScalarType* A, const OrdinalType& lda, ScalarType* B, const OrdinalType& ldb, OrdinalType* info) const
+  void LAPACK<OrdinalType, ScalarType>::POSV(const char&  /*UPLO*/, const OrdinalType&  /*n*/, const OrdinalType&  /*nrhs*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, ScalarType*  /*B*/, const OrdinalType&  /*ldb*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
@@ -599,67 +599,67 @@ namespace Teuchos
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::PORFS(const char& UPLO, const OrdinalType& n, const OrdinalType& nrhs, const ScalarType* A, const OrdinalType& lda, const ScalarType* AF, const OrdinalType& ldaf, const ScalarType* B, const OrdinalType& ldb, ScalarType* X, const OrdinalType& ldx, ScalarType* FERR, ScalarType* BERR, ScalarType* WORK, OrdinalType* IWORK, OrdinalType* info) const
+  void LAPACK<OrdinalType, ScalarType>::PORFS(const char&  /*UPLO*/, const OrdinalType&  /*n*/, const OrdinalType&  /*nrhs*/, const ScalarType*  /*A*/, const OrdinalType&  /*lda*/, const ScalarType*  /*AF*/, const OrdinalType&  /*ldaf*/, const ScalarType*  /*B*/, const OrdinalType&  /*ldb*/, ScalarType*  /*X*/, const OrdinalType&  /*ldx*/, ScalarType*  /*FERR*/, ScalarType*  /*BERR*/, ScalarType*  /*WORK*/, OrdinalType*  /*IWORK*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::POSVX(const char& FACT, const char& UPLO, const OrdinalType& n, const OrdinalType& nrhs, ScalarType* A, const OrdinalType& lda, ScalarType* AF, const OrdinalType& ldaf, char* EQUED, ScalarType* S, ScalarType* B, const OrdinalType& ldb, ScalarType* X, const OrdinalType& ldx, ScalarType* rcond, ScalarType* FERR, ScalarType* BERR, ScalarType* WORK, OrdinalType* IWORK, OrdinalType* info) const
+  void LAPACK<OrdinalType, ScalarType>::POSVX(const char&  /*FACT*/, const char&  /*UPLO*/, const OrdinalType&  /*n*/, const OrdinalType&  /*nrhs*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, ScalarType*  /*AF*/, const OrdinalType&  /*ldaf*/, char*  /*EQUED*/, ScalarType*  /*S*/, ScalarType*  /*B*/, const OrdinalType&  /*ldb*/, ScalarType*  /*X*/, const OrdinalType&  /*ldx*/, ScalarType*  /*rcond*/, ScalarType*  /*FERR*/, ScalarType*  /*BERR*/, ScalarType*  /*WORK*/, OrdinalType*  /*IWORK*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::GELS(const char& TRANS, const OrdinalType& m, const OrdinalType& n, const OrdinalType& nrhs, ScalarType* A, const OrdinalType& lda, ScalarType* B, const OrdinalType& ldb, ScalarType* WORK, const OrdinalType& lwork, OrdinalType* info) const
+  void LAPACK<OrdinalType,ScalarType>::GELS(const char&  /*TRANS*/, const OrdinalType&  /*m*/, const OrdinalType&  /*n*/, const OrdinalType&  /*nrhs*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, ScalarType*  /*B*/, const OrdinalType&  /*ldb*/, ScalarType*  /*WORK*/, const OrdinalType&  /*lwork*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::GELSS(const OrdinalType& m, const OrdinalType& n, const OrdinalType& nrhs, ScalarType* A, const OrdinalType& lda, ScalarType* B, const OrdinalType& ldb, MagnitudeType* S, const MagnitudeType rcond, OrdinalType* rank, ScalarType* WORK, const OrdinalType& lwork, MagnitudeType* RWORK, OrdinalType* info) const
+  void LAPACK<OrdinalType, ScalarType>::GELSS(const OrdinalType&  /*m*/, const OrdinalType&  /*n*/, const OrdinalType&  /*nrhs*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, ScalarType*  /*B*/, const OrdinalType&  /*ldb*/, MagnitudeType*  /*S*/, const MagnitudeType  /*rcond*/, OrdinalType*  /*rank*/, ScalarType*  /*WORK*/, const OrdinalType&  /*lwork*/, MagnitudeType*  /*RWORK*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::GELSS(const OrdinalType& m, const OrdinalType& n, const OrdinalType& nrhs, ScalarType* A, const OrdinalType& lda, ScalarType* B, const OrdinalType& ldb, ScalarType* S, const ScalarType& rcond, OrdinalType* rank, ScalarType* WORK, const OrdinalType& lwork, OrdinalType* info) const
+  void LAPACK<OrdinalType,ScalarType>::GELSS(const OrdinalType&  /*m*/, const OrdinalType&  /*n*/, const OrdinalType&  /*nrhs*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, ScalarType*  /*B*/, const OrdinalType&  /*ldb*/, ScalarType*  /*S*/, const ScalarType&  /*rcond*/, OrdinalType*  /*rank*/, ScalarType*  /*WORK*/, const OrdinalType&  /*lwork*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::GGLSE(const OrdinalType& m, const OrdinalType& n, const OrdinalType& p, ScalarType* A, const OrdinalType& lda, ScalarType* B, const OrdinalType& ldb, ScalarType* C, ScalarType* D, ScalarType* X, ScalarType* WORK, const OrdinalType& lwork, OrdinalType* info) const
+  void LAPACK<OrdinalType,ScalarType>::GGLSE(const OrdinalType&  /*m*/, const OrdinalType&  /*n*/, const OrdinalType&  /*p*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, ScalarType*  /*B*/, const OrdinalType&  /*ldb*/, ScalarType*  /*C*/, ScalarType*  /*D*/, ScalarType*  /*X*/, ScalarType*  /*WORK*/, const OrdinalType&  /*lwork*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::GEQRF( const OrdinalType& m, const OrdinalType& n, ScalarType* A, const OrdinalType& lda, ScalarType* TAU, ScalarType* WORK, const OrdinalType& lwork, OrdinalType* info) const
+  void LAPACK<OrdinalType,ScalarType>::GEQRF( const OrdinalType&  /*m*/, const OrdinalType&  /*n*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, ScalarType*  /*TAU*/, ScalarType*  /*WORK*/, const OrdinalType&  /*lwork*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::GEQR2 (const OrdinalType& m, const OrdinalType& n, ScalarType* A, const OrdinalType& lda, ScalarType* TAU, ScalarType* WORK, OrdinalType* const info) const
+  void LAPACK<OrdinalType,ScalarType>::GEQR2 (const OrdinalType&  /*m*/, const OrdinalType&  /*n*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, ScalarType*  /*TAU*/, ScalarType*  /*WORK*/, OrdinalType* const  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::GETRF(const OrdinalType& m, const OrdinalType& n, ScalarType* A, const OrdinalType& lda, OrdinalType* IPIV, OrdinalType* info) const
+  void LAPACK<OrdinalType,ScalarType>::GETRF(const OrdinalType&  /*m*/, const OrdinalType&  /*n*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, OrdinalType*  /*IPIV*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::GETRS(const char& TRANS, const OrdinalType& n, const OrdinalType& nrhs, const ScalarType* A, const OrdinalType& lda, const OrdinalType* IPIV, ScalarType* B, const OrdinalType& ldb, OrdinalType* info) const
+  void LAPACK<OrdinalType,ScalarType>::GETRS(const char&  /*TRANS*/, const OrdinalType&  /*n*/, const OrdinalType&  /*nrhs*/, const ScalarType*  /*A*/, const OrdinalType&  /*lda*/, const OrdinalType*  /*IPIV*/, ScalarType*  /*B*/, const OrdinalType&  /*ldb*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::LASCL(const char& TYPE, const OrdinalType& kl, const OrdinalType& ku, const MagnitudeType cfrom, const MagnitudeType cto, const OrdinalType& m, const OrdinalType& n, ScalarType* A, const OrdinalType& lda, OrdinalType* info) const
+  void LAPACK<OrdinalType,ScalarType>::LASCL(const char&  /*TYPE*/, const OrdinalType&  /*kl*/, const OrdinalType&  /*ku*/, const MagnitudeType cfrom, const MagnitudeType cto, const OrdinalType& m, const OrdinalType& n, ScalarType* A, const OrdinalType& lda, OrdinalType*  /*info*/) const
   {
     MagnitudeType safeMin = ScalarTraits<ScalarType>::sfmin();
     ScalarType sZero = ScalarTraits<ScalarType>::zero();
@@ -718,73 +718,73 @@ namespace Teuchos
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::GEQP3 (const OrdinalType& m, const OrdinalType& n, ScalarType* A, const OrdinalType& lda, OrdinalType* jpvt, ScalarType* TAU, ScalarType* WORK, const OrdinalType& lwork, MagnitudeType* RWORK, OrdinalType* info) const
+  void LAPACK<OrdinalType,ScalarType>::GEQP3 (const OrdinalType&  /*m*/, const OrdinalType&  /*n*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, OrdinalType*  /*jpvt*/, ScalarType*  /*TAU*/, ScalarType*  /*WORK*/, const OrdinalType&  /*lwork*/, MagnitudeType*  /*RWORK*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::LASWP (const OrdinalType& N, ScalarType* A, const OrdinalType& LDA, const OrdinalType& K1, const OrdinalType& K2, const OrdinalType* IPIV, const OrdinalType& INCX) const
+  void LAPACK<OrdinalType, ScalarType>::LASWP (const OrdinalType&  /*N*/, ScalarType*  /*A*/, const OrdinalType&  /*LDA*/, const OrdinalType&  /*K1*/, const OrdinalType&  /*K2*/, const OrdinalType*  /*IPIV*/, const OrdinalType&  /*INCX*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::GBTRF(const OrdinalType& m, const OrdinalType& n, const OrdinalType& kl, const OrdinalType& ku, ScalarType* A, const OrdinalType& lda, OrdinalType* IPIV, OrdinalType* info) const
+  void LAPACK<OrdinalType,ScalarType>::GBTRF(const OrdinalType&  /*m*/, const OrdinalType&  /*n*/, const OrdinalType&  /*kl*/, const OrdinalType&  /*ku*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, OrdinalType*  /*IPIV*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::GBTRS(const char& TRANS, const OrdinalType& n, const OrdinalType& kl, const OrdinalType& ku, const OrdinalType& nrhs, const ScalarType* A, const OrdinalType& lda, const OrdinalType* IPIV, ScalarType* B, const OrdinalType& ldb, OrdinalType* info) const
+  void LAPACK<OrdinalType,ScalarType>::GBTRS(const char&  /*TRANS*/, const OrdinalType&  /*n*/, const OrdinalType&  /*kl*/, const OrdinalType&  /*ku*/, const OrdinalType&  /*nrhs*/, const ScalarType*  /*A*/, const OrdinalType&  /*lda*/, const OrdinalType*  /*IPIV*/, ScalarType*  /*B*/, const OrdinalType&  /*ldb*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::GTTRF(const OrdinalType& n, ScalarType* dl, ScalarType* d, ScalarType* du, ScalarType* du2, OrdinalType* IPIV, OrdinalType* info) const
+  void LAPACK<OrdinalType,ScalarType>::GTTRF(const OrdinalType&  /*n*/, ScalarType*  /*dl*/, ScalarType*  /*d*/, ScalarType*  /*du*/, ScalarType*  /*du2*/, OrdinalType*  /*IPIV*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::GTTRS(const char& TRANS, const OrdinalType& n, const OrdinalType& nrhs, const ScalarType* dl, const ScalarType* d, const ScalarType* du, const ScalarType* du2, const OrdinalType* IPIV, ScalarType* B, const OrdinalType& ldb, OrdinalType* info) const
+  void LAPACK<OrdinalType,ScalarType>::GTTRS(const char&  /*TRANS*/, const OrdinalType&  /*n*/, const OrdinalType&  /*nrhs*/, const ScalarType*  /*dl*/, const ScalarType*  /*d*/, const ScalarType*  /*du*/, const ScalarType*  /*du2*/, const OrdinalType*  /*IPIV*/, ScalarType*  /*B*/, const OrdinalType&  /*ldb*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::GETRI(const OrdinalType& n, ScalarType* A, const OrdinalType& lda, const OrdinalType* IPIV, ScalarType* WORK, const OrdinalType& lwork, OrdinalType* info) const
+  void LAPACK<OrdinalType,ScalarType>::GETRI(const OrdinalType&  /*n*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, const OrdinalType*  /*IPIV*/, ScalarType*  /*WORK*/, const OrdinalType&  /*lwork*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::LATRS (const char& UPLO, const char& TRANS, const char& DIAG, const char& NORMIN, const OrdinalType& N, const ScalarType* A, const OrdinalType& LDA, ScalarType* X, MagnitudeType* SCALE, MagnitudeType* CNORM, OrdinalType* INFO) const
+  void LAPACK<OrdinalType,ScalarType>::LATRS (const char&  /*UPLO*/, const char&  /*TRANS*/, const char&  /*DIAG*/, const char&  /*NORMIN*/, const OrdinalType&  /*N*/, const ScalarType*  /*A*/, const OrdinalType&  /*LDA*/, ScalarType*  /*X*/, MagnitudeType*  /*SCALE*/, MagnitudeType*  /*CNORM*/, OrdinalType*  /*INFO*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::GECON(const char& NORM, const OrdinalType& n, const ScalarType* A, const OrdinalType& lda, const ScalarType& anorm, ScalarType* rcond, ScalarType* WORK, OrdinalType* IWORK, OrdinalType* info) const
+  void LAPACK<OrdinalType,ScalarType>::GECON(const char&  /*NORM*/, const OrdinalType&  /*n*/, const ScalarType*  /*A*/, const OrdinalType&  /*lda*/, const ScalarType&  /*anorm*/, ScalarType*  /*rcond*/, ScalarType*  /*WORK*/, OrdinalType*  /*IWORK*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::GBCON(const char& NORM, const OrdinalType& n, const OrdinalType& kl, const OrdinalType& ku, const ScalarType* A, const OrdinalType& lda, const OrdinalType* IPIV, const ScalarType& anorm, ScalarType* rcond, ScalarType* WORK, OrdinalType* IWORK, OrdinalType* info) const
+  void LAPACK<OrdinalType,ScalarType>::GBCON(const char&  /*NORM*/, const OrdinalType&  /*n*/, const OrdinalType&  /*kl*/, const OrdinalType&  /*ku*/, const ScalarType*  /*A*/, const OrdinalType&  /*lda*/, const OrdinalType*  /*IPIV*/, const ScalarType&  /*anorm*/, ScalarType*  /*rcond*/, ScalarType*  /*WORK*/, OrdinalType*  /*IWORK*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  typename ScalarTraits<ScalarType>::magnitudeType LAPACK<OrdinalType,ScalarType>::LANGB(const char& NORM, const OrdinalType& n, const OrdinalType& kl, const OrdinalType& ku, const ScalarType* A, const OrdinalType& lda, MagnitudeType* WORK) const
+  typename ScalarTraits<ScalarType>::magnitudeType LAPACK<OrdinalType,ScalarType>::LANGB(const char&  /*NORM*/, const OrdinalType&  /*n*/, const OrdinalType&  /*kl*/, const OrdinalType&  /*ku*/, const ScalarType*  /*A*/, const OrdinalType&  /*lda*/, MagnitudeType*  /*WORK*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::GESV(const OrdinalType& n, const OrdinalType& nrhs, ScalarType* A, const OrdinalType& lda, OrdinalType* IPIV, ScalarType* B, const OrdinalType& ldb, OrdinalType* info) const
+  void LAPACK<OrdinalType,ScalarType>::GESV(const OrdinalType&  /*n*/, const OrdinalType&  /*nrhs*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, OrdinalType*  /*IPIV*/, ScalarType*  /*B*/, const OrdinalType&  /*ldb*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
@@ -896,7 +896,7 @@ namespace Teuchos
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::GERFS(const char& TRANS, const OrdinalType& n, const OrdinalType& nrhs, const ScalarType* A, const OrdinalType& lda, const ScalarType* AF, const OrdinalType& ldaf, const OrdinalType* IPIV, const ScalarType* B, const OrdinalType& ldb, ScalarType* X, const OrdinalType& ldx, ScalarType* FERR, ScalarType* BERR, ScalarType* WORK, OrdinalType* IWORK, OrdinalType* info) const
+  void LAPACK<OrdinalType,ScalarType>::GERFS(const char&  /*TRANS*/, const OrdinalType&  /*n*/, const OrdinalType&  /*nrhs*/, const ScalarType*  /*A*/, const OrdinalType&  /*lda*/, const ScalarType*  /*AF*/, const OrdinalType&  /*ldaf*/, const OrdinalType*  /*IPIV*/, const ScalarType*  /*B*/, const OrdinalType&  /*ldb*/, ScalarType*  /*X*/, const OrdinalType&  /*ldx*/, ScalarType*  /*FERR*/, ScalarType*  /*BERR*/, ScalarType*  /*WORK*/, OrdinalType*  /*IWORK*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
@@ -1012,283 +1012,283 @@ namespace Teuchos
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::GBRFS(const char& TRANS, const OrdinalType& n, const OrdinalType& kl, const OrdinalType& ku, const OrdinalType& nrhs, const ScalarType* A, const OrdinalType& lda, const ScalarType* AF, const OrdinalType& ldaf, const OrdinalType* IPIV, const ScalarType* B, const OrdinalType& ldb, ScalarType* X, const OrdinalType& ldx, ScalarType* FERR, ScalarType* BERR, ScalarType* WORK, OrdinalType* IWORK, OrdinalType* info) const
+  void LAPACK<OrdinalType,ScalarType>::GBRFS(const char&  /*TRANS*/, const OrdinalType&  /*n*/, const OrdinalType&  /*kl*/, const OrdinalType&  /*ku*/, const OrdinalType&  /*nrhs*/, const ScalarType*  /*A*/, const OrdinalType&  /*lda*/, const ScalarType*  /*AF*/, const OrdinalType&  /*ldaf*/, const OrdinalType*  /*IPIV*/, const ScalarType*  /*B*/, const OrdinalType&  /*ldb*/, ScalarType*  /*X*/, const OrdinalType&  /*ldx*/, ScalarType*  /*FERR*/, ScalarType*  /*BERR*/, ScalarType*  /*WORK*/, OrdinalType*  /*IWORK*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::GESVX(const char& FACT, const char& TRANS, const OrdinalType& n, const OrdinalType& nrhs, ScalarType* A, const OrdinalType& lda, ScalarType* AF, const OrdinalType& ldaf, OrdinalType* IPIV, char* EQUED, ScalarType* R, ScalarType* C, ScalarType* B, const OrdinalType& ldb, ScalarType* X, const OrdinalType& ldx, ScalarType* rcond, ScalarType* FERR, ScalarType* BERR, ScalarType* WORK, OrdinalType* IWORK, OrdinalType* info) const
+  void LAPACK<OrdinalType,ScalarType>::GESVX(const char&  /*FACT*/, const char&  /*TRANS*/, const OrdinalType&  /*n*/, const OrdinalType&  /*nrhs*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, ScalarType*  /*AF*/, const OrdinalType&  /*ldaf*/, OrdinalType*  /*IPIV*/, char*  /*EQUED*/, ScalarType*  /*R*/, ScalarType*  /*C*/, ScalarType*  /*B*/, const OrdinalType&  /*ldb*/, ScalarType*  /*X*/, const OrdinalType&  /*ldx*/, ScalarType*  /*rcond*/, ScalarType*  /*FERR*/, ScalarType*  /*BERR*/, ScalarType*  /*WORK*/, OrdinalType*  /*IWORK*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::SYTRD(const char& UPLO, const OrdinalType& n, ScalarType* A, const OrdinalType& lda, ScalarType* D, ScalarType* E, ScalarType* TAU, ScalarType* WORK, const OrdinalType& lwork, OrdinalType* info) const
+  void LAPACK<OrdinalType,ScalarType>::SYTRD(const char&  /*UPLO*/, const OrdinalType&  /*n*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, ScalarType*  /*D*/, ScalarType*  /*E*/, ScalarType*  /*TAU*/, ScalarType*  /*WORK*/, const OrdinalType&  /*lwork*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::GEHRD(const OrdinalType& n, const OrdinalType& ilo, const OrdinalType& ihi, ScalarType* A, const OrdinalType& lda, ScalarType* TAU, ScalarType* WORK, const OrdinalType& lwork, OrdinalType* info) const
+  void LAPACK<OrdinalType,ScalarType>::GEHRD(const OrdinalType&  /*n*/, const OrdinalType&  /*ilo*/, const OrdinalType&  /*ihi*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, ScalarType*  /*TAU*/, ScalarType*  /*WORK*/, const OrdinalType&  /*lwork*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::TRTRS(const char& UPLO, const char& TRANS, const char& DIAG, const OrdinalType& n, const OrdinalType& nrhs, const ScalarType* A, const OrdinalType& lda, ScalarType* B, const OrdinalType& ldb, OrdinalType* info) const
+  void LAPACK<OrdinalType,ScalarType>::TRTRS(const char&  /*UPLO*/, const char&  /*TRANS*/, const char&  /*DIAG*/, const OrdinalType&  /*n*/, const OrdinalType&  /*nrhs*/, const ScalarType*  /*A*/, const OrdinalType&  /*lda*/, ScalarType*  /*B*/, const OrdinalType&  /*ldb*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::TRTRI(const char& UPLO, const char& DIAG, const OrdinalType& n, ScalarType* A, const OrdinalType& lda, OrdinalType* info) const
+  void LAPACK<OrdinalType,ScalarType>::TRTRI(const char&  /*UPLO*/, const char&  /*DIAG*/, const OrdinalType&  /*n*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::SPEV(const char& JOBZ, const char& UPLO, const OrdinalType& n, ScalarType* AP, ScalarType* W, ScalarType* Z, const OrdinalType& ldz, ScalarType* WORK, OrdinalType* info) const
+  void LAPACK<OrdinalType,ScalarType>::SPEV(const char&  /*JOBZ*/, const char&  /*UPLO*/, const OrdinalType&  /*n*/, ScalarType*  /*AP*/, ScalarType*  /*W*/, ScalarType*  /*Z*/, const OrdinalType&  /*ldz*/, ScalarType*  /*WORK*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::SYEV(const char& JOBZ, const char& UPLO, const OrdinalType& n, ScalarType* A, const OrdinalType& lda, ScalarType* W, ScalarType* WORK, const OrdinalType& lwork, OrdinalType* info) const
+  void LAPACK<OrdinalType,ScalarType>::SYEV(const char&  /*JOBZ*/, const char&  /*UPLO*/, const OrdinalType&  /*n*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, ScalarType*  /*W*/, ScalarType*  /*WORK*/, const OrdinalType&  /*lwork*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::SYGV(const OrdinalType& itype, const char& JOBZ, const char& UPLO, const OrdinalType& n, ScalarType* A, const OrdinalType& lda, ScalarType* B, const OrdinalType& ldb, ScalarType* W, ScalarType* WORK, const OrdinalType& lwork, OrdinalType* info) const
+  void LAPACK<OrdinalType,ScalarType>::SYGV(const OrdinalType&  /*itype*/, const char&  /*JOBZ*/, const char&  /*UPLO*/, const OrdinalType&  /*n*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, ScalarType*  /*B*/, const OrdinalType&  /*ldb*/, ScalarType*  /*W*/, ScalarType*  /*WORK*/, const OrdinalType&  /*lwork*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::HEEV(const char& JOBZ, const char& UPLO, const OrdinalType& n, ScalarType* A, const OrdinalType& lda, MagnitudeType* W, ScalarType* WORK, const OrdinalType& lwork, MagnitudeType* RWORK, OrdinalType* info) const
+  void LAPACK<OrdinalType,ScalarType>::HEEV(const char&  /*JOBZ*/, const char&  /*UPLO*/, const OrdinalType&  /*n*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, MagnitudeType*  /*W*/, ScalarType*  /*WORK*/, const OrdinalType&  /*lwork*/, MagnitudeType*  /*RWORK*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::HEGV(const OrdinalType& itype, const char& JOBZ, const char& UPLO, const OrdinalType& n, ScalarType* A, const OrdinalType& lda, ScalarType* B, const OrdinalType& ldb, MagnitudeType* W, ScalarType* WORK, const OrdinalType& lwork, MagnitudeType* RWORK, OrdinalType* info) const
+  void LAPACK<OrdinalType,ScalarType>::HEGV(const OrdinalType&  /*itype*/, const char&  /*JOBZ*/, const char&  /*UPLO*/, const OrdinalType&  /*n*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, ScalarType*  /*B*/, const OrdinalType&  /*ldb*/, MagnitudeType*  /*W*/, ScalarType*  /*WORK*/, const OrdinalType&  /*lwork*/, MagnitudeType*  /*RWORK*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::STEQR(const char& COMPZ, const OrdinalType& n, MagnitudeType* D, MagnitudeType* E, ScalarType* Z, const OrdinalType& ldz, MagnitudeType* WORK, OrdinalType* info) const
+  void LAPACK<OrdinalType,ScalarType>::STEQR(const char&  /*COMPZ*/, const OrdinalType&  /*n*/, MagnitudeType*  /*D*/, MagnitudeType*  /*E*/, ScalarType*  /*Z*/, const OrdinalType&  /*ldz*/, MagnitudeType*  /*WORK*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::PTEQR(const char& COMPZ, const OrdinalType& n, MagnitudeType* D, MagnitudeType* E, ScalarType* Z, const OrdinalType& ldz, MagnitudeType* WORK, OrdinalType* info) const
+  void LAPACK<OrdinalType,ScalarType>::PTEQR(const char&  /*COMPZ*/, const OrdinalType&  /*n*/, MagnitudeType*  /*D*/, MagnitudeType*  /*E*/, ScalarType*  /*Z*/, const OrdinalType&  /*ldz*/, MagnitudeType*  /*WORK*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::HSEQR(const char& JOB, const char& COMPZ, const OrdinalType& n, const OrdinalType& ilo, const OrdinalType& ihi, ScalarType* H, const OrdinalType& ldh, ScalarType* WR, ScalarType* WI, ScalarType* Z, const OrdinalType& ldz, ScalarType* WORK, const OrdinalType& lwork, OrdinalType* info) const
+  void LAPACK<OrdinalType, ScalarType>::HSEQR(const char&  /*JOB*/, const char&  /*COMPZ*/, const OrdinalType&  /*n*/, const OrdinalType&  /*ilo*/, const OrdinalType&  /*ihi*/, ScalarType*  /*H*/, const OrdinalType&  /*ldh*/, ScalarType*  /*WR*/, ScalarType*  /*WI*/, ScalarType*  /*Z*/, const OrdinalType&  /*ldz*/, ScalarType*  /*WORK*/, const OrdinalType&  /*lwork*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::GEES(const char& JOBVS, const char& SORT, OrdinalType& (*ptr2func)(ScalarType*, ScalarType*), const OrdinalType& n, ScalarType* A, const OrdinalType& lda, OrdinalType* sdim, ScalarType* WR, ScalarType* WI, ScalarType* VS, const OrdinalType& ldvs, ScalarType* WORK, const OrdinalType& lwork, OrdinalType* BWORK, OrdinalType* info) const
+  void LAPACK<OrdinalType, ScalarType>::GEES(const char&  /*JOBVS*/, const char&  /*SORT*/, OrdinalType& (* /*ptr2func*/)(ScalarType*, ScalarType*), const OrdinalType&  /*n*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, OrdinalType*  /*sdim*/, ScalarType*  /*WR*/, ScalarType*  /*WI*/, ScalarType*  /*VS*/, const OrdinalType&  /*ldvs*/, ScalarType*  /*WORK*/, const OrdinalType&  /*lwork*/, OrdinalType*  /*BWORK*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::GEES(const char& JOBVS, const char& SORT, OrdinalType& (*ptr2func)(ScalarType*), const OrdinalType& n, ScalarType* A, const OrdinalType& lda, OrdinalType* sdim, ScalarType* W, ScalarType* VS, const OrdinalType& ldvs, ScalarType* WORK, const OrdinalType& lwork, MagnitudeType *RWORK, OrdinalType* BWORK, OrdinalType* info) const
+  void LAPACK<OrdinalType, ScalarType>::GEES(const char&  /*JOBVS*/, const char&  /*SORT*/, OrdinalType& (* /*ptr2func*/)(ScalarType*), const OrdinalType&  /*n*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, OrdinalType*  /*sdim*/, ScalarType*  /*W*/, ScalarType*  /*VS*/, const OrdinalType&  /*ldvs*/, ScalarType*  /*WORK*/, const OrdinalType&  /*lwork*/, MagnitudeType * /*RWORK*/, OrdinalType*  /*BWORK*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::GEES(const char& JOBVS, const OrdinalType& n, ScalarType* A, const OrdinalType& lda, OrdinalType* sdim, MagnitudeType* WR, MagnitudeType* WI, ScalarType* VS, const OrdinalType& ldvs, ScalarType* WORK, const OrdinalType& lwork, MagnitudeType *RWORK, OrdinalType* BWORK, OrdinalType* info) const
+  void LAPACK<OrdinalType, ScalarType>::GEES(const char&  /*JOBVS*/, const OrdinalType&  /*n*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, OrdinalType*  /*sdim*/, MagnitudeType*  /*WR*/, MagnitudeType*  /*WI*/, ScalarType*  /*VS*/, const OrdinalType&  /*ldvs*/, ScalarType*  /*WORK*/, const OrdinalType&  /*lwork*/, MagnitudeType * /*RWORK*/, OrdinalType*  /*BWORK*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::GEEV(const char& JOBVL, const char& JOBVR, const OrdinalType& n, ScalarType* A, const OrdinalType& lda, MagnitudeType* WR, MagnitudeType* WI, ScalarType* VL, const OrdinalType& ldvl, ScalarType* VR, const OrdinalType& ldvr, ScalarType* WORK, const OrdinalType& lwork, MagnitudeType* rwork, OrdinalType* info) const
+  void LAPACK<OrdinalType, ScalarType>::GEEV(const char&  /*JOBVL*/, const char&  /*JOBVR*/, const OrdinalType&  /*n*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, MagnitudeType*  /*WR*/, MagnitudeType*  /*WI*/, ScalarType*  /*VL*/, const OrdinalType&  /*ldvl*/, ScalarType*  /*VR*/, const OrdinalType&  /*ldvr*/, ScalarType*  /*WORK*/, const OrdinalType&  /*lwork*/, MagnitudeType*  /*rwork*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::GEEVX(const char& BALANC, const char& JOBVL, const char& JOBVR, const char& SENSE, const OrdinalType& n, ScalarType* A, const OrdinalType& lda, ScalarType* WR, ScalarType* WI, ScalarType* VL, const OrdinalType& ldvl, ScalarType* VR, const OrdinalType& ldvr, OrdinalType* ilo, OrdinalType* ihi, MagnitudeType* SCALE, MagnitudeType* abnrm, MagnitudeType* RCONDE, MagnitudeType* RCONDV, ScalarType* WORK, const OrdinalType& lwork, OrdinalType* IWORK, OrdinalType* info) const
+  void LAPACK<OrdinalType, ScalarType>::GEEVX(const char&  /*BALANC*/, const char&  /*JOBVL*/, const char&  /*JOBVR*/, const char&  /*SENSE*/, const OrdinalType&  /*n*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, ScalarType*  /*WR*/, ScalarType*  /*WI*/, ScalarType*  /*VL*/, const OrdinalType&  /*ldvl*/, ScalarType*  /*VR*/, const OrdinalType&  /*ldvr*/, OrdinalType*  /*ilo*/, OrdinalType*  /*ihi*/, MagnitudeType*  /*SCALE*/, MagnitudeType*  /*abnrm*/, MagnitudeType*  /*RCONDE*/, MagnitudeType*  /*RCONDV*/, ScalarType*  /*WORK*/, const OrdinalType&  /*lwork*/, OrdinalType*  /*IWORK*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::GESVD(const char& JOBU, const char& JOBVT, const OrdinalType& m, const OrdinalType& n, ScalarType* A, const OrdinalType& lda, MagnitudeType* S, ScalarType* U, const OrdinalType& ldu, ScalarType* V, const OrdinalType& ldv, ScalarType* WORK, const OrdinalType& lwork, MagnitudeType* RWORK, OrdinalType* info) const
+  void LAPACK<OrdinalType, ScalarType>::GESVD(const char&  /*JOBU*/, const char&  /*JOBVT*/, const OrdinalType&  /*m*/, const OrdinalType&  /*n*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, MagnitudeType*  /*S*/, ScalarType*  /*U*/, const OrdinalType&  /*ldu*/, ScalarType*  /*V*/, const OrdinalType&  /*ldv*/, ScalarType*  /*WORK*/, const OrdinalType&  /*lwork*/, MagnitudeType*  /*RWORK*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::GGEVX(const char& BALANC, const char& JOBVL, const char& JOBVR, const char& SENSE, const OrdinalType& n, ScalarType* A, const OrdinalType& lda, ScalarType* B, const OrdinalType& ldb, MagnitudeType* ALPHAR, MagnitudeType* ALPHAI, ScalarType* BETA, ScalarType* VL, const OrdinalType& ldvl, ScalarType* VR, const OrdinalType& ldvr, OrdinalType* ilo, OrdinalType* ihi, MagnitudeType* lscale, MagnitudeType* rscale, MagnitudeType* abnrm, MagnitudeType* bbnrm, MagnitudeType* RCONDE, MagnitudeType* RCONDV, ScalarType* WORK, const OrdinalType& lwork, OrdinalType* IWORK, OrdinalType* BWORK, OrdinalType* info) const
+  void LAPACK<OrdinalType, ScalarType>::GGEVX(const char&  /*BALANC*/, const char&  /*JOBVL*/, const char&  /*JOBVR*/, const char&  /*SENSE*/, const OrdinalType&  /*n*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, ScalarType*  /*B*/, const OrdinalType&  /*ldb*/, MagnitudeType*  /*ALPHAR*/, MagnitudeType*  /*ALPHAI*/, ScalarType*  /*BETA*/, ScalarType*  /*VL*/, const OrdinalType&  /*ldvl*/, ScalarType*  /*VR*/, const OrdinalType&  /*ldvr*/, OrdinalType*  /*ilo*/, OrdinalType*  /*ihi*/, MagnitudeType*  /*lscale*/, MagnitudeType*  /*rscale*/, MagnitudeType*  /*abnrm*/, MagnitudeType*  /*bbnrm*/, MagnitudeType*  /*RCONDE*/, MagnitudeType*  /*RCONDV*/, ScalarType*  /*WORK*/, const OrdinalType&  /*lwork*/, OrdinalType*  /*IWORK*/, OrdinalType*  /*BWORK*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::GGEV(const char& JOBVL, const char& JOBVR, const OrdinalType& n, ScalarType* A, const OrdinalType& lda, ScalarType* B, const OrdinalType& ldb, MagnitudeType *ALPHAR, MagnitudeType *ALPHAI, ScalarType* BETA, ScalarType* VL, const OrdinalType& ldvl, ScalarType* VR, const OrdinalType& ldvr, ScalarType* WORK, const OrdinalType& lwork, OrdinalType* info) const
-  {
-    UndefinedLAPACKRoutine<ScalarType>::notDefined();
-  }
-
-
-  template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::TRSEN(const char& JOB, const char& COMPQ, const OrdinalType* SELECT, const OrdinalType& n, ScalarType* T, const OrdinalType& ldt, ScalarType* Q, const OrdinalType& ldq, MagnitudeType *WR, MagnitudeType *WI, OrdinalType* M, ScalarType* S, MagnitudeType *SEP, ScalarType* WORK, const OrdinalType& lwork, OrdinalType* IWORK, const OrdinalType& liwork, OrdinalType* info ) const
+  void LAPACK<OrdinalType, ScalarType>::GGEV(const char&  /*JOBVL*/, const char&  /*JOBVR*/, const OrdinalType&  /*n*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, ScalarType*  /*B*/, const OrdinalType&  /*ldb*/, MagnitudeType * /*ALPHAR*/, MagnitudeType * /*ALPHAI*/, ScalarType*  /*BETA*/, ScalarType*  /*VL*/, const OrdinalType&  /*ldvl*/, ScalarType*  /*VR*/, const OrdinalType&  /*ldvr*/, ScalarType*  /*WORK*/, const OrdinalType&  /*lwork*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType,ScalarType>::TGSEN(const OrdinalType& ijob, const OrdinalType& wantq, const OrdinalType& wantz, const OrdinalType* SELECT, const OrdinalType& n, ScalarType* A, const OrdinalType& lda, ScalarType* B, const OrdinalType& ldb, MagnitudeType *ALPHAR, MagnitudeType *ALPHAI, MagnitudeType *BETA, ScalarType* Q, const OrdinalType& ldq, ScalarType* Z, const OrdinalType& ldz, OrdinalType* M, MagnitudeType *PL, MagnitudeType *PR, MagnitudeType *DIF, ScalarType* WORK, const OrdinalType& lwork, OrdinalType* IWORK, const OrdinalType& liwork, OrdinalType* info ) const
+  void LAPACK<OrdinalType,ScalarType>::TRSEN(const char&  /*JOB*/, const char&  /*COMPQ*/, const OrdinalType*  /*SELECT*/, const OrdinalType&  /*n*/, ScalarType*  /*T*/, const OrdinalType&  /*ldt*/, ScalarType*  /*Q*/, const OrdinalType&  /*ldq*/, MagnitudeType * /*WR*/, MagnitudeType * /*WI*/, OrdinalType*  /*M*/, ScalarType*  /*S*/, MagnitudeType * /*SEP*/, ScalarType*  /*WORK*/, const OrdinalType&  /*lwork*/, OrdinalType*  /*IWORK*/, const OrdinalType&  /*liwork*/, OrdinalType*  /*info*/ ) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::GGES(const char& JOBVL, const char& JOBVR, const char& SORT, OrdinalType& (*ptr2func)(ScalarType*, ScalarType*, ScalarType*), const OrdinalType& n, ScalarType* A, const OrdinalType& lda, ScalarType* B, const OrdinalType& ldb, OrdinalType* sdim, MagnitudeType* ALPHAR, MagnitudeType* ALPHAI, MagnitudeType* BETA, ScalarType* VL, const OrdinalType& ldvl, ScalarType* VR, const OrdinalType& ldvr, ScalarType* WORK, const OrdinalType& lwork, OrdinalType* BWORK, OrdinalType* info ) const
-  {
-    UndefinedLAPACKRoutine<ScalarType>::notDefined();
-  }
-
-  template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::ORMQR(const char& SIDE, const char& TRANS, const OrdinalType& m, const OrdinalType& n, const OrdinalType& k, const ScalarType* A, const OrdinalType& lda, const ScalarType* TAU, ScalarType* C, const OrdinalType& ldc, ScalarType* WORK, const OrdinalType& lwork, OrdinalType* info) const
-  {
-    UndefinedLAPACKRoutine<ScalarType>::notDefined();
-  }
-
-  template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::ORM2R(const char& SIDE, const char& TRANS, const OrdinalType& m, const OrdinalType& n, const OrdinalType& k, const ScalarType* A, const OrdinalType& lda, const ScalarType* TAU, ScalarType* C, const OrdinalType& ldc, ScalarType* WORK, OrdinalType* const info) const
-  {
-    UndefinedLAPACKRoutine<ScalarType>::notDefined();
-  }
-
-  template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::UNMQR(const char& SIDE, const char& TRANS, const OrdinalType& m, const OrdinalType& n, const OrdinalType& k, const ScalarType* A, const OrdinalType& lda, const ScalarType* TAU, ScalarType* C, const OrdinalType& ldc, ScalarType* WORK, const OrdinalType& lwork, OrdinalType* info) const
-  {
-    UndefinedLAPACKRoutine<ScalarType>::notDefined();
-  }
-
-  template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::UNM2R(const char& SIDE, const char& TRANS, const OrdinalType& M, const OrdinalType& N, const OrdinalType& K, const ScalarType* A, const OrdinalType& LDA, const ScalarType* TAU, ScalarType* C, const OrdinalType& LDC, ScalarType* WORK, OrdinalType* const INFO) const
-  {
-    UndefinedLAPACKRoutine<ScalarType>::notDefined();
-  }
-
-  template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::ORGQR(const OrdinalType& m, const OrdinalType& n, const OrdinalType& k, ScalarType* A, const OrdinalType& lda, const ScalarType* TAU, ScalarType* WORK, const OrdinalType& lwork, OrdinalType* info) const
-  {
-    UndefinedLAPACKRoutine<ScalarType>::notDefined();
-  }
-
-  template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::UNGQR(const OrdinalType& m, const OrdinalType& n, const OrdinalType& k, ScalarType* A, const OrdinalType& lda, const ScalarType* TAU, ScalarType* WORK, const OrdinalType& lwork, OrdinalType* info) const
-  {
-    UndefinedLAPACKRoutine<ScalarType>::notDefined();
-  }
-
-  template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::ORGHR(const OrdinalType& n, const OrdinalType& ilo, const OrdinalType& ihi, ScalarType* A, const OrdinalType& lda, const ScalarType* TAU, ScalarType* WORK, const OrdinalType& lwork, OrdinalType* info) const
-  {
-    UndefinedLAPACKRoutine<ScalarType>::notDefined();
-  }
-
-  template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::ORMHR(const char& SIDE, const char& TRANS, const OrdinalType& m, const OrdinalType& n, const OrdinalType& ilo, const OrdinalType& ihi, const ScalarType* A, const OrdinalType& lda, const ScalarType* TAU, ScalarType* C, const OrdinalType& ldc, ScalarType* WORK, const OrdinalType& lwork, OrdinalType* info) const
-  {
-    UndefinedLAPACKRoutine<ScalarType>::notDefined();
-  }
-
-  template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::TREVC(const char& SIDE, const char& HOWMNY, OrdinalType* select, const OrdinalType& n, const ScalarType* T, const OrdinalType& ldt, ScalarType* VL, const OrdinalType& ldvl, ScalarType* VR, const OrdinalType& ldvr, const OrdinalType& mm, OrdinalType* m, ScalarType* WORK, OrdinalType* info) const
-  {
-    UndefinedLAPACKRoutine<ScalarType>::notDefined();
-  }
-
-  template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::TREVC(const char& SIDE, const OrdinalType& n, const ScalarType* T, const OrdinalType& ldt, ScalarType* VL, const OrdinalType& ldvl, ScalarType* VR, const OrdinalType& ldvr, const OrdinalType& mm, OrdinalType* m, ScalarType* WORK, MagnitudeType* RWORK, OrdinalType* info) const
-  {
-    UndefinedLAPACKRoutine<ScalarType>::notDefined();
-  }
-
-  template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::TREXC(const char& COMPQ, const OrdinalType& n, ScalarType* T, const OrdinalType& ldt, ScalarType* Q, const OrdinalType& ldq, OrdinalType* ifst, OrdinalType* ilst, ScalarType* WORK, OrdinalType* info) const
+  void LAPACK<OrdinalType,ScalarType>::TGSEN(const OrdinalType&  /*ijob*/, const OrdinalType&  /*wantq*/, const OrdinalType&  /*wantz*/, const OrdinalType*  /*SELECT*/, const OrdinalType&  /*n*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, ScalarType*  /*B*/, const OrdinalType&  /*ldb*/, MagnitudeType * /*ALPHAR*/, MagnitudeType * /*ALPHAI*/, MagnitudeType * /*BETA*/, ScalarType*  /*Q*/, const OrdinalType&  /*ldq*/, ScalarType*  /*Z*/, const OrdinalType&  /*ldz*/, OrdinalType*  /*M*/, MagnitudeType * /*PL*/, MagnitudeType * /*PR*/, MagnitudeType * /*DIF*/, ScalarType*  /*WORK*/, const OrdinalType&  /*lwork*/, OrdinalType*  /*IWORK*/, const OrdinalType&  /*liwork*/, OrdinalType*  /*info*/ ) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::TGEVC(const char& SIDE, const char& HOWMNY, const OrdinalType* SELECT, const OrdinalType& n, const ScalarType* S, const OrdinalType& lds, const ScalarType* P, const OrdinalType& ldp, ScalarType* VL, const OrdinalType& ldvl, ScalarType* VR, const OrdinalType& ldvr, const OrdinalType& mm, OrdinalType* M, ScalarType* WORK, OrdinalType* info) const
+  void LAPACK<OrdinalType, ScalarType>::GGES(const char&  /*JOBVL*/, const char&  /*JOBVR*/, const char&  /*SORT*/, OrdinalType& (* /*ptr2func*/)(ScalarType*, ScalarType*, ScalarType*), const OrdinalType&  /*n*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, ScalarType*  /*B*/, const OrdinalType&  /*ldb*/, OrdinalType*  /*sdim*/, MagnitudeType*  /*ALPHAR*/, MagnitudeType*  /*ALPHAI*/, MagnitudeType*  /*BETA*/, ScalarType*  /*VL*/, const OrdinalType&  /*ldvl*/, ScalarType*  /*VR*/, const OrdinalType&  /*ldvr*/, ScalarType*  /*WORK*/, const OrdinalType&  /*lwork*/, OrdinalType*  /*BWORK*/, OrdinalType*  /*info*/ ) const
+  {
+    UndefinedLAPACKRoutine<ScalarType>::notDefined();
+  }
+
+  template<typename OrdinalType, typename ScalarType>
+  void LAPACK<OrdinalType, ScalarType>::ORMQR(const char&  /*SIDE*/, const char&  /*TRANS*/, const OrdinalType&  /*m*/, const OrdinalType&  /*n*/, const OrdinalType&  /*k*/, const ScalarType*  /*A*/, const OrdinalType&  /*lda*/, const ScalarType*  /*TAU*/, ScalarType*  /*C*/, const OrdinalType&  /*ldc*/, ScalarType*  /*WORK*/, const OrdinalType&  /*lwork*/, OrdinalType*  /*info*/) const
+  {
+    UndefinedLAPACKRoutine<ScalarType>::notDefined();
+  }
+
+  template<typename OrdinalType, typename ScalarType>
+  void LAPACK<OrdinalType, ScalarType>::ORM2R(const char&  /*SIDE*/, const char&  /*TRANS*/, const OrdinalType&  /*m*/, const OrdinalType&  /*n*/, const OrdinalType&  /*k*/, const ScalarType*  /*A*/, const OrdinalType&  /*lda*/, const ScalarType*  /*TAU*/, ScalarType*  /*C*/, const OrdinalType&  /*ldc*/, ScalarType*  /*WORK*/, OrdinalType* const  /*info*/) const
+  {
+    UndefinedLAPACKRoutine<ScalarType>::notDefined();
+  }
+
+  template<typename OrdinalType, typename ScalarType>
+  void LAPACK<OrdinalType, ScalarType>::UNMQR(const char&  /*SIDE*/, const char&  /*TRANS*/, const OrdinalType&  /*m*/, const OrdinalType&  /*n*/, const OrdinalType&  /*k*/, const ScalarType*  /*A*/, const OrdinalType&  /*lda*/, const ScalarType*  /*TAU*/, ScalarType*  /*C*/, const OrdinalType&  /*ldc*/, ScalarType*  /*WORK*/, const OrdinalType&  /*lwork*/, OrdinalType*  /*info*/) const
+  {
+    UndefinedLAPACKRoutine<ScalarType>::notDefined();
+  }
+
+  template<typename OrdinalType, typename ScalarType>
+  void LAPACK<OrdinalType, ScalarType>::UNM2R(const char&  /*SIDE*/, const char&  /*TRANS*/, const OrdinalType&  /*M*/, const OrdinalType&  /*N*/, const OrdinalType&  /*K*/, const ScalarType*  /*A*/, const OrdinalType&  /*LDA*/, const ScalarType*  /*TAU*/, ScalarType*  /*C*/, const OrdinalType&  /*LDC*/, ScalarType*  /*WORK*/, OrdinalType* const  /*INFO*/) const
+  {
+    UndefinedLAPACKRoutine<ScalarType>::notDefined();
+  }
+
+  template<typename OrdinalType, typename ScalarType>
+  void LAPACK<OrdinalType, ScalarType>::ORGQR(const OrdinalType&  /*m*/, const OrdinalType&  /*n*/, const OrdinalType&  /*k*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, const ScalarType*  /*TAU*/, ScalarType*  /*WORK*/, const OrdinalType&  /*lwork*/, OrdinalType*  /*info*/) const
+  {
+    UndefinedLAPACKRoutine<ScalarType>::notDefined();
+  }
+
+  template<typename OrdinalType, typename ScalarType>
+  void LAPACK<OrdinalType, ScalarType>::UNGQR(const OrdinalType&  /*m*/, const OrdinalType&  /*n*/, const OrdinalType&  /*k*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, const ScalarType*  /*TAU*/, ScalarType*  /*WORK*/, const OrdinalType&  /*lwork*/, OrdinalType*  /*info*/) const
+  {
+    UndefinedLAPACKRoutine<ScalarType>::notDefined();
+  }
+
+  template<typename OrdinalType, typename ScalarType>
+  void LAPACK<OrdinalType, ScalarType>::ORGHR(const OrdinalType&  /*n*/, const OrdinalType&  /*ilo*/, const OrdinalType&  /*ihi*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, const ScalarType*  /*TAU*/, ScalarType*  /*WORK*/, const OrdinalType&  /*lwork*/, OrdinalType*  /*info*/) const
+  {
+    UndefinedLAPACKRoutine<ScalarType>::notDefined();
+  }
+
+  template<typename OrdinalType, typename ScalarType>
+  void LAPACK<OrdinalType, ScalarType>::ORMHR(const char&  /*SIDE*/, const char&  /*TRANS*/, const OrdinalType&  /*m*/, const OrdinalType&  /*n*/, const OrdinalType&  /*ilo*/, const OrdinalType&  /*ihi*/, const ScalarType*  /*A*/, const OrdinalType&  /*lda*/, const ScalarType*  /*TAU*/, ScalarType*  /*C*/, const OrdinalType&  /*ldc*/, ScalarType*  /*WORK*/, const OrdinalType&  /*lwork*/, OrdinalType*  /*info*/) const
+  {
+    UndefinedLAPACKRoutine<ScalarType>::notDefined();
+  }
+
+  template<typename OrdinalType, typename ScalarType>
+  void LAPACK<OrdinalType, ScalarType>::TREVC(const char&  /*SIDE*/, const char&  /*HOWMNY*/, OrdinalType*  /*select*/, const OrdinalType&  /*n*/, const ScalarType*  /*T*/, const OrdinalType&  /*ldt*/, ScalarType*  /*VL*/, const OrdinalType&  /*ldvl*/, ScalarType*  /*VR*/, const OrdinalType&  /*ldvr*/, const OrdinalType&  /*mm*/, OrdinalType*  /*m*/, ScalarType*  /*WORK*/, OrdinalType*  /*info*/) const
+  {
+    UndefinedLAPACKRoutine<ScalarType>::notDefined();
+  }
+
+  template<typename OrdinalType, typename ScalarType>
+  void LAPACK<OrdinalType, ScalarType>::TREVC(const char&  /*SIDE*/, const OrdinalType&  /*n*/, const ScalarType*  /*T*/, const OrdinalType&  /*ldt*/, ScalarType*  /*VL*/, const OrdinalType&  /*ldvl*/, ScalarType*  /*VR*/, const OrdinalType&  /*ldvr*/, const OrdinalType&  /*mm*/, OrdinalType*  /*m*/, ScalarType*  /*WORK*/, MagnitudeType*  /*RWORK*/, OrdinalType*  /*info*/) const
+  {
+    UndefinedLAPACKRoutine<ScalarType>::notDefined();
+  }
+
+  template<typename OrdinalType, typename ScalarType>
+  void LAPACK<OrdinalType, ScalarType>::TREXC(const char&  /*COMPQ*/, const OrdinalType&  /*n*/, ScalarType*  /*T*/, const OrdinalType&  /*ldt*/, ScalarType*  /*Q*/, const OrdinalType&  /*ldq*/, OrdinalType*  /*ifst*/, OrdinalType*  /*ilst*/, ScalarType*  /*WORK*/, OrdinalType*  /*info*/) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
 
   template<typename OrdinalType, typename ScalarType>
-  ScalarType LAPACK<OrdinalType, ScalarType>::LAMCH(const char& CMACH) const
+  void LAPACK<OrdinalType, ScalarType>::TGEVC(const char&  /*SIDE*/, const char&  /*HOWMNY*/, const OrdinalType*  /*SELECT*/, const OrdinalType&  /*n*/, const ScalarType*  /*S*/, const OrdinalType&  /*lds*/, const ScalarType*  /*P*/, const OrdinalType&  /*ldp*/, ScalarType*  /*VL*/, const OrdinalType&  /*ldvl*/, ScalarType*  /*VR*/, const OrdinalType&  /*ldvr*/, const OrdinalType&  /*mm*/, OrdinalType*  /*M*/, ScalarType*  /*WORK*/, OrdinalType*  /*info*/) const
+  {
+    UndefinedLAPACKRoutine<ScalarType>::notDefined();
+  }
+
+
+  template<typename OrdinalType, typename ScalarType>
+  ScalarType LAPACK<OrdinalType, ScalarType>::LAMCH(const char&  /*CMACH*/) const
   {
     return UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  OrdinalType LAPACK<OrdinalType, ScalarType>::ILAENV( const OrdinalType& ispec, const std::string& NAME, const std::string& OPTS, const OrdinalType& N1, const OrdinalType& N2, const OrdinalType& N3, const OrdinalType& N4 ) const
+  OrdinalType LAPACK<OrdinalType, ScalarType>::ILAENV( const OrdinalType&  /*ispec*/, const std::string&  /*NAME*/, const std::string&  /*OPTS*/, const OrdinalType&  /*N1*/, const OrdinalType&  /*N2*/, const OrdinalType&  /*N3*/, const OrdinalType&  /*N4*/ ) const
   {
     return UndefinedLAPACKRoutine<OrdinalType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  ScalarType LAPACK<OrdinalType, ScalarType>::LAPY2(const ScalarType& x, const ScalarType& y) const
+  ScalarType LAPACK<OrdinalType, ScalarType>::LAPY2(const ScalarType&  /*x*/, const ScalarType&  /*y*/) const
   {
     return UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::LARTG( const ScalarType& f, const ScalarType& g, MagnitudeType* c, ScalarType* s, ScalarType* r ) const
+  void LAPACK<OrdinalType, ScalarType>::LARTG( const ScalarType&  /*f*/, const ScalarType&  /*g*/, MagnitudeType*  /*c*/, ScalarType*  /*s*/, ScalarType*  /*r*/ ) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::LARFG( const OrdinalType& n, ScalarType* alpha, ScalarType* x, const OrdinalType& incx, ScalarType* tau ) const
+  void LAPACK<OrdinalType, ScalarType>::LARFG( const OrdinalType&  /*n*/, ScalarType*  /*alpha*/, ScalarType*  /*x*/, const OrdinalType&  /*incx*/, ScalarType*  /*tau*/ ) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::GEBAL( const char& JOBZ, const OrdinalType& n, ScalarType* A, const OrdinalType& lda, OrdinalType* ilo, OrdinalType* ihi, MagnitudeType* scale, OrdinalType* info ) const
+  void LAPACK<OrdinalType, ScalarType>::GEBAL( const char&  /*JOBZ*/, const OrdinalType&  /*n*/, ScalarType*  /*A*/, const OrdinalType&  /*lda*/, OrdinalType*  /*ilo*/, OrdinalType*  /*ihi*/, MagnitudeType*  /*scale*/, OrdinalType*  /*info*/ ) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::GEBAK( const char& JOBZ, const char& SIDE, const OrdinalType& n, const OrdinalType& ilo, const OrdinalType& ihi, const MagnitudeType* scale, const OrdinalType& m, ScalarType* V, const OrdinalType& ldv, OrdinalType* info ) const
+  void LAPACK<OrdinalType, ScalarType>::GEBAK( const char&  /*JOBZ*/, const char&  /*SIDE*/, const OrdinalType&  /*n*/, const OrdinalType&  /*ilo*/, const OrdinalType&  /*ihi*/, const MagnitudeType*  /*scale*/, const OrdinalType&  /*m*/, ScalarType*  /*V*/, const OrdinalType&  /*ldv*/, OrdinalType*  /*info*/ ) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  ScalarType LAPACK<OrdinalType, ScalarType>::LARND( const OrdinalType& idist, OrdinalType* seed ) const
+  ScalarType LAPACK<OrdinalType, ScalarType>::LARND( const OrdinalType&  /*idist*/, OrdinalType*  /*seed*/ ) const
   {
     return UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }
 
   template<typename OrdinalType, typename ScalarType>
-  void LAPACK<OrdinalType, ScalarType>::LARNV( const OrdinalType& idist, OrdinalType* seed, const OrdinalType& n, ScalarType* v ) const
+  void LAPACK<OrdinalType, ScalarType>::LARNV( const OrdinalType&  /*idist*/, OrdinalType*  /*seed*/, const OrdinalType&  /*n*/, ScalarType*  /*v*/ ) const
   {
     UndefinedLAPACKRoutine<ScalarType>::notDefined();
   }

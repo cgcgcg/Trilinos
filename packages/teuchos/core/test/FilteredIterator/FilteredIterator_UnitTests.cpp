@@ -19,7 +19,7 @@ namespace {
 template<typename T>
 class SelectAll {
 public:
-  bool operator()(const T& x) const
+  bool operator()(const T& x) const  // NOLINT(misc-unused-parameters)
     { return true; }
 };
 

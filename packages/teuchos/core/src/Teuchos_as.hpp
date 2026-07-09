@@ -386,7 +386,7 @@ namespace { // anonymous
     // strtoull().  If this is not the case, we could include a
     // configure-time test for these functions(), with a fall-back to
     // an std::istringstream operator>> implementation.
-    char* endptr = NULL;
+    char* endptr = nullptr;
     // Keep the pointer, because std::string doesn't necessarily
     // guarantee that this is the same across calls to c_str(), does
     // it?  Or perhaps it does...
@@ -496,14 +496,14 @@ namespace { // anonymous
                RealType (*rawConvert) (const char*, char**),
                const char* realTypeName)
   {
-    if (rawConvert == NULL) {
+    if (rawConvert == nullptr) {
       std::istringstream in (t);
       RealType out;
       in >> out;
       return out;
     }
     else {
-      char* endptr = NULL;
+      char* endptr = nullptr;
       // Keep the pointer, because std::string doesn't necessarily
       // guarantee that this is the same across calls to c_str(), does
       // it?  Or perhaps it does...

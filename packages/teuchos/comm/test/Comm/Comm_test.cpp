@@ -371,7 +371,7 @@ bool masterTestComm(
     RCP<const Teuchos::OpaqueWrapper<MPI_Comm> >
       rawMpiComm = mpiComm->getRawMpiComm();
 
-    if (static_cast<MPI_Comm>(*rawMpiComm) == 0) {
+    if (static_cast<MPI_Comm>(*rawMpiComm) == nullptr) {
       success = false;
       *out << "\n*** FAILED to get the raw MPI_Comm pointer from the Teuchos::MpiComm<" << OT::name() << ">!\n";
     }

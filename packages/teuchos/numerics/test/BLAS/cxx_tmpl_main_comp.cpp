@@ -107,7 +107,7 @@ bool CompareMatrices(TYPE* Matrix1, OTYPE1 Rows1, OTYPE1 Columns1, OTYPE1 LDM1,
 
 // Use this to convert the larger ordinal type to the smaller one (nothing inherently makes sure of this).
 template<typename OTYPE1, typename OTYPE2>
-OTYPE2 ConvertType(OTYPE1 T1, OTYPE2 T2)
+OTYPE2 ConvertType(OTYPE1 T1, OTYPE2  /*T2*/)
 {
   return static_cast<OTYPE2>(T1);
 }
@@ -206,7 +206,7 @@ int main(int argc, char *argv[])
   Teuchos::EDiag DIAG;
   MType TOL = 1e-8*ScalarTraits<MType>::one();
 
-  std::srand(time(NULL));
+  std::srand(time(nullptr));
 
   //--------------------------------------------------------------------------------
   // BEGIN LEVEL 1 BLAS TESTS
@@ -1953,7 +1953,7 @@ bool CompareScalars(TYPE Scalar1, TYPE Scalar2, typename ScalarTraits<TYPE>::mag
     Purpose:   Compares the difference between two vectors using relative euclidean-norms, i.e. ||v_1-v_2||_2/||v_2||_2
 */
 template<typename TYPE, typename OTYPE1, typename OTYPE2>
-bool CompareVectors(TYPE* Vector1, OTYPE1 Size1, TYPE* Vector2, OTYPE2 Size2, typename ScalarTraits<TYPE>::magnitudeType Tolerance)
+bool CompareVectors(TYPE* Vector1, OTYPE1 Size1, TYPE* Vector2, OTYPE2  /*Size2*/, typename ScalarTraits<TYPE>::magnitudeType Tolerance)
 {
   TYPE temp = ScalarTraits<TYPE>::zero();
   typename ScalarTraits<TYPE>::magnitudeType temp2 = ScalarTraits<typename ScalarTraits<TYPE>::magnitudeType>::zero();
@@ -1984,7 +1984,7 @@ bool CompareVectors(TYPE* Vector1, OTYPE1 Size1, TYPE* Vector2, OTYPE2 Size2, ty
 */
 template<typename TYPE, typename OTYPE1, typename OTYPE2>
 bool CompareMatrices(TYPE* Matrix1, OTYPE1 Rows1, OTYPE1 Columns1, OTYPE1 LDM1,
-                     TYPE* Matrix2, OTYPE2 Rows2, OTYPE2 Columns2, OTYPE2 LDM2,
+                     TYPE* Matrix2, OTYPE2  /*Rows2*/, OTYPE2  /*Columns2*/, OTYPE2 LDM2,
                      typename ScalarTraits<TYPE>::magnitudeType Tolerance)
 {
   TYPE temp = ScalarTraits<TYPE>::zero();

@@ -112,7 +112,7 @@ void CommandLineProcessor::setOption(
   )
 {
   add_extra_output_setup_options();
-  TEUCHOS_TEST_FOR_EXCEPT(!(option_val!=NULL));
+  TEUCHOS_TEST_FOR_EXCEPT(!(option_val!=nullptr));
   options_list_[std::string(option_true)]
     = opt_val_val_t(OPT_BOOL_TRUE,any(option_val),false);
   options_list_[std::string(option_false)]
@@ -132,7 +132,7 @@ void CommandLineProcessor::setOption(
   )
 {
   add_extra_output_setup_options();
-  TEUCHOS_TEST_FOR_EXCEPT(!(option_val!=NULL));
+  TEUCHOS_TEST_FOR_EXCEPT(!(option_val!=nullptr));
   options_list_[std::string(option_name)]
     = opt_val_val_t(OPT_INT,any(option_val),required);
   options_documentation_list_.push_back(
@@ -150,7 +150,7 @@ void CommandLineProcessor::setOption(
   )
 {
   add_extra_output_setup_options();
-  TEUCHOS_TEST_FOR_EXCEPT(!(option_val!=NULL));
+  TEUCHOS_TEST_FOR_EXCEPT(!(option_val!=nullptr));
   options_list_[std::string(option_name)]
     = opt_val_val_t(OPT_LONG_INT,any(option_val),required);
   options_documentation_list_.push_back(
@@ -168,7 +168,7 @@ void CommandLineProcessor::setOption(
   )
 {
   add_extra_output_setup_options();
-  TEUCHOS_TEST_FOR_EXCEPT(!(option_val!=NULL));
+  TEUCHOS_TEST_FOR_EXCEPT(!(option_val!=nullptr));
   options_list_[std::string(option_name)]
     = opt_val_val_t(OPT_SIZE_T,any(option_val),required);
   options_documentation_list_.push_back(
@@ -185,7 +185,7 @@ void CommandLineProcessor::setOption(
   )
 {
   add_extra_output_setup_options();
-  TEUCHOS_TEST_FOR_EXCEPT(!(option_val!=NULL));
+  TEUCHOS_TEST_FOR_EXCEPT(!(option_val!=nullptr));
   options_list_[std::string(option_name)]
     = opt_val_val_t(OPT_LONG_LONG_INT,any(option_val),required);
   options_documentation_list_.push_back(
@@ -202,7 +202,7 @@ void CommandLineProcessor::setOption(
   )
 {
   add_extra_output_setup_options();
-  TEUCHOS_TEST_FOR_EXCEPT(!(option_val!=NULL));
+  TEUCHOS_TEST_FOR_EXCEPT(!(option_val!=nullptr));
   options_list_[std::string(option_name)]
     = opt_val_val_t(OPT_DOUBLE,any(option_val),required);
   options_documentation_list_.push_back(
@@ -219,7 +219,7 @@ void CommandLineProcessor::setOption(
   )
 {
   add_extra_output_setup_options();
-  TEUCHOS_TEST_FOR_EXCEPT(!(option_val!=NULL));
+  TEUCHOS_TEST_FOR_EXCEPT(!(option_val!=nullptr));
   options_list_[std::string(option_name)]
     = opt_val_val_t(OPT_FLOAT,any(option_val),required);
   options_documentation_list_.push_back(
@@ -236,7 +236,7 @@ void CommandLineProcessor::setOption(
   )
 {
   add_extra_output_setup_options();
-  TEUCHOS_TEST_FOR_EXCEPT(!(option_val!=NULL));
+  TEUCHOS_TEST_FOR_EXCEPT(!(option_val!=nullptr));
   options_list_[std::string(option_name)]
     = opt_val_val_t(OPT_STRING,any(option_val),required);
   options_documentation_list_.push_back(
@@ -690,10 +690,10 @@ void CommandLineProcessor::setEnumOption(
 {
   add_extra_output_setup_options();
 
-  TEUCHOS_TEST_FOR_EXCEPT(enum_option_val==NULL);
+  TEUCHOS_TEST_FOR_EXCEPT(enum_option_val==nullptr);
   TEUCHOS_TEST_FOR_EXCEPT(num_enum_opt_values<=0);
-  TEUCHOS_TEST_FOR_EXCEPT(enum_opt_values==NULL);
-  TEUCHOS_TEST_FOR_EXCEPT(enum_opt_names==NULL);
+  TEUCHOS_TEST_FOR_EXCEPT(enum_opt_values==nullptr);
+  TEUCHOS_TEST_FOR_EXCEPT(enum_opt_names==nullptr);
 
   enum_opt_data_list_.push_back(
     enum_opt_data_t(enum_option_val,num_enum_opt_values,enum_opt_values,enum_opt_names)

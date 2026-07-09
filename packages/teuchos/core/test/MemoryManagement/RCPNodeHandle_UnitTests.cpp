@@ -53,14 +53,14 @@ void deleteRCPNode( RCPNode **node )
   TEUCHOS_ASSERT(*node);
   (*node)->delete_obj();
   delete (*node);
-  *node = 0;
+  *node = nullptr;
 }
 
 
 template<class T>
-RCPNodeHandle basicRCPNodeHandle(const bool has_ownership, T **p_out = 0)
+RCPNodeHandle basicRCPNodeHandle(const bool has_ownership, T **p_out = nullptr)
 {
-  T *p = 0;
+  T *p = nullptr;
   RCPNode *rcpNode = basicRCPNode(has_ownership, &p);
   if (p_out)
     *p_out = p;
@@ -288,7 +288,7 @@ TEUCHOS_UNIT_TEST( RCPNodeHandle, remove_RCPNode_missing_node )
 
 TEUCHOS_UNIT_TEST_TEMPLATE_1_DECL( RCPNodeHandle, basicConstruct_owns_mem, T )
 {
-  T *p = 0;
+  T *p = nullptr;
   RCPNodeHandle nodeRef(basicRCPNodeHandle<T>(true, &p));
   TEST_EQUALITY_CONST( nodeRef.strong_count(), 1 );
   TEST_EQUALITY_CONST( nodeRef.has_ownership(), true );
@@ -347,11 +347,11 @@ TEUCHOS_UNIT_TEST_TEMPLATE_1_DECL( RCPNodeHandle, weakPtr_basic_1, T )
   ECHO(nodeRef1 = null);
   ECHO(nodeRef3 = null);
 
-  TEST_EQUALITY_CONST( nodeRef1.node_ptr()==0, true );
+  TEST_EQUALITY_CONST( nodeRef1.node_ptr()==nullptr, true );
   TEST_EQUALITY_CONST( nodeRef1.is_node_null(), true );
   TEST_EQUALITY_CONST( nodeRef1.is_valid_ptr(), true );
 
-  TEST_EQUALITY_CONST( nodeRef2.node_ptr()!=0, true );
+  TEST_EQUALITY_CONST( nodeRef2.node_ptr()!=nullptr, true );
   TEST_EQUALITY_CONST( nodeRef2.is_node_null(), false );
   TEST_EQUALITY_CONST( nodeRef2.is_valid_ptr(), false );
 
@@ -384,11 +384,11 @@ TEUCHOS_UNIT_TEST_TEMPLATE_1_DECL( RCPNodeHandle, weakPtr_basic_2, T )
 
   ECHO(nodeRef2 = null); // The underlying object stays alive!
 
-  TEST_EQUALITY_CONST( nodeRef2.node_ptr()==0, true );
+  TEST_EQUALITY_CONST( nodeRef2.node_ptr()==nullptr, true );
   TEST_EQUALITY_CONST( nodeRef2.is_node_null(), true );
   TEST_EQUALITY_CONST( nodeRef2.is_valid_ptr(), true );
 
-  TEST_EQUALITY_CONST( nodeRef1.node_ptr()!=0, true );
+  TEST_EQUALITY_CONST( nodeRef1.node_ptr()!=nullptr, true );
   TEST_EQUALITY_CONST( nodeRef1.is_node_null(), false );
   TEST_EQUALITY_CONST( nodeRef1.is_valid_ptr(), true );
 
@@ -574,7 +574,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_1_DECL( RCPNodeHandle, extraData_basic, T )
   TEST_EQUALITY( any_cast<int>(a2), v1 );
 
   any *a3 = nodeRef.get_optional_extra_data(a1.typeName(), "a1");
-  TEST_EQUALITY_CONST( a3!=0, true );
+  TEST_EQUALITY_CONST( a3!=nullptr, true );
   TEST_EQUALITY( &a2, a3 );
   TEST_EQUALITY_CONST( a3->same(a1), true );
 
@@ -609,7 +609,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_1_DECL( RCPNodeHandle, extraData_basic_const, T )
   TEST_EQUALITY( any_cast<int>(a2), v1 );
 
   const any *a3 = nodeRef2.get_optional_extra_data(a1.typeName(), "a1");
-  TEST_EQUALITY_CONST( a3!=0, true );
+  TEST_EQUALITY_CONST( a3!=nullptr, true );
   TEST_EQUALITY( &a2, a3 );
   TEST_EQUALITY_CONST( a3->same(a1), true );
 

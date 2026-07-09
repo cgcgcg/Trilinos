@@ -115,7 +115,7 @@ const RCPNodeHandle& RCP<T>::access_private_node() const
 template<class T>
 inline
 RCP<T>::RCP( ENull )
-  : ptr_(NULL)
+  : ptr_(nullptr)
 {}
 
 
@@ -254,7 +254,7 @@ inline
 RCP<T>::RCP(RCP<T>&& r_ptr)
   : ptr_(r_ptr.ptr_), node_(std::move(r_ptr.node_))
 {
-  r_ptr.ptr_ = 0;
+  r_ptr.ptr_ = nullptr;
 }
 
 
@@ -307,7 +307,7 @@ RCP<T>& RCP<T>::operator=(RCP<T>&& r_ptr)
 #endif
   ptr_ = r_ptr.ptr_;
   node_ = std::move(r_ptr.node_);
-  r_ptr.ptr_ = 0;
+  r_ptr.ptr_ = nullptr;
   return *this;
 }
 
@@ -337,7 +337,7 @@ template<class T>
 inline
 bool RCP<T>::is_null() const
 {
-  return ptr_ == 0;
+  return ptr_ == nullptr;
 }
 
 
@@ -565,7 +565,7 @@ void RCP<T>::reset()
 #else
   RCPNodeHandle().swap(node_);
 #endif
-  ptr_ = 0;
+  ptr_ = nullptr;
 }
 
 
@@ -706,7 +706,7 @@ template<class T>
 inline
 bool Teuchos::operator!=( const RCP<T> &p, ENull )
 {
-  return p.get() != NULL;
+  return p.get() != nullptr;
 }
 
 
@@ -765,7 +765,7 @@ Teuchos::RCP<T2>
 Teuchos::rcp_dynamic_cast(const RCP<T1>& p1, bool throw_on_fail)
 {
   if (!is_null(p1)) {
-    T2 *p = NULL;
+    T2 *p = nullptr;
     if (throw_on_fail) {
       p = &dyn_cast<T2>(*p1);
     }

@@ -22,7 +22,7 @@ class C : public B1, public B2 {};
 
 using namespace Teuchos;
 
-int main(int argc, char* argv[])
+int main(int  /*argc*/, char*  /*argv*/[])
 {
 
   std::cout << Teuchos::Teuchos_Version() << std::endl << std::endl;
@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
   *ra_ptr2 = *ra_ptr3;    // ""
 
   // Get the raw C++ pointer.
-  A* true_ptr = 0;
+  A* true_ptr = nullptr;
   true_ptr = a_ptr1.get();
   TEUCHOS_ASSERT_EQUALITY(true_ptr, b1_ptr.get());
 

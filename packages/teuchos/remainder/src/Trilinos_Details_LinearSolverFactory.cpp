@@ -18,20 +18,20 @@ namespace { // (anonymous)
 
 // All package names that registerLinearSolverFactory has seen,
 // for any combination of template parameters MV and OP.
-static std::set<std::string>* packageNames_ = NULL;
+static std::set<std::string>* packageNames_ = nullptr;
 
 // atexit() hook for freeing packageNames_.
 void freePackageNames ()
 {
-  if (packageNames_ != NULL) {
+  if (packageNames_ != nullptr) {
     delete packageNames_;
-    packageNames_ = NULL;
+    packageNames_ = nullptr;
   }
 }
 
 void createPackageNames ()
 {
-  if (packageNames_ == NULL) {
+  if (packageNames_ == nullptr) {
     packageNames_ = new std::set<std::string> ();
     // It _is_ possible for atexit() to fail (e.g., because it ran
     // out of memory for storing callbacks).  We could throw an
@@ -47,7 +47,7 @@ bool rememberRegisteredSomeLinearSolverFactory (const std::string& packageName)
 {
   createPackageNames ();
   TEUCHOS_TEST_FOR_EXCEPTION
-    (packageNames_ == NULL, std::logic_error, "Trilinos::Details::"
+    (packageNames_ == nullptr, std::logic_error, "Trilinos::Details::"
      "Impl::rememberRegisteredSomeLinearSolverFactory: "
      "Should never get here!  packageNames_ is NULL.");
 
@@ -61,7 +61,7 @@ bool registeredSomeLinearSolverFactory (const std::string& packageName)
 {
   createPackageNames ();
   TEUCHOS_TEST_FOR_EXCEPTION
-    (packageNames_ == NULL, std::logic_error, "Trilinos::Details::"
+    (packageNames_ == nullptr, std::logic_error, "Trilinos::Details::"
      "Impl::rememberRegisteredSomeLinearSolverFactory: "
      "Should never get here!  packageNames_ is NULL.");
 

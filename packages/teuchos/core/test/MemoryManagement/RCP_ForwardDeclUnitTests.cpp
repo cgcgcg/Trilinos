@@ -47,7 +47,7 @@ TEUCHOS_UNIT_TEST( RCP, ForwardDeclaredUndefined_rcp )
   // This test ensures that you can set a pointer to an undefined type without
   // trouble.  Note that this has to be a non-owning RCP otherwise there will
   // be issues with the destructor call.
-  UndefinedType *ut_ptr = 0;
+  UndefinedType *ut_ptr = nullptr;
   RCP<UndefinedType> ut_rcp =
 #if defined(HAS_TEUCHOS_GET_BASE_OBJ_VOID_PTR)
     rcpFromUndefRef(*ut_ptr)

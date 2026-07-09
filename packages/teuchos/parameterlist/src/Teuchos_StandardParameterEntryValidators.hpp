@@ -325,7 +325,7 @@ private:
 
   void setValidValues(
     ArrayView<const std::string> const& strings,
-    ArrayView<const std::string> const* stringsDocs = NULL
+    ArrayView<const std::string> const* stringsDocs = nullptr
     );
 
   // Not defined and not to be called.
@@ -1583,7 +1583,7 @@ void EnhancedNumberValidator<T>::validateAndModify(
   ParameterEntry * entry
   ) const
 {
-  TEUCHOS_TEST_FOR_EXCEPT(0==entry);
+  TEUCHOS_TEST_FOR_EXCEPT(nullptr==entry);
 
   any anyValue = entry->getAny(true);
   // preferred type is not string
@@ -2850,7 +2850,7 @@ void Teuchos::setStringToIntegralParameter(
   )
 {
   typedef ParameterEntryValidator PEV;
-  TEUCHOS_TEST_FOR_EXCEPT(0==paramList);
+  TEUCHOS_TEST_FOR_EXCEPT(nullptr==paramList);
   paramList->set(
     paramName, defaultValue, docString,
     rcp_implicit_cast<const PEV>(
@@ -2873,7 +2873,7 @@ void Teuchos::setStringToIntegralParameter(
   )
 {
   typedef ParameterEntryValidator PEV;
-  TEUCHOS_TEST_FOR_EXCEPT(0==paramList);
+  TEUCHOS_TEST_FOR_EXCEPT(nullptr==paramList);
   paramList->set(
     paramName, defaultValue, docString,
     rcp_implicit_cast<const PEV>(
@@ -2898,7 +2898,7 @@ void Teuchos::setStringToIntegralParameter(
 
 {
   typedef ParameterEntryValidator PEV;
-  TEUCHOS_TEST_FOR_EXCEPT(0==paramList);
+  TEUCHOS_TEST_FOR_EXCEPT(nullptr==paramList);
   paramList->set(
     paramName, defaultValue, docString,
     rcp_implicit_cast<const PEV>(

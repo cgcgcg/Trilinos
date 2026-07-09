@@ -142,14 +142,14 @@ TEUCHOS_UNIT_TEST( ArrayRCP, release )
 
 TEUCHOS_UNIT_TEST( ArrayRCP, arcp_null )
 {
-  ArrayRCP<A> a_arcp = arcp<A>(0, 0, -1, false);
+  ArrayRCP<A> a_arcp = arcp<A>(nullptr, 0, -1, false);
   TEST_ASSERT(is_null(a_arcp));
 }
 
 
 TEUCHOS_UNIT_TEST( ArrayRCP, arcp_dealloc_null )
 {
-  ArrayRCP<A> a_arcp = arcp<A, Teuchos::DeallocNull<A> >(0, 0, -1,
+  ArrayRCP<A> a_arcp = arcp<A, Teuchos::DeallocNull<A> >(nullptr, 0, -1,
     Teuchos::DeallocNull<A>(), false);
   TEST_ASSERT(is_null(a_arcp));
 }
@@ -904,8 +904,8 @@ TEUCHOS_UNIT_TEST_TEMPLATE_1_DECL( ArrayRCP, getRawPtr, T )
 {
   ArrayRCP<const T> cptr;
   ArrayRCP<T> ptr;
-  TEST_EQUALITY_CONST( getRawPtr(cptr), (const T*)NULL );
-  TEST_EQUALITY_CONST( getRawPtr(ptr), (T*)NULL );
+  TEST_EQUALITY_CONST( getRawPtr(cptr), (const T*)nullptr );
+  TEST_EQUALITY_CONST( getRawPtr(ptr), (T*)nullptr );
   cptr = arcp<T>(n);
   ptr  = arcp<T>(n);
   TEST_EQUALITY( getRawPtr(cptr), &cptr[0]);
@@ -915,10 +915,10 @@ TEUCHOS_UNIT_TEST_TEMPLATE_1_DECL( ArrayRCP, getRawPtr, T )
 
 TEUCHOS_UNIT_TEST_TEMPLATE_1_DECL( CPtr, getRawPtr, T )
 {
-  const T *cptr = NULL;
-  T *ptr = NULL;
-  TEST_EQUALITY_CONST( getRawPtr(cptr), (const T*)NULL );
-  TEST_EQUALITY_CONST( getRawPtr(ptr),  (T*)NULL );
+  const T *cptr = nullptr;
+  T *ptr = nullptr;
+  TEST_EQUALITY_CONST( getRawPtr(cptr), (const T*)nullptr );
+  TEST_EQUALITY_CONST( getRawPtr(ptr),  (T*)nullptr );
   cptr = new T[n];
   ptr  = new T[n];
   TEST_EQUALITY( getRawPtr(cptr), &cptr[0]);

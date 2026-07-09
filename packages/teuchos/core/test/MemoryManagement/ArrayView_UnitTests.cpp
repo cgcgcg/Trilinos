@@ -292,7 +292,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_1_DECL( ArrayView, arrayView_convertToConst, T )
 TEUCHOS_UNIT_TEST_TEMPLATE_1_DECL( ArrayView, danglingView_std_vector, T )
 {
   ArrayView<T> av;
-  T* badPtr = 0;
+  T* badPtr = nullptr;
   {
     std::vector<T> v(n);
     av = v;

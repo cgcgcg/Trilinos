@@ -235,7 +235,7 @@ private:
 template<typename T>
 inline T& getValue( const ParameterEntry &entry )
 {
-  return entry.getValue(static_cast<T*>(0));
+  return entry.getValue(static_cast<T*>(nullptr));
 }
 
 /*! \relates ParameterEntry 
