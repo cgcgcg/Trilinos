@@ -10,7 +10,6 @@
 #include "uns_inline_decomp.h"
 #include <assert.h>
 #include <math.h>
-#include "uns_inline_decomp.h"
 #include "inline_mesh_desc.h"
 #include <ostream>
 #include <sstream>

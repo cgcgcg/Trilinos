@@ -806,7 +806,7 @@ ADvar: public IndepADvar<Double> {	// an "active" variable
 	};
 
 template<typename Double>
- inline void AD_Const1(Double *notused, const IndepADvar<Double>&v)
+ inline void AD_Const1(Double * /*notused*/, const IndepADvar<Double>&v)
 { IndepADvar<Double>::AD_Const(v); }
 
 template<typename Double>

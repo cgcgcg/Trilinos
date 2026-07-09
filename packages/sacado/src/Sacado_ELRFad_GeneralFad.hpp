@@ -974,7 +974,7 @@ namespace Sacado {
         }
         template <typename ArgT>
         SACADO_INLINE_FUNCTION
-        void operator () (ArgT arg) const {
+        void operator () (ArgT  /*arg*/) const {
           const int Arg = ArgT::value;
           t += partials[Arg] * x.template getTangent<Arg>(i);
         }
@@ -987,7 +987,7 @@ namespace Sacado {
           FastLocalAccumOp<ExprT>(x_) {}
         template <typename ArgT>
         SACADO_INLINE_FUNCTION
-        void operator () (ArgT arg) const {
+        void operator () (ArgT  /*arg*/) const {
           const int Arg = ArgT::value;
           if (this->x.template isActive<Arg>())
             this->t += this->partials[Arg] * this->x.template getTangent<Arg>(this->i);

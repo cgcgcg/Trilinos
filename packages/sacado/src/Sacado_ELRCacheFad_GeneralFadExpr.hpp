@@ -123,7 +123,7 @@ namespace Sacado {
 
       //! Get dx array
       SACADO_INLINE_FUNCTION
-      const value_type* getDx(int j) const { return this->dx(); }
+      const value_type* getDx(int  /*j*/) const { return this->dx(); }
 
     }; // class Expr<GeneralFad>
 

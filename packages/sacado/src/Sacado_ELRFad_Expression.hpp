@@ -134,7 +134,7 @@ namespace Sacado {
       //! Return tangent component \c i of argument \c Arg
       template <int Arg>
       SACADO_INLINE_FUNCTION
-      value_type getTangent(int i) const { return 0.0; }
+      value_type getTangent(int  /*i*/) const { return 0.0; }
 
       //! Return whether argument is active
       template <int Arg>

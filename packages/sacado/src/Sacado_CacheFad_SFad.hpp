@@ -95,7 +95,7 @@ namespace Sacado {
        * Initializes value to \c x and derivative array 0 of length \c sz
        */
       SACADO_INLINE_FUNCTION
-      Expr(const int sz, const T & x, const DerivInit zero_out = InitDerivArray)  : val_(x) {
+      Expr(const int  /*sz*/, const T & x, const DerivInit zero_out = InitDerivArray)  : val_(x) {
 #if defined(SACADO_DEBUG) && !defined(__CUDA_ARCH__ )
         if (sz != Num)
           throw "CacheFad::SFad() Error:  Supplied derivative dimension does not match compile time length.";
@@ -112,7 +112,7 @@ namespace Sacado {
        * \c i to 1 and all other's to zero.
        */
       SACADO_INLINE_FUNCTION
-      Expr(const int sz, const int i, const T & x) :
+      Expr(const int  /*sz*/, const int i, const T & x) :
         val_(x) {
 #if defined(SACADO_DEBUG) && !defined(__CUDA_ARCH__ )
         if (sz != Num)
@@ -162,7 +162,7 @@ namespace Sacado {
        * constructor.
        */
       SACADO_INLINE_FUNCTION
-      void diff(const int ith, const int n) {
+      void diff(const int ith, const int  /*n*/) {
 #if defined(SACADO_DEBUG) && !defined(__CUDA_ARCH__ )
         if (n != Num)
           throw "CacheFad::diff() Error:  Supplied derivative dimension does not match compile time length.";

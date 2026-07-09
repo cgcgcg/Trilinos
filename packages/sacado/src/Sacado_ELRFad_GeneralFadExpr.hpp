@@ -116,7 +116,7 @@ namespace Sacado {
 
       //! Return whether argument is active
       SACADO_INLINE_FUNCTION
-      bool isActive2(int j) const { return this->size() > 0; }
+      bool isActive2(int  /*j*/) const { return this->size() > 0; }
 
       //! Return whether expression is linear
       SACADO_INLINE_FUNCTION
@@ -129,7 +129,7 @@ namespace Sacado {
 
       //! Get dx array
       SACADO_INLINE_FUNCTION
-      const value_type* getDx(int j) const { return this->dx(); }
+      const value_type* getDx(int  /*j*/) const { return this->dx(); }
 
       SACADO_INLINE_FUNCTION
       int numActiveArgs() const {

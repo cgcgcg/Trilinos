@@ -386,7 +386,7 @@ double Pow::execute(Value** args)
 }
 
 /*****************************************************************************/
-double Rand::execute(Value** args)
+double Rand::execute(Value**  /*args*/)
 /*****************************************************************************/
 {
   assert(args == NULL);
@@ -394,7 +394,7 @@ double Rand::execute(Value** args)
 }
 
 /*****************************************************************************/
-double DRand::execute(Value** args)
+double DRand::execute(Value**  /*args*/)
 /*****************************************************************************/
 {
   assert(args == NULL);

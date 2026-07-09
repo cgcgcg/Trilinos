@@ -14,7 +14,6 @@
 #include <cstring>
 
 #include "../mesh_spec_lt/pamgen_mesh_specification.h"
-#include "inline_mesh_desc.h"
 ms_lt::Mesh_Specification * buildMeshSpecification_LT(
     PAMGEN_NEVADA::Inline_Mesh_Desc* imd,
     long long rank,

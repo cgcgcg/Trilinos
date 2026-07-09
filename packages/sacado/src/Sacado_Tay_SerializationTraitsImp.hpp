@@ -78,7 +78,7 @@ namespace Sacado {
       static void serialize (const Serializer& vs,
                              const Ordinal count,
                              const TayType buffer[],
-                             const Ordinal bytes,
+                             const Ordinal  /*bytes*/,
                              char charBuffer[],
                              const Ordinal sz = 0) {
         TayType *x = NULL;
@@ -115,10 +115,10 @@ namespace Sacado {
       }
 
       /** \brief Return the number of objects for <tt>bytes</tt> of storage. */
-      static Ordinal fromIndirectBytesToCount(const Serializer& vs,
+      static Ordinal fromIndirectBytesToCount(const Serializer&  /*vs*/,
                                               const Ordinal bytes,
                                               const char charBuffer[],
-                                              const Ordinal sz = 0) {
+                                              const Ordinal  /*sz*/ = 0) {
         Ordinal count = 0;
         Ordinal bytes_used = 0;
         while (bytes_used < bytes) {
@@ -143,7 +143,7 @@ namespace Sacado {
 
       /** \brief Deserialize from an indirect <tt>char[]</tt> buffer. */
       static void deserialize (const Serializer& vs,
-                               const Ordinal bytes,
+                               const Ordinal  /*bytes*/,
                                const char charBuffer[],
                                const Ordinal count,
                                TayType buffer[],

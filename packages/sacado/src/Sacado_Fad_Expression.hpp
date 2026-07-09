@@ -127,7 +127,7 @@ namespace Sacado {
 
       //! Return value of operation
       SACADO_INLINE_FUNCTION
-      const ConstT& val(int j) const { return constant_; }
+      const ConstT& val(int  /*j*/) const { return constant_; }
 
     protected:
 

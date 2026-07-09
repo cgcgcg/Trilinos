@@ -216,7 +216,7 @@ template<class ConcreteReductObj, int ReductionType>
 class BasicReductObjReductionOp {
 public:
   /** \brief . */
-  inline void operator()(const ConcreteReductObj& in_reduct, ConcreteReductObj& inout_reduct) const
+  inline void operator()(const ConcreteReductObj& in_reduct, ConcreteReductObj&  /*inout_reduct*/) const
     {
       return in_reduct.this_reduction_type_needs_a_specialization();
     }
@@ -1082,7 +1082,7 @@ public:
   void apply_op_impl(
     const ArrayView<const ConstSubVectorView<Scalar> > &sub_vecs,
     const ArrayView<const SubVectorView<Scalar> > &targ_sub_vecs,
-    const Ptr<ReductTarget> &reduct_obj_inout
+    const Ptr<ReductTarget> & /*reduct_obj_inout*/
     ) const
     {
       typedef typename Teuchos::ArrayRCP<const Scalar>::iterator const_iter_t;

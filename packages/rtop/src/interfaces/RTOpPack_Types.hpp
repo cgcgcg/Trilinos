@@ -547,18 +547,18 @@ public:
   /** \brief . */
   static void extractPrimitiveObjs(
     const Scalar &obj,
-    const ArrayView<primitiveType> &primitiveObjs,
-    const ArrayView<index_type> &indexObjs,
-    const ArrayView<char> &charObjs
+    const ArrayView<primitiveType> & /*primitiveObjs*/,
+    const ArrayView<index_type> & /*indexObjs*/,
+    const ArrayView<char> & /*charObjs*/
     )
     {
       Scalar::this_type_is_missing_a_specialization(obj);
     }
   /** \brief . */
   static void loadPrimitiveObjs(
-    const ArrayView<const primitiveType> &primitiveObjs,
-    const ArrayView<const index_type> &indexObjs,
-    const ArrayView<const char> &charObjs,
+    const ArrayView<const primitiveType> & /*primitiveObjs*/,
+    const ArrayView<const index_type> & /*indexObjs*/,
+    const ArrayView<const char> & /*charObjs*/,
     const Ptr<Scalar> &obj
     )
     {

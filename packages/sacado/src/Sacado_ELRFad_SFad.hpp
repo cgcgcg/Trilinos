@@ -102,7 +102,7 @@ namespace Sacado {
        * Initializes value to \c x and derivative array 0 of length \c sz
        */
       SACADO_INLINE_FUNCTION
-      Expr(const int sz, const T & x, const DerivInit zero_out = InitDerivArray) : val_(x) {
+      Expr(const int  /*sz*/, const T & x, const DerivInit zero_out = InitDerivArray) : val_(x) {
 #if defined(SACADO_DEBUG) && !defined(__CUDA_ARCH__ )
         if (sz != Num)
           throw "SELRFad::SFad() Error:  Supplied derivative dimension does not match compile time length.";
@@ -119,7 +119,7 @@ namespace Sacado {
        * \c i to 1 and all other's to zero.
        */
       SACADO_INLINE_FUNCTION
-      Expr(const int sz, const int i, const T & x) :
+      Expr(const int  /*sz*/, const int i, const T & x) :
         val_(x) {
 #if defined(SACADO_DEBUG) && !defined(__CUDA_ARCH__ )
         if (sz != Num)
@@ -181,7 +181,7 @@ namespace Sacado {
        * constructor.
        */
       SACADO_INLINE_FUNCTION
-      void diff(const int ith, const int n) {
+      void diff(const int ith, const int  /*n*/) {
 #if defined(SACADO_DEBUG) && !defined(__CUDA_ARCH__ )
         if (n != Num)
           throw "SELRFad::diff() Error:  Supplied derivative dimension does not match compile time length.";
@@ -325,7 +325,7 @@ namespace Sacado {
 
       //! Get dx array
       SACADO_INLINE_FUNCTION
-      const value_type* getDx(int j) const { return this->dx(); }
+      const value_type* getDx(int  /*j*/) const { return this->dx(); }
 
       //@}
 
@@ -595,7 +595,7 @@ namespace Sacado {
         void getTangents(int i_) { i = i_; }
         template <typename ArgT>
         SACADO_INLINE_FUNCTION
-        void operator () (ArgT arg) const {
+        void operator () (ArgT  /*arg*/) const {
           const int Arg = ArgT::value;
           if (x.template isActive<Arg>())
             t += partials[Arg] * x.template getTangent<Arg>(i);

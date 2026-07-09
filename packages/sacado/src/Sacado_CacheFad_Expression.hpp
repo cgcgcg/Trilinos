@@ -125,11 +125,11 @@ namespace Sacado {
 
       //! Return derivative component \c i of operation
       SACADO_INLINE_FUNCTION
-      value_type dx(int i) const { return value_type(0); }
+      value_type dx(int  /*i*/) const { return value_type(0); }
 
       //! Return derivative component \c i of operation
       SACADO_INLINE_FUNCTION
-      value_type fastAccessDx(int i) const { return value_type(0); }
+      value_type fastAccessDx(int  /*i*/) const { return value_type(0); }
 
     protected:
 

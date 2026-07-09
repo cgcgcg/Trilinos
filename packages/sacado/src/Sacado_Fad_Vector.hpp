@@ -38,7 +38,7 @@ namespace Sacado {
 
       //! Constructor 
       Vector(OrdinalType vec_size, OrdinalType deriv_sz,
-	     VectorDerivOrientation orient = Row) :
+	     VectorDerivOrientation  /*orient*/ = Row) :
 	deriv_size_(deriv_sz), vec_(vec_size) {
 	for (OrdinalType i=0; i<vec_size; i++)
 	  vec_[i] = FadType(deriv_size_, ValueType(0.0));
