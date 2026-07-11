@@ -44,23 +44,19 @@ class UnweightedDistanceFunctor {
   using coords_type        = Xpetra::MultiVector<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>;
   using local_coords_type  = typename coords_type::dual_view_type_const::t_dev;
 
-  Teuchos::RCP<coords_type> coordsMV;
-  Teuchos::RCP<coords_type> ghostedCoordsMV;
-
   local_coords_type coords;
   local_coords_type ghostedCoords;
 
  public:
   UnweightedDistanceFunctor(matrix_type& A, Teuchos::RCP<coords_type>& coords_) {
-    coordsMV      = coords_;
     auto importer = A.getCrsGraph()->getImporter();
     if (!importer.is_null()) {
-      ghostedCoordsMV = Xpetra::MultiVectorFactory<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), coordsMV->getNumVectors(), false);
-      ghostedCoordsMV->doImport(*coordsMV, *importer, Xpetra::INSERT);
-      coords        = coordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
+      auto ghostedCoordsMV = Xpetra::MultiVectorFactory<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), coords_->getNumVectors(), false);
+      ghostedCoordsMV->doImport(*coords_, *importer, Xpetra::INSERT);
+      coords        = coords_->getLocalViewDevice(Tpetra::Access::ReadOnly);
       ghostedCoords = ghostedCoordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
     } else {
-      coords        = coordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
+      coords        = coords_->getLocalViewDevice(Tpetra::Access::ReadOnly);
       ghostedCoords = coords;
     }
   }
@@ -96,9 +92,6 @@ class WeightedDistanceFunctor {
   using coords_type        = Xpetra::MultiVector<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>;
   using local_coords_type  = typename coords_type::dual_view_type_const::t_dev;
 
-  Teuchos::RCP<coords_type> coordsMV;
-  Teuchos::RCP<coords_type> ghostedCoordsMV;
-
   local_coords_type coords;
   local_coords_type ghostedCoords;
 
@@ -106,19 +99,18 @@ class WeightedDistanceFunctor {
 
  public:
   WeightedDistanceFunctor(matrix_type& A, Teuchos::RCP<coords_type>& coords_, weight_type weight_) {
-    coordsMV      = coords_;
     auto importer = A.getCrsGraph()->getImporter();
     if (!importer.is_null()) {
-      ghostedCoordsMV = Xpetra::MultiVectorFactory<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), coordsMV->getNumVectors(), false);
-      ghostedCoordsMV->doImport(*coordsMV, *importer, Xpetra::INSERT);
-      coords        = coordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
+      auto ghostedCoordsMV = Xpetra::MultiVectorFactory<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), coords_->getNumVectors(), false);
+      ghostedCoordsMV->doImport(*coords_, *importer, Xpetra::INSERT);
+      coords        = coords_->getLocalViewDevice(Tpetra::Access::ReadOnly);
       ghostedCoords = ghostedCoordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
     } else {
-      coords        = coordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
+      coords        = coords_->getLocalViewDevice(Tpetra::Access::ReadOnly);
       ghostedCoords = coords;
     }
     weight = weight_;
-    TEUCHOS_ASSERT(weight.extent(0) == coordsMV->getNumVectors());
+    TEUCHOS_ASSERT(weight.extent(0) == coords_->getNumVectors());
   }
 
   KOKKOS_FORCEINLINE_FUNCTION
@@ -154,9 +146,6 @@ class BlockWeightedDistanceFunctor {
   using coords_type        = Xpetra::MultiVector<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>;
   using local_coords_type  = typename coords_type::dual_view_type_const::t_dev;
 
-  Teuchos::RCP<coords_type> coordsMV;
-  Teuchos::RCP<coords_type> ghostedCoordsMV;
-
   local_coords_type coords;
   local_coords_type ghostedCoords;
 
@@ -165,20 +154,19 @@ class BlockWeightedDistanceFunctor {
 
  public:
   BlockWeightedDistanceFunctor(matrix_type& A, Teuchos::RCP<coords_type>& coords_, weight_type weight_, local_ordinal_type interleaved_blocksize_) {
-    coordsMV      = coords_;
     auto importer = A.getCrsGraph()->getImporter();
     if (!importer.is_null()) {
-      ghostedCoordsMV = Xpetra::MultiVectorFactory<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), coordsMV->getNumVectors(), false);
-      ghostedCoordsMV->doImport(*coordsMV, *importer, Xpetra::INSERT);
-      coords        = coordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
+      auto ghostedCoordsMV = Xpetra::MultiVectorFactory<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), coords_->getNumVectors(), false);
+      ghostedCoordsMV->doImport(*coords_, *importer, Xpetra::INSERT);
+      coords        = coords_->getLocalViewDevice(Tpetra::Access::ReadOnly);
       ghostedCoords = ghostedCoordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
     } else {
-      coords        = coordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
+      coords        = coords_->getLocalViewDevice(Tpetra::Access::ReadOnly);
       ghostedCoords = coords;
     }
     weight                = weight_;
     interleaved_blocksize = interleaved_blocksize_;
-    TEUCHOS_ASSERT(weight.extent(0) == coordsMV->getNumVectors());
+    TEUCHOS_ASSERT(weight.extent(0) == coords_->getNumVectors());
   }
 
   KOKKOS_FORCEINLINE_FUNCTION
@@ -214,38 +202,30 @@ class ScalarMaterialDistanceFunctor {
   using material_type       = Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
   using local_material_type = typename material_type::dual_view_type_const::t_dev;
 
-  Teuchos::RCP<coords_type> coordsMV;
-  Teuchos::RCP<coords_type> ghostedCoordsMV;
-
   local_coords_type coords;
   local_coords_type ghostedCoords;
-
-  Teuchos::RCP<material_type> materialMV;
-  Teuchos::RCP<material_type> ghostedMaterialMV;
 
   local_material_type material;
   local_material_type ghostedMaterial;
 
  public:
   ScalarMaterialDistanceFunctor(matrix_type& A, Teuchos::RCP<coords_type>& coords_, Teuchos::RCP<material_type>& material_) {
-    coordsMV      = coords_;
-    materialMV    = material_;
     auto importer = A.getCrsGraph()->getImporter();
     if (!importer.is_null()) {
-      ghostedCoordsMV = Xpetra::MultiVectorFactory<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), coordsMV->getNumVectors(), false);
-      ghostedCoordsMV->doImport(*coordsMV, *importer, Xpetra::INSERT);
-      coords        = coordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
+      auto ghostedCoordsMV = Xpetra::MultiVectorFactory<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), coords_->getNumVectors(), false);
+      ghostedCoordsMV->doImport(*coords_, *importer, Xpetra::INSERT);
+      coords        = coords_->getLocalViewDevice(Tpetra::Access::ReadOnly);
       ghostedCoords = ghostedCoordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
 
-      ghostedMaterialMV = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), materialMV->getNumVectors(), false);
-      ghostedMaterialMV->doImport(*materialMV, *importer, Xpetra::INSERT);
-      material        = materialMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
+      auto ghostedMaterialMV = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), material_->getNumVectors(), false);
+      ghostedMaterialMV->doImport(*material_, *importer, Xpetra::INSERT);
+      material        = material_->getLocalViewDevice(Tpetra::Access::ReadOnly);
       ghostedMaterial = ghostedMaterialMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
     } else {
-      coords        = coordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
+      coords        = coords_->getLocalViewDevice(Tpetra::Access::ReadOnly);
       ghostedCoords = coords;
 
-      material        = materialMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
+      material        = material_->getLocalViewDevice(Tpetra::Access::ReadOnly);
       ghostedMaterial = material;
     }
   }
@@ -315,9 +295,6 @@ class TensorMaterialDistanceFunctor {
   using local_material_type = Kokkos::View<impl_scalar_type***, memory_space>;
   using local_dist_type     = Kokkos::View<impl_scalar_type**, memory_space>;
 
-  Teuchos::RCP<coords_type> coordsMV;
-  Teuchos::RCP<coords_type> ghostedCoordsMV;
-
   local_coords_type coords;
   local_coords_type ghostedCoords;
 
@@ -329,16 +306,14 @@ class TensorMaterialDistanceFunctor {
 
  public:
   TensorMaterialDistanceFunctor(matrix_type& A, Teuchos::RCP<coords_type>& coords_, Teuchos::RCP<material_type>& material_) {
-    coordsMV = coords_;
-
     auto importer = A.getCrsGraph()->getImporter();
     if (!importer.is_null()) {
-      ghostedCoordsMV = Xpetra::MultiVectorFactory<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), coordsMV->getNumVectors(), false);
-      ghostedCoordsMV->doImport(*coordsMV, *importer, Xpetra::INSERT);
-      coords        = coordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
+      auto ghostedCoordsMV = Xpetra::MultiVectorFactory<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), coords_->getNumVectors(), false);
+      ghostedCoordsMV->doImport(*coords_, *importer, Xpetra::INSERT);
+      coords        = coords_->getLocalViewDevice(Tpetra::Access::ReadOnly);
       ghostedCoords = ghostedCoordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
     } else {
-      coords        = coordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
+      coords        = coords_->getLocalViewDevice(Tpetra::Access::ReadOnly);
       ghostedCoords = coords;
     }
 
@@ -413,9 +388,9 @@ class TensorMaterialDistanceFunctor {
 Method to compute ghosted distance Laplacian diagonal.
 */
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node, class DistanceFunctorType>
-Teuchos::RCP<Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node> >
-getDiagonal(Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& A,
-            DistanceFunctorType& distFunctor) {
+void getDiagonal(Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& A,
+                 DistanceFunctorType& distFunctor,
+                 typename Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::dual_view_type::t_dev& diag_view) {
   using scalar_type        = Scalar;
   using local_ordinal_type = LocalOrdinal;
   using ATS                = KokkosKernels::ArithTraits<scalar_type>;
@@ -425,7 +400,13 @@ getDiagonal(Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& A,
   using execution_space    = typename Node::execution_space;
   using range_type         = Kokkos::RangePolicy<LocalOrdinal, execution_space>;
 
-  auto diag = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(A.getRowMap(), 1, false);
+  RCP<Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>> diag;
+  auto importer = A.getCrsGraph()->getImporter();
+  if (importer.is_null())
+    diag = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(A.getRowMap(), diag_view);
+  else
+    diag = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(A.getRowMap(), 1, false);
+
   {
     auto lclA    = A.getLocalMatrixDevice();
     auto lclDiag = diag->getLocalViewDevice(Tpetra::Access::OverwriteAll);
@@ -454,20 +435,16 @@ getDiagonal(Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& A,
           lclDiag(row, 0) = !haveAddedToDiag ? implATS::squareroot(implATS::rmax()) : d2;
         });
   }
-  auto importer = A.getCrsGraph()->getImporter();
   if (!importer.is_null()) {
-    auto ghostedDiag = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(A.getColMap(), 1, false);
+    auto ghostedDiag = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(A.getColMap(), diag_view);
     ghostedDiag->doImport(*diag, *importer, Xpetra::INSERT);
-    return ghostedDiag;
-  } else {
-    return diag;
   }
 }
 
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node, class DistanceFunctorType>
-Teuchos::RCP<Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node> >
-getMaxMinusOffDiagonal(Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& A,
-                       DistanceFunctorType& distFunctor) {
+void getMaxMinusOffDiagonal(Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& A,
+                            DistanceFunctorType& distFunctor,
+                            typename Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::dual_view_type::t_dev& diag_view) {
   using scalar_type        = Scalar;
   using local_ordinal_type = LocalOrdinal;
   using ATS                = KokkosKernels::ArithTraits<scalar_type>;
@@ -477,7 +454,13 @@ getMaxMinusOffDiagonal(Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>
   using execution_space    = typename Node::execution_space;
   using range_type         = Kokkos::RangePolicy<LocalOrdinal, execution_space>;
 
-  auto diag = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(A.getRowMap(), 1, false);
+  RCP<Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>> diag;
+  auto importer = A.getCrsGraph()->getImporter();
+  if (importer.is_null())
+    diag = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(A.getRowMap(), diag_view);
+  else
+    diag = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(A.getRowMap(), 1, false);
+
   {
     auto lclA    = A.getLocalMatrixDevice();
     auto lclDiag = diag->getLocalViewDevice(Tpetra::Access::OverwriteAll);
@@ -504,13 +487,10 @@ getMaxMinusOffDiagonal(Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>
           lclDiag(row, 0) = mymax;
         });
   }
-  auto importer = A.getCrsGraph()->getImporter();
+
   if (!importer.is_null()) {
-    auto ghostedDiag = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(A.getColMap(), 1, false);
+    auto ghostedDiag = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(A.getColMap(), diag_view);
     ghostedDiag->doImport(*diag, *importer, Xpetra::INSERT);
-    return ghostedDiag;
-  } else {
-    return diag;
   }
 }
 
@@ -533,6 +513,7 @@ class DropFunctor {
   using local_ordinal_type = typename local_matrix_type::ordinal_type;
   using memory_space       = typename local_matrix_type::memory_space;
   using diag_vec_type      = Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
+  using diag_view2d_type   = typename diag_vec_type::dual_view_type::t_dev;
   using diag_view_type     = typename Kokkos::DualView<const scalar_type*, Kokkos::LayoutStride, typename Node::device_type, Kokkos::MemoryUnmanaged>::t_dev;
 
   using results_view = Kokkos::View<DecisionType*, memory_space>;
@@ -545,7 +526,7 @@ class DropFunctor {
  private:
   local_matrix_type A;
   magnitudeType eps;
-  Teuchos::RCP<diag_vec_type> diagVec;
+  diag_view2d_type lclDiag2d;
   diag_view_type diag;  // corresponds to overlapped diagonal
   DistanceFunctorType dist2;
   results_view results;
@@ -557,15 +538,13 @@ class DropFunctor {
     , eps(threshold)
     , dist2(dist2_)
     , results(results_) {
+    lclDiag2d = diag_view2d_type(Kokkos::ViewAllocateWithoutInitializing("lclDiag2d"), A_.getColMap()->getLocalNumElements(), 1);
     if constexpr ((measure == Misc::SmoothedAggregationMeasure) || (measure == Misc::SignedSmoothedAggregationMeasure)) {
-      diagVec        = getDiagonal(A_, dist2);
-      auto lclDiag2d = diagVec->getLocalViewDevice(Tpetra::Access::ReadOnly);
-      diag           = Kokkos::subview(lclDiag2d, Kokkos::ALL(), 0);
+      getDiagonal(A_, dist2, lclDiag2d);
     } else if constexpr (measure == Misc::SignedRugeStuebenMeasure) {
-      diagVec        = getMaxMinusOffDiagonal(A_, dist2);
-      auto lclDiag2d = diagVec->getLocalViewDevice(Tpetra::Access::ReadOnly);
-      diag           = Kokkos::subview(lclDiag2d, Kokkos::ALL(), 0);
+      getMaxMinusOffDiagonal(A_, dist2, lclDiag2d);
     }
+    diag = Kokkos::subview(lclDiag2d, Kokkos::ALL(), 0);
   }
 
   KOKKOS_FORCEINLINE_FUNCTION
@@ -654,6 +633,7 @@ class VectorDropFunctor {
   using memory_space            = typename local_matrix_type::memory_space;
   using block_indices_view_type = Kokkos::View<local_ordinal_type*, memory_space>;
   using diag_vec_type           = Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
+  using diag_view2d_type        = typename diag_vec_type::dual_view_type::t_dev;
   using diag_view_type          = typename Kokkos::DualView<const scalar_type*, Kokkos::LayoutStride, typename Node::device_type, Kokkos::MemoryUnmanaged>::t_dev;
 
   using results_view = Kokkos::View<DecisionType*, memory_space>;
@@ -666,7 +646,7 @@ class VectorDropFunctor {
  private:
   local_matrix_type A;
   magnitudeType eps;
-  Teuchos::RCP<diag_vec_type> diagVec;
+  diag_view2d_type lclDiag2d;
   diag_view_type diag;  // corresponds to overlapped diagonal
   DistanceFunctorType dist2;
   results_view results;
@@ -682,15 +662,13 @@ class VectorDropFunctor {
     , results(results_)
     , point_to_block(point_to_block_)
     , ghosted_point_to_block(ghosted_point_to_block_) {
+    lclDiag2d = diag_view2d_type(Kokkos::ViewAllocateWithoutInitializing("lclDiag2d"), A_.getColMap()->getLocalNumElements(), 1);
     if constexpr ((measure == Misc::SmoothedAggregationMeasure) || (measure == Misc::SignedSmoothedAggregationMeasure)) {
-      diagVec        = getDiagonal(mergedA_, dist2);
-      auto lclDiag2d = diagVec->getLocalViewDevice(Tpetra::Access::ReadOnly);
-      diag           = Kokkos::subview(lclDiag2d, Kokkos::ALL(), 0);
+      getDiagonal(mergedA_, dist2, lclDiag2d);
     } else if (measure == Misc::SignedRugeStuebenMeasure) {
-      diagVec        = getMaxMinusOffDiagonal(A_, dist2);
-      auto lclDiag2d = diagVec->getLocalViewDevice(Tpetra::Access::ReadOnly);
-      diag           = Kokkos::subview(lclDiag2d, Kokkos::ALL(), 0);
+      getMaxMinusOffDiagonal(A_, dist2, lclDiag2d);
     }
+    diag = Kokkos::subview(lclDiag2d, Kokkos::ALL(), 0);
   }
 
   KOKKOS_FORCEINLINE_FUNCTION

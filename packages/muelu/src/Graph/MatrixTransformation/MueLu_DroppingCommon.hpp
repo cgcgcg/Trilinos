@@ -396,7 +396,6 @@ class BlockDiagonalizeFunctor {
 
   local_matrix_type A;
   local_block_indices_view_type point_to_block;
-  Teuchos::RCP<block_indices_type> ghosted_point_to_blockMV;
   local_block_indices_view_type ghosted_point_to_block;
   results_view results;
 
@@ -408,7 +407,7 @@ class BlockDiagonalizeFunctor {
     auto importer = A_.getCrsGraph()->getImporter();
 
     if (!importer.is_null()) {
-      ghosted_point_to_blockMV = Xpetra::VectorFactory<LocalOrdinal, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), false);
+      auto ghosted_point_to_blockMV = Xpetra::VectorFactory<LocalOrdinal, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), false);
       ghosted_point_to_blockMV->doImport(point_to_block_, *importer, Xpetra::INSERT);
       ghosted_point_to_block = ghosted_point_to_blockMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
     } else
@@ -456,7 +455,6 @@ class BlockDiagonalizeVectorFunctor {
   results_view results;
   id_translation_type row_translation;
   id_translation_type col_translation;
-  Teuchos::RCP<block_indices_type> ghosted_point_to_blockMV;
 
  public:
   BlockDiagonalizeVectorFunctor(matrix_type& A_, block_indices_type& point_to_block_, const RCP<const importer_type>& importer, results_view& results_, id_translation_type row_translation_, id_translation_type col_translation_)
@@ -466,7 +464,7 @@ class BlockDiagonalizeVectorFunctor {
     , row_translation(row_translation_)
     , col_translation(col_translation_) {
     if (!importer.is_null()) {
-      ghosted_point_to_blockMV = Xpetra::VectorFactory<LocalOrdinal, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), false);
+      auto ghosted_point_to_blockMV = Xpetra::VectorFactory<LocalOrdinal, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), false);
       ghosted_point_to_blockMV->doImport(point_to_block_, *importer, Xpetra::INSERT);
       ghosted_point_to_block = ghosted_point_to_blockMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
     } else

@@ -287,6 +287,7 @@ class UnscaledDistanceLaplacianComparison {
   using local_ordinal_type = typename local_matrix_type::ordinal_type;
   using memory_space       = typename local_matrix_type::memory_space;
   using diag_vec_type      = Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
+  using diag_view2d_type   = typename diag_vec_type::dual_view_type::t_dev;
   using diag_view_type     = typename Kokkos::DualView<const scalar_type*, Kokkos::LayoutStride, typename Node::device_type, Kokkos::MemoryUnmanaged>::t_dev;
   using results_view       = Kokkos::View<DecisionType*, memory_space>;
 
@@ -298,7 +299,7 @@ class UnscaledDistanceLaplacianComparison {
   using magnitudeType = typename ATS::magnitudeType;
   using values_view   = Kokkos::View<magnitudeType*, memory_space>;
 
-  Teuchos::RCP<diag_vec_type> diagVec;
+  diag_view2d_type lclDiag2d;
   diag_view_type diag;
   DistanceFunctorType dist2;
   mutable values_view values;
@@ -310,9 +311,9 @@ class UnscaledDistanceLaplacianComparison {
     , dist2(dist2_)
     , values("UnscaledDistanceLaplacianComparison::values", A.nnz()) {
     // Construct ghosted distance Laplacian diagonal
-    diagVec        = DistanceLaplacian::getDiagonal(A_, dist2);
-    auto lclDiag2d = diagVec->getLocalViewDevice(Tpetra::Access::ReadOnly);
-    diag           = Kokkos::subview(lclDiag2d, Kokkos::ALL(), 0);
+    lclDiag2d = diag_view2d_type(Kokkos::ViewAllocateWithoutInitializing("lclDiag2d"), A_.getColMap()->getLocalNumElements(), 1);
+    DistanceLaplacian::getDiagonal(A_, dist2, lclDiag2d);
+    diag = Kokkos::subview(lclDiag2d, Kokkos::ALL(), 0);
   }
 
   template <class local_matrix_type2, class DistanceFunctorType2, class diag_view_type2>
@@ -413,6 +414,7 @@ class ScaledDistanceLaplacianComparison {
   using local_ordinal_type = typename local_matrix_type::ordinal_type;
   using memory_space       = typename local_matrix_type::memory_space;
   using diag_vec_type      = Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
+  using diag_view2d_type   = typename diag_vec_type::dual_view_type::t_dev;
   using diag_view_type     = typename Kokkos::DualView<const scalar_type*, Kokkos::LayoutStride, typename Node::device_type, Kokkos::MemoryUnmanaged>::t_dev;
   using results_view       = Kokkos::View<DecisionType*, memory_space>;
 
@@ -423,7 +425,7 @@ class ScaledDistanceLaplacianComparison {
   using ATS           = KokkosKernels::ArithTraits<scalar_type>;
   using magnitudeType = typename ATS::magnitudeType;
 
-  Teuchos::RCP<diag_vec_type> diagVec;
+  diag_view2d_type lclDiag2d;
   diag_view_type diag;
   DistanceFunctorType dist2;
 
@@ -437,15 +439,13 @@ class ScaledDistanceLaplacianComparison {
     , dist2(dist2_)
     , values("ScaledDistanceLaplacianComparison::values", A.nnz()) {
     // Construct ghosted distance Laplacian diagonal
+    lclDiag2d = diag_view2d_type(Kokkos::ViewAllocateWithoutInitializing("lclDiag2d"), A_.getColMap()->getLocalNumElements(), 1);
     if constexpr ((measure == Misc::SmoothedAggregationMeasure) || (measure == Misc::SignedSmoothedAggregationMeasure)) {
-      diagVec        = DistanceLaplacian::getDiagonal(A_, dist2);
-      auto lclDiag2d = diagVec->getLocalViewDevice(Tpetra::Access::ReadOnly);
-      diag           = Kokkos::subview(lclDiag2d, Kokkos::ALL(), 0);
+      DistanceLaplacian::getDiagonal(A_, dist2, lclDiag2d);
     } else if constexpr (measure == Misc::SignedRugeStuebenMeasure) {
-      diagVec        = DistanceLaplacian::getMaxMinusOffDiagonal(A_, dist2);
-      auto lclDiag2d = diagVec->getLocalViewDevice(Tpetra::Access::ReadOnly);
-      diag           = Kokkos::subview(lclDiag2d, Kokkos::ALL(), 0);
+      DistanceLaplacian::getMaxMinusOffDiagonal(A_, dist2, lclDiag2d);
     }
+    diag = Kokkos::subview(lclDiag2d, Kokkos::ALL(), 0);
   }
 
   template <class local_matrix_type2, class DistanceFunctorType2, class diag_view_type2>
@@ -584,6 +584,7 @@ class UnscaledDistanceLaplacianVectorComparison {
   using local_ordinal_type      = typename local_matrix_type::ordinal_type;
   using memory_space            = typename local_matrix_type::memory_space;
   using diag_vec_type           = Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
+  using diag_view2d_type        = typename diag_vec_type::dual_view_type::t_dev;
   using diag_view_type          = typename Kokkos::DualView<const scalar_type*, Kokkos::LayoutStride, typename Node::device_type, Kokkos::MemoryUnmanaged>::t_dev;
   using results_view            = Kokkos::View<DecisionType*, memory_space>;
   using block_indices_view_type = Kokkos::View<local_ordinal_type*, memory_space>;
@@ -596,7 +597,7 @@ class UnscaledDistanceLaplacianVectorComparison {
   using magnitudeType = typename ATS::magnitudeType;
   using values_view   = Kokkos::View<magnitudeType*, memory_space>;
 
-  Teuchos::RCP<diag_vec_type> diagVec;
+  diag_view2d_type lclDiag2d;
   diag_view_type diag;
   DistanceFunctorType dist2;
   block_indices_view_type point_to_block;
@@ -612,9 +613,9 @@ class UnscaledDistanceLaplacianVectorComparison {
     , ghosted_point_to_block(ghosted_point_to_block_)
     , values("UnscaledDistanceLaplacianVectorComparison::values", A.nnz()) {
     // Construct ghosted distance Laplacian diagonal
-    diagVec        = DistanceLaplacian::getDiagonal(mergedA_, dist2);
-    auto lclDiag2d = diagVec->getLocalViewDevice(Tpetra::Access::ReadOnly);
-    diag           = Kokkos::subview(lclDiag2d, Kokkos::ALL(), 0);
+    lclDiag2d = diag_view2d_type(Kokkos::ViewAllocateWithoutInitializing("lclDiag2d"), A_.getColMap()->getLocalNumElements(), 1);
+    DistanceLaplacian::getDiagonal(mergedA_, dist2, lclDiag2d);
+    diag = Kokkos::subview(lclDiag2d, Kokkos::ALL(), 0);
   }
 
   template <class local_matrix_type2, class DistanceFunctorType2, class diag_view_type2>
@@ -723,6 +724,7 @@ class ScaledDistanceLaplacianVectorComparison {
   using local_ordinal_type      = typename local_matrix_type::ordinal_type;
   using memory_space            = typename local_matrix_type::memory_space;
   using diag_vec_type           = Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
+  using diag_view2d_type        = typename diag_vec_type::dual_view_type::t_dev;
   using diag_view_type          = typename Kokkos::DualView<const scalar_type*, Kokkos::LayoutStride, typename Node::device_type, Kokkos::MemoryUnmanaged>::t_dev;
   using results_view            = Kokkos::View<DecisionType*, memory_space>;
   using block_indices_view_type = Kokkos::View<local_ordinal_type*, memory_space>;
@@ -734,7 +736,7 @@ class ScaledDistanceLaplacianVectorComparison {
   using ATS           = KokkosKernels::ArithTraits<scalar_type>;
   using magnitudeType = typename ATS::magnitudeType;
 
-  Teuchos::RCP<diag_vec_type> diagVec;
+  diag_view2d_type lclDiag2d;
   diag_view_type diag;
   DistanceFunctorType dist2;
 
@@ -753,15 +755,13 @@ class ScaledDistanceLaplacianVectorComparison {
     , ghosted_point_to_block(ghosted_point_to_block_)
     , values("ScaledDistanceLaplacianVectorComparison::values", A.nnz()) {
     // Construct ghosted distance Laplacian diagonal
+    lclDiag2d = diag_view2d_type(Kokkos::ViewAllocateWithoutInitializing("lclDiag2d"), A_.getColMap()->getLocalNumElements(), 1);
     if constexpr ((measure == Misc::SmoothedAggregationMeasure) || (measure == Misc::SignedSmoothedAggregationMeasure)) {
-      diagVec        = DistanceLaplacian::getDiagonal(mergedA_, dist2);
-      auto lclDiag2d = diagVec->getLocalViewDevice(Tpetra::Access::ReadOnly);
-      diag           = Kokkos::subview(lclDiag2d, Kokkos::ALL(), 0);
+      DistanceLaplacian::getDiagonal(mergedA_, dist2, lclDiag2d);
     } else if constexpr (measure == Misc::SignedRugeStuebenMeasure) {
-      diagVec        = DistanceLaplacian::getMaxMinusOffDiagonal(A_, dist2);
-      auto lclDiag2d = diagVec->getLocalViewDevice(Tpetra::Access::ReadOnly);
-      diag           = Kokkos::subview(lclDiag2d, Kokkos::ALL(), 0);
+      DistanceLaplacian::getMaxMinusOffDiagonal(A_, dist2, lclDiag2d);
     }
+    diag = Kokkos::subview(lclDiag2d, Kokkos::ALL(), 0);
   }
 
   template <class local_matrix_type2, class DistanceFunctorType2, class diag_view_type2>

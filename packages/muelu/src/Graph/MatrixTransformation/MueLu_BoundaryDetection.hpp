@@ -16,7 +16,6 @@
 #include "KokkosKernels_ArithTraits.hpp"
 #include "MueLu_LWGraph_kokkos.hpp"
 #include "MueLu_Utilities.hpp"
-#include "Teuchos_RCP.hpp"
 #include "Xpetra_ConfigDefs.hpp"
 #include "Xpetra_CrsGraph.hpp"
 #include "Xpetra_MultiVector.hpp"

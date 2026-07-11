@@ -35,12 +35,13 @@ Projection<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
                                                                            Nullspace->getMap()->getComm(),
                                                                            Xpetra::LocallyReplicated);
 
-  Teuchos::RCP<Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node> > tempMV = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(localMap_, Nullspace->getNumVectors(), false);
-  const Scalar ONE                                                                     = Teuchos::ScalarTraits<Scalar>::one();
-  const Scalar ZERO                                                                    = Teuchos::ScalarTraits<Scalar>::zero();
+  using MV                = Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
+  Teuchos::RCP<MV> tempMV = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(localMap_, Nullspace->getNumVectors(), false);
+  const Scalar ONE        = Teuchos::ScalarTraits<Scalar>::one();
+  const Scalar ZERO       = Teuchos::ScalarTraits<Scalar>::zero();
   tempMV->multiply(Teuchos::CONJ_TRANS, Teuchos::NO_TRANS, ONE, *Nullspace, *Nullspace, ZERO);
 
-  Kokkos::View<Scalar**, Kokkos::LayoutLeft, Kokkos::HostSpace> Q("Q", Nullspace->getNumVectors(), Nullspace->getNumVectors());
+  Kokkos::View<typename MV::impl_scalar_type**, Kokkos::LayoutLeft, Kokkos::HostSpace> Q("Q", Nullspace->getNumVectors(), Nullspace->getNumVectors());
   int LDQ;
   {
     auto dots = tempMV->getLocalViewHost(Tpetra::Access::ReadOnly);
@@ -48,7 +49,7 @@ Projection<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     LDQ = Q.stride(1);
   }
 
-  Teuchos::LAPACK<LocalOrdinal, Scalar> lapack;
+  Teuchos::LAPACK<LocalOrdinal, typename MV::impl_scalar_type> lapack;
   int info = 0;
   lapack.POTRF('L', Nullspace->getNumVectors(), Q.data(), LDQ, &info);
   TEUCHOS_ASSERT(info == 0);
