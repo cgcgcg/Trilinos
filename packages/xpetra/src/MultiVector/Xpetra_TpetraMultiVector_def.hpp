@@ -25,7 +25,7 @@ namespace Xpetra {
 
 //! Basic constuctor.
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::TpetraMultiVector(const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node> > &map, size_t NumVectors, bool zeroOut)
+TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::TpetraMultiVector(const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node>> &map, size_t NumVectors, bool zeroOut)
   : vec_(Teuchos::rcp(new Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>(toTpetra(map), NumVectors, zeroOut))) {
   // TAW 1/30/2016: even though Tpetra allows numVecs == 0, Epetra does not. Introduce exception to keep behavior of Epetra and Tpetra consistent.
   TEUCHOS_TEST_FOR_EXCEPTION(NumVectors < 1, std::invalid_argument, "Xpetra::TpetraMultiVector(map,numVecs,zeroOut): numVecs = " << NumVectors << " < 1.");
@@ -37,10 +37,16 @@ TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     TpetraMultiVector(const MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node> &source, const Teuchos::DataAccess copyOrView)
   : vec_(Teuchos::rcp(new Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>(toTpetra(source), copyOrView))) {}
 
+template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
+    TpetraMultiVector(const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node>> &map,
+                      const typename MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::dual_view_type::t_dev &dev_view)
+  : vec_(Teuchos::rcp(new Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>(toTpetra(map), dev_view))) {}
+
 //! Create multivector by copying two-dimensional array of local data.
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
-    TpetraMultiVector(const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node> > &map, const Teuchos::ArrayView<const Scalar> &A, size_t LDA, size_t NumVectors)
+    TpetraMultiVector(const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node>> &map, const Teuchos::ArrayView<const Scalar> &A, size_t LDA, size_t NumVectors)
   : vec_(Teuchos::rcp(new Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>(toTpetra(map), A, LDA, NumVectors))) {
   // TAW 1/30/2016: even though Tpetra allows numVecs == 0, Epetra does not. Introduce exception to keep behavior of Epetra and Tpetra consistent.
   TEUCHOS_TEST_FOR_EXCEPTION(NumVectors < 1, std::invalid_argument, "Xpetra::TpetraMultiVector(map,A,LDA,numVecs): numVecs = " << NumVectors << " < 1.");
@@ -49,7 +55,7 @@ TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 //! Create multivector by copying array of views of local data.
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
-    TpetraMultiVector(const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node> > &map, const Teuchos::ArrayView<const Teuchos::ArrayView<const Scalar> > &ArrayOfPtrs, size_t NumVectors)
+    TpetraMultiVector(const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node>> &map, const Teuchos::ArrayView<const Teuchos::ArrayView<const Scalar>> &ArrayOfPtrs, size_t NumVectors)
   : vec_(Teuchos::rcp(new Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>(toTpetra(map), ArrayOfPtrs, NumVectors))) {
   // TAW 1/30/2016: even though Tpetra allows numVecs == 0, Epetra does not. Introduce exception to keep behavior of Epetra and Tpetra consistent.
   TEUCHOS_TEST_FOR_EXCEPTION(NumVectors < 1, std::invalid_argument, "Xpetra::TpetraMultiVector(map,ArrayOfPtrs,numVecs): numVecs = " << NumVectors << " < 1.");
@@ -109,7 +115,7 @@ void TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 }
 
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-Teuchos::RCP<const Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node> >
+Teuchos::RCP<const Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
 TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     getVector(size_t j) const {
   XPETRA_MONITOR("TpetraMultiVector::getVector");
@@ -118,7 +124,7 @@ TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 
 //! Return a Vector which is a nonconst view of column j.
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-Teuchos::RCP<Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node> >
+Teuchos::RCP<Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
 TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     getVectorNonConst(size_t j) {
   XPETRA_MONITOR("TpetraMultiVector::getVectorNonConst");
@@ -154,7 +160,7 @@ void TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 //! Fill the given array with a copy of this multivector's local values.
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 void TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
-    get2dCopy(Teuchos::ArrayView<const Teuchos::ArrayView<Scalar> > ArrayOfPtrs) const {
+    get2dCopy(Teuchos::ArrayView<const Teuchos::ArrayView<Scalar>> ArrayOfPtrs) const {
   XPETRA_MONITOR("TpetraMultiVector::get2dCopy");
   vec_->get2dCopy(ArrayOfPtrs);
 }
@@ -170,7 +176,7 @@ TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 
 //! Return const persisting pointers to values.
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-Teuchos::ArrayRCP<Teuchos::ArrayRCP<const Scalar> >
+Teuchos::ArrayRCP<Teuchos::ArrayRCP<const Scalar>>
 TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     get2dView() const {
   XPETRA_MONITOR("TpetraMultiVector::get2dView");
@@ -188,7 +194,7 @@ TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 
 //! Return non-const persisting pointers to values.
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-Teuchos::ArrayRCP<Teuchos::ArrayRCP<Scalar> >
+Teuchos::ArrayRCP<Teuchos::ArrayRCP<Scalar>>
 TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     get2dViewNonConst() {
   XPETRA_MONITOR("TpetraMultiVector::get2dViewNonConst");
@@ -372,7 +378,7 @@ void TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 }
 
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node> >
+Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node>>
 TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     getMap() const {
   XPETRA_MONITOR("TpetraMultiVector::getMap");
@@ -385,7 +391,7 @@ void TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   XPETRA_MONITOR("TpetraMultiVector::doImport");
 
   XPETRA_DYNAMIC_CAST(const TpetraMultiVectorClass, source, tSource, "Xpetra::TpetraMultiVector::doImport only accept Xpetra::TpetraMultiVector as input arguments.");  // TODO: remove and use toTpetra()
-  RCP<const Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node> > v = tSource.getTpetra_MultiVector();
+  RCP<const Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>> v = tSource.getTpetra_MultiVector();
   this->getTpetra_MultiVector()->doImport(*v, toTpetra(importer), toTpetra(CM));
 }
 
@@ -395,7 +401,7 @@ void TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   XPETRA_MONITOR("TpetraMultiVector::beginImport");
 
   XPETRA_DYNAMIC_CAST(const TpetraMultiVectorClass, source, tSource, "Xpetra::TpetraMultiVector::doImport only accept Xpetra::TpetraMultiVector as input arguments.");  // TODO: remove and use toTpetra()
-  RCP<const Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node> > v = tSource.getTpetra_MultiVector();
+  RCP<const Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>> v = tSource.getTpetra_MultiVector();
   this->getTpetra_MultiVector()->beginImport(*v, toTpetra(importer), toTpetra(CM));
 }
 
@@ -405,7 +411,7 @@ void TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   XPETRA_MONITOR("TpetraMultiVector::endImport");
 
   XPETRA_DYNAMIC_CAST(const TpetraMultiVectorClass, source, tSource, "Xpetra::TpetraMultiVector::doImport only accept Xpetra::TpetraMultiVector as input arguments.");  // TODO: remove and use toTpetra()
-  RCP<const Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node> > v = tSource.getTpetra_MultiVector();
+  RCP<const Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>> v = tSource.getTpetra_MultiVector();
   this->getTpetra_MultiVector()->endImport(*v, toTpetra(importer), toTpetra(CM));
 }
 
@@ -415,7 +421,7 @@ void TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   XPETRA_MONITOR("TpetraMultiVector::doExport");
 
   XPETRA_DYNAMIC_CAST(const TpetraMultiVectorClass, dest, tDest, "Xpetra::TpetraMultiVector::doImport only accept Xpetra::TpetraMultiVector as input arguments.");  // TODO: remove and use toTpetra()
-  RCP<const Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node> > v = tDest.getTpetra_MultiVector();
+  RCP<const Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>> v = tDest.getTpetra_MultiVector();
   this->getTpetra_MultiVector()->doExport(*v, toTpetra(importer), toTpetra(CM));
 }
 
@@ -425,7 +431,7 @@ void TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   XPETRA_MONITOR("TpetraMultiVector::beginExport");
 
   XPETRA_DYNAMIC_CAST(const TpetraMultiVectorClass, dest, tDest, "Xpetra::TpetraMultiVector::doImport only accept Xpetra::TpetraMultiVector as input arguments.");  // TODO: remove and use toTpetra()
-  RCP<const Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node> > v = tDest.getTpetra_MultiVector();
+  RCP<const Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>> v = tDest.getTpetra_MultiVector();
   this->getTpetra_MultiVector()->beginExport(*v, toTpetra(importer), toTpetra(CM));
 }
 
@@ -435,7 +441,7 @@ void TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   XPETRA_MONITOR("TpetraMultiVector::endExport");
 
   XPETRA_DYNAMIC_CAST(const TpetraMultiVectorClass, dest, tDest, "Xpetra::TpetraMultiVector::doImport only accept Xpetra::TpetraMultiVector as input arguments.");  // TODO: remove and use toTpetra()
-  RCP<const Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node> > v = tDest.getTpetra_MultiVector();
+  RCP<const Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>> v = tDest.getTpetra_MultiVector();
   this->getTpetra_MultiVector()->endExport(*v, toTpetra(importer), toTpetra(CM));
 }
 
@@ -445,7 +451,7 @@ void TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   XPETRA_MONITOR("TpetraMultiVector::doImport");
 
   XPETRA_DYNAMIC_CAST(const TpetraMultiVectorClass, source, tSource, "Xpetra::TpetraMultiVector::doImport only accept Xpetra::TpetraMultiVector as input arguments.");  // TODO: remove and use toTpetra()
-  RCP<const Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node> > v = tSource.getTpetra_MultiVector();
+  RCP<const Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>> v = tSource.getTpetra_MultiVector();
   this->getTpetra_MultiVector()->doImport(*v, toTpetra(exporter), toTpetra(CM));
 }
 
@@ -455,7 +461,7 @@ void TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   XPETRA_MONITOR("TpetraMultiVector::beginImport");
 
   XPETRA_DYNAMIC_CAST(const TpetraMultiVectorClass, source, tSource, "Xpetra::TpetraMultiVector::doImport only accept Xpetra::TpetraMultiVector as input arguments.");  // TODO: remove and use toTpetra()
-  RCP<const Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node> > v = tSource.getTpetra_MultiVector();
+  RCP<const Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>> v = tSource.getTpetra_MultiVector();
   this->getTpetra_MultiVector()->beginImport(*v, toTpetra(exporter), toTpetra(CM));
 }
 
@@ -465,7 +471,7 @@ void TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   XPETRA_MONITOR("TpetraMultiVector::endImport");
 
   XPETRA_DYNAMIC_CAST(const TpetraMultiVectorClass, source, tSource, "Xpetra::TpetraMultiVector::doImport only accept Xpetra::TpetraMultiVector as input arguments.");  // TODO: remove and use toTpetra()
-  RCP<const Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node> > v = tSource.getTpetra_MultiVector();
+  RCP<const Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>> v = tSource.getTpetra_MultiVector();
   this->getTpetra_MultiVector()->endImport(*v, toTpetra(exporter), toTpetra(CM));
 }
 
@@ -475,7 +481,7 @@ void TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   XPETRA_MONITOR("TpetraMultiVector::doExport");
 
   XPETRA_DYNAMIC_CAST(const TpetraMultiVectorClass, dest, tDest, "Xpetra::TpetraMultiVector::doImport only accept Xpetra::TpetraMultiVector as input arguments.");  // TODO: remove and use toTpetra()
-  RCP<const Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node> > v = tDest.getTpetra_MultiVector();
+  RCP<const Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>> v = tDest.getTpetra_MultiVector();
   this->getTpetra_MultiVector()->doExport(*v, toTpetra(exporter), toTpetra(CM));
 }
 
@@ -485,7 +491,7 @@ void TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   XPETRA_MONITOR("TpetraMultiVector::beginExport");
 
   XPETRA_DYNAMIC_CAST(const TpetraMultiVectorClass, dest, tDest, "Xpetra::TpetraMultiVector::doImport only accept Xpetra::TpetraMultiVector as input arguments.");  // TODO: remove and use toTpetra()
-  RCP<const Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node> > v = tDest.getTpetra_MultiVector();
+  RCP<const Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>> v = tDest.getTpetra_MultiVector();
   this->getTpetra_MultiVector()->beginExport(*v, toTpetra(exporter), toTpetra(CM));
 }
 
@@ -495,13 +501,13 @@ void TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   XPETRA_MONITOR("TpetraMultiVector::endExport");
 
   XPETRA_DYNAMIC_CAST(const TpetraMultiVectorClass, dest, tDest, "Xpetra::TpetraMultiVector::doImport only accept Xpetra::TpetraMultiVector as input arguments.");  // TODO: remove and use toTpetra()
-  RCP<const Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node> > v = tDest.getTpetra_MultiVector();
+  RCP<const Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>> v = tDest.getTpetra_MultiVector();
   this->getTpetra_MultiVector()->endExport(*v, toTpetra(exporter), toTpetra(CM));
 }
 
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 void TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
-    replaceMap(const RCP<const Map<LocalOrdinal, GlobalOrdinal, Node> > &map) {
+    replaceMap(const RCP<const Map<LocalOrdinal, GlobalOrdinal, Node>> &map) {
   XPETRA_MONITOR("TpetraMultiVector::replaceMap");
   this->getTpetra_MultiVector()->replaceMap(toTpetra(map));
 }
@@ -509,12 +515,12 @@ void TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 //! TpetraMultiVector constructor to wrap a Tpetra::MultiVector objecT
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
-    TpetraMultiVector(const Teuchos::RCP<Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node> > &vec)
+    TpetraMultiVector(const Teuchos::RCP<Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>> &vec)
   : vec_(vec) {}  // TODO removed const
 
 //! Get the underlying Tpetra multivector
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-RCP<Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node> >
+RCP<Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
 TpetraMultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     getTpetra_MultiVector() const { return vec_; }
 
