@@ -211,3 +211,25 @@ TRIBITS_ADD_LIBRARY(
 
 # Set linker language explicitly for CUDA builds.
 SET_TARGET_PROPERTIES(${MUELU_ADAPTERS_LIBNAME} PROPERTIES LINKER_LANGUAGE CXX)
+
+# this function modifies a file to be includable as a string in c++ code
+FUNCTION(make_includable input_file output_file)
+  # Ensure that cmake knows about the file; this is annoyingly essential, otherwise updating the xml doesn't automatically trigger
+  # an update of the include file
+  CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/${input_file} ${CMAKE_CURRENT_BINARY_DIR}/${input_file} COPYONLY)
+  # Test whether the include file is up-to-date with the configured file
+  IF(${CMAKE_CURRENT_BINARY_DIR}/${input_file} IS_NEWER_THAN ${output_file})
+    MESSAGE(STATUS "Generating XML include file ${output_file} from ${CMAKE_CURRENT_SOURCE_DIR}/${input_file}")
+    FILE(READ ${CMAKE_CURRENT_BINARY_DIR}/${input_file} content)
+    SET(delim "for_c++_include")
+    SET(content "R\"${delim}(\n${content})${delim}\"")
+    FILE(WRITE ${output_file} "${content}")
+  ELSE()
+    MESSAGE(STATUS "XML include file ${output_file} up-to-date with ${CMAKE_CURRENT_SOURCE_DIR}/${input_file}")
+  ENDIF()
+ENDFUNCTION(make_includable)
+
+MAKE_INCLUDABLE(stratimikos/EMPIRE_EM_refmaxwell.xml ${CMAKE_CURRENT_BINARY_DIR}/stratimikos/EMPIRE_ES.xml.inc)
+MAKE_INCLUDABLE(stratimikos/EMPIRE_EM_refmaxwell.xml ${CMAKE_CURRENT_BINARY_DIR}/stratimikos/EMPIRE_ES_gpu.xml.inc)
+MAKE_INCLUDABLE(stratimikos/EMPIRE_EM_refmaxwell.xml ${CMAKE_CURRENT_BINARY_DIR}/stratimikos/EMPIRE_EM_refmaxwell.xml.inc)
+MAKE_INCLUDABLE(stratimikos/EMPIRE_EM_refmaxwell.xml ${CMAKE_CURRENT_BINARY_DIR}/stratimikos/EMPIRE_EM_refmaxwell_gpu.xml.inc)

@@ -15,6 +15,7 @@
 
 #include "Thyra_MueLuPreconditionerFactory.hpp"
 #include "Thyra_MueLuRefMaxwellPreconditionerFactory.hpp"
+#include "Thyra_MueLuPreconditionerFactoriesEMPIRE.hpp"
 #include "Thyra_MueLuMaxwell1PreconditionerFactory.hpp"
 
 #if defined(HAVE_MUELU_EXPERIMENTAL) && defined(HAVE_MUELU_TEKO)
@@ -35,13 +36,26 @@ void enableMueLu(LinearSolverBuilder<Scalar>& builder, const std::string& stratN
 #if defined(HAVE_MUELU_STRATIMIKOS) && defined(HAVE_MUELU_THYRA)
   const Teuchos::RCP<const Teuchos::ParameterList> precValidParams = Teuchos::sublist(builder.getValidParameters(), "Preconditioner Types");
 
-  TEUCHOS_TEST_FOR_EXCEPTION(precValidParams->isParameter(stratName), std::logic_error,
-                             "Stratimikos::enableMueLu cannot add \"" + stratName + "\" because it is already included in builder!");
-
   typedef Thyra::PreconditionerFactoryBase<Scalar> Base;
-  typedef Thyra::MueLuPreconditionerFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node> Impl;
+  {
+    TEUCHOS_TEST_FOR_EXCEPTION(precValidParams->isParameter(stratName), std::logic_error,
+                               "Stratimikos::enableMueLu cannot add \"" + stratName + "\" because it is already included in builder!");
 
-  builder.setPreconditioningStrategyFactory(Teuchos::abstractFactoryStd<Base, Impl>(), stratName);
+    typedef Thyra::MueLuPreconditionerFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node> Impl;
+
+    builder.setPreconditioningStrategyFactory(Teuchos::abstractFactoryStd<Base, Impl>(), stratName);
+  }
+
+  {
+    auto stratNameEMPIRE = stratName + " EMPIRE ES";
+    TEUCHOS_TEST_FOR_EXCEPTION(precValidParams->isParameter(stratNameEMPIRE), std::logic_error,
+                               "Stratimikos::enableMueLu cannot add \"" + stratNameEMPIRE + "\" because it is already included in builder!");
+
+    typedef Thyra::MueLuPreconditionerFactoryEMPIRE<Scalar, LocalOrdinal, GlobalOrdinal, Node> Impl;
+
+    builder.setPreconditioningStrategyFactory(Teuchos::abstractFactoryStd<Base, Impl>(), stratNameEMPIRE);
+  }
+
 #endif
 }
 
@@ -50,13 +64,26 @@ void enableMueLuRefMaxwell(LinearSolverBuilder<Scalar>& builder, const std::stri
 #if defined(HAVE_MUELU_STRATIMIKOS) && defined(HAVE_MUELU_THYRA)
   const Teuchos::RCP<const Teuchos::ParameterList> precValidParams = Teuchos::sublist(builder.getValidParameters(), "Preconditioner Types");
 
-  TEUCHOS_TEST_FOR_EXCEPTION(precValidParams->isParameter(stratName), std::logic_error,
-                             "Stratimikos::enableMueLuRefMaxwell cannot add \"" + stratName + "\" because it is already included in builder!");
-
   typedef Thyra::PreconditionerFactoryBase<Scalar> Base;
-  typedef Thyra::MueLuRefMaxwellPreconditionerFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node> Impl;
+  {
+    TEUCHOS_TEST_FOR_EXCEPTION(precValidParams->isParameter(stratName), std::logic_error,
+                               "Stratimikos::enableMueLuRefMaxwell cannot add \"" + stratName + "\" because it is already included in builder!");
 
-  builder.setPreconditioningStrategyFactory(Teuchos::abstractFactoryStd<Base, Impl>(), stratName);
+    typedef Thyra::MueLuRefMaxwellPreconditionerFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node> Impl;
+
+    builder.setPreconditioningStrategyFactory(Teuchos::abstractFactoryStd<Base, Impl>(), stratName);
+  }
+
+  {
+    auto stratNameEMPIRE = stratName + " EMPIRE EM";
+    TEUCHOS_TEST_FOR_EXCEPTION(precValidParams->isParameter(stratNameEMPIRE), std::logic_error,
+                               "Stratimikos::enableMueLuRefMaxwell cannot add \"" + stratNameEMPIRE + "\" because it is already included in builder!");
+
+    typedef Thyra::MueLuRefMaxwellPreconditionerFactoryEMPIRE<Scalar, LocalOrdinal, GlobalOrdinal, Node> Impl;
+
+    builder.setPreconditioningStrategyFactory(Teuchos::abstractFactoryStd<Base, Impl>(), stratNameEMPIRE);
+  }
+
 #endif
 }
 
