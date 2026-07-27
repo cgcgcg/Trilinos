@@ -48,7 +48,7 @@ class MueLuSmoother : public SmootherPrototype<Scalar, LocalOrdinal, GlobalOrdin
 
   */
 
-  MueLuSmoother(const std::string type, const Teuchos::ParameterList& paramList);
+  MueLuSmoother(const std::string type, const Teuchos::ParameterList& paramList, const LO& overlap);
 
   //! Destructor
   virtual ~MueLuSmoother() = default;
@@ -111,13 +111,17 @@ class MueLuSmoother : public SmootherPrototype<Scalar, LocalOrdinal, GlobalOrdin
 
  private:
   void SetupMueLu(Level& currentLevel);
+  void SetupOverlapped(Level& currentLevel);
+  void SetupLowPrecision(Level& currentLevel);
 
  private:
   std::string type_;
+  LocalOrdinal overlap_;
   std::string cachedDescription_;
 
   //! matrix, used in apply if solving residual equation
   RCP<Operator> op_;
+  RCP<Import> importer_;
 
 };  // class MueLuSmoother
 

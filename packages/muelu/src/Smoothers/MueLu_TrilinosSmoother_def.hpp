@@ -17,6 +17,7 @@
 
 #include "MueLu_Level.hpp"
 #include "MueLu_Ifpack2Smoother.hpp"
+#include "MueLu_MueLuSmoother.hpp"
 #include "MueLu_BelosSmoother.hpp"
 #include "MueLu_StratimikosSmoother.hpp"
 #include "MueLu_Exceptions.hpp"
@@ -35,6 +36,7 @@ TrilinosSmoother<Scalar, LocalOrdinal, GlobalOrdinal, Node>::TrilinosSmoother(co
   // could construct these objects is the constructor. Thus, we need to store RCPs, and both TrilinosSmoother and DirectSolver
   // obtain a state: they contain RCP to smoother prototypes.
   sTpetra_      = Teuchos::null;
+  sMueLu_       = Teuchos::null;
   sBelos_       = Teuchos::null;
   sStratimikos_ = Teuchos::null;
 
@@ -45,7 +47,7 @@ TrilinosSmoother<Scalar, LocalOrdinal, GlobalOrdinal, Node>::TrilinosSmoother(co
 
   // We want TrilinosSmoother to be able to work with both Epetra and Tpetra objects, therefore we try to construct both
   // Ifpack and Ifpack2 smoother prototypes. The construction really depends on configuration options.
-  triedTpetra_ = triedBelos_ = triedStratimikos_ = false;
+  triedTpetra_ = triedMueLu_ = triedBelos_ = triedStratimikos_ = false;
   try {
     sTpetra_ = rcp(new Ifpack2Smoother(type_, paramList, overlap_));
     if (sTpetra_.is_null())
@@ -62,6 +64,22 @@ TrilinosSmoother<Scalar, LocalOrdinal, GlobalOrdinal, Node>::TrilinosSmoother(co
     errorTpetra_ = e.what();
   }
   triedTpetra_ = true;
+  try {
+    sMueLu_ = rcp(new MueLuSmoother(type_, paramList, overlap_));
+    if (sMueLu_.is_null())
+      errorMueLu_ = "Unable to construct MueLu smoother";
+    else if (!sMueLu_->constructionSuccessful()) {
+      errorMueLu_ = sMueLu_->constructionErrorMsg();
+      sMueLu_     = Teuchos::null;
+    }
+  } catch (Exceptions::RuntimeError& e) {
+    errorMueLu_ = e.what();
+  } catch (Exceptions::BadCast& e) {
+    errorMueLu_ = e.what();
+  } catch (Teuchos::Exceptions::InvalidParameterName& e) {
+    errorMueLu_ = e.what();
+  }
+  triedMueLu_ = true;
 #if defined(HAVE_MUELU_BELOS)
   try {
     sBelos_ = rcp(new BelosSmoother(type_, paramList));
@@ -95,13 +113,15 @@ TrilinosSmoother<Scalar, LocalOrdinal, GlobalOrdinal, Node>::TrilinosSmoother(co
 
   // Check if we were able to construct at least one smoother. In many cases that's all we need, for instance if a user
   // simply wants to use Tpetra only stack, never enables Ifpack, and always runs Tpetra objects.
-  TEUCHOS_TEST_FOR_EXCEPTION(!triedTpetra_ && !triedBelos_ && !triedStratimikos_, Exceptions::RuntimeError,
+  TEUCHOS_TEST_FOR_EXCEPTION(!triedTpetra_ && !triedMueLu_ && !triedBelos_ && !triedStratimikos_, Exceptions::RuntimeError,
                              "Unable to construct any smoother.");
 
-  TEUCHOS_TEST_FOR_EXCEPTION(sTpetra_.is_null() && sBelos_.is_null() && sStratimikos_.is_null(), Exceptions::RuntimeError,
+  TEUCHOS_TEST_FOR_EXCEPTION(sTpetra_.is_null() && sMueLu_.is_null() && sBelos_.is_null() && sStratimikos_.is_null(), Exceptions::RuntimeError,
                              "Could not construct any smoother:\n"
                                  << (triedTpetra_ ? "=> Failed to build a Tpetra smoother due to the following exception:\n" : "=> Tpetra and/or Ifpack2 are not enabled.\n")
                                  << (triedTpetra_ ? errorTpetra_ + "\n" : "")
+                                 << (triedMueLu_ ? "=> Failed to build a MueLu smoother due to the following exception:\n" : "=> MueLu and/or Ifpack2 are not enabled.\n")
+                                 << (triedMueLu_ ? errorMueLu_ + "\n" : "")
                                  << (triedBelos_ ? "=> Failed to build a Belos smoother due to the following exception:\n" : "=> Belos not enabled.\n")
                                  << (triedBelos_ ? errorBelos_ + "\n" : "")
                                  << (triedStratimikos_ ? "=> Failed to build a Stratimikos smoother due to the following exception:\n" : "=> Stratimikos not enabled.\n")
@@ -114,6 +134,7 @@ template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 void TrilinosSmoother<Scalar, LocalOrdinal, GlobalOrdinal, Node>::SetFactory(const std::string& varName, const RCP<const FactoryBase>& factory) {
   // We need to propagate SetFactory to proper place
   if (!sTpetra_.is_null()) sTpetra_->SetFactory(varName, factory);
+  if (!sMueLu_.is_null()) sMueLu_->SetFactory(varName, factory);
   if (!sBelos_.is_null()) sBelos_->SetFactory(varName, factory);
   if (!sStratimikos_.is_null()) sStratimikos_->SetFactory(varName, factory);
 }
@@ -124,6 +145,8 @@ void TrilinosSmoother<Scalar, LocalOrdinal, GlobalOrdinal, Node>::DeclareInput(L
     s_ = sBelos_;
   else if (!sStratimikos_.is_null())
     s_ = sStratimikos_;
+  else if (!sMueLu_.is_null())
+    s_ = sMueLu_;
   else {
     s_ = sTpetra_;
   }
@@ -134,6 +157,9 @@ void TrilinosSmoother<Scalar, LocalOrdinal, GlobalOrdinal, Node>::DeclareInput(L
     if (triedStratimikos_)
       this->GetOStream(Errors) << "Stratimikos was disabled due to an error:\n"
                                << errorStratimikos_ << std::endl;
+    if (triedMueLu_)
+      this->GetOStream(Errors) << "MueLu mode was disabled due to an error:\n"
+                               << errorMueLu_ << std::endl;
     if (triedTpetra_)
       this->GetOStream(Errors) << "Tpetra mode was disabled due to an error:\n"
                                << errorTpetra_ << std::endl;
@@ -176,6 +202,8 @@ TrilinosSmoother<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Copy() const {
   // We still want TrilinosSmoother to follow Prototype Pattern, so we need to hide the fact that we do have some state
   if (!sTpetra_.is_null())
     newSmoo->sTpetra_ = sTpetra_->Copy();
+  if (!sMueLu_.is_null())
+    newSmoo->sMueLu_ = sMueLu_->Copy();
   if (!sBelos_.is_null())
     newSmoo->sBelos_ = sBelos_->Copy();
   if (!sStratimikos_.is_null())
@@ -186,6 +214,8 @@ TrilinosSmoother<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Copy() const {
     newSmoo->s_ = newSmoo->sBelos_;
   else if (s_.get() == sStratimikos_.get())
     newSmoo->s_ = newSmoo->sStratimikos_;
+  else if (s_.get() == sMueLu_.get())
+    newSmoo->s_ = newSmoo->sMueLu_;
   else
     newSmoo->s_ = newSmoo->sTpetra_;
 

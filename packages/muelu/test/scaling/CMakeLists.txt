@@ -127,6 +127,7 @@ TRIBITS_COPY_FILES_TO_BINARY_DIR(
     sa_enforce_constraints.xml
     sa_with_Ifpack2_line_detection.xml
     sa_with_ilu.xml
+    scaling-aggressive.xml
     scaling-complex-withglobalconstants.xml
     scaling-complex.xml
     scaling-gpu.xml

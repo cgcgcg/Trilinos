@@ -91,7 +91,7 @@ DirectSolver<Scalar, LocalOrdinal, GlobalOrdinal, Node>::DirectSolver(const std:
   triedStratimikos_ = true;
 #endif
   try {
-    sMueLu_ = rcp(new MueLuSmoother(type_, paramList));
+    sMueLu_ = rcp(new MueLuSmoother(type_, paramList, -1));
     if (sMueLu_.is_null())
       errorMueLu_ = "Unable to construct MueLu smoother";
     else if (!sMueLu_->constructionSuccessful()) {
