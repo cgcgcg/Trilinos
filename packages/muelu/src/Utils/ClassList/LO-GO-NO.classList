@@ -4,6 +4,7 @@ AggregationPhase2aAlgorithm
 AggregationPhase2bAlgorithm
 AggregationPhase3Algorithm
 AggregationStructuredAlgorithm
+AggressiveAggregationFactory
 AmalgamationInfo
 GlobalLexicographicIndexManager
 HybridAggregationFactory

@@ -29,6 +29,9 @@ using AggregationPhase3Algorithm [[maybe_unused]] = MueLu::AggregationPhase3Algo
 #ifdef MUELU_AGGREGATIONSTRUCTUREDALGORITHM_SHORT
 using AggregationStructuredAlgorithm [[maybe_unused]] = MueLu::AggregationStructuredAlgorithm<LocalOrdinal, GlobalOrdinal, Node>;
 #endif
+#ifdef MUELU_AGGRESSIVEAGGREGATIONFACTORY_SHORT
+using AggressiveAggregationFactory [[maybe_unused]] = MueLu::AggressiveAggregationFactory<LocalOrdinal, GlobalOrdinal, Node>;
+#endif
 #ifdef MUELU_AMALGAMATIONINFO_SHORT
 using AmalgamationInfo [[maybe_unused]] = MueLu::AmalgamationInfo<LocalOrdinal, GlobalOrdinal, Node>;
 #endif

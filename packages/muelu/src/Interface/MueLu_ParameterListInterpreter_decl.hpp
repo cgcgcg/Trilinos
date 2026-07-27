@@ -19,6 +19,7 @@
 #include "MueLu_HierarchyManager.hpp"
 
 #include "MueLu_AggregationExportFactory_fwd.hpp"
+#include "MueLu_AggressiveAggregationFactory_fwd.hpp"
 #include "MueLu_BrickAggregationFactory_fwd.hpp"
 #include "MueLu_ClassicalMapFactory_fwd.hpp"
 #include "MueLu_ClassicalPFactory_fwd.hpp"

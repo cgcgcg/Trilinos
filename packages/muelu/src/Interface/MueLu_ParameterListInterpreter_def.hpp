@@ -26,6 +26,7 @@
 
 #include "MueLu_AggregationExportFactory.hpp"
 #include "MueLu_AggregateQualityEstimateFactory.hpp"
+#include "MueLu_AggressiveAggregationFactory.hpp"
 #include "MueLu_AmalgamationFactory.hpp"
 #include "MueLu_BrickAggregationFactory.hpp"
 #include "MueLu_ClassicalMapFactory.hpp"
@@ -1251,7 +1252,7 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   auto reuseType = set_var_2list<std::string>(paramList, defaultList, "reuse: type");
 
   auto aggType = set_var_2list<std::string>(paramList, defaultList, "aggregation: type");
-  TEUCHOS_TEST_FOR_EXCEPTION(!strings({"uncoupled", "coupled", "brick", "matlab", "notay", "classical"}).count(aggType),
+  TEUCHOS_TEST_FOR_EXCEPTION(!strings({"uncoupled", "coupled", "brick", "matlab", "notay", "classical", "aggressive"}).count(aggType),
                              Exceptions::RuntimeError, "Unknown aggregation algorithm: \"" << aggType << "\". Please consult User's Guide.");
 
   // Only doing this for classical because otherwise, the gold tests get broken badly
@@ -1492,6 +1493,10 @@ void ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     test_and_set_param_2list<double>(paramList, defaultList, "aggregation: Dirichlet threshold", aggParams);
     test_and_set_param_2list<std::string>(paramList, defaultList, "aggregation: ordering", aggParams);
     aggFactory->SetParameterList(aggParams);
+    aggFactory->SetFactory("DofsPerNode", manager.GetFactory("Graph"));
+    aggFactory->SetFactory("Graph", manager.GetFactory("Graph"));
+  } else if (aggType == "aggressive") {
+    aggFactory = rcp(new AggressiveAggregationFactory());
     aggFactory->SetFactory("DofsPerNode", manager.GetFactory("Graph"));
     aggFactory->SetFactory("Graph", manager.GetFactory("Graph"));
   }
