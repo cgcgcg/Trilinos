@@ -69,6 +69,74 @@ extern void register_GmresSingleReduce(const bool verbose);
     tm = rcp(new TimeMonitor(*TimeMonitor::getNewTimer(timername))); \
   }
 
+template <class NewScalar, class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+Teuchos::RCP<Xpetra::Matrix<typename Teuchos::ScalarTraits<Scalar>::halfPrecision, LocalOrdinal, GlobalOrdinal, Node>>
+convert(Teuchos::RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>& A) {
+  auto tpA    = toTpetra(A);
+  auto tpLowA = tpA->template convert<NewScalar>();
+  return Xpetra::toXpetra(tpLowA);
+}
+
+// template <class NewScalar, class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+// Teuchos::RCP<MueLu::Hierarchy<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
+// GetHierarchy(Teuchos::RCP<MueLu::Hierarchy<Scalar, LocalOrdinal, GlobalOrdinal, Node>>& H,
+//              Teuchos::ParameterList& precList11_,
+//              int start,
+//              int end) {
+//   auto newH = Teuchos::rcp(new MueLu::Hierarchy<NewScalar, LocalOrdinal, GlobalOrdinal, Node>("Mixed Precision Hierarchy"));
+//   Teuchos::RCP<Xpetra::Matrix<NewScalar, LocalOrdinal, GlobalOrdinal, Node>> A0;
+//   for (int i = start; i < end; i++) {
+//     newH->AddNewLevel();
+//     auto oldLevel = H->GetLevel(i);
+//     auto newLevel = newH->GetLevel(i);
+//     for (auto matname : {"A", "P", "R"}) {
+//       if (oldLevel->IsAvailable(matname)) {
+//         auto mat = oldLevel->template Get<Teuchos::RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>>(matname);
+//         if ((i == 0) && (matname == "A"))
+//           A0 = mat;
+//         auto newMat = convert<NewScalar>(mat);
+//         newLevel->Set(matname, newMat);
+//       }
+//     }
+//     // if (oldLevel->IsAvailable("Coordinates")) {
+//     //   newLevel->Set("Coordinates", oldLevel->template Get<Teuchos::RCP<Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>>("Coordinates"));
+//     // }
+//     // if (oldLevel->IsAvailable("Nullspace")) {
+//     //   newLevel->Set("Nullspace", oldLevel->template Get<Teuchos::RCP<Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>>("Nullspace"));
+//     // }
+//   }
+//   TEUCHOS_ASSERT(!A0.is_null());
+
+//   precList11_.set("coarse: max size", 1);
+//   precList11_.set("max levels", end-start);
+
+//   // Rip off non-serializable data before validation
+//   Teuchos::ParameterList nonSerialList11;
+//   Teuchos::ParameterList processedPrecList11;
+//   MueLu::ExtractNonSerializableData(precList11_, processedPrecList11, nonSerialList11);
+//   auto mueLuFactory = Teuchos::rcp(new MueLu::ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>(processedPrecList11, A0->getDomainMap()->getComm()));
+//   newH->setlib(A0->getDomainMap()->lib());
+//   newH->SetProcRankVerbose(A0->getDomainMap()->getComm()->getRank());
+
+//   // Stick the non-serializable data on the hierarchy and do setup
+//   if (nonSerialList11.numParams() > 0) {
+//     MueLu::HierarchyUtils<Scalar, LocalOrdinal, GlobalOrdinal, Node>::AddNonSerializableDataToHierarchy(*mueLuFactory, *newH, nonSerialList11);
+//   }
+//   mueLuFactory->SetupHierarchy(*newH);
+
+//   return newH;
+// }
+
+// template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+// Teuchos::RCP<MueLu::Hierarchy<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
+// MixedPrecisionSetup(Teuchos::RCP<MueLu::Hierarchy<Scalar, LocalOrdinal, GlobalOrdinal, Node>>& H,
+//                     Teuchos::ParameterList& mueluList) {
+//   auto newH_0 = MueLu::CreateXpetraPreconditioner(A, mueluList);;
+//   auto newH_1 = GetHierarchy<Scalar>(H, precList11_, 1, H->GetNumLevels());
+
+//   return newH;
+// }
+
 //*************************************************************************************
 //*************************************************************************************
 //*************************************************************************************

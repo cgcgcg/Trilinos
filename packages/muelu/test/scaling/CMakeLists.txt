@@ -138,6 +138,7 @@ TRIBITS_COPY_FILES_TO_BINARY_DIR(
     scaling_apex.xml
     scaling_distance2_agg.xml
     scaling_sendtype.xml
+    scalingMP.xml
     smoother.xml
     smoother_complex.xml
     smooVec.mm
