@@ -21,6 +21,7 @@
 #include "MueLu_Amesos2Smoother.hpp"
 #include "MueLu_BelosSmoother.hpp"
 #include "MueLu_StratimikosSmoother.hpp"
+#include "MueLu_MueLuSmoother.hpp"
 #include "MueLu_RefMaxwellSmoother.hpp"
 
 namespace MueLu {
@@ -90,6 +91,18 @@ DirectSolver<Scalar, LocalOrdinal, GlobalOrdinal, Node>::DirectSolver(const std:
   triedStratimikos_ = true;
 #endif
   try {
+    sMueLu_ = rcp(new MueLuSmoother(type_, paramList));
+    if (sMueLu_.is_null())
+      errorMueLu_ = "Unable to construct MueLu smoother";
+    else if (!sMueLu_->constructionSuccessful()) {
+      errorMueLu_ = sMueLu_->constructionErrorMsg();
+      sMueLu_     = Teuchos::null;
+    }
+  } catch (Exceptions::RuntimeError& e) {
+    errorMueLu_ = e.what();
+  }
+  triedMueLu_ = true;
+  try {
     sRefMaxwell_ = rcp(new RefMaxwellSmoother(type_, paramList));
     if (sRefMaxwell_.is_null())
       errorRefMaxwell_ = "Unable to construct RefMaxwell smoother";
@@ -104,10 +117,10 @@ DirectSolver<Scalar, LocalOrdinal, GlobalOrdinal, Node>::DirectSolver(const std:
 
   // Check if we were able to construct at least one solver. In many cases that's all we need, for instance if a user
   // simply wants to use Tpetra only stack, never enables Amesos, and always runs Tpetra objects.
-  TEUCHOS_TEST_FOR_EXCEPTION(!triedTpetra_ && !triedBelos_ && !triedStratimikos_ && !triedRefMaxwell_, Exceptions::RuntimeError,
+  TEUCHOS_TEST_FOR_EXCEPTION(!triedTpetra_ && !triedBelos_ && !triedStratimikos_ && triedMueLu_ && !triedRefMaxwell_, Exceptions::RuntimeError,
                              "Unable to construct any direct solver.");
 
-  TEUCHOS_TEST_FOR_EXCEPTION(sTpetra_.is_null() && sBelos_.is_null() && sStratimikos_.is_null() && sRefMaxwell_.is_null(), Exceptions::RuntimeError,
+  TEUCHOS_TEST_FOR_EXCEPTION(sTpetra_.is_null() && sBelos_.is_null() && sStratimikos_.is_null() && sMueLu_.is_null() && sRefMaxwell_.is_null(), Exceptions::RuntimeError,
                              "Could not enable any direct solver:\n"
                                  << (triedTpetra_ ? "Tpetra mode was disabled due to an error:\n" : "")
                                  << (triedTpetra_ ? errorTpetra_ : "")
@@ -115,6 +128,8 @@ DirectSolver<Scalar, LocalOrdinal, GlobalOrdinal, Node>::DirectSolver(const std:
                                  << (triedBelos_ ? errorBelos_ : "")
                                  << (triedStratimikos_ ? "Stratimikos was disabled due to an error:\n" : "")
                                  << (triedStratimikos_ ? errorStratimikos_ : "")
+                                 << (triedMueLu_ ? "MueLu was disabled due to an error:\n" : "")
+                                 << (triedMueLu_ ? errorMueLu_ : "")
                                  << (triedRefMaxwell_ ? "RefMaxwell was disabled due to an error:\n" : "")
                                  << (triedRefMaxwell_ ? errorRefMaxwell_ : ""));
   ;
@@ -128,6 +143,7 @@ void DirectSolver<Scalar, LocalOrdinal, GlobalOrdinal, Node>::SetFactory(const s
   if (!sTpetra_.is_null()) sTpetra_->SetFactory(varName, factory);
   if (!sBelos_.is_null()) sBelos_->SetFactory(varName, factory);
   if (!sStratimikos_.is_null()) sStratimikos_->SetFactory(varName, factory);
+  if (!sMueLu_.is_null()) sMueLu_->SetFactory(varName, factory);
   if (!sRefMaxwell_.is_null()) sRefMaxwell_->SetFactory(varName, factory);
 }
 
@@ -137,6 +153,8 @@ void DirectSolver<Scalar, LocalOrdinal, GlobalOrdinal, Node>::DeclareInput(Level
     s_ = sBelos_;
   else if (!sStratimikos_.is_null())
     s_ = sStratimikos_;
+  else if (!sMueLu_.is_null())
+    s_ = sMueLu_;
   else if (!sRefMaxwell_.is_null())
     s_ = sRefMaxwell_;
   else {
@@ -152,6 +170,9 @@ void DirectSolver<Scalar, LocalOrdinal, GlobalOrdinal, Node>::DeclareInput(Level
     if (triedRefMaxwell_)
       this->GetOStream(Errors) << "RefMaxwell mode was disabled due to an error:\n"
                                << errorRefMaxwell_ << std::endl;
+    if (triedMueLu_)
+      this->GetOStream(Errors) << "MueLu mode was disabled due to an error:\n"
+                               << errorMueLu_ << std::endl;
     if (triedTpetra_)
       this->GetOStream(Errors) << "Tpetra mode was disabled due to an error:\n"
                                << errorTpetra_ << std::endl;
@@ -198,6 +219,8 @@ RCP<MueLu::SmootherPrototype<Scalar, LocalOrdinal, GlobalOrdinal, Node> > Direct
     newSmoo->sBelos_ = sBelos_->Copy();
   if (!sStratimikos_.is_null())
     newSmoo->sStratimikos_ = sStratimikos_->Copy();
+  if (!sMueLu_.is_null())
+    newSmoo->sMueLu_ = sMueLu_->Copy();
   if (!sRefMaxwell_.is_null())
     newSmoo->sRefMaxwell_ = sRefMaxwell_->Copy();
 
@@ -206,6 +229,8 @@ RCP<MueLu::SmootherPrototype<Scalar, LocalOrdinal, GlobalOrdinal, Node> > Direct
     newSmoo->s_ = newSmoo->sBelos_;
   else if (s_.get() == sStratimikos_.get())
     newSmoo->s_ = newSmoo->sStratimikos_;
+  else if (s_.get() == sMueLu_.get())
+    newSmoo->s_ = newSmoo->sMueLu_;
   else if (s_.get() == sRefMaxwell_.get())
     newSmoo->s_ = newSmoo->sRefMaxwell_;
   else

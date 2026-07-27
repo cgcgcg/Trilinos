@@ -394,12 +394,14 @@ bool Hierarchy<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Setup(int coarseLevel
   // Build coarse level hierarchy
   RCP<Operator> Ac = Teuchos::null;
   TopRAPFactory coarseRAPFactory(fineLevelManager, coarseLevelManager);
+  bool buildCalled = false;
 
   if (level.IsAvailable("A")) {
     Ac = level.Get<RCP<Operator>>("A");
   } else if (!isFinestLevel) {
     // We only build here, the release is done later
     coarseRAPFactory.Build(*level.GetPreviousLevel(), level);
+    buildCalled = true;
   }
 
   bool setLastLevelviaMaxCoarseSize = false;
@@ -525,7 +527,8 @@ bool Hierarchy<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Setup(int coarseLevel
     // Release the hierarchy data
     // We release so late to help blocked solvers, as the smoothers for them need A blocks
     // which we construct in RAPFactory
-    level.Release(coarseRAPFactory);
+    if (buildCalled)
+      level.Release(coarseRAPFactory);
   }
 
   if (oldRank != -1)

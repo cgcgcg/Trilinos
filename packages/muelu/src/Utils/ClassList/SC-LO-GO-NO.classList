@@ -66,6 +66,7 @@ MatrixAnalysisFactory
 MatrixTransferFactory
 MergedBlockedMatrixFactory
 MergedSmoother
+MueLuSmoother
 MultiVectorTransferFactory
 NotayAggregationFactory
 NullspaceFactory
