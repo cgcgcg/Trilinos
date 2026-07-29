@@ -357,6 +357,17 @@ class TpetraCrsGraph
 
 // TODO: move that elsewhere
 template <class LocalOrdinal, class GlobalOrdinal, class Node>
+RCP<CrsGraph<LocalOrdinal, GlobalOrdinal, Node> >
+toXpetra(RCP<Tpetra::CrsGraph<LocalOrdinal, GlobalOrdinal, Node> > graph) {  // TODO: return TpetraCrsGraph instead of CrsGraph
+  // typedef TpetraCrsGraph<LocalOrdinal, GlobalOrdinal, Node> TpetraCrsGraphClass;
+  // XPETRA_RCP_DYNAMIC_CAST(const TpetraCrsGraphClass, graph, tGraph, "toTpetra");
+  if (graph.is_null()) {
+    return Teuchos::null;
+  }
+  return rcp(new Xpetra::TpetraCrsGraph<LocalOrdinal, GlobalOrdinal, Node>(graph));
+}
+
+template <class LocalOrdinal, class GlobalOrdinal, class Node>
 RCP<const CrsGraph<LocalOrdinal, GlobalOrdinal, Node> >
 toXpetra(RCP<const Tpetra::CrsGraph<LocalOrdinal, GlobalOrdinal, Node> > graph) {  // TODO: return TpetraCrsGraph instead of CrsGraph
   // typedef TpetraCrsGraph<LocalOrdinal, GlobalOrdinal, Node> TpetraCrsGraphClass;
