@@ -88,10 +88,6 @@ class InverseApproximationFactory : public SingleLevelFactoryBase {
 
   //@}
 
- private:
-  //! Sparse inverse calculation method.
-  RCP<Matrix> GetSparseInverse(const RCP<Matrix>& A, const RCP<const CrsGraph>& sparsityPattern) const;
-
 };  // class InverseApproximationFactory
 
 }  // namespace MueLu
