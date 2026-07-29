@@ -11,12 +11,14 @@
 #define IFPACK2_DETAILS_ONELEVELFACTORY_DEF_HPP
 
 #include "Ifpack2_Factory.hpp"
+#include "Ifpack2_SparseApproximateInverse_decl.hpp"
 #include "Ifpack2_Utilities.hpp"
 #include "Ifpack2_Chebyshev.hpp"
 #include "Ifpack2_Details_DenseSolver.hpp"
 #include "Ifpack2_Diagonal.hpp"
 #include "Ifpack2_IdentitySolver.hpp"
 #include "Ifpack2_ILUT.hpp"
+#include "Ifpack2_SparseApproximateInverse.hpp"
 #include "Ifpack2_MDF.hpp"
 #include "Ifpack2_Relaxation.hpp"
 #include "Ifpack2_RILUK.hpp"
@@ -79,6 +81,11 @@ OneLevelFactory<MatrixType>::create(const std::string& precType,
     prec = rcp(new Diagonal<row_matrix_type>(matrix));
   } else if (precTypeUpper == "ILUT") {
     prec = rcp(new ILUT<row_matrix_type>(matrix));
+  } else if (precTypeUpper == "SPAI" ||
+             precTypeUpper == "SPARSE_APPROXIMATE_INVERSE" ||
+             precTypeUpper == "SPARSE APPROXIMATE INVERSE" ||
+             precTypeUpper == "SPARSEAPPROXIMATEINVERSE") {
+    prec = rcp(new SparseApproximateInverse<row_matrix_type>(matrix));
   } else if (precTypeUpper == "RELAXATION") {
     prec = rcp(new Relaxation<row_matrix_type>(matrix));
   } else if (precTypeUpper == "RILUK") {
@@ -220,6 +227,7 @@ OneLevelFactory<MatrixType>::getSupportedNames() const {
       "TRIDI_RELAXATION", "TRIDI RELAXATION", "TRIDIRELAXATION", "TRIDIAGONAL_RELAXATION", "TRIDIAGONAL RELAXATION", "TRIDIAGONALRELAXATION",
       "BANDED_RELAXATION", "BANDED RELAXATION", "BANDEDRELAXATION",
       "IDENTITY", "IDENTITY_SOLVER",
+      "SPAI", "SPARSE_APPROXIMATE_INVERSE", "SPARSE APPROXIMATE INVERSE", "SPARSEAPPROXIMATEINVERSE",
       "LOCAL SPARSE TRIANGULAR SOLVER", "LOCAL_SPARSE_TRIANGULAR_SOLVER", "LOCALSPARSETRIANGULARSOLVER", "SPARSE TRIANGULAR SOLVER", "SPARSE_TRIANGULAR_SOLVER", "SPARSETRIANGULARSOLVER",
       "HIPTMAIR"};
   return supportedNames;

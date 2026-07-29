@@ -27,6 +27,10 @@ bool supportsUnsymmetric(const std::string& prec_type) {
       prec_type == "RILUK" ||
       prec_type == "RBILUK" ||
       prec_type == "ILUT" ||
+      prec_type == "SPAI" ||
+      prec_type == "SPARSE_APPROXIMATE_INVERSE" ||
+      prec_type == "SPARSE APPROXIMATE INVERSE" ||
+      prec_type == "SPARSEAPPROXIMATEINVERSE" ||
       prec_type == "SCHWARZ" ||
       prec_type == "KRYLOV"
 #ifdef HAVE_IFPACK2_HYPRE

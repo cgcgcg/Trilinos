@@ -37,6 +37,7 @@ APPEND_SET(
   Ifpack2_UnitTestPartitioning.cpp
   Ifpack2_UnitTestRelaxation.cpp
   Ifpack2_UnitTestRILUK.cpp
+  Ifpack2_UnitTestSparseApproximateInverse.cpp
   Ifpack2_UnitTestTemplate.cpp
   Ifpack2_UnitTestTriDiSolver.cpp
 )

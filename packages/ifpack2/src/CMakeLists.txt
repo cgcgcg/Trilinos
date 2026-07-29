@@ -107,6 +107,7 @@ IF(Ifpack2_ENABLE_EXPLICIT_INSTANTIATION)
     ReorderFilter
     RILUK
     SingletonFilter
+    SparseApproximateInverse
     SparseContainer
     SparsityFilter
     ContainerFactory
