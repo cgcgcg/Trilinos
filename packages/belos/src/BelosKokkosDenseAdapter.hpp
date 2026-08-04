@@ -226,8 +226,6 @@ namespace Belos {
         }
       }
 
-      // Synchronize solution vector to the device
-
       return INFO;
     }
     //@}
@@ -249,6 +247,35 @@ namespace Belos {
     using DenseSolver<Scalar, DM>::B_;
 
   };
+
+ template<class DM>
+ class PropagateSubviewSyncState {
+ public:
+   PropagateSubviewSyncState(DM &dm,
+                             DM &subview)
+       : dm_(dm), subview_(subview) {}
+
+   ~PropagateSubviewSyncState() {
+     // std::cout << "HERE " << dm_.need_sync_device() << subview_.need_sync_device() << std::endl;
+
+     // if (subview_.need_sync_device()) {
+     //   // subview was modified on host
+     //   if (dm_.need_sync_device) {
+     //     // nothing to do
+     //   } else {
+     //     dm_.modify_host();
+     //   }
+     // }
+     // if (subview_.need_sync_device() && !dm_.need_sync_device()) {
+     //   dm_.modify_host();
+     // } else if (subview_.need_sync_host() && !dm_.need_sync_host()) {
+     //   dm_.modify_device();
+     // }
+   }
+ private:
+   DM dm_;
+   DM subview_;
+ };
 
   //! Full specialization of Belos::DenseMatTraits for Kokkos::DualView.
   //
@@ -350,9 +377,26 @@ namespace Belos {
     //! \brief Returns an RCP to a Kokkos::DualView which has a subview of the given Kokkos::DualView.
     //        Row and column indexing is zero-based.
     static Teuchos::RCP<DM>
-    Subview( DM & source, int numRows, int numCols, int startRow=0, int startCol=0){
-      return Teuchos::rcp(new DM(source,
-          Kokkos::pair<int,int>(startRow,startRow+numRows), Kokkos::pair<int,int>(startCol,startCol+numCols)));
+    Subview( DM & source, int numRows, int numCols, int startRow=0, int startCol=0) {
+
+      SyncHostToDevice(source);
+      std::cout << "YY " << source.need_sync_host() << source.need_sync_device() << std::endl;
+
+      // Create the subview
+      auto subview = Teuchos::rcp(new DM(source,
+                                         Kokkos::pair<int, int>(startRow, startRow + numRows),
+                                         Kokkos::pair<int,int>(startCol,startCol+numCols)));
+      // We get a non-const subview which can be modified.
+      // The parent DualView could in principle also be modified, but hopefully
+      // not in a different memory space. So we need to check that.
+      // A more common pattern is that the subview gets modified and then
+      // deleted again. In this case we do still need to mark the parent view as
+      // modified so that the syncing works.
+
+      // Teuchos::set_extra_data(Teuchos::rcp(new PropagateSubviewSyncState<DM>(source, *subview)),
+      //                         "PropagateSubviewSyncState", Teuchos::outArg(subview), Teuchos::PRE_DESTROY);
+
+      return subview;
     }
 
     static Teuchos::RCP<const DM>
@@ -375,8 +419,10 @@ namespace Belos {
       // But TODO Clarify to developer that this function needs to work on both host and device.
       // b) It's not a host-device copy or vice versa. Its a copy from device to same device and from host to host.
       // So shouldn't add much extra overhead.
-      Kokkos::deep_copy(*tmpViewRCP, Kokkos::subview(source,
-          Kokkos::pair<int,int>(startRow,startRow+numRows), Kokkos::pair<int,int>(startCol,startCol+numCols)));
+      auto subview = Kokkos::subview(source,
+                                     Kokkos::pair<int, int>(startRow, startRow + numRows),
+                                     Kokkos::pair<int,int>(startCol, startCol + numCols));
+      Kokkos::deep_copy(*tmpViewRCP, subview);
       return tmpViewRCP;
     }
     //@}
@@ -445,40 +491,52 @@ namespace Belos {
       return reinterpret_cast<Scalar const &>((dm.view_host())(i,j));
     }
 
-  private:
-    //! \brief If an accelerator is in use, sync it to device on this call.
-    //
-    //  \note The only Belos function that results in a need to sync to
-    //  host is MvTransMv. You MUST call SyncDeviceToHost before calling
-    //  any other DenseMatTraits functions after a call to MvTransMv.
-    //  All DenseMatTraits functions assume the necessary data is on host
-    //  and perform computations only on the host.
-    //
+    //! \brief If an accelerator is in use, sync it to host on this call.
     static void SyncDeviceToHost(DM & dm) {
-      if (dm.span_is_contiguous()) {
+      if (dm.span_is_contiguous() || DM::impl_dualview_is_single_device) {
         dm.sync_host();
       } else if (dm.need_sync_host()) {
-        DM compat_view("compat view", dm.extent_int(0), dm.extent_int(1));
-        Kokkos::deep_copy(compat_view, dm);
+        // CAG: We really never want to hit this code path, as it requires
+        //      additional allocations. Hopefully we do not need to sync once we
+        //      have switched from Teuchos BLAS & LAPACK interfaces to
+        //      KokkosKernels.
+
+        // allocate a contiguous dual view with the same dimensions as dm
+        DM compat_view(Kokkos::view_alloc(Kokkos::WithoutInitializing, "compat view"), dm.extent_int(0), dm.extent_int(1));
+        // Deep copy dm into compat_view on device.
+        Kokkos::deep_copy(compat_view.view_device(), dm.view_device());
+        // sync compat_view to host
         compat_view.sync_host();
-        Kokkos::deep_copy(dm, compat_view);
+        // Forget about the sync state of dm. The device view is not getting changed, and we make sure that the host view will match.
         dm.clear_sync_state();
+        // Deep copy compat_view into dm on host
+        Kokkos::deep_copy(dm.view_host(), compat_view.view_host());
       }
     }
 
+    //! \brief If an accelerator is in use, sync it to device on this call.
     static void SyncHostToDevice(DM & dm) {
-      if (dm.span_is_contiguous()) {
+      if (dm.span_is_contiguous() || DM::impl_dualview_is_single_device) {
         dm.sync_device();
       } else if (dm.need_sync_device()) {
-        DM compat_view("compat view", dm.extent_int(0), dm.extent_int(1));
-        Kokkos::deep_copy(compat_view, dm);
+        // CAG: We really never want to hit this code path, as it requires
+        //      additional allocations. Hopefully we do not need to sync once we
+        //      have switched from Teuchos BLAS & LAPACK interfaces to
+        //      KokkosKernels.
+
+        // allocate a contiguous dual view with the same dimensions as dm
+        DM compat_view(Kokkos::view_alloc(Kokkos::WithoutInitializing, "compat view"), dm.extent_int(0), dm.extent_int(1));
+        // Deep copy dm into compat_view on host.
+        Kokkos::deep_copy(compat_view.view_host(), dm.view_host());
+        // sync compat_view to device
         compat_view.sync_device();
-        Kokkos::deep_copy(dm, compat_view);
+        // Forget about the sync state of dm. The host view is not getting changed, and we make sure that the device view will match.
         dm.clear_sync_state();
+        // Deep copy compat_view into dm on device
+        Kokkos::deep_copy(dm.view_device(), compat_view.view_device());
       }
     }
 
-  public:
     //@}
     //@{ \name Operator methods
 
@@ -514,8 +572,11 @@ namespace Belos {
     }
 
     //!  \brief Copies entries of source to dest (deep copy).
-    static void Assign( DM& dest, const DM& source) {
-      Kokkos::deep_copy(dest,source);
+    static void Assign(DM &dest, const DM &source) {
+      // force assigment to happen on device
+      SyncHostToDevice(dest);
+      SyncHostToDevice(*const_cast<DM*>(&source));
+      Kokkos::deep_copy(dest, source);
     }
 
     //!  \brief Returns the Frobenius norm of the dense matrix.

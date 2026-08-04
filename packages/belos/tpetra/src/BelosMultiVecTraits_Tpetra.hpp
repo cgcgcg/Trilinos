@@ -74,8 +74,8 @@ makeStaticLocalMultiVector (const MultiVectorType& gblMv,
                             const size_t numCols)
 {
   using Tpetra::Details::getStatic2dDualView;
-  using IST = typename MultiVectorType::impl_scalar_type; 
-  using DT = typename MultiVectorType::device_type; 
+  using IST = typename MultiVectorType::impl_scalar_type;
+  using DT = typename MultiVectorType::device_type;
 
   auto lclMap = makeLocalMap (* (gblMv.getMap ()), lclNumRows);
   auto dv = getStatic2dDualView<IST, DT> (lclNumRows, numCols);
@@ -94,8 +94,8 @@ makeStaticLocalMultiVector (const MultiVectorType& gblMv,
 }
 
 // Return a Tpetra::MultiVector with static storage and a local Map,
-// as above, but this time, instead of pointing the multivector to 
-// uninitialized data, the multivector points to the data of the 
+// as above, but this time, instead of pointing the multivector to
+// uninitialized data, the multivector points to the data of the
 // Kokkos::DualView provided, allowing us to avoid extra deep copies.
 template<class MultiVectorType, class DualViewType>
 MultiVectorType
@@ -823,7 +823,7 @@ namespace Belos {
       C_mv.multiply (Teuchos::CONJ_TRANS, Teuchos::NO_TRANS, alpha, A, B, ZERO);
       Tpetra::deep_copy (C, C_mv);
     }
-    
+
     //==============================================================
     //Remaining functions can be called from the generic versions:
     //==============================================================
@@ -945,19 +945,20 @@ namespace Belos {
                                    Teuchos::SerialDenseMatrix<int,Scalar> > tsqr_adaptor_type;
 #endif // HAVE_BELOS_TSQR
 
-  };//end Teuchos serial dense specialized. 
+  };//end Teuchos serial dense specialized.
 
 
   //==============================================================
   //Specialize multivec traits for  Kokkos::DualView
   //==============================================================
   template<class Scalar, class LO, class GO, class Node >
-  class MultiVecTraits<Scalar, ::Tpetra::MultiVector<Scalar,LO,GO,Node>, 
+  class MultiVecTraits<Scalar, ::Tpetra::MultiVector<Scalar,LO,GO,Node>,
         typename ::Tpetra::MultiVector<Scalar,LO,GO,Node>::wrapped_dual_view_type::DVT> {
 
     using MV = ::Tpetra::MultiVector<Scalar, LO, GO, Node>;
     using IST = typename MV::impl_scalar_type;
     using DM = typename ::Tpetra::MultiVector<Scalar,LO,GO,Node>::wrapped_dual_view_type::DVT;
+    using DMT = Belos::DenseMatTraits<Scalar,DM>;
     using MVGen = TpetraMVGeneralTraits<Scalar,LO,GO,Node> ;
 
   public:
@@ -978,23 +979,25 @@ namespace Belos {
       Teuchos::TimeMonitor timeMon (*timer);
 #endif // HAVE_BELOS_TPETRA_TIMERS
 
-      // Give mv = alpha * A * B + beta * mv. 
+      // Give mv = alpha * A * B + beta * mv.
+
+      DMT::SyncHostToDevice(*const_cast<DM*>(&B));
       MV B_mv = impl::makeStaticLocalMultiVector (A, B);
       mv.multiply (Teuchos::NO_TRANS, Teuchos::NO_TRANS,
                    alpha, A, B_mv, beta);
       // Note: B is const here, never modified, so no need to sync
-      // back to host. 
+      // back to host.
     }
 
     // NOTE: This is the ONLY function in all of Belos that will
-    // ever modify a Kokkos::DualView on device. 
+    // ever modify a Kokkos::DualView on device.
     static void
     MvTransMv (const Scalar alpha,
                const MV& A,
                const MV& B,
                DM& C)
     {
-#ifdef HAVE_BELOS_TPETRA_TIMERS 
+#ifdef HAVE_BELOS_TPETRA_TIMERS
       const std::string timerName ("Belos::MVT::MvTransMv");
       auto timer = Teuchos::TimeMonitor::getNewCounter (timerName);
       Teuchos::TimeMonitor timeMon (*timer);
@@ -1006,16 +1009,11 @@ namespace Belos {
 
       if (alpha == ZERO) {
         // Short-circuit, as required by BLAS semantics.
-        if (C.need_sync_device()) {
-          Kokkos::deep_copy(C.view_host(), IST(alpha));
-          C.modify_host();
-          C.sync_device();
-        } else {
-          Kokkos::deep_copy(C.view_device(), IST(alpha));
-          C.modify_device();
-        }
+        DMT::PutScalar(C, alpha);
         return;
       }
+
+      DMT::SyncHostToDevice(C);
       MV C_mv = impl::makeStaticLocalMultiVector(A,C);
       // Filling with zero should be unnecessary, in theory, but not
       // in practice, alas (Issue_3235 test fails).
@@ -1025,9 +1023,8 @@ namespace Belos {
 
       // C_mv = ZERO*C_mv + alpha*A(conjtrans)*B
       C_mv.multiply(Teuchos::CONJ_TRANS, Teuchos::NO_TRANS, alpha, A, B, ZERO);
-      C.modify_device();
     }
-    
+
     //==============================================================
     //Remaining functions can be called from the generic versions:
     //==============================================================
@@ -1145,11 +1142,11 @@ namespace Belos {
 #ifdef HAVE_BELOS_TSQR
     /// \typedef tsqr_adaptor_type
     /// \brief TsqrAdaptor specialization for Tpetra::MultiVector
-   typedef ::Tpetra::TsqrAdaptor< ::Tpetra::MultiVector<Scalar, LO, GO, Node>, 
+   typedef ::Tpetra::TsqrAdaptor< ::Tpetra::MultiVector<Scalar, LO, GO, Node>,
                                   DM > tsqr_adaptor_type;
 #endif // HAVE_BELOS_TSQR
 
-  };//end Kokkos dense specialized. 
+  };//end Kokkos dense specialized.
 
 } // namespace Belos
 
