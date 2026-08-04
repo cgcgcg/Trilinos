@@ -376,8 +376,6 @@ namespace Belos {
         //  Make a view and then copy the RHS of the least squares problem.  DON'T OVERWRITE IT!
         //
         Teuchos::RCP<DM> y = DMT::SubviewCopy(*Z_[i], curDim_, 1);
-        DMT::SyncDeviceToHost( *y );
-        DMT::SyncDeviceToHost( *H_[i] );
         //
         //  Solve the least squares problem and compute current solutions.
         //
@@ -386,8 +384,6 @@ namespace Belos {
 		   DMT::GetConstRawHostPtr(*H_[i]), DMT::GetStride(*H_[i]), 
                    DMT::GetRawHostPtr(*y), DMT::GetStride(*y) );
 
-        DMT::SyncHostToDevice( *y ); 	
-        DMT::SyncHostToDevice( *H_[i] ); 	
 	Teuchos::RCP<const MV> Vjp1 = MVT::CloneView( *V_[i], index2 );
 	MVT::MvTimesMatAddMv( one, *Vjp1, *y, zero, *cur_block_copy_vec );
       }
@@ -413,7 +409,6 @@ namespace Belos {
 
 	for (int j = 0; j < numRHS_; ++j) 
 	  {
-            DMT::SyncDeviceToHost( *Z_[j] );
 	    const ScalarType curNativeResid = DMT::ValueConst(*Z_[j],curDim_,0);
 	    (*norms)[j] = SCT::magnitude (curNativeResid);
 	  }
@@ -755,9 +750,6 @@ namespace Belos {
       //
       // QR factorization of Least-Squares system with Givens rotations
       //
-      DMT::SyncDeviceToHost(*H_[i]);
-      DMT::SyncDeviceToHost(*Z_[i]);
-      // 
       for (j=0; j<curDim; j++) {
 	//
 	// Apply previous Givens rotations to new column of Hessenberg matrix
@@ -776,10 +768,6 @@ namespace Belos {
       //
       blas.ROT( 1, &(DMT::Value(*Z_[i],curDim,0)), 1, &(DMT::Value(*Z_[i],curDim+1,0)), 
                 1, &(*cs_[i])[curDim], &(*sn_[i])[curDim] );
-      //
-      DMT::SyncHostToDevice(*H_[i]);
-      DMT::SyncHostToDevice(*Z_[i]);
-      // 
     }
 
   } // end updateLSQR()

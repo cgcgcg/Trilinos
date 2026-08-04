@@ -422,11 +422,9 @@ namespace Belos {
       const int ncols = MVT::GetNumberVecs(X);
       mat_ptr XTX = DMT::Create(ncols, ncols);
       innerProd (X, X, *XTX);
-      DMT::SyncDeviceToHost( *XTX );
       for (int k = 0; k < ncols; ++k) {
         DMT::Value(*XTX,k,k) -= ONE;
       }
-      DMT::SyncHostToDevice( *XTX );
       return DMT::NormFrobenius( *XTX );
     }
 
@@ -1244,7 +1242,6 @@ namespace Belos {
       // compute column norms of X before and after projection.  Here,
       // we get them for free from the normalization coefficients.
       Teuchos::BLAS<int, Scalar> blas;
-      DMT::SyncDeviceToHost( *B_out );
       for (int j = 0; j < firstPassRank; ++j) {
         mat_ptr B_j = DMT::Subview( *B_out, firstPassRank, 1, 0, j );
         // Teuchos::BLAS::NRM2 returns a magnitude_type result on
@@ -1327,29 +1324,23 @@ namespace Belos {
         // its input and output arguments.
         mat_ptr B_copy = DMT::CreateCopy(*B_out);
         // B_out := B2 * B_out (where input B_out is in B_copy).
-        DMT::SyncDeviceToHost( *B2 );
-        DMT::SyncDeviceToHost( *B_out );
-        blas.GEMM( NO_TRANS, NO_TRANS, DMT::GetNumRows( *B2 ), DMT::GetNumCols( *B_copy ), 
+        blas.GEMM( NO_TRANS, NO_TRANS, DMT::GetNumRows( *B2 ), DMT::GetNumCols( *B_copy ),
                    DMT::GetNumCols( *B2 ), SCT::one(), DMT::GetRawHostPtr( *B2 ),
                    DMT::GetStride( *B2 ), DMT::GetRawHostPtr( *B_copy ),
                    DMT::GetStride( *B_copy ), SCT::zero(), 
                    DMT::GetRawHostPtr( *B_out ), DMT::GetStride( *B_out ) );
-        DMT::SyncHostToDevice( *B_out );
 
         // Update the block coefficients from the projection step.  We
         // use B_copy for this (a copy of B_out, the first-pass
         // normalization coefficients).
         for (int k = 0; k < num_Q_blocks; ++k) {
           // C[k] := C2[k]*B_copy + C[k].
-          DMT::SyncDeviceToHost( *C[k] );
-          DMT::SyncDeviceToHost( *C2[k] );
-       
+
           blas.GEMM( NO_TRANS, NO_TRANS, DMT::GetNumRows( *C2[k] ), DMT::GetNumCols( *B_copy ), 
                      DMT::GetNumCols( *C2[k] ), SCT::one(), DMT::GetRawHostPtr( *C2[k] ),
                      DMT::GetStride( *C2[k] ), DMT::GetRawHostPtr( *B_copy ),
                      DMT::GetStride( *B_copy ), SCT::one(), 
                      DMT::GetRawHostPtr( *C[k] ), DMT::GetStride( *C[k] ) );
-          DMT::SyncHostToDevice( *C[k] );
         }
         // Compute post-second-pass (pre-normalization) norms, using
         // B2 (the coefficients from the second normalization step) in

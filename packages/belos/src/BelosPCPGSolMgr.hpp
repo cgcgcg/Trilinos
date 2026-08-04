@@ -939,7 +939,6 @@ ReturnType PCPGSolMgr<ScalarType,MV,OP,DM,true>::solve() {
         // Explicitly construct Q and R factors
         Teuchos::RCP<DM> R = DMT::Create(dimU_,dimU_);
         rank = ortho_->normalize(*Uorth, R);
-        DMT::SyncDeviceToHost( *R );
         // TODO:  During the previous solve, the matrix that normalizes U(1:q) was computed and discarded.
         // One might save it, reuse it here, and just normalize columns U(q+1:dimU_) here.
 
@@ -967,8 +966,6 @@ ReturnType PCPGSolMgr<ScalarType,MV,OP,DM,true>::solve() {
 
         TEUCHOS_TEST_FOR_EXCEPTION(info != 0, PCPGSolMgrLAPACKFailure,
                              "Belos::PCPGSolMgr::solve(): LAPACK _GESVD failed to compute singular values.");
-
-        DMT::SyncHostToDevice( *R );
 
         if( work[0] !=  67. * dimU_ )
            printer_->stream(Debug) << " SVD " << dimU_ <<  " lwork " << work[0]  << std::endl;
@@ -1117,7 +1114,6 @@ int PCPGSolMgr<ScalarType,MV,OP,DM,true>::ARRQR(int p, int q, const std::vector<
       RCP<const MV> P = MVT::CloneView(*U_,curind);
       RCP<const MV> AP = MVT::CloneView(*C_,curind);
       MVT::MvTransMv( one, *P, *AP, *alpha);
-      DMT::SyncDeviceToHost( *alpha );
       anorm = Teuchos::ScalarTraits<ScalarType>::squareroot( DMT::ValueConst(*alpha,0,0) ) ;
     }
     if( rteps <= anorm && anorm < 9.765625e-4){
@@ -1149,7 +1145,6 @@ int PCPGSolMgr<ScalarType,MV,OP,DM,true>::ARRQR(int p, int q, const std::vector<
       curind[0] = l;
       RCP<MV> Q = MVT::CloneViewNonConst(*U_,curind); // segmentation fault,  j=i+1=5
       MVT::MvTransMv( one, *Q, *AP, *alpha); // alpha(0,0) = U(:,l)'*C(:,k);
-      DMT::SyncDeviceToHost(*alpha);
       MVT::MvAddMv( -DMT::ValueConst(*alpha,0,0), *P, one, *Q, *Q ); // U(:,l) -= U(:,k) * alpha(0,0);
       RCP<MV> AQ = MVT::CloneViewNonConst(*C_,curind);
       MVT::MvAddMv( -DMT::ValueConst(*alpha,0,0), *AP, one, *AQ, *AQ ); // C(:,l) -= C(:,l) - C(:,k) * alpha(0,0);

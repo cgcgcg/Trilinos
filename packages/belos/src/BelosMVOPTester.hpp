@@ -68,10 +68,7 @@ namespace Belos {
           DMT::Randomize(A);
         else
           DMT::PutScalar(A);
-
-        DMT::SyncDeviceToHost(A);
         broadcast(*comm, 0, DMT::GetNumRows(A)*DMT::GetNumCols(A), DMT::GetRawHostPtr(A));
-        DMT::SyncHostToDevice(A);
       }
 
   /// \brief Test correctness of a MultiVecTraits specialization and
@@ -842,7 +839,6 @@ namespace Belos {
 
       // perform SDM  = zero() * B^H * C
       MVT::MvTransMv( zero, *B, *C, *SDM );
-      DMT::SyncDeviceToHost(*SDM);
 
       // check the sizes: not allowed to have shrunk
       if ( DMT::GetNumRows(*SDM) != p || DMT::GetNumCols(*SDM) != q ) {
@@ -862,7 +858,6 @@ namespace Belos {
 
       // perform SDM  = one * B^H * C
       MVT::MvTransMv( one, *B, *C, *SDM );
-      DMT::SyncDeviceToHost(*SDM);
 
       // check the norms: a^H b = |a| |b| cos(theta) <= |a| |b|
       // with equality only when a and b are colinear
@@ -884,7 +879,6 @@ namespace Belos {
       MVT::MvInit(*C);
       MVT::MvRandom(*B);
       MVT::MvTransMv( one, *B, *C, *SDM );
-      DMT::SyncDeviceToHost(*SDM);
       for (int i=0; i<p; i++) {
         for (int j=0; j<q; j++) {
           if ( DMT::ValueConst(*SDM,i,j) != zero ) {
@@ -898,7 +892,6 @@ namespace Belos {
       MVT::MvInit(*B);
       MVT::MvRandom(*C);
       MVT::MvTransMv( one, *B, *C, *SDM );
-      DMT::SyncDeviceToHost(*SDM);
       for (int i=0; i<p; i++) {
         for (int j=0; j<q; j++) {
           if ( DMT::ValueConst(*SDM,i,j) != zero ) {
@@ -1248,11 +1241,9 @@ namespace Belos {
       MVT::MvNorm(*B,normsB1);
       MVT::MvNorm(*C,normsC1);
       DMT::Scale(*SDM,zero);
-      DMT::SyncDeviceToHost(*SDM);
       for (int i=0; i<q; i++) {
         DMT::Value(*SDM,i,i) = one;
       }
-      DMT::SyncHostToDevice(*SDM);
       MVT::MvTimesMatAddMv(one,*B,*SDM,zero,*C);
       MVT::MvNorm(*B,normsB2);
       MVT::MvNorm(*C,normsC2);
@@ -1385,11 +1376,9 @@ namespace Belos {
       MVT::MvNorm(*B,normsB1);
       MVT::MvNorm(*C,normsC1);
       DMT::Scale(*SDM,zero);
-      DMT::SyncDeviceToHost(*SDM);
       for (int i=0; i<p; i++) {
         DMT::Value(*SDM,i,i) = one;
       }
-      DMT::SyncHostToDevice(*SDM);  
       MVT::MvTimesMatAddMv(one,*B,*SDM,zero,*C);
       MVT::MvNorm(*B,normsB2);
       MVT::MvNorm(*C,normsC2);

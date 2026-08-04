@@ -540,19 +540,13 @@ class LSQRIter : virtual public Belos::Iteration<ScalarType,MV,OP,DM> {
 
           MVT::MvAddMv( one, *AtU, -alpha[0], *V_, *AtU );
           MVT::MvNorm( *AtU, xi );
-          std::cout << "| V alpha - A' u |= "  << xi[0] << std::endl;
           // 2. confirm that U is a unit vector
           RCP<DM> uotuo = DMT::Create(1,1);
           MVT::MvTransMv( one, *U_, *U_, *uotuo );
-          DMT::SyncDeviceToHost( *uotuo ); 
-          std::cout << "<U, U> = " << DMT::ValueConst(*uotuo,0,0) << std::endl;
           // 3. print alpha =  <V, A'U>
-          std::cout << "alpha = "  << alpha[0] << std::endl;
           // 4. compute < AV, U> which ought to be alpha
           RCP<DM> utav = DMT::Create(1,1);
           MVT::MvTransMv( one, *AV, *U_, *utav );
-          DMT::SyncDeviceToHost( *utav ); 
-          std::cout << "<AV, U> = alpha = " << DMT::ValueConst(*utav,0,0) << std::endl;
         }
 
       MVT::MvAddMv( one, *AV, -alpha[0], *U_, *U_ ); // uNew := Av - uOld alphaOld

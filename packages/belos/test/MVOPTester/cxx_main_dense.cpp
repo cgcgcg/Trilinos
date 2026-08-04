@@ -150,7 +150,6 @@ int main(int argc, char* argv[])
     {
       A33data[i] = i;
     }
-    DMT::SyncHostToDevice(*A33);
 
     Teuchos::RCP<DMatrix> Con2Test1ExpRes = DMT::Create();
     DMT::Reshape(*Con2Test1ExpRes, 2, 3);
@@ -160,7 +159,6 @@ int main(int argc, char* argv[])
     DMT::Value(*Con2Test1ExpRes, 1, 0) = 1;  
     DMT::Value(*Con2Test1ExpRes, 1, 1) = 4; 
     DMT::Value(*Con2Test1ExpRes, 1, 2) = 7;
-    DMT::SyncHostToDevice(*Con2Test1ExpRes);
 
     Teuchos::RCP<DMatrix> Con2Test1 = DMT::SubviewCopy(*A33, 2, 3);
     numberFailedTests += PrintTestResults("constructor 2 -- construct matrix from array subrange", Con2Test1, Con2Test1ExpRes, verbose);
@@ -173,7 +171,6 @@ int main(int argc, char* argv[])
     DMT::Value(*Con4TestSubmatrix, 0, 1) = 7;
     DMT::Value(*Con4TestSubmatrix, 1, 0) = 5;
     DMT::Value(*Con4TestSubmatrix, 1, 1) = 8;
-    DMT::SyncHostToDevice(*Con4TestSubmatrix);
     Teuchos::RCP<DMatrix> Con4TestCopy1 = DMT::SubviewCopy(*Con4TestOrig, 2, 2, 1, 1);
     numberFailedTests += PrintTestResults("constructor 4 -- submatrix copy", Con4TestCopy1, Con4TestSubmatrix, verbose);
     Teuchos::RCP<DMatrix> Con4TestCopy2 = DMT::SubviewCopy(*Con4TestOrig, 3, 3, 0, 0);
@@ -195,7 +192,6 @@ int main(int argc, char* argv[])
     DMT::Value(*AAA, 2, 0) = 7; 
     DMT::Value(*AAA, 2, 1) = 8; 
     DMT::Value(*AAA, 2, 2) = 9;
-    DMT::SyncHostToDevice(*AAA);
 
     Teuchos::RCP<DMatrix> BBB = DMT::Create();
     numberFailedTests += PrintTestResults2("normOne of a 3x3", DMT::NormOne(*AAA), 18.0, verbose);

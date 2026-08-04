@@ -506,7 +506,6 @@ class BlockGmresIter : virtual public GmresIteration<ScalarType,MV,OP,DM> {
       blas.TRSM( Teuchos::LEFT_SIDE, Teuchos::UPPER_TRI, Teuchos::NO_TRANS,
                  Teuchos::NON_UNIT_DIAG, curDim_, blockSize_, one,
                  DMT::GetRawHostPtr(*R_), DMT::GetStride(*R_), DMT::GetRawHostPtr(*y), DMT::GetStride(*y) );
-      DMT::SyncHostToDevice(*y);
       //
       //  Compute the current update.
       //
@@ -535,7 +534,6 @@ class BlockGmresIter : virtual public GmresIteration<ScalarType,MV,OP,DM> {
 
     if (norms) {
       Teuchos::BLAS<int,ScalarType> blas;
-      DMT::SyncDeviceToHost(*z_);
       for (int j=0; j<blockSize_; j++) {
         Teuchos::RCP<DM> z_j = DMT::Subview(*z_, blockSize_, 1, curDim_, j);
         (*norms)[j] = blas.NRM2( blockSize_, DMT::GetRawHostPtr(*z_j), 1);
@@ -767,8 +765,6 @@ class BlockGmresIter : virtual public GmresIteration<ScalarType,MV,OP,DM> {
     // Apply previous transformations and compute new transformation to reduce upper-Hessenberg
     // system to upper-triangular form.
     //
-    DMT::SyncDeviceToHost(*R_);
-    DMT::SyncDeviceToHost(*z_);
 
     if (blockSize_ == 1) {
       //
@@ -840,9 +836,6 @@ class BlockGmresIter : virtual public GmresIteration<ScalarType,MV,OP,DM> {
         }
       }
     } // end if (blockSize_ == 1)
-
-    DMT::SyncHostToDevice(*z_); 
-    DMT::SyncHostToDevice(*R_); 
 
     // If the least-squares problem is updated wrt "dim" then update the curDim_.
     if (dim >= curDim_ && dim < getMaxSubspaceDim()) {

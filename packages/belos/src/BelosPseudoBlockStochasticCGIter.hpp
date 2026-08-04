@@ -444,8 +444,6 @@ namespace Belos {
 	// Compute the scaling parameter for the stochastic vector
 	DMT::Value(*zeta,i,i) = z[i] / Teuchos::ScalarTraits<ScalarType>::squareroot(pAp[i]);
       }
-      DMT::SyncDeviceToHost( *alpha );
-      DMT::SyncDeviceToHost( *zeta );
 
       //
       // Update the solution std::vector x := x + alpha * P_

@@ -168,12 +168,6 @@ View(const pointer_type &ptr, const IntType&... indices)
     static const ScalarType & ValueConst( const DM& dm, const int i, const int j ) 
     { UndefinedDenseMatTraits<ScalarType, DM>::notDefined(); }
     
-    static void SyncDeviceToHost(DM & dm)
-    { UndefinedDenseMatTraits<ScalarType, DM>::notDefined(); }
-
-    static void SyncHostToDevice(DM & dm)
-    { UndefinedDenseMatTraits<ScalarType, DM>::notDefined(); }
-
     //@}
     //@{ \name Operator methods
     

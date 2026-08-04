@@ -775,7 +775,6 @@ namespace Belos {
 
         // $C := X^* X$
         MVT::MvTransMv (ONE, X, X, *C);
-        DMT::SyncDeviceToHost( *C );
 
         magnitude_type err (0);
         for (int i = 0; i < numCols; ++i)

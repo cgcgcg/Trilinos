@@ -580,11 +580,9 @@ namespace Belos {
 #endif
     MatOrthoManager<ScalarType,MV,OP,DM>::innerProd(X,X,MX,*xTx);
     }
-    DMT::SyncDeviceToHost(*xTx);
     for (int i=0; i<rank; i++) {
       DMT::Value(*xTx,i,i) -= ONE;
     }
-    DMT::SyncHostToDevice(*xTx);
     return DMT::NormFrobenius(*xTx);
   }
 

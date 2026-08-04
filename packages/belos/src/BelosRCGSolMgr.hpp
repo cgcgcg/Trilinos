@@ -1159,17 +1159,12 @@ ReturnType RCGSolMgr<ScalarType,MV,OP,DM,true>::solve() {
         Teuchos::RCP<DM> Utr = DMT::Create(recycleBlocks_,1);
         Teuchos::RCP<const MV> Utmp  = MVT::CloneView( *U_,  rindex );
         MVT::MvTransMv( one, *Utmp, *r_, *Utr );
-         
-        DMT::SyncHostToDevice(*LUUTAU_);
         DMT::Assign(*LUUTAU_,*UTAU_);
-        DMT::SyncDeviceToHost( *LUUTAU_ );
-        DMT::SyncDeviceToHost( *Utr );
         int info = 0;
         lapack.GESV(recycleBlocks_, 1, DMT::GetRawHostPtr(*LUUTAU_), DMT::GetStride(*LUUTAU_), 
                     &(*ipiv_)[0], DMT::GetRawHostPtr(*Utr), DMT::GetStride(*Utr), &info);
         TEUCHOS_TEST_FOR_EXCEPTION(info != 0, RCGSolMgrLAPACKFailure,
                            "Belos::RCGSolMgr::solve(): LAPACK GESV failed to compute a solution.");
-        DMT::SyncHostToDevice( *Utr );
 
         // Update solution (x = x + U*y)
         MVT::MvTimesMatAddMv( one, *Utmp, *Utr, one, *problem_->getCurrLHSVec() );
@@ -1194,14 +1189,12 @@ ReturnType RCGSolMgr<ScalarType,MV,OP,DM,true>::solve() {
         Teuchos::RCP<const MV> AUtmp  = MVT::CloneView( *AU_, rindex );
         MVT::MvTransMv( one, *AUtmp, *z_, *mu );
 
-        DMT::SyncDeviceToHost( *Delta_ );
         char TRANS = 'N';
         int info;
         lapack.GETRS( TRANS, recycleBlocks_, 1, DMT::GetConstRawHostPtr(*LUUTAU_), DMT::GetStride(*LUUTAU_), 
                       &(*ipiv_)[0], DMT::GetRawHostPtr(*mu), DMT::GetStride(*mu), &info );
         TEUCHOS_TEST_FOR_EXCEPTION(info != 0, RCGSolMgrLAPACKFailure,
                            "Belos::RCGSolMgr::solve(): LAPACK GETRS failed to compute a solution.");
-        DMT::SyncHostToDevice( *mu );
 
         // p  = z - U*mu;
         index.resize( 1 );
@@ -1287,8 +1280,6 @@ ReturnType RCGSolMgr<ScalarType,MV,OP,DM,true>::solve() {
                    Teuchos::RCP<DM> Gtmp = DMT::Subview( *G_, numBlocks_, numBlocks_ );
                    DMT::PutScalar( *Ftmp, zero );
                    DMT::PutScalar( *Gtmp, zero );
-                   DMT::SyncDeviceToHost( *F_ );
-                   DMT::SyncDeviceToHost( *G_ );
 		   for (int ii=0;ii<numBlocks_;ii++) {
                      DMT::Value(*Gtmp,ii,ii) = ((*D_)[ii] / (*Alpha_)[ii])*(1 + (*Beta_)[ii]);
                      if (ii > 0) {
@@ -1297,14 +1288,10 @@ ReturnType RCGSolMgr<ScalarType,MV,OP,DM,true>::solve() {
                      }
                      DMT::Value(*Ftmp,ii,ii) = (*D_)[ii];
                    }
-                   DMT::SyncHostToDevice( *F_ );
-                   DMT::SyncHostToDevice( *G_ );
 
                    // compute harmonic Ritz vectors
-                   DMT::SyncDeviceToHost( *Y_ );
                    Teuchos::RCP<DM> Ytmp = DMT::Subview( *Y_, numBlocks_, recycleBlocks_ );
                    getHarmonicVecs(*Ftmp,*Gtmp,*Ytmp);
-                   DMT::SyncHostToDevice( *Y_ );
 
                    // U1 = [P(:,1:end-1)*Y];
                    Teuchos::RCP<const MV> Ptmp = MVT::CloneView( *P_,  nindex );
@@ -1312,10 +1299,6 @@ ReturnType RCGSolMgr<ScalarType,MV,OP,DM,true>::solve() {
                    MVT::MvTimesMatAddMv( one, *Ptmp, *Ytmp, zero, *U1tmp );
 
                    // Precompute some variables for next cycle
-                   DMT::SyncDeviceToHost(*GY_);
-                   DMT::SyncDeviceToHost(*AU1TAU1_);
-                   DMT::SyncDeviceToHost(*FY_);
-                   DMT::SyncDeviceToHost(*AU1TU1_);
 
                    // AU1TAU1     = Y'*G*Y;
                    Teuchos::RCP<DM> GYtmp = DMT::Subview( *GY_, numBlocks_, recycleBlocks_ );
@@ -1344,20 +1327,14 @@ ReturnType RCGSolMgr<ScalarType,MV,OP,DM,true>::solve() {
                               DMT::GetConstRawHostPtr(*FYtmp), DMT::GetStride(*FYtmp),
                               zero, DMT::GetRawHostPtr(*AU1TU1_), DMT::GetStride(*AU1TU1_));
 
-                   DMT::SyncHostToDevice(*AU1TAU1_);
-                   DMT::SyncHostToDevice(*AU1TU1_);
-                   DMT::SyncHostToDevice(*AU1TAP_);
-                   
                    Teuchos::RCP<DM> AU1TAPtmp = DMT::Subview( *AU1TAP_, recycleBlocks_, 1 );
                    // Must reinitialize AU1TAP; can become dense later
                    DMT::PutScalar( *AU1TAPtmp, zero );
                    // AU1TAP(:,1) = Y(end,:)' * (-1/Alpha(end));
-		   DMT::SyncDeviceToHost( *AU1TAP_ );
 		   ScalarType alphatmp = -1.0 / (*Alpha_)[numBlocks_-1];
                    for (int ii=0; ii<recycleBlocks_; ++ii) {
                       DMT::Value(*AU1TAPtmp,ii,0) = DMT::ValueConst(*Ytmp,numBlocks_-1,ii) * alphatmp;
                    }
-                   DMT::SyncHostToDevice(*AU1TAP_);
 
                    // indicate that updated recycle space now defined
                    existU1_ = true;
@@ -1374,7 +1351,6 @@ ReturnType RCGSolMgr<ScalarType,MV,OP,DM,true>::solve() {
                    DMT::Scale(*AU1TAP_,(*D_)[0]);
 
                    DMT::PutScalar(*APTAP_,zero);
-                   DMT::SyncDeviceToHost(*APTAP_);
                    for (int ii=0; ii<numBlocks_; ii++) {
                      DMT::Value(*APTAP_,ii,ii) = ((*D_)[ii] / (*Alpha_)[ii])*(1 + (*Beta_)[ii+1]);
                      if (ii > 0) {
@@ -1382,18 +1358,15 @@ ReturnType RCGSolMgr<ScalarType,MV,OP,DM,true>::solve() {
                        DMT::Value(*APTAP_,ii,ii-1) = -(*D_)[ii]/(*Alpha_)[ii-1];
                      }
                    }
-                   DMT::SyncHostToDevice(*APTAP_);
 
                    // F = [AU1TU1 zeros(k,m); zeros(m,k) diag(D)];
                    DMT::PutScalar(*F_,zero);
                    Teuchos::RCP<DM> F11 = DMT::Subview( *F_, recycleBlocks_, recycleBlocks_ );
                    Teuchos::RCP<DM> F22 = DMT::Subview( *F_, numBlocks_, numBlocks_, recycleBlocks_, recycleBlocks_ );
                    DMT::Assign(*F11,*AU1TU1_);
-                   DMT::SyncDeviceToHost(*F_);
                    for(int ii=0;ii<numBlocks_;ii++) {
                      DMT::Value(*F22,ii,ii) = (*D_)[ii];
                    }
-                   DMT::SyncHostToDevice(*F_);
 
                    // G = [AU1TAU1 AU1TAP; AU1TAP' APTAP];
                    Teuchos::RCP<DM> G11 = DMT::Subview( *G_, recycleBlocks_, recycleBlocks_ );
@@ -1403,16 +1376,13 @@ ReturnType RCGSolMgr<ScalarType,MV,OP,DM,true>::solve() {
                    DMT::Assign(*G11, *AU1TAU1_);
                    DMT::Assign(*G12, *AU1TAP_);
                    DMT::Assign(*G22, *APTAP_);
-                   DMT::SyncDeviceToHost( *G_ );
                    // G21 = G12'; (no transpose operator exists for DM; Do copy manually)
                    for (int ii=0;ii<recycleBlocks_;++ii)
                      for (int jj=0;jj<numBlocks_;++jj)
                        DMT::Value(*G21,jj,ii) = DMT::ValueConst(*G12,ii,jj);
-                   DMT::SyncHostToDevice( *G_ );
 
                    // compute harmonic Ritz vectors
                    getHarmonicVecs(*F_,*G_,*Y_);
-                   DMT::SyncHostToDevice( *Y_ );
 
                    // U1 = [U1 P(:,2:end-1)]*Y;
                    index.resize( numBlocks_ );
@@ -1428,8 +1398,6 @@ ReturnType RCGSolMgr<ScalarType,MV,OP,DM,true>::solve() {
                    MVT::MvAddMv(one,*U1Y1tmp, one, *PY2tmp, *U1tmp);
 
                    // Precompute some variables for next cycle
-                   DMT::SyncDeviceToHost(*GY_);
-                   DMT::SyncDeviceToHost(*AU1TAU1_);
 
                    // AU1TAU1     = Y'*G*Y;
                    //GY_->multiply(Teuchos::NO_TRANS,Teuchos::NO_TRANS,one,*G_,*Y_,zero);
@@ -1445,21 +1413,13 @@ ReturnType RCGSolMgr<ScalarType,MV,OP,DM,true>::solve() {
                               DMT::GetConstRawHostPtr(*GY_), DMT::GetStride(*GY_),
                               zero, DMT::GetRawHostPtr(*AU1TAU1_), DMT::GetStride(*AU1TAU1_));
 
-                   DMT::SyncHostToDevice(*GY_);
-                   DMT::SyncHostToDevice(*AU1TAU1_);
-
                    // AU1TAP      = zeros(k,m);
                    // AU1TAP(:,1) = Y(end,:)' * (-1/Alpha(end));
                    DMT::PutScalar(*AU1TAP_,zero);
                    ScalarType alphatmp = -1.0 / (*Alpha_)[numBlocks_-1];
-                   DMT::SyncDeviceToHost(*AU1TAP_);
                    for (int ii=0; ii<recycleBlocks_; ++ii) {
                       DMT::Value(*AU1TAP_,ii,0) = DMT::ValueConst(*Y_,numBlocks_+recycleBlocks_-1,ii) * alphatmp;
                    }
-                   DMT::SyncHostToDevice(*AU1TAP_);
-
-                   DMT::SyncDeviceToHost(*FY_);
-                   DMT::SyncDeviceToHost(*AU1TU1_);
 
                    // AU1TU1      = Y'*F*Y;
                    //FY_->multiply(Teuchos::NO_TRANS,Teuchos::NO_TRANS,one,*F_,*Y_,zero);
@@ -1475,9 +1435,6 @@ ReturnType RCGSolMgr<ScalarType,MV,OP,DM,true>::solve() {
                               DMT::GetConstRawHostPtr(*FY_), DMT::GetStride(*FY_),
                               zero, DMT::GetRawHostPtr(*AU1TU1_), DMT::GetStride(*AU1TU1_));
 
-                   DMT::SyncHostToDevice(*FY_);
-                   DMT::SyncHostToDevice(*AU1TU1_);
-
                    // Indicate the size of the P, Beta structures generated this cycle
                    lastp = numBlocks_+1;
                    lastBeta = numBlocks_;
@@ -1487,7 +1444,6 @@ ReturnType RCGSolMgr<ScalarType,MV,OP,DM,true>::solve() {
               else { // U exists
                 if (cycle == 0) { // No U1, but U exists
                    DMT::PutScalar(*APTAP_,zero);
-                   DMT::SyncDeviceToHost(*APTAP_);
                    for (int ii=0; ii<numBlocks_; ii++) {
                      DMT::Value(*APTAP_,ii,ii) = ((*D_)[ii] / (*Alpha_)[ii])*(1 + (*Beta_)[ii]);
                      if (ii > 0) {
@@ -1495,21 +1451,14 @@ ReturnType RCGSolMgr<ScalarType,MV,OP,DM,true>::solve() {
                        DMT::Value(*APTAP_,ii,ii-1) = -(*D_)[ii]/(*Alpha_)[ii-1];
                      }
                    }
-                   DMT::SyncHostToDevice(*APTAP_);
 
                    DMT::PutScalar(*L2_,zero);
-                   DMT::SyncDeviceToHost(*L2_);
                    for(int ii=0;ii<numBlocks_;ii++) {
                      DMT::Value(*L2_,ii,ii)   = 1./(*Alpha_)[ii];
                      DMT::Value(*L2_,ii+1,ii) = -1./(*Alpha_)[ii];
                    }
-                   DMT::SyncHostToDevice(*L2_);
 
                    // AUTAP = UTAU*Delta*L2;
-                   DMT::SyncDeviceToHost(*Delta_);
-		   DMT::SyncDeviceToHost(*DeltaL2_);
-                   DMT::SyncDeviceToHost(*AUTAP_);
-                   DMT::SyncDeviceToHost(*UTAU_);
 
                    //DeltaL2_->multiply(Teuchos::NO_TRANS,Teuchos::NO_TRANS,one,*Delta_,*L2_,zero);
                    blas.GEMM( Teuchos::NO_TRANS, Teuchos::NO_TRANS, recycleBlocks_, numBlocks_, numBlocks_+1,
@@ -1522,19 +1471,14 @@ ReturnType RCGSolMgr<ScalarType,MV,OP,DM,true>::solve() {
                               DMT::GetConstRawHostPtr(*DeltaL2_), DMT::GetStride(*DeltaL2_),
                               zero, DMT::GetRawHostPtr(*AUTAP_), DMT::GetStride(*AUTAP_));
 
-                   DMT::SyncHostToDevice(*DeltaL2_);
-                   DMT::SyncHostToDevice(*AUTAP_);
-
                    // F = [UTAU zeros(k,m); zeros(m,k) diag(D)];
                    DMT::PutScalar(*F_,zero);
                    Teuchos::RCP<DM> F11 = DMT::Subview( *F_, recycleBlocks_, recycleBlocks_ );
                    Teuchos::RCP<DM> F22 = DMT::Subview( *F_, numBlocks_, numBlocks_, recycleBlocks_, recycleBlocks_ );
                    DMT::Assign(*F11,*UTAU_);
-                   DMT::SyncDeviceToHost(*F_);
                    for(int ii=0;ii<numBlocks_;ii++) {
                      DMT::Value(*F22,ii,ii) = (*D_)[ii];
                    }
-                   DMT::SyncHostToDevice(*F_);
 
                    // G = [AUTAU AUTAP; AUTAP' APTAP];
                    Teuchos::RCP<DM> G11 = DMT::Subview( *G_, recycleBlocks_, recycleBlocks_ );
@@ -1544,16 +1488,13 @@ ReturnType RCGSolMgr<ScalarType,MV,OP,DM,true>::solve() {
                    DMT::Assign(*G11,*AUTAU_);
                    DMT::Assign(*G12,*AUTAP_);
                    DMT::Assign(*G22,*APTAP_);
-                   DMT::SyncDeviceToHost(*G_);
                    // G21 = G12'; (no transpose operator exists for DM; Do copy manually)
                    for (int ii=0;ii<recycleBlocks_;++ii)
                      for (int jj=0;jj<numBlocks_;++jj)
                        DMT::Value(*G21,jj,ii) = DMT::ValueConst(*G12,ii,jj);
-                   DMT::SyncHostToDevice(*G_);
 
                    // compute harmonic Ritz vectors
                    getHarmonicVecs(*F_,*G_,*Y_);
-                   DMT::SyncHostToDevice(*Y_);
 
                    // U1 = [U P(:,1:end-1)]*Y;
                    Teuchos::RCP<const MV> Utmp = MVT::CloneView( *U_,  rindex );
@@ -1568,10 +1509,6 @@ ReturnType RCGSolMgr<ScalarType,MV,OP,DM,true>::solve() {
                    MVT::MvAddMv(one,*UY1tmp, one, *PY2tmp, *U1tmp);
 
                    // Precompute some variables for next cycle
-                   DMT::SyncDeviceToHost(*GY_);
-                   DMT::SyncDeviceToHost(*AU1TAU1_);
-                   DMT::SyncDeviceToHost(*FY_);
-                   DMT::SyncDeviceToHost(*AU1TU1_);
 
                    // AU1TAU1     = Y'*G*Y;
                    //GY_->multiply(Teuchos::NO_TRANS,Teuchos::NO_TRANS,one,*G_,*Y_,zero);
@@ -1600,11 +1537,6 @@ ReturnType RCGSolMgr<ScalarType,MV,OP,DM,true>::solve() {
                               one, DMT::GetConstRawHostPtr(*Y_), DMT::GetStride(*Y_),
                               DMT::GetConstRawHostPtr(*FY_), DMT::GetStride(*FY_),
                               zero, DMT::GetRawHostPtr(*AU1TU1_), DMT::GetStride(*AU1TU1_));
-
-                   DMT::SyncHostToDevice(*GY_);
-                   DMT::SyncHostToDevice(*AU1TAU1_);
-                   DMT::SyncHostToDevice(*FY_);
-                   DMT::SyncHostToDevice(*AU1TU1_);
 
                    // AU1TU   = UTAU;
                    DMT::Assign(*AU1TU_,*UTAU_);
@@ -1621,7 +1553,6 @@ ReturnType RCGSolMgr<ScalarType,MV,OP,DM,true>::solve() {
                 }
                 else { // Have U and U1
 
-                   DMT::SyncDeviceToHost(*APTAP_);
                    for (int ii=0; ii<numBlocks_; ii++) {
                      DMT::Value(*APTAP_,ii,ii) = ((*D_)[ii] / (*Alpha_)[ii])*(1 + (*Beta_)[ii+1]);
                      if (ii > 0) {
@@ -1629,19 +1560,11 @@ ReturnType RCGSolMgr<ScalarType,MV,OP,DM,true>::solve() {
                        DMT::Value(*APTAP_,ii,ii-1) = -(*D_)[ii]/(*Alpha_)[ii-1];
                      }
                    }
-                   DMT::SyncHostToDevice(*APTAP_);
 
-                   DMT::SyncDeviceToHost(*L2_);
                    for(int ii=0;ii<numBlocks_;ii++) {
                      DMT::Value(*L2_,ii,ii)   = 1./(*Alpha_)[ii];
                      DMT::Value(*L2_,ii+1,ii) = -1./(*Alpha_)[ii];
                    }
-                   DMT::SyncHostToDevice(*L2_);
-
-                   DMT::SyncDeviceToHost(*Delta_);
-                   DMT::SyncDeviceToHost(*DeltaL2_);
-                   DMT::SyncDeviceToHost(*AU1TUDeltaL2_);
-                   DMT::SyncDeviceToHost(*AU1TAP_);
 
                    // M(end,1) = dold*(-Beta(1)/Alpha(1));
                    // AU1TAP = Y'*[AU1TU*Delta*L2; M];
@@ -1656,7 +1579,6 @@ ReturnType RCGSolMgr<ScalarType,MV,OP,DM,true>::solve() {
                               DMT::GetConstRawHostPtr(*DeltaL2_), DMT::GetStride(*DeltaL2_),
                               zero, DMT::GetRawHostPtr(*AU1TUDeltaL2_), DMT::GetStride(*AU1TUDeltaL2_));
 
-		   DMT::SyncDeviceToHost( *Y_);
                    Teuchos::RCP<const DM> Y1 = DMT::SubviewConst( *Y_, recycleBlocks_, recycleBlocks_ );
 		   Teuchos::RCP<const DM> Y2 = DMT::SubviewConst( *Y_, numBlocks_, recycleBlocks_, recycleBlocks_, 0 );
 
@@ -1669,7 +1591,6 @@ ReturnType RCGSolMgr<ScalarType,MV,OP,DM,true>::solve() {
                    for(int ii=0;ii<recycleBlocks_;ii++) {
                      DMT::Value(*AU1TAP_,ii,0) += DMT::ValueConst(*Y2,numBlocks_-1,ii)*val;
                    }
-                   DMT::SyncHostToDevice(*AU1TAP_);
 
                    // AU1TU = Y1'*AU1TU
                    Teuchos::RCP<DM> Y1TAU1TU = DMT::Subview( *GY_, recycleBlocks_, recycleBlocks_ );
@@ -1678,7 +1599,6 @@ ReturnType RCGSolMgr<ScalarType,MV,OP,DM,true>::solve() {
                               one, DMT::GetConstRawHostPtr(*Y1), DMT::GetStride(*Y1),
                               DMT::GetConstRawHostPtr(*AU1TU_), DMT::GetStride(*AU1TU_),
                               zero, DMT::GetRawHostPtr(*Y1TAU1TU), DMT::GetStride(*Y1TAU1TU));
-                   DMT::SyncHostToDevice(*GY_);
                    DMT::Assign(*AU1TU_,*Y1TAU1TU);
 
                    // F = [AU1TU1 zeros(k,m); zeros(m,k) diag(D)];
@@ -1686,11 +1606,9 @@ ReturnType RCGSolMgr<ScalarType,MV,OP,DM,true>::solve() {
                    Teuchos::RCP<DM> F11 = DMT::Subview( *F_, recycleBlocks_, recycleBlocks_ );
                    Teuchos::RCP<DM> F22 = DMT::Subview( *F_, numBlocks_, numBlocks_, recycleBlocks_, recycleBlocks_ );
                    DMT::Assign(*F11,*AU1TU1_);
-                   DMT::SyncDeviceToHost(*F_);
                    for(int ii=0;ii<numBlocks_;ii++) {
                      DMT::Value(*F22,ii,ii) = (*D_)[ii];
                    }
-                   DMT::SyncHostToDevice(*F_);
 
                    // G = [AU1TAU1 AU1TAP; AU1TAP' APTAP];
                    Teuchos::RCP<DM> G11 = DMT::Subview( *G_, recycleBlocks_, recycleBlocks_ );
@@ -1700,16 +1618,13 @@ ReturnType RCGSolMgr<ScalarType,MV,OP,DM,true>::solve() {
                    DMT::Assign(*G11,*AU1TAU1_);
                    DMT::Assign(*G12,*AU1TAP_);
                    DMT::Assign(*G22,*APTAP_);
-                   DMT::SyncDeviceToHost(*G_);
                    // G21 = G12'; (no transpose operator exists for DM; Do copy manually)
                    for (int ii=0;ii<recycleBlocks_;++ii)
                      for (int jj=0;jj<numBlocks_;++jj)
                        DMT::Value(*G21,jj,ii) = DMT::ValueConst(*G12,ii,jj);
-                   DMT::SyncHostToDevice(*G_);
 
                    // compute harmonic Ritz vectors
                    getHarmonicVecs(*F_,*G_,*Y_);
-                   DMT::SyncHostToDevice(*Y_);
 
                    // U1 = [U1 P(:,2:end-1)]*Y;
                    index.resize( numBlocks_ );
@@ -1723,10 +1638,6 @@ ReturnType RCGSolMgr<ScalarType,MV,OP,DM,true>::solve() {
                    MVT::MvAddMv(one,*U1Y1tmp, one, *PY2tmp, *U1tmp);
 
                    // Precompute some variables for next cycle
-                   DMT::SyncDeviceToHost(*GY_);
-                   DMT::SyncDeviceToHost(*AU1TAU1_);
-                   DMT::SyncDeviceToHost(*FY_);
-                   DMT::SyncDeviceToHost(*AU1TU1_);
 
                    // AU1TAU1     = Y'*G*Y;
                    //GY_->multiply(Teuchos::NO_TRANS,Teuchos::NO_TRANS,one,*G_,*Y_,zero);
@@ -1755,11 +1666,6 @@ ReturnType RCGSolMgr<ScalarType,MV,OP,DM,true>::solve() {
                               one, DMT::GetConstRawHostPtr(*Y_), DMT::GetStride(*Y_),
                               DMT::GetConstRawHostPtr(*FY_), DMT::GetStride(*FY_),
                               zero, DMT::GetRawHostPtr(*AU1TU1_), DMT::GetStride(*AU1TU1_));
-
-                   DMT::SyncHostToDevice(*GY_);
-                   DMT::SyncHostToDevice(*AU1TAU1_);
-                   DMT::SyncHostToDevice(*FY_);
-                   DMT::SyncHostToDevice(*AU1TU1_);
 
                    // dold    = D(end);
                    dold = (*D_)[numBlocks_-1];
@@ -1974,9 +1880,6 @@ void RCGSolMgr<ScalarType,MV,OP,DM,true>::getHarmonicVecs(const DM& F,
   // since SYGV destroys workspace, create copies of F,G
   Teuchos::RCP<DM> F2 = DMT::CreateCopy( F );
   Teuchos::RCP<DM> G2 = DMT::CreateCopy( G );
-
-  DMT::SyncDeviceToHost(*F2);
-  DMT::SyncDeviceToHost(*G2);
 
   // query for optimal workspace size
   lapack.SYGV(itype, jobz, uplo, n, DMT::GetRawHostPtr(*G2), DMT::GetStride(*G2), 

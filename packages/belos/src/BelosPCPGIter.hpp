@@ -647,7 +647,6 @@ namespace Belos {
 
     // Compute first <r,z> a.k.a. rHz
     MVT::MvTransMv( one, *R_, *Z_, *rHz );
-    DMT::SyncDeviceToHost( *rHz );
 
     ////////////////////////////////////////////////////////////////
     // iterate until the status test is satisfied
@@ -677,7 +676,6 @@ namespace Belos {
           MVT::MvTransMv( one, *P_, *AP_, *pAp );
         }
       }
-      DMT::SyncDeviceToHost( *pAp );
 
       if( keepDiagonal_  && prevUdim_ + iter_ <= savedBlocks_ )
         D_[iter_-1] = DMT::ValueConst(*pAp,0,0);
@@ -722,7 +720,6 @@ namespace Belos {
       }
       //
       MVT::MvTransMv( one, *R_, *Z_, *rHz );
-      DMT::SyncDeviceToHost( *rHz );
       //
       beta = DMT::ValueConst(*rHz,0,0) / rHz_old;
       //

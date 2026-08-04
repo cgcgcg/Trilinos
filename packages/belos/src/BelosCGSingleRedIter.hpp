@@ -473,14 +473,12 @@ class CGSingleRedIter : virtual public CGIteration<ScalarType,MV,OP,DM> {
     if (foldConvergenceDetectionIntoAllreduce_ && convTest_->getResNormType() == Belos::TwoNorm) {
       // Compute first <S_,T_> a.k.a. <R_,Z_>, <AZ_,Z_> and <R_,R_> combined (also computes unneeded <AZ_,R_>)
       MVT::MvTransMv( one, *S_, *T_, *sHt );
-      DMT::SyncDeviceToHost( *sHt );
       rHz_ = DMT::ValueConst(*sHt,1,1);
       delta = DMT::ValueConst(*sHt,0,1);
       rHr_ = DMT::ValueConst(*sHt,1,0);
     } else {
       // Compute first <s,z> a.k.a. <r,z> and <Az,z> combined
       MVT::MvTransMv( one, *S_, *Z_, *sHz );
-      DMT::SyncDeviceToHost( *sHz );
       rHz_ = DMT::ValueConst(*sHz,1,0);
       delta = DMT::ValueConst(*sHz,0,0);
     }
@@ -531,7 +529,6 @@ class CGSingleRedIter : virtual public CGIteration<ScalarType,MV,OP,DM> {
         //
         // Compute <S_,T_> a.k.a. <R_,Z_>, <AZ_,Z_> and <R_,R_> combined (also computes unneeded <AZ_,R_>)
         MVT::MvTransMv( one, *S_, *T_, *sHt );
-        DMT::SyncDeviceToHost( *sHt ); 
         //
         // Update scalars.
         rHz_old = rHz_;
@@ -607,7 +604,6 @@ class CGSingleRedIter : virtual public CGIteration<ScalarType,MV,OP,DM> {
         //
         // Compute <S_,Z_> a.k.a. <R_,Z_> and <AZ_,Z_> combined
         MVT::MvTransMv( one, *S_, *Z_, *sHz );
-        DMT::SyncDeviceToHost( *sHz );
         //
         // Update scalars.
         rHz_old = rHz_;

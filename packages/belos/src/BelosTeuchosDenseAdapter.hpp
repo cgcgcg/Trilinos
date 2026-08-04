@@ -283,10 +283,6 @@ namespace Belos {
     { 
       return dm(i,j);
     }
-
-    static void SyncDeviceToHost(Teuchos::SerialDenseMatrix<int,ScalarType> &){ }
-
-    static void SyncHostToDevice(Teuchos::SerialDenseMatrix<int,ScalarType> &){ }
     //@}
 
     //@{ \name Operator methods

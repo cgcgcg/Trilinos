@@ -295,11 +295,9 @@ namespace Belos {
       const int ncols = MVT::GetNumberVecs(X);
       Teuchos::RCP<DM> XTX = DMT::Create(ncols, ncols);
       innerProd (X, X, *XTX);
-      DMT::SyncDeviceToHost(*XTX);
       for (int k = 0; k < ncols; ++k) {
         DMT::Value(*XTX,k,k) -= ONE;
       }
-      DMT::SyncHostToDevice(*XTX);
       return DMT::NormFrobenius(*XTX);
     }
 
@@ -361,7 +359,6 @@ namespace Belos {
         const magnitude_type theNorm = normVec[0];
         RCP<DM> B_jj = DMT::Subview(*B, 1, 1, j, j);
         DMT::Value(*B_jj,0,0) = theNorm;
-        DMT::SyncHostToDevice(*B_jj); 
         if (normVec[0] != STM::zero()) {
           MVT::MvScale (X_j, STS::one() / theNorm);
         } else {

@@ -443,8 +443,6 @@ namespace Belos {
       //  Make a view and then copy the RHS of the least squares problem.  DON'T OVERWRITE IT!
       //
       Teuchos::RCP<DM> y = DMT::SubviewCopy(*z_, curDim_, 1);
-      DMT::SyncDeviceToHost( *y );
-      DMT::SyncDeviceToHost( *R_ );
       //
       //  Solve the least squares problem.
       //
@@ -464,12 +462,10 @@ namespace Belos {
       //
       if (U_ != Teuchos::null) {
 	Teuchos::RCP<DM> z = DMT::Create( recycledBlocks_, 1 );
-	DMT::SyncDeviceToHost( *H2_ );
         blas.GEMM( Teuchos::NO_TRANS, Teuchos::NO_TRANS, recycledBlocks_, 1, curDim_, one, 
 		   DMT::GetConstRawHostPtr(*B_), DMT::GetStride(*B_),
 		   DMT::GetConstRawHostPtr(*y), DMT::GetStride(*y),
 		   zero, DMT::GetRawHostPtr(*z), DMT::GetStride(*z));
-        DMT::SyncHostToDevice( *z );
         MVT::MvTimesMatAddMv( -one, *U_, *z, one, *currentUpdate );
       }
     }
@@ -492,7 +488,6 @@ namespace Belos {
       norms->resize( 1 );                                          
     
     if (norms) {
-      DMT::SyncDeviceToHost( *z_ );
       const ScalarType curNativeResid = DMT::ValueConst(*z_,curDim_,0);
       (*norms)[0] = SCT::magnitude (curNativeResid);
     }
@@ -635,8 +630,6 @@ namespace Belos {
         lp_->apply(*Vprev,*Vnext);
         Vprev = Teuchos::null;
 
-	DMT::SyncHostToDevice(*H2_);
-
         // First, remove the recycled subspace (C) from Vnext and put coefficients in B.
         Teuchos::Array<Teuchos::RCP<const MV> > C(1, C_);
         Teuchos::RCP<DM> subB = DMT::Subview(*H2_, recycledBlocks_, 1, 0, ptrH00_+curDim_);
@@ -703,9 +696,6 @@ namespace Belos {
     //
     // QR factorization of Least-Squares system with Givens rotations
     //
-    DMT::SyncDeviceToHost(*R_);
-    DMT::SyncDeviceToHost(*z_);
-    //
     for (i=0; i<curDim; i++) {
       //
       // Apply previous Givens rotations to new column of Hessenberg matrix
@@ -722,9 +712,6 @@ namespace Belos {
     // Update RHS w/ new transformation
     //
     blas.ROT( 1, &(DMT::Value(*z_,curDim,0)), 1, &(DMT::Value(*z_,curDim+1,0)), 1, &cs_[curDim], &sn_[curDim] );
-    //
-    DMT::SyncHostToDevice(*R_);
-    DMT::SyncHostToDevice(*z_);
     //
   } // end updateLSQR()
 

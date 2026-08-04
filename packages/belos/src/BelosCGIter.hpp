@@ -448,7 +448,6 @@ class CGIter : virtual public CGIteration<ScalarType,MV,OP,DM> {
     // Compute first <r,z> a.k.a. rHz
     if (foldConvergenceDetectionIntoAllreduce_ && convTest_->getResNormType() == Belos::TwoNorm) {
       MVT::MvTransMv( one, *R_, *S_, *rHs );
-      DMT::SyncDeviceToHost( *rHs );
       rHr_ = DMT::ValueConst(*rHs,0,0);
       rHz[0] = DMT::ValueConst(*rHs,0,1);
     } else
@@ -508,7 +507,6 @@ class CGIter : virtual public CGIteration<ScalarType,MV,OP,DM> {
       //
       if (foldConvergenceDetectionIntoAllreduce_ && convTest_->getResNormType() == Belos::TwoNorm) {
         MVT::MvTransMv( one, *R_, *S_, *rHs );
-        DMT::SyncDeviceToHost( *rHs );
         rHr_ = DMT::ValueConst(*rHs,0,0);
         rHz[0] = DMT::ValueConst(*rHs,0,1);
       } else

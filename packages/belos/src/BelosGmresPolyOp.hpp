@@ -434,8 +434,6 @@ namespace Belos {
     {
       DM lhstemp = *DMT::SubviewCopy(AVtransAV, dim_, dim_);
       lapack.POTRF( 'U', dim_, DMT::GetRawHostPtr(lhstemp), DMT::GetStride(lhstemp), &infoInt);
-      
-      DMT::SyncHostToDevice(lhstemp);
       if(autoDeg == false)
       { 
         status = false;
@@ -478,7 +476,6 @@ namespace Belos {
       MVT::MvTransMv( SCT::one(), *AVsub, *V0, pCoeff_);
       lapack.POTRS( 'U', dim_, 1, DMT::GetRawHostPtr(lhs), DMT::GetStride(lhs), DMT::GetRawHostPtr(pCoeff_), DMT::GetStride(pCoeff_), &infoInt);
       if(infoInt != 0) 
-      DMT::SyncHostToDevice(pCoeff_);
       {
         std::cout << "BelosGmresPolyOp.hpp: LAPACK POTRS was not successful!!" << std::endl;
         std::cout << "Error code: " << infoInt << std::endl; 
@@ -565,8 +562,6 @@ namespace Belos {
     int rank = ortho_->normalize( *V_0, Teuchos::rcpFromRef(r0_) );
     TEUCHOS_TEST_FOR_EXCEPTION(rank != 1,GmresPolyOpOrthoFailure,
       "Belos::GmresPolyOp::generateArnoldiPoly(): Failed to compute initial block of orthonormal vectors for polynomial generation.");
-  
-    DMT::SyncDeviceToHost(r0_);
     // Set the new state and initialize the solver.
     GmresIterationState<ScalarType,MV,DM> newstate;
     newstate.V = V_0;
@@ -614,8 +609,6 @@ namespace Belos {
           Teuchos::NON_UNIT_DIAG, dim_, 1, SCT::one(),
                 DMT::GetConstRawHostPtr(*gmresState.R), DMT::GetStride(*gmresState.R),
                 DMT::GetRawHostPtr(y_), DMT::GetStride(y_) );
-      // DMT::SyncHostToDevice(*gmresState.R);  // Why sync this when the result is in y? Shouldn't y be sync'ed before update is computed?
-      DMT::SyncHostToDevice(y_);
     }
     else{ //Generate Roots Poly
     //Find Harmonic Ritz Values to use as polynomial roots:
@@ -629,7 +622,6 @@ namespace Belos {
       }
     }
     //Extra copy of H because equilibrate changes the matrix: 
-    DMT::SyncHostToDevice(H_);
     DM Htemp = *DMT::CreateCopy(H_);
 
     //View the m+1,m element and last col of H:

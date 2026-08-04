@@ -397,7 +397,6 @@ class MinresIter : virtual public MinresIteration<ScalarType,MV,OP,DM> {
 
     tmpDM = DMT::Create(1,1);
     MVT::MvTransMv( one, *newstate.Y, *Y_, *tmpDM);
-    DMT::SyncDeviceToHost(*tmpDM);
     beta1_ = DMT::ValueConst(*tmpDM,0,0);
 
     TEUCHOS_TEST_FOR_EXCEPTION( SCT::real(beta1_) < m_zero,
@@ -485,7 +484,6 @@ class MinresIter : virtual public MinresIteration<ScalarType,MV,OP,DM> {
 
       // alpha := dot(V, Y_)
       MVT::MvTransMv (one, *V, *Y_, *tmpDM);
-      DMT::SyncDeviceToHost(*tmpDM);
       alpha = DMT::ValueConst(*tmpDM,0,0);
 
       // y := y - alpha/beta r2
@@ -516,7 +514,6 @@ class MinresIter : virtual public MinresIteration<ScalarType,MV,OP,DM> {
       // Get new beta.
       oldBeta = beta;
       MVT::MvTransMv( one, *R2_, *Y_, *tmpDM);
-      DMT::SyncDeviceToHost(*tmpDM);
       beta = DMT::ValueConst(*tmpDM,0,0);
 
       // Intercept beta <= 0.

@@ -458,7 +458,6 @@ namespace Belos {
 
         DMT::Value(*alpha,i,i) = rHz[i] / pAp[i];
       }
-      DMT::SyncHostToDevice( *alpha );
 
       //
       // Update the solution std::vector x := x + alpha * P_

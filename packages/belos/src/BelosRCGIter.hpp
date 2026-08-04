@@ -547,16 +547,12 @@ namespace Belos {
         // mu = UTAU \ (AU'*z);
         Teuchos::RCP<DM> mu = DMT::Subview( *Delta_, recycleBlocks_, 1, 0, i_+1 );
         MVT::MvTransMv( one, *AU_, *z_, *mu );
-
-        DMT::SyncDeviceToHost( *mu );
-        DMT::SyncDeviceToHost( *LUUTAU_ );
         char TRANS = 'N';
         int info;
         lapack.GETRS( TRANS, recycleBlocks_, 1, DMT::GetConstRawHostPtr(*LUUTAU_), DMT::GetStride(*LUUTAU_), 
                       &(*ipiv_)[0], DMT::GetRawHostPtr(*mu), DMT::GetStride(*mu), &info );
         TEUCHOS_TEST_FOR_EXCEPTION(info != 0, CGIterationLAPACKFailure,
                            "Belos::RCGIter::solve(): LAPACK GETRS failed to compute a solution.");
-        DMT::SyncHostToDevice( *mu );
         // p = -(U*mu) + (beta*p) + z (in two steps)
         // p = (beta*p) + z;
         MVT::MvAddMv( (*Beta_)[Beta_i_], *p_, one, *z_, *pnext_ );

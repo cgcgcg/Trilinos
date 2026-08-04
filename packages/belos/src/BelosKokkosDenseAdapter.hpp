@@ -110,8 +110,6 @@ namespace Belos {
         int LDA = DMT::GetStride(*A_);
 
         IPIV_.resize( Min_MN );
-
-        DMT::SyncDeviceToHost(*A_);
         Scalar * Aptr = DMT::GetRawHostPtr(*A_);
 
         if (equilibrate_)
@@ -162,8 +160,6 @@ namespace Belos {
         else {
           lapack.GETRF(M, N, Aptr, LDA, &IPIV_[0], &INFO);
         }
-
-        DMT::SyncHostToDevice(*A_);
       }
 
       return INFO;
@@ -176,8 +172,6 @@ namespace Belos {
     int solve()
     {
       bool transpose = (TRANS_ != Teuchos::NO_TRANS) ? true : false;
-
-      DMT::SyncDeviceToHost(*X_);
 
       // LAPACK overwrites RHS vector with solution vector, so copy if necessary
       if (B_ != X_)
@@ -233,7 +227,6 @@ namespace Belos {
       }
 
       // Synchronize solution vector to the device
-      DMT::SyncHostToDevice(*X_);
 
       return INFO;
     }
@@ -335,8 +328,8 @@ namespace Belos {
     /// extra data syncs.
     /// The user must NOT hold onto this pointer after any data syncs. If you modify the
     /// data again after a sync, the view will not be marked as modified the second time.
-    static Scalar* GetRawHostPtr(DM & dm ) {
-      dm.sync_host();
+    static Scalar *GetRawHostPtr(DM &dm) {
+      SyncDeviceToHost(dm);
       dm.modify_host();
       return reinterpret_cast<Scalar*>(dm.view_host().data());
       //TODO: Is there any way that the user could hold on to this pointer...
@@ -350,7 +343,7 @@ namespace Belos {
     //! \brief Returns a raw pointer to const data on the host.
     static Scalar const * GetConstRawHostPtr(const DM & dm ) {
       // CAG: This is a bit naughty.
-      const_cast<DM*>(&dm)->sync_host();
+      SyncDeviceToHost(*const_cast<DM*>(&dm));
       return reinterpret_cast<Scalar const *>(dm.view_host().data());
     }
 
@@ -440,7 +433,7 @@ namespace Belos {
     static Scalar & Value( DM& dm, const int i, const int j )
     {
       // Mark as modified on host, since we don't know if it will be.
-      dm.sync_host();
+      SyncDeviceToHost(dm);
       dm.modify_host();
       return reinterpret_cast<Scalar&>((dm.view_host())(i,j));
     }
@@ -448,11 +441,12 @@ namespace Belos {
     //! \brief Access a const reference to the (i,j) entry of \c dm, \c e_i^T dm e_j.
     static const Scalar & ValueConst( const DM& dm, const int i, const int j ) {
       // CAG: This is a bit naughty.
-      const_cast<DM*>(&dm)->sync_host();
+      SyncDeviceToHost(*const_cast<DM*>(&dm));
       return reinterpret_cast<Scalar const &>((dm.view_host())(i,j));
     }
 
-    //! \brief If an accelorator is in use, sync it to device on this call.
+  private:
+    //! \brief If an accelerator is in use, sync it to device on this call.
     //
     //  \note The only Belos function that results in a need to sync to
     //  host is MvTransMv. You MUST call SyncDeviceToHost before calling
@@ -461,39 +455,36 @@ namespace Belos {
     //  and perform computations only on the host.
     //
     static void SyncDeviceToHost(DM & dm) {
-      if(dm.need_sync_host()){
-        if(dm.view_host().span_is_contiguous() && dm.view_device().span_is_contiguous()){
-        dm.sync_host();}
-        else{
-          DM compat_view("compat view",dm.extent_int(0),dm.extent_int(1));
-          Kokkos::deep_copy(compat_view,dm);
-          compat_view.sync_host();
-          Kokkos::deep_copy(dm,compat_view);
-          dm.clear_sync_state();
-        }
+      if (dm.span_is_contiguous()) {
+        dm.sync_host();
+      } else if (dm.need_sync_host()) {
+        DM compat_view("compat view", dm.extent_int(0), dm.extent_int(1));
+        Kokkos::deep_copy(compat_view, dm);
+        compat_view.sync_host();
+        Kokkos::deep_copy(dm, compat_view);
+        dm.clear_sync_state();
       }
     }
 
     static void SyncHostToDevice(DM & dm) {
-      if(dm.need_sync_device()){
-        if(dm.view_host().span_is_contiguous() && dm.view_device().span_is_contiguous()){
-          dm.sync_device();
-        }
-        else{
-          DM compat_view("compat view",dm.extent_int(0),dm.extent_int(1));
-          Kokkos::deep_copy(compat_view,dm);
-          compat_view.sync_host();
-          Kokkos::deep_copy(dm,compat_view);
-          dm.clear_sync_state();
-        }
+      if (dm.span_is_contiguous()) {
+        dm.sync_device();
+      } else if (dm.need_sync_device()) {
+        DM compat_view("compat view", dm.extent_int(0), dm.extent_int(1));
+        Kokkos::deep_copy(compat_view, dm);
+        compat_view.sync_device();
+        Kokkos::deep_copy(dm, compat_view);
+        dm.clear_sync_state();
       }
     }
+
+  public:
     //@}
     //@{ \name Operator methods
 
     //!  \brief Adds sourceDM to thisDM and returns answer in thisDM.
     static void Add( DM& thisDM, const DM& sourceDM) {
-      thisDM.sync_device();
+      SyncHostToDevice(thisDM);
       KokkosBlas::axpy(1.0,sourceDM.view_device(), thisDM.view_device()); //axpy(alpha,x,y), y = y + alpha*x
       thisDM.modify_device();
     }
@@ -507,7 +498,7 @@ namespace Belos {
 
     //!  \brief Multiply all entries by a scalar. DM = value.*DM
     static void Scale( DM& dm, Scalar value) {
-      dm.sync_device();
+      SyncHostToDevice(dm);
       KokkosBlas::scal( dm.view_device(), value, dm.view_device());
       dm.modify_device();
     }
@@ -532,7 +523,7 @@ namespace Belos {
       using KAT = KokkosKernels::ArithTraits<IST>;
       using mag_t = typename KAT::mag_type;
       // CAG: This is a bit naughty.
-      const_cast<DM*>(&dm)->sync_device();
+      SyncHostToDevice(*const_cast<DM*>(&dm));
       mag_t frobNorm;
       Kokkos::parallel_reduce(Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {dm.extent(0), dm.extent(1)}),
           KOKKOS_LAMBDA(size_t i, size_t j, mag_t& lfrobNorm)
@@ -548,7 +539,7 @@ namespace Belos {
       using KAT = KokkosKernels::ArithTraits<IST>;
       using mag_t = typename KAT::mag_type;
       // CAG: This is a bit naughty.
-      const_cast<DM*>(&dm)->sync_device();
+      SyncHostToDevice(*const_cast<DM*>(&dm));
       mag_t max_sum = 0;
 
       Kokkos::parallel_reduce(dm.extent(1), KOKKOS_LAMBDA(const int j, mag_t& norm) {
