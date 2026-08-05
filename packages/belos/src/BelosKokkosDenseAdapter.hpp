@@ -482,7 +482,7 @@ namespace Belos {
         else{
           DM compat_view("compat view",dm.extent_int(0),dm.extent_int(1));
           Kokkos::deep_copy(compat_view,dm);
-          compat_view.sync_host();
+          compat_view.sync_device();
           Kokkos::deep_copy(dm,compat_view);
           dm.clear_sync_state();
         }
@@ -494,6 +494,8 @@ namespace Belos {
     //!  \brief Adds sourceDM to thisDM and returns answer in thisDM.
     static void Add( DM& thisDM, const DM& sourceDM) {
       thisDM.sync_device();
+      // CAG: This is a bit naughty.
+      const_cast<DM*>(&sourceDM)->sync_device();
       KokkosBlas::axpy(1.0,sourceDM.view_device(), thisDM.view_device()); //axpy(alpha,x,y), y = y + alpha*x
       thisDM.modify_device();
     }

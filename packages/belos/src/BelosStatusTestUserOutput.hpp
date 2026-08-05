@@ -34,7 +34,7 @@ namespace Belos {
     \brief A special StatusTest for printing other status tests in a simple format.
 
   */
-template <class ScalarType, class MV, class OP, class DM>
+template <class ScalarType, class MV, class OP, class DM = Belos::DefaultDenseMatrix<int, ScalarType>>
 class StatusTestUserOutput : public StatusTestOutput<ScalarType,MV,OP,DM> {
 
   typedef MultiVecTraits<ScalarType,MV,DM> MVT;

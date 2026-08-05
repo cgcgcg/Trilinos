@@ -163,8 +163,8 @@ namespace Belos {
   /// \warning This interface is experimental and therefore subject to
   ///   change or removal at any time.  Do not rely on the stability
   ///   of this interface.
-  template<class Scalar>
-  class OperatorInnerSolver : public Operator<Scalar> {
+  template<class Scalar, class DM = DefaultDenseMatrix<int, Scalar>>
+  class OperatorInnerSolver : public Operator<Scalar, DM> {
   public:
     typedef Scalar scalar_type;
     typedef MultiVec<Scalar, DM> multivector_type;
@@ -255,14 +255,14 @@ namespace Belos {
   ///   change or removal at any time.  Do not rely on the stability
   ///   of this interface.
   ///
-  template <class Scalar>
-  class InnerSolverTraits<Scalar, MultiVec<Scalar>, Operator<Scalar> > {
+  template <class Scalar, class DM = DefaultDenseMatrix<int, Scalar>>
+  class InnerSolverTraits<Scalar, MultiVec<Scalar>, Operator<Scalar, DM> > {
   public:
     typedef Scalar scalar_type;
     typedef MultiVec<scalar_type, DM> multivector_type;
     typedef Operator<scalar_type, DM> operator_type;
     typedef InnerSolver<scalar_type, multivector_type, operator_type, DM> inner_solver_type;
-    typedef OperatorInnerSolver<scalar_type> wrapper_type;
+    typedef OperatorInnerSolver<scalar_type, DM> wrapper_type;
 
     /// \brief Wrap the given inner solver in a wrapper_type.
     ///

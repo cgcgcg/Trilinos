@@ -27,16 +27,15 @@
 #include <Teuchos_ParameterList.hpp>
 #include <Teuchos_GlobalMPISession.hpp>
 
-template <typename ScalarType>
-int run(int argc, char *argv[])
+template <class ScalarType, class DM>
+int run(Teuchos::CommandLineProcessor& cmdp, int argc, char *argv[])
 { 
   using Teuchos::Comm;
   using Teuchos::RCP;
   using Teuchos::rcpFromRef;
   using Teuchos::tuple;  
   
-  using BST = typename Tpetra::MultiVector<ScalarType>::scalar_type;
-  using ST = typename std::complex<BST>;
+  using ST = typename Tpetra::MultiVector<ScalarType>::scalar_type;
 
   using SCT = typename Teuchos::ScalarTraits<ST>;
   using MT = typename SCT::magnitudeType;
@@ -44,7 +43,7 @@ int run(int argc, char *argv[])
   using OP = typename Tpetra::Operator<ST>;
   using MV = typename Tpetra::MultiVector<ST>;
   using OPT = typename Belos::OperatorTraits<ST,MV,OP>;
-  using MVT = typename Belos::MultiVecTraits<ST,MV>;
+  using MVT = typename Belos::MultiVecTraits<ST,MV,DM>;
 
   using tcrsmatrix_t = Tpetra::CrsMatrix<ST>;
 
@@ -63,7 +62,6 @@ int run(int argc, char *argv[])
   std::string filename("mhd1280b.cua");
   MT tol = 1.0e-5;     // relative residual tolerance
 
-  Teuchos::CommandLineProcessor cmdp(false,true);
   cmdp.setOption("verbose","quiet",&verbose,"Print messages and results.");
   cmdp.setOption("debug","nodebug",&debug,"Run debugging checks.");
   cmdp.setOption("frequency",&frequency,"Solvers frequency for printing residuals (#iters).");
@@ -132,7 +130,7 @@ int run(int argc, char *argv[])
   }
 
   // Start the BiCGStab iteration
-  Belos::BiCGStabSolMgr<ST,MV,OP> solver( rcpFromRef(problem), rcpFromRef(belosList) );
+  Belos::BiCGStabSolMgr<ST,MV,OP,DM> solver( rcpFromRef(problem), rcpFromRef(belosList) );
 
   // Print out information about problem
   if (proc_verbose) {
@@ -199,10 +197,11 @@ int run(int argc, char *argv[])
   }
   return 0;
 
-} // end test_gcrodr_complex_hb.cpp
-
-int main(int argc, char *argv[]) {
-  return run<double>(argc, argv);
-  // return run<float>(argc, argv);
 }
 
+#define BELOS_DEFAULT_SCALAR typename Tpetra::MultiVector<std::complex<double>>::scalar_type
+#include "BelosTpetraTestMain.hpp"
+
+int main(int argc, char* argv[]) {
+  return common_main(argc, argv);
+}

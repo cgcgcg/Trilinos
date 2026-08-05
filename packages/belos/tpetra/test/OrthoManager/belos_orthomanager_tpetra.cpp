@@ -397,7 +397,7 @@ run (Teuchos::CommandLineProcessor& cmdp, int argc, char *argv[])
     {
       typedef std::complex<Tpetra::MultiVector<>::scalar_type> scalar_type;
       success = runTest<scalar_type, local_ordinal_type,
-              global_ordinal_type, node_type> (comm);
+                        global_ordinal_type, node_type, DM> (comm);
       if (success) {
         // The Trilinos test framework depends on seeing this message,
         // so don't rely on the OutputManager to report it correctly.

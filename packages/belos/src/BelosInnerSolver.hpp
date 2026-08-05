@@ -40,7 +40,7 @@ namespace Belos {
     using Teuchos::RCP;
     using Teuchos::rcp;
     typedef LinearProblem<Scalar, MV, OP, DM> lp_type;
-    typedef MultiVecTraits<Scalar, MV> MVT;
+    typedef MultiVecTraits<Scalar, MV, DM> MVT;
 
     RCP<const OP> A = problem->getOperator (); 
     RCP<MV> X_orig = problem->getLHS ();

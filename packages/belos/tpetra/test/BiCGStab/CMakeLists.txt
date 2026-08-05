@@ -20,3 +20,23 @@ TRIBITS_COPY_FILES_TO_BINARY_DIR(Tpetra_CopyTestBiCGSTABFiles
   SOURCE_FILES cage4.hb
   EXEDEPS Tpetra_BiCGStab_hb
   )
+
+IF (Tpetra_INST_COMPLEX_DOUBLE)
+
+    # This test fails.
+
+    # BELOS_ADD_EXECUTABLE_AND_TEUCHOS_AND_KOKKOS_TESTS(
+    TRIBITS_ADD_EXECUTABLE(
+      Tpetra_BiCGStab_complex_hb
+      SOURCES test_bicgstab_complex_hb.cpp
+      # ARGS
+      #   "--verbose --filename=mhd1280b.cua"
+      )
+
+    TRIBITS_COPY_FILES_TO_BINARY_DIR(CopyTpetraBiCGStabComplexFiles
+      SOURCE_DIR ${Belos_SOURCE_DIR}/testmatrices
+      SOURCE_FILES mhd1280b.cua
+      EXEDEPS Tpetra_BiCGStab_complex_hb
+    )
+
+ENDIF()

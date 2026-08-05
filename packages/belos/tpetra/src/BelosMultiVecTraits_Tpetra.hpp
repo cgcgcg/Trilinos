@@ -958,6 +958,7 @@ namespace Belos {
     using MV = ::Tpetra::MultiVector<Scalar, LO, GO, Node>;
     using IST = typename MV::impl_scalar_type;
     using DM = typename ::Tpetra::MultiVector<Scalar,LO,GO,Node>::wrapped_dual_view_type::DVT;
+    using DMT = DenseMatTraits<Scalar,DM>;
     using MVGen = TpetraMVGeneralTraits<Scalar,LO,GO,Node> ;
 
   public:
@@ -1006,14 +1007,7 @@ namespace Belos {
 
       if (alpha == ZERO) {
         // Short-circuit, as required by BLAS semantics.
-        if (C.need_sync_device()) {
-          Kokkos::deep_copy(C.view_host(), IST(alpha));
-          C.modify_host();
-          C.sync_device();
-        } else {
-          Kokkos::deep_copy(C.view_device(), IST(alpha));
-          C.modify_device();
-        }
+        DMT::PutScalar(C, alpha);
         return;
       }
       MV C_mv = impl::makeStaticLocalMultiVector(A,C);
@@ -1025,7 +1019,6 @@ namespace Belos {
 
       // C_mv = ZERO*C_mv + alpha*A(conjtrans)*B
       C_mv.multiply(Teuchos::CONJ_TRANS, Teuchos::NO_TRANS, alpha, A, B, ZERO);
-      C.modify_device();
     }
     
     //==============================================================

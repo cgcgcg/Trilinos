@@ -477,8 +477,8 @@ namespace Belos {
       //Compute rhs (AV)^T V0
       MVT::MvTransMv( SCT::one(), *AVsub, *V0, pCoeff_);
       lapack.POTRS( 'U', dim_, 1, DMT::GetRawHostPtr(lhs), DMT::GetStride(lhs), DMT::GetRawHostPtr(pCoeff_), DMT::GetStride(pCoeff_), &infoInt);
-      if(infoInt != 0) 
       DMT::SyncHostToDevice(pCoeff_);
+      if(infoInt != 0)
       {
         std::cout << "BelosGmresPolyOp.hpp: LAPACK POTRS was not successful!!" << std::endl;
         std::cout << "Error code: " << infoInt << std::endl; 

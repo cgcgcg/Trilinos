@@ -19,6 +19,7 @@
 
 #include "BelosStatusTest.hpp"
 #include "BelosLSQRIter.hpp"
+#include "BelosTypes.hpp"
 
 /*!  \class Belos::LSQRStatusTest
   \brief A Belos::StatusTest class for specifying convergence of LSQR.  The outer status tests passes if an inner
@@ -29,7 +30,7 @@
 namespace Belos {
 
 
-template <class ScalarType, class MV, class OP, class DM>
+template <class ScalarType, class MV, class OP, class DM = Belos::DefaultDenseMatrix<int, ScalarType>>
 class LSQRStatusTest: public Belos::StatusTest<ScalarType,MV,OP,DM> {
 
 public:

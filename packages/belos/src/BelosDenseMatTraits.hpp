@@ -153,7 +153,7 @@ View(const pointer_type &ptr, const IntType&... indices)
      *        the matrix will be maintained. For new entries that did not exist in the previous matrix, values will
      *        contain noise from memory. 
     */
-    static void Reshape( DM& dm, const int numrows, const int numcols, bool initZero = true)
+    static void Reshape( DM& dm, const int numrows, const int numcols, bool initZero = false)
     { UndefinedDenseMatTraits<ScalarType, DM>::notDefined(); }     
 
     //@}
