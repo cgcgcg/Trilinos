@@ -193,8 +193,7 @@ namespace Belos {
       if (equilibrate_)
       {
         // Apply equilibration scalings to RHS vector
-        MagnitudeType * R_tmp = &R_[0];
-        if (transpose && !spd_) R_tmp = &C_[0];
+        MagnitudeType * R_tmp = (transpose && !spd_) ? &C_[0] : &R_[0];
 
         Scalar * ptr = 0;
         for (int j=0; j<NRHS; j++) {
@@ -222,11 +221,14 @@ namespace Belos {
 
       if (equilibrate_)
       {
+        // Apply equilibration scalings to X vector
+        MagnitudeType * C_tmp = (spd_ || transpose) ? &R_[0] : &C_[0];
+
         Scalar * ptr = 0;
         for (int j=0; j<NRHS; j++) {
           ptr = X + j*LDX;
             for (int i=0; i<M; i++) {
-            *ptr = *ptr*R_[i];
+            *ptr = *ptr*C_tmp[i];
             ptr++;
           }
         }

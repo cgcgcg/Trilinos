@@ -42,7 +42,6 @@ extern void register_BlockCG_KDV (const bool verbose);
 extern void register_BlockGmres_KDV (const bool verbose);
 extern void register_FixedPoint_KDV (const bool verbose);
 extern void register_GCRODR_KDV (const bool verbose);
-extern void register_Gmres_KDV (const bool verbose);
 extern void register_GmresPoly_KDV (const bool verbose);
 extern void register_LSQR_KDV (const bool verbose);
 extern void register_Minres_KDV (const bool verbose);
@@ -50,6 +49,7 @@ extern void register_PCPG_KDV (const bool verbose);
 extern void register_PseudoBlockCG_KDV (const bool verbose);
 extern void register_PseudoBlockGmres_KDV (const bool verbose);
 extern void register_PseudoBlockTFQMR_KDV (const bool verbose);
+extern void register_RCG_KDV (const bool verbose);
 extern void register_TFQMR_KDV (const bool verbose);
 
 } // namespace Impl
@@ -96,6 +96,7 @@ void registerSolverFactory() {
   ::BelosTpetra::Impl::register_PseudoBlockCG_KDV (false);
   ::BelosTpetra::Impl::register_PseudoBlockGmres_KDV (false);
   ::BelosTpetra::Impl::register_PseudoBlockTFQMR_KDV (false);
+  ::BelosTpetra::Impl::register_RCG_KDV (false);
   ::BelosTpetra::Impl::register_TFQMR_KDV (false);
 }
 

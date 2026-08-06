@@ -1128,12 +1128,13 @@ namespace Belos {
       B_out = DMT::Create(ncols_X, ncols_X);
     } else {
       // Make sure that B is no smaller than numCols x numCols.
-      TEUCHOS_TEST_FOR_EXCEPTION(B->numRows() < ncols_X || B->numCols() < ncols_X,
+      TEUCHOS_TEST_FOR_EXCEPTION(DMT::GetNumRows(*B) < ncols_X ||
+                                 DMT::GetNumCols(*B) < ncols_X,
                          std::invalid_argument,
                          "normalizeOne: Input matrix B must be at "
                          "least " << ncols_X << " x " << ncols_X
-                         << ", but is instead " << B->numRows()
-                         << " x " << B->numCols() << ".");
+                         << ", but is instead " << DMT::GetNumRows(*B)
+                         << " x " << DMT::GetNumCols(*B) << ".");
       // Create a view of the ncols_X by ncols_X upper left
       // submatrix of *B.  TSQR will write the normalization
       // coefficients there.
@@ -1686,10 +1687,10 @@ namespace Belos {
     } else {
       // Make sure that B is no smaller than numCols x numCols.
       TEUCHOS_TEST_FOR_EXCEPTION(
-        B->numRows() < numCols || B->numCols() < numCols, std::invalid_argument,
+        DMT::GetNumRows(*B) < numCols || DMT::GetNumCols(*B) < numCols, std::invalid_argument,
         "TsqrOrthoManagerImpl::normalizeImpl: Input matrix B must be at least "
-        << numCols << " x " << numCols << ", but is instead " << B->numRows ()
-        << " x " << B->numCols() << ".");
+        << numCols << " x " << numCols << ", but is instead " << DMT::GetNumRows (*B)
+        << " x " << DMT::GetNumCols(*B) << ".");
       // Create a view of the numCols x numCols upper left submatrix
       // of *B.  TSQR will write the normalization coefficients there.
       B_out = DMT::Subview(*B, numCols, numCols);
