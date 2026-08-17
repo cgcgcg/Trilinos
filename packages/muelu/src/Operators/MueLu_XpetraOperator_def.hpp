@@ -17,8 +17,9 @@ namespace MueLu {
 
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 XpetraOperator<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
-    XpetraOperator(const RCP<MueLu::Hierarchy<Scalar, LocalOrdinal, GlobalOrdinal, Node> >& H)
-  : Hierarchy_(H) {}
+    XpetraOperator(const RCP<MueLu::Hierarchy<Scalar, LocalOrdinal, GlobalOrdinal, Node> >& H, int maxIts)
+  : Hierarchy_(H)
+  , maxIts_(maxIts) {}
 
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 XpetraOperator<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
@@ -63,7 +64,7 @@ void XpetraOperator<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
       TEUCHOS_TEST_FOR_EXCEPTION(A->getDomainMap()->isSameAs(*(Y.getMap())) == false, std::logic_error,
                                  "MueLu::XpetraOperator::apply: map of Y is incompatible with domain map of A");
     }
-    Hierarchy_->Iterate(X, Y, 1, true);
+    Hierarchy_->Iterate(X, Y, maxIts_, true);
   } catch (std::exception& e) {
     // FIXME add message and rethrow
     std::cerr << "Caught an exception in MueLu::XpetraOperator::apply():" << std::endl

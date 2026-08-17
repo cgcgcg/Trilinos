@@ -34,7 +34,7 @@ class XpetraOperator : public Xpetra::Operator<Scalar, LocalOrdinal, GlobalOrdin
   //@{
 
   //! Constructor
-  XpetraOperator(const RCP<MueLu::Hierarchy<Scalar, LocalOrdinal, GlobalOrdinal, Node> >& H);
+  XpetraOperator(const RCP<MueLu::Hierarchy<Scalar, LocalOrdinal, GlobalOrdinal, Node> >& H, int maxIts = 1);
 
   //! Destructor.
   virtual ~XpetraOperator();
@@ -76,6 +76,7 @@ class XpetraOperator : public Xpetra::Operator<Scalar, LocalOrdinal, GlobalOrdin
 
  private:
   RCP<MueLu::Hierarchy<Scalar, LocalOrdinal, GlobalOrdinal, Node> > Hierarchy_;
+  int maxIts_;
 };
 
 }  // namespace MueLu
