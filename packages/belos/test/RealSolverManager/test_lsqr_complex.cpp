@@ -38,8 +38,7 @@
 // arithmetic support enabled.
 //
 
-TEUCHOS_UNIT_TEST( LSQR, RealDoesNotThrow )
-{
+TEUCHOS_UNIT_TEST(LSQR, RealDoesNotThrow) {
   using Teuchos::RCP;
   using Teuchos::rcp;
   typedef double ST;
@@ -50,11 +49,10 @@ TEUCHOS_UNIT_TEST( LSQR, RealDoesNotThrow )
   typedef Belos::LSQRSolMgr<ST, MV, OP> sol_mgr_type;
 
   RCP<sol_mgr_type> solver;
-  TEST_NOTHROW( solver = rcp (new sol_mgr_type ()) );
+  TEST_NOTHROW(solver = rcp(new sol_mgr_type()));
 }
 
-TEUCHOS_UNIT_TEST( LSQR, ComplexThrows )
-{
+TEUCHOS_UNIT_TEST(LSQR, ComplexThrows) {
   using Teuchos::RCP;
   using Teuchos::rcp;
   typedef std::complex<double> ST;
@@ -65,6 +63,6 @@ TEUCHOS_UNIT_TEST( LSQR, ComplexThrows )
   typedef Belos::LSQRSolMgr<ST, MV, OP> sol_mgr_type;
 
   // no longer throws due to DII system needing to make dummy constructor
-  RCP<sol_mgr_type> solver = rcp (new sol_mgr_type ());
-  TEST_THROW( solver->getNumIters() , std::logic_error ); // throws!
+  RCP<sol_mgr_type> solver = rcp(new sol_mgr_type());
+  TEST_THROW(solver->getNumIters(), std::logic_error);  // throws!
 }

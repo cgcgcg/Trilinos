@@ -1,4 +1,3 @@
-
 TRIBITS_INCLUDE_DIRECTORIES(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR}/../MVOPTester)
 
 ASSERT_DEFINED(Teuchos_ENABLE_COMPLEX)
@@ -20,16 +19,11 @@ IF(Teuchos_ENABLE_COMPLEX)
   # ScalarType.  However, in that case, the TEST_THROW macro should be
   # changed to TEST_NOTHROW, and the macro's second argument should be
   # removed.
-  # 
+  #
   # This test requires that Trilinos was compiled with complex
   # arithmetic support enabled.
   #
-  TRIBITS_ADD_EXECUTABLE_AND_TEST(
-    test_gcrodr_complex
-    SOURCES
-      test_gcrodr_complex.cpp
-      ${TEUCHOS_STD_UNIT_TEST_MAIN}
-    )
+  TRIBITS_ADD_EXECUTABLE_AND_TEST(test_gcrodr_complex SOURCES test_gcrodr_complex.cpp ${TEUCHOS_STD_UNIT_TEST_MAIN})
 
   #
   # mfh 20 Jan 2014: This test ensures the following:
@@ -46,16 +40,11 @@ IF(Teuchos_ENABLE_COMPLEX)
   # ScalarType.  However, in that case, the TEST_THROW macro should be
   # changed to TEST_NOTHROW, and the macro's second argument should be
   # removed.
-  # 
+  #
   # This test requires that Trilinos was compiled with complex
   # arithmetic support enabled.
   #
-  TRIBITS_ADD_EXECUTABLE_AND_TEST(
-    test_rcg_complex
-    SOURCES
-      test_rcg_complex.cpp
-      ${TEUCHOS_STD_UNIT_TEST_MAIN}
-    )
+  TRIBITS_ADD_EXECUTABLE_AND_TEST(test_rcg_complex SOURCES test_rcg_complex.cpp ${TEUCHOS_STD_UNIT_TEST_MAIN})
 
   #
   # mfh 20 Jan 2014: This test ensures the following:
@@ -72,16 +61,11 @@ IF(Teuchos_ENABLE_COMPLEX)
   # ScalarType.  However, in that case, the TEST_THROW macro should be
   # changed to TEST_NOTHROW, and the macro's second argument should be
   # removed.
-  # 
+  #
   # This test requires that Trilinos was compiled with complex
   # arithmetic support enabled.
   #
-  TRIBITS_ADD_EXECUTABLE_AND_TEST(
-    test_lsqr_complex
-    SOURCES
-      test_lsqr_complex.cpp
-      ${TEUCHOS_STD_UNIT_TEST_MAIN}
-    )
+  TRIBITS_ADD_EXECUTABLE_AND_TEST(test_lsqr_complex SOURCES test_lsqr_complex.cpp ${TEUCHOS_STD_UNIT_TEST_MAIN})
 
   #
   # mfh 20 Jan 2014: This test ensures that Belos::SolverFactory can
@@ -91,11 +75,6 @@ IF(Teuchos_ENABLE_COMPLEX)
   # This test requires that Trilinos was compiled with complex
   # arithmetic support enabled.
   #
-  TRIBITS_ADD_EXECUTABLE_AND_TEST(
-    test_factory_complex
-    SOURCES
-      test_factory_complex.cpp
-      ${TEUCHOS_STD_UNIT_TEST_MAIN}
-    )
+  TRIBITS_ADD_EXECUTABLE_AND_TEST(test_factory_complex SOURCES test_factory_complex.cpp ${TEUCHOS_STD_UNIT_TEST_MAIN})
 
 ENDIF(Teuchos_ENABLE_COMPLEX)

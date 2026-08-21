@@ -19,9 +19,8 @@
 namespace BelosTpetra {
 namespace Impl {
 
-template<class SC, class LO, class GO, class NT>
-void register_Cg_tmpl (const bool verbose)
-{
+template <class SC, class LO, class GO, class NT>
+void register_Cg_tmpl(const bool verbose) {
   using ::Belos::Impl::registerSolverSubclassForTypes;
   using MV = ::Tpetra::MultiVector<SC, LO, GO, NT>;
   using OP = ::Tpetra::Operator<SC, LO, GO, NT>;
@@ -29,17 +28,17 @@ void register_Cg_tmpl (const bool verbose)
   if (verbose) {
     using Teuchos::TypeNameTraits;
     std::cout << "Registering BelosTpetra CgSolverManager<"
-	      << TypeNameTraits<SC>::name () << ", "
-	      << TypeNameTraits<LO>::name () << ", "
-	      << TypeNameTraits<GO>::name () << ", "
-	      << TypeNameTraits<NT>::name () << ">" << std::endl;
+              << TypeNameTraits<SC>::name() << ", "
+              << TypeNameTraits<LO>::name() << ", "
+              << TypeNameTraits<GO>::name() << ", "
+              << TypeNameTraits<NT>::name() << ">" << std::endl;
   }
   const char solverName[] = "TPETRA CG";
 
   {
-    using DM = ::Teuchos::SerialDenseMatrix<int, SC>;
+    using DM          = ::Teuchos::SerialDenseMatrix<int, SC>;
     using solver_type = CgSolverManager<SC, MV, OP>;
-    registerSolverSubclassForTypes<solver_type, SC, MV, OP, DM> (solverName);
+    registerSolverSubclassForTypes<solver_type, SC, MV, OP, DM>(solverName);
   }
 
   // {
@@ -55,19 +54,18 @@ void register_Cg_tmpl (const bool verbose)
   // }
 }
 
-void register_Cg (const bool verbose)
-{
+void register_Cg(const bool verbose) {
   TPETRA_ETI_MANGLING_TYPEDEFS()
 
 #ifdef BELOS_TPETRA_REGISTER_CG
-#  undef BELOS_TPETRA_REGISTER_CG
-#endif // BELOS_TPETRA_REGISTER_CG
-#define BELOS_TPETRA_REGISTER_CG( SC, LO, GO, NT ) register_Cg_tmpl<SC, LO, GO, NT> (verbose);
+#undef BELOS_TPETRA_REGISTER_CG
+#endif  // BELOS_TPETRA_REGISTER_CG
+#define BELOS_TPETRA_REGISTER_CG(SC, LO, GO, NT) register_Cg_tmpl<SC, LO, GO, NT>(verbose);
 
-  TPETRA_INSTANTIATE_SLGN_NO_ORDINAL_SCALAR( BELOS_TPETRA_REGISTER_CG )
+  TPETRA_INSTANTIATE_SLGN_NO_ORDINAL_SCALAR(BELOS_TPETRA_REGISTER_CG)
 
 #undef BELOS_TPETRA_REGISTER_CG
 }
 
-} // namespace Impl
-} // namespace BelosTpetra
+}  // namespace Impl
+}  // namespace BelosTpetra

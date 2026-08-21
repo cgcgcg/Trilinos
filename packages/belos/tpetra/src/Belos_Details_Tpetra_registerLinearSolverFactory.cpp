@@ -10,7 +10,7 @@
 #include "BelosConfigDefs.hpp"
 
 #ifdef HAVE_BELOS_TPETRA
-#include "BelosTpetraAdapter.hpp" // must go first
+#include "BelosTpetraAdapter.hpp"  // must go first
 #include "Belos_Details_LinearSolverFactory.hpp"
 #include "Belos_Details_registerLinearSolverFactory.hpp"
 #include "TpetraCore_ETIHelperMacros.h"
@@ -32,17 +32,17 @@ TPETRA_ETI_MANGLING_TYPEDEFS()
 // call it LCL_CALL and not LCL_INST.  We are just using the macros to
 // invoke this class method over the set of enabled template
 // parameters.
-#define LCL_CALL(SC, LO, GO, NT)                                               \
-  ::Belos::Details::LinearSolverFactory<                                       \
-      ::Tpetra::MultiVector<SC, LO, GO, NT>,                                   \
-      ::Tpetra::Operator<SC, LO, GO, NT>, SC,                                  \
-      typename ::Tpetra::MultiVector<SC, LO, GO, NT>::mag_type,                \
-      Teuchos::SerialDenseMatrix<int, SC>>::registerLinearSolverFactory();     \
-  ::Belos::Details::LinearSolverFactory<                                       \
-      ::Tpetra::MultiVector<SC, LO, GO, NT>,                                   \
-      ::Tpetra::Operator<SC, LO, GO, NT>, SC,                                  \
-      typename ::Tpetra::MultiVector<SC, LO, GO, NT>::mag_type,                \
-  typename ::Tpetra::MultiVector<SC, LO, GO, NT>::wrapped_dual_view_type::DVT>::registerLinearSolverFactory();
+#define LCL_CALL(SC, LO, GO, NT)                                           \
+  ::Belos::Details::LinearSolverFactory<                                   \
+      ::Tpetra::MultiVector<SC, LO, GO, NT>,                               \
+      ::Tpetra::Operator<SC, LO, GO, NT>, SC,                              \
+      typename ::Tpetra::MultiVector<SC, LO, GO, NT>::mag_type,            \
+      Teuchos::SerialDenseMatrix<int, SC>>::registerLinearSolverFactory(); \
+  ::Belos::Details::LinearSolverFactory<                                   \
+      ::Tpetra::MultiVector<SC, LO, GO, NT>,                               \
+      ::Tpetra::Operator<SC, LO, GO, NT>, SC,                              \
+      typename ::Tpetra::MultiVector<SC, LO, GO, NT>::mag_type,            \
+      typename ::Tpetra::MultiVector<SC, LO, GO, NT>::wrapped_dual_view_type::DVT>::registerLinearSolverFactory();
 
 namespace Belos {
 namespace Details {
@@ -55,8 +55,8 @@ void registerLinearSolverFactory() {
   TPETRA_INSTANTIATE_SLGN_NO_ORDINAL_SCALAR(LCL_CALL)
 }
 
-} // namespace Tpetra
-} // namespace Details
-} // namespace Belos
+}  // namespace Tpetra
+}  // namespace Details
+}  // namespace Belos
 
-#endif // HAVE_BELOS_TPETRA
+#endif  // HAVE_BELOS_TPETRA

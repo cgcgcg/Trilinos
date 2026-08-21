@@ -54,12 +54,12 @@ namespace Details {
 ///   Belos::Details::Epetra::registerLinearSolverFactory() for the
 ///   Epetra specialization.  Either of these requires an extern
 ///   declaration in your code.
-void registerLinearSolverFactory ();
+void registerLinearSolverFactory();
 
-} // namespace Details
-} // namespace Belos
+}  // namespace Details
+}  // namespace Belos
 
-namespace { // (anonymous)
+namespace {  // (anonymous)
 
 // \class RegisterLinearSolverFactory
 // \brief Register Belos' solver factory/ies with the central registry.
@@ -74,9 +74,9 @@ namespace { // (anonymous)
 // <tt>__attribute__((constructor))</tt>, without actually requiring
 // the syntax extension.)
 class RegisterLinearSolverFactory {
-public:
-  RegisterLinearSolverFactory () {
-    Belos::Details::registerLinearSolverFactory ();
+ public:
+  RegisterLinearSolverFactory() {
+    Belos::Details::registerLinearSolverFactory();
   }
 };
 
@@ -85,6 +85,6 @@ public:
 // Belos::Details::registerLinearSolverFactory().
 RegisterLinearSolverFactory registerIt;
 
-} // namespace (anonymous)
+}  // namespace
 
 #endif /* BELOS_DETAILS_REGISTERLINEARSOLVERFACTORY_HPP */

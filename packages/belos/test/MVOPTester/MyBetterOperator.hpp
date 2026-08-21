@@ -31,76 +31,74 @@
  *
  */
 template <class ScalarType, class DM = Belos::DefaultDenseMatrix<int, ScalarType>>
-class MyBetterOperator : public Belos::Operator<ScalarType, DM>
-{
-
-public:
-
+class MyBetterOperator : public Belos::Operator<ScalarType, DM> {
+ public:
   //! Constructor
-  MyBetterOperator(const int nrows, const int *colptr,
-                   const int nnz, const int *rowin, const ScalarType *vals)
-  : _nr(nrows), _nnz(nnz), _cptr(nrows+1), _rind(nnz), _vals(nnz)
-  {
-    std::copy<const int*,IntIter>(colptr,colptr+nrows+1,_cptr.begin());
-    std::copy<const int*,IntIter>(rowin,rowin+nnz,_rind.begin());
-    std::copy<const ScalarType*,STIter>(vals,vals+nnz,_vals.begin());
+  MyBetterOperator(const int nrows, const int* colptr,
+                   const int nnz, const int* rowin, const ScalarType* vals)
+    : _nr(nrows)
+    , _nnz(nnz)
+    , _cptr(nrows + 1)
+    , _rind(nnz)
+    , _vals(nnz) {
+    std::copy<const int*, IntIter>(colptr, colptr + nrows + 1, _cptr.begin());
+    std::copy<const int*, IntIter>(rowin, rowin + nnz, _rind.begin());
+    std::copy<const ScalarType*, STIter>(vals, vals + nnz, _vals.begin());
   }
 
   //! Deconstructor
-  ~MyBetterOperator()
-  { }
+  ~MyBetterOperator() {}
 
   //! Applies the matrix to a multivector.
   void Apply(const Belos::MultiVec<ScalarType, DM>& X,
              Belos::MultiVec<ScalarType, DM>& Y,
-             Belos::ETrans trans = Belos::NOTRANS) const
-  {
+             Belos::ETrans trans = Belos::NOTRANS) const {
     const MyMultiVec<ScalarType>* MyX;
     MyX = dynamic_cast<const MyMultiVec<ScalarType>*>(&X);
-    assert (MyX != 0);
+    assert(MyX != 0);
 
     MyMultiVec<ScalarType>* MyY;
     MyY = dynamic_cast<MyMultiVec<ScalarType>*>(&Y);
-    assert (MyY != 0);
+    assert(MyY != 0);
 
     // Initialize output std::vector to zero.
-    MyY->MvInit( Teuchos::ScalarTraits<ScalarType>::zero() );
+    MyY->MvInit(Teuchos::ScalarTraits<ScalarType>::zero());
 
-    assert (X.GetNumberVecs() == Y.GetNumberVecs());
-    assert (X.GetGlobalLength() == Y.GetGlobalLength());
+    assert(X.GetNumberVecs() == Y.GetNumberVecs());
+    assert(X.GetGlobalLength() == Y.GetGlobalLength());
 
     int nv = X.GetNumberVecs();
 
     // Apply operator
     int IA1, IA2, ri;
     ScalarType aval;
-    int i,j,v;
-    for (j=0; j<_nr; j++) {
-      IA1 = _cptr[j]-1;
-      IA2 = _cptr[j+1]-1;
-      for (i=IA1; i<IA2; i++) {
-        ri = _rind[i]-1;
+    int i, j, v;
+    for (j = 0; j < _nr; j++) {
+      IA1 = _cptr[j] - 1;
+      IA2 = _cptr[j + 1] - 1;
+      for (i = IA1; i < IA2; i++) {
+        ri   = _rind[i] - 1;
         aval = _vals[i];
-        for (v=0; v<nv; v++) {
-          (*MyY)[v][ri] += aval*(*MyX)[v][j];
+        for (v = 0; v < nv; v++) {
+          (*MyY)[v][ri] += aval * (*MyX)[v][j];
         }
       }
     }
   }
 
-  void Print( std::ostream& os ) {
-    for (int j=0; j<_nr; j++) {
-      int IA1 = _cptr[j]-1;
-      int IA2 = _cptr[j+1]-1;
-      for (int i=IA1; i<IA2; i++) {
-        os << "("<<_rind[i]-1<<","<<j<<")\t"<<_vals[i]<< std::endl;
+  void Print(std::ostream& os) {
+    for (int j = 0; j < _nr; j++) {
+      int IA1 = _cptr[j] - 1;
+      int IA2 = _cptr[j + 1] - 1;
+      for (int i = IA1; i < IA2; i++) {
+        os << "(" << _rind[i] - 1 << "," << j << ")\t" << _vals[i] << std::endl;
       }
     }
   }
 
-  private:
+ private:
   typedef typename std::vector<ScalarType>::iterator STIter;
-  typedef std::vector<int>::iterator        IntIter;
+  typedef std::vector<int>::iterator IntIter;
   //! Number of rows and columns
   int _nr, _nnz;
   //! Column pointers
@@ -111,4 +109,4 @@ public:
   std::vector<ScalarType> _vals;
 };
 
-#endif //MY_BETTER_OPERATOR_HPP
+#endif  // MY_BETTER_OPERATOR_HPP

@@ -17,24 +17,23 @@
 
 namespace Belos {
 
-template<class SC, class MV, class OP, class DM = DefaultDenseMatrix<int, SC>>
-class TpetraSolverFactory : public Impl::SolverFactoryParent<SC, MV, OP, DM>
-{
-  public:
-    TpetraSolverFactory() {
-      Details::Tpetra::registerSolverFactory();
-    };
+template <class SC, class MV, class OP, class DM = DefaultDenseMatrix<int, SC>>
+class TpetraSolverFactory : public Impl::SolverFactoryParent<SC, MV, OP, DM> {
+ public:
+  TpetraSolverFactory() {
+    Details::Tpetra::registerSolverFactory();
+  };
 };
 
 namespace Impl {
 
-template<class SC, class LO, class GO, class NT, class DM>
-class SolverFactorySelector<SC,Tpetra::MultiVector<SC, LO, GO, NT>,Tpetra::Operator<SC, LO, GO, NT>,DM> {
-  public:
-    typedef TpetraSolverFactory<SC,Tpetra::MultiVector<SC, LO, GO, NT>,Tpetra::Operator<SC, LO, GO, NT>, DM> type;
+template <class SC, class LO, class GO, class NT, class DM>
+class SolverFactorySelector<SC, Tpetra::MultiVector<SC, LO, GO, NT>, Tpetra::Operator<SC, LO, GO, NT>, DM> {
+ public:
+  typedef TpetraSolverFactory<SC, Tpetra::MultiVector<SC, LO, GO, NT>, Tpetra::Operator<SC, LO, GO, NT>, DM> type;
 };
 
-} // namespace Impl
-} // namespace Belos
+}  // namespace Impl
+}  // namespace Belos
 
-#endif // BELOSSOLVERFACTORY_TPETRA_HPP
+#endif  // BELOSSOLVERFACTORY_TPETRA_HPP

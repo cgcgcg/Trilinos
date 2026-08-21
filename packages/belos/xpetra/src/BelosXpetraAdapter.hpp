@@ -14,4 +14,4 @@
 #include <BelosXpetraAdapterMultiVector.hpp>
 #include <BelosSolverFactory_Xpetra.hpp>
 
-#endif // BELOS_XPETRA_ADAPTER_HPP
+#endif  // BELOS_XPETRA_ADAPTER_HPP

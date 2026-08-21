@@ -17,9 +17,8 @@
 namespace BelosTpetra {
 namespace Impl {
 
-template<class SC, class LO, class GO, class NT>
-void register_PseudoBlockTFQMR_tmpl (const bool verbose)
-{
+template <class SC, class LO, class GO, class NT>
+void register_PseudoBlockTFQMR_tmpl(const bool verbose) {
   using ::Belos::Impl::registerSolverSubclassForTypes;
   using MV = ::Tpetra::MultiVector<SC, LO, GO, NT>;
   using OP = ::Tpetra::Operator<SC, LO, GO, NT>;
@@ -27,32 +26,31 @@ void register_PseudoBlockTFQMR_tmpl (const bool verbose)
   if (verbose) {
     using Teuchos::TypeNameTraits;
     std::cout << "Registering BelosTpetra PseudoBlockTFQMRSolMgr<"
-              << TypeNameTraits<SC>::name () << ", "
-              << TypeNameTraits<LO>::name () << ", "
-              << TypeNameTraits<GO>::name () << ", "
-              << TypeNameTraits<NT>::name () << ">" << std::endl;
+              << TypeNameTraits<SC>::name() << ", "
+              << TypeNameTraits<LO>::name() << ", "
+              << TypeNameTraits<GO>::name() << ", "
+              << TypeNameTraits<NT>::name() << ">" << std::endl;
   }
   const char solverName[] = "PSEUDOBLOCK TFQMR";
   {
-    using DM = ::Teuchos::SerialDenseMatrix<int, SC>;
+    using DM          = ::Teuchos::SerialDenseMatrix<int, SC>;
     using solver_type = ::Belos::PseudoBlockTFQMRSolMgr<SC, MV, OP, DM>;
-    registerSolverSubclassForTypes<solver_type, SC, MV, OP, DM> (solverName);
+    registerSolverSubclassForTypes<solver_type, SC, MV, OP, DM>(solverName);
   }
 }
 
-void register_PseudoBlockTFQMR (const bool verbose)
-{
+void register_PseudoBlockTFQMR(const bool verbose) {
   TPETRA_ETI_MANGLING_TYPEDEFS()
 
 #ifdef BELOS_TPETRA_REGISTER_PSEUDOBLOCKTFQMR
-#  undef BELOS_TPETRA_REGISTER_PSEUDOBLOCKTFQMR
-#endif // BELOS_TPETRA_REGISTER_PSEUDOBLOCKTFQMR
-#define BELOS_TPETRA_REGISTER_PSEUDOBLOCKTFQMR( SC, LO, GO, NT ) register_PseudoBlockTFQMR_tmpl<SC, LO, GO, NT> (verbose);
+#undef BELOS_TPETRA_REGISTER_PSEUDOBLOCKTFQMR
+#endif  // BELOS_TPETRA_REGISTER_PSEUDOBLOCKTFQMR
+#define BELOS_TPETRA_REGISTER_PSEUDOBLOCKTFQMR(SC, LO, GO, NT) register_PseudoBlockTFQMR_tmpl<SC, LO, GO, NT>(verbose);
 
-  TPETRA_INSTANTIATE_SLGN_NO_ORDINAL_SCALAR( BELOS_TPETRA_REGISTER_PSEUDOBLOCKTFQMR )
+  TPETRA_INSTANTIATE_SLGN_NO_ORDINAL_SCALAR(BELOS_TPETRA_REGISTER_PSEUDOBLOCKTFQMR)
 
 #undef BELOS_TPETRA_REGISTER_PSEUDOBLOCKTFQMR
 }
 
-} // namespace Impl
-} // namespace BelosTpetra
+}  // namespace Impl
+}  // namespace BelosTpetra

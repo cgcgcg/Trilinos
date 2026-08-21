@@ -19,12 +19,12 @@ namespace Details {
 namespace Tpetra {
 
 /// \brief Register Belos' LinearSolverFactory for Tpetra objects.
-void registerLinearSolverFactory ();
+void registerLinearSolverFactory();
 
-} // namespace Tpetra
-} // namespace Details
-} // namespace Belos
+}  // namespace Tpetra
+}  // namespace Details
+}  // namespace Belos
 
-#endif // HAVE_BELOS_TPETRA
+#endif  // HAVE_BELOS_TPETRA
 
-#endif // BELOS_DETAILS_TPETRA_REGISTERLINEARSOLVERFACTORY_HPP
+#endif  // BELOS_DETAILS_TPETRA_REGISTERLINEARSOLVERFACTORY_HPP

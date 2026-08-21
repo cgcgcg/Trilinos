@@ -9,7 +9,7 @@
 
 #include "Belos_Details_registerLinearSolverFactory.hpp"
 #include "Belos_Details_LinearSolverFactory.hpp"
-#include "Teuchos_ConfigDefs.hpp" // for __attribute__((weak)) check
+#include "Teuchos_ConfigDefs.hpp"  // for __attribute__((weak)) check
 
 // FIXME (mfh 23 Aug 2015) Belos' main library is upstream from
 // libraries where Belos' Epetra and Tpetra specializations live.
@@ -21,11 +21,11 @@
 namespace Belos {
 namespace Details {
 namespace Tpetra {
-  extern void __attribute__((weak)) registerLinearSolverFactory ();
-} // namespace Tpetra
-} // namespace Details
-} // namespace Belos
-#endif // defined(HAVE_BELOS_TPETRA) && defined(HAVE_TEUCHOS_CXX_ATTRIBUTE_WEAK)
+extern void __attribute__((weak)) registerLinearSolverFactory();
+}  // namespace Tpetra
+}  // namespace Details
+}  // namespace Belos
+#endif  // defined(HAVE_BELOS_TPETRA) && defined(HAVE_TEUCHOS_CXX_ATTRIBUTE_WEAK)
 
 //
 // FIXME (mfh 23 Aug 2015) We should add Thyra as well.
@@ -34,18 +34,14 @@ namespace Tpetra {
 namespace Belos {
 namespace Details {
 
-void
-registerLinearSolverFactory ()
-{
+void registerLinearSolverFactory() {
 #if defined(HAVE_BELOS_TPETRA) && defined(HAVE_TEUCHOS_CXX_ATTRIBUTE_WEAK)
   // It's a weak symbol, so it might be NULL.
   if (::Belos::Details::Tpetra::registerLinearSolverFactory != NULL) {
-    ::Belos::Details::Tpetra::registerLinearSolverFactory ();
+    ::Belos::Details::Tpetra::registerLinearSolverFactory();
   }
-#endif // defined(HAVE_BELOS_TPETRA) && defined(HAVE_TEUCHOS_CXX_ATTRIBUTE_WEAK)
+#endif  // defined(HAVE_BELOS_TPETRA) && defined(HAVE_TEUCHOS_CXX_ATTRIBUTE_WEAK)
 }
 
-} // namespace Details
-} // namespace Belos
-
-
+}  // namespace Details
+}  // namespace Belos

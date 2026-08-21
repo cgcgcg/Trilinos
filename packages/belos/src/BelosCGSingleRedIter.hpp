@@ -42,98 +42,94 @@
 
 namespace Belos {
 
-  //! @name CGSingleRedIteration Structures
-  //@{
+//! @name CGSingleRedIteration Structures
+//@{
 
-  /** \brief Structure to contain pointers to CGSingleRedIteration state variables.
-   *
-   * This struct is utilized by CGSingleRedIteration::initialize() and CGSingleRedIteration::getState().
-   */
-  template <class ScalarType, class MV, class DM>
-  class CGSingleRedIterationState : public CGIterationStateBase<ScalarType, MV, DM> {
+/** \brief Structure to contain pointers to CGSingleRedIteration state variables.
+ *
+ * This struct is utilized by CGSingleRedIteration::initialize() and CGSingleRedIteration::getState().
+ */
+template <class ScalarType, class MV, class DM>
+class CGSingleRedIterationState : public CGIterationStateBase<ScalarType, MV, DM> {
+ public:
+  CGSingleRedIterationState() = default;
 
-  public:
-    CGSingleRedIterationState() = default;
+  CGSingleRedIterationState(Teuchos::RCP<const MV> tmp) {
+    initialize(tmp);
+  }
 
-    CGSingleRedIterationState(Teuchos::RCP<const MV> tmp) {
-      initialize(tmp);
-    }
+  virtual ~CGSingleRedIterationState() = default;
 
-    virtual ~CGSingleRedIterationState() = default;
+  void initialize(Teuchos::RCP<const MV> tmp, int _numVectors) {
+    using MVT = MultiVecTraits<ScalarType, MV, DM>;
 
-    void initialize(Teuchos::RCP<const MV> tmp, int _numVectors) {
-      using MVT = MultiVecTraits<ScalarType, MV, DM>;
+    TEUCHOS_ASSERT(_numVectors == 1);
 
-      TEUCHOS_ASSERT(_numVectors == 1);
+    // W = (AZ, R, Z)
+    W = MVT::Clone(*tmp, 3);
+    std::vector<int> index2(2, 0);
+    std::vector<int> index(1, 0);
 
-      // W = (AZ, R, Z)
-      W = MVT::Clone( *tmp, 3 );
-      std::vector<int> index2(2,0);
-      std::vector<int> index(1,0);
+    // S = (AZ, R)
+    index2[0] = 0;
+    index2[1] = 1;
+    S         = MVT::CloneViewNonConst(*W, index2);
 
-      // S = (AZ, R)
-      index2[0] = 0;
-      index2[1] = 1;
-      S = MVT::CloneViewNonConst( *W, index2 );
+    // U = (AZ, Z)
+    index2[0] = 0;
+    index2[1] = 2;
+    U         = MVT::CloneViewNonConst(*W, index2);
 
-      // U = (AZ, Z)
-      index2[0] = 0;
-      index2[1] = 2;
-      U = MVT::CloneViewNonConst( *W, index2 );
+    index[0] = 1;
+    this->R  = MVT::CloneViewNonConst(*W, index);
+    index[0] = 0;
+    AZ       = MVT::CloneViewNonConst(*W, index);
+    index[0] = 2;
+    this->Z  = MVT::CloneViewNonConst(*W, index);
 
-      index[0] = 1;
-      this->R = MVT::CloneViewNonConst( *W, index );
-      index[0] = 0;
-      AZ = MVT::CloneViewNonConst( *W, index );
-      index[0] = 2;
-      this->Z = MVT::CloneViewNonConst( *W, index );
+    // T = (R, Z)
+    index2[0] = 1;
+    index2[1] = 2;
+    T         = MVT::CloneViewNonConst(*W, index2);
 
-      // T = (R, Z)
-      index2[0] = 1;
-      index2[1] = 2;
-      T = MVT::CloneViewNonConst( *W, index2 );
+    // V = (AP, P)
+    V        = MVT::Clone(*tmp, 2);
+    index[0] = 0;
+    this->AP = MVT::CloneViewNonConst(*V, index);
+    index[0] = 1;
+    this->P  = MVT::CloneViewNonConst(*V, index);
 
-      // V = (AP, P)
-      V = MVT::Clone( *tmp, 2 );
-      index[0] = 0;
-      this->AP = MVT::CloneViewNonConst( *V, index );
-      index[0] = 1;
-      this->P = MVT::CloneViewNonConst( *V, index );
+    CGIterationStateBase<ScalarType, MV, DM>::initialize(tmp, _numVectors);
+  }
 
-      CGIterationStateBase<ScalarType, MV, DM>::initialize(tmp, _numVectors);
-    }
+  bool matches(Teuchos::RCP<const MV> tmp, int _numVectors = 1) const {
+    return (CGIterationStateBase<ScalarType, MV, DM>::matches(tmp, _numVectors) &&
+            !W.is_null() &&
+            !V.is_null() &&
+            !U.is_null() &&
+            !S.is_null() &&
+            !T.is_null() &&
+            !AZ.is_null());
+  }
 
-    bool matches(Teuchos::RCP<const MV> tmp, int _numVectors=1) const {
-      return (CGIterationStateBase<ScalarType, MV, DM>::matches(tmp, _numVectors) &&
-              !W.is_null() &&
-              !V.is_null() &&
-              !U.is_null() &&
-              !S.is_null() &&
-              !T.is_null() &&
-              !AZ.is_null());
-    }
+  Teuchos::RCP<MV> W;
+  Teuchos::RCP<MV> V;
+  Teuchos::RCP<MV> U;
+  Teuchos::RCP<MV> S;
+  Teuchos::RCP<MV> T;
+  Teuchos::RCP<MV> AZ;
+};
 
-    Teuchos::RCP<MV> W;
-    Teuchos::RCP<MV> V;
-    Teuchos::RCP<MV> U;
-    Teuchos::RCP<MV> S;
-    Teuchos::RCP<MV> T;
-    Teuchos::RCP<MV> AZ;
-
-  };
-
-template<class ScalarType, class MV, class OP, class DM>
-class CGSingleRedIter : virtual public CGIteration<ScalarType,MV,OP,DM> {
-
-  public:
-
+template <class ScalarType, class MV, class OP, class DM>
+class CGSingleRedIter : virtual public CGIteration<ScalarType, MV, OP, DM> {
+ public:
   //
   // Convenience typedefs
   //
-  using MVT = MultiVecTraits<ScalarType, MV, DM>;
-  using OPT = OperatorTraits<ScalarType, MV, OP>;
-  using DMT = DenseMatTraits<ScalarType, DM>;
-  using SCT = Teuchos::ScalarTraits<ScalarType>;
+  using MVT           = MultiVecTraits<ScalarType, MV, DM>;
+  using OPT           = OperatorTraits<ScalarType, MV, OP>;
+  using DMT           = DenseMatTraits<ScalarType, DM>;
+  using SCT           = Teuchos::ScalarTraits<ScalarType>;
   using MagnitudeType = typename SCT::magnitudeType;
 
   //! @name Constructors/Destructor
@@ -144,16 +140,15 @@ class CGSingleRedIter : virtual public CGIteration<ScalarType,MV,OP,DM> {
    * This constructor takes pointers required by the linear solver iteration, in addition
    * to a parameter list of options for the linear solver.
    */
-  CGSingleRedIter( const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > &problem,
-                   const Teuchos::RCP<OutputManager<ScalarType> > &printer,
-                   const Teuchos::RCP<StatusTest<ScalarType,MV,OP,DM> > &tester,
-                   const Teuchos::RCP<StatusTestGenResNorm<ScalarType,MV,OP,DM> > &convTester,
-                   Teuchos::ParameterList &params );
+  CGSingleRedIter(const Teuchos::RCP<LinearProblem<ScalarType, MV, OP, DM> > &problem,
+                  const Teuchos::RCP<OutputManager<ScalarType> > &printer,
+                  const Teuchos::RCP<StatusTest<ScalarType, MV, OP, DM> > &tester,
+                  const Teuchos::RCP<StatusTestGenResNorm<ScalarType, MV, OP, DM> > &convTester,
+                  Teuchos::ParameterList &params);
 
   //! Destructor.
   virtual ~CGSingleRedIter() = default;
   //@}
-
 
   //! @name Solver methods
   //@{
@@ -186,13 +181,12 @@ class CGSingleRedIter : virtual public CGIteration<ScalarType,MV,OP,DM> {
    * \note For any pointer in \c newstate which directly points to the multivectors in
    * the solver, the data is not copied.
    */
-  void initializeCG(Teuchos::RCP<CGIterationStateBase<ScalarType,MV,DM> > newstate, Teuchos::RCP<MV> R_0);
+  void initializeCG(Teuchos::RCP<CGIterationStateBase<ScalarType, MV, DM> > newstate, Teuchos::RCP<MV> R_0);
 
   /*! \brief Initialize the solver with the initial vectors from the linear problem
    *  or random data.
    */
-  void initialize()
-  {
+  void initialize() {
     initializeCG(Teuchos::null, Teuchos::null);
   }
 
@@ -202,37 +196,36 @@ class CGSingleRedIter : virtual public CGIteration<ScalarType,MV,OP,DM> {
    *
    * \returns A CGSingleRedIterationState object containing const pointers to the current solver state.
    */
-  Teuchos::RCP<CGIterationStateBase<ScalarType,MV,DM> > getState() const {
-    auto state = Teuchos::rcp(new CGSingleRedIterationState<ScalarType,MV,DM>());
-    state->W = W_;
-    state->V = V_;
-    state->U = U_;
-    state->S = S_;
-    state->T = T_;
-    state->R = R_;
-    state->Z = Z_;
-    state->P = P_;
-    state->AP = AP_;
-    state->AZ = AZ_;
+  Teuchos::RCP<CGIterationStateBase<ScalarType, MV, DM> > getState() const {
+    auto state = Teuchos::rcp(new CGSingleRedIterationState<ScalarType, MV, DM>());
+    state->W   = W_;
+    state->V   = V_;
+    state->U   = U_;
+    state->S   = S_;
+    state->T   = T_;
+    state->R   = R_;
+    state->Z   = Z_;
+    state->P   = P_;
+    state->AP  = AP_;
+    state->AZ  = AZ_;
     return state;
   }
 
-  void setState(Teuchos::RCP<CGIterationStateBase<ScalarType,MV,DM> >  state) {
-    auto s = Teuchos::rcp_dynamic_cast<CGSingleRedIterationState<ScalarType,MV,DM> >(state, true);
-    W_ = s->W;
-    V_ = s->V;
-    U_ = s->U;
-    S_ = s->S;
-    T_ = s->T;
-    R_ = s->R;
-    Z_ = s->Z;
-    P_ = s->P;
-    AP_ = s->AP;
-    AZ_ = s->AZ;
+  void setState(Teuchos::RCP<CGIterationStateBase<ScalarType, MV, DM> > state) {
+    auto s = Teuchos::rcp_dynamic_cast<CGSingleRedIterationState<ScalarType, MV, DM> >(state, true);
+    W_     = s->W;
+    V_     = s->V;
+    U_     = s->U;
+    S_     = s->S;
+    T_     = s->T;
+    R_     = s->R;
+    Z_     = s->Z;
+    P_     = s->P;
+    AP_    = s->AP;
+    AZ_    = s->AZ;
   }
 
   //@}
-
 
   //! @name Status methods
   //@{
@@ -241,15 +234,15 @@ class CGSingleRedIter : virtual public CGIteration<ScalarType,MV,OP,DM> {
   int getNumIters() const { return iter_; }
 
   //! \brief Reset the iteration count.
-  void resetNumIters( int iter = 0 ) { iter_ = iter; }
+  void resetNumIters(int iter = 0) { iter_ = iter; }
 
   //! Get the norms of the residuals native to the solver.
   //! \return A std::vector of length blockSize containing the native residuals.
-  Teuchos::RCP<const MV> getNativeResiduals( std::vector<MagnitudeType> *norms ) const;
+  Teuchos::RCP<const MV> getNativeResiduals(std::vector<MagnitudeType> *norms) const;
 
   //! Get the current update to the linear system.
   /*! \note This method returns a null pointer because the linear problem is current.
-  */
+   */
   Teuchos::RCP<MV> getCurrentUpdate() const { return Teuchos::null; }
 
   //@}
@@ -258,22 +251,23 @@ class CGSingleRedIter : virtual public CGIteration<ScalarType,MV,OP,DM> {
   //@{
 
   //! Get a constant reference to the linear problem.
-  const LinearProblem<ScalarType,MV,OP,DM>& getProblem() const { return *lp_; }
+  const LinearProblem<ScalarType, MV, OP, DM> &getProblem() const { return *lp_; }
 
   //! Get the blocksize to be used by the iterative solver in solving this linear problem.
   int getBlockSize() const { return 1; }
 
   //! \brief Set the blocksize to be used by the iterative solver in solving this linear problem.
   void setBlockSize(int blockSize) {
-    TEUCHOS_TEST_FOR_EXCEPTION(blockSize!=1,std::invalid_argument,
-		       "Belos::CGSingleRedIter::setBlockSize(): Cannot use a block size that is not one.");
+    TEUCHOS_TEST_FOR_EXCEPTION(blockSize != 1, std::invalid_argument,
+                               "Belos::CGSingleRedIter::setBlockSize(): Cannot use a block size that is not one.");
   }
 
   //! States whether the solver has been initialized or not.
   bool isInitialized() { return initialized_; }
 
   //! Sets whether or not to store the diagonal for condition estimation
-  void setDoCondEst(bool /* val */){/*ignored*/}
+  void setDoCondEst(bool /* val */) { /*ignored*/
+  }
 
   //! Gets the diagonal for condition estimation (NOT_IMPLEMENTED)
   Teuchos::ArrayView<MagnitudeType> getDiag() {
@@ -289,18 +283,17 @@ class CGSingleRedIter : virtual public CGIteration<ScalarType,MV,OP,DM> {
 
   //@}
 
-  private:
-
+ private:
   //
   // Internal methods
   //
 
   // Classes inputed through constructor that define the linear problem to be solved.
   //
-  const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> >    lp_;
-  const Teuchos::RCP<OutputManager<ScalarType> >          om_;
-  const Teuchos::RCP<StatusTest<ScalarType,MV,OP,DM> >       stest_;
-  const Teuchos::RCP<StatusTestGenResNorm<ScalarType,MV,OP,DM> >       convTest_;
+  const Teuchos::RCP<LinearProblem<ScalarType, MV, OP, DM> > lp_;
+  const Teuchos::RCP<OutputManager<ScalarType> > om_;
+  const Teuchos::RCP<StatusTest<ScalarType, MV, OP, DM> > stest_;
+  const Teuchos::RCP<StatusTestGenResNorm<ScalarType, MV, OP, DM> > convTest_;
 
   //
   // Current solver state
@@ -345,293 +338,278 @@ class CGSingleRedIter : virtual public CGIteration<ScalarType,MV,OP,DM> {
   Teuchos::RCP<MV> U_;
   // V_ = (AP_, P_)
   Teuchos::RCP<MV> V_;
-
 };
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  // Constructor.
-  template<class ScalarType, class MV, class OP, class DM>
-  CGSingleRedIter<ScalarType,MV,OP,DM>::CGSingleRedIter(const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > &problem,
-						     const Teuchos::RCP<OutputManager<ScalarType> > &printer,
-						     const Teuchos::RCP<StatusTest<ScalarType,MV,OP,DM> > &tester,
-                                                     const Teuchos::RCP<StatusTestGenResNorm<ScalarType,MV,OP,DM> > &convTester,
-						     Teuchos::ParameterList &params ):
-    lp_(problem),
-    om_(printer),
-    stest_(tester),
-    convTest_(convTester),
-    initialized_(false),
-    iter_(0)
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// Constructor.
+template <class ScalarType, class MV, class OP, class DM>
+CGSingleRedIter<ScalarType, MV, OP, DM>::CGSingleRedIter(const Teuchos::RCP<LinearProblem<ScalarType, MV, OP, DM> > &problem,
+                                                         const Teuchos::RCP<OutputManager<ScalarType> > &printer,
+                                                         const Teuchos::RCP<StatusTest<ScalarType, MV, OP, DM> > &tester,
+                                                         const Teuchos::RCP<StatusTestGenResNorm<ScalarType, MV, OP, DM> > &convTester,
+                                                         Teuchos::ParameterList &params)
+  : lp_(problem)
+  , om_(printer)
+  , stest_(tester)
+  , convTest_(convTester)
+  , initialized_(false)
+  , iter_(0) {
+  foldConvergenceDetectionIntoAllreduce_ = params.get<bool>("Fold Convergence Detection Into Allreduce", false);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// Setup the state storage.
+template <class ScalarType, class MV, class OP, class DM>
+void CGSingleRedIter<ScalarType, MV, OP, DM>::initializeCG(Teuchos::RCP<CGIterationStateBase<ScalarType, MV, DM> > newstate, Teuchos::RCP<MV> R_0) {
+  // Initialize the state storage if it isn't already.
+  Teuchos::RCP<const MV> lhsMV = lp_->getLHS();
+  Teuchos::RCP<const MV> rhsMV = lp_->getRHS();
+  Teuchos::RCP<const MV> tmp   = ((rhsMV != Teuchos::null) ? rhsMV : lhsMV);
+  TEUCHOS_ASSERT(!newstate.is_null());
+  if (!Teuchos::rcp_dynamic_cast<CGSingleRedIterationState<ScalarType, MV, DM> >(newstate, true)->matches(tmp, 1))
+    newstate->initialize(tmp, 1);
+  setState(newstate);
+
+  std::string errstr("Belos::CGSingleRedIter::initialize(): Specified multivectors must have a consistent length and width.");
+
   {
-    foldConvergenceDetectionIntoAllreduce_ = params.get<bool>("Fold Convergence Detection Into Allreduce",false);
-  }
+    TEUCHOS_TEST_FOR_EXCEPTION(MVT::GetGlobalLength(*newstate->R) != MVT::GetGlobalLength(*R_),
+                               std::invalid_argument, errstr);
+    TEUCHOS_TEST_FOR_EXCEPTION(MVT::GetNumberVecs(*newstate->R) != 1,
+                               std::invalid_argument, errstr);
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  // Setup the state storage.
-  template<class ScalarType, class MV, class OP, class DM>
-  void CGSingleRedIter<ScalarType,MV,OP,DM>::initializeCG(Teuchos::RCP<CGIterationStateBase<ScalarType,MV,DM> > newstate, Teuchos::RCP<MV> R_0)
-  {
-    // Initialize the state storage if it isn't already.
-    Teuchos::RCP<const MV> lhsMV = lp_->getLHS();
-    Teuchos::RCP<const MV> rhsMV = lp_->getRHS();
-    Teuchos::RCP<const MV> tmp = ( (rhsMV!=Teuchos::null)? rhsMV: lhsMV );
-    TEUCHOS_ASSERT(!newstate.is_null());
-    if (!Teuchos::rcp_dynamic_cast<CGSingleRedIterationState<ScalarType,MV,DM> >(newstate, true)->matches(tmp, 1))
-      newstate->initialize(tmp, 1);
-    setState(newstate);
-
-    std::string errstr("Belos::CGSingleRedIter::initialize(): Specified multivectors must have a consistent length and width.");
-
-    {
-
-      TEUCHOS_TEST_FOR_EXCEPTION( MVT::GetGlobalLength(*newstate->R) != MVT::GetGlobalLength(*R_),
-                          std::invalid_argument, errstr );
-      TEUCHOS_TEST_FOR_EXCEPTION( MVT::GetNumberVecs(*newstate->R) != 1,
-                          std::invalid_argument, errstr );
-
-      // Copy basis vectors from newstate into V
-      if (R_0 != R_) {
-        // copy over the initial residual (unpreconditioned).
-	MVT::Assign( *R_0, *R_ );
-      }
-
-      // Compute initial direction vectors
-      // Initially, they are set to the preconditioned residuals
-      //
-      if ( lp_->getLeftPrec() != Teuchos::null ) {
-        lp_->applyLeftPrec( *R_, *Z_ );
-        if ( lp_->getRightPrec() != Teuchos::null ) {
-          Teuchos::RCP<MV> tmp2 = MVT::Clone( *Z_, 1 );
-          lp_->applyRightPrec( *Z_, *tmp2 );
-          MVT::Assign( *tmp2, *Z_ );
-        }
-      }
-      else if ( lp_->getRightPrec() != Teuchos::null ) {
-        lp_->applyRightPrec( *R_, *Z_ );
-      }
-      else {
-        MVT::Assign( *R_, *Z_ );
-      }
-
-      // Multiply the current preconditioned residual vector by A and store in AZ_
-      lp_->applyOp( *Z_, *AZ_ );
-
-      // P_ := Z_
-      // Logically, AP_ := AZ_
-      MVT::Assign( *U_, *V_);
+    // Copy basis vectors from newstate into V
+    if (R_0 != R_) {
+      // copy over the initial residual (unpreconditioned).
+      MVT::Assign(*R_0, *R_);
     }
 
-    // The solver is initialized
-    initialized_ = true;
-  }
-
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  // Get the norms of the residuals native to the solver.
-  template<class ScalarType, class MV, class OP, class DM>
-  Teuchos::RCP<const MV>
-  CGSingleRedIter<ScalarType,MV,OP,DM>::getNativeResiduals( std::vector<MagnitudeType> *norms ) const {
-    if (convTest_->getResNormType() == Belos::PreconditionerNorm) {
-      (*norms)[0] = std::sqrt(Teuchos::ScalarTraits<ScalarType>::magnitude(rHz_));
-      return Teuchos::null;
-    } else if (foldConvergenceDetectionIntoAllreduce_ && convTest_->getResNormType() == Belos::TwoNorm) {
-      (*norms)[0] = std::sqrt(Teuchos::ScalarTraits<ScalarType>::magnitude(rHr_));
-      return Teuchos::null;
-    } else
-      return R_;
-  }
-
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  // Iterate until the status test informs us we should stop.
-  template<class ScalarType, class MV, class OP, class DM>
-  void CGSingleRedIter<ScalarType,MV,OP,DM>::iterate()
-  {
+    // Compute initial direction vectors
+    // Initially, they are set to the preconditioned residuals
     //
-    // Allocate/initialize data structures
-    //
-    if (!initialized_) {
-      initialize();
-    }
-
-    // Allocate memory for scalars.
-    Teuchos::RCP<DM> sHz = DMT::Create( 2, 1 );
-    Teuchos::RCP<DM> sHt = DMT::Create( 2, 2 );
-    ScalarType rHz_old, alpha, beta, delta;
-
-    // Create convenience variables for zero and one.
-    const ScalarType one = Teuchos::ScalarTraits<ScalarType>::one();
-    const MagnitudeType zero = Teuchos::ScalarTraits<MagnitudeType>::zero();
-
-    // Get the current solution vector.
-    Teuchos::RCP<MV> cur_soln_vec = lp_->getCurrLHSVec();
-
-    // Check that the current solution vector only has one column.
-    TEUCHOS_TEST_FOR_EXCEPTION( MVT::GetNumberVecs(*cur_soln_vec) != 1, CGIterateFailure,
-                        "Belos::CGSingleRedIter::iterate(): current linear system has more than one vector!" );
-
-    if (foldConvergenceDetectionIntoAllreduce_ && convTest_->getResNormType() == Belos::TwoNorm) {
-      // Compute first <S_,T_> a.k.a. <R_,Z_>, <AZ_,Z_> and <R_,R_> combined (also computes unneeded <AZ_,R_>)
-      MVT::MvTransMv( one, *S_, *T_, *sHt );
-      DMT::SyncDeviceToHost( *sHt );
-      rHz_ = DMT::ValueConst(*sHt,1,1);
-      delta = DMT::ValueConst(*sHt,0,1);
-      rHr_ = DMT::ValueConst(*sHt,1,0);
+    if (lp_->getLeftPrec() != Teuchos::null) {
+      lp_->applyLeftPrec(*R_, *Z_);
+      if (lp_->getRightPrec() != Teuchos::null) {
+        Teuchos::RCP<MV> tmp2 = MVT::Clone(*Z_, 1);
+        lp_->applyRightPrec(*Z_, *tmp2);
+        MVT::Assign(*tmp2, *Z_);
+      }
+    } else if (lp_->getRightPrec() != Teuchos::null) {
+      lp_->applyRightPrec(*R_, *Z_);
     } else {
-      // Compute first <s,z> a.k.a. <r,z> and <Az,z> combined
-      MVT::MvTransMv( one, *S_, *Z_, *sHz );
-      DMT::SyncDeviceToHost( *sHz );
-      rHz_ = DMT::ValueConst(*sHz,1,0);
-      delta = DMT::ValueConst(*sHz,0,0);
+      MVT::Assign(*R_, *Z_);
     }
-    if ((Teuchos::ScalarTraits<ScalarType>::magnitude(delta) < Teuchos::ScalarTraits<ScalarType>::eps()) &&
-        (stest_->checkStatus(this) == Passed))
-      return;
-    alpha = rHz_ / delta;
 
-    // Check that alpha is a positive number!
-    TEUCHOS_TEST_FOR_EXCEPTION( SCT::real(alpha) <= zero, CGPositiveDefiniteFailure,
-      "Belos::CGSingleRedIter::iterate(): non-positive value for p^H*A*p encountered!" );
+    // Multiply the current preconditioned residual vector by A and store in AZ_
+    lp_->applyOp(*Z_, *AZ_);
 
+    // P_ := Z_
+    // Logically, AP_ := AZ_
+    MVT::Assign(*U_, *V_);
+  }
+
+  // The solver is initialized
+  initialized_ = true;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// Get the norms of the residuals native to the solver.
+template <class ScalarType, class MV, class OP, class DM>
+Teuchos::RCP<const MV>
+CGSingleRedIter<ScalarType, MV, OP, DM>::getNativeResiduals(std::vector<MagnitudeType> *norms) const {
+  if (convTest_->getResNormType() == Belos::PreconditionerNorm) {
+    (*norms)[0] = std::sqrt(Teuchos::ScalarTraits<ScalarType>::magnitude(rHz_));
+    return Teuchos::null;
+  } else if (foldConvergenceDetectionIntoAllreduce_ && convTest_->getResNormType() == Belos::TwoNorm) {
+    (*norms)[0] = std::sqrt(Teuchos::ScalarTraits<ScalarType>::magnitude(rHr_));
+    return Teuchos::null;
+  } else
+    return R_;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// Iterate until the status test informs us we should stop.
+template <class ScalarType, class MV, class OP, class DM>
+void CGSingleRedIter<ScalarType, MV, OP, DM>::iterate() {
+  //
+  // Allocate/initialize data structures
+  //
+  if (!initialized_) {
+    initialize();
+  }
+
+  // Allocate memory for scalars.
+  Teuchos::RCP<DM> sHz = DMT::Create(2, 1);
+  Teuchos::RCP<DM> sHt = DMT::Create(2, 2);
+  ScalarType rHz_old, alpha, beta, delta;
+
+  // Create convenience variables for zero and one.
+  const ScalarType one     = Teuchos::ScalarTraits<ScalarType>::one();
+  const MagnitudeType zero = Teuchos::ScalarTraits<MagnitudeType>::zero();
+
+  // Get the current solution vector.
+  Teuchos::RCP<MV> cur_soln_vec = lp_->getCurrLHSVec();
+
+  // Check that the current solution vector only has one column.
+  TEUCHOS_TEST_FOR_EXCEPTION(MVT::GetNumberVecs(*cur_soln_vec) != 1, CGIterateFailure,
+                             "Belos::CGSingleRedIter::iterate(): current linear system has more than one vector!");
+
+  if (foldConvergenceDetectionIntoAllreduce_ && convTest_->getResNormType() == Belos::TwoNorm) {
+    // Compute first <S_,T_> a.k.a. <R_,Z_>, <AZ_,Z_> and <R_,R_> combined (also computes unneeded <AZ_,R_>)
+    MVT::MvTransMv(one, *S_, *T_, *sHt);
+    DMT::SyncDeviceToHost(*sHt);
+    rHz_  = DMT::ValueConst(*sHt, 1, 1);
+    delta = DMT::ValueConst(*sHt, 0, 1);
+    rHr_  = DMT::ValueConst(*sHt, 1, 0);
+  } else {
+    // Compute first <s,z> a.k.a. <r,z> and <Az,z> combined
+    MVT::MvTransMv(one, *S_, *Z_, *sHz);
+    DMT::SyncDeviceToHost(*sHz);
+    rHz_  = DMT::ValueConst(*sHz, 1, 0);
+    delta = DMT::ValueConst(*sHz, 0, 0);
+  }
+  if ((Teuchos::ScalarTraits<ScalarType>::magnitude(delta) < Teuchos::ScalarTraits<ScalarType>::eps()) &&
+      (stest_->checkStatus(this) == Passed))
+    return;
+  alpha = rHz_ / delta;
+
+  // Check that alpha is a positive number!
+  TEUCHOS_TEST_FOR_EXCEPTION(SCT::real(alpha) <= zero, CGPositiveDefiniteFailure,
+                             "Belos::CGSingleRedIter::iterate(): non-positive value for p^H*A*p encountered!");
+
+  ////////////////////////////////////////////////////////////////
+  // Iterate until the status test tells us to stop.
+  //
+  if (foldConvergenceDetectionIntoAllreduce_ && convTest_->getResNormType() == Belos::TwoNorm) {
     ////////////////////////////////////////////////////////////////
     // Iterate until the status test tells us to stop.
     //
-    if (foldConvergenceDetectionIntoAllreduce_ && convTest_->getResNormType() == Belos::TwoNorm) {
-      ////////////////////////////////////////////////////////////////
-      // Iterate until the status test tells us to stop.
+    while (true) {
+      // Update the solution vector x := x + alpha * P_
       //
-      while (true) {
-
-        // Update the solution vector x := x + alpha * P_
-        //
-        MVT::MvAddMv( one, *cur_soln_vec, alpha, *P_, *cur_soln_vec );
-        //
-        // Compute the new residual R_ := R_ - alpha * AP_
-        //
-        MVT::MvAddMv( one, *R_, -alpha, *AP_, *R_ );
-        //
-        // Apply preconditioner to new residual to update Z_
-        //
-        if ( lp_->getLeftPrec() != Teuchos::null ) {
-          lp_->applyLeftPrec( *R_, *Z_ );
-          if ( lp_->getRightPrec() != Teuchos::null ) {
-            Teuchos::RCP<MV> tmp = MVT::CloneCopy( *Z_ );
-            lp_->applyRightPrec( *tmp, *Z_ );
-          }
-        }
-        else if ( lp_->getRightPrec() != Teuchos::null ) {
-          lp_->applyRightPrec( *R_, *Z_ );
-        }
-        else {
-          MVT::Assign( *R_, *Z_ );
-        }
-        //
-        // Multiply the current preconditioned residual vector by A and store in AZ_
-        lp_->applyOp( *Z_, *AZ_ );
-        //
-        // Compute <S_,T_> a.k.a. <R_,Z_>, <AZ_,Z_> and <R_,R_> combined (also computes unneeded <AZ_,R_>)
-        MVT::MvTransMv( one, *S_, *T_, *sHt );
-        DMT::SyncDeviceToHost( *sHt ); 
-        //
-        // Update scalars.
-        rHz_old = rHz_;
-        rHz_ = DMT::ValueConst(*sHt,1,1);
-        delta = DMT::ValueConst(*sHt,0,1);
-        rHr_ = DMT::ValueConst(*sHt,1,0);
-
-        // Increment the iteration
-        iter_++;
-        //
-        // Check the status test, now that the solution and residual have been updated
-        //
-        if (stest_->checkStatus(this) == Passed) {
-          break;
-        }
-        //
-        beta = rHz_ / rHz_old;
-        alpha = rHz_ / (delta - (beta*rHz_ / alpha));
-        //
-        // Check that alpha is a positive number!
-        TEUCHOS_TEST_FOR_EXCEPTION( SCT::real(alpha) <= zero, CGPositiveDefiniteFailure,
-                                    "Belos::CGSingleRedIter::iterate(): non-positive value for p^H*A*p encountered!" );
-
-        //
-        // Update the direction vector P_ := Z_ + beta * P_
-        // Update AP_ through recurrence relation AP_ := AZ_ + beta * AP_
-        // Hence: V_ = (AP_, P_) := (AZ_, Z_) + beta (AP_, P_) = U_ + beta * V_
-        //
-        MVT::MvAddMv( one, *U_, beta, *V_, *V_ );
-
-      } // end while (1)
-    } else {
-      ////////////////////////////////////////////////////////////////
-      // Iterate until the status test tells us to stop.
+      MVT::MvAddMv(one, *cur_soln_vec, alpha, *P_, *cur_soln_vec);
       //
-      while (true) {
-
-        // Update the solution vector x := x + alpha * P_
-        //
-        MVT::MvAddMv( one, *cur_soln_vec, alpha, *P_, *cur_soln_vec );
-        //
-        // Compute the new residual R_ := R_ - alpha * AP_
-        //
-        MVT::MvAddMv( one, *R_, -alpha, *AP_, *R_ );
-
-        // Increment the iteration
-        iter_++;
-        //
-        // Check the status test, now that the solution and residual have been updated
-        //
-        if (stest_->checkStatus(this) == Passed) {
-          break;
+      // Compute the new residual R_ := R_ - alpha * AP_
+      //
+      MVT::MvAddMv(one, *R_, -alpha, *AP_, *R_);
+      //
+      // Apply preconditioner to new residual to update Z_
+      //
+      if (lp_->getLeftPrec() != Teuchos::null) {
+        lp_->applyLeftPrec(*R_, *Z_);
+        if (lp_->getRightPrec() != Teuchos::null) {
+          Teuchos::RCP<MV> tmp = MVT::CloneCopy(*Z_);
+          lp_->applyRightPrec(*tmp, *Z_);
         }
-        //
-        // Apply preconditioner to new residual to update Z_
-        //
-        if ( lp_->getLeftPrec() != Teuchos::null ) {
-          lp_->applyLeftPrec( *R_, *Z_ );
-          if ( lp_->getRightPrec() != Teuchos::null ) {
-            Teuchos::RCP<MV> tmp = MVT::CloneCopy( *Z_ );
-            lp_->applyRightPrec( *tmp, *Z_ );
-          }
-        }
-        else if ( lp_->getRightPrec() != Teuchos::null ) {
-          lp_->applyRightPrec( *R_, *Z_ );
-        }
-        else {
-          MVT::Assign( *R_, *Z_ );
-        }
-        //
-        // Multiply the current preconditioned residual vector by A and store in AZ_
-        lp_->applyOp( *Z_, *AZ_ );
-        //
-        // Compute <S_,Z_> a.k.a. <R_,Z_> and <AZ_,Z_> combined
-        MVT::MvTransMv( one, *S_, *Z_, *sHz );
-        DMT::SyncDeviceToHost( *sHz );
-        //
-        // Update scalars.
-        rHz_old = rHz_;
-        rHz_ = DMT::ValueConst(*sHz,1,0);
-        delta = DMT::ValueConst(*sHz,0,0);
-        //
-        beta = rHz_ / rHz_old;
-        alpha = rHz_ / (delta - (beta*rHz_ / alpha));
-        //
-        // Check that alpha is a positive number!
-        TEUCHOS_TEST_FOR_EXCEPTION( SCT::real(alpha) <= zero, CGPositiveDefiniteFailure,
-                                    "Belos::CGSingleRedIter::iterate(): non-positive value for p^H*A*p encountered!" );
+      } else if (lp_->getRightPrec() != Teuchos::null) {
+        lp_->applyRightPrec(*R_, *Z_);
+      } else {
+        MVT::Assign(*R_, *Z_);
+      }
+      //
+      // Multiply the current preconditioned residual vector by A and store in AZ_
+      lp_->applyOp(*Z_, *AZ_);
+      //
+      // Compute <S_,T_> a.k.a. <R_,Z_>, <AZ_,Z_> and <R_,R_> combined (also computes unneeded <AZ_,R_>)
+      MVT::MvTransMv(one, *S_, *T_, *sHt);
+      DMT::SyncDeviceToHost(*sHt);
+      //
+      // Update scalars.
+      rHz_old = rHz_;
+      rHz_    = DMT::ValueConst(*sHt, 1, 1);
+      delta   = DMT::ValueConst(*sHt, 0, 1);
+      rHr_    = DMT::ValueConst(*sHt, 1, 0);
 
-        //
-        // Update the direction vector P_ := Z_ + beta * P_
-        // Update AP_ through recurrence relation AP_ := AZ_ + beta * AP_
-        // Hence: V_ = (AP_, P_) := (AZ_, Z_) + beta (AP_, P_) = U_ + beta * V_
-        //
-        MVT::MvAddMv( one, *U_, beta, *V_, *V_ );
+      // Increment the iteration
+      iter_++;
+      //
+      // Check the status test, now that the solution and residual have been updated
+      //
+      if (stest_->checkStatus(this) == Passed) {
+        break;
+      }
+      //
+      beta  = rHz_ / rHz_old;
+      alpha = rHz_ / (delta - (beta * rHz_ / alpha));
+      //
+      // Check that alpha is a positive number!
+      TEUCHOS_TEST_FOR_EXCEPTION(SCT::real(alpha) <= zero, CGPositiveDefiniteFailure,
+                                 "Belos::CGSingleRedIter::iterate(): non-positive value for p^H*A*p encountered!");
 
-      } // end while (1)
-    }
+      //
+      // Update the direction vector P_ := Z_ + beta * P_
+      // Update AP_ through recurrence relation AP_ := AZ_ + beta * AP_
+      // Hence: V_ = (AP_, P_) := (AZ_, Z_) + beta (AP_, P_) = U_ + beta * V_
+      //
+      MVT::MvAddMv(one, *U_, beta, *V_, *V_);
+
+    }  // end while (1)
+  } else {
+    ////////////////////////////////////////////////////////////////
+    // Iterate until the status test tells us to stop.
+    //
+    while (true) {
+      // Update the solution vector x := x + alpha * P_
+      //
+      MVT::MvAddMv(one, *cur_soln_vec, alpha, *P_, *cur_soln_vec);
+      //
+      // Compute the new residual R_ := R_ - alpha * AP_
+      //
+      MVT::MvAddMv(one, *R_, -alpha, *AP_, *R_);
+
+      // Increment the iteration
+      iter_++;
+      //
+      // Check the status test, now that the solution and residual have been updated
+      //
+      if (stest_->checkStatus(this) == Passed) {
+        break;
+      }
+      //
+      // Apply preconditioner to new residual to update Z_
+      //
+      if (lp_->getLeftPrec() != Teuchos::null) {
+        lp_->applyLeftPrec(*R_, *Z_);
+        if (lp_->getRightPrec() != Teuchos::null) {
+          Teuchos::RCP<MV> tmp = MVT::CloneCopy(*Z_);
+          lp_->applyRightPrec(*tmp, *Z_);
+        }
+      } else if (lp_->getRightPrec() != Teuchos::null) {
+        lp_->applyRightPrec(*R_, *Z_);
+      } else {
+        MVT::Assign(*R_, *Z_);
+      }
+      //
+      // Multiply the current preconditioned residual vector by A and store in AZ_
+      lp_->applyOp(*Z_, *AZ_);
+      //
+      // Compute <S_,Z_> a.k.a. <R_,Z_> and <AZ_,Z_> combined
+      MVT::MvTransMv(one, *S_, *Z_, *sHz);
+      DMT::SyncDeviceToHost(*sHz);
+      //
+      // Update scalars.
+      rHz_old = rHz_;
+      rHz_    = DMT::ValueConst(*sHz, 1, 0);
+      delta   = DMT::ValueConst(*sHz, 0, 0);
+      //
+      beta  = rHz_ / rHz_old;
+      alpha = rHz_ / (delta - (beta * rHz_ / alpha));
+      //
+      // Check that alpha is a positive number!
+      TEUCHOS_TEST_FOR_EXCEPTION(SCT::real(alpha) <= zero, CGPositiveDefiniteFailure,
+                                 "Belos::CGSingleRedIter::iterate(): non-positive value for p^H*A*p encountered!");
+
+      //
+      // Update the direction vector P_ := Z_ + beta * P_
+      // Update AP_ through recurrence relation AP_ := AZ_ + beta * AP_
+      // Hence: V_ = (AP_, P_) := (AZ_, Z_) + beta (AP_, P_) = U_ + beta * V_
+      //
+      MVT::MvAddMv(one, *U_, beta, *V_, *V_);
+
+    }  // end while (1)
   }
+}
 
-} // end Belos namespace
+}  // namespace Belos
 
 #endif /* BELOS_CG_SINGLE_RED_ITER_HPP */

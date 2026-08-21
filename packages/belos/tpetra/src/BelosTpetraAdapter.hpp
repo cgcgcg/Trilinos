@@ -51,4 +51,4 @@
 // #include "BelosOperatorTraits_Tpetra.hpp"
 #include "BelosSolverFactory_Tpetra.hpp"
 
-#endif // BELOS_TPETRA_ADAPTER_HPP
+#endif  // BELOS_TPETRA_ADAPTER_HPP

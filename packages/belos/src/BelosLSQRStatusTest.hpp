@@ -29,16 +29,13 @@
 
 namespace Belos {
 
-
 template <class ScalarType, class MV, class OP, class DM = Belos::DefaultDenseMatrix<int, ScalarType>>
-class LSQRStatusTest: public Belos::StatusTest<ScalarType,MV,OP,DM> {
-
-public:
-
+class LSQRStatusTest : public Belos::StatusTest<ScalarType, MV, OP, DM> {
+ public:
   // Convenience typedefs
   typedef Teuchos::ScalarTraits<ScalarType> SCT;
   typedef typename SCT::magnitudeType MagnitudeType;
-  typedef Belos::MultiVecTraits<ScalarType,MV,DM>  MVT;
+  typedef Belos::MultiVecTraits<ScalarType, MV, DM> MVT;
 
   //! @name Constructor/Destructor.
   //@{
@@ -49,10 +46,10 @@ public:
  side (b), and an estimate of the relative error in the data defining the coefficinet matrix (A).  The default
  termIterMax is 1, and the other three parameters default to 0.  The defaults specified in LSQRSolMgr are more realistic.
    */
-  LSQRStatusTest( MagnitudeType condMax = 0.0,
-                  int term_iter_max = 1,
-                  MagnitudeType rel_rhs_err = 0.0,
-                  MagnitudeType rel_mat_err = 0.0 );
+  LSQRStatusTest(MagnitudeType condMax     = 0.0,
+                 int term_iter_max         = 1,
+                 MagnitudeType rel_rhs_err = 0.0,
+                 MagnitudeType rel_mat_err = 0.0);
 
   //! Destructor
   virtual ~LSQRStatusTest();
@@ -64,10 +61,10 @@ public:
   //! Check convergence status of the iterative solver: Unconverged, Converged, Failed.
   /*! This method checks if the convergence criteria are met using the current information from the iterative solver.
    */
-  Belos::StatusType checkStatus(Belos::Iteration<ScalarType,MV,OP,DM> *iSolver );
+  Belos::StatusType checkStatus(Belos::Iteration<ScalarType, MV, OP, DM>* iSolver);
 
   //! Return the result of the most recent CheckStatus call.
-  Belos::StatusType getStatus() const {return(status_);}
+  Belos::StatusType getStatus() const { return (status_); }
 
   //@}
 
@@ -79,23 +76,27 @@ public:
 
   //! Set the tolerances
   int setCondLim(MagnitudeType condMax) {
-    condMax_ = condMax;
-    rcondMin_ = (condMax > 0) ? (Teuchos::ScalarTraits< MagnitudeType >::one() / condMax) : Teuchos::ScalarTraits< MagnitudeType >::eps();
-    return(0);}
+    condMax_  = condMax;
+    rcondMin_ = (condMax > 0) ? (Teuchos::ScalarTraits<MagnitudeType>::one() / condMax) : Teuchos::ScalarTraits<MagnitudeType>::eps();
+    return (0);
+  }
 
   int setTermIterMax(int term_iter_max) {
     term_iter_max_ = term_iter_max;
     if (term_iter_max_ < 1)
       term_iter_max_ = 1;
-    return(0);}
+    return (0);
+  }
 
   int setRelRhsErr(MagnitudeType rel_rhs_err) {
     rel_rhs_err_ = rel_rhs_err;
-    return(0);}
+    return (0);
+  }
 
   int setRelMatErr(MagnitudeType rel_mat_err) {
     rel_mat_err_ = rel_mat_err;
-    return(0);}
+    return (0);
+  }
 
   //@}
 
@@ -103,33 +104,32 @@ public:
   //@{
 
   //! Returns the value of the upper limit of the condition number of Abar set in the constructor.
-  MagnitudeType getCondMaxLim() const {return(condMax_);}
+  MagnitudeType getCondMaxLim() const { return (condMax_); }
 
   //! Returns the number of successful convergent iterations required set in the constructor.
-  int getTermIterMax() const {return(term_iter_max_);}
+  int getTermIterMax() const { return (term_iter_max_); }
 
   //! Returns the value of the estimate of the relative error in the data defining b set in the constructor.
-  MagnitudeType getRelRhsErr() const {return(rel_rhs_err_);}
+  MagnitudeType getRelRhsErr() const { return (rel_rhs_err_); }
 
   //! Returns the value of the estimate of the relative error in the data defining A set in the constructor.
-  MagnitudeType getMatErr() const {return(rel_mat_err_);}
+  MagnitudeType getMatErr() const { return (rel_mat_err_); }
 
   //! Returns the value of the observed condition number of Abar
-  MagnitudeType getMatCondNum() const {return(matCondNum_);}
+  MagnitudeType getMatCondNum() const { return (matCondNum_); }
 
   //! Returns the value of the observed (Frobenius) norm of A
-  MagnitudeType getMatNorm() const {return(matNorm_);}
+  MagnitudeType getMatNorm() const { return (matNorm_); }
 
   //! !Returns the current number of successful iterations from the most recent StatusTest call.
   int getTermIter() const { return term_iter_; }
 
   //! Returns the value of the observed norm of the residual r = b-Ax
-  MagnitudeType getResidNorm() const {return(resNorm_);}
+  MagnitudeType getResidNorm() const { return (resNorm_); }
 
   //! Returns the value of the observed norm of the Least Squares residual A^T r
-  MagnitudeType getLSResidNorm() const {return(matResNorm_);}
+  MagnitudeType getLSResidNorm() const { return (matResNorm_); }
   //@}
-
 
   //! @name Print methods
   //@{
@@ -147,23 +147,21 @@ public:
 
   /// \brief Called in checkStatus exactly once, on the first call to checkStatus.
   ///
-  Belos::StatusType firstCallCheckStatusSetup(Belos::Iteration<ScalarType,MV,OP,DM>* iSolver);
+  Belos::StatusType firstCallCheckStatusSetup(Belos::Iteration<ScalarType, MV, OP, DM>* iSolver);
   //@}
 
   /** \name Overridden from Teuchos::Describable */
   //@{
 
   /** \brief Method to return description of the maximum iteration status test  */
-  std::string description() const
-  {
+  std::string description() const {
     std::ostringstream oss;
     oss << "LSQRStatusTest<>: [ limit of condition number = " << condMax_ << " ]";
     return oss.str();
   }
   //@}
 
-private:
-
+ private:
   //! @name Private data members.
   //@{
 
@@ -202,56 +200,48 @@ private:
   MagnitudeType matResNorm_;
 
   //@}
-
 };
 
 template <class ScalarType, class MV, class OP, class DM>
-LSQRStatusTest<ScalarType,MV,OP,DM>::
-LSQRStatusTest (MagnitudeType condMax /* = 0 */,
-                int term_iter_max /* = 1 */,
-                MagnitudeType rel_rhs_err /* = 0 */,
-                MagnitudeType rel_mat_err /* = 0 */)
-  : condMax_(condMax),
-    term_iter_max_ (term_iter_max),
-    rel_rhs_err_ (rel_rhs_err),
-    rel_mat_err_ (rel_mat_err),
-    rcondMin_ ( Teuchos::ScalarTraits<MagnitudeType>::zero() ),
-    status_ (Belos::Undefined),
-    term_iter_ (0),
-    matCondNum_ ( Teuchos::ScalarTraits<MagnitudeType>::one() ),
-    matNorm_ ( Teuchos::ScalarTraits<MagnitudeType>::zero() ),
-    resNorm_  ( Teuchos::ScalarTraits<MagnitudeType>::zero() ),
-    matResNorm_ ( Teuchos::ScalarTraits<MagnitudeType>::zero() )
-{}
+LSQRStatusTest<ScalarType, MV, OP, DM>::
+    LSQRStatusTest(MagnitudeType condMax /* = 0 */,
+                   int term_iter_max /* = 1 */,
+                   MagnitudeType rel_rhs_err /* = 0 */,
+                   MagnitudeType rel_mat_err /* = 0 */)
+  : condMax_(condMax)
+  , term_iter_max_(term_iter_max)
+  , rel_rhs_err_(rel_rhs_err)
+  , rel_mat_err_(rel_mat_err)
+  , rcondMin_(Teuchos::ScalarTraits<MagnitudeType>::zero())
+  , status_(Belos::Undefined)
+  , term_iter_(0)
+  , matCondNum_(Teuchos::ScalarTraits<MagnitudeType>::one())
+  , matNorm_(Teuchos::ScalarTraits<MagnitudeType>::zero())
+  , resNorm_(Teuchos::ScalarTraits<MagnitudeType>::zero())
+  , matResNorm_(Teuchos::ScalarTraits<MagnitudeType>::zero()) {}
 
 template <class ScalarType, class MV, class OP, class DM>
-LSQRStatusTest<ScalarType,MV,OP,DM>::~LSQRStatusTest()
-{}
+LSQRStatusTest<ScalarType, MV, OP, DM>::~LSQRStatusTest() {}
 
 template <class ScalarType, class MV, class OP, class DM>
-void LSQRStatusTest<ScalarType,MV,OP,DM>::reset()
-{
+void LSQRStatusTest<ScalarType, MV, OP, DM>::reset() {
   status_ = Belos::Undefined;
 }
 
 template <class ScalarType, class MV, class OP, class DM>
-Belos::StatusType LSQRStatusTest<ScalarType,MV,OP,DM>::checkStatus( Belos::Iteration<ScalarType,MV,OP,DM>* iSolver)
-{
+Belos::StatusType LSQRStatusTest<ScalarType, MV, OP, DM>::checkStatus(Belos::Iteration<ScalarType, MV, OP, DM>* iSolver) {
   const MagnitudeType MTzero = Teuchos::ScalarTraits<MagnitudeType>::zero();
-  const MagnitudeType MTone = Teuchos::ScalarTraits<MagnitudeType>::one();
-  if (condMax_ > MTzero )
-    {
-        rcondMin_ = MTone / condMax_;
-    }
-  else
-    {
-        rcondMin_ = Teuchos::ScalarTraits< MagnitudeType >::eps();
-    }
+  const MagnitudeType MTone  = Teuchos::ScalarTraits<MagnitudeType>::one();
+  if (condMax_ > MTzero) {
+    rcondMin_ = MTone / condMax_;
+  } else {
+    rcondMin_ = Teuchos::ScalarTraits<MagnitudeType>::eps();
+  }
 
-  bool termIterFlag = false;
-  LSQRIter<ScalarType,MV,OP,DM>* solver = dynamic_cast< LSQRIter<ScalarType,MV,OP,DM>* > (iSolver);
+  bool termIterFlag                        = false;
+  LSQRIter<ScalarType, MV, OP, DM>* solver = dynamic_cast<LSQRIter<ScalarType, MV, OP, DM>*>(iSolver);
   TEUCHOS_ASSERT(solver != NULL);
-  LSQRIterationState< ScalarType, MV > state = solver->getState();
+  LSQRIterationState<ScalarType, MV> state = solver->getState();
   //
   //   LSQR solves a least squares problem.  A converged preconditioned residual norm
   // suffices for convergence, but is not necessary.  LSQR sometimes returns a larger
@@ -276,36 +266,29 @@ Belos::StatusType LSQRStatusTest<ScalarType,MV,OP,DM>::checkStatus( Belos::Itera
             << "  Atr  " << state.mat_resid_norm
             << "  A " << state.frob_mat_norm
             << "  cond  " << state.mat_cond_num
-            << "  relResNorm " << state.resid_norm/state.bnorm
-            << "  LS " << state.mat_resid_norm /( state.resid_norm * state.frob_mat_norm )
+            << "  relResNorm " << state.resid_norm / state.bnorm
+            << "  LS " << state.mat_resid_norm / (state.resid_norm * state.frob_mat_norm)
             << std::endl;
 
   const MagnitudeType zero = Teuchos::ScalarTraits<MagnitudeType>::zero();
-  const ScalarType one = Teuchos::ScalarTraits<ScalarType>::one();
-  ScalarType stop_crit_1 = zero; // b = 0, done
-  if( state.bnorm  > zero )
-    {
-      stop_crit_1 = state.resid_norm / state.bnorm;
-    }
+  const ScalarType one     = Teuchos::ScalarTraits<ScalarType>::one();
+  ScalarType stop_crit_1   = zero;  // b = 0, done
+  if (state.bnorm > zero) {
+    stop_crit_1 = state.resid_norm / state.bnorm;
+  }
   ScalarType stop_crit_2 = zero;
-  if( state.frob_mat_norm  > zero  && state.resid_norm > zero )
-    {
-      stop_crit_2 = (state.resid_norm > zero) ? state.mat_resid_norm / (state.frob_mat_norm * state.resid_norm) : zero;
+  if (state.frob_mat_norm > zero && state.resid_norm > zero) {
+    stop_crit_2 = (state.resid_norm > zero) ? state.mat_resid_norm / (state.frob_mat_norm * state.resid_norm) : zero;
+  } else {
+    if (state.resid_norm == zero) {
+      stop_crit_2 = zero;
+    } else {
+      stop_crit_2 = one;  // Initial mat_norm always vanishes
     }
-  else
-    {
-     if( state.resid_norm == zero )
-       {
-         stop_crit_2 = zero;
-       }
-     else
-       {
-         stop_crit_2 = one; // Initial mat_norm always vanishes
-       }
-    }
-  ScalarType stop_crit_3 = one / state.mat_cond_num;
-  ScalarType resid_tol = rel_rhs_err_ + rel_mat_err_ * state.frob_mat_norm * state.sol_norm / state.bnorm;
-  ScalarType resid_tol_mach = Teuchos::ScalarTraits< MagnitudeType >::eps() + Teuchos::ScalarTraits< MagnitudeType >::eps() * state.frob_mat_norm * state.sol_norm / state.bnorm;
+  }
+  ScalarType stop_crit_3    = one / state.mat_cond_num;
+  ScalarType resid_tol      = rel_rhs_err_ + rel_mat_err_ * state.frob_mat_norm * state.sol_norm / state.bnorm;
+  ScalarType resid_tol_mach = Teuchos::ScalarTraits<MagnitudeType>::eps() + Teuchos::ScalarTraits<MagnitudeType>::eps() * state.frob_mat_norm * state.sol_norm / state.bnorm;
 
   // The expected use case for our users is that the linear system will almost
   // always be compatible, but occasionally may not be.  However, some users
@@ -322,26 +305,26 @@ Belos::StatusType LSQRStatusTest<ScalarType,MV,OP,DM>::checkStatus( Belos::Itera
   // stop_crit_3 is for either compatible or incompatible linear systems.
 
   // Have we met any of the stopping criteria?
-  if (stop_crit_1 <= resid_tol || stop_crit_2 <= rel_mat_err_ || stop_crit_3 <= rcondMin_ || stop_crit_1 <= resid_tol_mach || stop_crit_2 <= Teuchos::ScalarTraits< MagnitudeType >::eps() || stop_crit_3 <= Teuchos::ScalarTraits< MagnitudeType >::eps()) {
+  if (stop_crit_1 <= resid_tol || stop_crit_2 <= rel_mat_err_ || stop_crit_3 <= rcondMin_ || stop_crit_1 <= resid_tol_mach || stop_crit_2 <= Teuchos::ScalarTraits<MagnitudeType>::eps() || stop_crit_3 <= Teuchos::ScalarTraits<MagnitudeType>::eps()) {
     termIterFlag = true;
 
-    if (stop_crit_1 <= resid_tol )
-      std::cout << "Conv: stop_crit_1  " << stop_crit_1  << " resid_tol " << resid_tol << std::endl;
+    if (stop_crit_1 <= resid_tol)
+      std::cout << "Conv: stop_crit_1  " << stop_crit_1 << " resid_tol " << resid_tol << std::endl;
 
-    if (stop_crit_1 <=  resid_tol_mach )
-      std::cout << "Conv: stop_crit_1  " << stop_crit_1  << " resid_tol_mach " << resid_tol_mach << std::endl;
+    if (stop_crit_1 <= resid_tol_mach)
+      std::cout << "Conv: stop_crit_1  " << stop_crit_1 << " resid_tol_mach " << resid_tol_mach << std::endl;
 
-    if (stop_crit_2 <= rel_mat_err_ )
-      std::cout << "Conv: stop_crit_2  " << stop_crit_2  << " rel_mat_err " << rel_mat_err_ << std::endl;
+    if (stop_crit_2 <= rel_mat_err_)
+      std::cout << "Conv: stop_crit_2  " << stop_crit_2 << " rel_mat_err " << rel_mat_err_ << std::endl;
 
-    if (stop_crit_2 <=   Teuchos::ScalarTraits< MagnitudeType >::eps() )
-      std::cout << "Conv: stop_crit_2  " << stop_crit_2  << " eps " <<   Teuchos::ScalarTraits< MagnitudeType >::eps()   << std::endl;
+    if (stop_crit_2 <= Teuchos::ScalarTraits<MagnitudeType>::eps())
+      std::cout << "Conv: stop_crit_2  " << stop_crit_2 << " eps " << Teuchos::ScalarTraits<MagnitudeType>::eps() << std::endl;
 
-    if (stop_crit_3 <= rcondMin_ )
-      std::cout << "Conv: stop_crit_3  " << stop_crit_3  << " rcondMin_ " << rcondMin_ << std::endl;
+    if (stop_crit_3 <= rcondMin_)
+      std::cout << "Conv: stop_crit_3  " << stop_crit_3 << " rcondMin_ " << rcondMin_ << std::endl;
 
-    if (stop_crit_3 <=   Teuchos::ScalarTraits< MagnitudeType >::eps() )
-      std::cout << "Conv: stop_crit_3  " << stop_crit_3  << " eps " <<   Teuchos::ScalarTraits< MagnitudeType >::eps()   << std::endl;
+    if (stop_crit_3 <= Teuchos::ScalarTraits<MagnitudeType>::eps())
+      std::cout << "Conv: stop_crit_3  " << stop_crit_3 << " eps " << Teuchos::ScalarTraits<MagnitudeType>::eps() << std::endl;
   }
 
   // update number of consecutive successful iterations
@@ -352,17 +335,16 @@ Belos::StatusType LSQRStatusTest<ScalarType,MV,OP,DM>::checkStatus( Belos::Itera
   }
   status_ = (term_iter_ < term_iter_max_) ? Belos::Failed : Belos::Passed;
 
-  matCondNum_ = state.mat_cond_num; // information that defined convergence
-  matNorm_ = state.frob_mat_norm;   // in accessible variables
-  resNorm_  = state.resid_norm;
+  matCondNum_ = state.mat_cond_num;   // information that defined convergence
+  matNorm_    = state.frob_mat_norm;  // in accessible variables
+  resNorm_    = state.resid_norm;
   matResNorm_ = state.mat_resid_norm;
 
   return status_;
 }
 
 template <class ScalarType, class MV, class OP, class DM>
-void LSQRStatusTest<ScalarType,MV,OP,DM>::print(std::ostream& os, int indent) const
-{
+void LSQRStatusTest<ScalarType, MV, OP, DM>::print(std::ostream& os, int indent) const {
   for (int j = 0; j < indent; j++)
     os << ' ';
   printStatus(os, status_);
@@ -371,26 +353,24 @@ void LSQRStatusTest<ScalarType,MV,OP,DM>::print(std::ostream& os, int indent) co
 }
 
 template <class ScalarType, class MV, class OP, class DM>
-void LSQRStatusTest<ScalarType,MV,OP,DM>::printStatus(std::ostream&os, Belos::StatusType type) const
-{
+void LSQRStatusTest<ScalarType, MV, OP, DM>::printStatus(std::ostream& os, Belos::StatusType type) const {
   os << std::left << std::setw(13) << std::setfill('.');
   switch (type) {
-  case Belos::Passed:
-    os << "Passed";
-    break;
-  case Belos::Failed:
-    os << "Failed";
-    break;
-  case Belos::Undefined:
-  default:
-    os << "Undefined";
-    break;
+    case Belos::Passed:
+      os << "Passed";
+      break;
+    case Belos::Failed:
+      os << "Failed";
+      break;
+    case Belos::Undefined:
+    default:
+      os << "Undefined";
+      break;
   }
   os << std::left << std::setfill(' ');
   return;
 }
 
-} // end Belos namespace
-
+}  // namespace Belos
 
 #endif /* BELOS_LSQR_STATUS_TEST_HPP */

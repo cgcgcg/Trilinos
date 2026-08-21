@@ -10,7 +10,7 @@
 // This driver reads a problem from a Harwell-Boeing (HB) file.
 // Multiple right-hand-sides are created randomly.
 // The initial guesses are all set to zero.
-// 
+//
 // Adapted from PseudoBlockTFQMREpetraExFile.cpp (with original comments)
 
 // All preconditioning has been commented out
@@ -51,15 +51,15 @@ int run(int argc, char *argv[]) {
   using GO = typename Tpetra::Vector<>::global_ordinal_type;
   using NT = typename Tpetra::Vector<>::node_type;
 
-  using MV = typename Tpetra::MultiVector<ST, LO, GO, NT>;
-  using OP = typename Tpetra::Operator<ST, LO, GO, NT>;
+  using MV  = typename Tpetra::MultiVector<ST, LO, GO, NT>;
+  using OP  = typename Tpetra::Operator<ST, LO, GO, NT>;
   using MAP = typename Tpetra::Map<LO, GO, NT>;
   using MAT = typename Tpetra::CrsMatrix<ST, LO, GO, NT>;
 
   using MVT = typename Belos::MultiVecTraits<ST, MV>;
   using OPT = typename Belos::OperatorTraits<ST, MV, OP>;
 
-  using MT = typename Teuchos::ScalarTraits<ST>::magnitudeType;
+  using MT  = typename Teuchos::ScalarTraits<ST>::magnitudeType;
   using STM = typename Teuchos::ScalarTraits<MT>;
 
   using LinearProblem = typename Belos::LinearProblem<ST, MV, OP>;
@@ -74,10 +74,10 @@ int run(int argc, char *argv[]) {
 
   try {
     bool procVerbose = false;
-    bool leftPrec = true;  // use left preconditioning to solve these linear systems
-    int frequency = -1;    // how often residuals are printed by solver
-    int numRhs = 1;
-    int maxiters = -1;  // maximum iterations allowed
+    bool leftPrec    = true;  // use left preconditioning to solve these linear systems
+    int frequency    = -1;    // how often residuals are printed by solver
+    int numRhs       = 1;
+    int maxiters     = -1;  // maximum iterations allowed
     std::string filename("osrirr1.hb");
     MT tol = STM::squareroot(STM::eps());  // relative residual tolerance
 
@@ -100,13 +100,13 @@ int run(int argc, char *argv[]) {
     Tpetra::Utils::readHBMatrix(filename, comm, A);
     RCP<const MAP> map = A->getRowMap();
 
-    procVerbose = verbose && (comm->getRank() == 0); // Only print on zero processor
+    procVerbose = verbose && (comm->getRank() == 0);  // Only print on zero processor
 
     // Create the preconditioner.
     // std::string precType = "RILUK";
     // RCP<Preconditioner> prec = Ifpack2::Factory::create<MAT>(precType, A);
     // assert(prec != Teuchos::null);
-  
+
     // // Specify parameters for the preconditioner
     // int lFill = 2;     // if (argc > 2) lFill = atoi(argv[2]);
     // int overlap = 2;   // if (argc > 3) overlap = atoi(argv[3]);
@@ -162,7 +162,8 @@ int run(int argc, char *argv[]) {
     bool set = problem->setProblem();
     if (set == false) {
       if (procVerbose)
-        std::cout << std::endl << "ERROR:  Belos::LinearProblem failed to set up correctly!" << std::endl;
+        std::cout << std::endl
+                  << "ERROR:  Belos::LinearProblem failed to set up correctly!" << std::endl;
       return -1;
     }
 
@@ -171,7 +172,8 @@ int run(int argc, char *argv[]) {
 
     // Print out information about problem
     if (procVerbose) {
-      std::cout << std::endl << std::endl;
+      std::cout << std::endl
+                << std::endl;
       std::cout << "Dimension of matrix: " << numGlobalElements << std::endl;
       std::cout << "Number of right-hand sides: " << numRhs << std::endl;
       std::cout << "Max number of Pseudo Block TFQMR iterations: " << maxiters << std::endl;
@@ -192,7 +194,8 @@ int run(int argc, char *argv[]) {
     MVT::MvNorm(resid, actualResids);
     MVT::MvNorm(*B, rhsNorm);
     if (procVerbose) {
-      std::cout << "---------- Actual Residuals (normalized) ----------" << std::endl << std::endl;
+      std::cout << "---------- Actual Residuals (normalized) ----------" << std::endl
+                << std::endl;
       for (int i = 0; i < numRhs; i++) {
         ST actRes = actualResids[i] / rhsNorm[i];
         std::cout << "Problem " << i << " : \t" << actRes << std::endl;
@@ -200,12 +203,14 @@ int run(int argc, char *argv[]) {
       }
     }
 
-    if (ret==Belos::Converged && !badRes) {
+    if (ret == Belos::Converged && !badRes) {
       success = true;
-      if (procVerbose) std::cout << std::endl << "SUCCESS:  Belos converged!" << std::endl;
+      if (procVerbose) std::cout << std::endl
+                                 << "SUCCESS:  Belos converged!" << std::endl;
     } else {
       success = false;
-      if (procVerbose) std::cout << std::endl << "ERROR:  Belos did not converge!" << std::endl;
+      if (procVerbose) std::cout << std::endl
+                                 << "ERROR:  Belos did not converge!" << std::endl;
     }
   }
   TEUCHOS_STANDARD_CATCH_STATEMENTS(verbose, std::cerr, success);

@@ -15,8 +15,8 @@
 
 namespace Belos {
 
-	std::string Belos_Version() { 
-		return("Belos Version 1.3d - 9/17/2008"); 
-	}
+std::string Belos_Version() {
+  return ("Belos Version 1.3d - 9/17/2008");
+}
 
-} // namespace Belos 
+}  // namespace Belos

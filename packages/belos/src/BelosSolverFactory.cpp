@@ -13,10 +13,8 @@
 namespace Belos {
 namespace Impl {
 
-void
-printStringArray (std::ostream& out,
-                  const Teuchos::ArrayView<const std::string>& array)
-{
+void printStringArray(std::ostream& out,
+                      const Teuchos::ArrayView<const std::string>& array) {
   typedef Teuchos::ArrayView<std::string>::const_iterator iter_type;
 
   out << "[";
@@ -29,37 +27,31 @@ printStringArray (std::ostream& out,
   out << "]";
 }
 
-void
-printStringArray (std::ostream& out,
-                  const std::vector<std::string>& array)
-{
+void printStringArray(std::ostream& out,
+                      const std::vector<std::string>& array) {
   Teuchos::ArrayView<const std::string> av;
-  if (array.size () == 0) {
-    av = Teuchos::ArrayView<const std::string> (NULL, 0);
+  if (array.size() == 0) {
+    av = Teuchos::ArrayView<const std::string>(NULL, 0);
+  } else {
+    av = Teuchos::ArrayView<const std::string>(&array[0], array.size());
   }
-  else {
-    av = Teuchos::ArrayView<const std::string> (&array[0], array.size ());
-  }
-  printStringArray (out, av);
+  printStringArray(out, av);
 }
 
 std::string
-upperCase (const std::string& s)
-{
+upperCase(const std::string& s) {
   typedef std::string::value_type char_t;
   typedef std::ctype<char_t> facet_type;
-  const facet_type& facet = std::use_facet<facet_type> (std::locale ());
+  const facet_type& facet = std::use_facet<facet_type>(std::locale());
 
-  const std::string::size_type len = s.size ();
-  std::string s_uc (s);
+  const std::string::size_type len = s.size();
+  std::string s_uc(s);
   for (std::string::size_type k = 0; k < len; ++k) {
-    s_uc[k] = facet.toupper (s[k]);
+    s_uc[k] = facet.toupper(s[k]);
   }
 
   return s_uc;
 }
 
-} // namespace Impl
-} // namespace Belos
-
-
+}  // namespace Impl
+}  // namespace Belos

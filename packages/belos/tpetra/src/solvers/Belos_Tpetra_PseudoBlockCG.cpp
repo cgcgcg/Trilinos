@@ -17,9 +17,8 @@
 namespace BelosTpetra {
 namespace Impl {
 
-template<class SC, class LO, class GO, class NT>
-void register_PseudoBlockCG_tmpl (const bool verbose)
-{
+template <class SC, class LO, class GO, class NT>
+void register_PseudoBlockCG_tmpl(const bool verbose) {
   using ::Belos::Impl::registerSolverSubclassForTypes;
   using MV = ::Tpetra::MultiVector<SC, LO, GO, NT>;
   using OP = ::Tpetra::Operator<SC, LO, GO, NT>;
@@ -27,32 +26,31 @@ void register_PseudoBlockCG_tmpl (const bool verbose)
   if (verbose) {
     using Teuchos::TypeNameTraits;
     std::cout << "Registering BelosTpetra PseudoBlockCGSolMgr<"
-              << TypeNameTraits<SC>::name () << ", "
-              << TypeNameTraits<LO>::name () << ", "
-              << TypeNameTraits<GO>::name () << ", "
-              << TypeNameTraits<NT>::name () << ">" << std::endl;
+              << TypeNameTraits<SC>::name() << ", "
+              << TypeNameTraits<LO>::name() << ", "
+              << TypeNameTraits<GO>::name() << ", "
+              << TypeNameTraits<NT>::name() << ">" << std::endl;
   }
   const char solverName[] = "PSEUDOBLOCK CG";
   {
-    using DM = ::Teuchos::SerialDenseMatrix<int, SC>;
+    using DM          = ::Teuchos::SerialDenseMatrix<int, SC>;
     using solver_type = ::Belos::PseudoBlockCGSolMgr<SC, MV, OP, DM>;
-    registerSolverSubclassForTypes<solver_type, SC, MV, OP, DM> (solverName);
+    registerSolverSubclassForTypes<solver_type, SC, MV, OP, DM>(solverName);
   }
 }
 
-void register_PseudoBlockCG (const bool verbose)
-{
+void register_PseudoBlockCG(const bool verbose) {
   TPETRA_ETI_MANGLING_TYPEDEFS()
 
 #ifdef BELOS_TPETRA_REGISTER_PSEUDOBLOCKCG
-#  undef BELOS_TPETRA_REGISTER_PSEUDOBLOCKCG
-#endif // BELOS_TPETRA_REGISTER_PSEUDOBLOCKCG
-#define BELOS_TPETRA_REGISTER_PSEUDOBLOCKCG( SC, LO, GO, NT ) register_PseudoBlockCG_tmpl<SC, LO, GO, NT> (verbose);
+#undef BELOS_TPETRA_REGISTER_PSEUDOBLOCKCG
+#endif  // BELOS_TPETRA_REGISTER_PSEUDOBLOCKCG
+#define BELOS_TPETRA_REGISTER_PSEUDOBLOCKCG(SC, LO, GO, NT) register_PseudoBlockCG_tmpl<SC, LO, GO, NT>(verbose);
 
-  TPETRA_INSTANTIATE_SLGN_NO_ORDINAL_SCALAR( BELOS_TPETRA_REGISTER_PSEUDOBLOCKCG )
+  TPETRA_INSTANTIATE_SLGN_NO_ORDINAL_SCALAR(BELOS_TPETRA_REGISTER_PSEUDOBLOCKCG)
 
 #undef BELOS_TPETRA_REGISTER_PSEUDOBLOCKCG
 }
 
-} // namespace Impl
-} // namespace BelosTpetra
+}  // namespace Impl
+}  // namespace BelosTpetra

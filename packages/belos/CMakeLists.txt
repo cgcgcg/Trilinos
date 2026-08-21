@@ -1,4 +1,3 @@
-
 ######################################################################
 ## Define the package
 ######################################################################
@@ -29,9 +28,12 @@ TRIBITS_ADD_SHOW_DEPRECATED_WARNINGS_OPTION()
 # Tpetra, since Tpetra already had an optional dependency on Epetra.
 # So, for better or worse, you won't be able to use TSQR with Epetra
 # unless you enable both Epetra and Tpetra in your Trilinos build.
-# HAVE_BELOS_TSQR will correctly reflect this: it won't be defined 
+# HAVE_BELOS_TSQR will correctly reflect this: it won't be defined
 # unless both Epetra and Tpetra are enabled in your Trilinos build.
-IF (${PACKAGE_NAME}_ENABLE_Epetra AND ${PACKAGE_NAME}_ENABLE_Tpetra AND Tpetra_ENABLE_TSQR)
+IF(${PACKAGE_NAME}_ENABLE_Epetra
+   AND ${PACKAGE_NAME}_ENABLE_Tpetra
+   AND Tpetra_ENABLE_TSQR
+)
   GLOBAL_SET(${PACKAGE_NAME}_ENABLE_TSQR_DEFAULT ON)
 ELSE()
   GLOBAL_SET(${PACKAGE_NAME}_ENABLE_TSQR_DEFAULT OFF)
@@ -40,19 +42,22 @@ TRIBITS_ADD_OPTION_AND_DEFINE(
   ${PACKAGE_NAME}_ENABLE_TSQR
   HAVE_BELOS_TSQR
   "Enable TSQR (Tall Skinny QR factorization) as an orthogonalization method in Belos.  You must build Trilinos with both Epetra _and_ Tpetra enabled in order to use TSQR with Epetra objects."
-  "${${PACKAGE_NAME}_ENABLE_TSQR_DEFAULT}")
+  "${${PACKAGE_NAME}_ENABLE_TSQR_DEFAULT}"
+)
 
 TRIBITS_ADD_OPTION_AND_DEFINE(
   ${PACKAGE_NAME}_ENABLE_TEUCHOS_TIME_MONITOR
   BELOS_TEUCHOS_TIME_MONITOR
   "Enable Teuchos timers (via TimeMonitor) in Belos solvers."
-  ${${PROJECT_NAME}_ENABLE_TEUCHOS_TIME_MONITOR} )
+  ${${PROJECT_NAME}_ENABLE_TEUCHOS_TIME_MONITOR}
+)
 
 TRIBITS_ADD_OPTION_AND_DEFINE(
   ${PACKAGE_NAME}_Tpetra_Timers
   HAVE_BELOS_TPETRA_TIMERS
   "Add timers to Belos::MultiVecTraits for Tpetra::MultiVector operations."
-  NO )
+  NO
+)
 
 #
 # "Experimental" code lives in Belos, but is not quite ready for use
@@ -88,19 +93,20 @@ TRIBITS_ADD_OPTION_AND_DEFINE(
   ${PACKAGE_NAME}_ENABLE_Experimental
   HAVE_BELOS_EXPERIMENTAL
   "Enable experimental Belos solvers and features."
-  NO )
+  NO
+)
 
 TRIBITS_ADD_OPTION_AND_DEFINE(
   ${PACKAGE_NAME}_ENABLE_DenseMatrixKokkosDefault
   HAVE_BELOS_DENSEMATRIXKOKKOSDEFAULT
   "Use Kokkos::DualView as the default for dense matrices."
-  NO )
+  NO
+)
 
 # See above discussion of "experimental" Belos headers and source
 # files.  belos/src/CMakeLists.txt may append to these lists.
 SET(${PACKAGE_NAME}_EXPERIMENTAL_HEADERS "")
 SET(${PACKAGE_NAME}_EXPERIMENTAL_SOURCES "")
-
 
 ######################################################################
 ## Add the libraries, tests, and examples
@@ -110,14 +116,13 @@ ADD_SUBDIRECTORY(src)
 
 TRIBITS_ADD_TEST_DIRECTORIES(test)
 
-
-IF (Belos_ENABLE_Tpetra)
+IF(Belos_ENABLE_Tpetra)
   ADD_SUBDIRECTORY(tpetra)
 ENDIF()
 
 ADD_SUBDIRECTORY(kokkos)
 
-IF (Belos_ENABLE_Xpetra)
+IF(Belos_ENABLE_Xpetra)
   ADD_SUBDIRECTORY(xpetra)
 ENDIF()
 

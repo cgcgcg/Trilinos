@@ -1,5 +1,3 @@
-
-
 TRIBITS_INCLUDE_DIRECTORIES(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR}/../MVOPTester)
 
 ASSERT_DEFINED(Teuchos_ENABLE_COMPLEX)
@@ -10,13 +8,11 @@ IF(Teuchos_ENABLE_COMPLEX)
   TRIBITS_ADD_EXECUTABLE_AND_TEST(
     bl_cg_complex_hb
     SOURCES test_bl_cg_complex_hb.cpp
-    ARGS
-    "--verbose --filename=mhd1280b.cua"
-    "--verbose --filename=mhd1280b.cua --pseudo"
-    "--verbose --filename=mhd1280b.cua --use-single-red"
+    ARGS "--verbose --filename=mhd1280b.cua" "--verbose --filename=mhd1280b.cua --pseudo" "--verbose --filename=mhd1280b.cua --use-single-red"
   )
 
-  TRIBITS_COPY_FILES_TO_BINARY_DIR(CopyTestBlockCGComplexFiles
+  TRIBITS_COPY_FILES_TO_BINARY_DIR(
+    CopyTestBlockCGComplexFiles
     SOURCE_DIR ${Belos_SOURCE_DIR}/testmatrices
     SOURCE_FILES mhd1280b.cua
     EXEDEPS bl_cg_complex_hb
@@ -24,19 +20,11 @@ IF(Teuchos_ENABLE_COMPLEX)
 
 ENDIF(Teuchos_ENABLE_COMPLEX)
 
-
 TRIBITS_ADD_EXECUTABLE_AND_TEST(
   bl_cg_real_hb
   SOURCES test_bl_cg_real_hb.cpp
-  ARGS
-  "--verbose --filename=A.hb"
-  "--verbose --filename=A.hb --pseudo"
-  "--verbose --filename=A.hb --use-single-red"
-  "--verbose --filename=A.hb --combine-conv-inner"
-  "--verbose --filename=A.hb --pseudo --combine-conv-inner"
-  "--verbose --filename=A.hb --use-single-red --combine-conv-inner"
+  ARGS "--verbose --filename=A.hb" "--verbose --filename=A.hb --pseudo" "--verbose --filename=A.hb --use-single-red" "--verbose --filename=A.hb --combine-conv-inner"
+       "--verbose --filename=A.hb --pseudo --combine-conv-inner" "--verbose --filename=A.hb --use-single-red --combine-conv-inner"
 )
 
-TRIBITS_COPY_FILES_TO_BINARY_DIR(CopyTestBlockCGFiles2
-  SOURCE_FILES A.hb
-)
+TRIBITS_COPY_FILES_TO_BINARY_DIR(CopyTestBlockCGFiles2 SOURCE_FILES A.hb)

@@ -9,31 +9,36 @@ TRIBITS_ADD_EXECUTABLE_AND_TEST(
   Tpetra_minres_indefinite
   SOURCES test_minres_indefinite.cpp
   COMM serial mpi
-  ARGS
-    "--debug --verbose --tol=1e-5"
-  STANDARD_PASS_OUTPUT 
+  ARGS "--debug --verbose --tol=1e-5"
+  STANDARD_PASS_OUTPUT
 )
 
 BELOS_ADD_EXECUTABLE_AND_TEUCHOS_AND_KOKKOS_TESTS(
   Tpetra_minres_hb
-  SOURCES test_minres_hb.cpp
-  COMM serial mpi
+  SOURCES
+  test_minres_hb.cpp
+  COMM
+  serial
+  mpi
   ARGS
-    "--verbose --filename=bcsstk14.hb --tol=1e-5"
-    "--verbose --filename=bcsstk14.hb --num-rhs=2 --tol=1e-5"
-  STANDARD_PASS_OUTPUT 
+  "--verbose --filename=bcsstk14.hb --tol=1e-5"
+  "--verbose --filename=bcsstk14.hb --num-rhs=2 --tol=1e-5"
+  STANDARD_PASS_OUTPUT
 )
 
 ASSERT_DEFINED(Tpetra_INST_COMPLEX_DOUBLE)
-IF (Tpetra_INST_COMPLEX_DOUBLE)
+IF(Tpetra_INST_COMPLEX_DOUBLE)
 
   BELOS_ADD_EXECUTABLE_AND_TEUCHOS_AND_KOKKOS_TESTS(
     Tpetra_minres_complex_hb
-    SOURCES test_minres_complex_hb.cpp
+    SOURCES
+    test_minres_complex_hb.cpp
     ARGS
-      "--verbose"
-      "--verbose --num-rhs=2"
-    COMM serial mpi
+    "--verbose"
+    "--verbose --num-rhs=2"
+    COMM
+    serial
+    mpi
   )
 
   TRIBITS_COPY_FILES_TO_BINARY_DIR(
@@ -45,8 +50,9 @@ IF (Tpetra_INST_COMPLEX_DOUBLE)
 
 ENDIF()
 
-TRIBITS_COPY_FILES_TO_BINARY_DIR(Tpetra_CopyTestMinresFiles
+TRIBITS_COPY_FILES_TO_BINARY_DIR(
+  Tpetra_CopyTestMinresFiles
   SOURCE_DIR ${Belos_SOURCE_DIR}/testmatrices
   SOURCE_FILES bcsstk14.hb
   EXEDEPS Tpetra_minres_hb
-  )
+)

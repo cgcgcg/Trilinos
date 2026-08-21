@@ -22,82 +22,76 @@
 
 namespace Belos {
 
-/** \example epetra/example/SolverFactory/SolverFactoryEpetraGaleriEx.cpp 
+/** \example epetra/example/SolverFactory/SolverFactoryEpetraGaleriEx.cpp
     This is an example of how to use the Belos::SolverFactory with Epetra.
 */
-/** \example tpetra/example/SolverFactory/SolverFactoryTpetraGaleriEx.cpp 
+/** \example tpetra/example/SolverFactory/SolverFactoryTpetraGaleriEx.cpp
     This is an example of how to use the Belos::SolverFactory with Tpetra.
 */
 
-  class BelosSolverFactory : public Impl::SolverFactoryParent<double,MultiVec<double, DefaultDenseMatrix<int,double>>,Operator<double, DefaultDenseMatrix<int,double>>,
-                                                          DefaultDenseMatrix<int,double>>
-{
-  public:
-    BelosSolverFactory() {
-      Details::registerSolverFactory();
-    };
+class BelosSolverFactory : public Impl::SolverFactoryParent<double, MultiVec<double, DefaultDenseMatrix<int, double>>, Operator<double, DefaultDenseMatrix<int, double>>,
+                                                            DefaultDenseMatrix<int, double>> {
+ public:
+  BelosSolverFactory() {
+    Details::registerSolverFactory();
+  };
 };
 
-  class BelosFloatSolverFactory : public Impl::SolverFactoryParent<float,MultiVec<float, DefaultDenseMatrix<int,float>>,Operator<float, DefaultDenseMatrix<int,float>>,
-                                                          DefaultDenseMatrix<int,float>>
-{
-  public:
-    BelosFloatSolverFactory() {
-      Details::registerSolverFactory();
-    };
+class BelosFloatSolverFactory : public Impl::SolverFactoryParent<float, MultiVec<float, DefaultDenseMatrix<int, float>>, Operator<float, DefaultDenseMatrix<int, float>>,
+                                                                 DefaultDenseMatrix<int, float>> {
+ public:
+  BelosFloatSolverFactory() {
+    Details::registerSolverFactory();
+  };
 };
 
 namespace Impl {
 
-template<>
-class SolverFactorySelector<double,MultiVec<double, DefaultDenseMatrix<int,double>>,Operator<double, DefaultDenseMatrix<int,double>>,DefaultDenseMatrix<int,double>> {
-  public:
-    typedef BelosSolverFactory type;
+template <>
+class SolverFactorySelector<double, MultiVec<double, DefaultDenseMatrix<int, double>>, Operator<double, DefaultDenseMatrix<int, double>>, DefaultDenseMatrix<int, double>> {
+ public:
+  typedef BelosSolverFactory type;
 };
 
-template<>
-class SolverFactorySelector<float,MultiVec<float, DefaultDenseMatrix<int,float>>,Operator<float, DefaultDenseMatrix<int,float>>,DefaultDenseMatrix<int,float>> {
-  public:
-    typedef BelosFloatSolverFactory type;
+template <>
+class SolverFactorySelector<float, MultiVec<float, DefaultDenseMatrix<int, float>>, Operator<float, DefaultDenseMatrix<int, float>>, DefaultDenseMatrix<int, float>> {
+ public:
+  typedef BelosFloatSolverFactory type;
 };
 
 #ifdef HAVE_TEUCHOS_COMPLEX
-class BelosComplexSolverFactory : public Impl::SolverFactoryParent<std::complex<double>,MultiVec<std::complex<double>>,
-  Operator<std::complex<double>, DefaultDenseMatrix<int,std::complex<double>>>, DefaultDenseMatrix<int,std::complex<double>>>
-{
-  public:
-    BelosComplexSolverFactory() {
-      Details::registerSolverFactory();
-    };
+class BelosComplexSolverFactory : public Impl::SolverFactoryParent<std::complex<double>, MultiVec<std::complex<double>>,
+                                                                   Operator<std::complex<double>, DefaultDenseMatrix<int, std::complex<double>>>, DefaultDenseMatrix<int, std::complex<double>>> {
+ public:
+  BelosComplexSolverFactory() {
+    Details::registerSolverFactory();
+  };
 };
 
-template<>
-class SolverFactorySelector<std::complex<double>,MultiVec<std::complex<double>>,Operator<std::complex<double>, DefaultDenseMatrix<int,std::complex<double>>>,
-                                    DefaultDenseMatrix<int,std::complex<double>>>
-{
-  public:
-    typedef BelosComplexSolverFactory type;
+template <>
+class SolverFactorySelector<std::complex<double>, MultiVec<std::complex<double>>, Operator<std::complex<double>, DefaultDenseMatrix<int, std::complex<double>>>,
+                            DefaultDenseMatrix<int, std::complex<double>>> {
+ public:
+  typedef BelosComplexSolverFactory type;
 };
 
-class BelosFloatComplexSolverFactory : public Impl::SolverFactoryParent<std::complex<float>,MultiVec<std::complex<float>>,
-                                                                        Operator<std::complex<float>, DefaultDenseMatrix<int,std::complex<float>>>, DefaultDenseMatrix<int,std::complex<float>>>
-{
-  public:
-    BelosFloatComplexSolverFactory() {
-      Details::registerSolverFactory();
-    };
+class BelosFloatComplexSolverFactory : public Impl::SolverFactoryParent<std::complex<float>, MultiVec<std::complex<float>>,
+                                                                        Operator<std::complex<float>, DefaultDenseMatrix<int, std::complex<float>>>, DefaultDenseMatrix<int, std::complex<float>>> {
+ public:
+  BelosFloatComplexSolverFactory() {
+    Details::registerSolverFactory();
+  };
 };
 
-template<>
-class SolverFactorySelector<std::complex<float>,MultiVec<std::complex<float>>,Operator<std::complex<float>, DefaultDenseMatrix<int,std::complex<float>>>,
-                                    DefaultDenseMatrix<int,std::complex<float>>>
-{
-  public:
-    typedef BelosFloatComplexSolverFactory type;
+template <>
+class SolverFactorySelector<std::complex<float>, MultiVec<std::complex<float>>, Operator<std::complex<float>, DefaultDenseMatrix<int, std::complex<float>>>,
+                            DefaultDenseMatrix<int, std::complex<float>>> {
+ public:
+  typedef BelosFloatComplexSolverFactory type;
 };
 #endif
 
-} // namespace Impl
-} // namespace Belos
+}  // namespace Impl
+}  // namespace Belos
 
-#endif // BELOSSOLVERFACTORY_BELOS_HPP
+#endif  // BELOSSOLVERFACTORY_BELOS_HPP

@@ -18,42 +18,41 @@
 
 namespace Belos {
 
-  //! Partial specialization of OperatorTraits for Tpetra objects.
-  template <class Scalar, class LO, class GO, class Node>
-  class OperatorTraits<Scalar,
-                       ::Tpetra::MultiVector<Scalar,LO,GO,Node>,
-                       ::Tpetra::Operator<Scalar,LO,GO,Node> >
-  {
-  public:
-    static void
-    Apply (const ::Tpetra::Operator<Scalar,LO,GO,Node>& Op,
-           const ::Tpetra::MultiVector<Scalar,LO,GO,Node>& X,
-           ::Tpetra::MultiVector<Scalar,LO,GO,Node>& Y,
-           const ETrans trans = NOTRANS)
-    {
-      Teuchos::ETransp teuchosTrans = Teuchos::NO_TRANS;
-      if (trans == NOTRANS) {
-        teuchosTrans = Teuchos::NO_TRANS;
-      } else if (trans == TRANS) {
-        teuchosTrans = Teuchos::TRANS;
-      } else if (trans == CONJTRANS) {
-        teuchosTrans = Teuchos::CONJ_TRANS;
-      } else {
-        TEUCHOS_TEST_FOR_EXCEPTION(
-          true, std::invalid_argument, "Belos::OperatorTraits::Apply: Invalid "
-          "'trans' value " << trans << ".  Valid values are NOTRANS=" << NOTRANS
-          << ", TRANS=" << TRANS << ", and CONJTRANS=" << CONJTRANS << ".");
-      }
-      Op.apply (X, Y, teuchosTrans);
+//! Partial specialization of OperatorTraits for Tpetra objects.
+template <class Scalar, class LO, class GO, class Node>
+class OperatorTraits<Scalar,
+                     ::Tpetra::MultiVector<Scalar, LO, GO, Node>,
+                     ::Tpetra::Operator<Scalar, LO, GO, Node> > {
+ public:
+  static void
+  Apply(const ::Tpetra::Operator<Scalar, LO, GO, Node>& Op,
+        const ::Tpetra::MultiVector<Scalar, LO, GO, Node>& X,
+        ::Tpetra::MultiVector<Scalar, LO, GO, Node>& Y,
+        const ETrans trans = NOTRANS) {
+    Teuchos::ETransp teuchosTrans = Teuchos::NO_TRANS;
+    if (trans == NOTRANS) {
+      teuchosTrans = Teuchos::NO_TRANS;
+    } else if (trans == TRANS) {
+      teuchosTrans = Teuchos::TRANS;
+    } else if (trans == CONJTRANS) {
+      teuchosTrans = Teuchos::CONJ_TRANS;
+    } else {
+      TEUCHOS_TEST_FOR_EXCEPTION(
+          true, std::invalid_argument,
+          "Belos::OperatorTraits::Apply: Invalid "
+          "'trans' value "
+              << trans << ".  Valid values are NOTRANS=" << NOTRANS
+              << ", TRANS=" << TRANS << ", and CONJTRANS=" << CONJTRANS << ".");
     }
+    Op.apply(X, Y, teuchosTrans);
+  }
 
-    static bool
-    HasApplyTranspose (const ::Tpetra::Operator<Scalar,LO,GO,Node>& Op)
-    {
-      return Op.hasTransposeApply ();
-    }
-  };
+  static bool
+  HasApplyTranspose(const ::Tpetra::Operator<Scalar, LO, GO, Node>& Op) {
+    return Op.hasTransposeApply();
+  }
+};
 
-} // namespace Belos
+}  // namespace Belos
 
-#endif // BELOSOPERATORTRAITS_TPETRA_HPP
+#endif  // BELOSOPERATORTRAITS_TPETRA_HPP

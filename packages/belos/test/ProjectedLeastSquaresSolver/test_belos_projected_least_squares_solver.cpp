@@ -14,17 +14,15 @@
 #include <Teuchos_oblackholestream.hpp>
 #include <Teuchos_ParameterList.hpp>
 
-int 
-main (int argc, char *argv[]) 
-{
+int main(int argc, char* argv[]) {
   using Belos::details::ERobustness;
   using Belos::details::ProjectedLeastSquaresSolver;
   using Belos::details::robustnessEnumToString;
   using Belos::details::robustnessStringToEnum;
+  using std::endl;
   using Teuchos::CommandLineProcessor;
   using Teuchos::RCP;
   using Teuchos::rcp;
-  using std::endl;
 
   typedef double scalar_type;
   typedef Teuchos::ScalarTraits<scalar_type> STS;
@@ -35,35 +33,35 @@ main (int argc, char *argv[])
   // Initialize MPI using Teuchos wrappers, if Trilinos was built with
   // MPI support.  Otherwise, initialize a communicator with one
   // process.
-  Teuchos::GlobalMPISession mpiSession (&argc, &argv, &blackHole);
+  Teuchos::GlobalMPISession mpiSession(&argc, &argv, &blackHole);
   const int myRank = mpiSession.getRank();
   // Output stream only prints on MPI Proc 0.
   std::ostream& out = (myRank == 0) ? std::cout : blackHole;
-  
+
   // Command-line arguments
-  std::string robustnessLevel ("None");
-  bool testBlockGivens = false;
+  std::string robustnessLevel("None");
+  bool testBlockGivens     = false;
   bool testGivensRotations = false;
-  bool verbose = false;
-  bool debug = false;
-  int testProblemSize = 10;
+  bool verbose             = false;
+  bool debug               = false;
+  int testProblemSize      = 10;
 
   // Parse command-line arguments
-  CommandLineProcessor cmdp (false,true);
-  cmdp.setOption ("robustness", &robustnessLevel,
-		  "Robustness level: \"None\", \"Some\", or \"Lots\".");
-  cmdp.setOption ("testGivensRotations", "dontTestGivensRotations", 
-		  &testGivensRotations, 
-		  "Test the implementation of Givens rotations.");
-  cmdp.setOption ("testBlockGivens", "dontTestBlockGivens", &testBlockGivens,
-		  "Test the panel version of the Givens rotations - based "
-		  "update.");
-  cmdp.setOption ("verbose", "quiet", &verbose, "Print messages and results.");
-  cmdp.setOption ("debug", "release", &debug, "Print copious debug output.");
-  cmdp.setOption ("testProblemSize", &testProblemSize, 
-		  "Number of columns in the projected least-squares test "
-		  "problem.");
-  if (cmdp.parse (argc,argv) != CommandLineProcessor::PARSE_SUCCESSFUL) {
+  CommandLineProcessor cmdp(false, true);
+  cmdp.setOption("robustness", &robustnessLevel,
+                 "Robustness level: \"None\", \"Some\", or \"Lots\".");
+  cmdp.setOption("testGivensRotations", "dontTestGivensRotations",
+                 &testGivensRotations,
+                 "Test the implementation of Givens rotations.");
+  cmdp.setOption("testBlockGivens", "dontTestBlockGivens", &testBlockGivens,
+                 "Test the panel version of the Givens rotations - based "
+                 "update.");
+  cmdp.setOption("verbose", "quiet", &verbose, "Print messages and results.");
+  cmdp.setOption("debug", "release", &debug, "Print copious debug output.");
+  cmdp.setOption("testProblemSize", &testProblemSize,
+                 "Number of columns in the projected least-squares test "
+                 "problem.");
+  if (cmdp.parse(argc, argv) != CommandLineProcessor::PARSE_SUCCESSFUL) {
     out << "End Result: TEST FAILED" << endl;
     return EXIT_FAILURE;
   }
@@ -72,31 +70,31 @@ main (int argc, char *argv[])
   std::ostream& verboseOut = verbose ? out : blackHole;
 
   // Robustness level for triangular solves.
-  const ERobustness robustness = robustnessStringToEnum (robustnessLevel);
+  const ERobustness robustness = robustnessStringToEnum(robustnessLevel);
   verboseOut << "-- Robustness level: " << robustnessLevel << endl;
 
-  bool success = true; // Innocent until proven guilty.
+  bool success = true;  // Innocent until proven guilty.
 
   // Seed the pseudorandom number generator with the same seed each
   // time, to ensure repeatable results.
-  STS::seedrandom (0);
-  ProjectedLeastSquaresSolver<scalar_type> solver (out, robustness);
+  STS::seedrandom(0);
+  ProjectedLeastSquaresSolver<scalar_type> solver(out, robustness);
 
   if (testGivensRotations) {
-    solver.testGivensRotations (verboseOut);
+    solver.testGivensRotations(verboseOut);
   }
   if (testProblemSize > 0) {
     const bool extraVerbose = debug;
-    success = success && 
-      solver.testUpdateColumn (verboseOut, testProblemSize, 
-			       testBlockGivens, extraVerbose);
+    success                 = success &&
+              solver.testUpdateColumn(verboseOut, testProblemSize,
+                                      testBlockGivens, extraVerbose);
     success = success &&
-      solver.testTriangularSolves (verboseOut, testProblemSize, 
-				   robustness, extraVerbose);
+              solver.testTriangularSolves(verboseOut, testProblemSize,
+                                          robustness, extraVerbose);
   }
 
   if (success) {
-    out << "End Result: TEST PASSED" << endl;  
+    out << "End Result: TEST PASSED" << endl;
     return EXIT_SUCCESS;
   } else {
     out << "End Result: TEST FAILED" << endl;

@@ -12,7 +12,7 @@
 
 /*! \file BelosBiCGStabSolMgr.hpp
  *  \brief The Belos::BiCGStabSolMgr provides a solver manager for the BiCGStab linear solver.
-*/
+ */
 
 #include "BelosConfigDefs.hpp"
 #include "BelosTypes.hpp"
@@ -51,265 +51,262 @@
 
 namespace Belos {
 
-  //! @name BiCGStabSolMgr Exceptions
+//! @name BiCGStabSolMgr Exceptions
+//@{
+
+/** \brief BiCGStabSolMgrLinearProblemFailure is thrown when the linear problem is
+ * not setup (i.e. setProblem() was not called) when solve() is called.
+ *
+ * This std::exception is thrown from the BiCGStabSolMgr::solve() method.
+ *
+ */
+class BiCGStabSolMgrLinearProblemFailure : public BelosError {
+ public:
+  BiCGStabSolMgrLinearProblemFailure(const std::string &what_arg)
+    : BelosError(what_arg) {}
+};
+
+template <class ScalarType, class MV, class OP, class DM = DefaultDenseMatrix<int, ScalarType>>
+class BiCGStabSolMgr : public SolverManager<ScalarType, MV, OP, DM> {
+ private:
+  typedef MultiVecTraits<ScalarType, MV, DM> MVT;
+  typedef OperatorTraits<ScalarType, MV, OP> OPT;
+  typedef Teuchos::ScalarTraits<ScalarType> SCT;
+  typedef typename Teuchos::ScalarTraits<ScalarType>::magnitudeType MagnitudeType;
+  typedef Teuchos::ScalarTraits<MagnitudeType> MT;
+
+ public:
+  //! @name Constructors/Destructor
   //@{
 
-  /** \brief BiCGStabSolMgrLinearProblemFailure is thrown when the linear problem is
-   * not setup (i.e. setProblem() was not called) when solve() is called.
-   *
-   * This std::exception is thrown from the BiCGStabSolMgr::solve() method.
-   *
+  /*! \brief Empty constructor for BiCGStabSolMgr.
+   * This constructor takes no arguments and sets the default values for the solver.
+   * The linear problem must be passed in using setProblem() before solve() is called on this object.
+   * The solver values can be changed using setParameters().
    */
-  class BiCGStabSolMgrLinearProblemFailure : public BelosError {public:
-    BiCGStabSolMgrLinearProblemFailure(const std::string& what_arg) : BelosError(what_arg)
-    {}};
+  BiCGStabSolMgr();
 
-  template<class ScalarType, class MV, class OP, class DM = DefaultDenseMatrix<int, ScalarType>>
-  class BiCGStabSolMgr : public SolverManager<ScalarType,MV,OP,DM> {
+  /*! \brief Basic constructor for BiCGStabSolMgr.
+   *
+   * This constructor accepts the LinearProblem to be solved in addition
+   * to a parameter list of options for the solver manager. These options include the following:
+   *   - "Maximum Iterations" - a \c int specifying the maximum number of iterations the underlying solver is allowed to perform.
+   *   - "Verbosity" - a sum of MsgType specifying the verbosity. Default: Belos::Errors
+   *   - "Output Style" - a OutputType specifying the style of output. Default: Belos::General
+   *   - "Convergence Tolerance" - a \c MagnitudeType specifying the level that residual norms must reach to decide convergence.
+   */
+  BiCGStabSolMgr(const Teuchos::RCP<LinearProblem<ScalarType, MV, OP, DM>> &problem,
+                 const Teuchos::RCP<Teuchos::ParameterList> &pl);
 
-  private:
-    typedef MultiVecTraits<ScalarType,MV,DM> MVT;
-    typedef OperatorTraits<ScalarType,MV,OP> OPT;
-    typedef Teuchos::ScalarTraits<ScalarType> SCT;
-    typedef typename Teuchos::ScalarTraits<ScalarType>::magnitudeType MagnitudeType;
-    typedef Teuchos::ScalarTraits<MagnitudeType> MT;
+  //! Destructor.
+  virtual ~BiCGStabSolMgr(){};
 
-  public:
+  //! clone for Inverted Injection (DII)
+  Teuchos::RCP<SolverManager<ScalarType, MV, OP, DM>> clone() const override {
+    return Teuchos::rcp(new BiCGStabSolMgr<ScalarType, MV, OP, DM>);
+  }
+  //@}
 
-    //! @name Constructors/Destructor
-    //@{
+  //! @name Accessor methods
+  //@{
 
-    /*! \brief Empty constructor for BiCGStabSolMgr.
-     * This constructor takes no arguments and sets the default values for the solver.
-     * The linear problem must be passed in using setProblem() before solve() is called on this object.
-     * The solver values can be changed using setParameters().
-     */
-    BiCGStabSolMgr();
+  const LinearProblem<ScalarType, MV, OP, DM> &getProblem() const override {
+    return *problem_;
+  }
 
-    /*! \brief Basic constructor for BiCGStabSolMgr.
-     *
-     * This constructor accepts the LinearProblem to be solved in addition
-     * to a parameter list of options for the solver manager. These options include the following:
-     *   - "Maximum Iterations" - a \c int specifying the maximum number of iterations the underlying solver is allowed to perform.
-     *   - "Verbosity" - a sum of MsgType specifying the verbosity. Default: Belos::Errors
-     *   - "Output Style" - a OutputType specifying the style of output. Default: Belos::General
-     *   - "Convergence Tolerance" - a \c MagnitudeType specifying the level that residual norms must reach to decide convergence.
-     */
-    BiCGStabSolMgr( const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > &problem,
-                         const Teuchos::RCP<Teuchos::ParameterList> &pl );
+  /*! \brief Get a parameter list containing the valid parameters for this object.
+   */
+  Teuchos::RCP<const Teuchos::ParameterList> getValidParameters() const override;
 
-    //! Destructor.
-    virtual ~BiCGStabSolMgr() {};
+  /*! \brief Get a parameter list containing the current parameters for this object.
+   */
+  Teuchos::RCP<const Teuchos::ParameterList> getCurrentParameters() const override { return params_; }
 
-    //! clone for Inverted Injection (DII)
-    Teuchos::RCP<SolverManager<ScalarType, MV, OP, DM> > clone () const override {
-      return Teuchos::rcp(new BiCGStabSolMgr<ScalarType,MV,OP,DM>);
-    }
-    //@}
+  /*! \brief Return the timers for this object.
+   *
+   * The timers are ordered as follows:
+   *   - time spent in solve() routine
+   */
+  Teuchos::Array<Teuchos::RCP<Teuchos::Time>> getTimers() const {
+    return Teuchos::tuple(timerSolve_);
+  }
 
-    //! @name Accessor methods
-    //@{
+  /// \brief Tolerance achieved by the last \c solve() invocation.
+  ///
+  /// This is the maximum over all right-hand sides' achieved
+  /// convergence tolerances, and is set whether or not the solve
+  /// actually managed to achieve the desired convergence tolerance.
+  ///
+  /// \warning This result may not be meaningful if there was a loss
+  ///   of accuracy during the solve.  You should first call \c
+  ///   isLOADetected() to check for a loss of accuracy during the
+  ///   last solve.
+  MagnitudeType achievedTol() const override {
+    return achievedTol_;
+  }
 
-    const LinearProblem<ScalarType,MV,OP,DM>& getProblem() const override {
-      return *problem_;
-    }
+  //! Get the iteration count for the most recent call to \c solve().
+  int getNumIters() const override {
+    return numIters_;
+  }
 
-    /*! \brief Get a parameter list containing the valid parameters for this object.
-     */
-    Teuchos::RCP<const Teuchos::ParameterList> getValidParameters() const override;
+  /*! \brief Return whether a loss of accuracy was detected by this solver during the most current solve.
+      \note This flag will be reset the next time solve() is called.
+   */
+  bool isLOADetected() const override { return false; }
 
-    /*! \brief Get a parameter list containing the current parameters for this object.
-     */
-    Teuchos::RCP<const Teuchos::ParameterList> getCurrentParameters() const override { return params_; }
+  //@}
 
-    /*! \brief Return the timers for this object.
-     *
-     * The timers are ordered as follows:
-     *   - time spent in solve() routine
-     */
-    Teuchos::Array<Teuchos::RCP<Teuchos::Time> > getTimers() const {
-      return Teuchos::tuple(timerSolve_);
-    }
+  //! @name Set methods
+  //@{
 
+  //! Set the linear problem that needs to be solved.
+  void setProblem(const Teuchos::RCP<LinearProblem<ScalarType, MV, OP, DM>> &problem) override { problem_ = problem; }
 
-    /// \brief Tolerance achieved by the last \c solve() invocation.
-    ///
-    /// This is the maximum over all right-hand sides' achieved
-    /// convergence tolerances, and is set whether or not the solve
-    /// actually managed to achieve the desired convergence tolerance.
-    ///
-    /// \warning This result may not be meaningful if there was a loss
-    ///   of accuracy during the solve.  You should first call \c
-    ///   isLOADetected() to check for a loss of accuracy during the
-    ///   last solve.
-    MagnitudeType achievedTol() const override {
-      return achievedTol_;
-    }
+  //! Set the parameters the solver manager should use to solve the linear problem.
+  void setParameters(const Teuchos::RCP<Teuchos::ParameterList> &params) override;
 
-    //! Get the iteration count for the most recent call to \c solve().
-    int getNumIters() const override {
-      return numIters_;
-    }
+  //@}
 
-    /*! \brief Return whether a loss of accuracy was detected by this solver during the most current solve.
-        \note This flag will be reset the next time solve() is called.
-     */
-    bool isLOADetected() const override { return false; }
+  //! @name Reset methods
+  //@{
+  /*! \brief Performs a reset of the solver manager specified by the \c ResetType.  This informs the
+   *  solver manager that the solver should prepare for the next call to solve by resetting certain elements
+   *  of the iterative solver strategy.
+   */
+  void reset(const ResetType type) override {
+    if ((type & Belos::Problem) && !Teuchos::is_null(problem_)) problem_->setProblem();
+  }
+  //@}
 
-    //@}
+  //! @name Solver application methods
+  //@{
 
-    //! @name Set methods
-    //@{
+  /*! \brief This method performs possibly repeated calls to the underlying linear solver's iterate() routine
+   * until the problem has been solved (as decided by the solver manager) or the solver manager decides to
+   * quit.
+   *
+   * This method calls BiCGStabIter::iterate(), which will return either because a specially constructed status test evaluates to
+   * ::Passed or an std::exception is thrown.
+   *
+   * A return from BiCGStabIter::iterate() signifies one of the following scenarios:
+   *    - the maximum number of restarts has been exceeded. In this scenario, the current solutions to the linear system
+   *      will be placed in the linear problem and return ::Unconverged.
+   *    - global convergence has been met. In this case, the current solutions to the linear system will be placed in the linear
+   *      problem and the solver manager will return ::Converged
+   *
+   * \returns ::ReturnType specifying:
+   *     - ::Converged: the linear problem was solved to the specification required by the solver manager.
+   *     - ::Unconverged: the linear problem was not solved to the specification desired by the solver manager.
+   */
+  ReturnType solve() override;
 
-    //! Set the linear problem that needs to be solved.
-    void setProblem( const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > &problem ) override { problem_ = problem; }
+  //@}
 
-    //! Set the parameters the solver manager should use to solve the linear problem.
-    void setParameters( const Teuchos::RCP<Teuchos::ParameterList> &params ) override;
+  /** \name Overridden from Teuchos::Describable */
+  //@{
 
-    //@}
+  /** \brief Method to return description of the block BiCGStab solver manager */
+  std::string description() const override;
 
-    //! @name Reset methods
-    //@{
-    /*! \brief Performs a reset of the solver manager specified by the \c ResetType.  This informs the
-     *  solver manager that the solver should prepare for the next call to solve by resetting certain elements
-     *  of the iterative solver strategy.
-     */
-    void reset( const ResetType type ) override { if ((type & Belos::Problem) && !Teuchos::is_null(problem_)) problem_->setProblem(); }
-    //@}
+  //@}
+ private:
+  // Linear problem.
+  Teuchos::RCP<LinearProblem<ScalarType, MV, OP, DM>> problem_;
 
-    //! @name Solver application methods
-    //@{
+  // Output manager.
+  Teuchos::RCP<OutputManager<ScalarType>> printer_;
+  Teuchos::RCP<std::ostream> outputStream_;
 
-    /*! \brief This method performs possibly repeated calls to the underlying linear solver's iterate() routine
-     * until the problem has been solved (as decided by the solver manager) or the solver manager decides to
-     * quit.
-     *
-     * This method calls BiCGStabIter::iterate(), which will return either because a specially constructed status test evaluates to
-     * ::Passed or an std::exception is thrown.
-     *
-     * A return from BiCGStabIter::iterate() signifies one of the following scenarios:
-     *    - the maximum number of restarts has been exceeded. In this scenario, the current solutions to the linear system
-     *      will be placed in the linear problem and return ::Unconverged.
-     *    - global convergence has been met. In this case, the current solutions to the linear system will be placed in the linear
-     *      problem and the solver manager will return ::Converged
-     *
-     * \returns ::ReturnType specifying:
-     *     - ::Converged: the linear problem was solved to the specification required by the solver manager.
-     *     - ::Unconverged: the linear problem was not solved to the specification desired by the solver manager.
-     */
-    ReturnType solve() override;
+  // Status test.
+  Teuchos::RCP<StatusTest<ScalarType, MV, OP, DM>> sTest_;
+  Teuchos::RCP<StatusTestMaxIters<ScalarType, MV, OP, DM>> maxIterTest_;
+  Teuchos::RCP<StatusTestGenResNorm<ScalarType, MV, OP, DM>> convTest_;
+  Teuchos::RCP<StatusTestOutput<ScalarType, MV, OP, DM>> outputTest_;
 
-    //@}
+  // Current parameter list.
+  Teuchos::RCP<Teuchos::ParameterList> params_;
 
-    /** \name Overridden from Teuchos::Describable */
-    //@{
+  /// \brief List of valid parameters and their default values.
+  ///
+  /// This is declared "mutable" because the SolverManager interface
+  /// requires that getValidParameters() be declared const, yet we
+  /// want to create the valid parameter list only on demand.
+  mutable Teuchos::RCP<const Teuchos::ParameterList> validParams_;
 
-    /** \brief Method to return description of the block BiCGStab solver manager */
-    std::string description() const override;
+  // Default solver values.
+  static constexpr int maxIters_default_            = 1000;
+  static constexpr bool showMaxResNormOnly_default_ = false;
+  static constexpr int verbosity_default_           = Belos::Errors;
+  static constexpr int outputStyle_default_         = Belos::General;
+  static constexpr int outputFreq_default_          = -1;
+  static constexpr int defQuorum_default_           = 1;
+  static constexpr const char *resScale_default_    = "Norm of Initial Residual";
+  static constexpr const char *label_default_       = "Belos";
 
-    //@}
-  private:
+  // Current solver values.
+  MagnitudeType convtol_, achievedTol_;
+  int maxIters_, numIters_;
+  int verbosity_, outputStyle_, outputFreq_, defQuorum_;
+  bool showMaxResNormOnly_;
+  std::string resScale_;
 
-    // Linear problem.
-    Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > problem_;
+  // Timers.
+  std::string label_;
+  Teuchos::RCP<Teuchos::Time> timerSolve_;
 
-    // Output manager.
-    Teuchos::RCP<OutputManager<ScalarType> > printer_;
-    Teuchos::RCP<std::ostream> outputStream_;
-
-    // Status test.
-    Teuchos::RCP<StatusTest<ScalarType,MV,OP,DM> > sTest_;
-    Teuchos::RCP<StatusTestMaxIters<ScalarType,MV,OP,DM> > maxIterTest_;
-    Teuchos::RCP<StatusTestGenResNorm<ScalarType,MV,OP,DM> > convTest_;
-    Teuchos::RCP<StatusTestOutput<ScalarType,MV,OP,DM> > outputTest_;
-
-    // Current parameter list.
-    Teuchos::RCP<Teuchos::ParameterList> params_;
-
-    /// \brief List of valid parameters and their default values.
-    ///
-    /// This is declared "mutable" because the SolverManager interface
-    /// requires that getValidParameters() be declared const, yet we
-    /// want to create the valid parameter list only on demand.
-    mutable Teuchos::RCP<const Teuchos::ParameterList> validParams_;
-
-    // Default solver values.
-    static constexpr int maxIters_default_ = 1000;
-    static constexpr bool showMaxResNormOnly_default_ = false;
-    static constexpr int verbosity_default_ = Belos::Errors;
-    static constexpr int outputStyle_default_ = Belos::General;
-    static constexpr int outputFreq_default_ = -1;
-    static constexpr int defQuorum_default_ = 1;
-    static constexpr const char * resScale_default_ = "Norm of Initial Residual";
-    static constexpr const char * label_default_ = "Belos";
-
-    // Current solver values.
-    MagnitudeType convtol_,achievedTol_;
-    int maxIters_, numIters_;
-    int verbosity_, outputStyle_, outputFreq_, defQuorum_;
-    bool showMaxResNormOnly_;
-    std::string resScale_;
-
-    // Timers.
-    std::string label_;
-    Teuchos::RCP<Teuchos::Time> timerSolve_;
-
-    // Internal state variables.
-    bool isSet_;
-  };
+  // Internal state variables.
+  bool isSet_;
+};
 
 // Empty Constructor
-template<class ScalarType, class MV, class OP, class DM>
-BiCGStabSolMgr<ScalarType,MV,OP,DM>::BiCGStabSolMgr() :
-  outputStream_(Teuchos::rcpFromRef(std::cout)),
-  convtol_(DefaultSolverParameters::convTol),
-  maxIters_(maxIters_default_),
-  numIters_(0),
-  verbosity_(verbosity_default_),
-  outputStyle_(outputStyle_default_),
-  outputFreq_(outputFreq_default_),
-  defQuorum_(defQuorum_default_),
-  showMaxResNormOnly_(showMaxResNormOnly_default_),
-  resScale_(resScale_default_),
-  label_(label_default_),
-  isSet_(false)
-{}
+template <class ScalarType, class MV, class OP, class DM>
+BiCGStabSolMgr<ScalarType, MV, OP, DM>::BiCGStabSolMgr()
+  : outputStream_(Teuchos::rcpFromRef(std::cout))
+  , convtol_(DefaultSolverParameters::convTol)
+  , maxIters_(maxIters_default_)
+  , numIters_(0)
+  , verbosity_(verbosity_default_)
+  , outputStyle_(outputStyle_default_)
+  , outputFreq_(outputFreq_default_)
+  , defQuorum_(defQuorum_default_)
+  , showMaxResNormOnly_(showMaxResNormOnly_default_)
+  , resScale_(resScale_default_)
+  , label_(label_default_)
+  , isSet_(false) {}
 
 // Basic Constructor
-template<class ScalarType, class MV, class OP, class DM>
-BiCGStabSolMgr<ScalarType,MV,OP,DM>::
-BiCGStabSolMgr (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > &problem,
-                     const Teuchos::RCP<Teuchos::ParameterList> &pl ) :
-  problem_(problem),
-  outputStream_(Teuchos::rcpFromRef(std::cout)),
-  convtol_(DefaultSolverParameters::convTol),
-  maxIters_(maxIters_default_),
-  numIters_(0),
-  verbosity_(verbosity_default_),
-  outputStyle_(outputStyle_default_),
-  outputFreq_(outputFreq_default_),
-  defQuorum_(defQuorum_default_),
-  showMaxResNormOnly_(showMaxResNormOnly_default_),
-  resScale_(resScale_default_),
-  label_(label_default_),
-  isSet_(false)
-{
+template <class ScalarType, class MV, class OP, class DM>
+BiCGStabSolMgr<ScalarType, MV, OP, DM>::
+    BiCGStabSolMgr(const Teuchos::RCP<LinearProblem<ScalarType, MV, OP, DM>> &problem,
+                   const Teuchos::RCP<Teuchos::ParameterList> &pl)
+  : problem_(problem)
+  , outputStream_(Teuchos::rcpFromRef(std::cout))
+  , convtol_(DefaultSolverParameters::convTol)
+  , maxIters_(maxIters_default_)
+  , numIters_(0)
+  , verbosity_(verbosity_default_)
+  , outputStyle_(outputStyle_default_)
+  , outputFreq_(outputFreq_default_)
+  , defQuorum_(defQuorum_default_)
+  , showMaxResNormOnly_(showMaxResNormOnly_default_)
+  , resScale_(resScale_default_)
+  , label_(label_default_)
+  , isSet_(false) {
   TEUCHOS_TEST_FOR_EXCEPTION(
-    problem_.is_null (), std::invalid_argument,
-    "Belos::BiCGStabSolMgr two-argument constructor: "
-    "'problem' is null.  You must supply a non-null Belos::LinearProblem "
-    "instance when calling this constructor.");
+      problem_.is_null(), std::invalid_argument,
+      "Belos::BiCGStabSolMgr two-argument constructor: "
+      "'problem' is null.  You must supply a non-null Belos::LinearProblem "
+      "instance when calling this constructor.");
 
-  if (! pl.is_null ()) {
+  if (!pl.is_null()) {
     // Set the parameters using the list that was passed in.
-    setParameters (pl);
+    setParameters(pl);
   }
 }
 
-template<class ScalarType, class MV, class OP, class DM>
-void BiCGStabSolMgr<ScalarType,MV,OP,DM>::setParameters( const Teuchos::RCP<Teuchos::ParameterList> &params )
-{
+template <class ScalarType, class MV, class OP, class DM>
+void BiCGStabSolMgr<ScalarType, MV, OP, DM>::setParameters(const Teuchos::RCP<Teuchos::ParameterList> &params) {
   using Teuchos::ParameterList;
   using Teuchos::parameterList;
   using Teuchos::RCP;
@@ -318,19 +315,19 @@ void BiCGStabSolMgr<ScalarType,MV,OP,DM>::setParameters( const Teuchos::RCP<Teuc
 
   // Create the internal parameter list if one doesn't already exist.
   if (params_.is_null()) {
-    params_ = parameterList (*defaultParams);
+    params_ = parameterList(*defaultParams);
   } else {
-    params->validateParameters (*defaultParams);
+    params->validateParameters(*defaultParams);
   }
 
   // Check for maximum number of iterations
   if (params->isParameter("Maximum Iterations")) {
-    maxIters_ = params->get("Maximum Iterations",maxIters_default_);
+    maxIters_ = params->get("Maximum Iterations", maxIters_default_);
 
     // Update parameter in our list and in status test.
     params_->set("Maximum Iterations", maxIters_);
-    if (maxIterTest_!=Teuchos::null)
-      maxIterTest_->setMaxIters( maxIters_ );
+    if (maxIterTest_ != Teuchos::null)
+      maxIterTest_->setMaxIters(maxIters_);
   }
 
   // Check to see if the timer label changed.
@@ -350,10 +347,10 @@ void BiCGStabSolMgr<ScalarType,MV,OP,DM>::setParameters( const Teuchos::RCP<Teuc
 
   // Check for a change in verbosity level
   if (params->isParameter("Verbosity")) {
-    if (Teuchos::isParameterType<int>(*params,"Verbosity")) {
+    if (Teuchos::isParameterType<int>(*params, "Verbosity")) {
       verbosity_ = params->get("Verbosity", verbosity_default_);
     } else {
-      verbosity_ = (int)Teuchos::getParameter<Belos::MsgType>(*params,"Verbosity");
+      verbosity_ = (int)Teuchos::getParameter<Belos::MsgType>(*params, "Verbosity");
     }
 
     // Update parameter in our list.
@@ -364,10 +361,10 @@ void BiCGStabSolMgr<ScalarType,MV,OP,DM>::setParameters( const Teuchos::RCP<Teuc
 
   // Check for a change in output style
   if (params->isParameter("Output Style")) {
-    if (Teuchos::isParameterType<int>(*params,"Output Style")) {
+    if (Teuchos::isParameterType<int>(*params, "Output Style")) {
       outputStyle_ = params->get("Output Style", outputStyle_default_);
     } else {
-      outputStyle_ = (int)Teuchos::getParameter<Belos::OutputType>(*params,"Output Style");
+      outputStyle_ = (int)Teuchos::getParameter<Belos::OutputType>(*params, "Output Style");
     }
 
     // Reconstruct the convergence test if the explicit residual test is not being used.
@@ -377,12 +374,12 @@ void BiCGStabSolMgr<ScalarType,MV,OP,DM>::setParameters( const Teuchos::RCP<Teuc
 
   // output stream
   if (params->isParameter("Output Stream")) {
-    outputStream_ = Teuchos::getParameter<Teuchos::RCP<std::ostream> >(*params,"Output Stream");
+    outputStream_ = Teuchos::getParameter<Teuchos::RCP<std::ostream>>(*params, "Output Stream");
 
     // Update parameter in our list.
     params_->set("Output Stream", outputStream_);
     if (printer_ != Teuchos::null)
-      printer_->setOStream( outputStream_ );
+      printer_->setOStream(outputStream_);
   }
 
   // frequency level
@@ -394,41 +391,40 @@ void BiCGStabSolMgr<ScalarType,MV,OP,DM>::setParameters( const Teuchos::RCP<Teuc
     // Update parameter in out list and output status test.
     params_->set("Output Frequency", outputFreq_);
     if (outputTest_ != Teuchos::null)
-      outputTest_->setOutputFrequency( outputFreq_ );
+      outputTest_->setOutputFrequency(outputFreq_);
   }
 
   // Create output manager if we need to.
   if (printer_ == Teuchos::null) {
-    printer_ = Teuchos::rcp( new OutputManager<ScalarType>(verbosity_, outputStream_) );
+    printer_ = Teuchos::rcp(new OutputManager<ScalarType>(verbosity_, outputStream_));
   }
 
   // Convergence
-  typedef Belos::StatusTestCombo<ScalarType,MV,OP,DM>  StatusTestCombo_t;
-  typedef Belos::StatusTestGenResNorm<ScalarType,MV,OP,DM>  StatusTestResNorm_t;
+  typedef Belos::StatusTestCombo<ScalarType, MV, OP, DM> StatusTestCombo_t;
+  typedef Belos::StatusTestGenResNorm<ScalarType, MV, OP, DM> StatusTestResNorm_t;
 
   // Check for convergence tolerance
   if (params->isParameter("Convergence Tolerance")) {
-    if (params->isType<MagnitudeType> ("Convergence Tolerance")) {
-      convtol_ = params->get ("Convergence Tolerance",
-                              static_cast<MagnitudeType> (DefaultSolverParameters::convTol));
-    }
-    else {
-      convtol_ = params->get ("Convergence Tolerance", DefaultSolverParameters::convTol);
+    if (params->isType<MagnitudeType>("Convergence Tolerance")) {
+      convtol_ = params->get("Convergence Tolerance",
+                             static_cast<MagnitudeType>(DefaultSolverParameters::convTol));
+    } else {
+      convtol_ = params->get("Convergence Tolerance", DefaultSolverParameters::convTol);
     }
 
     // Update parameter in our list and residual tests.
     params_->set("Convergence Tolerance", convtol_);
     if (convTest_ != Teuchos::null)
-      convTest_->setTolerance( convtol_ );
+      convTest_->setTolerance(convtol_);
   }
 
   if (params->isParameter("Show Maximum Residual Norm Only")) {
-    showMaxResNormOnly_ = Teuchos::getParameter<bool>(*params,"Show Maximum Residual Norm Only");
+    showMaxResNormOnly_ = Teuchos::getParameter<bool>(*params, "Show Maximum Residual Norm Only");
 
     // Update parameter in our list and residual tests
     params_->set("Show Maximum Residual Norm Only", showMaxResNormOnly_);
     if (convTest_ != Teuchos::null)
-      convTest_->setShowMaxResNormOnly( showMaxResNormOnly_ );
+      convTest_->setShowMaxResNormOnly(showMaxResNormOnly_);
   }
 
   // Check for a change in scaling, if so we need to build new residual tests.
@@ -437,35 +433,32 @@ void BiCGStabSolMgr<ScalarType,MV,OP,DM>::setParameters( const Teuchos::RCP<Teuc
     // "Residual Scaling" is the old parameter name; "Implicit
     // Residual Scaling" is the new name.  We support both options for
     // backwards compatibility.
-    std::string tempResScale = resScale_;
+    std::string tempResScale         = resScale_;
     bool implicitResidualScalingName = false;
-    if (params->isParameter ("Residual Scaling")) {
-      tempResScale = params->get<std::string> ("Residual Scaling");
-    }
-    else if (params->isParameter ("Implicit Residual Scaling")) {
-      tempResScale = params->get<std::string> ("Implicit Residual Scaling");
+    if (params->isParameter("Residual Scaling")) {
+      tempResScale = params->get<std::string>("Residual Scaling");
+    } else if (params->isParameter("Implicit Residual Scaling")) {
+      tempResScale                = params->get<std::string>("Implicit Residual Scaling");
       implicitResidualScalingName = true;
     }
 
     // Only update the scaling if it's different.
     if (resScale_ != tempResScale) {
-      Belos::ScaleType resScaleType = convertStringToScaleType( tempResScale );
-      resScale_ = tempResScale;
+      Belos::ScaleType resScaleType = convertStringToScaleType(tempResScale);
+      resScale_                     = tempResScale;
 
       // Update parameter in our list and residual tests, using the
       // given parameter name.
       if (implicitResidualScalingName) {
-        params_->set ("Implicit Residual Scaling", resScale_);
-      }
-      else {
-        params_->set ("Residual Scaling", resScale_);
+        params_->set("Implicit Residual Scaling", resScale_);
+      } else {
+        params_->set("Residual Scaling", resScale_);
       }
 
-      if (! convTest_.is_null()) {
+      if (!convTest_.is_null()) {
         try {
-          convTest_->defineScaleForm( resScaleType, Belos::TwoNorm );
-        }
-        catch (std::exception& e) {
+          convTest_->defineScaleForm(resScaleType, Belos::TwoNorm);
+        } catch (std::exception &e) {
           // Make sure the convergence test gets constructed again.
           newResTest = true;
         }
@@ -478,35 +471,33 @@ void BiCGStabSolMgr<ScalarType,MV,OP,DM>::setParameters( const Teuchos::RCP<Teuc
     defQuorum_ = params->get("Deflation Quorum", defQuorum_);
     params_->set("Deflation Quorum", defQuorum_);
     if (convTest_ != Teuchos::null)
-      convTest_->setQuorum( defQuorum_ );
+      convTest_->setQuorum(defQuorum_);
   }
 
   // Create status tests if we need to.
 
   // Basic test checks maximum iterations and native residual.
   if (maxIterTest_ == Teuchos::null)
-    maxIterTest_ = Teuchos::rcp( new StatusTestMaxIters<ScalarType,MV,OP,DM>( maxIters_ ) );
+    maxIterTest_ = Teuchos::rcp(new StatusTestMaxIters<ScalarType, MV, OP, DM>(maxIters_));
 
   // Implicit residual test, using the native residual to determine if convergence was achieved.
   if (convTest_ == Teuchos::null || newResTest) {
-    convTest_ = Teuchos::rcp( new StatusTestResNorm_t( convtol_, defQuorum_, showMaxResNormOnly_ ) );
-    convTest_->defineScaleForm( convertStringToScaleType( resScale_ ), Belos::TwoNorm );
+    convTest_ = Teuchos::rcp(new StatusTestResNorm_t(convtol_, defQuorum_, showMaxResNormOnly_));
+    convTest_->defineScaleForm(convertStringToScaleType(resScale_), Belos::TwoNorm);
   }
 
   if (sTest_ == Teuchos::null || newResTest)
-    sTest_ = Teuchos::rcp( new StatusTestCombo_t( StatusTestCombo_t::OR, maxIterTest_, convTest_ ) );
+    sTest_ = Teuchos::rcp(new StatusTestCombo_t(StatusTestCombo_t::OR, maxIterTest_, convTest_));
 
   if (outputTest_ == Teuchos::null || newResTest) {
-
     // Create the status test output class.
     // This class manages and formats the output from the status test.
-    StatusTestOutputFactory<ScalarType,MV,OP,DM> stoFactory( outputStyle_ );
-    outputTest_ = stoFactory.create( printer_, sTest_, outputFreq_, Passed+Failed+Undefined );
+    StatusTestOutputFactory<ScalarType, MV, OP, DM> stoFactory(outputStyle_);
+    outputTest_ = stoFactory.create(printer_, sTest_, outputFreq_, Passed + Failed + Undefined);
 
     // Set the solver string for the output test
     std::string solverDesc = " Pseudo Block BiCGStab ";
-    outputTest_->setSolverDesc( solverDesc );
-
+    outputTest_->setSolverDesc(solverDesc);
   }
 
   // Create the timer if we need to.
@@ -521,47 +512,45 @@ void BiCGStabSolMgr<ScalarType,MV,OP,DM>::setParameters( const Teuchos::RCP<Teuc
   isSet_ = true;
 }
 
-
-template<class ScalarType, class MV, class OP, class DM>
+template <class ScalarType, class MV, class OP, class DM>
 Teuchos::RCP<const Teuchos::ParameterList>
-BiCGStabSolMgr<ScalarType,MV,OP,DM>::getValidParameters() const
-{
+BiCGStabSolMgr<ScalarType, MV, OP, DM>::getValidParameters() const {
   using Teuchos::ParameterList;
   using Teuchos::parameterList;
   using Teuchos::RCP;
 
   if (validParams_.is_null()) {
     // Set all the valid parameters and their default values.
-    RCP<ParameterList> pl = parameterList ();
+    RCP<ParameterList> pl = parameterList();
 
     // The static_cast is to resolve an issue with older clang versions which
     // would cause the constexpr to link fail. With c++17 the problem is resolved.
     pl->set("Convergence Tolerance", static_cast<MagnitudeType>(DefaultSolverParameters::convTol),
-      "The relative residual tolerance that needs to be achieved by the\n"
-      "iterative solver in order for the linera system to be declared converged.");
+            "The relative residual tolerance that needs to be achieved by the\n"
+            "iterative solver in order for the linera system to be declared converged.");
     pl->set("Maximum Iterations", static_cast<int>(maxIters_default_),
-      "The maximum number of block iterations allowed for each\n"
-      "set of RHS solved.");
+            "The maximum number of block iterations allowed for each\n"
+            "set of RHS solved.");
     pl->set("Verbosity", static_cast<int>(verbosity_default_),
-      "What type(s) of solver information should be outputted\n"
-      "to the output stream.");
+            "What type(s) of solver information should be outputted\n"
+            "to the output stream.");
     pl->set("Output Style", static_cast<int>(outputStyle_default_),
-      "What style is used for the solver information outputted\n"
-      "to the output stream.");
+            "What style is used for the solver information outputted\n"
+            "to the output stream.");
     pl->set("Output Frequency", static_cast<int>(outputFreq_default_),
-      "How often convergence information should be outputted\n"
-      "to the output stream.");
+            "How often convergence information should be outputted\n"
+            "to the output stream.");
     pl->set("Deflation Quorum", static_cast<int>(defQuorum_default_),
-      "The number of linear systems that need to converge before\n"
-      "they are deflated.  This number should be <= block size.");
+            "The number of linear systems that need to converge before\n"
+            "they are deflated.  This number should be <= block size.");
     pl->set("Output Stream", Teuchos::rcpFromRef(std::cout),
-      "A reference-counted pointer to the output stream where all\n"
-      "solver output is sent.");
+            "A reference-counted pointer to the output stream where all\n"
+            "solver output is sent.");
     pl->set("Show Maximum Residual Norm Only", static_cast<bool>(showMaxResNormOnly_default_),
-      "When convergence information is printed, only show the maximum\n"
-      "relative residual norm when the block size is greater than one.");
+            "When convergence information is printed, only show the maximum\n"
+            "relative residual norm when the block size is greater than one.");
     pl->set("Implicit Residual Scaling", static_cast<const char *>(resScale_default_),
-      "The type of scaling used in the residual convergence test.");
+            "The type of scaling used in the residual convergence test.");
     // We leave the old name as a valid parameter for backwards
     // compatibility (so that validateParametersAndSetDefaults()
     // doesn't raise an exception if it encounters "Residual
@@ -571,50 +560,47 @@ BiCGStabSolMgr<ScalarType,MV,OP,DM>::getValidParameters() const
             "The type of scaling used in the residual convergence test.  This "
             "name is deprecated; the new name is \"Implicit Residual Scaling\".");
     pl->set("Timer Label", static_cast<const char *>(label_default_),
-      "The string to use as a prefix for the timer labels.");
+            "The string to use as a prefix for the timer labels.");
     validParams_ = pl;
   }
   return validParams_;
 }
 
-
-template<class ScalarType, class MV, class OP, class DM>
-ReturnType BiCGStabSolMgr<ScalarType,MV,OP,DM>::solve ()
-{
+template <class ScalarType, class MV, class OP, class DM>
+ReturnType BiCGStabSolMgr<ScalarType, MV, OP, DM>::solve() {
   ReturnType retType = Undetermined;
 
   // Set the current parameters if they were not set before.
   // NOTE:  This may occur if the user generated the solver manager with the default constructor and
   // then didn't set any parameters using setParameters().
-  if (! isSet_) {
-    setParameters (params_);
+  if (!isSet_) {
+    setParameters(params_);
   }
 
-  TEUCHOS_TEST_FOR_EXCEPTION
-    (! problem_->isProblemSet (), BiCGStabSolMgrLinearProblemFailure,
-     "Belos::BiCGStabSolMgr::solve: Linear problem is not ready.  "
-     "You must call setProblem() on the LinearProblem before you may solve it.");
-  TEUCHOS_TEST_FOR_EXCEPTION
-    (problem_->isLeftPrec (), std::logic_error, "Belos::BiCGStabSolMgr::solve: "
-     "The left-preconditioned case has not yet been implemented.  Please use "
-     "right preconditioning for now.  If you need to use left preconditioning, "
-     "please contact the Belos developers.  Left preconditioning is more "
-     "interesting in BiCGStab because whether it works depends on the initial "
-     "guess (e.g., an initial guess of all zeros might NOT work).");
+  TEUCHOS_TEST_FOR_EXCEPTION(!problem_->isProblemSet(), BiCGStabSolMgrLinearProblemFailure,
+                             "Belos::BiCGStabSolMgr::solve: Linear problem is not ready.  "
+                             "You must call setProblem() on the LinearProblem before you may solve it.");
+  TEUCHOS_TEST_FOR_EXCEPTION(problem_->isLeftPrec(), std::logic_error,
+                             "Belos::BiCGStabSolMgr::solve: "
+                             "The left-preconditioned case has not yet been implemented.  Please use "
+                             "right preconditioning for now.  If you need to use left preconditioning, "
+                             "please contact the Belos developers.  Left preconditioning is more "
+                             "interesting in BiCGStab because whether it works depends on the initial "
+                             "guess (e.g., an initial guess of all zeros might NOT work).");
 
   // Create indices for the linear systems to be solved.
-  int startPtr = 0;
-  int numRHS2Solve = MVT::GetNumberVecs( *(problem_->getRHS()) );
-  int numCurrRHS = numRHS2Solve;
+  int startPtr     = 0;
+  int numRHS2Solve = MVT::GetNumberVecs(*(problem_->getRHS()));
+  int numCurrRHS   = numRHS2Solve;
 
-  std::vector<int> currIdx( numRHS2Solve ), currIdx2( numRHS2Solve );
-  for (int i=0; i<numRHS2Solve; ++i) {
-    currIdx[i] = startPtr+i;
-    currIdx2[i]=i;
+  std::vector<int> currIdx(numRHS2Solve), currIdx2(numRHS2Solve);
+  for (int i = 0; i < numRHS2Solve; ++i) {
+    currIdx[i]  = startPtr + i;
+    currIdx2[i] = i;
   }
 
   // Inform the linear problem of the current linear system to solve.
-  problem_->setLSIndex( currIdx );
+  problem_->setLSIndex(currIdx);
 
   //////////////////////////////////////////////////////////////////////////////////////
   // Parameter list (iteration)
@@ -629,8 +615,7 @@ ReturnType BiCGStabSolMgr<ScalarType,MV,OP,DM>::solve ()
   //////////////////////////////////////////////////////////////////////////////////////
   // Pseudo-Block BiCGStab solver
 
-  Teuchos::RCP<BiCGStabIter<ScalarType,MV,OP,DM> > bicgstab_iter
-    = Teuchos::rcp( new BiCGStabIter<ScalarType,MV,OP,DM>(problem_,printer_,outputTest_,plist) );
+  Teuchos::RCP<BiCGStabIter<ScalarType, MV, OP, DM>> bicgstab_iter = Teuchos::rcp(new BiCGStabIter<ScalarType, MV, OP, DM>(problem_, printer_, outputTest_, plist));
 
   // Enter solve() iterations
   {
@@ -638,11 +623,11 @@ ReturnType BiCGStabSolMgr<ScalarType,MV,OP,DM>::solve ()
     Teuchos::TimeMonitor slvtimer(*timerSolve_);
 #endif
 
-    //bool first_time=true;
-    while ( numRHS2Solve > 0 ) {
+    // bool first_time=true;
+    while (numRHS2Solve > 0) {
       // Reset the active / converged vectors from this block
       std::vector<int> convRHSIdx;
-      std::vector<int> currRHSIdx( currIdx );
+      std::vector<int> currRHSIdx(currIdx);
       currRHSIdx.resize(numCurrRHS);
 
       // Reset the number of iterations.
@@ -652,18 +637,16 @@ ReturnType BiCGStabSolMgr<ScalarType,MV,OP,DM>::solve ()
       outputTest_->resetNumCalls();
 
       // Get the current residual for this block of linear systems.
-      Teuchos::RCP<MV> R_0 = MVT::CloneViewNonConst( *(Teuchos::rcp_const_cast<MV>(problem_->getInitResVec())), currIdx );
+      Teuchos::RCP<MV> R_0 = MVT::CloneViewNonConst(*(Teuchos::rcp_const_cast<MV>(problem_->getInitResVec())), currIdx);
 
       // Get a new state struct and initialize the solver.
-      BiCGStabIterationState<ScalarType,MV> newState;
+      BiCGStabIterationState<ScalarType, MV> newState;
       newState.R = R_0;
       bicgstab_iter->initializeBiCGStab(newState);
 
-      while(1) {
-
+      while (1) {
         // tell block_gmres_iter to iterate
         try {
-
           bicgstab_iter->iterate();
 
           ////////////////////////////////////////////////////////////////////////////////////
@@ -671,10 +654,9 @@ ReturnType BiCGStabSolMgr<ScalarType,MV,OP,DM>::solve ()
           // check convergence first
           //
           ////////////////////////////////////////////////////////////////////////////////////
-          if ( convTest_->getStatus() == Passed ) {
-
+          if (convTest_->getStatus() == Passed) {
             // Figure out which linear systems converged.
-            std::vector<int> convIdx = Teuchos::rcp_dynamic_cast<StatusTestGenResNorm<ScalarType,MV,OP,DM> >(convTest_)->convIndices();
+            std::vector<int> convIdx = Teuchos::rcp_dynamic_cast<StatusTestGenResNorm<ScalarType, MV, OP, DM>>(convTest_)->convIndices();
 
             // If the number of converged linear systems is equal to the
             // number of current linear systems, then we are done with this block.
@@ -687,16 +669,16 @@ ReturnType BiCGStabSolMgr<ScalarType,MV,OP,DM>::solve ()
             // Reset currRHSIdx to have the right-hand sides that are left to converge for this block.
             int have = 0;
             std::vector<int> unconvIdx(currRHSIdx.size());
-            for (unsigned int i=0; i<currRHSIdx.size(); ++i) {
+            for (unsigned int i = 0; i < currRHSIdx.size(); ++i) {
               bool found = false;
-              for (unsigned int j=0; j<convIdx.size(); ++j) {
+              for (unsigned int j = 0; j < convIdx.size(); ++j) {
                 if (currRHSIdx[i] == convIdx[j]) {
                   found = true;
                   break;
                 }
               }
               if (!found) {
-                currIdx2[have] = currIdx2[i];
+                currIdx2[have]     = currIdx2[i];
                 currRHSIdx[have++] = currRHSIdx[i];
               }
             }
@@ -704,15 +686,17 @@ ReturnType BiCGStabSolMgr<ScalarType,MV,OP,DM>::solve ()
             currIdx2.resize(have);
 
             // Set the remaining indices after deflation.
-            problem_->setLSIndex( currRHSIdx );
+            problem_->setLSIndex(currRHSIdx);
 
             // Get the current residual vector.
             std::vector<MagnitudeType> norms;
-            R_0 = MVT::CloneCopy( *(bicgstab_iter->getNativeResiduals(&norms)),currIdx2 );
-            for (int i=0; i<have; ++i) { currIdx2[i] = i; }
+            R_0 = MVT::CloneCopy(*(bicgstab_iter->getNativeResiduals(&norms)), currIdx2);
+            for (int i = 0; i < have; ++i) {
+              currIdx2[i] = i;
+            }
 
             // Set the new state and initialize the solver.
-            BiCGStabIterationState<ScalarType,MV> defstate;
+            BiCGStabIterationState<ScalarType, MV> defstate;
             defstate.R = R_0;
             bicgstab_iter->initializeBiCGStab(defstate);
           }
@@ -722,10 +706,10 @@ ReturnType BiCGStabSolMgr<ScalarType,MV,OP,DM>::solve ()
           // check for maximum iterations
           //
           ////////////////////////////////////////////////////////////////////////////////////
-          else if ( maxIterTest_->getStatus() == Passed ) {
+          else if (maxIterTest_->getStatus() == Passed) {
             // we don't have convergence
             isConverged = false;
-            retType = MaxItersReached;
+            retType     = MaxItersReached;
             break;  // break from while(1){bicgstab_iter->iterate()}
           }
 
@@ -736,14 +720,13 @@ ReturnType BiCGStabSolMgr<ScalarType,MV,OP,DM>::solve ()
           //
           ////////////////////////////////////////////////////////////////////////////////////
 
-          else if ( bicgstab_iter->breakdownDetected() ) {
+          else if (bicgstab_iter->breakdownDetected()) {
             // we don't have convergence
             isConverged = false;
-            retType = BreakdownDetected;
-            printer_->stream(Warnings) <<
-              "Belos::BiCGStabSolMgr::solve(): Warning! Solver has experienced a breakdown!" << std::endl;
+            retType     = BreakdownDetected;
+            printer_->stream(Warnings) << "Belos::BiCGStabSolMgr::solve(): Warning! Solver has experienced a breakdown!" << std::endl;
             break;  // break from while(1){bicgstab_iter->iterate()}
-          } 
+          }
 
           ////////////////////////////////////////////////////////////////////////////////////
           //
@@ -754,21 +737,19 @@ ReturnType BiCGStabSolMgr<ScalarType,MV,OP,DM>::solve ()
 
           else {
             retType = InconsistentState;
-            TEUCHOS_TEST_FOR_EXCEPTION(true,std::logic_error,
-                               "Belos::BiCGStabSolMgr::solve(): Invalid return from BiCGStabIter::iterate().");
+            TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error,
+                                       "Belos::BiCGStabSolMgr::solve(): Invalid return from BiCGStabIter::iterate().");
           }
-        }
-        catch (const StatusTestNaNError& e) {
+        } catch (const StatusTestNaNError &e) {
           // A NaN was detected in the solver.  Set the solution to zero and return unconverged.
-          retType = NaNDetected;
-          achievedTol_ = MT::one();
+          retType            = NaNDetected;
+          achievedTol_       = MT::one();
           Teuchos::RCP<MV> X = problem_->getLHS();
-          MVT::MvInit( *X, SCT::zero() );
-          printer_->stream(Warnings) << "Belos::BiCGStabSolMgr::solve(): Warning! NaN has been detected!" 
+          MVT::MvInit(*X, SCT::zero());
+          printer_->stream(Warnings) << "Belos::BiCGStabSolMgr::solve(): Warning! NaN has been detected!"
                                      << std::endl;
-          return retType; 
-        }
-        catch (const std::exception &e) {
+          return retType;
+        } catch (const std::exception &e) {
           retType = NonspecificException;
           printer_->stream(Errors) << "Error! Caught std::exception in BiCGStabIter::iterate() at iteration "
                                    << bicgstab_iter->getNumIters() << std::endl
@@ -784,28 +765,27 @@ ReturnType BiCGStabSolMgr<ScalarType,MV,OP,DM>::solve ()
       startPtr += numCurrRHS;
       numRHS2Solve -= numCurrRHS;
 
-      if ( numRHS2Solve > 0 ) {
-
+      if (numRHS2Solve > 0) {
         numCurrRHS = numRHS2Solve;
-        currIdx.resize( numCurrRHS );
-        currIdx2.resize( numCurrRHS );
-        for (int i=0; i<numCurrRHS; ++i)
-          { currIdx[i] = startPtr+i; currIdx2[i] = i; }
+        currIdx.resize(numCurrRHS);
+        currIdx2.resize(numCurrRHS);
+        for (int i = 0; i < numCurrRHS; ++i) {
+          currIdx[i]  = startPtr + i;
+          currIdx2[i] = i;
+        }
 
         // Set the next indices.
-        problem_->setLSIndex( currIdx );
-      }
-      else {
-        currIdx.resize( numRHS2Solve );
+        problem_->setLSIndex(currIdx);
+      } else {
+        currIdx.resize(numRHS2Solve);
       }
 
-      //first_time=false;
-    }// while ( numRHS2Solve > 0 )
-
+      // first_time=false;
+    }  // while ( numRHS2Solve > 0 )
   }
 
   // print final summary
-  sTest_->print( printer_->stream(FinalSummary) );
+  sTest_->print(printer_->stream(FinalSummary));
 
   // print timing information
 #ifdef BELOS_TEUCHOS_TIME_MONITOR
@@ -813,38 +793,33 @@ ReturnType BiCGStabSolMgr<ScalarType,MV,OP,DM>::solve ()
   // user wants to print out timing details.  summarize() will do all
   // the work even if it's passed a "black hole" output stream.
   if (verbosity_ & TimingDetails)
-    Teuchos::TimeMonitor::summarize( printer_->stream(TimingDetails) );
+    Teuchos::TimeMonitor::summarize(printer_->stream(TimingDetails));
 #endif
 
   // get iteration information for this solve
   numIters_ = maxIterTest_->getNumIters();
 
-
   // Save the convergence test value ("achieved tolerance") for this
   // solve.
-  const std::vector<MagnitudeType>* pTestValues = convTest_->getTestValue();
-  achievedTol_ = *std::max_element (pTestValues->begin(), pTestValues->end());
+  const std::vector<MagnitudeType> *pTestValues = convTest_->getTestValue();
+  achievedTol_                                  = *std::max_element(pTestValues->begin(), pTestValues->end());
 
-
-  if (!isConverged ) {
-    return retType; // return from BiCGStabSolMgr::solve()
+  if (!isConverged) {
+    return retType;  // return from BiCGStabSolMgr::solve()
   }
-  return Converged; // return from BiCGStabSolMgr::solve()
+  return Converged;  // return from BiCGStabSolMgr::solve()
 }
 
 //  This method requires the solver manager to return a std::string that describes itself.
-template<class ScalarType, class MV, class OP, class DM>
-std::string BiCGStabSolMgr<ScalarType,MV,OP,DM>::description() const
-{
+template <class ScalarType, class MV, class OP, class DM>
+std::string BiCGStabSolMgr<ScalarType, MV, OP, DM>::description() const {
   std::ostringstream oss;
-  oss << "Belos::BiCGStabSolMgr<...,"<<Teuchos::ScalarTraits<ScalarType>::name()<<">";
+  oss << "Belos::BiCGStabSolMgr<...," << Teuchos::ScalarTraits<ScalarType>::name() << ">";
   oss << "{";
   oss << "}";
   return oss.str();
 }
 
-
-
-} // end Belos namespace
+}  // namespace Belos
 
 #endif /* BELOS_BICGSTAB_SOLMGR_HPP */

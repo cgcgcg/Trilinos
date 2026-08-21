@@ -1,5 +1,3 @@
-
-
 ######################################################################
 ## Package-specific configuration options
 ######################################################################
@@ -15,14 +13,13 @@ SET(SOURCES "")
 
 TRIBITS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 
-SET(HEADERS ${HEADERS}
-  ${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE_NAME}_config.h
-  )
+SET(HEADERS ${HEADERS} ${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE_NAME}_config.h)
 
 TRIBITS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
 # CORE
-APPEND_SET(HEADERS
+APPEND_SET(
+  HEADERS
   Belos_Details_EBelosSolverType.hpp
   BelosBiCGStabIter.hpp
   BelosBiCGStabSolMgr.hpp
@@ -113,20 +110,22 @@ APPEND_SET(HEADERS
   Belos_Details_registerLinearSolverFactory.hpp
   Belos_Details_registerSolverFactory.hpp
   BelosGlobalComm.hpp
-  )
+)
 
 # UTIL
-APPEND_SET(SOURCES
+APPEND_SET(
+  SOURCES
   Belos_Details_EBelosSolverType.cpp
   BelosTypes.cpp
   BelosVersion.cpp
   Belos_Details_registerLinearSolverFactory.cpp
   BelosSolverFactory.cpp
   Belos_Details_registerSolverFactory.cpp
-  )
+)
 
 # COMP_H
-APPEND_SET(HEADERS
+APPEND_SET(
+  HEADERS
   BelosBlockCGSolMgr.hpp
   BelosMinresSolMgr.hpp
   BelosBlockGmresSolMgr.hpp
@@ -145,7 +144,7 @@ APPEND_SET(HEADERS
   BelosPseudoBlockStochasticCGIter.hpp
   BelosTFQMRIter.hpp
   BelosPseudoBlockTFQMRIter.hpp
-  )
+)
 
 ######################################################################
 ## Add files to HEADERS and /or SOURCES, depending on the values of
@@ -166,7 +165,8 @@ ENDIF() # ${PACKAGE_NAME}_ENABLE_TSQR
 # in the build or install unless the Belos_ENABLE_Experimental CMake
 # option was set at configure time.
 #
-APPEND_SET(${PACKAGE_NAME}_EXPERIMENTAL_HEADERS
+APPEND_SET(
+  ${PACKAGE_NAME}_EXPERIMENTAL_HEADERS
   BelosBlockGCRODRIter.hpp
   BelosBlockGCRODRSolMgr.hpp
   BelosInnerSolveResult.hpp
@@ -174,9 +174,7 @@ APPEND_SET(${PACKAGE_NAME}_EXPERIMENTAL_HEADERS
   BelosProjectedLeastSquaresSolver.hpp
 )
 
-APPEND_SET(${PACKAGE_NAME}_EXPERIMENTAL_SOURCES
-  BelosInnerSolveResult.cpp
-)
+APPEND_SET(${PACKAGE_NAME}_EXPERIMENTAL_SOURCES BelosInnerSolveResult.cpp)
 
 ASSERT_DEFINED(${PACKAGE_NAME}_ENABLE_Experimental)
 IF(${PACKAGE_NAME}_ENABLE_Experimental)
@@ -191,7 +189,7 @@ ENDIF() # ${PACKAGE_NAME}_ENABLE_Experimental
 ## Define the targets for the package's library/ies.
 ######################################################################
 
-IF (${PACKAGE_NAME}_ENABLE_TSQR)
+IF(${PACKAGE_NAME}_ENABLE_TSQR)
   # If TSQR support is enabled in Belos, we have to link Belos with
   # the appropriate Kokkos libraries, since TSQR is implemented in
   # Kokkos.
@@ -199,11 +197,11 @@ IF (${PACKAGE_NAME}_ENABLE_TSQR)
     belos
     HEADERS ${HEADERS}
     SOURCES ${SOURCES}
-    )
-ELSE ()
+  )
+ELSE()
   TRIBITS_ADD_LIBRARY(
     belos
     HEADERS ${HEADERS}
     SOURCES ${SOURCES}
-    )
-ENDIF ()
+  )
+ENDIF()

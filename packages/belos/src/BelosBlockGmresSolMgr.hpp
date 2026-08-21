@@ -65,9 +65,11 @@ namespace Belos {
  * This std::exception is thrown from the BlockGmresSolMgr::solve() method.
  *
  */
-class BlockGmresSolMgrLinearProblemFailure : public BelosError {public:
-  BlockGmresSolMgrLinearProblemFailure(const std::string& what_arg) : BelosError(what_arg)
-    {}};
+class BlockGmresSolMgrLinearProblemFailure : public BelosError {
+ public:
+  BlockGmresSolMgrLinearProblemFailure(const std::string &what_arg)
+    : BelosError(what_arg) {}
+};
 
 /** \brief BlockGmresSolMgrOrthoFailure is thrown when the orthogonalization manager is
  * unable to generate orthonormal columns from the initial basis vectors.
@@ -75,9 +77,11 @@ class BlockGmresSolMgrLinearProblemFailure : public BelosError {public:
  * This std::exception is thrown from the BlockGmresSolMgr::solve() method.
  *
  */
-class BlockGmresSolMgrOrthoFailure : public BelosError {public:
-  BlockGmresSolMgrOrthoFailure(const std::string& what_arg) : BelosError(what_arg)
-    {}};
+class BlockGmresSolMgrOrthoFailure : public BelosError {
+ public:
+  BlockGmresSolMgrOrthoFailure(const std::string &what_arg)
+    : BelosError(what_arg) {}
+};
 
 /*! \class BlockGmresSolMgr
  * \brief Interface to Block GMRES and Flexible GMRES.
@@ -95,19 +99,17 @@ class BlockGmresSolMgrOrthoFailure : public BelosError {public:
  * PseudoBlockGmresSolMgr.  If you want Flexible GMRES, use this class
  * with the "Flexible Gmres" parameter set to true.
  */
-template<class ScalarType, class MV, class OP, class DM = DefaultDenseMatrix<int, ScalarType>>
-class BlockGmresSolMgr : public SolverManager<ScalarType,MV,OP,DM> {
-
-private:
-  typedef MultiVecTraits<ScalarType,MV,DM> MVT;
-  typedef DenseMatTraits<ScalarType,DM> DMT;
-  typedef OperatorTraits<ScalarType,MV,OP> OPT;
+template <class ScalarType, class MV, class OP, class DM = DefaultDenseMatrix<int, ScalarType>>
+class BlockGmresSolMgr : public SolverManager<ScalarType, MV, OP, DM> {
+ private:
+  typedef MultiVecTraits<ScalarType, MV, DM> MVT;
+  typedef DenseMatTraits<ScalarType, DM> DMT;
+  typedef OperatorTraits<ScalarType, MV, OP> OPT;
   typedef Teuchos::ScalarTraits<ScalarType> SCT;
   typedef typename Teuchos::ScalarTraits<ScalarType>::magnitudeType MagnitudeType;
   typedef Teuchos::ScalarTraits<MagnitudeType> MT;
 
-public:
-
+ public:
   //! @name Constructors/Destructor
   //@{
 
@@ -138,15 +140,15 @@ public:
    *                    <hr />
    *                    \endhtmlonly
    */
-  BlockGmresSolMgr( const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > &problem,
-    const Teuchos::RCP<Teuchos::ParameterList> &pl );
+  BlockGmresSolMgr(const Teuchos::RCP<LinearProblem<ScalarType, MV, OP, DM>> &problem,
+                   const Teuchos::RCP<Teuchos::ParameterList> &pl);
 
   //! Destructor.
-  virtual ~BlockGmresSolMgr() {};
+  virtual ~BlockGmresSolMgr(){};
 
   //! clone for Inverted Injection (DII)
-  Teuchos::RCP<SolverManager<ScalarType, MV, OP, DM> > clone () const override {
-    return Teuchos::rcp(new BlockGmresSolMgr<ScalarType,MV,OP,DM>);
+  Teuchos::RCP<SolverManager<ScalarType, MV, OP, DM>> clone() const override {
+    return Teuchos::rcp(new BlockGmresSolMgr<ScalarType, MV, OP, DM>);
   }
   //@}
 
@@ -155,7 +157,7 @@ public:
 
   /*! \brief Get current linear problem being solved for in this object.
    */
-  const LinearProblem<ScalarType,MV,OP,DM>& getProblem() const override {
+  const LinearProblem<ScalarType, MV, OP, DM> &getProblem() const override {
     return *problem_;
   }
 
@@ -172,7 +174,7 @@ public:
    * The timers are ordered as follows:
    *   - time spent in solve() routine
    */
-  Teuchos::Array<Teuchos::RCP<Teuchos::Time> > getTimers() const {
+  Teuchos::Array<Teuchos::RCP<Teuchos::Time>> getTimers() const {
     return Teuchos::tuple(timerSolve_);
   }
 
@@ -206,13 +208,17 @@ public:
   //@{
 
   //! Set the linear problem that needs to be solved.
-  void setProblem( const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > &problem ) override { problem_ = problem; isSTSet_ = false; needsIterRebuild_ = true; }
+  void setProblem(const Teuchos::RCP<LinearProblem<ScalarType, MV, OP, DM>> &problem) override {
+    problem_          = problem;
+    isSTSet_          = false;
+    needsIterRebuild_ = true;
+  }
 
   //! Set the parameters the solver manager should use to solve the linear problem.
-  void setParameters( const Teuchos::RCP<Teuchos::ParameterList> &params ) override;
+  void setParameters(const Teuchos::RCP<Teuchos::ParameterList> &params) override;
 
   //! Set a debug status test that will be checked at the same time as the top-level status test.
-  void setDebugStatusTest( const Teuchos::RCP<StatusTest<ScalarType,MV,OP,DM> > &debugStatusTest ) override;
+  void setDebugStatusTest(const Teuchos::RCP<StatusTest<ScalarType, MV, OP, DM>> &debugStatusTest) override;
 
   //@}
 
@@ -221,8 +227,10 @@ public:
   /*! \brief Performs a reset of the solver manager specified by the \c ResetType.  This informs the
    *  solver manager that the solver should prepare for the next call to solve by resetting certain elements
    *  of the iterative solver strategy.
-  */
-  void reset( const ResetType type ) override { if ((type & Belos::Problem) && !Teuchos::is_null(problem_)) problem_->setProblem(); }
+   */
+  void reset(const ResetType type) override {
+    if ((type & Belos::Problem) && !Teuchos::is_null(problem_)) problem_->setProblem();
+  }
   //@}
 
   //! @name Solver application methods
@@ -259,58 +267,57 @@ public:
   /// \param verbLevel [in] Verbosity level.  The default verbosity
   ///   (verbLevel=Teuchos::VERB_DEFAULT) is Teuchos::VERB_LOW.
   void
-  describe (Teuchos::FancyOStream& out,
-            const Teuchos::EVerbosityLevel verbLevel =
-            Teuchos::Describable::verbLevel_default) const override;
+  describe(Teuchos::FancyOStream &out,
+           const Teuchos::EVerbosityLevel verbLevel =
+               Teuchos::Describable::verbLevel_default) const override;
 
   //! Return a one-line description of this object.
-  std::string description () const override;
+  std::string description() const override;
 
   //@}
 
-private:
-
+ private:
   // Method for checking current status test against defined linear problem.
   bool checkStatusTest();
 
   // Linear problem.
-  Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > problem_;
+  Teuchos::RCP<LinearProblem<ScalarType, MV, OP, DM>> problem_;
 
   // Output manager.
-  Teuchos::RCP<OutputManager<ScalarType> > printer_;
+  Teuchos::RCP<OutputManager<ScalarType>> printer_;
   Teuchos::RCP<std::ostream> outputStream_;
 
   // Status test.
-  Teuchos::RCP<StatusTest<ScalarType,MV,OP,DM> > debugStatusTest_;
-  Teuchos::RCP<StatusTest<ScalarType,MV,OP,DM> > sTest_;
-  Teuchos::RCP<StatusTestMaxIters<ScalarType,MV,OP,DM> > maxIterTest_;
-  Teuchos::RCP<StatusTest<ScalarType,MV,OP,DM> > convTest_;
-  Teuchos::RCP<StatusTestResNorm<ScalarType,MV,OP,DM> > expConvTest_, impConvTest_;
-  Teuchos::RCP<StatusTestOutput<ScalarType,MV,OP,DM> > outputTest_;
+  Teuchos::RCP<StatusTest<ScalarType, MV, OP, DM>> debugStatusTest_;
+  Teuchos::RCP<StatusTest<ScalarType, MV, OP, DM>> sTest_;
+  Teuchos::RCP<StatusTestMaxIters<ScalarType, MV, OP, DM>> maxIterTest_;
+  Teuchos::RCP<StatusTest<ScalarType, MV, OP, DM>> convTest_;
+  Teuchos::RCP<StatusTestResNorm<ScalarType, MV, OP, DM>> expConvTest_, impConvTest_;
+  Teuchos::RCP<StatusTestOutput<ScalarType, MV, OP, DM>> outputTest_;
 
   // Orthogonalization manager.
-  Teuchos::RCP<MatOrthoManager<ScalarType,MV,OP,DM> > ortho_;
+  Teuchos::RCP<MatOrthoManager<ScalarType, MV, OP, DM>> ortho_;
 
   // Current parameter list.
   Teuchos::RCP<Teuchos::ParameterList> params_;
 
   // Default solver values.
-  static constexpr int maxRestarts_default_ = 20;
-  static constexpr int maxIters_default_ = 1000;
-  static constexpr bool adaptiveBlockSize_default_ = true;
+  static constexpr int maxRestarts_default_         = 20;
+  static constexpr int maxIters_default_            = 1000;
+  static constexpr bool adaptiveBlockSize_default_  = true;
   static constexpr bool showMaxResNormOnly_default_ = false;
-  static constexpr bool flexibleGmres_default_ = false;
-  static constexpr bool keepHessenberg_default_ = false;
-  static constexpr bool expResTest_default_ = false;
-  static constexpr int blockSize_default_ = 1;
-  static constexpr int numBlocks_default_ = 300;
-  static constexpr int verbosity_default_ = Belos::Errors;
-  static constexpr int outputStyle_default_ = Belos::General;
-  static constexpr int outputFreq_default_ = -1;
-  static constexpr const char * impResScale_default_ = "Norm of Preconditioned Initial Residual";
-  static constexpr const char * expResScale_default_ = "Norm of Initial Residual";
-  static constexpr const char * label_default_ = "Belos";
-  static constexpr const char * orthoType_default_ = "ICGS";
+  static constexpr bool flexibleGmres_default_      = false;
+  static constexpr bool keepHessenberg_default_     = false;
+  static constexpr bool expResTest_default_         = false;
+  static constexpr int blockSize_default_           = 1;
+  static constexpr int numBlocks_default_           = 300;
+  static constexpr int verbosity_default_           = Belos::Errors;
+  static constexpr int outputStyle_default_         = Belos::General;
+  static constexpr int outputFreq_default_          = -1;
+  static constexpr const char *impResScale_default_ = "Norm of Preconditioned Initial Residual";
+  static constexpr const char *expResScale_default_ = "Norm of Initial Residual";
+  static constexpr const char *label_default_       = "Belos";
+  static constexpr const char *orthoType_default_   = "ICGS";
 
   // Current solver values.
   MagnitudeType convtol_, orthoKappa_, achievedTol_;
@@ -325,7 +332,7 @@ private:
   Teuchos::RCP<Teuchos::Time> timerSolve_;
 
   // Cached iterator (reused across solve() calls to avoid reallocating Krylov subspace).
-  Teuchos::RCP<GmresIteration<ScalarType,MV,OP,DM> > block_gmres_iter_;
+  Teuchos::RCP<GmresIteration<ScalarType, MV, OP, DM>> block_gmres_iter_;
 
   // Internal state variables.
   bool isSet_, isSTSet_;
@@ -333,85 +340,77 @@ private:
   bool loaDetected_;
 };
 
-
 // Empty Constructor
-template<class ScalarType, class MV, class OP, class DM>
-BlockGmresSolMgr<ScalarType,MV,OP,DM>::BlockGmresSolMgr() :
-  outputStream_(Teuchos::rcpFromRef(std::cout)),
-  convtol_(DefaultSolverParameters::convTol),
-  orthoKappa_(DefaultSolverParameters::orthoKappa),
-  achievedTol_(Teuchos::ScalarTraits<typename Teuchos::ScalarTraits<ScalarType>::magnitudeType>::zero()),
-  maxRestarts_(maxRestarts_default_),
-  maxIters_(maxIters_default_),
-  numIters_(0),
-  blockSize_(blockSize_default_),
-  numBlocks_(numBlocks_default_),
-  verbosity_(verbosity_default_),
-  outputStyle_(outputStyle_default_),
-  outputFreq_(outputFreq_default_),
-  adaptiveBlockSize_(adaptiveBlockSize_default_),
-  showMaxResNormOnly_(showMaxResNormOnly_default_),
-  isFlexible_(flexibleGmres_default_),
-  keepHessenberg_(keepHessenberg_default_),
-  expResTest_(expResTest_default_),
-  orthoType_(orthoType_default_),
-  impResScale_(impResScale_default_),
-  expResScale_(expResScale_default_),
-  label_(label_default_),
-  isSet_(false),
-  isSTSet_(false),
-  needsIterRebuild_(true),
-  loaDetected_(false)
-{}
-
+template <class ScalarType, class MV, class OP, class DM>
+BlockGmresSolMgr<ScalarType, MV, OP, DM>::BlockGmresSolMgr()
+  : outputStream_(Teuchos::rcpFromRef(std::cout))
+  , convtol_(DefaultSolverParameters::convTol)
+  , orthoKappa_(DefaultSolverParameters::orthoKappa)
+  , achievedTol_(Teuchos::ScalarTraits<typename Teuchos::ScalarTraits<ScalarType>::magnitudeType>::zero())
+  , maxRestarts_(maxRestarts_default_)
+  , maxIters_(maxIters_default_)
+  , numIters_(0)
+  , blockSize_(blockSize_default_)
+  , numBlocks_(numBlocks_default_)
+  , verbosity_(verbosity_default_)
+  , outputStyle_(outputStyle_default_)
+  , outputFreq_(outputFreq_default_)
+  , adaptiveBlockSize_(adaptiveBlockSize_default_)
+  , showMaxResNormOnly_(showMaxResNormOnly_default_)
+  , isFlexible_(flexibleGmres_default_)
+  , keepHessenberg_(keepHessenberg_default_)
+  , expResTest_(expResTest_default_)
+  , orthoType_(orthoType_default_)
+  , impResScale_(impResScale_default_)
+  , expResScale_(expResScale_default_)
+  , label_(label_default_)
+  , isSet_(false)
+  , isSTSet_(false)
+  , needsIterRebuild_(true)
+  , loaDetected_(false) {}
 
 // Basic Constructor
-template<class ScalarType, class MV, class OP, class DM>
-BlockGmresSolMgr<ScalarType,MV,OP,DM>::
-BlockGmresSolMgr (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > &problem,
-                  const Teuchos::RCP<Teuchos::ParameterList> &pl) :
-  problem_(problem),
-  outputStream_(Teuchos::rcpFromRef(std::cout)),
-  convtol_(DefaultSolverParameters::convTol),
-  orthoKappa_(DefaultSolverParameters::orthoKappa),
-  achievedTol_(Teuchos::ScalarTraits<typename Teuchos::ScalarTraits<ScalarType>::magnitudeType>::zero()),
-  maxRestarts_(maxRestarts_default_),
-  maxIters_(maxIters_default_),
-  numIters_(0),
-  blockSize_(blockSize_default_),
-  numBlocks_(numBlocks_default_),
-  verbosity_(verbosity_default_),
-  outputStyle_(outputStyle_default_),
-  outputFreq_(outputFreq_default_),
-  adaptiveBlockSize_(adaptiveBlockSize_default_),
-  showMaxResNormOnly_(showMaxResNormOnly_default_),
-  isFlexible_(flexibleGmres_default_),
-  keepHessenberg_(keepHessenberg_default_),
-  expResTest_(expResTest_default_),
-  orthoType_(orthoType_default_),
-  impResScale_(impResScale_default_),
-  expResScale_(expResScale_default_),
-  label_(label_default_),
-  isSet_(false),
-  isSTSet_(false),
-  needsIterRebuild_(true),
-  loaDetected_(false)
-{
-
+template <class ScalarType, class MV, class OP, class DM>
+BlockGmresSolMgr<ScalarType, MV, OP, DM>::
+    BlockGmresSolMgr(const Teuchos::RCP<LinearProblem<ScalarType, MV, OP, DM>> &problem,
+                     const Teuchos::RCP<Teuchos::ParameterList> &pl)
+  : problem_(problem)
+  , outputStream_(Teuchos::rcpFromRef(std::cout))
+  , convtol_(DefaultSolverParameters::convTol)
+  , orthoKappa_(DefaultSolverParameters::orthoKappa)
+  , achievedTol_(Teuchos::ScalarTraits<typename Teuchos::ScalarTraits<ScalarType>::magnitudeType>::zero())
+  , maxRestarts_(maxRestarts_default_)
+  , maxIters_(maxIters_default_)
+  , numIters_(0)
+  , blockSize_(blockSize_default_)
+  , numBlocks_(numBlocks_default_)
+  , verbosity_(verbosity_default_)
+  , outputStyle_(outputStyle_default_)
+  , outputFreq_(outputFreq_default_)
+  , adaptiveBlockSize_(adaptiveBlockSize_default_)
+  , showMaxResNormOnly_(showMaxResNormOnly_default_)
+  , isFlexible_(flexibleGmres_default_)
+  , keepHessenberg_(keepHessenberg_default_)
+  , expResTest_(expResTest_default_)
+  , orthoType_(orthoType_default_)
+  , impResScale_(impResScale_default_)
+  , expResScale_(expResScale_default_)
+  , label_(label_default_)
+  , isSet_(false)
+  , isSTSet_(false)
+  , needsIterRebuild_(true)
+  , loaDetected_(false) {
   TEUCHOS_TEST_FOR_EXCEPTION(problem_ == Teuchos::null, std::invalid_argument, "Problem not given to solver manager.");
 
   // If the parameter list pointer is null, then set the current parameters to the default parameter list.
-  if ( !is_null(pl) ) {
-    setParameters( pl );
+  if (!is_null(pl)) {
+    setParameters(pl);
   }
-
 }
 
-
-template<class ScalarType, class MV, class OP, class DM>
+template <class ScalarType, class MV, class OP, class DM>
 Teuchos::RCP<const Teuchos::ParameterList>
-BlockGmresSolMgr<ScalarType,MV,OP,DM>::getValidParameters() const
-{
+BlockGmresSolMgr<ScalarType, MV, OP, DM>::getValidParameters() const {
   static Teuchos::RCP<const Teuchos::ParameterList> validPL;
   if (is_null(validPL)) {
     Teuchos::RCP<Teuchos::ParameterList> pl = Teuchos::parameterList();
@@ -419,79 +418,75 @@ BlockGmresSolMgr<ScalarType,MV,OP,DM>::getValidParameters() const
     // The static_cast is to resolve an issue with older clang versions which
     // would cause the constexpr to link fail. With c++17 the problem is resolved.
     pl->set("Convergence Tolerance", static_cast<MagnitudeType>(DefaultSolverParameters::convTol),
-      "The relative residual tolerance that needs to be achieved by the\n"
-      "iterative solver in order for the linear system to be declared converged." );
+            "The relative residual tolerance that needs to be achieved by the\n"
+            "iterative solver in order for the linear system to be declared converged.");
     pl->set("Maximum Restarts", static_cast<int>(maxRestarts_default_),
-      "The maximum number of restarts allowed for each\n"
-      "set of RHS solved.");
+            "The maximum number of restarts allowed for each\n"
+            "set of RHS solved.");
     pl->set("Maximum Iterations", static_cast<int>(maxIters_default_),
-      "The maximum number of block iterations allowed for each\n"
-      "set of RHS solved.");
+            "The maximum number of block iterations allowed for each\n"
+            "set of RHS solved.");
     pl->set("Num Blocks", static_cast<int>(numBlocks_default_),
-      "The maximum number of blocks allowed in the Krylov subspace\n"
-      "for each set of RHS solved.");
+            "The maximum number of blocks allowed in the Krylov subspace\n"
+            "for each set of RHS solved.");
     pl->set("Block Size", static_cast<int>(blockSize_default_),
-      "The number of vectors in each block.  This number times the\n"
-      "number of blocks is the total Krylov subspace dimension.");
+            "The number of vectors in each block.  This number times the\n"
+            "number of blocks is the total Krylov subspace dimension.");
     pl->set("Adaptive Block Size", static_cast<bool>(adaptiveBlockSize_default_),
-      "Whether the solver manager should adapt the block size\n"
-      "based on the number of RHS to solve.");
+            "Whether the solver manager should adapt the block size\n"
+            "based on the number of RHS to solve.");
     pl->set("Verbosity", static_cast<int>(verbosity_default_),
-      "What type(s) of solver information should be outputted\n"
-      "to the output stream.");
+            "What type(s) of solver information should be outputted\n"
+            "to the output stream.");
     pl->set("Output Style", static_cast<int>(outputStyle_default_),
-      "What style is used for the solver information outputted\n"
-      "to the output stream.");
+            "What style is used for the solver information outputted\n"
+            "to the output stream.");
     pl->set("Output Frequency", static_cast<int>(outputFreq_default_),
-      "How often convergence information should be outputted\n"
-      "to the output stream.");
+            "How often convergence information should be outputted\n"
+            "to the output stream.");
     pl->set("Output Stream", Teuchos::rcpFromRef(std::cout),
-      "A reference-counted pointer to the output stream where all\n"
-      "solver output is sent.");
+            "A reference-counted pointer to the output stream where all\n"
+            "solver output is sent.");
     pl->set("Show Maximum Residual Norm Only", static_cast<bool>(showMaxResNormOnly_default_),
-      "When convergence information is printed, only show the maximum\n"
-      "relative residual norm when the block size is greater than one.");
+            "When convergence information is printed, only show the maximum\n"
+            "relative residual norm when the block size is greater than one.");
     pl->set("Flexible Gmres", static_cast<bool>(flexibleGmres_default_),
-      "Whether the solver manager should use the flexible variant\n"
-      "of GMRES.");
+            "Whether the solver manager should use the flexible variant\n"
+            "of GMRES.");
     pl->set("Keep Hessenberg", static_cast<bool>(keepHessenberg_default_),
-      "Whether the raw upper Hessenberg matrix should be stored separately\n"
-      "from the QR-factored least squares system. Useful for harmonic Ritz\n"
-      "pair computation from the GMRES iteration state.");
+            "Whether the raw upper Hessenberg matrix should be stored separately\n"
+            "from the QR-factored least squares system. Useful for harmonic Ritz\n"
+            "pair computation from the GMRES iteration state.");
     pl->set("Explicit Residual Test", static_cast<bool>(expResTest_default_),
-      "Whether the explicitly computed residual should be used in the convergence test.");
+            "Whether the explicitly computed residual should be used in the convergence test.");
     pl->set("Implicit Residual Scaling", static_cast<const char *>(impResScale_default_),
-      "The type of scaling used in the implicit residual convergence test.");
+            "The type of scaling used in the implicit residual convergence test.");
     pl->set("Explicit Residual Scaling", static_cast<const char *>(expResScale_default_),
-      "The type of scaling used in the explicit residual convergence test.");
+            "The type of scaling used in the explicit residual convergence test.");
     pl->set("Timer Label", static_cast<const char *>(label_default_),
-      "The string to use as a prefix for the timer labels.");
+            "The string to use as a prefix for the timer labels.");
     pl->set("Orthogonalization", static_cast<const char *>(orthoType_default_),
-      "The type of orthogonalization to use: DGKS, ICGS, or IMGS.");
-    pl->set("Orthogonalization Constant",static_cast<MagnitudeType>(DefaultSolverParameters::orthoKappa),
-      "The constant used by DGKS orthogonalization to determine\n"
-      "whether another step of classical Gram-Schmidt is necessary.");
+            "The type of orthogonalization to use: DGKS, ICGS, or IMGS.");
+    pl->set("Orthogonalization Constant", static_cast<MagnitudeType>(DefaultSolverParameters::orthoKappa),
+            "The constant used by DGKS orthogonalization to determine\n"
+            "whether another step of classical Gram-Schmidt is necessary.");
     validPL = pl;
   }
   return validPL;
 }
 
-
-template<class ScalarType, class MV, class OP, class DM>
-void BlockGmresSolMgr<ScalarType,MV,OP,DM>::setParameters( const Teuchos::RCP<Teuchos::ParameterList> &params )
-{
-
+template <class ScalarType, class MV, class OP, class DM>
+void BlockGmresSolMgr<ScalarType, MV, OP, DM>::setParameters(const Teuchos::RCP<Teuchos::ParameterList> &params) {
   // Create the internal parameter list if ones doesn't already exist.
   if (params_ == Teuchos::null) {
-    params_ = Teuchos::rcp( new Teuchos::ParameterList(*getValidParameters()) );
-  }
-  else {
+    params_ = Teuchos::rcp(new Teuchos::ParameterList(*getValidParameters()));
+  } else {
     params->validateParameters(*getValidParameters());
   }
 
   // Check for maximum number of restarts
   if (params->isParameter("Maximum Restarts")) {
-    maxRestarts_ = params->get("Maximum Restarts",maxRestarts_default_);
+    maxRestarts_ = params->get("Maximum Restarts", maxRestarts_default_);
 
     // Update parameter in our list.
     params_->set("Maximum Restarts", maxRestarts_);
@@ -499,19 +494,19 @@ void BlockGmresSolMgr<ScalarType,MV,OP,DM>::setParameters( const Teuchos::RCP<Te
 
   // Check for maximum number of iterations
   if (params->isParameter("Maximum Iterations")) {
-    maxIters_ = params->get("Maximum Iterations",maxIters_default_);
+    maxIters_ = params->get("Maximum Iterations", maxIters_default_);
 
     // Update parameter in our list and in status test.
     params_->set("Maximum Iterations", maxIters_);
-    if (maxIterTest_!=Teuchos::null)
-      maxIterTest_->setMaxIters( maxIters_ );
+    if (maxIterTest_ != Teuchos::null)
+      maxIterTest_->setMaxIters(maxIters_);
   }
 
   // Check for blocksize
   if (params->isParameter("Block Size")) {
-    blockSize_ = params->get("Block Size",blockSize_default_);
+    blockSize_ = params->get("Block Size", blockSize_default_);
     TEUCHOS_TEST_FOR_EXCEPTION(blockSize_ <= 0, std::invalid_argument,
-      "Belos::BlockGmresSolMgr: \"Block Size\" must be strictly positive.");
+                               "Belos::BlockGmresSolMgr: \"Block Size\" must be strictly positive.");
 
     // Update parameter in our list.
     params_->set("Block Size", blockSize_);
@@ -519,7 +514,7 @@ void BlockGmresSolMgr<ScalarType,MV,OP,DM>::setParameters( const Teuchos::RCP<Te
 
   // Check if the blocksize should be adaptive
   if (params->isParameter("Adaptive Block Size")) {
-    adaptiveBlockSize_ = params->get("Adaptive Block Size",adaptiveBlockSize_default_);
+    adaptiveBlockSize_ = params->get("Adaptive Block Size", adaptiveBlockSize_default_);
 
     // Update parameter in our list.
     params_->set("Adaptive Block Size", adaptiveBlockSize_);
@@ -527,9 +522,9 @@ void BlockGmresSolMgr<ScalarType,MV,OP,DM>::setParameters( const Teuchos::RCP<Te
 
   // Check for the maximum number of blocks.
   if (params->isParameter("Num Blocks")) {
-    numBlocks_ = params->get("Num Blocks",numBlocks_default_);
+    numBlocks_ = params->get("Num Blocks", numBlocks_default_);
     TEUCHOS_TEST_FOR_EXCEPTION(numBlocks_ <= 0, std::invalid_argument,
-      "Belos::BlockGmresSolMgr: \"Num Blocks\" must be strictly positive.");
+                               "Belos::BlockGmresSolMgr: \"Num Blocks\" must be strictly positive.");
 
     // Update parameter in our list.
     params_->set("Num Blocks", numBlocks_);
@@ -548,20 +543,20 @@ void BlockGmresSolMgr<ScalarType,MV,OP,DM>::setParameters( const Teuchos::RCP<Te
       timerSolve_ = Teuchos::TimeMonitor::getNewCounter(solveLabel);
 #endif
       if (ortho_ != Teuchos::null) {
-        ortho_->setLabel( label_ );
+        ortho_->setLabel(label_);
       }
     }
   }
 
   // Determine whether the raw Hessenberg should be stored separately from R.
   if (params->isParameter("Keep Hessenberg")) {
-    keepHessenberg_ = Teuchos::getParameter<bool>(*params,"Keep Hessenberg");
+    keepHessenberg_ = Teuchos::getParameter<bool>(*params, "Keep Hessenberg");
     params_->set("Keep Hessenberg", keepHessenberg_);
   }
 
   // Determine whether this solver should be "flexible".
   if (params->isParameter("Flexible Gmres")) {
-    isFlexible_ = Teuchos::getParameter<bool>(*params,"Flexible Gmres");
+    isFlexible_ = Teuchos::getParameter<bool>(*params, "Flexible Gmres");
     params_->set("Flexible Gmres", isFlexible_);
     if (isFlexible_ && expResTest_) {
       // Use an implicit convergence test if the Gmres solver is flexible
@@ -571,10 +566,10 @@ void BlockGmresSolMgr<ScalarType,MV,OP,DM>::setParameters( const Teuchos::RCP<Te
 
   // Check for a change in verbosity level
   if (params->isParameter("Verbosity")) {
-    if (Teuchos::isParameterType<int>(*params,"Verbosity")) {
+    if (Teuchos::isParameterType<int>(*params, "Verbosity")) {
       verbosity_ = params->get("Verbosity", verbosity_default_);
     } else {
-      verbosity_ = (int)Teuchos::getParameter<Belos::MsgType>(*params,"Verbosity");
+      verbosity_ = (int)Teuchos::getParameter<Belos::MsgType>(*params, "Verbosity");
     }
 
     // Update parameter in our list.
@@ -585,10 +580,10 @@ void BlockGmresSolMgr<ScalarType,MV,OP,DM>::setParameters( const Teuchos::RCP<Te
 
   // Check for a change in output style
   if (params->isParameter("Output Style")) {
-    if (Teuchos::isParameterType<int>(*params,"Output Style")) {
+    if (Teuchos::isParameterType<int>(*params, "Output Style")) {
       outputStyle_ = params->get("Output Style", outputStyle_default_);
     } else {
-      outputStyle_ = (int)Teuchos::getParameter<Belos::OutputType>(*params,"Output Style");
+      outputStyle_ = (int)Teuchos::getParameter<Belos::OutputType>(*params, "Output Style");
     }
 
     // Reconstruct the convergence test if the explicit residual test is not being used.
@@ -600,12 +595,12 @@ void BlockGmresSolMgr<ScalarType,MV,OP,DM>::setParameters( const Teuchos::RCP<Te
 
   // output stream
   if (params->isParameter("Output Stream")) {
-    outputStream_ = Teuchos::getParameter<Teuchos::RCP<std::ostream> >(*params,"Output Stream");
+    outputStream_ = Teuchos::getParameter<Teuchos::RCP<std::ostream>>(*params, "Output Stream");
 
     // Update parameter in our list.
     params_->set("Output Stream", outputStream_);
     if (printer_ != Teuchos::null)
-      printer_->setOStream( outputStream_ );
+      printer_->setOStream(outputStream_);
   }
 
   // frequency level
@@ -617,20 +612,20 @@ void BlockGmresSolMgr<ScalarType,MV,OP,DM>::setParameters( const Teuchos::RCP<Te
     // Update parameter in out list and output status test.
     params_->set("Output Frequency", outputFreq_);
     if (outputTest_ != Teuchos::null)
-      outputTest_->setOutputFrequency( outputFreq_ );
+      outputTest_->setOutputFrequency(outputFreq_);
   }
 
   // Create output manager if we need to.
   if (printer_ == Teuchos::null) {
-    printer_ = Teuchos::rcp( new OutputManager<ScalarType>(verbosity_, outputStream_) );
+    printer_ = Teuchos::rcp(new OutputManager<ScalarType>(verbosity_, outputStream_));
   }
 
   // Check if the orthogonalization changed.
   bool changedOrthoType = false;
   if (params->isParameter("Orthogonalization")) {
-    std::string tempOrthoType = params->get("Orthogonalization",orthoType_default_);
+    std::string tempOrthoType = params->get("Orthogonalization", orthoType_default_);
     if (tempOrthoType != orthoType_) {
-      orthoType_ = tempOrthoType;
+      orthoType_       = tempOrthoType;
       changedOrthoType = true;
     }
   }
@@ -638,70 +633,67 @@ void BlockGmresSolMgr<ScalarType,MV,OP,DM>::setParameters( const Teuchos::RCP<Te
 
   // Check which orthogonalization constant to use.
   if (params->isParameter("Orthogonalization Constant")) {
-    if (params->isType<MagnitudeType> ("Orthogonalization Constant")) {
-      orthoKappa_ = params->get ("Orthogonalization Constant",
-                                 static_cast<MagnitudeType> (DefaultSolverParameters::orthoKappa));
-    }
-    else {
-      orthoKappa_ = params->get ("Orthogonalization Constant",
-                                 DefaultSolverParameters::orthoKappa);
+    if (params->isType<MagnitudeType>("Orthogonalization Constant")) {
+      orthoKappa_ = params->get("Orthogonalization Constant",
+                                static_cast<MagnitudeType>(DefaultSolverParameters::orthoKappa));
+    } else {
+      orthoKappa_ = params->get("Orthogonalization Constant",
+                                DefaultSolverParameters::orthoKappa);
     }
 
     // Update parameter in our list.
-    params_->set("Orthogonalization Constant",orthoKappa_);
-    if (orthoType_=="DGKS") {
+    params_->set("Orthogonalization Constant", orthoKappa_);
+    if (orthoType_ == "DGKS") {
       if (orthoKappa_ > 0 && ortho_ != Teuchos::null && !changedOrthoType) {
-        Teuchos::rcp_dynamic_cast<DGKSOrthoManager<ScalarType,MV,OP,DM> >(ortho_)->setDepTol( orthoKappa_ );//TODO
+        Teuchos::rcp_dynamic_cast<DGKSOrthoManager<ScalarType, MV, OP, DM>>(ortho_)->setDepTol(orthoKappa_);  // TODO
       }
     }
   }
 
   // Create orthogonalization manager if we need to.
   if (ortho_ == Teuchos::null || changedOrthoType) {
-    Belos::OrthoManagerFactory<ScalarType,MV,OP,DM> factory; 
-    Teuchos::RCP<Teuchos::ParameterList> paramsOrtho;   
-    if (orthoType_=="DGKS" && orthoKappa_ > 0) {
+    Belos::OrthoManagerFactory<ScalarType, MV, OP, DM> factory;
+    Teuchos::RCP<Teuchos::ParameterList> paramsOrtho;
+    if (orthoType_ == "DGKS" && orthoKappa_ > 0) {
       paramsOrtho = Teuchos::rcp(new Teuchos::ParameterList());
-      paramsOrtho->set ("depTol", orthoKappa_ );
+      paramsOrtho->set("depTol", orthoKappa_);
     }
 
-    ortho_ = factory.makeMatOrthoManager (orthoType_, Teuchos::null, printer_, label_, paramsOrtho);
+    ortho_ = factory.makeMatOrthoManager(orthoType_, Teuchos::null, printer_, label_, paramsOrtho);
   }
 
   // Check for convergence tolerance
   if (params->isParameter("Convergence Tolerance")) {
-    if (params->isType<MagnitudeType> ("Convergence Tolerance")) {
-      convtol_ = params->get ("Convergence Tolerance",
-                              static_cast<MagnitudeType> (DefaultSolverParameters::convTol));
-    }
-    else {
-      convtol_ = params->get ("Convergence Tolerance", DefaultSolverParameters::convTol);
+    if (params->isType<MagnitudeType>("Convergence Tolerance")) {
+      convtol_ = params->get("Convergence Tolerance",
+                             static_cast<MagnitudeType>(DefaultSolverParameters::convTol));
+    } else {
+      convtol_ = params->get("Convergence Tolerance", DefaultSolverParameters::convTol);
     }
 
     // Update parameter in our list and residual tests.
     params_->set("Convergence Tolerance", convtol_);
     if (impConvTest_ != Teuchos::null)
-      impConvTest_->setTolerance( convtol_ );
+      impConvTest_->setTolerance(convtol_);
     if (expConvTest_ != Teuchos::null)
-      expConvTest_->setTolerance( convtol_ );
+      expConvTest_->setTolerance(convtol_);
   }
 
   // Check for a change in scaling, if so we need to build new residual tests.
   if (params->isParameter("Implicit Residual Scaling")) {
-    std::string tempImpResScale = Teuchos::getParameter<std::string>( *params, "Implicit Residual Scaling" );
+    std::string tempImpResScale = Teuchos::getParameter<std::string>(*params, "Implicit Residual Scaling");
 
     // Only update the scaling if it's different.
     if (impResScale_ != tempImpResScale) {
-      Belos::ScaleType impResScaleType = convertStringToScaleType( tempImpResScale );
-      impResScale_ = tempImpResScale;
+      Belos::ScaleType impResScaleType = convertStringToScaleType(tempImpResScale);
+      impResScale_                     = tempImpResScale;
 
       // Update parameter in our list and residual tests
       params_->set("Implicit Residual Scaling", impResScale_);
       if (impConvTest_ != Teuchos::null) {
         try {
-          impConvTest_->defineScaleForm( impResScaleType, Belos::TwoNorm );
-        }
-        catch (std::exception& e) {
+          impConvTest_->defineScaleForm(impResScaleType, Belos::TwoNorm);
+        } catch (std::exception &e) {
           // Make sure the convergence test gets constructed again.
           isSTSet_ = false;
         }
@@ -710,20 +702,19 @@ void BlockGmresSolMgr<ScalarType,MV,OP,DM>::setParameters( const Teuchos::RCP<Te
   }
 
   if (params->isParameter("Explicit Residual Scaling")) {
-    std::string tempExpResScale = Teuchos::getParameter<std::string>( *params, "Explicit Residual Scaling" );
+    std::string tempExpResScale = Teuchos::getParameter<std::string>(*params, "Explicit Residual Scaling");
 
     // Only update the scaling if it's different.
     if (expResScale_ != tempExpResScale) {
-      Belos::ScaleType expResScaleType = convertStringToScaleType( tempExpResScale );
-      expResScale_ = tempExpResScale;
+      Belos::ScaleType expResScaleType = convertStringToScaleType(tempExpResScale);
+      expResScale_                     = tempExpResScale;
 
       // Update parameter in our list and residual tests
       params_->set("Explicit Residual Scaling", expResScale_);
       if (expConvTest_ != Teuchos::null) {
         try {
-          expConvTest_->defineScaleForm( expResScaleType, Belos::TwoNorm );
-        }
-        catch (std::exception& e) {
+          expConvTest_->defineScaleForm(expResScaleType, Belos::TwoNorm);
+        } catch (std::exception &e) {
           // Make sure the convergence test gets constructed again.
           isSTSet_ = false;
         }
@@ -732,7 +723,7 @@ void BlockGmresSolMgr<ScalarType,MV,OP,DM>::setParameters( const Teuchos::RCP<Te
   }
 
   if (params->isParameter("Explicit Residual Test")) {
-    expResTest_ = Teuchos::getParameter<bool>( *params,"Explicit Residual Test" );
+    expResTest_ = Teuchos::getParameter<bool>(*params, "Explicit Residual Test");
 
     // Reconstruct the convergence test if the explicit residual test is not being used.
     params_->set("Explicit Residual Test", expResTest_);
@@ -742,16 +733,15 @@ void BlockGmresSolMgr<ScalarType,MV,OP,DM>::setParameters( const Teuchos::RCP<Te
   }
 
   if (params->isParameter("Show Maximum Residual Norm Only")) {
-    showMaxResNormOnly_ = Teuchos::getParameter<bool>(*params,"Show Maximum Residual Norm Only");
+    showMaxResNormOnly_ = Teuchos::getParameter<bool>(*params, "Show Maximum Residual Norm Only");
 
     // Update parameter in our list and residual tests
     params_->set("Show Maximum Residual Norm Only", showMaxResNormOnly_);
     if (impConvTest_ != Teuchos::null)
-      impConvTest_->setShowMaxResNormOnly( showMaxResNormOnly_ );
+      impConvTest_->setShowMaxResNormOnly(showMaxResNormOnly_);
     if (expConvTest_ != Teuchos::null)
-      expConvTest_->setShowMaxResNormOnly( showMaxResNormOnly_ );
+      expConvTest_->setShowMaxResNormOnly(showMaxResNormOnly_);
   }
-
 
   // Create the timer if we need to.
   if (timerSolve_ == Teuchos::null) {
@@ -764,19 +754,18 @@ void BlockGmresSolMgr<ScalarType,MV,OP,DM>::setParameters( const Teuchos::RCP<Te
   // Inform the solver manager that the current parameters were set.
   // The cached iterator must be rebuilt since printer_, outputTest_, and ortho_ may have changed.
   needsIterRebuild_ = true;
-  isSet_ = true;
+  isSet_            = true;
 }
 
 // Check the status test versus the defined linear problem
-template<class ScalarType, class MV, class OP, class DM>
-bool BlockGmresSolMgr<ScalarType,MV,OP,DM>::checkStatusTest() {
-
-  typedef Belos::StatusTestCombo<ScalarType,MV,OP,DM>  StatusTestCombo_t;
-  typedef Belos::StatusTestGenResNorm<ScalarType,MV,OP,DM>  StatusTestGenResNorm_t;
-  typedef Belos::StatusTestImpResNorm<ScalarType,MV,OP,DM>  StatusTestImpResNorm_t;
+template <class ScalarType, class MV, class OP, class DM>
+bool BlockGmresSolMgr<ScalarType, MV, OP, DM>::checkStatusTest() {
+  typedef Belos::StatusTestCombo<ScalarType, MV, OP, DM> StatusTestCombo_t;
+  typedef Belos::StatusTestGenResNorm<ScalarType, MV, OP, DM> StatusTestGenResNorm_t;
+  typedef Belos::StatusTestImpResNorm<ScalarType, MV, OP, DM> StatusTestImpResNorm_t;
 
   // Basic test checks maximum iterations and native residual.
-  maxIterTest_ = Teuchos::rcp( new StatusTestMaxIters<ScalarType,MV,OP,DM>( maxIters_ ) );
+  maxIterTest_ = Teuchos::rcp(new StatusTestMaxIters<ScalarType, MV, OP, DM>(maxIters_));
 
   // Perform sanity checking for flexible Gmres here.
   // NOTE:  If the user requests that the solver manager use flexible GMRES, but there is no right preconditioner, don't use flexible GMRES.
@@ -786,8 +775,8 @@ bool BlockGmresSolMgr<ScalarType,MV,OP,DM>::checkStatusTest() {
     params_->set("Flexible Gmres", isFlexible_);
 
     // If the user specified the preconditioner as a left preconditioner, throw an error.
-    TEUCHOS_TEST_FOR_EXCEPTION( !Teuchos::is_null(problem_->getLeftPrec()),BlockGmresSolMgrLinearProblemFailure,
-      "Belos::BlockGmresSolMgr::solve(): Linear problem has a left preconditioner, not a right preconditioner, which is required for flexible GMRES.");
+    TEUCHOS_TEST_FOR_EXCEPTION(!Teuchos::is_null(problem_->getLeftPrec()), BlockGmresSolMgrLinearProblemFailure,
+                               "Belos::BlockGmresSolMgr::solve(): Linear problem has a left preconditioner, not a right preconditioner, which is required for flexible GMRES.");
   }
 
   // If there is a left preconditioner, we create a combined status test that checks the implicit
@@ -797,69 +786,65 @@ bool BlockGmresSolMgr<ScalarType,MV,OP,DM>::checkStatusTest() {
   }
 
   if (expResTest_) {
-
     // Implicit residual test, using the native residual to determine if convergence was achieved.
     Teuchos::RCP<StatusTestGenResNorm_t> tmpImpConvTest =
-      Teuchos::rcp( new StatusTestGenResNorm_t( convtol_ ) );
-    tmpImpConvTest->defineScaleForm( convertStringToScaleType(impResScale_), Belos::TwoNorm );
-    tmpImpConvTest->setShowMaxResNormOnly( showMaxResNormOnly_ );
+        Teuchos::rcp(new StatusTestGenResNorm_t(convtol_));
+    tmpImpConvTest->defineScaleForm(convertStringToScaleType(impResScale_), Belos::TwoNorm);
+    tmpImpConvTest->setShowMaxResNormOnly(showMaxResNormOnly_);
     impConvTest_ = tmpImpConvTest;
 
     // Explicit residual test once the native residual is below the tolerance
     Teuchos::RCP<StatusTestGenResNorm_t> tmpExpConvTest =
-      Teuchos::rcp( new StatusTestGenResNorm_t( convtol_ ) );
-    tmpExpConvTest->defineResForm( StatusTestGenResNorm_t::Explicit, Belos::TwoNorm );
-    tmpExpConvTest->defineScaleForm( convertStringToScaleType(expResScale_), Belos::TwoNorm );
-    tmpExpConvTest->setShowMaxResNormOnly( showMaxResNormOnly_ );
+        Teuchos::rcp(new StatusTestGenResNorm_t(convtol_));
+    tmpExpConvTest->defineResForm(StatusTestGenResNorm_t::Explicit, Belos::TwoNorm);
+    tmpExpConvTest->defineScaleForm(convertStringToScaleType(expResScale_), Belos::TwoNorm);
+    tmpExpConvTest->setShowMaxResNormOnly(showMaxResNormOnly_);
     expConvTest_ = tmpExpConvTest;
 
     // The convergence test is a combination of the "cheap" implicit test and explicit test.
-    convTest_ = Teuchos::rcp( new StatusTestCombo_t( StatusTestCombo_t::SEQ, impConvTest_, expConvTest_ ) );
-  }
-  else {
-
+    convTest_ = Teuchos::rcp(new StatusTestCombo_t(StatusTestCombo_t::SEQ, impConvTest_, expConvTest_));
+  } else {
     if (isFlexible_) {
       // Implicit residual test, using the native residual to determine if convergence was achieved.
       Teuchos::RCP<StatusTestGenResNorm_t> tmpImpConvTest =
-        Teuchos::rcp( new StatusTestGenResNorm_t( convtol_ ) );
-      tmpImpConvTest->defineScaleForm( convertStringToScaleType(impResScale_), Belos::TwoNorm );
-      tmpImpConvTest->setShowMaxResNormOnly( showMaxResNormOnly_ );
+          Teuchos::rcp(new StatusTestGenResNorm_t(convtol_));
+      tmpImpConvTest->defineScaleForm(convertStringToScaleType(impResScale_), Belos::TwoNorm);
+      tmpImpConvTest->setShowMaxResNormOnly(showMaxResNormOnly_);
       impConvTest_ = tmpImpConvTest;
-    }
-    else {
+    } else {
       // Implicit residual test, using the native residual to determine if convergence was achieved.
       // Use test that checks for loss of accuracy.
       Teuchos::RCP<StatusTestImpResNorm_t> tmpImpConvTest =
-        Teuchos::rcp( new StatusTestImpResNorm_t( convtol_ ) );
-      tmpImpConvTest->defineScaleForm( convertStringToScaleType(impResScale_), Belos::TwoNorm );
-      tmpImpConvTest->setShowMaxResNormOnly( showMaxResNormOnly_ );
+          Teuchos::rcp(new StatusTestImpResNorm_t(convtol_));
+      tmpImpConvTest->defineScaleForm(convertStringToScaleType(impResScale_), Belos::TwoNorm);
+      tmpImpConvTest->setShowMaxResNormOnly(showMaxResNormOnly_);
       impConvTest_ = tmpImpConvTest;
     }
 
     // Set the explicit and total convergence test to this implicit test that checks for accuracy loss.
     expConvTest_ = impConvTest_;
-    convTest_ = impConvTest_;
+    convTest_    = impConvTest_;
   }
 
   // Create the status test.
-  sTest_ = Teuchos::rcp( new StatusTestCombo_t( StatusTestCombo_t::OR, maxIterTest_, convTest_ ) );
+  sTest_ = Teuchos::rcp(new StatusTestCombo_t(StatusTestCombo_t::OR, maxIterTest_, convTest_));
 
   // Add debug status test, if one is provided by the user
-  if (nonnull(debugStatusTest_) ) {
+  if (nonnull(debugStatusTest_)) {
     // Add debug convergence test
-    Teuchos::rcp_dynamic_cast<StatusTestCombo_t>(sTest_)->addStatusTest( debugStatusTest_ );
+    Teuchos::rcp_dynamic_cast<StatusTestCombo_t>(sTest_)->addStatusTest(debugStatusTest_);
   }
 
   // Create the status test output class.
   // This class manages and formats the output from the status test.
-  StatusTestOutputFactory<ScalarType,MV,OP,DM> stoFactory( outputStyle_ );
-  outputTest_ = stoFactory.create( printer_, sTest_, outputFreq_, Passed+Failed+Undefined );
+  StatusTestOutputFactory<ScalarType, MV, OP, DM> stoFactory(outputStyle_);
+  outputTest_ = stoFactory.create(printer_, sTest_, outputFreq_, Passed + Failed + Undefined);
 
   // Set the solver string for the output test
   std::string solverDesc = " Block Gmres ";
   if (isFlexible_)
     solverDesc = "Flexible" + solverDesc;
-  outputTest_->setSolverDesc( solverDesc );
+  outputTest_->setSolverDesc(solverDesc);
 
   // The status test is now set.
   isSTSet_ = true;
@@ -867,18 +852,15 @@ bool BlockGmresSolMgr<ScalarType,MV,OP,DM>::checkStatusTest() {
   return false;
 }
 
-template<class ScalarType, class MV, class OP, class DM>
-void BlockGmresSolMgr<ScalarType,MV,OP,DM>::setDebugStatusTest(
-  const Teuchos::RCP<StatusTest<ScalarType,MV,OP,DM> > &debugStatusTest
-  )
-{
+template <class ScalarType, class MV, class OP, class DM>
+void BlockGmresSolMgr<ScalarType, MV, OP, DM>::setDebugStatusTest(
+    const Teuchos::RCP<StatusTest<ScalarType, MV, OP, DM>> &debugStatusTest) {
   debugStatusTest_ = debugStatusTest;
 }
 
-
 // solve()
-template<class ScalarType, class MV, class OP, class DM>
-ReturnType BlockGmresSolMgr<ScalarType,MV,OP,DM>::solve() {
+template <class ScalarType, class MV, class OP, class DM>
+ReturnType BlockGmresSolMgr<ScalarType, MV, OP, DM>::solve() {
   ReturnType retType = Undetermined;
 
   // Set the current parameters if they were not set before.
@@ -888,63 +870,64 @@ ReturnType BlockGmresSolMgr<ScalarType,MV,OP,DM>::solve() {
     setParameters(Teuchos::parameterList(*getValidParameters()));
   }
 
-  TEUCHOS_TEST_FOR_EXCEPTION(problem_ == Teuchos::null,BlockGmresSolMgrLinearProblemFailure,
-    "Belos::BlockGmresSolMgr::solve(): Linear problem is not a valid object.");
+  TEUCHOS_TEST_FOR_EXCEPTION(problem_ == Teuchos::null, BlockGmresSolMgrLinearProblemFailure,
+                             "Belos::BlockGmresSolMgr::solve(): Linear problem is not a valid object.");
 
-  TEUCHOS_TEST_FOR_EXCEPTION(!problem_->isProblemSet(),BlockGmresSolMgrLinearProblemFailure,
-    "Belos::BlockGmresSolMgr::solve(): Linear problem is not ready, setProblem() has not been called.");
+  TEUCHOS_TEST_FOR_EXCEPTION(!problem_->isProblemSet(), BlockGmresSolMgrLinearProblemFailure,
+                             "Belos::BlockGmresSolMgr::solve(): Linear problem is not ready, setProblem() has not been called.");
 
-  if (!isSTSet_ || (!expResTest_ && !Teuchos::is_null(problem_->getLeftPrec())) ) {
-    TEUCHOS_TEST_FOR_EXCEPTION( checkStatusTest(),BlockGmresSolMgrLinearProblemFailure,
-      "Belos::BlockGmresSolMgr::solve(): Linear problem and requested status tests are incompatible.");
+  if (!isSTSet_ || (!expResTest_ && !Teuchos::is_null(problem_->getLeftPrec()))) {
+    TEUCHOS_TEST_FOR_EXCEPTION(checkStatusTest(), BlockGmresSolMgrLinearProblemFailure,
+                               "Belos::BlockGmresSolMgr::solve(): Linear problem and requested status tests are incompatible.");
   }
 
   // Create indices for the linear systems to be solved.
-  int startPtr = 0;
-  int numRHS2Solve = MVT::GetNumberVecs( *(problem_->getRHS()) );
-  int numCurrRHS = ( numRHS2Solve < blockSize_) ? numRHS2Solve : blockSize_;
+  int startPtr     = 0;
+  int numRHS2Solve = MVT::GetNumberVecs(*(problem_->getRHS()));
+  int numCurrRHS   = (numRHS2Solve < blockSize_) ? numRHS2Solve : blockSize_;
 
   std::vector<int> currIdx;
   //  If an adaptive block size is allowed then only the linear systems that need to be solved are solved.
   //  Otherwise, the index set is generated that informs the linear problem that some linear systems are augmented.
-  if ( adaptiveBlockSize_ ) {
+  if (adaptiveBlockSize_) {
     blockSize_ = numCurrRHS;
-    currIdx.resize( numCurrRHS  );
-    for (int i=0; i<numCurrRHS; ++i)
-    { currIdx[i] = startPtr+i; }
+    currIdx.resize(numCurrRHS);
+    for (int i = 0; i < numCurrRHS; ++i) {
+      currIdx[i] = startPtr + i;
+    }
 
-  }
-  else {
-    currIdx.resize( blockSize_ );
-    for (int i=0; i<numCurrRHS; ++i)
-    { currIdx[i] = startPtr+i; }
-    for (int i=numCurrRHS; i<blockSize_; ++i)
-    { currIdx[i] = -1; }
+  } else {
+    currIdx.resize(blockSize_);
+    for (int i = 0; i < numCurrRHS; ++i) {
+      currIdx[i] = startPtr + i;
+    }
+    for (int i = numCurrRHS; i < blockSize_; ++i) {
+      currIdx[i] = -1;
+    }
   }
 
   // Inform the linear problem of the current linear system to solve.
-  problem_->setLSIndex( currIdx );
+  problem_->setLSIndex(currIdx);
 
   //////////////////////////////////////////////////////////////////////////////////////
   // Parameter list
   Teuchos::ParameterList plist;
-  plist.set("Block Size",blockSize_);
-  plist.set("Keep Hessenberg",keepHessenberg_);
+  plist.set("Block Size", blockSize_);
+  plist.set("Keep Hessenberg", keepHessenberg_);
 
-  ptrdiff_t dim = MVT::GetGlobalLength( *(problem_->getRHS()) );
-  if (blockSize_*static_cast<ptrdiff_t>(numBlocks_) > dim) {
+  ptrdiff_t dim = MVT::GetGlobalLength(*(problem_->getRHS()));
+  if (blockSize_ * static_cast<ptrdiff_t>(numBlocks_) > dim) {
     int tmpNumBlocks = 0;
     if (blockSize_ == 1)
       tmpNumBlocks = dim / blockSize_;  // Allow for a good breakdown.
     else
-      tmpNumBlocks = ( dim - blockSize_) / blockSize_;  // Allow for restarting.
-    printer_->stream(Warnings) <<
-      "Belos::BlockGmresSolMgr::solve():  Warning! Requested Krylov subspace dimension is larger than operator dimension!"
-      << std::endl << " The maximum number of blocks allowed for the Krylov subspace will be adjusted to " << tmpNumBlocks << std::endl;
-    plist.set("Num Blocks",tmpNumBlocks);
-  }
-  else
-    plist.set("Num Blocks",numBlocks_);
+      tmpNumBlocks = (dim - blockSize_) / blockSize_;  // Allow for restarting.
+    printer_->stream(Warnings) << "Belos::BlockGmresSolMgr::solve():  Warning! Requested Krylov subspace dimension is larger than operator dimension!"
+                               << std::endl
+                               << " The maximum number of blocks allowed for the Krylov subspace will be adjusted to " << tmpNumBlocks << std::endl;
+    plist.set("Num Blocks", tmpNumBlocks);
+  } else
+    plist.set("Num Blocks", numBlocks_);
 
   // Reset the status test.
   outputTest_->reset();
@@ -958,12 +941,12 @@ ReturnType BlockGmresSolMgr<ScalarType,MV,OP,DM>::solve() {
 
   if (needsIterRebuild_) {
     if (isFlexible_)
-      block_gmres_iter_ = Teuchos::rcp( new BlockFGmresIter<ScalarType,MV,OP,DM>(problem_,printer_,outputTest_,ortho_,plist) );
+      block_gmres_iter_ = Teuchos::rcp(new BlockFGmresIter<ScalarType, MV, OP, DM>(problem_, printer_, outputTest_, ortho_, plist));
     else
-      block_gmres_iter_ = Teuchos::rcp( new BlockGmresIter<ScalarType,MV,OP,DM>(problem_,printer_,outputTest_,ortho_,plist) );
+      block_gmres_iter_ = Teuchos::rcp(new BlockGmresIter<ScalarType, MV, OP, DM>(problem_, printer_, outputTest_, ortho_, plist));
     needsIterRebuild_ = false;
   }
-  Teuchos::RCP<GmresIteration<ScalarType,MV,OP,DM> > &block_gmres_iter = block_gmres_iter_;
+  Teuchos::RCP<GmresIteration<ScalarType, MV, OP, DM>> &block_gmres_iter = block_gmres_iter_;
 
   // Enter solve() iterations
   {
@@ -971,19 +954,17 @@ ReturnType BlockGmresSolMgr<ScalarType,MV,OP,DM>::solve() {
     Teuchos::TimeMonitor slvtimer(*timerSolve_);
 #endif
 
-    while ( numRHS2Solve > 0 ) {
-
+    while (numRHS2Solve > 0) {
       // Set the current number of blocks and blocksize with the Gmres iteration.
-      if (blockSize_*numBlocks_ > dim) {
+      if (blockSize_ * numBlocks_ > dim) {
         int tmpNumBlocks = 0;
         if (blockSize_ == 1)
           tmpNumBlocks = dim / blockSize_;  // Allow for a good breakdown.
         else
-          tmpNumBlocks = ( dim - blockSize_) / blockSize_;  // Allow for restarting.
-        block_gmres_iter->setSize( blockSize_, tmpNumBlocks );
-      }
-      else
-        block_gmres_iter->setSize( blockSize_, numBlocks_ );
+          tmpNumBlocks = (dim - blockSize_) / blockSize_;  // Allow for restarting.
+        block_gmres_iter->setSize(blockSize_, tmpNumBlocks);
+      } else
+        block_gmres_iter->setSize(blockSize_, numBlocks_);
 
       // Reset the number of iterations.
       block_gmres_iter->resetNumIters();
@@ -995,22 +976,19 @@ ReturnType BlockGmresSolMgr<ScalarType,MV,OP,DM>::solve() {
       Teuchos::RCP<MV> V_0;
       if (isFlexible_) {
         // Load the correct residual if the system is augmented
-        if (currIdx[blockSize_-1] == -1) {
-          V_0 = MVT::Clone( *(problem_->getInitResVec()), blockSize_ );
-          problem_->computeCurrResVec( &*V_0 );
+        if (currIdx[blockSize_ - 1] == -1) {
+          V_0 = MVT::Clone(*(problem_->getInitResVec()), blockSize_);
+          problem_->computeCurrResVec(&*V_0);
+        } else {
+          V_0 = MVT::CloneCopy(*(problem_->getInitResVec()), currIdx);
         }
-        else {
-          V_0 = MVT::CloneCopy( *(problem_->getInitResVec()), currIdx );
-        }
-      }
-      else {
+      } else {
         // Load the correct residual if the system is augmented
-        if (currIdx[blockSize_-1] == -1) {
-          V_0 = MVT::Clone( *(problem_->getInitPrecResVec()), blockSize_ );
-          problem_->computeCurrPrecResVec( &*V_0 );
-        }
-        else {
-          V_0 = MVT::CloneCopy( *(problem_->getInitPrecResVec()), currIdx );
+        if (currIdx[blockSize_ - 1] == -1) {
+          V_0 = MVT::Clone(*(problem_->getInitPrecResVec()), blockSize_);
+          problem_->computeCurrPrecResVec(&*V_0);
+        } else {
+          V_0 = MVT::CloneCopy(*(problem_->getInitPrecResVec()), currIdx);
         }
       }
 
@@ -1018,19 +996,19 @@ ReturnType BlockGmresSolMgr<ScalarType,MV,OP,DM>::solve() {
       Teuchos::RCP<DM> z_0 = DMT::Create(blockSize_, blockSize_);
 
       // Orthonormalize the new V_0
-      int rank = ortho_->normalize( *V_0, z_0 );
-      TEUCHOS_TEST_FOR_EXCEPTION(rank != blockSize_,BlockGmresSolMgrOrthoFailure,
-        "Belos::BlockGmresSolMgr::solve(): Failed to compute initial block of orthonormal vectors.");
+      int rank = ortho_->normalize(*V_0, z_0);
+      TEUCHOS_TEST_FOR_EXCEPTION(rank != blockSize_, BlockGmresSolMgrOrthoFailure,
+                                 "Belos::BlockGmresSolMgr::solve(): Failed to compute initial block of orthonormal vectors.");
 
       // Set the new state and initialize the solver.
-      GmresIterationState<ScalarType,MV,DM> newstate;
-      newstate.V = V_0;
-      newstate.z = z_0;
+      GmresIterationState<ScalarType, MV, DM> newstate;
+      newstate.V      = V_0;
+      newstate.z      = z_0;
       newstate.curDim = 0;
       block_gmres_iter->initializeGmres(newstate);
       int numRestarts = 0;
 
-      while(1) {
+      while (1) {
         // tell block_gmres_iter to iterate
         try {
           block_gmres_iter->iterate();
@@ -1040,13 +1018,12 @@ ReturnType BlockGmresSolMgr<ScalarType,MV,OP,DM>::solve() {
           // check convergence first
           //
           ////////////////////////////////////////////////////////////////////////////////////
-          if ( convTest_->getStatus() == Passed ) {
-            if ( expConvTest_->getLOADetected() ) {
+          if (convTest_->getStatus() == Passed) {
+            if (expConvTest_->getLOADetected()) {
               // we don't have convergence
-              retType = LossOfAccuracyDetected;
+              retType      = LossOfAccuracyDetected;
               loaDetected_ = true;
-              printer_->stream(Warnings) <<
-                "Belos::BlockGmresSolMgr::solve(): Warning! Solver has experienced a loss of accuracy!" << std::endl;
+              printer_->stream(Warnings) << "Belos::BlockGmresSolMgr::solve(): Warning! Solver has experienced a loss of accuracy!" << std::endl;
               isConverged = false;
             }
             break;  // break from while(1){block_gmres_iter->iterate()}
@@ -1056,9 +1033,9 @@ ReturnType BlockGmresSolMgr<ScalarType,MV,OP,DM>::solve() {
           // check for maximum iterations
           //
           ////////////////////////////////////////////////////////////////////////////////////
-          else if ( maxIterTest_->getStatus() == Passed ) {
+          else if (maxIterTest_->getStatus() == Passed) {
             // we don't have convergence
-            retType = MaxItersReached;
+            retType     = MaxItersReached;
             isConverged = false;
             break;  // break from while(1){block_gmres_iter->iterate()}
           }
@@ -1067,53 +1044,52 @@ ReturnType BlockGmresSolMgr<ScalarType,MV,OP,DM>::solve() {
           // check for restarting, i.e. the subspace is full
           //
           ////////////////////////////////////////////////////////////////////////////////////
-          else if ( block_gmres_iter->getCurSubspaceDim() == block_gmres_iter->getMaxSubspaceDim() ) {
-
-            if ( numRestarts >= maxRestarts_ ) {
-              retType = MaxRestartsReached;
+          else if (block_gmres_iter->getCurSubspaceDim() == block_gmres_iter->getMaxSubspaceDim()) {
+            if (numRestarts >= maxRestarts_) {
+              retType     = MaxRestartsReached;
               isConverged = false;
-              break; // break from while(1){block_gmres_iter->iterate()}
+              break;  // break from while(1){block_gmres_iter->iterate()}
             }
             numRestarts++;
 
-            printer_->stream(Debug) << " Performing restart number " << numRestarts << " of " << maxRestarts_ << std::endl << std::endl;
+            printer_->stream(Debug) << " Performing restart number " << numRestarts << " of " << maxRestarts_ << std::endl
+                                    << std::endl;
 
             // Update the linear problem.
             Teuchos::RCP<MV> update = block_gmres_iter->getCurrentUpdate();
             if (isFlexible_) {
               // Update the solution manually, since the preconditioning doesn't need to be undone.
               Teuchos::RCP<MV> curX = problem_->getCurrLHSVec();
-              MVT::MvAddMv( 1.0, *curX, 1.0, *update, *curX );
-            }
-            else
-              problem_->updateSolution( update, true );
+              MVT::MvAddMv(1.0, *curX, 1.0, *update, *curX);
+            } else
+              problem_->updateSolution(update, true);
 
             // Get the state.
-            GmresIterationState<ScalarType,MV,DM> oldState = block_gmres_iter->getState();
+            GmresIterationState<ScalarType, MV, DM> oldState = block_gmres_iter->getState();
 
             // Compute the restart std::vector.
             // Get a view of the current Krylov basis.
-            V_0  = MVT::Clone( *(oldState.V), blockSize_ );
+            V_0 = MVT::Clone(*(oldState.V), blockSize_);
             if (isFlexible_)
-              problem_->computeCurrResVec( &*V_0 );
+              problem_->computeCurrResVec(&*V_0);
             else
-              problem_->computeCurrPrecResVec( &*V_0 );
+              problem_->computeCurrPrecResVec(&*V_0);
 
             // Get a view of the first block of the Krylov basis.
             z_0 = DMT::Create(blockSize_, blockSize_);
 
             // Orthonormalize the new V_0
-            rank = ortho_->normalize( *V_0, z_0 );
-            TEUCHOS_TEST_FOR_EXCEPTION(rank != blockSize_,BlockGmresSolMgrOrthoFailure,
-              "Belos::BlockGmresSolMgr::solve(): Failed to compute initial block of orthonormal vectors after restart.");
+            rank = ortho_->normalize(*V_0, z_0);
+            TEUCHOS_TEST_FOR_EXCEPTION(rank != blockSize_, BlockGmresSolMgrOrthoFailure,
+                                       "Belos::BlockGmresSolMgr::solve(): Failed to compute initial block of orthonormal vectors after restart.");
 
             // Set the new state and initialize the solver.
-            newstate.V = V_0;
-            newstate.z = z_0;
+            newstate.V      = V_0;
+            newstate.z      = z_0;
             newstate.curDim = 0;
             block_gmres_iter->initializeGmres(newstate);
 
-          } // end of restarting
+          }  // end of restarting
 
           ////////////////////////////////////////////////////////////////////////////////////
           //
@@ -1124,46 +1100,42 @@ ReturnType BlockGmresSolMgr<ScalarType,MV,OP,DM>::solve() {
 
           else {
             retType = InconsistentState;
-            TEUCHOS_TEST_FOR_EXCEPTION(true,std::logic_error,
-              "Belos::BlockGmresSolMgr::solve(): Invalid return from BlockGmresIter::iterate().");
+            TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error,
+                                       "Belos::BlockGmresSolMgr::solve(): Invalid return from BlockGmresIter::iterate().");
           }
-        }
-        catch (const GmresIterationOrthoFailure &e) {
+        } catch (const GmresIterationOrthoFailure &e) {
           // If the block size is not one, it's not considered a lucky breakdown.
           if (blockSize_ != 1) {
             printer_->stream(Errors) << "Error! Caught std::exception in BlockGmresIter::iterate() at iteration "
                                      << block_gmres_iter->getNumIters() << std::endl
                                      << e.what() << std::endl;
             if (convTest_->getStatus() != Passed) {
-              retType = OrthonormFailure;
+              retType     = OrthonormFailure;
               isConverged = false;
             }
             break;
-          }
-          else {
+          } else {
             // If the block size is one, try to recover the most recent least-squares solution
-            block_gmres_iter->updateLSQR( block_gmres_iter->getCurSubspaceDim() );
+            block_gmres_iter->updateLSQR(block_gmres_iter->getCurSubspaceDim());
 
             // Check to see if the most recent least-squares solution yielded convergence.
-            sTest_->checkStatus( &*block_gmres_iter );
+            sTest_->checkStatus(&*block_gmres_iter);
             if (convTest_->getStatus() != Passed) {
-              retType = OrthonormFailure;
+              retType     = OrthonormFailure;
               isConverged = false;
             }
             break;
           }
-        }
-        catch (const StatusTestNaNError& e) {
+        } catch (const StatusTestNaNError &e) {
           // A NaN was detected in the solver.  Set the solution to zero and return unconverged.
-          retType = NaNDetected;
-          achievedTol_ = MT::one();
+          retType            = NaNDetected;
+          achievedTol_       = MT::one();
           Teuchos::RCP<MV> X = problem_->getLHS();
-          MVT::MvInit( *X, SCT::zero() );
-          printer_->stream(Warnings) << "Belos::BlockGmresSolMgr::solve(): Warning! NaN has been detected!" 
+          MVT::MvInit(*X, SCT::zero());
+          printer_->stream(Warnings) << "Belos::BlockGmresSolMgr::solve(): Warning! NaN has been detected!"
                                      << std::endl;
           return retType;
-        }
-        catch (const std::exception &e) {
+        } catch (const std::exception &e) {
           retType = NonspecificException;
           printer_->stream(Errors) << "Error! Caught std::exception in BlockGmresIter::iterate() at iteration "
                                    << block_gmres_iter->getNumIters() << std::endl
@@ -1177,21 +1149,19 @@ ReturnType BlockGmresSolMgr<ScalarType,MV,OP,DM>::solve() {
       if (isFlexible_) {
         // Update the solution manually, since the preconditioning doesn't need to be undone.
         Teuchos::RCP<MV> update = block_gmres_iter->getCurrentUpdate();
-        Teuchos::RCP<MV> curX = problem_->getCurrLHSVec();
+        Teuchos::RCP<MV> curX   = problem_->getCurrLHSVec();
         // Update the solution only if there is a valid update from the iteration
         if (update != Teuchos::null)
-          MVT::MvAddMv( 1.0, *curX, 1.0, *update, *curX );
-      }
-      else {
+          MVT::MvAddMv(1.0, *curX, 1.0, *update, *curX);
+      } else {
         // Attempt to get the current solution from the residual status test, if it has one.
-        if ( !Teuchos::is_null(expConvTest_->getSolution()) ) {
+        if (!Teuchos::is_null(expConvTest_->getSolution())) {
           Teuchos::RCP<MV> newX = expConvTest_->getSolution();
           Teuchos::RCP<MV> curX = problem_->getCurrLHSVec();
-          MVT::Assign( *newX, *curX );
-        }
-        else {
+          MVT::Assign(*newX, *curX);
+        } else {
           Teuchos::RCP<MV> update = block_gmres_iter->getCurrentUpdate();
-          problem_->updateSolution( update, true );
+          problem_->updateSolution(update, true);
         }
       }
 
@@ -1201,35 +1171,35 @@ ReturnType BlockGmresSolMgr<ScalarType,MV,OP,DM>::solve() {
       // Update indices for the linear systems to be solved.
       startPtr += numCurrRHS;
       numRHS2Solve -= numCurrRHS;
-      if ( numRHS2Solve > 0 ) {
-        numCurrRHS = ( numRHS2Solve < blockSize_) ? numRHS2Solve : blockSize_;
+      if (numRHS2Solve > 0) {
+        numCurrRHS = (numRHS2Solve < blockSize_) ? numRHS2Solve : blockSize_;
 
-        if ( adaptiveBlockSize_ ) {
+        if (adaptiveBlockSize_) {
           blockSize_ = numCurrRHS;
-          currIdx.resize( numCurrRHS  );
-          for (int i=0; i<numCurrRHS; ++i)
-          { currIdx[i] = startPtr+i; }
-        }
-        else {
-          currIdx.resize( blockSize_ );
-          for (int i=0; i<numCurrRHS; ++i)
-          { currIdx[i] = startPtr+i; }
-          for (int i=numCurrRHS; i<blockSize_; ++i)
-          { currIdx[i] = -1; }
+          currIdx.resize(numCurrRHS);
+          for (int i = 0; i < numCurrRHS; ++i) {
+            currIdx[i] = startPtr + i;
+          }
+        } else {
+          currIdx.resize(blockSize_);
+          for (int i = 0; i < numCurrRHS; ++i) {
+            currIdx[i] = startPtr + i;
+          }
+          for (int i = numCurrRHS; i < blockSize_; ++i) {
+            currIdx[i] = -1;
+          }
         }
         // Set the next indices.
-        problem_->setLSIndex( currIdx );
-      }
-      else {
-        currIdx.resize( numRHS2Solve );
+        problem_->setLSIndex(currIdx);
+      } else {
+        currIdx.resize(numRHS2Solve);
       }
 
-    }// while ( numRHS2Solve > 0 )
-
+    }  // while ( numRHS2Solve > 0 )
   }
 
   // print final summary
-  sTest_->print( printer_->stream(FinalSummary) );
+  sTest_->print(printer_->stream(FinalSummary));
 
   // print timing information
 #ifdef BELOS_TEUCHOS_TIME_MONITOR
@@ -1237,7 +1207,7 @@ ReturnType BlockGmresSolMgr<ScalarType,MV,OP,DM>::solve() {
   // user wants to print out timing details.  summarize() will do all
   // the work even if it's passed a "black hole" output stream.
   if (verbosity_ & TimingDetails)
-    Teuchos::TimeMonitor::summarize( printer_->stream(TimingDetails) );
+    Teuchos::TimeMonitor::summarize(printer_->stream(TimingDetails));
 #endif
 
   // get iteration information for this solve
@@ -1255,46 +1225,43 @@ ReturnType BlockGmresSolMgr<ScalarType,MV,OP,DM>::solve() {
   // impConvTest_->getTestValue().
   {
     // We'll fetch the vector of residual norms one way or the other.
-    const std::vector<MagnitudeType>* pTestValues = NULL;
+    const std::vector<MagnitudeType> *pTestValues = NULL;
     if (expResTest_) {
       pTestValues = expConvTest_->getTestValue();
       if (pTestValues == NULL || pTestValues->size() < 1) {
         pTestValues = impConvTest_->getTestValue();
       }
-    }
-    else {
+    } else {
       // Only the implicit residual norm test is being used.
       pTestValues = impConvTest_->getTestValue();
     }
     TEUCHOS_TEST_FOR_EXCEPTION(pTestValues == NULL, std::logic_error,
-      "Belos::BlockGmresSolMgr::solve(): The implicit convergence test's "
-      "getTestValue() method returned NULL.  Please report this bug to the "
-      "Belos developers.");
+                               "Belos::BlockGmresSolMgr::solve(): The implicit convergence test's "
+                               "getTestValue() method returned NULL.  Please report this bug to the "
+                               "Belos developers.");
     TEUCHOS_TEST_FOR_EXCEPTION(pTestValues->size() < 1, std::logic_error,
-      "Belos::BlockGmresSolMgr::solve(): The implicit convergence test's "
-      "getTestValue() method returned a vector of length zero.  Please report "
-      "this bug to the Belos developers.");
+                               "Belos::BlockGmresSolMgr::solve(): The implicit convergence test's "
+                               "getTestValue() method returned a vector of length zero.  Please report "
+                               "this bug to the Belos developers.");
 
     // FIXME (mfh 12 Dec 2011) Does pTestValues really contain the
     // achieved tolerances for all vectors in the current solve(), or
     // just for the vectors from the last deflation?
-    achievedTol_ = *std::max_element (pTestValues->begin(), pTestValues->end());
+    achievedTol_ = *std::max_element(pTestValues->begin(), pTestValues->end());
   }
 
   if (!isConverged || loaDetected_) {
-    return retType; // return from BlockGmresSolMgr::solve()
+    return retType;  // return from BlockGmresSolMgr::solve()
   }
-  return Converged; // return from BlockGmresSolMgr::solve()
+  return Converged;  // return from BlockGmresSolMgr::solve()
 }
 
-
-template<class ScalarType, class MV, class OP, class DM>
-std::string BlockGmresSolMgr<ScalarType,MV,OP,DM>::description() const
-{
+template <class ScalarType, class MV, class OP, class DM>
+std::string BlockGmresSolMgr<ScalarType, MV, OP, DM>::description() const {
   std::ostringstream out;
   out << "\"Belos::BlockGmresSolMgr\": {";
-  if (this->getObjectLabel () != "") {
-    out << "Label: " << this->getObjectLabel () << ", ";
+  if (this->getObjectLabel() != "") {
+    out << "Label: " << this->getObjectLabel() << ", ";
   }
   out << "Flexible: " << (isFlexible_ ? "true" : "false")
       << ", Num Blocks: " << numBlocks_
@@ -1302,20 +1269,17 @@ std::string BlockGmresSolMgr<ScalarType,MV,OP,DM>::description() const
       << ", Maximum Restarts: " << maxRestarts_
       << ", Convergence Tolerance: " << convtol_
       << "}";
-  return out.str ();
+  return out.str();
 }
 
-
-template<class ScalarType, class MV, class OP, class DM>
-void
-BlockGmresSolMgr<ScalarType, MV, OP, DM>::
-describe (Teuchos::FancyOStream &out,
-          const Teuchos::EVerbosityLevel verbLevel) const
-{
+template <class ScalarType, class MV, class OP, class DM>
+void BlockGmresSolMgr<ScalarType, MV, OP, DM>::
+    describe(Teuchos::FancyOStream &out,
+             const Teuchos::EVerbosityLevel verbLevel) const {
   using Teuchos::TypeNameTraits;
   using Teuchos::VERB_DEFAULT;
-  using Teuchos::VERB_NONE;
   using Teuchos::VERB_LOW;
+  using Teuchos::VERB_NONE;
   // using Teuchos::VERB_MEDIUM;
   // using Teuchos::VERB_HIGH;
   // using Teuchos::VERB_EXTREME;
@@ -1323,22 +1287,22 @@ describe (Teuchos::FancyOStream &out,
 
   // Set default verbosity if applicable.
   const Teuchos::EVerbosityLevel vl =
-    (verbLevel == VERB_DEFAULT) ? VERB_LOW : verbLevel;
+      (verbLevel == VERB_DEFAULT) ? VERB_LOW : verbLevel;
 
   if (vl != VERB_NONE) {
-    Teuchos::OSTab tab0 (out);
+    Teuchos::OSTab tab0(out);
 
     out << "\"Belos::BlockGmresSolMgr\":" << endl;
-    Teuchos::OSTab tab1 (out);
+    Teuchos::OSTab tab1(out);
     out << "Template parameters:" << endl;
     {
-      Teuchos::OSTab tab2 (out);
-      out << "ScalarType: " << TypeNameTraits<ScalarType>::name () << endl
-          << "MV: " << TypeNameTraits<MV>::name () << endl
-          << "OP: " << TypeNameTraits<OP>::name () << endl;
+      Teuchos::OSTab tab2(out);
+      out << "ScalarType: " << TypeNameTraits<ScalarType>::name() << endl
+          << "MV: " << TypeNameTraits<MV>::name() << endl
+          << "OP: " << TypeNameTraits<OP>::name() << endl;
     }
-    if (this->getObjectLabel () != "") {
-      out << "Label: " << this->getObjectLabel () << endl;
+    if (this->getObjectLabel() != "") {
+      out << "Label: " << this->getObjectLabel() << endl;
     }
     out << "Flexible: " << (isFlexible_ ? "true" : "false") << endl
         << "Num Blocks: " << numBlocks_ << endl
@@ -1348,7 +1312,6 @@ describe (Teuchos::FancyOStream &out,
   }
 }
 
-
-} // end Belos namespace
+}  // namespace Belos
 
 #endif /* BELOS_BLOCK_GMRES_SOLMGR_HPP */

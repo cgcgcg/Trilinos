@@ -21,52 +21,54 @@ namespace BelosTpetra {
 namespace Impl {
 
 class Indent {
-public:
-  Indent (Teuchos::FancyOStream* out) : out_ (out) {
+ public:
+  Indent(Teuchos::FancyOStream* out)
+    : out_(out) {
     if (out_ != nullptr) {
-      out_->pushTab ();
+      out_->pushTab();
     }
   }
 
-  Indent () = delete;
-  Indent (const Indent&) = delete;
-  Indent& operator= (const Indent&) = delete;
+  Indent()                         = delete;
+  Indent(const Indent&)            = delete;
+  Indent& operator=(const Indent&) = delete;
 
-  ~Indent () {
+  ~Indent() {
     if (out_ != nullptr) {
-      out_->popTab ();
+      out_->popTab();
     }
   }
-private:
+
+ private:
   Teuchos::FancyOStream* out_;
 };
 
-template<class ScalarType>
+template <class ScalarType>
 struct SolverInput {
-public:
+ public:
   using mag_type = typename Teuchos::ScalarTraits<ScalarType>::magnitudeType;
 
-private:
+ private:
   using STS = Teuchos::ScalarTraits<ScalarType>;
   using STM = Teuchos::ScalarTraits<mag_type>;
 
-public:
-  SolverInput () = default;
-  SolverInput (const SolverInput<ScalarType>&) = default;
-  SolverInput& operator= (const SolverInput<ScalarType>&) = default;
+ public:
+  SolverInput()                                          = default;
+  SolverInput(const SolverInput<ScalarType>&)            = default;
+  SolverInput& operator=(const SolverInput<ScalarType>&) = default;
 
-  mag_type r_norm_orig = STM::zero ();
-  mag_type tol = STM::squareroot (STS::eps ());
-  int maxNumIters = 1000;
-  int resCycle = 30;
-  int stepSize = 5;
-  bool needToScale = true;
-  bool needToReortho = false;
-  bool delayedNorm = true;
-  int maxOrthoSteps = 0;
-  std::string orthoType {"ICGS"};
-  std::string precoSide {"none"};
-  bool computeRitzValues = true;
+  mag_type r_norm_orig = STM::zero();
+  mag_type tol         = STM::squareroot(STS::eps());
+  int maxNumIters      = 1000;
+  int resCycle         = 30;
+  int stepSize         = 5;
+  bool needToScale     = true;
+  bool needToReortho   = false;
+  bool delayedNorm     = true;
+  int maxOrthoSteps    = 0;
+  std::string orthoType{"ICGS"};
+  std::string precoSide{"none"};
+  bool computeRitzValues      = true;
   bool computeRitzValuesOnFly = false;
 };
 
@@ -74,20 +76,20 @@ public:
 // a linear system with zero right-hand sides."  This means that
 // the solve succeeded trivially (converged == true), in zero
 // iterations, with zero residual norm.
-template<class SC>
+template <class SC>
 struct SolverOutput {
-  using val_type = SC;
-  using mag_type = typename Teuchos::ScalarTraits<SC>::magnitudeType;
+  using val_type     = SC;
+  using mag_type     = typename Teuchos::ScalarTraits<SC>::magnitudeType;
   using complex_type = std::complex<mag_type>;
 
-  SolverOutput () = default;
-  SolverOutput (const SolverOutput<SC>&) = default;
-  SolverOutput& operator= (const SolverOutput<SC>&) = default;
+  SolverOutput()                                   = default;
+  SolverOutput(const SolverOutput<SC>&)            = default;
+  SolverOutput& operator=(const SolverOutput<SC>&) = default;
 
   //! Absolute residual norm.
-  mag_type absResid = Teuchos::ScalarTraits<mag_type>::zero ();
+  mag_type absResid = Teuchos::ScalarTraits<mag_type>::zero();
   //! Relative residual norm (if applicable).
-  mag_type relResid = Teuchos::ScalarTraits<mag_type>::zero ();
+  mag_type relResid = Teuchos::ScalarTraits<mag_type>::zero();
   //! Number of iterations executed.
   int numIters = 0;
   //! Number of restarts.
@@ -104,10 +106,8 @@ struct SolverOutput {
 /// solving A x_1 = b_1 and A x_2 = b_2, that is, two solves with the
 /// same matrix, but different right-hand sides.  Combining is
 /// associative and commutative.
-template<class SC>
-void
-combineSolverOutput (SolverOutput<SC>& dst, const SolverOutput<SC>& src)
-{
+template <class SC>
+void combineSolverOutput(SolverOutput<SC>& dst, const SolverOutput<SC>& src) {
   // max of the residuals and iteration counts
   dst.relResid = dst.relResid > src.relResid ? dst.relResid : src.relResid;
   dst.absResid = dst.absResid > src.absResid ? dst.absResid : src.absResid;
@@ -116,18 +116,17 @@ combineSolverOutput (SolverOutput<SC>& dst, const SolverOutput<SC>& src)
   // "converged" if all converged
   dst.converged = dst.converged && src.converged;
   // copy ritz values
-  if (src.ritzValues.size () > dst.ritzValues.size ()) {
-    dst.ritzValues.resize (src.ritzValues.size ());
-    std::copy (std::begin (src.ritzValues), std::end (src.ritzValues),
-               std::begin (dst.ritzValues));
+  if (src.ritzValues.size() > dst.ritzValues.size()) {
+    dst.ritzValues.resize(src.ritzValues.size());
+    std::copy(std::begin(src.ritzValues), std::end(src.ritzValues),
+              std::begin(dst.ritzValues));
   }
 }
 
-template<class SC>
+template <class SC>
 std::ostream&
-operator<< (std::ostream& out,
-            const SolverOutput<SC>& so)
-{
+operator<<(std::ostream& out,
+           const SolverOutput<SC>& so) {
   using std::endl;
 
   out << "Solver output:" << endl
@@ -138,11 +137,11 @@ operator<< (std::ostream& out,
     out << " Number of restarts: " << so.numRests << endl;
   }
   out << " Converged: " << (so.converged ? "true" : "false") << endl;
-  if (so.ritzValues.size () != 0) {
+  if (so.ritzValues.size() != 0) {
     out << " Ritz values: [";
-    for (std::size_t k = 0; k < so.ritzValues.size (); ++k) {
+    for (std::size_t k = 0; k < so.ritzValues.size(); ++k) {
       out << so.ritzValues[k];
-      if (k + std::size_t (1) < so.ritzValues.size ()) {
+      if (k + std::size_t(1) < so.ritzValues.size()) {
         out << ", ";
       }
     }
@@ -151,11 +150,10 @@ operator<< (std::ostream& out,
   return out;
 }
 
-template<class SC>
+template <class SC>
 std::ostream&
-operator<< (std::ostream& out,
-            const SolverInput<SC>& si)
-{
+operator<<(std::ostream& out,
+           const SolverInput<SC>& si) {
   using std::endl;
 
   out << "Solver input:" << endl;
@@ -171,7 +169,7 @@ operator<< (std::ostream& out,
   return out;
 }
 
-} // namespace Impl
-} // namespace BelosTpetra
+}  // namespace Impl
+}  // namespace BelosTpetra
 
-#endif // BELOS_TPETRA_KRYLOV_PARAMETERS_HPP
+#endif  // BELOS_TPETRA_KRYLOV_PARAMETERS_HPP

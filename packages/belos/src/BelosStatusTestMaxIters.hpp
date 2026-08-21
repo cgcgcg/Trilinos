@@ -7,7 +7,7 @@
 // *****************************************************************************
 // @HEADER
 //
-   
+
 #ifndef BELOS_STATUS_TEST_MAXITERS_HPP
 #define BELOS_STATUS_TEST_MAXITERS_HPP
 
@@ -18,7 +18,7 @@
 
 #include "BelosStatusTest.hpp"
 
-/*! \class Belos::StatusTestMaxIters: 
+/*! \class Belos::StatusTestMaxIters:
     \brief A Belos::StatusTest class for specifying a maximum number of iterations.
 
     This implementation of the Belos::StatusTest base class tests the number of iterations performed
@@ -27,37 +27,35 @@
 
 namespace Belos {
 
-template <class ScalarType, class MV, class OP, class DM = DefaultDenseMatrix<int,ScalarType>>
-class StatusTestMaxIters: public StatusTest<ScalarType,MV,OP,DM> {
-
+template <class ScalarType, class MV, class OP, class DM = DefaultDenseMatrix<int, ScalarType>>
+class StatusTestMaxIters : public StatusTest<ScalarType, MV, OP, DM> {
  public:
-
-   //! @name Constructor/Destructor.
-  //@{ 
+  //! @name Constructor/Destructor.
+  //@{
 
   //! Constructor
   StatusTestMaxIters(int maxIters);
 
   //! Destructor
-  virtual ~StatusTestMaxIters() {};
+  virtual ~StatusTestMaxIters(){};
   //@}
 
   //! @name Status methods
-  //@{ 
+  //@{
 
   //! Check convergence status of the iterative solver: Unconverged, Converged, Failed.
-  /*! This method checks to see if the convergence criteria are met using the current information from the 
+  /*! This method checks to see if the convergence criteria are met using the current information from the
     iterative solver.
   */
-  StatusType checkStatus(Iteration<ScalarType,MV,OP,DM> *iSolver );
+  StatusType checkStatus(Iteration<ScalarType, MV, OP, DM>* iSolver);
 
   //! Return the result of the most recent CheckStatus call.
-  StatusType getStatus() const {return(status_);}
+  StatusType getStatus() const { return (status_); }
 
   //@}
 
   //! @name Reset methods
-  //@{ 
+  //@{
 
   //! Resets the status test to the initial internal state.
   void reset();
@@ -68,18 +66,18 @@ class StatusTestMaxIters: public StatusTest<ScalarType,MV,OP,DM> {
   //@}
 
   //! @name Accessor methods
-  //@{ 
+  //@{
 
   //! Returns the maximum number of iterations set in the constructor.
-  int getMaxIters() const { return(maxIters_); }
+  int getMaxIters() const { return (maxIters_); }
 
   //! Returns the current number of iterations from the most recent StatusTest call.
-  int getNumIters() const { return(nIters_); }
+  int getNumIters() const { return (nIters_); }
 
   //@}
 
   //! @name Print methods
-  //@{ 
+  //@{
 
   //! Output formatted description of stopping test to output stream.
   void print(std::ostream& os, int indent = 0) const;
@@ -88,23 +86,21 @@ class StatusTestMaxIters: public StatusTest<ScalarType,MV,OP,DM> {
   void printStatus(std::ostream& os, StatusType type) const;
 
   //@}
- 
+
   /** \name Overridden from Teuchos::Describable */
   //@{
 
   /** \brief Method to return description of the maximum iteration status test  */
-  std::string description() const 
-  {  
-    std::ostringstream oss; 
-    oss << "Belos::StatusTestMaxIters<>: [ " << getNumIters() << " / " << getMaxIters() << " ]"; 
+  std::string description() const {
+    std::ostringstream oss;
+    oss << "Belos::StatusTestMaxIters<>: [ " << getNumIters() << " / " << getMaxIters() << " ]";
     return oss.str();
   }
-  //@} 
+  //@}
 
-private:
-
+ private:
   //! @name Private data members.
-  //@{ 
+  //@{
   //! Maximum number of iterations allowed
   int maxIters_;
 
@@ -114,71 +110,65 @@ private:
   //! Status
   StatusType status_;
   //@}
-
 };
 
-  template <class ScalarType, class MV, class OP, class DM> 
-  StatusTestMaxIters<ScalarType,MV,OP,DM>::StatusTestMaxIters(int maxIters)
-  {
-    if (maxIters < 1)
-      maxIters_ = 1;
-    else
-      maxIters_ = maxIters;
-    
-    nIters_ = 0;
-    status_ = Undefined;
-  }
-  
-  template <class ScalarType, class MV, class OP, class DM>
-  StatusType StatusTestMaxIters<ScalarType,MV,OP,DM>::checkStatus(Iteration<ScalarType,MV,OP,DM> *iSolver )
-  {
-    status_ = Failed;
-    nIters_ = iSolver->getNumIters();
-    if (nIters_ >= maxIters_)
-      status_ = Passed;
-    return status_;
-  }
-  
-  template <class ScalarType, class MV, class OP, class DM>
-  void StatusTestMaxIters<ScalarType,MV,OP,DM>::reset()
-  {
-    nIters_ = 0;
-    status_ = Undefined;
-  }    
-    
-  template <class ScalarType, class MV, class OP, class DM>
-  void StatusTestMaxIters<ScalarType,MV,OP,DM>::print(std::ostream& os, int indent) const
-  {
-    for (int j = 0; j < indent; j ++)
-      os << ' ';
-    printStatus(os, status_);
-    os << "Number of Iterations = ";
-    os << nIters_;
-    os << ((nIters_ < maxIters_) ? " < " : ((nIters_ == maxIters_) ? " == " : " > "));
-    os << maxIters_;
-    os << std::endl;
-  }
- 
-  template <class ScalarType, class MV, class OP, class DM>
-  void StatusTestMaxIters<ScalarType,MV,OP,DM>::printStatus(std::ostream& os, StatusType type) const 
-  {
-    os << std::left << std::setw(13) << std::setfill('.');
-    switch (type) {
-    case  Passed:
+template <class ScalarType, class MV, class OP, class DM>
+StatusTestMaxIters<ScalarType, MV, OP, DM>::StatusTestMaxIters(int maxIters) {
+  if (maxIters < 1)
+    maxIters_ = 1;
+  else
+    maxIters_ = maxIters;
+
+  nIters_ = 0;
+  status_ = Undefined;
+}
+
+template <class ScalarType, class MV, class OP, class DM>
+StatusType StatusTestMaxIters<ScalarType, MV, OP, DM>::checkStatus(Iteration<ScalarType, MV, OP, DM>* iSolver) {
+  status_ = Failed;
+  nIters_ = iSolver->getNumIters();
+  if (nIters_ >= maxIters_)
+    status_ = Passed;
+  return status_;
+}
+
+template <class ScalarType, class MV, class OP, class DM>
+void StatusTestMaxIters<ScalarType, MV, OP, DM>::reset() {
+  nIters_ = 0;
+  status_ = Undefined;
+}
+
+template <class ScalarType, class MV, class OP, class DM>
+void StatusTestMaxIters<ScalarType, MV, OP, DM>::print(std::ostream& os, int indent) const {
+  for (int j = 0; j < indent; j++)
+    os << ' ';
+  printStatus(os, status_);
+  os << "Number of Iterations = ";
+  os << nIters_;
+  os << ((nIters_ < maxIters_) ? " < " : ((nIters_ == maxIters_) ? " == " : " > "));
+  os << maxIters_;
+  os << std::endl;
+}
+
+template <class ScalarType, class MV, class OP, class DM>
+void StatusTestMaxIters<ScalarType, MV, OP, DM>::printStatus(std::ostream& os, StatusType type) const {
+  os << std::left << std::setw(13) << std::setfill('.');
+  switch (type) {
+    case Passed:
       os << "Failed";
       break;
-    case  Failed:
+    case Failed:
       os << "OK";
       break;
-    case  Undefined:
+    case Undefined:
     default:
       os << "**";
       break;
-    }
-    os << std::left << std::setfill(' ');
-    return;
-  } 
+  }
+  os << std::left << std::setfill(' ');
+  return;
+}
 
-} // end Belos namespace
+}  // namespace Belos
 
 #endif /* BELOS_STATUS_TEST_MAXITERS_HPP */

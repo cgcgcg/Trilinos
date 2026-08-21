@@ -17,24 +17,23 @@
 
 namespace Belos {
 
-template<class Scalar, class MV, class OP>
-class XpetraSolverFactory : public Impl::SolverFactoryParent<Scalar, MV, OP>
-{
-  public:
-    XpetraSolverFactory() {
-      Details::Xpetra::registerSolverFactory();
-    };
+template <class Scalar, class MV, class OP>
+class XpetraSolverFactory : public Impl::SolverFactoryParent<Scalar, MV, OP> {
+ public:
+  XpetraSolverFactory() {
+    Details::Xpetra::registerSolverFactory();
+  };
 };
 
 namespace Impl {
 
-template<class SC, class LO, class GO, class NT>
-class SolverFactorySelector<SC,::Xpetra::MultiVector<SC, LO, GO, NT>,::Belos::OperatorT<Xpetra::MultiVector<SC, LO, GO, NT>>> {
-  public:
-    typedef XpetraSolverFactory<SC,::Xpetra::MultiVector<SC, LO, GO, NT>,::Belos::OperatorT<Xpetra::MultiVector<SC, LO, GO, NT>>> type;
+template <class SC, class LO, class GO, class NT>
+class SolverFactorySelector<SC, ::Xpetra::MultiVector<SC, LO, GO, NT>, ::Belos::OperatorT<Xpetra::MultiVector<SC, LO, GO, NT>>> {
+ public:
+  typedef XpetraSolverFactory<SC, ::Xpetra::MultiVector<SC, LO, GO, NT>, ::Belos::OperatorT<Xpetra::MultiVector<SC, LO, GO, NT>>> type;
 };
 
-} // namespace Impl
-} // namespace Belos
+}  // namespace Impl
+}  // namespace Belos
 
-#endif // BELOSSOLVERFACTORY_XPETRA_HPP
+#endif  // BELOSSOLVERFACTORY_XPETRA_HPP

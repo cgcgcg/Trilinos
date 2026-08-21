@@ -45,7 +45,7 @@
 // random right-hand sides.  The initial guesses are all set to zero.
 //
 // Adapted from belos/epetra/example/LSQR/LSQREpetraExFile.cpp
-// 
+//
 // NOTE: No preconditioner is used in this example.
 //
 
@@ -82,20 +82,20 @@ int run(int argc, char *argv[]) {
   using GO = typename Tpetra::Vector<>::global_ordinal_type;
   using NT = typename Tpetra::Vector<>::node_type;
 
-  using MV = typename Tpetra::MultiVector<ST, LO, GO, NT>;
-  using OP = typename Tpetra::Operator<ST, LO, GO, NT>;
+  using MV  = typename Tpetra::MultiVector<ST, LO, GO, NT>;
+  using OP  = typename Tpetra::Operator<ST, LO, GO, NT>;
   using MAP = typename Tpetra::Map<LO, GO, NT>;
   using MAT = typename Tpetra::CrsMatrix<ST, LO, GO, NT>;
 
   using MVT = typename Belos::MultiVecTraits<ST, MV>;
   using OPT = typename Belos::OperatorTraits<ST, MV, OP>;
 
-  using MT = typename Teuchos::ScalarTraits<ST>::magnitudeType;
+  using MT  = typename Teuchos::ScalarTraits<ST>::magnitudeType;
   using STM = Teuchos::ScalarTraits<MT>;
   using STS = Teuchos::ScalarTraits<ST>;
 
   using LinearProblem = typename Belos::LinearProblem<ST, MV, OP>;
-  using Solver = ::Belos::LSQRSolMgr<ST, MV, OP>;
+  using Solver        = ::Belos::LSQRSolMgr<ST, MV, OP>;
 
   Teuchos::GlobalMPISession session(&argc, &argv, NULL);
   RCP<const Teuchos::Comm<int>> comm = Tpetra::getDefaultComm();
@@ -105,11 +105,11 @@ int run(int argc, char *argv[]) {
 
   try {
     bool procVerbose = false;
-    bool debug = false;
-    int frequency = -1;  // frequency of status test output.
-    int blockSize = 1;   // blockSize
-    int numRHS = 1;      // number of right-hand sides to solve for
-    int maxiters = -1;   // maximum number of iterations allowed per linear system
+    bool debug       = false;
+    int frequency    = -1;  // frequency of status test output.
+    int blockSize    = 1;   // blockSize
+    int numRHS       = 1;   // number of right-hand sides to solve for
+    int maxiters     = -1;  // maximum number of iterations allowed per linear system
     std::string filename("orsirr1_scaled.hb");
     std::string filenameRHS;                     // blank mean unset
     MT relResTol = STM::squareroot(STS::eps());  // relative residual tolerance
@@ -120,8 +120,8 @@ int run(int argc, char *argv[]) {
     // residual.
 
     MT relMatTol = 1.e-4;  // relative Matrix error, default value sqrt(eps)
-    MT maxCond = 1.e+8;    // maximum condition number default value 1/eps
-    MT damp = 0.;          // regularization (or damping) parameter
+    MT maxCond   = 1.e+8;  // maximum condition number default value 1/eps
+    MT damp      = 0.;     // regularization (or damping) parameter
 
     Teuchos::CommandLineProcessor cmdp(false, true);  // e.g. ./a.out --tol=.1 --filename=foo.hb
 
@@ -152,7 +152,7 @@ int run(int argc, char *argv[]) {
 
     // Get the problem
     Belos::Tpetra::HarwellBoeingReader<MAT> reader(comm);
-    RCP<MAT> A = reader.readFromFile(filename);
+    RCP<MAT> A         = reader.readFromFile(filename);
     RCP<const MAP> map = A->getDomainMap();
 
     // Initialize vectors
@@ -171,8 +171,8 @@ int run(int argc, char *argv[]) {
     // Check to see if the number of right-hand sides is the same as requested.
     if (numRHS > 1) {
       isRHS = false;  // numRHS > 1 not yet supported
-      X = rcp(new MV(map, numRHS));
-      B = rcp(new MV(map, numRHS));
+      X     = rcp(new MV(map, numRHS));
+      B     = rcp(new MV(map, numRHS));
       X->randomize();
       OPT::Apply(*A, *X, *B);  // B := AX
       X->putScalar(0.0);       // annihilate X
@@ -185,11 +185,11 @@ int run(int argc, char *argv[]) {
         X = rcp(new MV(map, numRHS));
         X->scale(0.0);
       } else {
-        LO locNumCol = map->getMaxLocalIndex() + 1;  // Create a known solution
+        LO locNumCol  = map->getMaxLocalIndex() + 1;  // Create a known solution
         GO globNumCol = map->getMaxGlobalIndex() + 1;
         for (LO li = 0; li <= locNumCol; li++) {
           const auto gid = map->getGlobalElement(li);
-          ST value = (ST)(globNumCol - 1 - gid);
+          ST value       = (ST)(globNumCol - 1 - gid);
           int numEntries = 1;
           vecX->replaceGlobalValue(numEntries, 0, value);
         }
@@ -238,7 +238,7 @@ int run(int argc, char *argv[]) {
 
     // Construct an unpreconditioned linear problem instance.
     RCP<LinearProblem> problem = rcp(new LinearProblem(A, X, B));
-    bool set = problem->setProblem();
+    bool set                   = problem->setProblem();
     if (set == false) {
       if (procVerbose) {
         std::cout << std::endl
@@ -252,7 +252,8 @@ int run(int argc, char *argv[]) {
 
     if (procVerbose) {
       // Print a problem description
-      std::cout << std::endl << std::endl;
+      std::cout << std::endl
+                << std::endl;
       std::cout << "Dimension of matrix: " << numGlobalElements << std::endl;
       std::cout << "Number of right-hand sides: " << numRHS << std::endl;
       std::cout << "Block size used by solver: " << blockSize << std::endl;
@@ -268,11 +269,11 @@ int run(int argc, char *argv[]) {
 
     std::vector<ST> solNorm(numRHS);  // get solution norm
     MVT::MvNorm(*X, solNorm);
-    int numIters = newSolver->getNumIters();  // get number of solver iterations
-    MT condNum = newSolver->getMatCondNum();
+    int numIters  = newSolver->getNumIters();  // get number of solver iterations
+    MT condNum    = newSolver->getMatCondNum();
     MT matrixNorm = newSolver->getMatNorm();
-    MT resNorm = newSolver->getResNorm();
-    MT lsResNorm = newSolver->getMatResNorm();
+    MT resNorm    = newSolver->getResNorm();
+    MT lsResNorm  = newSolver->getMatResNorm();
 
     if (procVerbose)
       std::cout << "Number of iterations performed for this solve: " << numIters << std::endl
@@ -292,7 +293,8 @@ int run(int argc, char *argv[]) {
     MVT::MvNorm(resid, actualResids);
     MVT::MvNorm(*B, rhsNorm);
     if (procVerbose) {
-      std::cout << "---------- Actual Residuals (normalized) ----------" << std::endl << std::endl;
+      std::cout << "---------- Actual Residuals (normalized) ----------" << std::endl
+                << std::endl;
       for (int i = 0; i < numRHS; i++) {
         ST actRes = actualResids[i] / rhsNorm[i];
         std::cout << "Problem " << i << " : \t" << actRes << std::endl;
@@ -304,14 +306,16 @@ int run(int argc, char *argv[]) {
       }
     }
 
-    if (ret==Belos::Converged && !badRes) {
+    if (ret == Belos::Converged && !badRes) {
       success = true;
       if (procVerbose)
-        std::cout << std::endl << "SUCCESS:  Belos converged!" << std::endl;
+        std::cout << std::endl
+                  << "SUCCESS:  Belos converged!" << std::endl;
     } else {
       success = false;
       if (procVerbose)
-        std::cout << std::endl << "ERROR:  Belos did not converge!" << std::endl;
+        std::cout << std::endl
+                  << "ERROR:  Belos did not converge!" << std::endl;
     }
   }
   TEUCHOS_STANDARD_CATCH_STATEMENTS(verbose, std::cerr, success);

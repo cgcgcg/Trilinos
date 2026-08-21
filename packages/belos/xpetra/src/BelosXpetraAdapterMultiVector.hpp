@@ -32,7 +32,7 @@ namespace BelosXpetraTsqrImpl {
 
 template <class Scalar, class LO, class GO, class Node>
 class XpetraStubTsqrAdaptor : public Teuchos::ParameterListAcceptorDefaultBase {
-public:
+ public:
   typedef Xpetra::MultiVector<Scalar, LO, GO, Node> MV;
   typedef Scalar scalar_type;
   typedef LO ordinal_type;
@@ -70,8 +70,8 @@ public:
 
 template <class Scalar, class LO, class GO, class Node>
 class XpetraTpetraTsqrAdaptor
-    : public Teuchos::ParameterListAcceptorDefaultBase {
-public:
+  : public Teuchos::ParameterListAcceptorDefaultBase {
+ public:
   typedef Xpetra::MultiVector<Scalar, LO, GO, Node> MV;
   typedef Scalar scalar_type;
   typedef LO ordinal_type;
@@ -81,7 +81,7 @@ public:
       typename Teuchos::ScalarTraits<scalar_type>::magnitudeType magnitude_type;
 
   XpetraTpetraTsqrAdaptor(const Teuchos::RCP<Teuchos::ParameterList> &plist)
-      : tpetraImpl_(plist) {}
+    : tpetraImpl_(plist) {}
 
   XpetraTpetraTsqrAdaptor() {}
 
@@ -110,14 +110,14 @@ public:
     XPETRA_FACTORY_END;
   }
 
-private:
+ private:
   typedef ::Tpetra::TsqrAdaptor<::Tpetra::MultiVector<Scalar, LO, GO, Node>>
       tpetra_tsqr_adaptor_type;
   tpetra_tsqr_adaptor_type tpetraImpl_;
 };
 
-} // namespace BelosXpetraTsqrImpl
-#endif // HAVE_BELOS_TSQR
+}  // namespace BelosXpetraTsqrImpl
+#endif  // HAVE_BELOS_TSQR
 
 namespace Belos {
 
@@ -136,9 +136,9 @@ using Teuchos::rcp;
 */
 template <class Scalar, class LO, class GO, class Node>
 class MultiVecTraits<Scalar, Xpetra::MultiVector<Scalar, LO, GO, Node>, ::Belos::DefaultDenseMatrix<int, Scalar>> {
-private:
-  using DM = ::Belos::DefaultDenseMatrix<int, Scalar>;
-  using DMT =::Belos::DenseMatTraits<Scalar, DM>;
+ private:
+  using DM  = ::Belos::DefaultDenseMatrix<int, Scalar>;
+  using DMT = ::Belos::DenseMatTraits<Scalar, DM>;
   typedef Xpetra::MultiVector<Scalar, LO, GO, Node> MV;
   using MVT = MultiVecTraits<Scalar, MV, DM>;
   typedef Xpetra::BlockedMultiVector<Scalar, LO, GO, Node> BlockedMultiVector;
@@ -162,7 +162,7 @@ private:
     return bmv.getBlockedMap()->getNumMaps();
   }
 
-public:
+ public:
 #ifdef HAVE_BELOS_XPETRA_TIMERS
   static RCP<Teuchos::Time> mvTimesMatAddMvTimer_, mvTransMvTimer_;
 #endif
@@ -181,7 +181,7 @@ public:
           bmv->getBlockedMap(), mv.getNumVectors(), true));
       for (size_t r = 0; r < getNumBlocks(*bmv); ++r) {
         RCP<MV> out_r = out->getMultiVector(r);
-        RCP<MV> in_r = bmv->getMultiVector(r);
+        RCP<MV> in_r  = bmv->getMultiVector(r);
         MVT::Assign(*in_r, *out_r);
       }
       return out;
@@ -199,15 +199,15 @@ public:
           rcp(new BlockedMultiVector(bmv->getBlockedMap(), index.size(), true));
       for (size_t r = 0; r < getNumBlocks(*bmv); ++r) {
         RCP<MV> out_r = out->getMultiVector(r);
-        RCP<MV> in_r = bmv->getMultiVector(r);
-        RCP<MV> tmp = MVT::CloneCopy(*in_r, index);
+        RCP<MV> in_r  = bmv->getMultiVector(r);
+        RCP<MV> tmp   = MVT::CloneCopy(*in_r, index);
         MVT::Assign(*tmp, *out_r);
       }
       return out;
     }
 
 #ifdef HAVE_TPETRA_DEBUG
-    const char fnName[] = "Belos::MultiVecTraits::CloneCopy(mv,index)";
+    const char fnName[]    = "Belos::MultiVecTraits::CloneCopy(mv,index)";
     const size_t inNumVecs = mv.getNumVectors();
     TEUCHOS_TEST_FOR_EXCEPTION(
         index.size() > 0 && *std::min_element(index.begin(), index.end()) < 0,
@@ -219,15 +219,15 @@ public:
         fnName << ": All indices must be strictly less than the number of "
                   "columns "
                << inNumVecs << " of the input multivector mv.");
-#endif // HAVE_TPETRA_DEBUG
+#endif  // HAVE_TPETRA_DEBUG
 
     RCP<MV> X_copy = Xpetra::MultiVectorFactory<Scalar, LO, GO, Node>::Build(
         mv.getMap(), index.size());
 
     for (size_t j = 0; j < index.size(); ++j) {
       RCP<const Vector> src = mv.getVector(static_cast<size_t>(index[j]));
-      RCP<Vector> dst = X_copy->getVectorNonConst(j);
-      *dst = *src;
+      RCP<Vector> dst       = X_copy->getVectorNonConst(j);
+      *dst                  = *src;
     }
 
     return X_copy;
@@ -239,15 +239,15 @@ public:
           rcp(new BlockedMultiVector(bmv->getBlockedMap(), index.size(), true));
       for (size_t r = 0; r < getNumBlocks(*bmv); ++r) {
         RCP<MV> out_r = out->getMultiVector(r);
-        RCP<MV> in_r = bmv->getMultiVector(r);
-        RCP<MV> tmp = MVT::CloneCopy(*in_r, index);
+        RCP<MV> in_r  = bmv->getMultiVector(r);
+        RCP<MV> tmp   = MVT::CloneCopy(*in_r, index);
         MVT::Assign(*tmp, *out_r);
       }
       return out;
     }
 
 #ifdef HAVE_TPETRA_DEBUG
-    const char fnName[] = "Belos::MultiVecTraits::CloneCopy(mv,index)";
+    const char fnName[]    = "Belos::MultiVecTraits::CloneCopy(mv,index)";
     const size_t inNumVecs = mv.getNumVectors();
     TEUCHOS_TEST_FOR_EXCEPTION(index.lbound() < 0, std::runtime_error,
                                fnName << ": Lower bound must be nonnegative.");
@@ -257,15 +257,15 @@ public:
         fnName << ": Upper bound must be strictly less than the number of "
                   "columns "
                << inNumVecs << " of the input multivector mv.");
-#endif // HAVE_TPETRA_DEBUG
+#endif  // HAVE_TPETRA_DEBUG
 
     RCP<MV> X_copy = Xpetra::MultiVectorFactory<Scalar, LO, GO, Node>::Build(
         mv.getMap(), index.size());
 
     for (int j = index.lbound(), k = 0; j <= index.ubound(); ++j, ++k) {
       RCP<const Vector> src = mv.getVector(static_cast<size_t>(j));
-      RCP<Vector> dst = X_copy->getVectorNonConst(static_cast<size_t>(k));
-      *dst = *src;
+      RCP<Vector> dst       = X_copy->getVectorNonConst(static_cast<size_t>(k));
+      *dst                  = *src;
     }
 
     return X_copy;
@@ -395,9 +395,9 @@ public:
           Teuchos::rcpFromRef(A), true);
       for (size_t r = 0; r < getNumBlocks(*bmv); ++r) {
         RCP<MV> mv_r = bmv->getMultiVector(r);
-        RCP<MV> A_r = A_bmv->getMultiVector(r);
+        RCP<MV> A_r  = A_bmv->getMultiVector(r);
         MVT::MvTimesMatAddMv(alpha, *A_r, B, beta,
-                                                    *mv_r);
+                             *mv_r);
       }
       return;
     }
@@ -420,8 +420,8 @@ public:
           Teuchos::rcpFromRef(B), true);
       for (size_t r = 0; r < getNumBlocks(*bmv); ++r) {
         RCP<MV> mv_r = bmv->getMultiVector(r);
-        RCP<MV> A_r = A_bmv->getMultiVector(r);
-        RCP<MV> B_r = B_bmv->getMultiVector(r);
+        RCP<MV> A_r  = A_bmv->getMultiVector(r);
+        RCP<MV> B_r  = B_bmv->getMultiVector(r);
         MVT::MvAddMv(alpha, *A_r, beta, *B_r, *mv_r);
       }
       return;
@@ -518,62 +518,62 @@ public:
       std::vector<magnitude_type> tmp(normvec.size(), zero);
 
       switch (type) {
-      case OneNorm:
-        for (size_t r = 0; r < getNumBlocks(*bmv); ++r) {
-          RCP<MV> mv_r = bmv->getMultiVector(r);
-          std::fill(tmp.begin(), tmp.end(), zero);
-          MVT::MvNorm(*mv_r, tmp, OneNorm);
-          for (size_t j = 0; j < normvec.size(); ++j)
-            normvec[j] += tmp[j];
-        }
-        return;
+        case OneNorm:
+          for (size_t r = 0; r < getNumBlocks(*bmv); ++r) {
+            RCP<MV> mv_r = bmv->getMultiVector(r);
+            std::fill(tmp.begin(), tmp.end(), zero);
+            MVT::MvNorm(*mv_r, tmp, OneNorm);
+            for (size_t j = 0; j < normvec.size(); ++j)
+              normvec[j] += tmp[j];
+          }
+          return;
 
-      case TwoNorm:
-        for (size_t r = 0; r < getNumBlocks(*bmv); ++r) {
-          RCP<MV> mv_r = bmv->getMultiVector(r);
-          std::fill(tmp.begin(), tmp.end(), zero);
-          MVT::MvNorm(*mv_r, tmp, TwoNorm);
+        case TwoNorm:
+          for (size_t r = 0; r < getNumBlocks(*bmv); ++r) {
+            RCP<MV> mv_r = bmv->getMultiVector(r);
+            std::fill(tmp.begin(), tmp.end(), zero);
+            MVT::MvNorm(*mv_r, tmp, TwoNorm);
+            for (size_t j = 0; j < normvec.size(); ++j)
+              normvec[j] += tmp[j] * tmp[j];
+          }
           for (size_t j = 0; j < normvec.size(); ++j)
-            normvec[j] += tmp[j] * tmp[j];
-        }
-        for (size_t j = 0; j < normvec.size(); ++j)
-          normvec[j] =
-              Teuchos::ScalarTraits<magnitude_type>::squareroot(normvec[j]);
-        return;
+            normvec[j] =
+                Teuchos::ScalarTraits<magnitude_type>::squareroot(normvec[j]);
+          return;
 
-      case InfNorm:
-        for (size_t r = 0; r < getNumBlocks(*bmv); ++r) {
-          RCP<MV> mv_r = bmv->getMultiVector(r);
-          std::fill(tmp.begin(), tmp.end(), zero);
-          MVT::MvNorm(*mv_r, tmp, InfNorm);
-          for (size_t j = 0; j < normvec.size(); ++j)
-            if (tmp[j] > normvec[j])
-              normvec[j] = tmp[j];
-        }
-        return;
+        case InfNorm:
+          for (size_t r = 0; r < getNumBlocks(*bmv); ++r) {
+            RCP<MV> mv_r = bmv->getMultiVector(r);
+            std::fill(tmp.begin(), tmp.end(), zero);
+            MVT::MvNorm(*mv_r, tmp, InfNorm);
+            for (size_t j = 0; j < normvec.size(); ++j)
+              if (tmp[j] > normvec[j])
+                normvec[j] = tmp[j];
+          }
+          return;
 
-      default:
-        TEUCHOS_TEST_FOR_EXCEPTION(true, std::invalid_argument,
-                                   "Belos::MultiVecTraits<Xpetra::MultiVector>:"
-                                   ":MvNorm: invalid NormType.");
+        default:
+          TEUCHOS_TEST_FOR_EXCEPTION(true, std::invalid_argument,
+                                     "Belos::MultiVecTraits<Xpetra::MultiVector>:"
+                                     ":MvNorm: invalid NormType.");
       }
     }
 
     Teuchos::ArrayView<magnitude_type> norms(normvec.data(), normvec.size());
     switch (type) {
-    case OneNorm:
-      mv.norm1(norms);
-      break;
-    case TwoNorm:
-      mv.norm2(norms);
-      break;
-    case InfNorm:
-      mv.normInf(norms);
-      break;
-    default:
-      TEUCHOS_TEST_FOR_EXCEPTION(true, std::invalid_argument,
-                                 "Belos::MultiVecTraits<Xpetra::MultiVector>::"
-                                 "MvNorm: invalid NormType.");
+      case OneNorm:
+        mv.norm1(norms);
+        break;
+      case TwoNorm:
+        mv.norm2(norms);
+        break;
+      case InfNorm:
+        mv.normInf(norms);
+        break;
+      default:
+        TEUCHOS_TEST_FOR_EXCEPTION(true, std::invalid_argument,
+                                   "Belos::MultiVecTraits<Xpetra::MultiVector>::"
+                                   "MvNorm: invalid NormType.");
     }
   }
 
@@ -583,7 +583,7 @@ public:
           Teuchos::rcpFromRef(A), true);
       for (size_t r = 0; r < getNumBlocks(*bmv); ++r) {
         RCP<MV> mv_r = bmv->getMultiVector(r);
-        RCP<MV> A_r = A_bmv->getMultiVector(r);
+        RCP<MV> A_r  = A_bmv->getMultiVector(r);
         MVT::SetBlock(*A_r, index, *mv_r);
       }
       return;
@@ -603,7 +603,7 @@ public:
           Teuchos::rcpFromRef(A), true);
       for (size_t r = 0; r < getNumBlocks(*bmv); ++r) {
         RCP<MV> mv_r = bmv->getMultiVector(r);
-        RCP<MV> A_r = A_bmv->getMultiVector(r);
+        RCP<MV> A_r  = A_bmv->getMultiVector(r);
         MVT::SetBlock(*A_r, index, *mv_r);
       }
       return;
@@ -623,7 +623,7 @@ public:
           Teuchos::rcpFromRef(A), true);
       for (size_t r = 0; r < getNumBlocks(*bmv); ++r) {
         RCP<MV> mv_r = bmv->getMultiVector(r);
-        RCP<MV> A_r = A_bmv->getMultiVector(r);
+        RCP<MV> A_r  = A_bmv->getMultiVector(r);
         MVT::Assign(*A_r, *mv_r);
       }
       return;
@@ -662,12 +662,12 @@ public:
     mv.describe(fos, Teuchos::Describable::verbLevel_default);
   }
 
-private:
+ private:
   static void mvDotImpl(const MV &A, const MV &B, std::vector<Scalar> &dots) {
     A.dot(B, Teuchos::ArrayView<Scalar>(dots.data(), dots.size()));
   }
 };
 
-} // namespace Belos
+}  // namespace Belos
 
 #endif

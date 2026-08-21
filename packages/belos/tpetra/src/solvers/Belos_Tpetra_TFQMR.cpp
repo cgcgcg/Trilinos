@@ -17,9 +17,8 @@
 namespace BelosTpetra {
 namespace Impl {
 
-template<class SC, class LO, class GO, class NT>
-void register_TFQMR_tmpl (const bool verbose)
-{
+template <class SC, class LO, class GO, class NT>
+void register_TFQMR_tmpl(const bool verbose) {
   using ::Belos::Impl::registerSolverSubclassForTypes;
   using MV = ::Tpetra::MultiVector<SC, LO, GO, NT>;
   using OP = ::Tpetra::Operator<SC, LO, GO, NT>;
@@ -27,32 +26,31 @@ void register_TFQMR_tmpl (const bool verbose)
   if (verbose) {
     using Teuchos::TypeNameTraits;
     std::cout << "Registering BelosTpetra TFQMRSolMgr<"
-              << TypeNameTraits<SC>::name () << ", "
-              << TypeNameTraits<LO>::name () << ", "
-              << TypeNameTraits<GO>::name () << ", "
-              << TypeNameTraits<NT>::name () << ">" << std::endl;
+              << TypeNameTraits<SC>::name() << ", "
+              << TypeNameTraits<LO>::name() << ", "
+              << TypeNameTraits<GO>::name() << ", "
+              << TypeNameTraits<NT>::name() << ">" << std::endl;
   }
   const char solverName[] = "TFQMR";
   {
-    using DM = ::Teuchos::SerialDenseMatrix<int, SC>;
+    using DM          = ::Teuchos::SerialDenseMatrix<int, SC>;
     using solver_type = ::Belos::TFQMRSolMgr<SC, MV, OP, DM>;
-    registerSolverSubclassForTypes<solver_type, SC, MV, OP, DM> (solverName);
+    registerSolverSubclassForTypes<solver_type, SC, MV, OP, DM>(solverName);
   }
 }
 
-void register_TFQMR (const bool verbose)
-{
+void register_TFQMR(const bool verbose) {
   TPETRA_ETI_MANGLING_TYPEDEFS()
 
 #ifdef BELOS_TPETRA_REGISTER_TFQMR
-#  undef BELOS_TPETRA_REGISTER_TFQMR
-#endif // BELOS_TPETRA_REGISTER_TFQMR
-#define BELOS_TPETRA_REGISTER_TFQMR( SC, LO, GO, NT ) register_TFQMR_tmpl<SC, LO, GO, NT> (verbose);
+#undef BELOS_TPETRA_REGISTER_TFQMR
+#endif  // BELOS_TPETRA_REGISTER_TFQMR
+#define BELOS_TPETRA_REGISTER_TFQMR(SC, LO, GO, NT) register_TFQMR_tmpl<SC, LO, GO, NT>(verbose);
 
-  TPETRA_INSTANTIATE_SLGN_NO_ORDINAL_SCALAR( BELOS_TPETRA_REGISTER_TFQMR )
+  TPETRA_INSTANTIATE_SLGN_NO_ORDINAL_SCALAR(BELOS_TPETRA_REGISTER_TFQMR)
 
 #undef BELOS_TPETRA_REGISTER_TFQMR
 }
 
-} // namespace Impl
-} // namespace BelosTpetra
+}  // namespace Impl
+}  // namespace BelosTpetra

@@ -22,11 +22,9 @@ namespace Details {
 
 /// \class LinearSolver
 /// \brief Belos' implementation of Trilinos::Details::LinearSolverFactory.
-template<class MV, class OP, class ScalarType, class NormType, class DM>
-class LinearSolverFactory :
-    public Trilinos::Details::LinearSolverFactory<MV, OP, NormType>
-{
-public:
+template <class MV, class OP, class ScalarType, class NormType, class DM>
+class LinearSolverFactory : public Trilinos::Details::LinearSolverFactory<MV, OP, NormType> {
+ public:
   /// \brief Get an instance of a Belos solver.
   ///
   /// The solver is wrapped in a Trilinos::Details::LinearSolver
@@ -37,10 +35,9 @@ public:
   /// \return A pointer to the solver, if the name was valid; else,
   ///   a null pointer (Teuchos::null).
   virtual Teuchos::RCP<Trilinos::Details::LinearSolver<MV, OP, NormType> >
-  getLinearSolver (const std::string& solverName)
-  {
+  getLinearSolver(const std::string& solverName) {
     using Teuchos::rcp;
-    return rcp (new Belos::Details::LinearSolver<MV, OP, ScalarType, NormType, DM> (solverName));
+    return rcp(new Belos::Details::LinearSolver<MV, OP, ScalarType, NormType, DM>(solverName));
   }
 
   /// \brief Register this LinearSolverFactory with the central registry.
@@ -56,24 +53,23 @@ public:
   /// Users do not normally have to call this function.  Belos
   /// automatically registers its LinearSolverFactory with the central
   /// repository, for all enabled template parameter combinations.
-  static void registerLinearSolverFactory ()
-  {
+  static void registerLinearSolverFactory() {
     typedef Belos::Details::LinearSolverFactory<MV, OP, ScalarType, NormType, DM> this_type;
 
 #ifdef HAVE_TEUCHOSCORE_CXX11
     typedef std::shared_ptr<this_type> ptr_type;
-    //typedef std::shared_ptr<Trilinos::Details::LinearSolverFactory<MV, OP> > base_ptr_type;
+    // typedef std::shared_ptr<Trilinos::Details::LinearSolverFactory<MV, OP> > base_ptr_type;
 #else
     typedef Teuchos::RCP<this_type> ptr_type;
-    //typedef Teuchos::RCP<Trilinos::Details::LinearSolverFactory<MV, OP> > base_ptr_type;
-#endif // HAVE_TEUCHOSCORE_CXX11
+    // typedef Teuchos::RCP<Trilinos::Details::LinearSolverFactory<MV, OP> > base_ptr_type;
+#endif  // HAVE_TEUCHOSCORE_CXX11
 
-    ptr_type factory (new this_type ());
-    Trilinos::Details::registerLinearSolverFactory<MV, OP, NormType> ("Belos", factory);
+    ptr_type factory(new this_type());
+    Trilinos::Details::registerLinearSolverFactory<MV, OP, NormType>("Belos", factory);
   }
 };
 
-} // namespace Details
-} // namespace Belos
+}  // namespace Details
+}  // namespace Belos
 
 #endif /* BELOS_DETAILS_LINEARSOLVERFACTORY_HPP */

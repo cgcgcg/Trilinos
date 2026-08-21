@@ -35,24 +35,24 @@ namespace Belos {
 namespace Details {
 
 #ifdef HAVE_TEUCHOS_COMPLEX
-#define BELOS_DEFINE_REGISTER_SOLVER_MANAGER(manager,name)                           \
-  Impl::registerSolverSubclassForTypes<manager<fST,fMVt,fOPt,fSDM>, fST, fMVt, fOPt, fSDM> (name);        \
-  Impl::registerSolverSubclassForTypes<manager<dST,dMVt,dOPt,dSDM>, dST, dMVt, dOPt, dSDM> (name);        \
-  Impl::registerSolverSubclassForTypes<manager<cST,cMVt,cOPt,cSDM>, cST, cMVt, cOPt, cSDM> (name);  \
-  Impl::registerSolverSubclassForTypes<manager<cfST,cfMVt,cfOPt,cfSDM>, cfST, cfMVt, cfOPt, cfSDM> (name); \
-  Impl::registerSolverSubclassForTypes<manager<fST,fMVk,fOPk,fKDV>, fST, fMVk, fOPk, fKDV> (name);        \
-  Impl::registerSolverSubclassForTypes<manager<dST,dMVk,dOPk,dKDV>, dST, dMVk, dOPk, dKDV> (name);        \
-  Impl::registerSolverSubclassForTypes<manager<cST,cMVk,cOPk,cKDV>, cST, cMVk, cOPk, cKDV> (name);  \
-  Impl::registerSolverSubclassForTypes<manager<cfST,cfMVk,cfOPk,cfKDV>, cfST, cfMVk, cfOPk, cfKDV> (name);
-#else // HAVE_TEUCHOS_COMPLEX
-#define BELOS_DEFINE_REGISTER_SOLVER_MANAGER(manager,name)            \
-  Impl::registerSolverSubclassForTypes<manager<fST,fMVt,fOPt,fSDM>, fST, fMVt, fOPt, fSDM> (name);  \
-  Impl::registerSolverSubclassForTypes<manager<dST,dMVt,dOPt,dSDM>, dST, dMVt, dOPt, dSDM> (name);  \
-  Impl::registerSolverSubclassForTypes<manager<fST,fMVk,fOPk,fKDV>, fST, fMVk, fOPk, fKDV> (name);  \
-  Impl::registerSolverSubclassForTypes<manager<dST,dMVk,dOPk,dKDV>, dST, dMVk, dOPk, dKDV> (name);
-#endif // HAVE_TEUCHOS_COMPLEX
+#define BELOS_DEFINE_REGISTER_SOLVER_MANAGER(manager, name)                                                  \
+  Impl::registerSolverSubclassForTypes<manager<fST, fMVt, fOPt, fSDM>, fST, fMVt, fOPt, fSDM>(name);         \
+  Impl::registerSolverSubclassForTypes<manager<dST, dMVt, dOPt, dSDM>, dST, dMVt, dOPt, dSDM>(name);         \
+  Impl::registerSolverSubclassForTypes<manager<cST, cMVt, cOPt, cSDM>, cST, cMVt, cOPt, cSDM>(name);         \
+  Impl::registerSolverSubclassForTypes<manager<cfST, cfMVt, cfOPt, cfSDM>, cfST, cfMVt, cfOPt, cfSDM>(name); \
+  Impl::registerSolverSubclassForTypes<manager<fST, fMVk, fOPk, fKDV>, fST, fMVk, fOPk, fKDV>(name);         \
+  Impl::registerSolverSubclassForTypes<manager<dST, dMVk, dOPk, dKDV>, dST, dMVk, dOPk, dKDV>(name);         \
+  Impl::registerSolverSubclassForTypes<manager<cST, cMVk, cOPk, cKDV>, cST, cMVk, cOPk, cKDV>(name);         \
+  Impl::registerSolverSubclassForTypes<manager<cfST, cfMVk, cfOPk, cfKDV>, cfST, cfMVk, cfOPk, cfKDV>(name);
+#else  // HAVE_TEUCHOS_COMPLEX
+#define BELOS_DEFINE_REGISTER_SOLVER_MANAGER(manager, name)                                          \
+  Impl::registerSolverSubclassForTypes<manager<fST, fMVt, fOPt, fSDM>, fST, fMVt, fOPt, fSDM>(name); \
+  Impl::registerSolverSubclassForTypes<manager<dST, dMVt, dOPt, dSDM>, dST, dMVt, dOPt, dSDM>(name); \
+  Impl::registerSolverSubclassForTypes<manager<fST, fMVk, fOPk, fKDV>, fST, fMVk, fOPk, fKDV>(name); \
+  Impl::registerSolverSubclassForTypes<manager<dST, dMVk, dOPk, dKDV>, dST, dMVk, dOPk, dKDV>(name);
+#endif  // HAVE_TEUCHOS_COMPLEX
 
-void registerSolverFactory () {
+void registerSolverFactory() {
   typedef double dST;
   typedef Teuchos::SerialDenseMatrix<int, dST> dSDM;
   typedef Kokkos::DualView<typename KokkosKernels::ArithTraits<dST>::val_type **, Kokkos::LayoutLeft> dKDV;
@@ -85,7 +85,7 @@ void registerSolverFactory () {
   typedef Operator<cfST, cfSDM> cfOPt;
   typedef MultiVec<cfST, cfKDV> cfMVk;
   typedef Operator<cfST, cfKDV> cfOPk;
-#endif // HAVE_TEUCHOS_COMPLEX
+#endif  // HAVE_TEUCHOS_COMPLEX
 
   BELOS_DEFINE_REGISTER_SOLVER_MANAGER(BiCGStabSolMgr, "BICGSTAB")
   BELOS_DEFINE_REGISTER_SOLVER_MANAGER(BlockCGSolMgr, "BLOCK CG")
@@ -103,6 +103,5 @@ void registerSolverFactory () {
   BELOS_DEFINE_REGISTER_SOLVER_MANAGER(TFQMRSolMgr, "TFQMR")
 }
 
-} // namespace Details
-} // namespace Belos
-
+}  // namespace Details
+}  // namespace Belos

@@ -1,5 +1,3 @@
-
-
 #
 # A) Package-specific configuration options
 #
@@ -23,7 +21,8 @@ TRIBITS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 
 TRIBITS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
-APPEND_SET(HEADERS
+APPEND_SET(
+  HEADERS
   BelosMultiVecTraits_Tpetra.hpp
   BelosOperatorTraits_Tpetra.hpp
   BelosSolverFactory_Tpetra.hpp
@@ -33,15 +32,17 @@ APPEND_SET(HEADERS
   BelosTpetraTestMain.hpp
   Belos_Details_Tpetra_registerLinearSolverFactory.hpp
   Belos_Details_Tpetra_registerSolverFactory.hpp
-  )
+)
 
-APPEND_SET(SOURCES
+APPEND_SET(
+  SOURCES
   BelosTpetraAdapter.cpp
   Belos_Details_Tpetra_registerLinearSolverFactory.cpp
   Belos_Details_Tpetra_registerSolverFactory.cpp
-  )
+)
 
-APPEND_SET(HEADERS
+APPEND_SET(
+  HEADERS
   ${CMAKE_CURRENT_SOURCE_DIR}/solvers/Belos_Tpetra_Cg.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/solvers/Belos_Tpetra_CgPipeline.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/solvers/Belos_Tpetra_CgSingleReduce.hpp
@@ -55,8 +56,9 @@ APPEND_SET(HEADERS
   ${CMAKE_CURRENT_SOURCE_DIR}/solvers/Belos_Tpetra_SolverManager.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/solvers/Belos_Tpetra_SolverManagerBase.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/solvers/Belos_Tpetra_UpdateNewton.hpp
-  )
-APPEND_SET(SOURCES
+)
+APPEND_SET(
+  SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/solvers/Belos_Tpetra_BiCGStab.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/solvers/Belos_Tpetra_BlockCG.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/solvers/Belos_Tpetra_BlockGmres.cpp
@@ -79,7 +81,6 @@ APPEND_SET(SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/solvers/Belos_Tpetra_PseudoBlockTFQMR.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/solvers/Belos_Tpetra_TFQMR.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/solvers/Belos_Tpetra_RCG.cpp
-
   ${CMAKE_CURRENT_SOURCE_DIR}/solvers/Belos_Tpetra_BiCGStab_KDV.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/solvers/Belos_Tpetra_BlockCG_KDV.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/solvers/Belos_Tpetra_BlockGmres_KDV.cpp
@@ -94,7 +95,7 @@ APPEND_SET(SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/solvers/Belos_Tpetra_PseudoBlockTFQMR_KDV.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/solvers/Belos_Tpetra_TFQMR_KDV.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/solvers/Belos_Tpetra_RCG_KDV.cpp
-  )
+)
 
 #
 # C) Define the targets for package's library(s)
@@ -104,4 +105,4 @@ TRIBITS_ADD_LIBRARY(
   HEADERS ${HEADERS}
   SOURCES ${SOURCES}
   DEPLIBS belos
-  )
+)

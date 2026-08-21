@@ -1,36 +1,46 @@
-
 TRIBITS_ADD_EXECUTABLE_AND_TEST(
   Tpetra_pseudo_cg_indefinite
-  SOURCES test_pseudo_cg_indefinite.cpp   
+  SOURCES test_pseudo_cg_indefinite.cpp
   COMM serial mpi
-  ARGS
-    "--debug --verbose --tol=1e-5"
+  ARGS "--debug --verbose --tol=1e-5"
   STANDARD_PASS_OUTPUT
-  )
+)
 
 BELOS_ADD_EXECUTABLE_AND_TEUCHOS_AND_KOKKOS_TESTS(
   Tpetra_BlockCG_hb_test
-  SOURCES test_bl_cg_hb.cpp
-  ARGS "--verbose"
-       "--verbose --use-single-red"
-       "--verbose --num-rhs=2 --block-size=2"
-  COMM serial mpi
+  SOURCES
+  test_bl_cg_hb.cpp
+  ARGS
+  "--verbose"
+  "--verbose --use-single-red"
+  "--verbose --num-rhs=2 --block-size=2"
+  COMM
+  serial
+  mpi
   STANDARD_PASS_OUTPUT
-  )
+)
 
 BELOS_ADD_EXECUTABLE_AND_TEUCHOS_AND_KOKKOS_TESTS(
   Tpetra_PseudoBlockCG_hb_test
-  SOURCES test_pseudo_bl_cg_hb.cpp
-  ARGS "--verbose"
-  COMM serial mpi
-  )
+  SOURCES
+  test_pseudo_bl_cg_hb.cpp
+  ARGS
+  "--verbose"
+  COMM
+  serial
+  mpi
+)
 
 BELOS_ADD_EXECUTABLE_AND_TEUCHOS_AND_KOKKOS_TESTS(
   Tpetra_PseudoBlockStochasticCG_hb_test
-  SOURCES test_pseudo_stochastic_cg_hb.cpp
-  ARGS "--verbose"
-  COMM serial mpi
-  )
+  SOURCES
+  test_pseudo_stochastic_cg_hb.cpp
+  ARGS
+  "--verbose"
+  COMM
+  serial
+  mpi
+)
 
 TRIBITS_ADD_EXECUTABLE_AND_TEST(
   Tpetra_pseudo_cg_hb
@@ -49,27 +59,31 @@ TRIBITS_ADD_EXECUTABLE_AND_TEST(
 )
 
 ASSERT_DEFINED(Tpetra_INST_COMPLEX_DOUBLE)
-IF (Tpetra_INST_COMPLEX_DOUBLE)
+IF(Tpetra_INST_COMPLEX_DOUBLE)
 
   BELOS_ADD_EXECUTABLE_AND_TEUCHOS_AND_KOKKOS_TESTS(
     Tpetra_BlockCG_complex_hb_test
-    SOURCES test_cg_complex_hb.cpp
+    SOURCES
+    test_cg_complex_hb.cpp
     ARGS
-      "--verbose"
-      "--verbose --pseudo"
-    COMM serial mpi
-    )
+    "--verbose"
+    "--verbose --pseudo"
+    COMM
+    serial
+    mpi
+  )
 
   TRIBITS_COPY_FILES_TO_BINARY_DIR(
     Tpetra_BlockCG_complex_hb_CopyFiles
     SOURCE_DIR ${Belos_SOURCE_DIR}/testmatrices
     SOURCE_FILES mhd1280b.cua
     EXEDEPS Tpetra_BlockCG_complex_hb_test
-    )
+  )
 
 ENDIF()
 
-TRIBITS_COPY_FILES_TO_BINARY_DIR(Tpetra_BlockCG_hb_CopyFiles2
+TRIBITS_COPY_FILES_TO_BINARY_DIR(
+  Tpetra_BlockCG_hb_CopyFiles2
   SOURCE_DIR ${Belos_SOURCE_DIR}/testmatrices
   SOURCE_FILES bcsstk14.hb
   EXEDEPS Tpetra_BlockCG_hb_test

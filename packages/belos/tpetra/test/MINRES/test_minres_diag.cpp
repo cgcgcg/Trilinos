@@ -37,7 +37,9 @@ using Teuchos::rcp;
 template <class MV>
 class VectorOperator {
  public:
-  VectorOperator(int m_in, int n_in) : m(m_in), n(n_in){};
+  VectorOperator(int m_in, int n_in)
+    : m(m_in)
+    , n(n_in){};
 
   virtual ~VectorOperator(){};
 
@@ -50,7 +52,9 @@ class VectorOperator {
 
  private:
   // Not allowing copy construction.
-  VectorOperator(const VectorOperator &) : m(0), n(0){};
+  VectorOperator(const VectorOperator &)
+    : m(0)
+    , n(0){};
   VectorOperator *operator=(const VectorOperator &) { return NULL; };
 };
 
@@ -59,7 +63,9 @@ class VectorOperator {
 template <class ST, class MV>
 class DiagonalOperator : public VectorOperator<MV> {
  public:
-  DiagonalOperator(int n_in, ST v_in) : VectorOperator<MV>(n_in, n_in), v(v_in){};
+  DiagonalOperator(int n_in, ST v_in)
+    : VectorOperator<MV>(n_in, n_in)
+    , v(v_in){};
 
   ~DiagonalOperator(){};
 
@@ -75,7 +81,9 @@ template <class ST, class MV>
 class DiagonalOperator2 : public VectorOperator<MV> {
  public:
   DiagonalOperator2(int n_in, int min_gid_in, ST v_in)
-      : VectorOperator<MV>(n_in, n_in), min_gid(min_gid_in), v(v_in) {}
+    : VectorOperator<MV>(n_in, n_in)
+    , min_gid(min_gid_in)
+    , v(v_in) {}
 
   ~DiagonalOperator2(){};
 
@@ -114,7 +122,9 @@ class ComposedOperator : public VectorOperator<MV> {
 template <class MV>
 ComposedOperator<MV>::ComposedOperator(int n_in, const RCP<VectorOperator<MV>> &pA_in,
                                        const RCP<VectorOperator<MV>> &pB_in)
-    : VectorOperator<MV>(n_in, n_in), pA(pA_in), pB(pB_in) {}
+  : VectorOperator<MV>(n_in, n_in)
+  , pA(pA_in)
+  , pB(pB_in) {}
 
 template <class MV>
 void ComposedOperator<MV>::operator()(const MV &x, MV &y) {
@@ -130,7 +140,10 @@ class TrilinosInterface : public OP {
  public:
   TrilinosInterface(const RCP<VectorOperator<MV>> pA_in, const RCP<const Teuchos::Comm<int>> pComm_in,
                     const RCP<const MP> pMap_in)
-      : pA(pA_in), pComm(pComm_in), pMap(pMap_in), use_transpose(false) {}
+    : pA(pA_in)
+    , pComm(pComm_in)
+    , pMap(pMap_in)
+    , use_transpose(false) {}
 
   void apply(const MV &X, MV &Y, Teuchos::ETransp mode = Teuchos::NO_TRANS, ST alpha = Teuchos::ScalarTraits<ST>::one(),
              ST beta = Teuchos::ScalarTraits<ST>::zero()) const override;
@@ -186,10 +199,11 @@ template <class OP, class ST, class MP, class MV>
 IterativeInverseOperator<OP, ST, MP, MV>::IterativeInverseOperator(int n_in, int blocksize,
                                                                    const RCP<VectorOperator<MV>> &pA_in,
                                                                    std::string opString, bool print_in)
-    : VectorOperator<MV>(n_in, n_in),  // square operator
-      pA(pA_in),
-      print(print_in),
-      timer(opString) {
+  : VectorOperator<MV>(n_in, n_in)
+  ,  // square operator
+  pA(pA_in)
+  , print(print_in)
+  , timer(opString) {
   int n_global;
   pComm = Tpetra::getDefaultComm();
   Teuchos::reduceAll<int, int>(*pComm, Teuchos::REDUCE_SUM, 1, &n_in, &n_global);
@@ -201,8 +215,8 @@ IterativeInverseOperator<OP, ST, MP, MV>::IterativeInverseOperator(int n_in, int
   pProb = rcp(new Belos::LinearProblem<ST, MV, OP>());
   pProb->setOperator(pPE);
 
-  int max_iter = 100;
-  const ST tol = sqrt(std::numeric_limits<ST>::epsilon());
+  int max_iter  = 100;
+  const ST tol  = sqrt(std::numeric_limits<ST>::epsilon());
   int verbosity = Belos::Errors + Belos::Warnings;
   if (print)
     verbosity += Belos::TimingDetails + Belos::StatusTestDetails;
@@ -231,11 +245,13 @@ void IterativeInverseOperator<OP, ST, MP, MV>::operator()(const MV &b, MV &x) {
 
   if (pid == 0 && print) {
     if (ret == Belos::Converged) {
-      std::cout << std::endl << "pid[" << pid << "] Minres converged" << std::endl;
+      std::cout << std::endl
+                << "pid[" << pid << "] Minres converged" << std::endl;
       std::cout << "Solution time: " << timer.totalElapsedTime() << std::endl;
 
     } else
-      std::cout << std::endl << "pid[" << pid << "] Minres did not converge" << std::endl;
+      std::cout << std::endl
+                << "pid[" << pid << "] Minres did not converge" << std::endl;
   }
 }
 
@@ -257,7 +273,7 @@ int run(int argc, char *argv[]) {
   Teuchos::GlobalMPISession session(&argc, &argv, NULL);
 
   RCP<const Teuchos::Comm<int>> comm = Tpetra::getDefaultComm();
-  const int pid = rank(*comm);
+  const int pid                      = rank(*comm);
 
   bool verbose = false;
   bool success = true;
@@ -292,7 +308,7 @@ int run(int argc, char *argv[]) {
 
     // ComposedOperator computed inv(D)*B*x
     RCP<DiagonalOperator<ST, MV>> B = rcp(new DiagonalOperator<ST, MV>(n, 4.0));
-    RCP<ComposedOperator<MV>> C = rcp(new ComposedOperator<MV>(n, Inner, B));
+    RCP<ComposedOperator<MV>> C     = rcp(new ComposedOperator<MV>(n, Inner, B));
 
     // Outer computes inv(C) = inv(inv(D)*B)*x = inv(B)*D*x = x
     RCP<IterativeInverseOperator<OP, ST, MP, MV>> Outer =
@@ -302,7 +318,8 @@ int run(int argc, char *argv[]) {
     (*Inner)(X, Y);
 
     if (pid == 0) {
-      std::cout << std::endl << "Vector Y should have all entries [1/4, 1/4, 1/4, ..., 1/4]" << std::endl;
+      std::cout << std::endl
+                << "Vector Y should have all entries [1/4, 1/4, 1/4, ..., 1/4]" << std::endl;
     }
     Y.print(std::cout);
 

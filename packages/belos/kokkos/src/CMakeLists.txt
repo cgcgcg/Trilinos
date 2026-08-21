@@ -1,5 +1,3 @@
-
-
 #
 # A) Package-specific configuration options
 #
@@ -23,9 +21,7 @@ TRIBITS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 
 TRIBITS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
-APPEND_SET(HEADERS
-   BelosKokkosAdapter.hpp
-  )
+APPEND_SET(HEADERS BelosKokkosAdapter.hpp)
 
 #
 # C) Define the targets for package's library(s)
@@ -36,4 +32,3 @@ APPEND_SET(HEADERS
 #  SOURCES ${SOURCES}
 #  DEPLIBS belos
 #  )
-

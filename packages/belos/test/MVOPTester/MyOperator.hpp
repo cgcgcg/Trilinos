@@ -30,97 +30,77 @@
  * \date Last modified on 01-Nov-05
  */
 template <class ScalarType, class DM>
-class MyOperator : public Belos::Operator<ScalarType, DM>
-{
-
-public:
-
+class MyOperator : public Belos::Operator<ScalarType, DM> {
+ public:
   /* Constructs a square matrix with \c NumRows rows and columns.
    * The matrix is tridiagonal, and the computational stencil is
    * [-1, 2, -1]
    */
-  MyOperator(const int NumRows) :
-    NumRows_(NumRows)
-  {
+  MyOperator(const int NumRows)
+    : NumRows_(NumRows) {
     l_ = -1.0;
-    d_ =  2.0;
+    d_ = 2.0;
     u_ = -1.0;
   }
 
   // Constructor for tridiagonal matrix.
-  MyOperator(const int NumRows, std::vector<ScalarType> ldu) :
-    NumRows_(NumRows)
-  {
+  MyOperator(const int NumRows, std::vector<ScalarType> ldu)
+    : NumRows_(NumRows) {
     l_ = ldu[0];
     d_ = ldu[1];
     u_ = ldu[2];
   }
 
   // Constructor for a diagonal matrix with variable entries.
-  MyOperator(std::vector<ScalarType> diag) :
-    NumRows_(diag.size())
-  {
+  MyOperator(std::vector<ScalarType> diag)
+    : NumRows_(diag.size()) {
     diag_.resize(diag.size());
-    for(unsigned int i=0; i<diag_.size(); ++i)
+    for (unsigned int i = 0; i < diag_.size(); ++i)
       diag_[i] = diag[i];
   }
 
   //! Dtor
-  ~MyOperator()
-  {}
+  ~MyOperator() {}
 
   //! Applies the tridiagonal or diagonal matrix to a multivector.
   void Apply(const Belos::MultiVec<ScalarType>& X,
              Belos::MultiVec<ScalarType>& Y,
-             Belos::ETrans trans = Belos::NOTRANS) const
-  {
+             Belos::ETrans trans = Belos::NOTRANS) const {
     const MyMultiVec<ScalarType>* MyX;
     MyX = dynamic_cast<const MyMultiVec<ScalarType>*>(&X);
-    assert (MyX != 0);
+    assert(MyX != 0);
 
     MyMultiVec<ScalarType>* MyY;
     MyY = dynamic_cast<MyMultiVec<ScalarType>*>(&Y);
-    assert (MyY != 0);
+    assert(MyY != 0);
 
-    assert (X.GetNumberVecs() == Y.GetNumberVecs());
-    assert (X.GetGlobalLength() == Y.GetGlobalLength());
+    assert(X.GetNumberVecs() == Y.GetNumberVecs());
+    assert(X.GetGlobalLength() == Y.GetGlobalLength());
 
-    if (diag_.size() == 0)
-    {
+    if (diag_.size() == 0) {
       // This is a tridiagonal matrix
-      for (int v = 0 ; v < X.GetNumberVecs() ; ++v)
-      {
-        for (ptrdiff_t i = 0 ; i < X.GetGlobalLength() ; ++i)
-        {
-          if (i == 0)
-          {
+      for (int v = 0; v < X.GetNumberVecs(); ++v) {
+        for (ptrdiff_t i = 0; i < X.GetGlobalLength(); ++i) {
+          if (i == 0) {
             (*MyY)[v][i] = (d_ * (*MyX)[v][i] + u_ * (*MyX)[v][i + 1]);
-          }
-          else if (i == X.GetGlobalLength() - 1)
-          {
-            (*MyY)[v][i] = (d_ * (*MyX)[v][i] + l_ * (*MyX)[v][i-1]);
-          }
-          else
-          {
-            (*MyY)[v][i] = (d_ * (*MyX)[v][i] + l_ * (*MyX)[v][i-1] + u_ * (*MyX)[v][i+1]);
+          } else if (i == X.GetGlobalLength() - 1) {
+            (*MyY)[v][i] = (d_ * (*MyX)[v][i] + l_ * (*MyX)[v][i - 1]);
+          } else {
+            (*MyY)[v][i] = (d_ * (*MyX)[v][i] + l_ * (*MyX)[v][i - 1] + u_ * (*MyX)[v][i + 1]);
           }
         }
       }
-    }
-    else
-    {
+    } else {
       // This is a diagonal matrix
-      for (int v = 0 ; v < X.GetNumberVecs() ; ++v)
-      {
-        for (ptrdiff_t i = 0 ; i < X.GetGlobalLength() ; ++i)
-        {
+      for (int v = 0; v < X.GetNumberVecs(); ++v) {
+        for (ptrdiff_t i = 0; i < X.GetGlobalLength(); ++i) {
           (*MyY)[v][i] = diag_[i] * (*MyX)[v][i];
         }
       }
     }
   }
 
-private:
+ private:
   //! Number of rows and columns
   int NumRows_;
   //! Elements on subdiagonal, diagonal, and superdiagonal.
@@ -129,4 +109,4 @@ private:
   std::vector<ScalarType> diag_;
 };
 
-#endif //MY_OPERATOR_HPP
+#endif  // MY_OPERATOR_HPP

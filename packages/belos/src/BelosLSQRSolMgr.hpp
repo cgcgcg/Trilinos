@@ -36,7 +36,6 @@
 
 namespace Belos {
 
-
 //! @name LSQRSolMgr Exceptions
 //@{
 
@@ -47,10 +46,9 @@ namespace Belos {
  *
  */
 class LSQRSolMgrLinearProblemFailure : public BelosError {
-public:
+ public:
   LSQRSolMgrLinearProblemFailure(const std::string& what_arg)
-    : BelosError(what_arg)
-  {}
+    : BelosError(what_arg) {}
 };
 
 /** \brief LSQRSolMgrBlockSizeFailure is thrown when the linear problem has
@@ -60,10 +58,9 @@ public:
  *
  */
 class LSQRSolMgrBlockSizeFailure : public BelosError {
-public:
+ public:
   LSQRSolMgrBlockSizeFailure(const std::string& what_arg)
-  : BelosError(what_arg)
-  {}
+    : BelosError(what_arg) {}
 };
 
 /// \class LSQRSolMgr
@@ -180,51 +177,43 @@ public:
 /// web page.</a>
 ///
 
-
 // Partial specialization for complex ScalarType.
 // This contains a trivial implementation.
 // See discussion in the class documentation above.
-template<class ScalarType, class MV, class OP, class DM = DefaultDenseMatrix<int,ScalarType>,
-         const bool scalarTypeIsComplex = Teuchos::ScalarTraits<ScalarType>::isComplex>
-class LSQRSolMgr :
-    public Details::RealSolverManager<ScalarType, MV, OP, DM,
-                                      Teuchos::ScalarTraits<ScalarType>::isComplex>
-{
+template <class ScalarType, class MV, class OP, class DM = DefaultDenseMatrix<int, ScalarType>,
+          const bool scalarTypeIsComplex = Teuchos::ScalarTraits<ScalarType>::isComplex>
+class LSQRSolMgr : public Details::RealSolverManager<ScalarType, MV, OP, DM,
+                                                     Teuchos::ScalarTraits<ScalarType>::isComplex> {
   static const bool isComplex = Teuchos::ScalarTraits<ScalarType>::isComplex;
   typedef Details::RealSolverManager<ScalarType, MV, OP, DM, isComplex> base_type;
 
-public:
-  LSQRSolMgr () :
-    base_type ()
-  {}
-  LSQRSolMgr (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > &problem,
-              const Teuchos::RCP<Teuchos::ParameterList> &pl) :
-    base_type ()
-  {}
-  virtual ~LSQRSolMgr () {}
+ public:
+  LSQRSolMgr()
+    : base_type() {}
+  LSQRSolMgr(const Teuchos::RCP<LinearProblem<ScalarType, MV, OP, DM> >& problem,
+             const Teuchos::RCP<Teuchos::ParameterList>& pl)
+    : base_type() {}
+  virtual ~LSQRSolMgr() {}
 
   //! clone for Inverted Injection (DII)
-  Teuchos::RCP<SolverManager<ScalarType, MV, OP, DM> > clone () const override {
-    return Teuchos::rcp(new LSQRSolMgr<ScalarType,MV,OP,DM,scalarTypeIsComplex>);
+  Teuchos::RCP<SolverManager<ScalarType, MV, OP, DM> > clone() const override {
+    return Teuchos::rcp(new LSQRSolMgr<ScalarType, MV, OP, DM, scalarTypeIsComplex>);
   }
 };
-
 
 // Partial specialization for real ScalarType.
 // This contains the actual working implementation of LSQR.
 // See discussion in the class documentation above.
-template<class ScalarType, class MV, class OP, class DM>
-class LSQRSolMgr<ScalarType, MV, OP, DM, false> :
-    public Details::RealSolverManager<ScalarType, MV, OP, DM, false> {
-private:
-  typedef MultiVecTraits<ScalarType,MV,DM> MVT;
-  typedef OperatorTraits<ScalarType,MV,OP> OPT;
+template <class ScalarType, class MV, class OP, class DM>
+class LSQRSolMgr<ScalarType, MV, OP, DM, false> : public Details::RealSolverManager<ScalarType, MV, OP, DM, false> {
+ private:
+  typedef MultiVecTraits<ScalarType, MV, DM> MVT;
+  typedef OperatorTraits<ScalarType, MV, OP> OPT;
   typedef Teuchos::ScalarTraits<ScalarType> STS;
   typedef typename Teuchos::ScalarTraits<ScalarType>::magnitudeType MagnitudeType;
   typedef Teuchos::ScalarTraits<MagnitudeType> STM;
 
-public:
-
+ public:
   //! @name Construct/Destroy
   //@{
 
@@ -234,7 +223,7 @@ public:
    * on this object.
    * The solver values can be changed using setParameters().
    */
-  LSQRSolMgr ();
+  LSQRSolMgr();
 
   /*! \brief Basic constructor for LSQRSolMgr.
    *
@@ -263,15 +252,15 @@ public:
    * step convergence property.  Without either blocks or
    * reorthogonalization, there is nothing to "Orthogonalize."
    */
-  LSQRSolMgr (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> >& problem,
-              const Teuchos::RCP<Teuchos::ParameterList>& pl);
+  LSQRSolMgr(const Teuchos::RCP<LinearProblem<ScalarType, MV, OP, DM> >& problem,
+             const Teuchos::RCP<Teuchos::ParameterList>& pl);
 
   //! Destructor (declared virtual for memory safety of base classes).
-  virtual ~LSQRSolMgr () {}
+  virtual ~LSQRSolMgr() {}
 
   //! clone for Inverted Injection (DII)
-  Teuchos::RCP<SolverManager<ScalarType, MV, OP, DM> > clone () const override {
-    return Teuchos::rcp(new LSQRSolMgr<ScalarType,MV,OP,DM>);
+  Teuchos::RCP<SolverManager<ScalarType, MV, OP, DM> > clone() const override {
+    return Teuchos::rcp(new LSQRSolMgr<ScalarType, MV, OP, DM>);
   }
   //@}
   //! \name Accessor methods
@@ -279,7 +268,7 @@ public:
 
   /*! \brief Get current linear problem being solved for in this object.
    */
-  const LinearProblem<ScalarType,MV,OP,DM>& getProblem () const override {
+  const LinearProblem<ScalarType, MV, OP, DM>& getProblem() const override {
     return *problem_;
   }
 
@@ -298,12 +287,12 @@ public:
    * The timers are ordered as follows:
    *   - time spent in solve() routine
    */
-  Teuchos::Array<Teuchos::RCP<Teuchos::Time> > getTimers () const {
-    return Teuchos::tuple (timerSolve_);
+  Teuchos::Array<Teuchos::RCP<Teuchos::Time> > getTimers() const {
+    return Teuchos::tuple(timerSolve_);
   }
 
   //! Iteration count from the last solve.
-  int getNumIters () const override {
+  int getNumIters() const override {
     return numIters_;
   }
 
@@ -311,7 +300,7 @@ public:
   ///
   /// LSQR computes a running condition number estimate of the
   /// (preconditioned, if applicable) operator.
-  MagnitudeType getMatCondNum () const {
+  MagnitudeType getMatCondNum() const {
     return matCondNum_;
   }
 
@@ -319,7 +308,7 @@ public:
   ///
   /// LSQR computes a running Frobenius norm estimate of the
   /// (preconditioned, if applicable) operator.
-  MagnitudeType getMatNorm () const {
+  MagnitudeType getMatNorm() const {
     return matNorm_;
   }
 
@@ -331,12 +320,12 @@ public:
   /// converges.  (LSQR defines "convergence" to allow for possibly
   /// inconsistent systems.  See the documentation of \c
   /// LSQRStatusTest for details.)
-  MagnitudeType getResNorm () const {
+  MagnitudeType getResNorm() const {
     return resNorm_;
   }
 
   //! Estimate of \f$A^* r\f$ (residual vector \f$r\f$) from the last solve.
-  MagnitudeType getMatResNorm () const {
+  MagnitudeType getMatResNorm() const {
     return matResNorm_;
   }
 
@@ -348,7 +337,7 @@ public:
   /// least-squares sense.  "Loss of accuracy" would correspond to the
   /// difference between the preconditioned residual and the
   /// unpreconditioned residual.
-  bool isLOADetected () const override { return false; }
+  bool isLOADetected() const override { return false; }
 
   //@}
 
@@ -356,12 +345,12 @@ public:
   //@{
 
   //! Set the linear problem that needs to be solved.
-  void setProblem (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> >& problem) override {
+  void setProblem(const Teuchos::RCP<LinearProblem<ScalarType, MV, OP, DM> >& problem) override {
     problem_ = problem;
   }
 
   //! Set the parameters the solver manager should use to solve the linear problem.
-  void setParameters (const Teuchos::RCP<Teuchos::ParameterList>& params) override;
+  void setParameters(const Teuchos::RCP<Teuchos::ParameterList>& params) override;
 
   //@}
 
@@ -371,9 +360,9 @@ public:
    *  solver manager that the solver should prepare for the next call to solve
    *  by resetting certain elements of the iterative solver strategy.
    */
-  void reset (const ResetType type) override {
-    if ((type & Belos::Problem) && ! problem_.is_null ()) {
-      problem_->setProblem ();
+  void reset(const ResetType type) override {
+    if ((type & Belos::Problem) && !problem_.is_null()) {
+      problem_->setProblem();
     }
   }
 
@@ -406,24 +395,23 @@ public:
   //@{
 
   //! One-line description of this solver.
-  std::string description () const override;
+  std::string description() const override;
 
   //@}
 
-private:
-
+ private:
   //! The linear problem to solve.
-  Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > problem_;
+  Teuchos::RCP<LinearProblem<ScalarType, MV, OP, DM> > problem_;
   //! The output manager.
   Teuchos::RCP<OutputManager<ScalarType> > printer_;
   //! Output stream to which to write status output.
   Teuchos::RCP<std::ostream> outputStream_;
 
   //! The "master" status test (that includes all status tests).
-  Teuchos::RCP<StatusTest<ScalarType,MV,OP,DM> > sTest_;
-  Teuchos::RCP<StatusTestMaxIters<ScalarType,MV,OP,DM> > maxIterTest_;
-  Teuchos::RCP<LSQRStatusTest<ScalarType,MV,OP,DM> > convTest_;
-  Teuchos::RCP<StatusTestOutput<ScalarType,MV,OP,DM> > outputTest_;
+  Teuchos::RCP<StatusTest<ScalarType, MV, OP, DM> > sTest_;
+  Teuchos::RCP<StatusTestMaxIters<ScalarType, MV, OP, DM> > maxIterTest_;
+  Teuchos::RCP<LSQRStatusTest<ScalarType, MV, OP, DM> > convTest_;
+  Teuchos::RCP<StatusTestOutput<ScalarType, MV, OP, DM> > outputTest_;
 
   //! Current parameter list.
   Teuchos::RCP<Teuchos::ParameterList> params_;
@@ -459,48 +447,46 @@ private:
   bool loaDetected_;
 };
 
-template<class ScalarType, class MV, class OP, class DM>
-LSQRSolMgr<ScalarType,MV,OP,DM,false>::LSQRSolMgr () :
-  lambda_ (STM::zero ()),
-  relRhsErr_ (Teuchos::as<MagnitudeType> (10) * STM::squareroot (STM::eps ())),
-  relMatErr_ (Teuchos::as<MagnitudeType> (10) * STM::squareroot (STM::eps ())),
-  condMax_ (STM::one () / STM::eps ()),
-  maxIters_ (1000),
-  termIterMax_ (1),
-  verbosity_ (Belos::Errors),
-  outputStyle_ (Belos::General),
-  outputFreq_ (-1),
-  numIters_ (0),
-  matCondNum_ (STM::zero ()),
-  matNorm_ (STM::zero ()),
-  resNorm_ (STM::zero ()),
-  matResNorm_ (STM::zero ()),
-  isSet_ (false),
-  loaDetected_ (false)
-{}
+template <class ScalarType, class MV, class OP, class DM>
+LSQRSolMgr<ScalarType, MV, OP, DM, false>::LSQRSolMgr()
+  : lambda_(STM::zero())
+  , relRhsErr_(Teuchos::as<MagnitudeType>(10) * STM::squareroot(STM::eps()))
+  , relMatErr_(Teuchos::as<MagnitudeType>(10) * STM::squareroot(STM::eps()))
+  , condMax_(STM::one() / STM::eps())
+  , maxIters_(1000)
+  , termIterMax_(1)
+  , verbosity_(Belos::Errors)
+  , outputStyle_(Belos::General)
+  , outputFreq_(-1)
+  , numIters_(0)
+  , matCondNum_(STM::zero())
+  , matNorm_(STM::zero())
+  , resNorm_(STM::zero())
+  , matResNorm_(STM::zero())
+  , isSet_(false)
+  , loaDetected_(false) {}
 
-template<class ScalarType, class MV, class OP, class DM>
-LSQRSolMgr<ScalarType,MV,OP,DM,false>::
-LSQRSolMgr (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> >& problem,
-            const Teuchos::RCP<Teuchos::ParameterList>& pl) :
-  problem_ (problem),
-  lambda_ (STM::zero ()),
-  relRhsErr_ (Teuchos::as<MagnitudeType> (10) * STM::squareroot (STM::eps ())),
-  relMatErr_ (Teuchos::as<MagnitudeType> (10) * STM::squareroot (STM::eps ())),
-  condMax_ (STM::one () / STM::eps ()),
-  maxIters_ (1000),
-  termIterMax_ (1),
-  verbosity_ (Belos::Errors),
-  outputStyle_ (Belos::General),
-  outputFreq_ (-1),
-  numIters_ (0),
-  matCondNum_ (STM::zero ()),
-  matNorm_ (STM::zero ()),
-  resNorm_ (STM::zero ()),
-  matResNorm_ (STM::zero ()),
-  isSet_ (false),
-  loaDetected_ (false)
-{
+template <class ScalarType, class MV, class OP, class DM>
+LSQRSolMgr<ScalarType, MV, OP, DM, false>::
+    LSQRSolMgr(const Teuchos::RCP<LinearProblem<ScalarType, MV, OP, DM> >& problem,
+               const Teuchos::RCP<Teuchos::ParameterList>& pl)
+  : problem_(problem)
+  , lambda_(STM::zero())
+  , relRhsErr_(Teuchos::as<MagnitudeType>(10) * STM::squareroot(STM::eps()))
+  , relMatErr_(Teuchos::as<MagnitudeType>(10) * STM::squareroot(STM::eps()))
+  , condMax_(STM::one() / STM::eps())
+  , maxIters_(1000)
+  , termIterMax_(1)
+  , verbosity_(Belos::Errors)
+  , outputStyle_(Belos::General)
+  , outputFreq_(-1)
+  , numIters_(0)
+  , matCondNum_(STM::zero())
+  , matNorm_(STM::zero())
+  , resNorm_(STM::zero())
+  , matResNorm_(STM::zero())
+  , isSet_(false)
+  , loaDetected_(false) {
   // The linear problem to solve is allowed to be null here.  The user
   // must then set a nonnull linear problem (by calling setProblem())
   // before calling solve().
@@ -508,16 +494,14 @@ LSQRSolMgr (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> >& problem,
   // Similarly, users are allowed to set a null parameter list here,
   // but they must first set a nonnull parameter list (by calling
   // setParameters()) before calling solve().
-  if (! pl.is_null ()) {
-    setParameters (pl);
+  if (!pl.is_null()) {
+    setParameters(pl);
   }
 }
 
-
-template<class ScalarType, class MV, class OP, class DM>
+template <class ScalarType, class MV, class OP, class DM>
 Teuchos::RCP<const Teuchos::ParameterList>
-LSQRSolMgr<ScalarType,MV,OP,DM,false>::getValidParameters() const
-{
+LSQRSolMgr<ScalarType, MV, OP, DM, false>::getValidParameters() const {
   using Teuchos::ParameterList;
   using Teuchos::parameterList;
   using Teuchos::RCP;
@@ -525,62 +509,68 @@ LSQRSolMgr<ScalarType,MV,OP,DM,false>::getValidParameters() const
   using Teuchos::rcpFromRef;
 
   // Set all the valid parameters and their default values.
-  if (validParams_.is_null ()) {
+  if (validParams_.is_null()) {
     // We use Teuchos::as just in case MagnitudeType doesn't have a
     // constructor that takes an int.  Otherwise, we could just write
     // "MagnitudeType(10)".
-    const MagnitudeType ten = Teuchos::as<MagnitudeType> (10);
-    const MagnitudeType sqrtEps = STM::squareroot (STM::eps());
+    const MagnitudeType ten     = Teuchos::as<MagnitudeType>(10);
+    const MagnitudeType sqrtEps = STM::squareroot(STM::eps());
 
-    const MagnitudeType lambda = STM::zero();
-    RCP<std::ostream> outputStream = rcpFromRef (std::cout);
-    const MagnitudeType relRhsErr = ten * sqrtEps;
-    const MagnitudeType relMatErr = ten * sqrtEps;
-    const MagnitudeType condMax = STM::one() / STM::eps();
-    const int maxIters = 1000;
-    const int termIterMax = 1;
-    const int verbosity = Belos::Errors;
-    const int outputStyle = Belos::General;
-    const int outputFreq = -1;
-    const std::string label ("Belos");
+    const MagnitudeType lambda     = STM::zero();
+    RCP<std::ostream> outputStream = rcpFromRef(std::cout);
+    const MagnitudeType relRhsErr  = ten * sqrtEps;
+    const MagnitudeType relMatErr  = ten * sqrtEps;
+    const MagnitudeType condMax    = STM::one() / STM::eps();
+    const int maxIters             = 1000;
+    const int termIterMax          = 1;
+    const int verbosity            = Belos::Errors;
+    const int outputStyle          = Belos::General;
+    const int outputFreq           = -1;
+    const std::string label("Belos");
 
     RCP<Teuchos::ParameterList> pl = Teuchos::parameterList();
-    pl->set ("Output Stream", outputStream, "Teuchos::RCP<std::ostream> "
-             "(reference-counted pointer to the output stream) receiving "
-             "all solver output");
-    pl->set ("Lambda", lambda, "Damping parameter");
-    pl->set ("Rel RHS Err", relRhsErr, "Estimates the error in the data "
-             "defining the right-hand side");
-    pl->set ("Rel Mat Err", relMatErr, "Estimates the error in the data "
-             "defining the matrix.");
-    pl->set ("Condition Limit", condMax, "Bounds the estimated condition "
-             "number of Abar.");
-    pl->set ("Maximum Iterations", maxIters, "Maximum number of iterations");
-    pl->set ("Term Iter Max", termIterMax, "The number of consecutive "
-             "iterations must that satisfy all convergence criteria in order "
-             "for LSQR to stop iterating");
-    pl->set ("Verbosity", verbosity, "Type(s) of solver information written to "
-             "the output stream");
-    pl->set ("Output Style", outputStyle, "Style of solver output");
-    pl->set ("Output Frequency", outputFreq, "Frequency at which information "
-             "is written to the output stream (-1 means \"not at all\")");
-    pl->set ("Timer Label", label, "String to use as a prefix for the timer "
-             "labels");
-    pl->set ("Block Size", 1, "Block size parameter (currently, LSQR requires "
-             "this must always be 1)");
+    pl->set("Output Stream", outputStream,
+            "Teuchos::RCP<std::ostream> "
+            "(reference-counted pointer to the output stream) receiving "
+            "all solver output");
+    pl->set("Lambda", lambda, "Damping parameter");
+    pl->set("Rel RHS Err", relRhsErr,
+            "Estimates the error in the data "
+            "defining the right-hand side");
+    pl->set("Rel Mat Err", relMatErr,
+            "Estimates the error in the data "
+            "defining the matrix.");
+    pl->set("Condition Limit", condMax,
+            "Bounds the estimated condition "
+            "number of Abar.");
+    pl->set("Maximum Iterations", maxIters, "Maximum number of iterations");
+    pl->set("Term Iter Max", termIterMax,
+            "The number of consecutive "
+            "iterations must that satisfy all convergence criteria in order "
+            "for LSQR to stop iterating");
+    pl->set("Verbosity", verbosity,
+            "Type(s) of solver information written to "
+            "the output stream");
+    pl->set("Output Style", outputStyle, "Style of solver output");
+    pl->set("Output Frequency", outputFreq,
+            "Frequency at which information "
+            "is written to the output stream (-1 means \"not at all\")");
+    pl->set("Timer Label", label,
+            "String to use as a prefix for the timer "
+            "labels");
+    pl->set("Block Size", 1,
+            "Block size parameter (currently, LSQR requires "
+            "this must always be 1)");
     validParams_ = pl;
   }
   return validParams_;
 }
 
-
-template<class ScalarType, class MV, class OP, class DM>
-void
-LSQRSolMgr<ScalarType,MV,OP,DM,false>::
-setParameters (const Teuchos::RCP<Teuchos::ParameterList>& params)
-{
-  using Teuchos::isParameterType;
+template <class ScalarType, class MV, class OP, class DM>
+void LSQRSolMgr<ScalarType, MV, OP, DM, false>::
+    setParameters(const Teuchos::RCP<Teuchos::ParameterList>& params) {
   using Teuchos::getParameter;
+  using Teuchos::isParameterType;
   using Teuchos::null;
   using Teuchos::ParameterList;
   using Teuchos::parameterList;
@@ -594,10 +584,9 @@ setParameters (const Teuchos::RCP<Teuchos::ParameterList>& params)
   using Teuchos::Exceptions::InvalidParameterName;
   using Teuchos::Exceptions::InvalidParameterType;
 
-  TEUCHOS_TEST_FOR_EXCEPTION
-    (params.is_null (), std::invalid_argument,
-     "Belos::LSQRSolMgr::setParameters: The input ParameterList is null.");
-  RCP<const ParameterList> defaultParams = getValidParameters ();
+  TEUCHOS_TEST_FOR_EXCEPTION(params.is_null(), std::invalid_argument,
+                             "Belos::LSQRSolMgr::setParameters: The input ParameterList is null.");
+  RCP<const ParameterList> defaultParams = getValidParameters();
 
   // FIXME (mfh 29 Apr 2015) Our users would like to supply one
   // ParameterList that works for both GMRES and LSQR.  Thus, we want
@@ -608,7 +597,7 @@ setParameters (const Teuchos::RCP<Teuchos::ParameterList>& params)
   // facility for all parameters recognized by some solver in Belos,
   // so we could use that for spell checking.)
   //
-  //params->validateParameters (*defaultParams);
+  // params->validateParameters (*defaultParams);
 
   // mfh 29 Apr 2015: The convention in Belos is that the input
   // ParameterList is a "delta" from the current state.  Thus, we
@@ -618,26 +607,25 @@ setParameters (const Teuchos::RCP<Teuchos::ParameterList>& params)
   // with the default state on construction.
 
   // Get the damping (regularization) parameter lambda.
-  if (params->isParameter ("Lambda")) {
-    lambda_ = params->get<MagnitudeType> ("Lambda");
-  } else if (params->isParameter ("lambda")) {
-    lambda_ = params->get<MagnitudeType> ("lambda");
+  if (params->isParameter("Lambda")) {
+    lambda_ = params->get<MagnitudeType>("Lambda");
+  } else if (params->isParameter("lambda")) {
+    lambda_ = params->get<MagnitudeType>("lambda");
   }
 
   // Get the maximum number of iterations.
-  if (params->isParameter ("Maximum Iterations")) {
-    maxIters_ = params->get<int> ("Maximum Iterations");
+  if (params->isParameter("Maximum Iterations")) {
+    maxIters_ = params->get<int>("Maximum Iterations");
   }
-  TEUCHOS_TEST_FOR_EXCEPTION
-    (maxIters_ < 0, std::invalid_argument, "Belos::LSQRSolMgr::setParameters: "
-     "\"Maximum Iterations\" = " << maxIters_ << " < 0.");
+  TEUCHOS_TEST_FOR_EXCEPTION(maxIters_ < 0, std::invalid_argument,
+                             "Belos::LSQRSolMgr::setParameters: "
+                             "\"Maximum Iterations\" = "
+                                 << maxIters_ << " < 0.");
 
   // (Re)set the timer label.
   {
     const std::string newLabel =
-      params->isParameter ("Timer Label") ?
-      params->get<std::string> ("Timer Label") :
-      label_;
+        params->isParameter("Timer Label") ? params->get<std::string>("Timer Label") : label_;
 
     // Update parameter in our list and solver timer
     if (newLabel != label_) {
@@ -645,12 +633,10 @@ setParameters (const Teuchos::RCP<Teuchos::ParameterList>& params)
     }
 
 #ifdef BELOS_TEUCHOS_TIME_MONITOR
-    const std::string newSolveLabel = (newLabel != "") ?
-      (newLabel + ": Belos::LSQRSolMgr total solve time") :
-      std::string ("Belos::LSQRSolMgr total solve time");
-    if (timerSolve_.is_null ()) {
+    const std::string newSolveLabel = (newLabel != "") ? (newLabel + ": Belos::LSQRSolMgr total solve time") : std::string("Belos::LSQRSolMgr total solve time");
+    if (timerSolve_.is_null()) {
       // Ask TimeMonitor for a new timer.
-      timerSolve_ = TimeMonitor::getNewCounter (newSolveLabel);
+      timerSolve_ = TimeMonitor::getNewCounter(newSolveLabel);
     } else {
       // We've already created a timer, but we may have changed its
       // label.  If we did change its name, then we have to forget
@@ -659,20 +645,20 @@ setParameters (const Teuchos::RCP<Teuchos::ParameterList>& params)
       // to change a timer's name, once you've created it.  We assume
       // that if the user changed the timer's label, then the user
       // wants to reset the timer's results.
-      const std::string oldSolveLabel = timerSolve_->name ();
+      const std::string oldSolveLabel = timerSolve_->name();
 
       if (oldSolveLabel != newSolveLabel) {
         // Tell TimeMonitor to forget about the old timer.
         // TimeMonitor lets you clear timers by name.
-        TimeMonitor::clearCounter (oldSolveLabel);
-        timerSolve_ = TimeMonitor::getNewCounter (newSolveLabel);
+        TimeMonitor::clearCounter(oldSolveLabel);
+        timerSolve_ = TimeMonitor::getNewCounter(newSolveLabel);
       }
     }
-#endif // BELOS_TEUCHOS_TIME_MONITOR
+#endif  // BELOS_TEUCHOS_TIME_MONITOR
   }
 
   // Check for a change in verbosity level
-  if (params->isParameter ("Verbosity")) {
+  if (params->isParameter("Verbosity")) {
     int newVerbosity = 0;
     // ParameterList gets confused sometimes about enums.  This
     // ensures that no matter how "Verbosity" was stored -- either an
@@ -680,9 +666,9 @@ setParameters (const Teuchos::RCP<Teuchos::ParameterList>& params)
     // it.  If it was stored as some other type, we let the exception
     // through.
     try {
-      newVerbosity = params->get<Belos::MsgType> ("Verbosity");
+      newVerbosity = params->get<Belos::MsgType>("Verbosity");
     } catch (Teuchos::Exceptions::InvalidParameterType&) {
-      newVerbosity = params->get<int> ("Verbosity");
+      newVerbosity = params->get<int>("Verbosity");
     }
     if (newVerbosity != verbosity_) {
       verbosity_ = newVerbosity;
@@ -690,76 +676,75 @@ setParameters (const Teuchos::RCP<Teuchos::ParameterList>& params)
   }
 
   // (Re)set the output style.
-  if (params->isParameter ("Output Style")) {
-    outputStyle_ = params->get<int> ("Output Style");
+  if (params->isParameter("Output Style")) {
+    outputStyle_ = params->get<int>("Output Style");
   }
 
   // Get the output stream for the output manager.
   //
   // In case the output stream can't be read back in, we default to
   // stdout (std::cout), just to ensure reasonable behavior.
-  if (params->isParameter ("Output Stream")) {
-    outputStream_ = params->get<RCP<std::ostream> > ("Output Stream");
+  if (params->isParameter("Output Stream")) {
+    outputStream_ = params->get<RCP<std::ostream> >("Output Stream");
   }
   // We assume that a null output stream indicates that the user
   // doesn't want to print anything, so we replace it with a "black
   // hole" stream that prints nothing sent to it.  (We can't use a
   // null output stream, since the output manager always sends
   // things it wants to print to the output stream.)
-  if (outputStream_.is_null ()) {
-    outputStream_ = rcp (new Teuchos::oblackholestream ());
+  if (outputStream_.is_null()) {
+    outputStream_ = rcp(new Teuchos::oblackholestream());
   }
 
   // Get the frequency of solver output.  (For example, -1 means
   // "never," and 1 means "every iteration.")
-  if (params->isParameter ("Output Frequency")) {
-    outputFreq_ = params->get<int> ("Output Frequency");
+  if (params->isParameter("Output Frequency")) {
+    outputFreq_ = params->get<int>("Output Frequency");
   }
 
   // Create output manager if we need to, using the verbosity level
   // and output stream that we fetched above.  Status tests (i.e.,
   // stopping criteria) need this.
-  if (printer_.is_null ()) {
-    printer_ = rcp (new OutputManager<ScalarType> (verbosity_, outputStream_));
+  if (printer_.is_null()) {
+    printer_ = rcp(new OutputManager<ScalarType>(verbosity_, outputStream_));
   } else {
-    printer_->setVerbosity (verbosity_);
-    printer_->setOStream (outputStream_);
+    printer_->setVerbosity(verbosity_);
+    printer_->setOStream(outputStream_);
   }
 
   // Check for condition number limit, number of consecutive passed
   // iterations, relative RHS error, and relative matrix error.
   // Create the LSQR convergence test if necessary.
   {
-    if (params->isParameter ("Condition Limit")) {
-      condMax_ = params->get<MagnitudeType> ("Condition Limit");
+    if (params->isParameter("Condition Limit")) {
+      condMax_ = params->get<MagnitudeType>("Condition Limit");
     }
-    if (params->isParameter ("Term Iter Max")) {
-      termIterMax_ = params->get<int> ("Term Iter Max");
+    if (params->isParameter("Term Iter Max")) {
+      termIterMax_ = params->get<int>("Term Iter Max");
     }
-    if (params->isParameter ("Rel RHS Err")) {
-      relRhsErr_ = params->get<MagnitudeType> ("Rel RHS Err");
-    }
-    else if (params->isParameter ("Convergence Tolerance")) {
+    if (params->isParameter("Rel RHS Err")) {
+      relRhsErr_ = params->get<MagnitudeType>("Rel RHS Err");
+    } else if (params->isParameter("Convergence Tolerance")) {
       // NOTE (mfh 29 Apr 2015) We accept this parameter as an alias
       // for "Rel RHS Err".
-      relRhsErr_ = params->get<MagnitudeType> ("Convergence Tolerance");
+      relRhsErr_ = params->get<MagnitudeType>("Convergence Tolerance");
     }
 
-    if (params->isParameter ("Rel Mat Err")) {
-      relMatErr_ = params->get<MagnitudeType> ("Rel Mat Err");
+    if (params->isParameter("Rel Mat Err")) {
+      relMatErr_ = params->get<MagnitudeType>("Rel Mat Err");
     }
 
     // Create the LSQR convergence test if it doesn't exist yet.
     // Otherwise, update its parameters.
-    if (convTest_.is_null ()) {
+    if (convTest_.is_null()) {
       convTest_ =
-        rcp (new LSQRStatusTest<ScalarType,MV,OP,DM> (condMax_, termIterMax_,
-                                                   relRhsErr_, relMatErr_));
+          rcp(new LSQRStatusTest<ScalarType, MV, OP, DM>(condMax_, termIterMax_,
+                                                         relRhsErr_, relMatErr_));
     } else {
-      convTest_->setCondLim (condMax_);
-      convTest_->setTermIterMax (termIterMax_);
-      convTest_->setRelRhsErr (relRhsErr_);
-      convTest_->setRelMatErr (relMatErr_);
+      convTest_->setCondLim(condMax_);
+      convTest_->setTermIterMax(termIterMax_);
+      convTest_->setRelRhsErr(relRhsErr_);
+      convTest_->setRelMatErr(relMatErr_);
     }
   }
 
@@ -767,39 +752,39 @@ setParameters (const Teuchos::RCP<Teuchos::ParameterList>& params)
   // necessary.  Otherwise, update it with the new maximum iteration
   // count.
   if (maxIterTest_.is_null()) {
-    maxIterTest_ = rcp (new StatusTestMaxIters<ScalarType,MV,OP,DM> (maxIters_));
+    maxIterTest_ = rcp(new StatusTestMaxIters<ScalarType, MV, OP, DM>(maxIters_));
   } else {
-    maxIterTest_->setMaxIters (maxIters_);
+    maxIterTest_->setMaxIters(maxIters_);
   }
 
   // The stopping criterion is an OR combination of the test for
   // maximum number of iterations, and the LSQR convergence test.
   // ("OR combination" means that both tests will always be evaluated,
   // as opposed to a SEQ combination.)
-  typedef StatusTestCombo<ScalarType,MV,OP,DM> combo_type;
+  typedef StatusTestCombo<ScalarType, MV, OP, DM> combo_type;
   // If sTest_ is not null, then maxIterTest_ and convTest_ were
   // already constructed on entry to this routine, and sTest_ has
   // their pointers.  Thus, maxIterTest_ and convTest_ have gotten any
   // parameter changes, so we don't need to do anything to sTest_.
   if (sTest_.is_null()) {
-    sTest_ = rcp (new combo_type (combo_type::OR, maxIterTest_, convTest_));
+    sTest_ = rcp(new combo_type(combo_type::OR, maxIterTest_, convTest_));
   }
 
-  if (outputTest_.is_null ()) {
+  if (outputTest_.is_null()) {
     // Create the status test output class.
     // This class manages and formats the output from the status test.
-    StatusTestOutputFactory<ScalarType,MV,OP,DM> stoFactory (outputStyle_);
-    outputTest_ = stoFactory.create (printer_, sTest_, outputFreq_,
-                                     Passed + Failed + Undefined);
+    StatusTestOutputFactory<ScalarType, MV, OP, DM> stoFactory(outputStyle_);
+    outputTest_ = stoFactory.create(printer_, sTest_, outputFreq_,
+                                    Passed + Failed + Undefined);
     // Set the solver string for the output test.
     const std::string solverDesc = " LSQR ";
-    outputTest_->setSolverDesc (solverDesc);
+    outputTest_->setSolverDesc(solverDesc);
   } else {
     // FIXME (mfh 18 Sep 2011) How do we change the output style of
     // outputTest_, without destroying and recreating it?
-    outputTest_->setOutputManager (printer_);
-    outputTest_->setChild (sTest_);
-    outputTest_->setOutputFrequency (outputFreq_);
+    outputTest_->setOutputManager(printer_);
+    outputTest_->setChild(sTest_);
+    outputTest_->setOutputFrequency(outputFreq_);
     // Since outputTest_ can only be created here, I'm assuming that
     // the fourth constructor argument ("printStates") was set
     // correctly on constrution; I don't need to reset it (and I can't
@@ -814,11 +799,9 @@ setParameters (const Teuchos::RCP<Teuchos::ParameterList>& params)
   isSet_ = true;
 }
 
-
-template<class ScalarType, class MV, class OP, class DM>
+template <class ScalarType, class MV, class OP, class DM>
 Belos::ReturnType
-LSQRSolMgr<ScalarType,MV,OP,DM,false>::solve ()
-{
+LSQRSolMgr<ScalarType, MV, OP, DM, false>::solve() {
   using Teuchos::RCP;
   using Teuchos::rcp;
 
@@ -828,24 +811,22 @@ LSQRSolMgr<ScalarType,MV,OP,DM,false>::solve ()
   // This may occur if the user generated the solver manager with the
   // default constructor, but did not set any parameters using
   // setParameters().
-  if (! isSet_) {
-    this->setParameters (Teuchos::parameterList (* (getValidParameters ())));
+  if (!isSet_) {
+    this->setParameters(Teuchos::parameterList(*(getValidParameters())));
   }
 
-  TEUCHOS_TEST_FOR_EXCEPTION
-    (problem_.is_null (), LSQRSolMgrLinearProblemFailure,
-     "Belos::LSQRSolMgr::solve: The linear problem to solve is null.");
-  TEUCHOS_TEST_FOR_EXCEPTION
-    (! problem_->isProblemSet (), LSQRSolMgrLinearProblemFailure,
-     "Belos::LSQRSolMgr::solve: The linear problem is not ready, "
-     "as its setProblem() method has not been called.");
-  TEUCHOS_TEST_FOR_EXCEPTION
-    (MVT::GetNumberVecs (*(problem_->getRHS ())) != 1,
-     LSQRSolMgrBlockSizeFailure, "Belos::LSQRSolMgr::solve: "
-     "The current implementation of LSQR only knows how to solve problems "
-     "with one right-hand side, but the linear problem to solve has "
-     << MVT::GetNumberVecs (* (problem_->getRHS ()))
-     << " right-hand sides.");
+  TEUCHOS_TEST_FOR_EXCEPTION(problem_.is_null(), LSQRSolMgrLinearProblemFailure,
+                             "Belos::LSQRSolMgr::solve: The linear problem to solve is null.");
+  TEUCHOS_TEST_FOR_EXCEPTION(!problem_->isProblemSet(), LSQRSolMgrLinearProblemFailure,
+                             "Belos::LSQRSolMgr::solve: The linear problem is not ready, "
+                             "as its setProblem() method has not been called.");
+  TEUCHOS_TEST_FOR_EXCEPTION(MVT::GetNumberVecs(*(problem_->getRHS())) != 1,
+                             LSQRSolMgrBlockSizeFailure,
+                             "Belos::LSQRSolMgr::solve: "
+                             "The current implementation of LSQR only knows how to solve problems "
+                             "with one right-hand side, but the linear problem to solve has "
+                                 << MVT::GetNumberVecs(*(problem_->getRHS()))
+                                 << " right-hand sides.");
 
   // We've validated the LinearProblem instance above.  If any of the
   // StatusTests needed to be initialized using information from the
@@ -861,11 +842,11 @@ LSQRSolMgr<ScalarType,MV,OP,DM,false>::solve ()
   // Next the right-hand sides to solve are identified.  Among other things,
   // this enables getCurrLHSVec() to get the current initial guess vector,
   // and getCurrRHSVec() to get the current right-hand side (in Iter).
-  std::vector<int> currRHSIdx (1, 0);
-  problem_->setLSIndex (currRHSIdx);
+  std::vector<int> currRHSIdx(1, 0);
+  problem_->setLSIndex(currRHSIdx);
 
   // Reset the status test.
-  outputTest_->reset ();
+  outputTest_->reset();
 
   // Don't assume convergence unless we've verified that the
   // convergence test passed.
@@ -893,54 +874,56 @@ LSQRSolMgr<ScalarType,MV,OP,DM,false>::solve ()
   // manager's parameter list (params_) does indeed contain the
   // "Lambda" parameter, because solve() always ensures that
   // setParameters() has been called.
-  plist.set ("Lambda", lambda_);
+  plist.set("Lambda", lambda_);
 
-  typedef LSQRIter<ScalarType,MV,OP,DM> iter_type;
+  typedef LSQRIter<ScalarType, MV, OP, DM> iter_type;
   RCP<iter_type> lsqr_iter =
-    rcp (new iter_type (problem_, printer_, outputTest_, plist));
+      rcp(new iter_type(problem_, printer_, outputTest_, plist));
 #ifdef BELOS_TEUCHOS_TIME_MONITOR
-  Teuchos::TimeMonitor slvtimer (*timerSolve_);
+  Teuchos::TimeMonitor slvtimer(*timerSolve_);
 #endif
 
   // Reset the number of iterations.
-  lsqr_iter->resetNumIters ();
+  lsqr_iter->resetNumIters();
   // Reset the number of calls that the status test output knows about.
-  outputTest_->resetNumCalls ();
+  outputTest_->resetNumCalls();
   // Set the new state and initialize the solver.
   LSQRIterationState<ScalarType, MV> newstate;
-  lsqr_iter->initializeLSQR (newstate);
+  lsqr_iter->initializeLSQR(newstate);
   // tell lsqr_iter to iterate
   try {
-    lsqr_iter->iterate ();
+    lsqr_iter->iterate();
 
     // First check for convergence.  If we didn't converge, then check
     // whether we reached the maximum number of iterations.  If
     // neither of those happened, there must have been a bug.
-    if (convTest_->getStatus () == Belos::Passed) {
+    if (convTest_->getStatus() == Belos::Passed) {
       isConverged = true;
-    } else if (maxIterTest_->getStatus () == Belos::Passed) {
-      retType = MaxItersReached;
+    } else if (maxIterTest_->getStatus() == Belos::Passed) {
+      retType     = MaxItersReached;
       isConverged = false;
     } else {
       retType = InconsistentState;
       TEUCHOS_TEST_FOR_EXCEPTION(true,
-         std::logic_error, "Belos::LSQRSolMgr::solve: "
-         "LSQRIteration::iterate returned without either the convergence test "
-         "or the maximum iteration count test passing.  "
-         "Please report this bug to the Belos developers.");
+                                 std::logic_error,
+                                 "Belos::LSQRSolMgr::solve: "
+                                 "LSQRIteration::iterate returned without either the convergence test "
+                                 "or the maximum iteration count test passing.  "
+                                 "Please report this bug to the Belos developers.");
     }
   } catch (const std::exception& e) {
     retType = NonspecificException;
     printer_->stream(Belos::Errors)
-      << "Error! Caught std::exception in LSQRIter::iterate at iteration "
-      << lsqr_iter->getNumIters () << std::endl << e.what () << std::endl;
+        << "Error! Caught std::exception in LSQRIter::iterate at iteration "
+        << lsqr_iter->getNumIters() << std::endl
+        << e.what() << std::endl;
     throw;
   }
 
   // identify current linear system as solved LinearProblem
   problem_->setCurrLS();
   // print final summary
-  sTest_->print (printer_->stream (Belos::FinalSummary));
+  sTest_->print(printer_->stream(Belos::FinalSummary));
 
   // Print timing information, if the corresponding compile-time and
   // run-time options are enabled.
@@ -949,14 +932,14 @@ LSQRSolMgr<ScalarType,MV,OP,DM,false>::solve ()
   // user wants to print out timing details.  summarize() will do all
   // the work even if it's passed a "black hole" output stream.
   if (verbosity_ & TimingDetails)
-    Teuchos::TimeMonitor::summarize (printer_->stream (Belos::TimingDetails));
-#endif // BELOS_TEUCHOS_TIME_MONITOR
+    Teuchos::TimeMonitor::summarize(printer_->stream(Belos::TimingDetails));
+#endif  // BELOS_TEUCHOS_TIME_MONITOR
 
   // A posteriori solve information
-  numIters_ = maxIterTest_->getNumIters();
+  numIters_   = maxIterTest_->getNumIters();
   matCondNum_ = convTest_->getMatCondNum();
-  matNorm_ = convTest_->getMatNorm();
-  resNorm_ = convTest_->getResidNorm();
+  matNorm_    = convTest_->getMatNorm();
+  resNorm_    = convTest_->getResidNorm();
   matResNorm_ = convTest_->getLSResidNorm();
 
   if (!isConverged) {
@@ -967,11 +950,10 @@ LSQRSolMgr<ScalarType,MV,OP,DM,false>::solve ()
 }
 
 // LSQRSolMgr requires the solver manager to return an eponymous std::string.
-template<class ScalarType, class MV, class OP, class DM>
-std::string LSQRSolMgr<ScalarType,MV,OP,DM,false>::description () const
-{
+template <class ScalarType, class MV, class OP, class DM>
+std::string LSQRSolMgr<ScalarType, MV, OP, DM, false>::description() const {
   std::ostringstream oss;
-  oss << "LSQRSolMgr<...," << STS::name () << ">";
+  oss << "LSQRSolMgr<...," << STS::name() << ">";
   oss << "{";
   oss << "Lambda: " << lambda_;
   oss << ", condition number limit: " << condMax_;
@@ -980,9 +962,9 @@ std::string LSQRSolMgr<ScalarType,MV,OP,DM,false>::description () const
   oss << ", maximum number of iterations: " << maxIters_;
   oss << ", termIterMax: " << termIterMax_;
   oss << "}";
-  return oss.str ();
+  return oss.str();
 }
 
-} // end Belos namespace
+}  // namespace Belos
 
 #endif /* BELOS_LSQR_SOLMGR_HPP */

@@ -7,14 +7,13 @@
 // *****************************************************************************
 // @HEADER
 
-
 #ifndef BELOS_DETAILS_REGISTERSOLVERFACTORY_HPP
 #define BELOS_DETAILS_REGISTERSOLVERFACTORY_HPP
 
 namespace Belos {
 namespace Details {
-  void registerSolverFactory();
-} // Details
-} // Belos
+void registerSolverFactory();
+}  // namespace Details
+}  // namespace Belos
 
-#endif // BELOS_DETAILS_REGISTERSOLVERFACTORY_HPP
+#endif  // BELOS_DETAILS_REGISTERSOLVERFACTORY_HPP

@@ -77,24 +77,24 @@ int main(int argc, char *argv[]) {
   using Teuchos::tuple;
 
   using ScalarType = double;
-  using DM = Belos::DefaultDenseMatrix<int, ScalarType>;
-  using ST = typename Tpetra::MultiVector<ScalarType>::scalar_type;
-  using LO = typename Tpetra::Vector<>::local_ordinal_type;
-  using GO = typename Tpetra::Vector<>::global_ordinal_type;
-  using NT = typename Tpetra::Vector<>::node_type;
+  using DM         = Belos::DefaultDenseMatrix<int, ScalarType>;
+  using ST         = typename Tpetra::MultiVector<ScalarType>::scalar_type;
+  using LO         = typename Tpetra::Vector<>::local_ordinal_type;
+  using GO         = typename Tpetra::Vector<>::global_ordinal_type;
+  using NT         = typename Tpetra::Vector<>::node_type;
 
-  using V = typename Tpetra::Vector<ST, LO, GO, NT>;
-  using MV = typename Tpetra::MultiVector<ST, LO, GO, NT>;
-  using OP = typename Tpetra::Operator<ST, LO, GO, NT>;
+  using V   = typename Tpetra::Vector<ST, LO, GO, NT>;
+  using MV  = typename Tpetra::MultiVector<ST, LO, GO, NT>;
+  using OP  = typename Tpetra::Operator<ST, LO, GO, NT>;
   using MVT = typename Belos::MultiVecTraits<ST, MV, DM>;
   using OPT = typename Belos::OperatorTraits<ST, MV, OP>;
   using MAP = typename Tpetra::Map<LO, GO, NT>;
   using MAT = typename Tpetra::CrsMatrix<ST, LO, GO, NT>;
   using SCT = typename Teuchos::ScalarTraits<ST>;
-  using MT = typename SCT::magnitudeType;
+  using MT  = typename SCT::magnitudeType;
 
   using LinearProblem = typename Belos::LinearProblem<ST, MV, OP, DM>;
-  using PCPGSolMgr = ::Belos::PCPGSolMgr<ST, MV, OP, DM>;
+  using PCPGSolMgr    = ::Belos::PCPGSolMgr<ST, MV, OP, DM>;
 
   Teuchos::GlobalMPISession session(&argc, &argv, NULL);
   RCP<const Teuchos::Comm<int>> comm = Tpetra::getDefaultComm();
@@ -104,10 +104,10 @@ int main(int argc, char *argv[]) {
 
   try {
     bool procVerbose = false;
-    int frequency = -1;  // frequency of status test output.
-    int blocksize = 1;   // blocksize, PCPGIter
-    int numRhs = 1;      // number of right-hand sides to solve for
-    int maxIters = 30;   // maximum number of iterations allowed per linear system
+    int frequency    = -1;  // frequency of status test output.
+    int blocksize    = 1;   // blocksize, PCPGIter
+    int numRhs       = 1;   // number of right-hand sides to solve for
+    int maxIters     = 30;  // maximum number of iterations allowed per linear system
 
     int maxDeflate = 4;  // maximum number of vectors deflated from the linear system;
     // There is no overhead cost assoc with changing maxDeflate between solves
@@ -150,30 +150,30 @@ int main(int argc, char *argv[]) {
     //
     // *************Form the problem****************
     //
-    int numTimeStep = 4;
+    int numTimeStep       = 4;
     GO numElePerDirection = 14 * comm->getSize();  // 5 -> 20
-    size_t numNodes = (numElePerDirection - 1) * (numElePerDirection - 1);
+    size_t numNodes       = (numElePerDirection - 1) * (numElePerDirection - 1);
 
     // By the way, either matrix has (3*numElePerDirection - 2)^2 nonzeros.
-    RCP<MAP> map = rcp(new MAP(numNodes, 0, comm));
+    RCP<MAP> map   = rcp(new MAP(numNodes, 0, comm));
     RCP<MAT> stiff = rcp(new MAT(map, numNodes));
-    RCP<MAT> mass = rcp(new MAT(map, numNodes));
-    RCP<V> vecLHS = rcp(new V(map));
-    RCP<V> vecRHS = rcp(new V(map));
+    RCP<MAT> mass  = rcp(new MAT(map, numNodes));
+    RCP<V> vecLHS  = rcp(new V(map));
+    RCP<V> vecRHS  = rcp(new V(map));
     RCP<MV> LHS, RHS;
 
     ST ko = 8.0 / 3.0, k1 = -1.0 / 3.0;
 
-    ST h = 1.0 / static_cast<ST>(numElePerDirection);  // x=(iX,iY)h
+    ST h  = 1.0 / static_cast<ST>(numElePerDirection);  // x=(iX,iY)h
     ST mo = h * h * 4.0 / 9.0, m1 = h * h / 9.0, m2 = h * h / 36.0;
 
     ST pi = 4.0 * atan(1.0), valueLHS;
     GO node, iX, iY;
 
     for (LO lid = map->getMinLocalIndex(); lid <= map->getMaxLocalIndex(); lid++) {
-      node = map->getGlobalElement(lid);
-      iX = node % (numElePerDirection - 1);
-      iY = (node - iX) / (numElePerDirection - 1);
+      node   = map->getGlobalElement(lid);
+      iX     = node % (numElePerDirection - 1);
+      iY     = (node - iX) / (numElePerDirection - 1);
       GO pos = node;
       stiff->insertGlobalValues(node, tuple(pos), tuple(ko));
       mass->insertGlobalValues(node, tuple(pos),
@@ -229,13 +229,13 @@ int main(int argc, char *argv[]) {
     mass->fillComplete();
 
     const ST one = SCT::one();
-    ST hdt = .00005;  // half time step
+    ST hdt       = .00005;  // half time step
 
     // A = Mass+Stiff*dt/2
     RCP<MAT> A = Tpetra::MatrixMatrix::add(one, false, *mass, hdt, false, *stiff);
 
     // B = Mass-Stiff*dt/2
-    hdt = -hdt;
+    hdt        = -hdt;
     RCP<MAT> B = Tpetra::MatrixMatrix::add(one, false, *mass, hdt, false, *stiff);
 
     B->apply(*vecLHS, *vecRHS);
@@ -325,7 +325,8 @@ int main(int argc, char *argv[]) {
     // *******************************************************************
     //
     if (procVerbose) {
-      std::cout << std::endl << std::endl;
+      std::cout << std::endl
+                << std::endl;
       std::cout << "Dimension of matrix: " << numGlobalElements << std::endl;
       std::cout << "Number of right-hand sides: " << numRhs << std::endl;
       std::cout << "Block size used by solver: " << blocksize << std::endl;
@@ -374,10 +375,9 @@ int main(int argc, char *argv[]) {
             badRes = true;
         }
       }
-      if (ret==Belos::Converged && !badRes) {
-	// Ok
-      }
-      else {
+      if (ret == Belos::Converged && !badRes) {
+        // Ok
+      } else {
         success = false;
         break;
       }
@@ -385,9 +385,11 @@ int main(int argc, char *argv[]) {
 
     if (procVerbose) {
       if (success)
-        std::cout << std::endl << "SUCCESS:  Belos converged!" << std::endl;
+        std::cout << std::endl
+                  << "SUCCESS:  Belos converged!" << std::endl;
       else
-        std::cout << std::endl << "ERROR:  Belos did not converge!" << std::endl;
+        std::cout << std::endl
+                  << "ERROR:  Belos did not converge!" << std::endl;
     }
   }  // end try
   TEUCHOS_STANDARD_CATCH_STATEMENTS(verbose, std::cerr, success);

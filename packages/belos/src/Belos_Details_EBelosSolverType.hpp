@@ -19,10 +19,10 @@
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 namespace Teuchos {
-  // forward declaration (avoid unnecessary include)
-  class ParameterList;
-} // namespace Teuchos
-#endif // NOT DOXYGEN_SHOULD_SKIP_THIS
+// forward declaration (avoid unnecessary include)
+class ParameterList;
+}  // namespace Teuchos
+#endif  // NOT DOXYGEN_SHOULD_SKIP_THIS
 
 namespace Belos {
 namespace Details {
@@ -33,7 +33,7 @@ namespace Details {
 /// This may differ from the number of supported solver
 /// <i>names</i>, since we may accept multiple names ("aliases") for
 /// some solvers.
-int numSupportedSolvers ();
+int numSupportedSolvers();
 
 /// \brief Get the candidate canonical name for a given candidate
 ///   alias.
@@ -55,19 +55,19 @@ int numSupportedSolvers ();
 ///   Details::reviseParameterListForAlias to do any modifications of
 ///   the input ParameterList associated with that alias.
 std::pair<std::string, bool>
-getCanonicalNameFromAlias (const std::string& candidateAlias);
+getCanonicalNameFromAlias(const std::string& candidateAlias);
 
 /// \brief List of supported aliases (to canonical solver names).
 ///
 /// This list does _not_ include canonical names.
 std::vector<std::string>
-solverNameAliases ();
+solverNameAliases();
 
 /// \brief List of canonical solver names.
 ///
 /// This list does _not_ include aliases.
 std::vector<std::string>
-canonicalSolverNames ();
+canonicalSolverNames();
 
 /// \brief Modify the input ParameterList appropriately for the given
 ///   solver alias.
@@ -75,11 +75,10 @@ canonicalSolverNames ();
 /// Some aliases include modifications or special checking of the
 /// input ParameterList.  All alias-related ParameterList revision
 /// happens in this method.
-void
-reviseParameterListForAlias (const std::string& aliasName,
-                             Teuchos::ParameterList& solverParams);
+void reviseParameterListForAlias(const std::string& aliasName,
+                                 Teuchos::ParameterList& solverParams);
 
-} // namespace Details
-} // namespace Belos
+}  // namespace Details
+}  // namespace Belos
 
-#endif // BELOS_DETAILS_EBELOSSOLVERTYPE_HPP
+#endif  // BELOS_DETAILS_EBELOSSOLVERTYPE_HPP

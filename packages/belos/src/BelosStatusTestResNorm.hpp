@@ -19,28 +19,26 @@
 #include "BelosLinearProblem.hpp"
 #include "BelosMultiVecTraits.hpp"
 
-/*! 
+/*!
   \class Belos::StatusTestResNorm
   \brief An abstract class of StatusTest for stopping criteria using residual norms.
 */
 
 namespace Belos {
 
-template <class ScalarType, class MV, class OP, class DM = DefaultDenseMatrix<int,ScalarType>>
-class StatusTestResNorm: public StatusTest<ScalarType,MV,OP,DM> {
-
+template <class ScalarType, class MV, class OP, class DM = DefaultDenseMatrix<int, ScalarType>>
+class StatusTestResNorm : public StatusTest<ScalarType, MV, OP, DM> {
  public:
-
   // Convenience typedefs
   typedef Teuchos::ScalarTraits<ScalarType> SCT;
   typedef typename SCT::magnitudeType MagnitudeType;
-  typedef MultiVecTraits<ScalarType,MV,DM>  MVT;
+  typedef MultiVecTraits<ScalarType, MV, DM> MVT;
 
   //! @name Form and parameter definition methods.
-  //@{ 
+  //@{
 
   //! Set the value of the tolerance
-  /*! We allow the tolerance to be reset for cases where, in the process of testing the residual, 
+  /*! We allow the tolerance to be reset for cases where, in the process of testing the residual,
     we find that the initial tolerance was too tight or too lax.
   */
   virtual int setTolerance(MagnitudeType tolerance) = 0;
@@ -53,12 +51,12 @@ class StatusTestResNorm: public StatusTest<ScalarType,MV,OP,DM> {
   virtual int setShowMaxResNormOnly(bool showMaxResNormOnly) = 0;
 
   //! Define the form of the scaling for the residual.
-  virtual int defineScaleForm( ScaleType TypeOfScaling, NormType TypeOfNorm, MagnitudeType ScaleValue = Teuchos::ScalarTraits<MagnitudeType>::one()) = 0;
+  virtual int defineScaleForm(ScaleType TypeOfScaling, NormType TypeOfNorm, MagnitudeType ScaleValue = Teuchos::ScalarTraits<MagnitudeType>::one()) = 0;
 
   //@}
 
   //! @name Methods to access data members.
-  //@{ 
+  //@{
 
   //! Returns the number of residuals that must pass the convergence test before Passed is returned.
   //! \note If \c quorum=-1 then all residuals must pass the convergence test before Passed is returned.
@@ -72,10 +70,10 @@ class StatusTestResNorm: public StatusTest<ScalarType,MV,OP,DM> {
 
   //! Returns the value of the tolerance, \f$ \tau \f$, set in the constructor.
   virtual MagnitudeType getTolerance() const = 0;
- 
+
   //! Returns the test value, \f$ \frac{\|r\|}{\sigma} \f$, computed in most recent call to CheckStatus.
   virtual const std::vector<MagnitudeType>* getTestValue() const = 0;
- 
+
   //! Returns the current solution estimate that was computed for the most recent residual test.
   //! \note This method will return a null pointer if no vector was computed.
   virtual Teuchos::RCP<MV> getSolution() = 0;
@@ -84,9 +82,8 @@ class StatusTestResNorm: public StatusTest<ScalarType,MV,OP,DM> {
   virtual bool getLOADetected() const = 0;
 
   //@}
-
 };
 
-} // end namespace Belos
+}  // end namespace Belos
 
 #endif /* BELOS_STATUS_TEST_RESNORM_H */

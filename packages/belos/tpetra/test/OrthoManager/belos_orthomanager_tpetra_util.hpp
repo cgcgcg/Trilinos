@@ -9,7 +9,7 @@
 #ifndef __belos_orthomanager_tpetra_util_hpp
 #define __belos_orthomanager_tpetra_util_hpp
 
-#include <BelosTypes.hpp> // includes BelosConfigDefs.hpp
+#include <BelosTypes.hpp>  // includes BelosConfigDefs.hpp
 #include <BelosOrthoManagerFactory.hpp>
 #include <BelosOrthoManagerTest.hpp>
 #include <BelosTpetraTestFramework.hpp>
@@ -21,90 +21,83 @@
 #include <Tpetra_Util_iohb.h>
 
 namespace Belos {
-  namespace Test {
+namespace Test {
 
-    //! Print Belos version information
-    void
-    printVersionInfo (std::ostream& debugOut)
-    {
-      using std::endl;
+//! Print Belos version information
+void printVersionInfo(std::ostream& debugOut) {
+  using std::endl;
 
-      debugOut << "Belos version information:" << endl
-               << Belos::Belos_Version() << endl << endl;
-    }
+  debugOut << "Belos version information:" << endl
+           << Belos::Belos_Version() << endl
+           << endl;
+}
 
-    //! Return a MsgType enum to specify Belos::OutputManager verbosity
-    int
-    selectVerbosity (const bool verbose, const bool debug)
-    {
-      // NOTE Calling this a "MsgType" (its correct type) or even an
-      // "enum MsgType" confuses the compiler.
-      int theType = Belos::Errors; // default (always print errors)
-      if (verbose)
-        {
-          // "Verbose" also means printing out Debug messages (as well
-          // as everything else).
-          theType = theType |
-            Belos::Warnings |
-            Belos::IterationDetails |
-            Belos::OrthoDetails |
-            Belos::FinalSummary |
-            Belos::TimingDetails |
-            Belos::StatusTestDetails |
-            Belos::Debug;
-        }
-      if (debug)
-        // "Debug" doesn't necessarily mean the same thing as
-        // "Verbose".  We interpret "Debug" to mean printing out
-        // messages marked as Debug (as well as Error messages).
-        theType = theType | Belos::Debug;
-      return theType;
-    }
+//! Return a MsgType enum to specify Belos::OutputManager verbosity
+int selectVerbosity(const bool verbose, const bool debug) {
+  // NOTE Calling this a "MsgType" (its correct type) or even an
+  // "enum MsgType" confuses the compiler.
+  int theType = Belos::Errors;  // default (always print errors)
+  if (verbose) {
+    // "Verbose" also means printing out Debug messages (as well
+    // as everything else).
+    theType = theType |
+              Belos::Warnings |
+              Belos::IterationDetails |
+              Belos::OrthoDetails |
+              Belos::FinalSummary |
+              Belos::TimingDetails |
+              Belos::StatusTestDetails |
+              Belos::Debug;
+  }
+  if (debug)
+    // "Debug" doesn't necessarily mean the same thing as
+    // "Verbose".  We interpret "Debug" to mean printing out
+    // messages marked as Debug (as well as Error messages).
+    theType = theType | Belos::Debug;
+  return theType;
+}
 
-    template<class Scalar>
-    Teuchos::RCP<Belos::OutputManager<Scalar> >
-    makeOutputManager (const bool verbose, const bool debug)
-    {
-      return Teuchos::rcp (new Belos::OutputManager<Scalar> (selectVerbosity (verbose, debug)));
-    }
+template <class Scalar>
+Teuchos::RCP<Belos::OutputManager<Scalar>>
+makeOutputManager(const bool verbose, const bool debug) {
+  return Teuchos::rcp(new Belos::OutputManager<Scalar>(selectVerbosity(verbose, debug)));
+}
 
-    /// \fn loadSparseMatrix
-    /// \brief Load a sparse matrix from a Harwell-Boeing file
-    ///
-    /// Load a sparse matrix from a Harwell-Boeing file, distribute
-    /// it, and return RCPs to a map_type (the map object describing the
-    /// distribution of the sparse matrix: we distribute in a way such
-    /// that the domain, range, and row maps are the same) and a
-    /// sparse_matrix_type (the sparse matrix itself).
-    template<class SC, class LO, class GO, class NodeType>
-    std::pair<Teuchos::RCP<::Tpetra::Map<LO, GO, NodeType> >, Teuchos::RCP<::Tpetra::CrsMatrix<SC, LO, GO, NodeType> > >
-    loadSparseMatrix (const Teuchos::RCP< const Teuchos::Comm<int> > pComm,
-                      const std::string& filename,
-                      int& numRows,
-                      std::ostream& debugOut)
-    {
-      typedef SC scalar_type;
-      typedef LO local_ordinal_type;
-      typedef GO global_ordinal_type;
-      typedef NodeType node_type;
+/// \fn loadSparseMatrix
+/// \brief Load a sparse matrix from a Harwell-Boeing file
+///
+/// Load a sparse matrix from a Harwell-Boeing file, distribute
+/// it, and return RCPs to a map_type (the map object describing the
+/// distribution of the sparse matrix: we distribute in a way such
+/// that the domain, range, and row maps are the same) and a
+/// sparse_matrix_type (the sparse matrix itself).
+template <class SC, class LO, class GO, class NodeType>
+std::pair<Teuchos::RCP<::Tpetra::Map<LO, GO, NodeType>>, Teuchos::RCP<::Tpetra::CrsMatrix<SC, LO, GO, NodeType>>>
+loadSparseMatrix(const Teuchos::RCP<const Teuchos::Comm<int>> pComm,
+                 const std::string& filename,
+                 int& numRows,
+                 std::ostream& debugOut) {
+  typedef SC scalar_type;
+  typedef LO local_ordinal_type;
+  typedef GO global_ordinal_type;
+  typedef NodeType node_type;
 
-      typedef ::Tpetra::Map<local_ordinal_type, global_ordinal_type, node_type> map_type;
-      typedef ::Tpetra::CrsMatrix<scalar_type, local_ordinal_type, global_ordinal_type, node_type> sparse_matrix_type;
+  typedef ::Tpetra::Map<local_ordinal_type, global_ordinal_type, node_type> map_type;
+  typedef ::Tpetra::CrsMatrix<scalar_type, local_ordinal_type, global_ordinal_type, node_type> sparse_matrix_type;
 
-      using Teuchos::RCP;
-      using Teuchos::rcp;
-      using std::vector;
+  using std::vector;
+  using Teuchos::RCP;
+  using Teuchos::rcp;
 
-      //      const int myRank = Teuchos::rank (*pComm);
-      RCP<map_type> pMap;
-      RCP<sparse_matrix_type> pMatrix;
+  //      const int myRank = Teuchos::rank (*pComm);
+  RCP<map_type> pMap;
+  RCP<sparse_matrix_type> pMatrix;
 
-      if (filename != "")
-        {
-          debugOut << "Loading sparse matrix file \"" << filename << "\"" << endl;
-          Belos::Tpetra::HarwellBoeingReader<sparse_matrix_type> reader(pComm);
-          pMatrix = reader.readFromFile(filename);
-          pMap = Teuchos::rcp_const_cast<map_type>(pMatrix->getRowMap());
+  if (filename != "") {
+    debugOut << "Loading sparse matrix file \"" << filename << "\"" << endl;
+    Belos::Tpetra::HarwellBoeingReader<sparse_matrix_type> reader(pComm);
+    pMatrix = reader.readFromFile(filename);
+    pMap    = Teuchos::rcp_const_cast<map_type>(pMatrix->getRowMap());
 #if 0          
           int loadedNumRows = 0;
           int numCols = 0;
@@ -247,21 +240,20 @@ namespace Belos {
           // the same (the matrix must be square).
           pMatrix->fillComplete();
 #endif
-          debugOut << "Completed loading and distributing sparse matrix" << endl;
-        } // else M == null
-      else
-        {
-          debugOut << "Testing with Euclidean inner product" << endl;
+    debugOut << "Completed loading and distributing sparse matrix" << endl;
+  }  // else M == null
+  else {
+    debugOut << "Testing with Euclidean inner product" << endl;
 
-          // Let M remain null, and allocate map using the number of rows
-          // (numRows) specified on the command line.
-          pMap = rcp (new map_type (numRows, 0, pComm,
-                                    ::Tpetra::GloballyDistributed));
-        }
-      return std::make_pair (pMap, pMatrix);
-    }
+    // Let M remain null, and allocate map using the number of rows
+    // (numRows) specified on the command line.
+    pMap = rcp(new map_type(numRows, 0, pComm,
+                            ::Tpetra::GloballyDistributed));
+  }
+  return std::make_pair(pMap, pMatrix);
+}
 
-  } // namespace Test
-} // namespace Belos
+}  // namespace Test
+}  // namespace Belos
 
-#endif // __belos_orthomanager_tpetra_util_hpp
+#endif  // __belos_orthomanager_tpetra_util_hpp

@@ -80,17 +80,18 @@
 #include <cmath>
 #include <complex>
 
-#endif 
+#endif
 
 #endif /*ndef HAVE_CONFIG_H*/
 
-
 /* Define some macros */
-#define BELOS_MAX(x,y) (( (x) > (y) ) ? (x)  : (y) )     /* max function  */
-#define BELOS_MIN(x,y) (( (x) < (y) ) ? (x)  : (y) )     /* min function  */
-#define BELOS_SGN(x)   (( (x) < 0.0 ) ? -1.0 : 1.0 )     /* sign function */
+#define BELOS_MAX(x, y) (((x) > (y)) ? (x) : (y)) /* max function  */
+#define BELOS_MIN(x, y) (((x) < (y)) ? (x) : (y)) /* min function  */
+#define BELOS_SGN(x) (((x) < 0.0) ? -1.0 : 1.0)   /* sign function */
 
-namespace Belos { std::string Belos_Version(); }
+namespace Belos {
+std::string Belos_Version();
+}
 
 // This include file defines macros to avoid warnings under CUDA.  See github issue #1133.
 #include "Teuchos_CompilerCodeTweakMacros.hpp"

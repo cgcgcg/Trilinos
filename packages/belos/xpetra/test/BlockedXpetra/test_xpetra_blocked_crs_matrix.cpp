@@ -79,7 +79,7 @@ RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>> BuildLaplace2D(
     const RCP<const Teuchos::Comm<int>> &comm, Xpetra::UnderlyingLib lib,
     GlobalOrdinal nx, GlobalOrdinal ny,
     const RCP<const Xpetra::Map<LocalOrdinal, GlobalOrdinal, Node>> &map) {
-  using Map = Xpetra::Map<LocalOrdinal, GlobalOrdinal, Node>;
+  using Map    = Xpetra::Map<LocalOrdinal, GlobalOrdinal, Node>;
   using Matrix = Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
   using CrsWrap =
       Xpetra::CrsMatrixWrap<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
@@ -162,7 +162,7 @@ BuildPointCouplingMatrix(
       rangeMap->getLocalElementList();
   for (size_t i = 0; i < static_cast<size_t>(rowGids.size()); ++i) {
     const GlobalOrdinal row = rowGids[i];
-    const LocalOrdinal lid = rangeMap->getLocalElement(row);
+    const LocalOrdinal lid  = rangeMap->getLocalElement(row);
     const GlobalOrdinal col = domainMap->getGlobalElement(lid);
 
     Teuchos::Array<GlobalOrdinal> cols(1, col);
@@ -189,7 +189,7 @@ RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>> ShiftMatrixGIDs(
   using CrsMatrix =
       Xpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
 
-  RCP<const CrsWrap> Awrap = Teuchos::rcp_dynamic_cast<const CrsWrap>(A, true);
+  RCP<const CrsWrap> Awrap  = Teuchos::rcp_dynamic_cast<const CrsWrap>(A, true);
   RCP<const CrsMatrix> Acrs = Awrap->getCrsMatrix();
 
   RCP<Matrix> Ashift =
@@ -230,7 +230,7 @@ BuildBlockedMatrix(const RCP<const Teuchos::Comm<int>> &comm,
   using BlockedCrsMatrix =
       Xpetra::BlockedCrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
   using BlockedMap = Xpetra::BlockedMap<LocalOrdinal, GlobalOrdinal, Node>;
-  using Map = Xpetra::Map<LocalOrdinal, GlobalOrdinal, Node>;
+  using Map        = Xpetra::Map<LocalOrdinal, GlobalOrdinal, Node>;
 
   // Build the base scalar map for field 0.
   RCP<const Map> mapU =
@@ -305,7 +305,7 @@ int main(int argc, char *argv[]) {
   bool verbose = false;
 
   try {
-    const ST one = SCT::one();
+    const ST one  = SCT::one();
     const ST zero = SCT::zero();
 
     int MyPID = 0;
@@ -316,17 +316,17 @@ int main(int argc, char *argv[]) {
     // Get test parameters from command-line processor
     //
     bool proc_verbose = false;
-    bool debug = false;
-    int frequency = -1; // how often residuals are printed by solver
-    int numrhs = 1;     // total number of right-hand sides to solve for
-    int blocksize = 1;  // blocksize used by solver
-    int maxiters = 200; // maximum number of iterations for solver to use
-    int length = 100;   // max subspace size
-    GO nx = 40;         // problem size in x
-    GO ny = 40;         // problem size in y
-    ST alpha = Teuchos::as<ST>(0.05);
-    ST beta = Teuchos::as<ST>(-0.05);
-    MT tol = 1.0e-6; // relative residual tolerance
+    bool debug        = false;
+    int frequency     = -1;   // how often residuals are printed by solver
+    int numrhs        = 1;    // total number of right-hand sides to solve for
+    int blocksize     = 1;    // blocksize used by solver
+    int maxiters      = 200;  // maximum number of iterations for solver to use
+    int length        = 100;  // max subspace size
+    GO nx             = 40;   // problem size in x
+    GO ny             = 40;   // problem size in y
+    ST alpha          = Teuchos::as<ST>(0.05);
+    ST beta           = Teuchos::as<ST>(-0.05);
+    MT tol            = 1.0e-6;  // relative residual tolerance
 
     Teuchos::CommandLineProcessor cmdp(false, true);
     cmdp.setOption("verbose", "quiet", &verbose, "Print messages and results.");
@@ -361,11 +361,12 @@ int main(int argc, char *argv[]) {
       frequency = -1;
     }
 
-    MyPID = rank(*comm);
+    MyPID        = rank(*comm);
     proc_verbose = (verbose && (MyPID == 0));
 
     if (proc_verbose) {
-      std::cout << Belos::Belos_Version() << std::endl << std::endl;
+      std::cout << Belos::Belos_Version() << std::endl
+                << std::endl;
     }
 
     const Xpetra::UnderlyingLib lib = Xpetra::UseTpetra;
@@ -454,7 +455,8 @@ int main(int argc, char *argv[]) {
     // **********Print out information about problem*******************
     //
     if (proc_verbose) {
-      std::cout << std::endl << std::endl;
+      std::cout << std::endl
+                << std::endl;
       std::cout << "Dimension of matrix: " << NumGlobalElements << std::endl;
       std::cout << "Number of right-hand sides: " << numrhs << std::endl;
       std::cout << "Block size used by solver: " << blocksize << std::endl;

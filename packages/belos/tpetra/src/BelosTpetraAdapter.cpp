@@ -10,5 +10,3 @@
 */
 
 #include "BelosTpetraAdapter.hpp"
-
-

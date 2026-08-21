@@ -61,19 +61,19 @@ int common_main(int argc, char *argv[]) {
   // clp.setOption("scalar", &scalarOption, "Choice of scalar type");
 
   Belos::DenseMatrixType denseMatrixTypes[2] = {Belos::TeuchosSerialDenseMatrix, Belos::KokkosDualView};
-  const char *denseMatrixNames[2] = {"Teuchos", "Kokkos"};
+  const char *denseMatrixNames[2]            = {"Teuchos", "Kokkos"};
 
   Belos::DenseMatrixType denseMatrix = Belos::defaultDenseMatrixType;
   clp.setOption("denseMatrix", &denseMatrix, 2, denseMatrixTypes, denseMatrixNames,
                 "Choice of dense matrix ( Teuchos | Kokkos )");
 
   switch (clp.parse(argc, argv, NULL)) {
-  case Teuchos::CommandLineProcessor::PARSE_ERROR:
-    return EXIT_FAILURE;
-  case Teuchos::CommandLineProcessor::PARSE_UNRECOGNIZED_OPTION:
-  case Teuchos::CommandLineProcessor::PARSE_SUCCESSFUL:
-  case Teuchos::CommandLineProcessor::PARSE_HELP_PRINTED:
-    break;
+    case Teuchos::CommandLineProcessor::PARSE_ERROR:
+      return EXIT_FAILURE;
+    case Teuchos::CommandLineProcessor::PARSE_UNRECOGNIZED_OPTION:
+    case Teuchos::CommandLineProcessor::PARSE_SUCCESSFUL:
+    case Teuchos::CommandLineProcessor::PARSE_HELP_PRINTED:
+      break;
   }
 
   clp.recogniseAllOptions(true);
@@ -87,75 +87,75 @@ int common_main(int argc, char *argv[]) {
     return BELOS_MAIN_FUNC<BELOS_DEFAULT_SCALAR, DM>(clp, argc, argv);
   }
 
-//   if (denseMatrix == TeuchosSerialDenseMatrix) {
-//     if (scalarOption == "double") {
-// #if defined(HAVE_TPETRA_INST_DOUBLE)
-//       using DM = Teuchos::SerialDenseMatrix<Ordinal, double>;
-//       return BELOS_MAIN_FUNC<double, DM>(clp, argc, argv);
-// #else
-//       std::cout << "Tpetra has not been instantiated for scalar type double\n";
-//       return EXIT_FAILURE;
-// #endif
-//     } else if (scalarOption == "float") {
-// #if defined(HAVE_TPETRA_INST_FLOAT)
-//       using DM = Teuchos::SerialDenseMatrix<Ordinal, float>;
-//       return BELOS_MAIN_FUNC<float, DM>(clp, argc, argv);
-// #else
-//       std::cout << "Tpetra has not been instantiated for scalar type float\n";
-//       return EXIT_FAILURE;
-// #endif
-//     } else if (scalarOption == "complex_double") {
-// #if defined(HAVE_TPETRA_INST_COMPLEX_DOUBLE)
-//       using DM = Teuchos::SerialDenseMatrix<Ordinal, std::complex<double>>;
-//       return BELOS_MAIN_FUNC<std::complex<double>, DM>(clp, argc, argv);
-// #else
-//       std::cout << "Tpetra has not been instantiated for scalar type complex<double>\n";
-//       return EXIT_FAILURE;
-// #endif
-//     } else if (scalarOption == "complex_float") {
-//       // #if defined(HAVE_TPETRA_INST_COMPLEX_FLOAT)
-//       //   using DM = Teuchos::SerialDenseMatrix<Ordinal, std::complex<float>>;
-//       //   return BELOS_MAIN_FUNC<std::complex<float>, DM>(clp, argc, argv);
-//       // #endif
-//     }
-//   } else if ((denseMatrix == KokkosDualView)) {
-//     if (scalarOption == "double") {
-// #if defined(HAVE_TPETRA_INST_DOUBLE)
-//       using IST = KokkosKernels::ArithTraits<double>::val_type;
-//       using DM = Kokkos::DualView<IST **, Kokkos::LayoutLeft>;
-//       return BELOS_MAIN_FUNC<double, DM>(clp, argc, argv);
-// #else
-//       std::cout << "Tpetra has not been instantiated for scalar type double\n";
-//       return EXIT_FAILURE;
-// #endif
-//     } else if (scalarOption == "float") {
-// #if defined(HAVE_TPETRA_INST_FLOAT)
-//       using IST = KokkosKernels::ArithTraits<float>::val_type;
-//       using DM = Kokkos::DualView<IST **, Kokkos::LayoutLeft>;
-//       return BELOS_MAIN_FUNC<float, DM>(clp, argc, argv);
-// #else
-//       std::cout << "Tpetra has not been instantiated for scalar type float\n";
-//       return EXIT_FAILURE;
-// #endif
-//     } else if (scalarOption == "complex_double") {
-// #if defined(HAVE_TPETRA_INST_COMPLEX_DOUBLE)
-//       using IST =
-//             KokkosKernels::ArithTraits<std::complex<double>>::val_type;
-//       using DM = Kokkos::DualView<IST **, Kokkos::LayoutLeft>;
-//       return BELOS_MAIN_FUNC<std::complex<double>, DM>(clp, argc, argv);
-// #else
-//       std::cout << "Tpetra has not been instantiated for scalar type complex<double>\n";
-//       return EXIT_FAILURE;
-// #endif
-//     }
-// // #if defined(HAVE_TPETRA_INST_COMPLEX_FLOAT)
-// //     else if (scalarOption == "complex_float") {
-// //   using IST = KokkosKernels::ArithTraits<std::complex<float>>::val_type;
-// //   using DM = Kokkos::DualView<IST **, Kokkos::LayoutLeft>;
-// //   return BELOS_MAIN_FUNC<std::complex<float>, DM>(clp, argc, argv);
-// // }
-// // #endif
-//   }
+  //   if (denseMatrix == TeuchosSerialDenseMatrix) {
+  //     if (scalarOption == "double") {
+  // #if defined(HAVE_TPETRA_INST_DOUBLE)
+  //       using DM = Teuchos::SerialDenseMatrix<Ordinal, double>;
+  //       return BELOS_MAIN_FUNC<double, DM>(clp, argc, argv);
+  // #else
+  //       std::cout << "Tpetra has not been instantiated for scalar type double\n";
+  //       return EXIT_FAILURE;
+  // #endif
+  //     } else if (scalarOption == "float") {
+  // #if defined(HAVE_TPETRA_INST_FLOAT)
+  //       using DM = Teuchos::SerialDenseMatrix<Ordinal, float>;
+  //       return BELOS_MAIN_FUNC<float, DM>(clp, argc, argv);
+  // #else
+  //       std::cout << "Tpetra has not been instantiated for scalar type float\n";
+  //       return EXIT_FAILURE;
+  // #endif
+  //     } else if (scalarOption == "complex_double") {
+  // #if defined(HAVE_TPETRA_INST_COMPLEX_DOUBLE)
+  //       using DM = Teuchos::SerialDenseMatrix<Ordinal, std::complex<double>>;
+  //       return BELOS_MAIN_FUNC<std::complex<double>, DM>(clp, argc, argv);
+  // #else
+  //       std::cout << "Tpetra has not been instantiated for scalar type complex<double>\n";
+  //       return EXIT_FAILURE;
+  // #endif
+  //     } else if (scalarOption == "complex_float") {
+  //       // #if defined(HAVE_TPETRA_INST_COMPLEX_FLOAT)
+  //       //   using DM = Teuchos::SerialDenseMatrix<Ordinal, std::complex<float>>;
+  //       //   return BELOS_MAIN_FUNC<std::complex<float>, DM>(clp, argc, argv);
+  //       // #endif
+  //     }
+  //   } else if ((denseMatrix == KokkosDualView)) {
+  //     if (scalarOption == "double") {
+  // #if defined(HAVE_TPETRA_INST_DOUBLE)
+  //       using IST = KokkosKernels::ArithTraits<double>::val_type;
+  //       using DM = Kokkos::DualView<IST **, Kokkos::LayoutLeft>;
+  //       return BELOS_MAIN_FUNC<double, DM>(clp, argc, argv);
+  // #else
+  //       std::cout << "Tpetra has not been instantiated for scalar type double\n";
+  //       return EXIT_FAILURE;
+  // #endif
+  //     } else if (scalarOption == "float") {
+  // #if defined(HAVE_TPETRA_INST_FLOAT)
+  //       using IST = KokkosKernels::ArithTraits<float>::val_type;
+  //       using DM = Kokkos::DualView<IST **, Kokkos::LayoutLeft>;
+  //       return BELOS_MAIN_FUNC<float, DM>(clp, argc, argv);
+  // #else
+  //       std::cout << "Tpetra has not been instantiated for scalar type float\n";
+  //       return EXIT_FAILURE;
+  // #endif
+  //     } else if (scalarOption == "complex_double") {
+  // #if defined(HAVE_TPETRA_INST_COMPLEX_DOUBLE)
+  //       using IST =
+  //             KokkosKernels::ArithTraits<std::complex<double>>::val_type;
+  //       using DM = Kokkos::DualView<IST **, Kokkos::LayoutLeft>;
+  //       return BELOS_MAIN_FUNC<std::complex<double>, DM>(clp, argc, argv);
+  // #else
+  //       std::cout << "Tpetra has not been instantiated for scalar type complex<double>\n";
+  //       return EXIT_FAILURE;
+  // #endif
+  //     }
+  // // #if defined(HAVE_TPETRA_INST_COMPLEX_FLOAT)
+  // //     else if (scalarOption == "complex_float") {
+  // //   using IST = KokkosKernels::ArithTraits<std::complex<float>>::val_type;
+  // //   using DM = Kokkos::DualView<IST **, Kokkos::LayoutLeft>;
+  // //   return BELOS_MAIN_FUNC<std::complex<float>, DM>(clp, argc, argv);
+  // // }
+  // // #endif
+  //   }
   return EXIT_FAILURE;
 }
 

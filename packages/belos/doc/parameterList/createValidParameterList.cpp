@@ -28,25 +28,21 @@ typedef Belos::SolverManager<scalar_type, multivector_type, operator_type> solve
 
 // Flatten the namespaces of certain classes
 using std::string;
-using Teuchos::ParameterList;
 using Teuchos::CommandLineProcessor;
+using Teuchos::ParameterList;
+using Teuchos::parameterList;
 using Teuchos::RCP;
 using Teuchos::rcp;
-using Teuchos::parameterList;
 
-void writeXSLHeader( std::ofstream& out )
-{
-      out << "<?xml-stylesheet type=\"text/xsl\" "
-          << "href=\"common/parameterList/parameterList.xsl\"?>\n";
+void writeXSLHeader(std::ofstream& out) {
+  out << "<?xml-stylesheet type=\"text/xsl\" "
+      << "href=\"common/parameterList/parameterList.xsl\"?>\n";
 }
 
-int main(int argc, char* argv[])
-{
-
+int main(int argc, char* argv[]) {
   bool success = false;
   bool verbose = false;
-  try
-  {
+  try {
     //
     // Open an output file stream for writing our XML file
     //
@@ -70,7 +66,7 @@ int main(int argc, char* argv[])
     // additional options here to control which ParameterList to
     // output.
     //
-    CommandLineProcessor clp(false);  //don't throw exceptions
+    CommandLineProcessor clp(false);  // don't throw exceptions
     clp.recogniseAllOptions(true);
     clp.setOption("add-xsl-header",
                   "suppress-xsl-header",
@@ -81,10 +77,9 @@ int main(int argc, char* argv[])
     // Parse the command line and quit if not successful
     //
     CommandLineProcessor::EParseCommandLineReturn parse_return =
-      clp.parse(argc, argv);
-    if(parse_return != CommandLineProcessor::PARSE_SUCCESSFUL)
+        clp.parse(argc, argv);
+    if (parse_return != CommandLineProcessor::PARSE_SUCCESSFUL)
       return parse_return;
-
 
     //
     // Here is where code should go that is required to generate the
@@ -95,58 +90,49 @@ int main(int argc, char* argv[])
     // appropriate class would go.
     //
 
-	Belos::SolverFactory<scalar_type, multivector_type, operator_type> sFactory;
-	RCP<solver_type> solver;
-	for ( int i = 0; i < 4; ++i )
-	{
-		RCP<ParameterList> nullParams = parameterList();
-		std::cout << "writing parameter list " << i+1 << " of 9." << std::endl;
-		if ( i == 0 )
-		{
-			solver = sFactory.create("Block GMRES", nullParams);
-			out.open("belos_BlockGmres.xml", std::ofstream::out);
-			if ( xsl_header_flag )
-				writeXSLHeader( out );
-			RCP<const ParameterList> gmresParams = solver -> getValidParameters();
-			Teuchos::writeParameterListToXmlOStream( *gmresParams, out);
-			out.close();
-		}
-		else if ( i == 1 )
-		{
-			solver = sFactory.create("Pseudo Block GMRES", nullParams);
-			out.open("belos_PseudoBlockGmres.xml", std::ofstream::out);
-			if ( xsl_header_flag )
-				writeXSLHeader( out );
-			RCP<const ParameterList> pseudoGmresParams = solver -> getValidParameters();
-			Teuchos::writeParameterListToXmlOStream( *pseudoGmresParams, out);
-			out.close();
-		}
-		else if ( i == 2 )
-		{
-			solver = sFactory.create("Block CG", nullParams);
-			out.open("belos_BlockCG.xml", std::ofstream::out);
-			if ( xsl_header_flag )
-				writeXSLHeader( out );
-			RCP<const ParameterList> blockCgParams = solver -> getValidParameters();
-			Teuchos::writeParameterListToXmlOStream( *blockCgParams, out);
-			out.close();
-		}
-		else if ( i == 3 )
-		{
-			solver = sFactory.create("Pseudo Block CG", nullParams);
-			out.open("belos_PseudoBlockCG.xml", std::ofstream::out);
-			if ( xsl_header_flag )
-				writeXSLHeader( out );
-			RCP<const ParameterList> pseudoBlockCgParams = solver -> getValidParameters();
-			Teuchos::writeParameterListToXmlOStream( *pseudoBlockCgParams, out);
-			out.close();
-		}
-	}
+    Belos::SolverFactory<scalar_type, multivector_type, operator_type> sFactory;
+    RCP<solver_type> solver;
+    for (int i = 0; i < 4; ++i) {
+      RCP<ParameterList> nullParams = parameterList();
+      std::cout << "writing parameter list " << i + 1 << " of 9." << std::endl;
+      if (i == 0) {
+        solver = sFactory.create("Block GMRES", nullParams);
+        out.open("belos_BlockGmres.xml", std::ofstream::out);
+        if (xsl_header_flag)
+          writeXSLHeader(out);
+        RCP<const ParameterList> gmresParams = solver->getValidParameters();
+        Teuchos::writeParameterListToXmlOStream(*gmresParams, out);
+        out.close();
+      } else if (i == 1) {
+        solver = sFactory.create("Pseudo Block GMRES", nullParams);
+        out.open("belos_PseudoBlockGmres.xml", std::ofstream::out);
+        if (xsl_header_flag)
+          writeXSLHeader(out);
+        RCP<const ParameterList> pseudoGmresParams = solver->getValidParameters();
+        Teuchos::writeParameterListToXmlOStream(*pseudoGmresParams, out);
+        out.close();
+      } else if (i == 2) {
+        solver = sFactory.create("Block CG", nullParams);
+        out.open("belos_BlockCG.xml", std::ofstream::out);
+        if (xsl_header_flag)
+          writeXSLHeader(out);
+        RCP<const ParameterList> blockCgParams = solver->getValidParameters();
+        Teuchos::writeParameterListToXmlOStream(*blockCgParams, out);
+        out.close();
+      } else if (i == 3) {
+        solver = sFactory.create("Pseudo Block CG", nullParams);
+        out.open("belos_PseudoBlockCG.xml", std::ofstream::out);
+        if (xsl_header_flag)
+          writeXSLHeader(out);
+        RCP<const ParameterList> pseudoBlockCgParams = solver->getValidParameters();
+        Teuchos::writeParameterListToXmlOStream(*pseudoBlockCgParams, out);
+        out.close();
+      }
+    }
 
     success = true;
   }
   TEUCHOS_STANDARD_CATCH_STATEMENTS(verbose, std::cerr, success);
 
-  return ( success ? EXIT_SUCCESS : EXIT_FAILURE );
-
+  return (success ? EXIT_SUCCESS : EXIT_FAILURE);
 }

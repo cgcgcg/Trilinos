@@ -1,4 +1,3 @@
-
 TRIBITS_ADD_EXECUTABLE_AND_TEST(
   Tpetra_BlockGMRES_diag_test
   SOURCES test_bl_gmres_diag.cpp
@@ -8,62 +7,75 @@ TRIBITS_ADD_EXECUTABLE_AND_TEST(
 
 ASSERT_DEFINED(Tpetra_INST_FLOAT)
 
-IF (Tpetra_INST_FLOAT)
+IF(Tpetra_INST_FLOAT)
 
- TRIBITS_ADD_EXECUTABLE_AND_TEST(
-   Tpetra_BlockGMRES_hb_DoubleFloat_test
-   SOURCES test_bl_gmres_hb_df.cpp
-   ARGS "--verbose"
-   COMM serial mpi
-   )
+  TRIBITS_ADD_EXECUTABLE_AND_TEST(
+    Tpetra_BlockGMRES_hb_DoubleFloat_test
+    SOURCES test_bl_gmres_hb_df.cpp
+    ARGS "--verbose"
+    COMM serial mpi
+  )
 
 ENDIF()
 
 BELOS_ADD_EXECUTABLE_AND_TEUCHOS_AND_KOKKOS_TESTS(
   Tpetra_resolve_gmres_hb
-  SOURCES test_resolve_gmres_hb.cpp
-  COMM serial mpi
+  SOURCES
+  test_resolve_gmres_hb.cpp
+  COMM
+  serial
+  mpi
   ARGS
-    "--verbose --filename=orsirr1.hb"
-    "--verbose --filename=orsirr1.hb --pseudo"
+  "--verbose --filename=orsirr1.hb"
+  "--verbose --filename=orsirr1.hb --pseudo"
   STANDARD_PASS_OUTPUT
-  )
+)
 
 BELOS_ADD_EXECUTABLE_AND_TEUCHOS_AND_KOKKOS_TESTS(
   Tpetra_pseudo_gmres_hb
-  SOURCES test_pseudo_gmres_hb.cpp
-  COMM serial mpi
-  ARGS "--verbose --filename=orsirr1.hb"
+  SOURCES
+  test_pseudo_gmres_hb.cpp
+  COMM
+  serial
+  mpi
+  ARGS
+  "--verbose --filename=orsirr1.hb"
   STANDARD_PASS_OUTPUT
-  )
+)
 
 BELOS_ADD_EXECUTABLE_AND_TEUCHOS_AND_KOKKOS_TESTS(
   Tpetra_BlockGMRES_hb_test
-  SOURCES test_bl_gmres_hb.cpp
+  SOURCES
+  test_bl_gmres_hb.cpp
   ARGS
-    "--verbose --ortho-type=DGKS"
-    "--verbose --ortho-type=ICGS"
-    "--verbose --ortho-type=IMGS"
-  COMM serial mpi
-  )
+  "--verbose --ortho-type=DGKS"
+  "--verbose --ortho-type=ICGS"
+  "--verbose --ortho-type=IMGS"
+  COMM
+  serial
+  mpi
+)
 
 ASSERT_DEFINED(Belos_ENABLE_TSQR)
-IF (Belos_ENABLE_TSQR)
-TRIBITS_ADD_EXECUTABLE_AND_TEST(
-  Tpetra_BlockGMRES_hb_TSQR_test
-  SOURCES test_bl_gmres_hb.cpp
-  ARGS "--verbose --num-rhs=3 --block-size=3 --ortho-type=TSQR"
-  COMM serial mpi
+IF(Belos_ENABLE_TSQR)
+  TRIBITS_ADD_EXECUTABLE_AND_TEST(
+    Tpetra_BlockGMRES_hb_TSQR_test
+    SOURCES test_bl_gmres_hb.cpp
+    ARGS "--verbose --num-rhs=3 --block-size=3 --ortho-type=TSQR"
+    COMM serial mpi
   )
 ENDIF()
 
-
 BELOS_ADD_EXECUTABLE_AND_TEUCHOS_AND_KOKKOS_TESTS(
   Tpetra_BlockFGMRES_hb_test
-  SOURCES test_bl_fgmres_hb.cpp
-  ARGS "--verbose"
-  COMM serial mpi
-  )
+  SOURCES
+  test_bl_fgmres_hb.cpp
+  ARGS
+  "--verbose"
+  COMM
+  serial
+  mpi
+)
 
 TRIBITS_ADD_EXECUTABLE_AND_TEST(
   Tpetra_BlockFGMRES_keep_hessenberg_test
@@ -71,26 +83,31 @@ TRIBITS_ADD_EXECUTABLE_AND_TEST(
   ARGS "--verbose"
   COMM serial mpi
   STANDARD_PASS_OUTPUT
-  )
+)
 
 BELOS_ADD_EXECUTABLE_AND_TEUCHOS_AND_KOKKOS_TESTS(
   Tpetra_HybridGMRES_hb_test
-  SOURCES test_hybrid_gmres_hb.cpp
-  ARGS "--verbose --max-degree=10 --poly-type=Arnoldi"
-       "--verbose --max-degree=10 --poly-type=Gmres"
-       "--verbose --max-degree=10 --poly-type=Roots"
-  COMM serial mpi
-  )
+  SOURCES
+  test_hybrid_gmres_hb.cpp
+  ARGS
+  "--verbose --max-degree=10 --poly-type=Arnoldi"
+  "--verbose --max-degree=10 --poly-type=Gmres"
+  "--verbose --max-degree=10 --poly-type=Roots"
+  COMM
+  serial
+  mpi
+)
 
-TRIBITS_COPY_FILES_TO_BINARY_DIR(Tpetra_BlockGMRES_hb_CopyFiles
+TRIBITS_COPY_FILES_TO_BINARY_DIR(
+  Tpetra_BlockGMRES_hb_CopyFiles
   SOURCE_DIR ${Belos_SOURCE_DIR}/testmatrices
   SOURCE_FILES bcsstk14.hb
   EXEDEPS Tpetra_BlockGMRES_hb_test
-  )
+)
 
-TRIBITS_COPY_FILES_TO_BINARY_DIR(Tpetra_BlockGMRES_pseudo_CopyFiles
+TRIBITS_COPY_FILES_TO_BINARY_DIR(
+  Tpetra_BlockGMRES_pseudo_CopyFiles
   SOURCE_DIR ${Belos_SOURCE_DIR}/testmatrices
   SOURCE_FILES orsirr1.hb
   EXEDEPS Tpetra_BlockGMRES_hb_test
 )
-

@@ -19,7 +19,6 @@
 // matrix is nontrivial.
 #include "BelosDGKSOrthoManager.hpp"
 
-
 namespace Belos {
 
 /// \class OutOfPlaceNormalizerMixin
@@ -43,17 +42,17 @@ namespace Belos {
 /// However, if you handle Tsqr(Mat)OrthoManager through this mixin,
 /// you can exploit TSQR's unique interface to avoid copying back and
 /// forth between scratch space.
-template<class Scalar, class MV, class DM>
+template <class Scalar, class MV, class DM>
 class OutOfPlaceNormalizerMixin {
-public:
+ public:
   typedef Scalar scalar_type;
   typedef typename Teuchos::ScalarTraits<Scalar>::magnitudeType magnitude_type;
   /// \typedef multivector_type
   /// \brief Multivector type with which this class was specialized.
   typedef MV multivector_type;
 
-  typedef DM                        mat_type;
-  typedef Teuchos::RCP<mat_type>    mat_ptr;
+  typedef DM mat_type;
+  typedef Teuchos::RCP<mat_type> mat_ptr;
 
   /// \brief Normalize X into Q*B.
   ///
@@ -64,7 +63,7 @@ public:
   ///
   /// \return Rank of the input multivector X.
   virtual int
-  normalizeOutOfPlace (MV& X, MV& Q, mat_ptr B) const = 0;
+  normalizeOutOfPlace(MV& X, MV& Q, mat_ptr B) const = 0;
 
   /// \brief Project and normalize X_in into X_out.
   ///
@@ -85,14 +84,14 @@ public:
   ///
   /// \return Rank of X_in after projection
   virtual int
-  projectAndNormalizeOutOfPlace (MV& X_in,
-                                 MV& X_out,
-                                 Teuchos::Array<mat_ptr> C,
-                                 mat_ptr B,
-                                 Teuchos::ArrayView<Teuchos::RCP<const MV> > Q) const = 0;
+  projectAndNormalizeOutOfPlace(MV& X_in,
+                                MV& X_out,
+                                Teuchos::Array<mat_ptr> C,
+                                mat_ptr B,
+                                Teuchos::ArrayView<Teuchos::RCP<const MV> > Q) const = 0;
 
   //! Trivial virtual destructor, to silence compiler warnings.
-  virtual ~OutOfPlaceNormalizerMixin () {}
+  virtual ~OutOfPlaceNormalizerMixin() {}
 };
 
 /// \class TsqrOrthoManager
@@ -101,30 +100,28 @@ public:
 ///
 /// Subclass of OrthoManager, implemented using TsqrOrthoManagerImpl
 /// (TSQR + Block Gram-Schmidt).
-template<class Scalar, class MV, class DM>
-class TsqrOrthoManager :
-    public OrthoManager<Scalar, MV, DM>,
-    public OutOfPlaceNormalizerMixin<Scalar, MV, DM>
-{
-public:
+template <class Scalar, class MV, class DM>
+class TsqrOrthoManager : public OrthoManager<Scalar, MV, DM>,
+                         public OutOfPlaceNormalizerMixin<Scalar, MV, DM> {
+ public:
   typedef Scalar scalar_type;
   typedef typename Teuchos::ScalarTraits<Scalar>::magnitudeType magnitude_type;
   //! \typedef Multivector type with which this class was specialized
   typedef MV multivector_type;
 
-  typedef DM                          mat_type;
-  typedef Teuchos::RCP<mat_type>      mat_ptr;
+  typedef DM mat_type;
+  typedef Teuchos::RCP<mat_type> mat_ptr;
 
-  void setParameterList (const Teuchos::RCP<Teuchos::ParameterList>& params) {
-    impl_.setParameterList (params);
+  void setParameterList(const Teuchos::RCP<Teuchos::ParameterList>& params) {
+    impl_.setParameterList(params);
   }
 
-  Teuchos::RCP<Teuchos::ParameterList> getNonconstParameterList () {
-    return impl_.getNonconstParameterList ();
+  Teuchos::RCP<Teuchos::ParameterList> getNonconstParameterList() {
+    return impl_.getNonconstParameterList();
   }
 
-  Teuchos::RCP<Teuchos::ParameterList> unsetParameterList () {
-    return impl_.unsetParameterList ();
+  Teuchos::RCP<Teuchos::ParameterList> unsetParameterList() {
+    return impl_.unsetParameterList();
   }
 
   /// \brief Default valid parameter list.
@@ -166,18 +163,16 @@ public:
   /// documentation, including TSQR implementation parameters.  Call
   /// getFastParameters() to get documented parameters for faster
   /// computation, possibly at the expense of accuracy and robustness.
-  TsqrOrthoManager (const Teuchos::RCP<Teuchos::ParameterList>& params,
-                    const std::string& label = "Belos") :
-    impl_ (params, label)
-  {}
+  TsqrOrthoManager(const Teuchos::RCP<Teuchos::ParameterList>& params,
+                   const std::string& label = "Belos")
+    : impl_(params, label) {}
 
   /// \brief Constructor (that sets default parameters).
   ///
   /// \param label [in] Label for timers.  This only matters if the
   ///   compile-time option for enabling timers is set.
-  TsqrOrthoManager (const std::string& label) :
-    impl_ (label)
-  {}
+  TsqrOrthoManager(const std::string& label)
+    : impl_(label) {}
 
   //! Destructor, declared virtual for safe inheritance.
   virtual ~TsqrOrthoManager() {}
@@ -204,44 +199,39 @@ public:
   ///   operator() are only valid views within the scope of the
   ///   function.  Your callback should not keep the views.
   void
-  setReorthogonalizationCallback (const Teuchos::RCP<ReorthogonalizationCallback<Scalar> >& callback)
-  {
-    impl_.setReorthogonalizationCallback (callback);
+  setReorthogonalizationCallback(const Teuchos::RCP<ReorthogonalizationCallback<Scalar> >& callback) {
+    impl_.setReorthogonalizationCallback(callback);
   }
 
-  void innerProd (const MV &X, const MV &Y, mat_type& Z) const {
-    return impl_.innerProd (X, Y, Z);
+  void innerProd(const MV& X, const MV& Y, mat_type& Z) const {
+    return impl_.innerProd(X, Y, Z);
   }
 
-  void norm (const MV& X, std::vector<magnitude_type>& normVec) const {
-    return impl_.norm (X, normVec);
+  void norm(const MV& X, std::vector<magnitude_type>& normVec) const {
+    return impl_.norm(X, normVec);
   }
 
   void
-  project (MV &X,
-           Teuchos::Array<mat_ptr> C,
-           Teuchos::ArrayView<Teuchos::RCP<const MV> > Q) const
-  {
-    return impl_.project (X, C, Q);
+  project(MV& X,
+          Teuchos::Array<mat_ptr> C,
+          Teuchos::ArrayView<Teuchos::RCP<const MV> > Q) const {
+    return impl_.project(X, C, Q);
   }
 
-  int
-  normalize (MV &X, mat_ptr B) const
-  {
-    return impl_.normalize (X, B);
+  int normalize(MV& X, mat_ptr B) const {
+    return impl_.normalize(X, B);
   }
 
-protected:
+ protected:
   virtual int
-  projectAndNormalizeImpl (MV &X,
-                           Teuchos::Array<mat_ptr> C,
-                           mat_ptr B,
-                           Teuchos::ArrayView<Teuchos::RCP<const MV> > Q) const
-  {
-    return impl_.projectAndNormalize (X, C, B, Q);
+  projectAndNormalizeImpl(MV& X,
+                          Teuchos::Array<mat_ptr> C,
+                          mat_ptr B,
+                          Teuchos::ArrayView<Teuchos::RCP<const MV> > Q) const {
+    return impl_.projectAndNormalize(X, C, B, Q);
   }
 
-public:
+ public:
   /// \brief Normalize X into Q*B, overwriting X with invalid values.
   ///
   /// We expose this interface to applications because TSQR is not
@@ -258,10 +248,8 @@ public:
   ///
   /// \note Q must have at least as many columns as X.  It may have
   ///   more columns than X; those columns are ignored.
-  int
-  normalizeOutOfPlace (MV& X, MV& Q, mat_ptr B) const
-  {
-    return impl_.normalizeOutOfPlace (X, Q, B);
+  int normalizeOutOfPlace(MV& X, MV& Q, mat_ptr B) const {
+    return impl_.normalizeOutOfPlace(X, Q, B);
   }
 
   /// \brief Project and normalize X_in into X_out; overwrite X_in.
@@ -284,22 +272,20 @@ public:
   ///
   /// \note We expose this interface to applications for the same
   ///   reason that we expose normalizeOutOfPlace().
-  int
-  projectAndNormalizeOutOfPlace (MV& X_in,
-                                 MV& X_out,
-                                 Teuchos::Array<mat_ptr> C,
-                                 mat_ptr B,
-                                 Teuchos::ArrayView<Teuchos::RCP<const MV> > Q) const
-  {
-    return impl_.projectAndNormalizeOutOfPlace (X_in, X_out, C, B, Q);
+  int projectAndNormalizeOutOfPlace(MV& X_in,
+                                    MV& X_out,
+                                    Teuchos::Array<mat_ptr> C,
+                                    mat_ptr B,
+                                    Teuchos::ArrayView<Teuchos::RCP<const MV> > Q) const {
+    return impl_.projectAndNormalizeOutOfPlace(X_in, X_out, C, B, Q);
   }
 
-  magnitude_type orthonormError (const MV &X) const {
-    return impl_.orthonormError (X);
+  magnitude_type orthonormError(const MV& X) const {
+    return impl_.orthonormError(X);
   }
 
-  magnitude_type orthogError (const MV &X1, const MV &X2) const {
-    return impl_.orthogError (X1, X2);
+  magnitude_type orthogError(const MV& X1, const MV& X2) const {
+    return impl_.orthogError(X1, X2);
   }
 
   /// Set the label for (the timers for) this orthogonalization
@@ -309,13 +295,13 @@ public:
   ///
   /// \note Belos::OrthoManager wants this virtual function to be
   ///   implemented; Anasazi::OrthoManager does not.
-  void setLabel (const std::string& label) {
-    impl_.setLabel (label);
+  void setLabel(const std::string& label) {
+    impl_.setLabel(label);
   }
 
   const std::string& getLabel() const { return impl_.getLabel(); }
 
-private:
+ private:
   /// \brief The implementation of TSQR.
   ///
   /// The object is delcared "mutable" because it has internal
@@ -326,7 +312,6 @@ private:
   //! Label for timers (if timers are enabled at compile time).
   std::string label_;
 };
-
 
 /// \class TsqrMatOrthoManager
 /// \brief MatOrthoManager subclass using TSQR or DGKS
@@ -341,12 +326,10 @@ private:
 /// TSQR uses multivector scratch space.  However, scratch space
 /// initialization is "lazy," so scratch space will not be allocated
 /// if TSQR is not used.
-template<class Scalar, class MV, class OP, class DM>
-class TsqrMatOrthoManager :
-    public MatOrthoManager<Scalar, MV, OP, DM>,
-    public OutOfPlaceNormalizerMixin<Scalar, MV, DM>
-{
-public:
+template <class Scalar, class MV, class OP, class DM>
+class TsqrMatOrthoManager : public MatOrthoManager<Scalar, MV, OP, DM>,
+                            public OutOfPlaceNormalizerMixin<Scalar, MV, DM> {
+ public:
   typedef Scalar scalar_type;
   typedef typename Teuchos::ScalarTraits<Scalar>::magnitudeType magnitude_type;
   //! Multivector type with which this class was specialized
@@ -355,9 +338,9 @@ public:
   typedef OP operator_type;
 
   typedef DM mat_type;
-  typedef Teuchos::RCP<mat_type>                  mat_ptr;
+  typedef Teuchos::RCP<mat_type> mat_ptr;
 
-private:
+ private:
   /// \typedef base_type
   ///
   /// This will be used to help C++ resolve getOp().  We can't call
@@ -380,7 +363,7 @@ private:
   /// \brief Traits class for the multivector type
   typedef MultiVecTraits<Scalar, MV, DM> MVT;
 
-public:
+ public:
   /// \brief Constructor (that sets user-specified parameters).
   ///
   /// \param label [in] Label for timers.  This only matters if the
@@ -401,12 +384,12 @@ public:
   /// getFastParameters() to get documented parameters for faster
   /// computation, possibly at the expense of accuracy and
   /// robustness.
-  TsqrMatOrthoManager (const Teuchos::RCP<Teuchos::ParameterList>& params,
-                       const std::string& label = "Belos",
-                       Teuchos::RCP<const OP> Op = Teuchos::null) :
-    MatOrthoManager<Scalar, MV, OP, DM> (Op),
-    tsqr_ (params, label),
-    pDgks_ (Teuchos::null) // Initialized lazily
+  TsqrMatOrthoManager(const Teuchos::RCP<Teuchos::ParameterList>& params,
+                      const std::string& label  = "Belos",
+                      Teuchos::RCP<const OP> Op = Teuchos::null)
+    : MatOrthoManager<Scalar, MV, OP, DM>(Op)
+    , tsqr_(params, label)
+    , pDgks_(Teuchos::null)  // Initialized lazily
   {}
 
   /// \brief Constructor (that sets default parameters).
@@ -417,11 +400,11 @@ public:
   ///
   /// \param label [in] Label for timers.  This only matters if the
   ///   compile-time option for enabling timers is set.
-  TsqrMatOrthoManager (const std::string& label = "Belos",
-                       Teuchos::RCP<const OP> Op = Teuchos::null) :
-    MatOrthoManager<Scalar, MV, OP, DM> (Op),
-    tsqr_ (label),
-    pDgks_ (Teuchos::null) // Initialized lazily
+  TsqrMatOrthoManager(const std::string& label  = "Belos",
+                      Teuchos::RCP<const OP> Op = Teuchos::null)
+    : MatOrthoManager<Scalar, MV, OP, DM>(Op)
+    , tsqr_(label)
+    , pDgks_(Teuchos::null)  // Initialized lazily
   {}
 
   //! Destructor (declared virtual for memory safety of derived classes).
@@ -435,7 +418,7 @@ public:
   /// \note TSQR implementation configuration options are stored
   ///   under "TSQR implementation" as a sublist.
   Teuchos::RCP<const Teuchos::ParameterList> getValidParameters() const {
-    return tsqr_.getValidParameters ();
+    return tsqr_.getValidParameters();
   }
 
   /// \brief Get "fast" parameters for TsqrMatOrthoManager.
@@ -448,199 +431,185 @@ public:
   /// \note TSQR implementation configuration options are stored
   ///   under "TSQR implementation" as a sublist.
   Teuchos::RCP<const Teuchos::ParameterList> getFastParameters() {
-    return tsqr_.getFastParameters ();
+    return tsqr_.getFastParameters();
   }
 
-  void setParameterList (const Teuchos::RCP<Teuchos::ParameterList>& params) {
-    tsqr_.setParameterList (params);
+  void setParameterList(const Teuchos::RCP<Teuchos::ParameterList>& params) {
+    tsqr_.setParameterList(params);
   }
 
-  const std::string& getLabel() const { return tsqr_.getLabel (); }
+  const std::string& getLabel() const { return tsqr_.getLabel(); }
 
   void
-  setOp (Teuchos::RCP<const OP> Op)
-  {
+  setOp(Teuchos::RCP<const OP> Op) {
     // We override the base class' setOp() so that the
     // DGKSOrthoManager instance gets the new op.
     //
     // The base_type notation helps C++ resolve the name for a
     // member function of a templated base class.
-    base_type::setOp (Op); // base class gets a copy of the Op too
+    base_type::setOp(Op);  // base class gets a copy of the Op too
 
-    if (! Op.is_null()) {
-      ensureDgksInit (); // Make sure the DGKS object has been initialized
-      pDgks_->setOp (Op);
+    if (!Op.is_null()) {
+      ensureDgksInit();  // Make sure the DGKS object has been initialized
+      pDgks_->setOp(Op);
     }
   }
 
-  Teuchos::RCP<const OP> getOp () const {
+  Teuchos::RCP<const OP> getOp() const {
     // The base_type notation helps C++ resolve the name for a
     // member function of a templated base class.
     return base_type::getOp();
   }
 
   void
-  project (MV &X,
-           Teuchos::RCP<MV> MX,
-           Teuchos::Array<mat_ptr> C,
-           Teuchos::ArrayView<Teuchos::RCP<const MV> > Q) const
-  {
+  project(MV& X,
+          Teuchos::RCP<MV> MX,
+          Teuchos::Array<mat_ptr> C,
+          Teuchos::ArrayView<Teuchos::RCP<const MV> > Q) const {
     if (getOp().is_null()) {
-      tsqr_.project (X, C, Q);
-      if (! MX.is_null()) {
+      tsqr_.project(X, C, Q);
+      if (!MX.is_null()) {
         // MX gets a copy of X; M is the identity operator.
-        MVT::Assign (X, *MX);
+        MVT::Assign(X, *MX);
       }
     } else {
-      ensureDgksInit ();
-      pDgks_->project (X, MX, C, Q);
+      ensureDgksInit();
+      pDgks_->project(X, MX, C, Q);
     }
   }
 
   void
-  project (MV &X,
-           Teuchos::Array<mat_ptr> C,
-           Teuchos::ArrayView<Teuchos::RCP<const MV> > Q) const
-  {
-    project (X, Teuchos::null, C, Q);
+  project(MV& X,
+          Teuchos::Array<mat_ptr> C,
+          Teuchos::ArrayView<Teuchos::RCP<const MV> > Q) const {
+    project(X, Teuchos::null, C, Q);
   }
 
-  int
-  normalize (MV& X, Teuchos::RCP<MV> MX, mat_ptr B) const
-  {
+  int normalize(MV& X, Teuchos::RCP<MV> MX, mat_ptr B) const {
     if (getOp().is_null()) {
-      const int rank = tsqr_.normalize (X, B);
-      if (! MX.is_null()) {
+      const int rank = tsqr_.normalize(X, B);
+      if (!MX.is_null()) {
         // MX gets a copy of X; M is the identity operator.
-        MVT::Assign (X, *MX);
+        MVT::Assign(X, *MX);
       }
       return rank;
     } else {
-      ensureDgksInit ();
-      return pDgks_->normalize (X, MX, B);
+      ensureDgksInit();
+      return pDgks_->normalize(X, MX, B);
     }
   }
 
-  int normalize (MV& X, mat_ptr B) const {
-    return normalize (X, Teuchos::null, B);
+  int normalize(MV& X, mat_ptr B) const {
+    return normalize(X, Teuchos::null, B);
   }
 
   // Attempted fix for a warning about hiding
   // OrthoManager::projectAndNormalize(). Unfortunately, this fix turns out
   // to produce a compilation error with cray++, see bug #6129,
   // <https://software.sandia.gov/bugzilla/show_bug.cgi?id=6129>.
-  //using Belos::OrthoManager<Scalar, MV>::projectAndNormalize;
+  // using Belos::OrthoManager<Scalar, MV>::projectAndNormalize;
 
-protected:
+ protected:
   virtual int
-  projectAndNormalizeWithMxImpl (MV &X,
-                                 Teuchos::RCP<MV> MX,
-                                 Teuchos::Array<mat_ptr> C,
-                                 mat_ptr B,
-                                 Teuchos::ArrayView<Teuchos::RCP<const MV> > Q) const
-  {
+  projectAndNormalizeWithMxImpl(MV& X,
+                                Teuchos::RCP<MV> MX,
+                                Teuchos::Array<mat_ptr> C,
+                                mat_ptr B,
+                                Teuchos::ArrayView<Teuchos::RCP<const MV> > Q) const {
     if (getOp().is_null()) {
-      const int rank = tsqr_.projectAndNormalize (X, C, B, Q);
-      if (! MX.is_null()) {
+      const int rank = tsqr_.projectAndNormalize(X, C, B, Q);
+      if (!MX.is_null()) {
         // MX gets a copy of X; M is the identity operator.
-        MVT::Assign (X, *MX);
+        MVT::Assign(X, *MX);
       }
       return rank;
     } else {
-      ensureDgksInit ();
-      return pDgks_->projectAndNormalize (X, MX, C, B, Q);
+      ensureDgksInit();
+      return pDgks_->projectAndNormalize(X, MX, C, B, Q);
     }
   }
 
-public:
-  int
-  normalizeOutOfPlace (MV& X, MV& Q, mat_ptr B) const
-  {
+ public:
+  int normalizeOutOfPlace(MV& X, MV& Q, mat_ptr B) const {
     if (getOp().is_null()) {
-      return tsqr_.normalizeOutOfPlace (X, Q, B);
+      return tsqr_.normalizeOutOfPlace(X, Q, B);
     } else {
       // DGKS normalizes in place, so we have to copy.
-      ensureDgksInit ();
-      const int rank = pDgks_->normalize (X, B);
-      MVT::Assign (X, Q);
+      ensureDgksInit();
+      const int rank = pDgks_->normalize(X, B);
+      MVT::Assign(X, Q);
       return rank;
     }
   }
 
-  int
-  projectAndNormalizeOutOfPlace (MV& X_in,
-                                 MV& X_out,
-                                 Teuchos::Array<mat_ptr> C,
-                                 mat_ptr B,
-                                 Teuchos::ArrayView<Teuchos::RCP<const MV> > Q) const
-  {
+  int projectAndNormalizeOutOfPlace(MV& X_in,
+                                    MV& X_out,
+                                    Teuchos::Array<mat_ptr> C,
+                                    mat_ptr B,
+                                    Teuchos::ArrayView<Teuchos::RCP<const MV> > Q) const {
     using Teuchos::null;
 
     if (getOp().is_null()) {
-      return tsqr_.projectAndNormalizeOutOfPlace (X_in, X_out, C, B, Q);
+      return tsqr_.projectAndNormalizeOutOfPlace(X_in, X_out, C, B, Q);
     } else {
       // DGKS normalizes in place, so we have to copy.
-      ensureDgksInit ();
-      const int rank = pDgks_->projectAndNormalize (X_in, null, C, B, Q);
-      MVT::Assign (X_in, X_out);
+      ensureDgksInit();
+      const int rank = pDgks_->projectAndNormalize(X_in, null, C, B, Q);
+      MVT::Assign(X_in, X_out);
       return rank;
     }
   }
 
   magnitude_type
-  orthonormError (const MV &X, Teuchos::RCP<const MV> MX) const
-  {
+  orthonormError(const MV& X, Teuchos::RCP<const MV> MX) const {
     if (getOp().is_null()) {
-      return tsqr_.orthonormError (X); // Ignore MX
+      return tsqr_.orthonormError(X);  // Ignore MX
     } else {
-      ensureDgksInit ();
-      return pDgks_->orthonormError (X, MX);
+      ensureDgksInit();
+      return pDgks_->orthonormError(X, MX);
     }
   }
 
-  magnitude_type orthonormError (const MV &X) const {
-    return orthonormError (X, Teuchos::null);
+  magnitude_type orthonormError(const MV& X) const {
+    return orthonormError(X, Teuchos::null);
   }
 
-  magnitude_type orthogError (const MV &X1, const MV &X2) const {
-    return orthogError (X1, Teuchos::null, X2);
+  magnitude_type orthogError(const MV& X1, const MV& X2) const {
+    return orthogError(X1, Teuchos::null, X2);
   }
 
   magnitude_type
-  orthogError (const MV &X1,
-               Teuchos::RCP<const MV> MX1,
-               const MV &X2) const
-  {
-    if (getOp ().is_null ()) {
+  orthogError(const MV& X1,
+              Teuchos::RCP<const MV> MX1,
+              const MV& X2) const {
+    if (getOp().is_null()) {
       // Ignore MX1, since we don't need to write to it.
-      return tsqr_.orthogError (X1, X2);
+      return tsqr_.orthogError(X1, X2);
     } else {
-      ensureDgksInit ();
-      return pDgks_->orthogError (X1, MX1, X2);
+      ensureDgksInit();
+      return pDgks_->orthogError(X1, MX1, X2);
     }
   }
 
   void
-  setLabel (const std::string& label)
-  {
-    tsqr_.setLabel (label);
+  setLabel(const std::string& label) {
+    tsqr_.setLabel(label);
 
     // Make sure DGKS gets the new label, if it's initialized.
     // Otherwise, it will get the new label on initialization.
-    if (! pDgks_.is_null ()) {
-      pDgks_->setLabel (label);
+    if (!pDgks_.is_null()) {
+      pDgks_->setLabel(label);
     }
   }
 
-private:
+ private:
   //! Ensure that the DGKSOrthoManager instance is initialized.
   void
-  ensureDgksInit () const
-  {
+  ensureDgksInit() const {
     // NOTE (mfh 11 Jan 2011) DGKS has a parameter that needs to be
     // set.  For now, we just use the default value of the parameter.
-    if (pDgks_.is_null ()) {
-      pDgks_ = Teuchos::rcp (new dgks_type (getLabel (), getOp ()));
+    if (pDgks_.is_null()) {
+      pDgks_ = Teuchos::rcp(new dgks_type(getLabel(), getOp()));
     }
   }
 
@@ -661,6 +630,6 @@ private:
   mutable Teuchos::RCP<dgks_type> pDgks_;
 };
 
-} // namespace Belos
+}  // namespace Belos
 
-#endif // __BelosTsqrOrthoManager_hpp
+#endif  // __BelosTsqrOrthoManager_hpp

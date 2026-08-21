@@ -21,58 +21,58 @@
 
 namespace Belos {
 
-  //! @name CGIteration Structures 
-  //@{ 
-  
-  /** \brief Structure to contain pointers to CGIteration state variables.
-   *
-   * This struct is utilized by StochasticCGIteration::initialize() and StochasticCGIteration::getState().
-   */
-  template <class ScalarType, class MV>
-  struct StochasticCGIterationState {
+//! @name CGIteration Structures
+//@{
 
-    /*! \brief The current residual. */
-    Teuchos::RCP<const MV> R;
+/** \brief Structure to contain pointers to CGIteration state variables.
+ *
+ * This struct is utilized by StochasticCGIteration::initialize() and StochasticCGIteration::getState().
+ */
+template <class ScalarType, class MV>
+struct StochasticCGIterationState {
+  /*! \brief The current residual. */
+  Teuchos::RCP<const MV> R;
 
-    /*! \brief The current preconditioned residual. */
-    Teuchos::RCP<const MV> Z;
+  /*! \brief The current preconditioned residual. */
+  Teuchos::RCP<const MV> Z;
 
-    /*! \brief The current decent direction vector */
-    Teuchos::RCP<const MV> P;
+  /*! \brief The current decent direction vector */
+  Teuchos::RCP<const MV> P;
 
-    /*! \brief The matrix A applied to current decent direction vector */
-    Teuchos::RCP<const MV> AP;
-    
-    /*! \brief The current stochastic recurrence vector */
-    Teuchos::RCP<const MV> Y;
+  /*! \brief The matrix A applied to current decent direction vector */
+  Teuchos::RCP<const MV> AP;
 
-    StochasticCGIterationState() : R(Teuchos::null), Z(Teuchos::null), 
-			 P(Teuchos::null), AP(Teuchos::null), Y(Teuchos::null)
-    {}
-  };
+  /*! \brief The current stochastic recurrence vector */
+  Teuchos::RCP<const MV> Y;
 
-template<class ScalarType, class MV, class OP, class DM>
-class StochasticCGIteration : virtual public Iteration<ScalarType,MV,OP,DM> {
+  StochasticCGIterationState()
+    : R(Teuchos::null)
+    , Z(Teuchos::null)
+    , P(Teuchos::null)
+    , AP(Teuchos::null)
+    , Y(Teuchos::null) {}
+};
 
-  public:
-
+template <class ScalarType, class MV, class OP, class DM>
+class StochasticCGIteration : virtual public Iteration<ScalarType, MV, OP, DM> {
+ public:
   //! @name State methods
-  //@{ 
+  //@{
   /*! \brief Initialize the solver to an iterate, providing a complete state.
    *
-   * The %StochasticCGIteration contains a certain amount of state, consisting of the current 
+   * The %StochasticCGIteration contains a certain amount of state, consisting of the current
    * residual, preconditioned residual, and decent direction.
    *
    * initialize() gives the user the opportunity to manually set these,
    * although only the current unpreconditioned residual is required.
    *
-   * \post 
+   * \post
    * <li>isInitialized() == \c true (see post-conditions of isInitialize())
    *
-   * \note For any pointer in \c newstate which directly points to the multivectors in 
+   * \note For any pointer in \c newstate which directly points to the multivectors in
    * the solver, the data is not copied.
    */
-  virtual void initializeCG(StochasticCGIterationState<ScalarType,MV>& newstate) = 0;
+  virtual void initializeCG(StochasticCGIterationState<ScalarType, MV>& newstate) = 0;
 
   /*! \brief Get the current state of the linear solver.
    *
@@ -80,11 +80,10 @@ class StochasticCGIteration : virtual public Iteration<ScalarType,MV,OP,DM> {
    *
    * \returns A StochasticCGIterationState object containing const pointers to the current solver state.
    */
-  virtual StochasticCGIterationState<ScalarType,MV> getState() const = 0;
+  virtual StochasticCGIterationState<ScalarType, MV> getState() const = 0;
   //@}
-
 };
 
-} // end Belos namespace
+}  // namespace Belos
 
 #endif /* BELOS_STOCHASTIC_CG_ITERATION_HPP */

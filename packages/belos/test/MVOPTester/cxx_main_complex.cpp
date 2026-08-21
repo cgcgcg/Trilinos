@@ -31,14 +31,13 @@
 
 using namespace Teuchos;
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
   bool ierr, gerr;
   gerr = true;
 
 #ifdef HAVE_MPI
   // Initialize MPI and setup an Epetra communicator
-  MPI_Init(&argc,&argv);
+  MPI_Init(&argc, &argv);
 #endif
 
   bool success = false;
@@ -50,18 +49,18 @@ int main(int argc, char *argv[])
 #else
     MyPID = 0;
 #endif
-    (void) MyPID; // forestall "set but not used" warnings
+    (void)MyPID;  // forestall "set but not used" warnings
 
     std::string filename("mhd1280b.cua");
 
     // number of global elements
     int blockSize = 5;
 
-    CommandLineProcessor cmdp(false,true);
-    cmdp.setOption("verbose","quiet",&verbose,"Print messages and results.");
-    cmdp.setOption("debug","quiet",&verbose,"Print messages and results.");
-    cmdp.setOption("filename",&filename,"Filename for Harwell-Boeing test matrix.");
-    if (cmdp.parse(argc,argv) != CommandLineProcessor::PARSE_SUCCESSFUL) {
+    CommandLineProcessor cmdp(false, true);
+    cmdp.setOption("verbose", "quiet", &verbose, "Print messages and results.");
+    cmdp.setOption("debug", "quiet", &verbose, "Print messages and results.");
+    cmdp.setOption("filename", &filename, "Filename for Harwell-Boeing test matrix.");
+    if (cmdp.parse(argc, argv) != CommandLineProcessor::PARSE_SUCCESSFUL) {
 #ifdef HAVE_MPI
       MPI_Finalize();
 #endif
@@ -73,27 +72,26 @@ int main(int argc, char *argv[])
     // Issue several useful typedefs;
     typedef Belos::MultiVec<ST> MV;
     typedef Belos::Operator<ST> OP;
-    typedef Belos::MultiVecTraits<ST,MV> MVT;
-    typedef Teuchos::SerialDenseMatrix<int,ST> TDM;
+    typedef Belos::MultiVecTraits<ST, MV> MVT;
+    typedef Teuchos::SerialDenseMatrix<int, ST> TDM;
 
     // Create an output manager to handle the I/O from the solver
-    RCP<Belos::OutputManager<ST> > MyOM
-      = rcp( new Belos::OutputManager<ST>() );
+    RCP<Belos::OutputManager<ST> > MyOM = rcp(new Belos::OutputManager<ST>());
     if (verbose) {
-      MyOM->setVerbosity( Belos::Warnings );
+      MyOM->setVerbosity(Belos::Warnings);
     }
 
     // Get the data from the HB file
     int info;
-    int dim,dim2,nnz;
+    int dim, dim2, nnz;
     double *dvals;
-    int *colptr,*rowind;
-    nnz = -1;
-    info = Tpetra::HB::readHB_newmat_double(filename.c_str(),&dim,&dim2,&nnz,&colptr,&rowind,&dvals);
+    int *colptr, *rowind;
+    nnz  = -1;
+    info = Tpetra::HB::readHB_newmat_double(filename.c_str(), &dim, &dim2, &nnz, &colptr, &rowind, &dvals);
     if (info == 0 || nnz < 0) {
       MyOM->stream(Belos::Warnings)
-        << "Warning reading '" << filename << "'" << std::endl
-        << "End Result: TEST FAILED" << std::endl;
+          << "Warning reading '" << filename << "'" << std::endl
+          << "End Result: TEST FAILED" << std::endl;
 #ifdef HAVE_MPI
       MPI_Finalize();
 #endif
@@ -101,69 +99,64 @@ int main(int argc, char *argv[])
     }
     // Convert interleaved doubles to std::complex values
     std::vector<ST> cvals(nnz);
-    for (int ii=0; ii<nnz; ii++) {
-      cvals[ii] = ST(dvals[ii*2],dvals[ii*2+1]);
+    for (int ii = 0; ii < nnz; ii++) {
+      cvals[ii] = ST(dvals[ii * 2], dvals[ii * 2 + 1]);
     }
     // Build the problem matrix
-    RCP< MyBetterOperator<ST> > A1
-      = rcp( new MyBetterOperator<ST>(dim,colptr,nnz,rowind,&cvals[0]) );
-
+    RCP<MyBetterOperator<ST> > A1 = rcp(new MyBetterOperator<ST>(dim, colptr, nnz, rowind, &cvals[0]));
 
     // Create a MyMultiVec for cloning
     std::vector<ScalarTraits<ST>::magnitudeType> v(blockSize);
-    RCP< MyMultiVec<ST> > ivec = rcp( new MyMultiVec<ST>(dim,blockSize) );
-    MVT::MvNorm(*ivec,v);
+    RCP<MyMultiVec<ST> > ivec = rcp(new MyMultiVec<ST>(dim, blockSize));
+    MVT::MvNorm(*ivec, v);
 
     // Create a MyOperator for testing against
-    RCP<MyOperator<ST, TDM> > A2 = rcp( new MyOperator<ST, TDM>(dim) );
+    RCP<MyOperator<ST, TDM> > A2 = rcp(new MyOperator<ST, TDM>(dim));
 
     // test the multivector and its adapter
-    ierr = Belos::TestMultiVecTraits<ST,MV,TDM>(MyOM,ivec);
+    ierr = Belos::TestMultiVecTraits<ST, MV, TDM>(MyOM, ivec);
     gerr &= ierr;
     if (ierr) {
       MyOM->print(Belos::Warnings, "*** MyMultiVec<std::complex> PASSED TestMultiVecTraits()\n");
-    }
-    else {
+    } else {
       MyOM->print(Belos::Warnings, "*** MyMultiVec<std::complex> FAILED TestMultiVecTraits() ***\n\n");
     }
 
     // test the operator and its adapter
-    ierr = Belos::TestOperatorTraits<ST,MV,OP>(MyOM,ivec,A2);
+    ierr = Belos::TestOperatorTraits<ST, MV, OP>(MyOM, ivec, A2);
     gerr &= ierr;
     if (ierr) {
-      MyOM->print(Belos::Warnings,"*** MyOperator<std::complex> PASSED TestOperatorTraits()\n");
-    }
-    else {
-      MyOM->print(Belos::Warnings,"*** MyOperator<std::complex> FAILED TestOperatorTraits() ***\n\n");
+      MyOM->print(Belos::Warnings, "*** MyOperator<std::complex> PASSED TestOperatorTraits()\n");
+    } else {
+      MyOM->print(Belos::Warnings, "*** MyOperator<std::complex> FAILED TestOperatorTraits() ***\n\n");
     }
 
     // test the operator and its adapter
-    ierr = Belos::TestOperatorTraits<ST,MV,OP>(MyOM,ivec,A1);
+    ierr = Belos::TestOperatorTraits<ST, MV, OP>(MyOM, ivec, A1);
     gerr &= ierr;
     if (ierr) {
-      MyOM->print(Belos::Warnings,"*** MyBetterOperator<std::complex> PASSED TestOperatorTraits()\n");
-    }
-    else {
-      MyOM->print(Belos::Warnings,"*** MyBetterOperator<std::complex> FAILED TestOperatorTraits() ***\n\n");
+      MyOM->print(Belos::Warnings, "*** MyBetterOperator<std::complex> PASSED TestOperatorTraits()\n");
+    } else {
+      MyOM->print(Belos::Warnings, "*** MyBetterOperator<std::complex> FAILED TestOperatorTraits() ***\n\n");
     }
 
     // Clean up.
-    free( dvals );
-    free( colptr );
-    free( rowind );
+    free(dvals);
+    free(colptr);
+    free(rowind);
 
     success = gerr;
     if (success) {
-      MyOM->print(Belos::Warnings,"End Result: TEST PASSED\n");
+      MyOM->print(Belos::Warnings, "End Result: TEST PASSED\n");
     } else {
-      MyOM->print(Belos::Warnings,"End Result: TEST FAILED\n");
+      MyOM->print(Belos::Warnings, "End Result: TEST FAILED\n");
     }
   }
   TEUCHOS_STANDARD_CATCH_STATEMENTS(verbose, std::cerr, success);
 
 #ifdef HAVE_MPI
-    MPI_Finalize();
+  MPI_Finalize();
 #endif
 
-  return ( success ? EXIT_SUCCESS : EXIT_FAILURE );
+  return (success ? EXIT_SUCCESS : EXIT_FAILURE);
 }

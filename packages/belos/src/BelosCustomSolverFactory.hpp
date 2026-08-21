@@ -18,16 +18,16 @@
 namespace Teuchos {
 // Forward declaration
 class ParameterList;
-} // namespace Teuchos
-#endif // DOXYGEN_SHOULD_SKIP_THIS
+}  // namespace Teuchos
+#endif  // DOXYGEN_SHOULD_SKIP_THIS
 
 namespace Belos {
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 // Forward declaration
-template<class Scalar, class MV, class OP, class DM>
+template <class Scalar, class MV, class OP, class DM>
 class SolverManager;
-#endif // DOXYGEN_SHOULD_SKIP_THIS
+#endif  // DOXYGEN_SHOULD_SKIP_THIS
 
 /// \brief Interface for custom Belos solver factories
 ///
@@ -45,9 +45,9 @@ class SolverManager;
 ///
 /// For a test and example of how to do this (with a trivial solver),
 /// see <tt>Trilinos/packages/belos/tpetra/test/CustomSolverFactory.cpp</tt>.
-template<class Scalar, class MV, class OP, class DM = DefaultDenseMatrix<int,Scalar>>
+template <class Scalar, class MV, class OP, class DM = DefaultDenseMatrix<int, Scalar>>
 class CustomSolverFactory {
-public:
+ public:
   /// \brief Return an instance of the specified solver, or
   ///   Teuchos::null if this factory does not provide the requested
   ///   solver.
@@ -78,31 +78,31 @@ public:
   /// Teuchos::RCP<Teuchos::ParameterList>.  We allow a null parameter
   /// list only for convenience, and will use default parameter values
   /// in that case.
-  virtual Teuchos::RCP<SolverManager<Scalar, MV, OP, DM> >
-  getSolver (const std::string& solverName,
-             const Teuchos::RCP<Teuchos::ParameterList>& solverParams) = 0;
+  virtual Teuchos::RCP<SolverManager<Scalar, MV, OP, DM>>
+  getSolver(const std::string& solverName,
+            const Teuchos::RCP<Teuchos::ParameterList>& solverParams) = 0;
 
   /// \brief Number of supported solvers.
   ///
   /// This may differ from the number of supported solver
   /// <i>names</i>, since we may accept multiple names ("aliases") for
   /// some solvers.
-  virtual int numSupportedSolvers () const = 0;
+  virtual int numSupportedSolvers() const = 0;
 
   /// \brief List of supported solver names.
   ///
   /// The length of this list may differ from the number of supported
   /// solvers, since we may accept multiple names ("aliases") for some
   /// solvers.
-  virtual std::vector<std::string> supportedSolverNames () const = 0;
+  virtual std::vector<std::string> supportedSolverNames() const = 0;
 
   //! Whether the given solver name names a supported solver.
-  virtual bool isSupported (const std::string& solverName) const = 0;
+  virtual bool isSupported(const std::string& solverName) const = 0;
 
   //! Destructor (virtual, for safety of derived classes).
-  virtual ~CustomSolverFactory () {}
+  virtual ~CustomSolverFactory() {}
 };
 
-} // namespace Belos
+}  // namespace Belos
 
-#endif // BELOSSOLVERFACTORYBASE_HPP
+#endif  // BELOSSOLVERFACTORYBASE_HPP

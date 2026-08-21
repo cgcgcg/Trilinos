@@ -29,18 +29,17 @@
 
 namespace Belos {
 
-  /*!
-    \class StatusTestUserOutput
-    \brief A special StatusTest for printing other status tests in a simple format.
+/*!
+  \class StatusTestUserOutput
+  \brief A special StatusTest for printing other status tests in a simple format.
 
-  */
+*/
 template <class ScalarType, class MV, class OP, class DM = Belos::DefaultDenseMatrix<int, ScalarType>>
-class StatusTestUserOutput : public StatusTestOutput<ScalarType,MV,OP,DM> {
-
-  typedef MultiVecTraits<ScalarType,MV,DM> MVT;
-  typedef Belos::StatusTestCombo<ScalarType,MV,OP,DM>  StatusTestCombo_t;
-  typedef Belos::StatusTestResNorm<ScalarType,MV,OP,DM>  StatusTestResNorm_t;
-  typedef Belos::StatusTestMaxIters<ScalarType,MV,OP,DM>  StatusTestMaxIters_t;
+class StatusTestUserOutput : public StatusTestOutput<ScalarType, MV, OP, DM> {
+  typedef MultiVecTraits<ScalarType, MV, DM> MVT;
+  typedef Belos::StatusTestCombo<ScalarType, MV, OP, DM> StatusTestCombo_t;
+  typedef Belos::StatusTestResNorm<ScalarType, MV, OP, DM> StatusTestResNorm_t;
+  typedef Belos::StatusTestMaxIters<ScalarType, MV, OP, DM> StatusTestMaxIters_t;
 
  public:
   //! @name Constructors/destructors
@@ -61,31 +60,30 @@ class StatusTestUserOutput : public StatusTestOutput<ScalarType,MV,OP,DM> {
    * @param[in] printStates A combination of ::StatusType values for which the output may be printed. Default: ::Passed (attempt to print whenever checkStatus() will return ::Passed)
    *
    */
-  StatusTestUserOutput(const Teuchos::RCP<OutputManager<ScalarType> > &printer,
-      Teuchos::RCP<StatusTest<ScalarType,MV,OP,DM> > test,
-      Teuchos::RCP<std::map<std::string,Teuchos::RCP<StatusTest<ScalarType,MV,OP,DM> > > > taggedTests,
-      int mod = 1,
-      int printStates = Passed)
-    : printer_(printer),
-      taggedTests_(taggedTests),
-      state_(Undefined),
-      headerPrinted_(false),
-      stateTest_(printStates),
-      modTest_(mod),
-      lastNumIters_(-1),
-      comboType_(0),
-      blockSize_(1),
-      currNumRHS_(0),
-      currLSNum_(0),
-      numLSDgts_(1),
-      numIterDgts_(1)
-    {
-      // Set the input test.
-      setChild(test);
-    }
+  StatusTestUserOutput(const Teuchos::RCP<OutputManager<ScalarType>>& printer,
+                       Teuchos::RCP<StatusTest<ScalarType, MV, OP, DM>> test,
+                       Teuchos::RCP<std::map<std::string, Teuchos::RCP<StatusTest<ScalarType, MV, OP, DM>>>> taggedTests,
+                       int mod         = 1,
+                       int printStates = Passed)
+    : printer_(printer)
+    , taggedTests_(taggedTests)
+    , state_(Undefined)
+    , headerPrinted_(false)
+    , stateTest_(printStates)
+    , modTest_(mod)
+    , lastNumIters_(-1)
+    , comboType_(0)
+    , blockSize_(1)
+    , currNumRHS_(0)
+    , currLSNum_(0)
+    , numLSDgts_(1)
+    , numIterDgts_(1) {
+    // Set the input test.
+    setChild(test);
+  }
 
   //! Destructor
-  virtual ~StatusTestUserOutput() {};
+  virtual ~StatusTestUserOutput(){};
   //@}
 
   //! @name Status methods
@@ -107,32 +105,30 @@ class StatusTestUserOutput : public StatusTestOutput<ScalarType,MV,OP,DM> {
 
     \return ::StatusType indicating whether the underlying test passed or failed.
   */
-  StatusType checkStatus( Iteration<ScalarType,MV,OP,DM>* solver )
-  {
-    TEUCHOS_TEST_FOR_EXCEPTION(iterTest_ == Teuchos::null,StatusTestError,"StatusTestUserOutput::checkStatus():  iteration test pointer is null.");
-    TEUCHOS_TEST_FOR_EXCEPTION(resTestVec_.size() == 0,StatusTestError,"StatusTestUserOutput::checkStatus():  residual test pointer is null.");
+  StatusType checkStatus(Iteration<ScalarType, MV, OP, DM>* solver) {
+    TEUCHOS_TEST_FOR_EXCEPTION(iterTest_ == Teuchos::null, StatusTestError, "StatusTestUserOutput::checkStatus():  iteration test pointer is null.");
+    TEUCHOS_TEST_FOR_EXCEPTION(resTestVec_.size() == 0, StatusTestError, "StatusTestUserOutput::checkStatus():  residual test pointer is null.");
     state_ = test_->checkStatus(solver);
 
     // Update some information for the header, if it has not printed or the linear system has changed.
-    LinearProblem<ScalarType,MV,OP,DM> currProb = solver->getProblem();
-    //if (!headerPrinted_ || currLSNum_ != currProb.getLSNumber()) {
+    LinearProblem<ScalarType, MV, OP, DM> currProb = solver->getProblem();
+    // if (!headerPrinted_ || currLSNum_ != currProb.getLSNumber()) {
     if (currLSNum_ != currProb.getLSNumber()) {
-      currLSNum_ = currProb.getLSNumber();
-      blockSize_ = solver->getBlockSize();
-      currIdx_ = currProb.getLSIndex();
-      currNumRHS_ = currIdx_.size();
-      numLSDgts_ = (int)std::floor((double)MVT::GetNumberVecs(*(currProb.getRHS())))+1;
-      numIterDgts_ = (int)std::floor(std::log10((double)iterTest_->getMaxIters()))+1;
+      currLSNum_   = currProb.getLSNumber();
+      blockSize_   = solver->getBlockSize();
+      currIdx_     = currProb.getLSIndex();
+      currNumRHS_  = currIdx_.size();
+      numLSDgts_   = (int)std::floor((double)MVT::GetNumberVecs(*(currProb.getRHS()))) + 1;
+      numIterDgts_ = (int)std::floor(std::log10((double)iterTest_->getMaxIters())) + 1;
     }
     // Print out current iteration information if it hasn't already been printed, or the status has changed
-    if (((iterTest_->getNumIters() % modTest_ == 0) && (iterTest_->getNumIters()!=lastNumIters_)) || (state_ == Passed)) {
+    if (((iterTest_->getNumIters() % modTest_ == 0) && (iterTest_->getNumIters() != lastNumIters_)) || (state_ == Passed)) {
       lastNumIters_ = iterTest_->getNumIters();
-      if ( (state_ & stateTest_) == state_) {
-        if ( printer_->isVerbosity(StatusTestDetails) ) {
-          print( printer_->stream(StatusTestDetails) );
-        }
-        else if ( printer_->isVerbosity(Debug) ) {
-          print( printer_->stream(Debug) );
+      if ((state_ & stateTest_) == state_) {
+        if (printer_->isVerbosity(StatusTestDetails)) {
+          print(printer_->stream(StatusTestDetails));
+        } else if (printer_->isVerbosity(Debug)) {
+          print(printer_->stream(Debug));
         }
       }
     }
@@ -146,13 +142,12 @@ class StatusTestUserOutput : public StatusTestOutput<ScalarType,MV,OP,DM> {
   }
   //@}
 
-
   //! @name Accessor methods
   //@{
 
   /*! \brief Set the output manager.
    */
-  void setOutputManager(const Teuchos::RCP<OutputManager<ScalarType> > &printer) { printer_ = printer; }
+  void setOutputManager(const Teuchos::RCP<OutputManager<ScalarType>>& printer) { printer_ = printer; }
 
   /*! \brief Set how often the child test is printed.
    */
@@ -162,19 +157,17 @@ class StatusTestUserOutput : public StatusTestOutput<ScalarType,MV,OP,DM> {
    *
    *  \note This also resets the test status to ::Undefined.
    */
-  void setChild(Teuchos::RCP<StatusTest<ScalarType,MV,OP,DM> > test) {
-
+  void setChild(Teuchos::RCP<StatusTest<ScalarType, MV, OP, DM>> test) {
     // First check to see if this test is a combination test
     Teuchos::RCP<StatusTestCombo_t> comboTest = Teuchos::rcp_dynamic_cast<StatusTestCombo_t>(test);
-    TEUCHOS_TEST_FOR_EXCEPTION(comboTest == Teuchos::null,StatusTestError,"StatusTestUserOutput::setChild: The parameter \"test\" must be a Belos::StatusTestCombo.");
-    std::vector<Teuchos::RCP<StatusTest<ScalarType,MV,OP,DM> > > tmpVec = comboTest->getStatusTests();
+    TEUCHOS_TEST_FOR_EXCEPTION(comboTest == Teuchos::null, StatusTestError, "StatusTestUserOutput::setChild: The parameter \"test\" must be a Belos::StatusTestCombo.");
+    std::vector<Teuchos::RCP<StatusTest<ScalarType, MV, OP, DM>>> tmpVec = comboTest->getStatusTests();
 
     // Get the number of tests.
     int numTests = tmpVec.size();
 
     // Find the maximum iteration and residual tests
-    for (int i=0; i<numTests; ++i) {
-
+    for (int i = 0; i < numTests; ++i) {
       // Check if this is a maximum iteration test.
       Teuchos::RCP<StatusTestMaxIters_t> tmpItrTest = Teuchos::rcp_dynamic_cast<StatusTestMaxIters_t>(tmpVec[i]);
       if (tmpItrTest != Teuchos::null) {
@@ -188,9 +181,9 @@ class StatusTestUserOutput : public StatusTestOutput<ScalarType,MV,OP,DM> {
       Teuchos::RCP<StatusTestResNorm_t> tmpResTest = Teuchos::rcp_dynamic_cast<StatusTestResNorm_t>(tmpVec[i]);
       // If the residual status test is a single test, put in the vector
       if (tmpResTest != Teuchos::null) {
-        resTestVec_.resize( 1 );
+        resTestVec_.resize(1);
         resTestVec_[0] = tmpResTest;
-        resTestNamesVec_.resize( 1 );
+        resTestNamesVec_.resize(1);
         resTestNamesVec_[0] = "IMPLICIT RES";
         continue;
       }
@@ -199,43 +192,45 @@ class StatusTestUserOutput : public StatusTestOutput<ScalarType,MV,OP,DM> {
       // This should be the standard: we have a combo of the solver-specific tests and user-specific tests
       // The user-specific tests are probably a combo again.
       Teuchos::RCP<StatusTestCombo_t> tmpComboTest = Teuchos::rcp_dynamic_cast<StatusTestCombo_t>(tmpVec[i]);
-      TEUCHOS_TEST_FOR_EXCEPTION(tmpComboTest == Teuchos::null,StatusTestError,"StatusTestUserOutput():  test must be Belos::StatusTest[MaxIters|ResNorm|Combo].");
-      tmpVec = tmpComboTest->getStatusTests();
+      TEUCHOS_TEST_FOR_EXCEPTION(tmpComboTest == Teuchos::null, StatusTestError, "StatusTestUserOutput():  test must be Belos::StatusTest[MaxIters|ResNorm|Combo].");
+      tmpVec     = tmpComboTest->getStatusTests();
       comboType_ = tmpComboTest->getComboType();
 
       // Add only status tests which are not in the user-specified list of tagged status tests
       // More specifically: we want to add the implicit residual test
-      typename std::map<std::string,Teuchos::RCP<StatusTest<ScalarType,MV,OP,DM> > >::iterator it;
-      for (size_t j=0; j<tmpVec.size(); ++j) {
+      typename std::map<std::string, Teuchos::RCP<StatusTest<ScalarType, MV, OP, DM>>>::iterator it;
+      for (size_t j = 0; j < tmpVec.size(); ++j) {
         tmpResTest = Teuchos::rcp_dynamic_cast<StatusTestResNorm_t>(tmpVec[j]);
 
-        if(tmpResTest == Teuchos::null) continue;
+        if (tmpResTest == Teuchos::null) continue;
 
         bool bFound = false;
-        for(it = taggedTests_->begin(); it != taggedTests_->end(); ++it) {
-          if(tmpVec[j] == it->second) { bFound = true; break; }
+        for (it = taggedTests_->begin(); it != taggedTests_->end(); ++it) {
+          if (tmpVec[j] == it->second) {
+            bFound = true;
+            break;
+          }
         }
-        if(!bFound) {
+        if (!bFound) {
           resTestVec_.push_back(tmpResTest);
           resTestNamesVec_.push_back("IMPLICIT RES");
         }
       }
 
       // add all tagged tests (the ordering is by the Tag names in alphabetical ordering)
-      for(it = taggedTests_->begin(); it != taggedTests_->end(); ++it) {
+      for (it = taggedTests_->begin(); it != taggedTests_->end(); ++it) {
         resTestVec_.push_back(it->second);
         resTestNamesVec_.push_back(it->first);
       }
     }
 
     // Keep the pointer to the new test and reset the state to Undefined.
-    test_ = test;
+    test_  = test;
     state_ = Undefined;
-
   }
 
   //! \brief Get child test.
-  Teuchos::RCP<StatusTest<ScalarType,MV,OP,DM> > getChild() const {
+  Teuchos::RCP<StatusTest<ScalarType, MV, OP, DM>> getChild() const {
     return test_;
   }
 
@@ -248,7 +243,6 @@ class StatusTestUserOutput : public StatusTestOutput<ScalarType,MV,OP,DM> {
   void setPrecondDesc(const std::string& precondDesc) { precondDesc_ = precondDesc; }
   //@}
 
-
   //! @name Reset methods
   //@{
   /*! \brief Informs the status test that it should reset its internal configuration to the uninitialized state.
@@ -259,7 +253,7 @@ class StatusTestUserOutput : public StatusTestOutput<ScalarType,MV,OP,DM> {
   void reset() {
     state_ = Undefined;
     test_->reset();
-    lastNumIters_ = -1;
+    lastNumIters_  = -1;
     headerPrinted_ = false;
   }
 
@@ -276,9 +270,9 @@ class StatusTestUserOutput : public StatusTestOutput<ScalarType,MV,OP,DM> {
 
   //! Output formatted description of stopping test to output stream.
   void print(std::ostream& os, int indent = 0) const {
-    std::string ind(indent,' ');
-    std::string starLine(55,'*');
-    std::string starFront(5,'*');
+    std::string ind(indent, ' ');
+    std::string starLine(55, '*');
+    std::string starFront(5, '*');
 
     std::ios_base::fmtflags osFlags(os.flags());
 
@@ -287,25 +281,26 @@ class StatusTestUserOutput : public StatusTestOutput<ScalarType,MV,OP,DM> {
 
     // Print header if this is the first call to this output status test.
     if (!headerPrinted_) {
-      os << std::endl << ind << starLine << std::endl;
+      os << std::endl
+         << ind << starLine << std::endl;
       os << ind << starFront << " Belos Iterative Solver: " << solverDesc_ << std::endl;
       if (precondDesc_ != "")
         os << ind << starFront << " Preconditioner: " << precondDesc_ << std::endl;
       os << ind << starFront << " Maximum Iterations: " << iterTest_->getMaxIters() << std::endl;
       os << ind << starFront << " Block Size: " << blockSize_ << std::endl;
       os << ind << starFront << " Status tests: " << std::endl;
-      test_->print(os,indent + 3);
+      test_->print(os, indent + 3);
       os << ind << starLine << std::endl;
       os.setf(std::ios_base::right, std::ios_base::adjustfield);
-      std::string indheader( 7 + numIterDgts_, ' ' );
+      std::string indheader(7 + numIterDgts_, ' ');
       os << indheader;
-      for (int i=0; i<currNumRHS_; ++i) {
-        if ( i > 0 && currIdx_[i]!=-1 ) {
+      for (int i = 0; i < currNumRHS_; ++i) {
+        if (i > 0 && currIdx_[i] != -1) {
           // Put in space where 'Iter :' is in the previous lines
           os << ind << indheader;
         }
-        os << "[" << std::setw(numLSDgts_) << currIdx_[i]+1 << "] : ";
-        for (size_t j=0; j<resTestVec_.size(); ++j) {
+        os << "[" << std::setw(numLSDgts_) << currIdx_[i] + 1 << "] : ";
+        for (size_t j = 0; j < resTestVec_.size(); ++j) {
           os << std::setw(15) << resTestNamesVec_[j];
         }
         os << std::endl;
@@ -315,26 +310,27 @@ class StatusTestUserOutput : public StatusTestOutput<ScalarType,MV,OP,DM> {
 
     // Print out residuals for each residual test.
     os.setf(std::ios_base::right, std::ios_base::adjustfield);
-    std::string ind2( 7 + numIterDgts_, ' ' );
+    std::string ind2(7 + numIterDgts_, ' ');
     os << ind << "Iter " << std::setw(numIterDgts_) << iterTest_->getNumIters() << ", ";
-    for (int i=0; i<currNumRHS_; ++i) {
-      if ( i > 0 && currIdx_[i]!=-1 ) {
+    for (int i = 0; i < currNumRHS_; ++i) {
+      if (i > 0 && currIdx_[i] != -1) {
         // Put in space where 'Iter :' is in the previous lines
         os << ind << ind2;
       }
-      os << "[" << std::setw(numLSDgts_) << currIdx_[i]+1 << "] : ";
-      for (size_t j=0; j<resTestVec_.size(); ++j) {
-        if ( resTestVec_[j]->getStatus() != Undefined && currIdx_[i]!=-1 ) {
+      os << "[" << std::setw(numLSDgts_) << currIdx_[i] + 1 << "] : ";
+      for (size_t j = 0; j < resTestVec_.size(); ++j) {
+        if (resTestVec_[j]->getStatus() != Undefined && currIdx_[i] != -1) {
           // distinguish between ResNormTest derived and others
           Teuchos::RCP<StatusTestResNorm_t> tempResTest = Teuchos::rcp_dynamic_cast<StatusTestResNorm_t>(resTestVec_[j]);
-          if(tempResTest != Teuchos::null)
+          if (tempResTest != Teuchos::null)
             os << std::setw(15) << (*tempResTest->getTestValue())[currIdx_[i]];
           else {
-            if(resTestVec_[j]->getStatus() == Belos::Passed)
+            if (resTestVec_[j]->getStatus() == Belos::Passed)
               os << std::setw(15) << "Passed";
-            else if(resTestVec_[j]->getStatus() == Belos::Failed)
+            else if (resTestVec_[j]->getStatus() == Belos::Failed)
               os << std::setw(15) << "Failed";
-            else os << std::setw(15) << "Undefined";
+            else
+              os << std::setw(15) << "Undefined";
           }
         } else {
           os << std::setw(15) << "---";
@@ -348,37 +344,37 @@ class StatusTestUserOutput : public StatusTestOutput<ScalarType,MV,OP,DM> {
 
   //@}
 
-  private:
-    // Output manager.
-    Teuchos::RCP<OutputManager<ScalarType> > printer_;
+ private:
+  // Output manager.
+  Teuchos::RCP<OutputManager<ScalarType>> printer_;
 
-    // Overall status test.
-    Teuchos::RCP<StatusTest<ScalarType,MV,OP,DM> > test_;
+  // Overall status test.
+  Teuchos::RCP<StatusTest<ScalarType, MV, OP, DM>> test_;
 
-    // tagged tests
-    Teuchos::RCP<std::map<std::string,Teuchos::RCP<StatusTest<ScalarType,MV,OP,DM> > > > taggedTests_;
+  // tagged tests
+  Teuchos::RCP<std::map<std::string, Teuchos::RCP<StatusTest<ScalarType, MV, OP, DM>>>> taggedTests_;
 
-    // Iteration test (as passed in).
-    Teuchos::RCP<StatusTestMaxIters<ScalarType,MV,OP,DM> > iterTest_;
+  // Iteration test (as passed in).
+  Teuchos::RCP<StatusTestMaxIters<ScalarType, MV, OP, DM>> iterTest_;
 
-    //! Vector of residual status tests
-    std::vector<Teuchos::RCP<StatusTest<ScalarType,MV,OP,DM> > > resTestVec_;
+  //! Vector of residual status tests
+  std::vector<Teuchos::RCP<StatusTest<ScalarType, MV, OP, DM>>> resTestVec_;
 
-    //! Name tags for status tests
-    std::vector<std::string> resTestNamesVec_;
+  //! Name tags for status tests
+  std::vector<std::string> resTestNamesVec_;
 
-    std::string solverDesc_;
-    std::string precondDesc_;
-    std::vector<int> currIdx_;
-    StatusType state_;
-    mutable bool headerPrinted_;
-    int stateTest_, modTest_;
-    int lastNumIters_, comboType_;
-    int blockSize_;
-    int currNumRHS_, currLSNum_;
-    int numLSDgts_, numIterDgts_;
+  std::string solverDesc_;
+  std::string precondDesc_;
+  std::vector<int> currIdx_;
+  StatusType state_;
+  mutable bool headerPrinted_;
+  int stateTest_, modTest_;
+  int lastNumIters_, comboType_;
+  int blockSize_;
+  int currNumRHS_, currLSNum_;
+  int numLSDgts_, numIterDgts_;
 };
 
-} // end of Belos namespace
+}  // namespace Belos
 
 #endif /* BELOS_STATUS_TEST_USER_OUTPUT_HPP */

@@ -23,25 +23,23 @@
 #include "BelosStatusTest.hpp"
 #include "BelosOutputManager.hpp"
 
-
 namespace Belos {
 
-  /*! 
-    \class StatusTestOutput
-    \brief A virtual base class for StatusTest that print other status tests.     
+/*!
+  \class StatusTestOutput
+  \brief A virtual base class for StatusTest that print other status tests.
 
-    StatusTestOutput provides an interface for status tests that wrap another StatusTest.  These
-    printing status tests can be generic, calling StatusTest::print() on the underlying object, or 
-    can specifically require input status tests to be of a certain type. The frequency and occasion 
-    of the printing can be dictated according to some parameters passed to 
-    StatusTestOutput::StatusTestOutput().
-  */
-template <class ScalarType, class MV, class OP, class DM = DefaultDenseMatrix<int,ScalarType>>
-class StatusTestOutput : public virtual StatusTest<ScalarType,MV,OP,DM> {
-
+  StatusTestOutput provides an interface for status tests that wrap another StatusTest.  These
+  printing status tests can be generic, calling StatusTest::print() on the underlying object, or
+  can specifically require input status tests to be of a certain type. The frequency and occasion
+  of the printing can be dictated according to some parameters passed to
+  StatusTestOutput::StatusTestOutput().
+*/
+template <class ScalarType, class MV, class OP, class DM = DefaultDenseMatrix<int, ScalarType>>
+class StatusTestOutput : public virtual StatusTest<ScalarType, MV, OP, DM> {
  public:
   //! @name Constructors/destructors
-  //@{ 
+  //@{
 
   //! \brief Default constructor
   StatusTestOutput() {}
@@ -51,8 +49,8 @@ class StatusTestOutput : public virtual StatusTest<ScalarType,MV,OP,DM> {
    * The StatusTestOutput requires an OutputManager for printing the underlying StatusTest on
    * calls to checkStatus(), as well as an underlying StatusTest.
    *
-   * The last two parameters, described below, in addition to the verbosity level of the OutputManager, control when printing is 
-   * called. When both the \c mod criterion and the \c printStates criterion are satisfied, the status test will be printed to the 
+   * The last two parameters, described below, in addition to the verbosity level of the OutputManager, control when printing is
+   * called. When both the \c mod criterion and the \c printStates criterion are satisfied, the status test will be printed to the
    * OutputManager with ::MsgType of ::StatusTestDetails.
    *
    * @param[in] mod A positive number describes how often the output should be printed. On every call to checkStatus(), an internal counter
@@ -60,22 +58,21 @@ class StatusTestOutput : public virtual StatusTest<ScalarType,MV,OP,DM> {
    * @param[in] printStates A combination of ::StatusType values for which the output may be printed. Default: ::Passed (attempt to print whenever checkStatus() will return ::Passed)
    *
    */
-  StatusTestOutput(const Teuchos::RCP<OutputManager<ScalarType> > &printer, 
-                   Teuchos::RCP<StatusTest<ScalarType,MV,OP,DM> > test,
-                   int mod = 1,
-                   int printStates = Passed)
-    {}   
+  StatusTestOutput(const Teuchos::RCP<OutputManager<ScalarType>>& printer,
+                   Teuchos::RCP<StatusTest<ScalarType, MV, OP, DM>> test,
+                   int mod         = 1,
+                   int printStates = Passed) {}
 
   //! Destructor
   virtual ~StatusTestOutput() {}
   //@}
 
   //! @name Accessor methods
-  //@{ 
+  //@{
 
   /*! \brief Set the output manager.
-   */ 
-  virtual void setOutputManager(const Teuchos::RCP<OutputManager<ScalarType> > &printer) = 0;
+   */
+  virtual void setOutputManager(const Teuchos::RCP<OutputManager<ScalarType>>& printer) = 0;
 
   /*! \brief Set how often the child test is printed.
    */
@@ -85,10 +82,10 @@ class StatusTestOutput : public virtual StatusTest<ScalarType,MV,OP,DM> {
    *
    *  \note This also resets the test status to ::Undefined.
    */
-  virtual void setChild(Teuchos::RCP<StatusTest<ScalarType,MV,OP,DM> > test) = 0;
+  virtual void setChild(Teuchos::RCP<StatusTest<ScalarType, MV, OP, DM>> test) = 0;
 
   //! \brief Get child test.
-  virtual Teuchos::RCP<StatusTest<ScalarType,MV,OP,DM> > getChild() const = 0;
+  virtual Teuchos::RCP<StatusTest<ScalarType, MV, OP, DM>> getChild() const = 0;
 
   /*! \brief Set a short solver description for output clarity.
    */
@@ -100,17 +97,15 @@ class StatusTestOutput : public virtual StatusTest<ScalarType,MV,OP,DM> {
 
   //@}
 
-
   //! @name Reset methods
-  //@{ 
+  //@{
 
   //! Informs the outputting status test that it should reset the number of calls to zero.
   virtual void resetNumCalls() = 0;
 
   //@}
-
 };
 
-} // end of Belos namespace
+}  // namespace Belos
 
 #endif /* BELOS_STATUS_TEST_OUTPUT_HPP */

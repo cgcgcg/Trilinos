@@ -39,16 +39,14 @@
 
 namespace Belos {
 
-template<class ScalarType, class MV, class OP, class DM>
-class FixedPointIter : virtual public FixedPointIteration<ScalarType,MV,OP,DM> {
-
-  public:
-
+template <class ScalarType, class MV, class OP, class DM>
+class FixedPointIter : virtual public FixedPointIteration<ScalarType, MV, OP, DM> {
+ public:
   //
   // Convenience typedefs
   //
-  typedef MultiVecTraits<ScalarType,MV,DM> MVT;
-  typedef OperatorTraits<ScalarType,MV,OP> OPT;
+  typedef MultiVecTraits<ScalarType, MV, DM> MVT;
+  typedef OperatorTraits<ScalarType, MV, OP> OPT;
   typedef Teuchos::ScalarTraits<ScalarType> SCT;
   typedef typename SCT::magnitudeType MagnitudeType;
 
@@ -60,15 +58,14 @@ class FixedPointIter : virtual public FixedPointIteration<ScalarType,MV,OP,DM> {
    * This constructor takes pointers required by the linear solver iteration, in addition
    * to a parameter list of options for the linear solver.
    */
-  FixedPointIter( const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > &problem,
-                  const Teuchos::RCP<OutputManager<ScalarType> > &printer,
-                  const Teuchos::RCP<StatusTest<ScalarType,MV,OP,DM> > &tester,
-                  Teuchos::ParameterList &params );
+  FixedPointIter(const Teuchos::RCP<LinearProblem<ScalarType, MV, OP, DM> > &problem,
+                 const Teuchos::RCP<OutputManager<ScalarType> > &printer,
+                 const Teuchos::RCP<StatusTest<ScalarType, MV, OP, DM> > &tester,
+                 Teuchos::ParameterList &params);
 
   //! Destructor.
-  virtual ~FixedPointIter() {};
+  virtual ~FixedPointIter(){};
   //@}
-
 
   //! @name Solver methods
   //@{
@@ -101,14 +98,13 @@ class FixedPointIter : virtual public FixedPointIteration<ScalarType,MV,OP,DM> {
    * \note For any pointer in \c newstate which directly points to the multivectors in
    * the solver, the data is not copied.
    */
-  void initializeFixedPoint(FixedPointIterationState<ScalarType,MV>& newstate);
+  void initializeFixedPoint(FixedPointIterationState<ScalarType, MV> &newstate);
 
   /*! \brief Initialize the solver with the initial vectors from the linear problem
    *  or random data.
    */
-  void initialize()
-  {
-    FixedPointIterationState<ScalarType,MV> empty;
+  void initialize() {
+    FixedPointIterationState<ScalarType, MV> empty;
     initializeFixedPoint(empty);
   }
 
@@ -118,15 +114,14 @@ class FixedPointIter : virtual public FixedPointIteration<ScalarType,MV,OP,DM> {
    *
    * \returns A FixedPointIterationState object containing const pointers to the current solver state.
    */
-  FixedPointIterationState<ScalarType,MV> getState() const {
-    FixedPointIterationState<ScalarType,MV> state;
+  FixedPointIterationState<ScalarType, MV> getState() const {
+    FixedPointIterationState<ScalarType, MV> state;
     state.R = R_;
     state.Z = Z_;
     return state;
   }
 
   //@}
-
 
   //! @name Status methods
   //@{
@@ -135,15 +130,15 @@ class FixedPointIter : virtual public FixedPointIteration<ScalarType,MV,OP,DM> {
   int getNumIters() const { return iter_; }
 
   //! \brief Reset the iteration count.
-  void resetNumIters( int iter = 0 ) { iter_ = iter; }
+  void resetNumIters(int iter = 0) { iter_ = iter; }
 
   //! Get the norms of the residuals native to the solver.
   //! \return A std::vector of length blockSize containing the native residuals.
-  Teuchos::RCP<const MV> getNativeResiduals( std::vector<MagnitudeType> * /* norms */ ) const { return R_; }
+  Teuchos::RCP<const MV> getNativeResiduals(std::vector<MagnitudeType> * /* norms */) const { return R_; }
 
   //! Get the current update to the linear system.
   /*! \note This method returns a null pointer because the linear problem is current.
-  */
+   */
   Teuchos::RCP<MV> getCurrentUpdate() const { return Teuchos::null; }
 
   //@}
@@ -152,7 +147,7 @@ class FixedPointIter : virtual public FixedPointIteration<ScalarType,MV,OP,DM> {
   //@{
 
   //! Get a constant reference to the linear problem.
-  const LinearProblem<ScalarType,MV,OP,DM>& getProblem() const { return *lp_; }
+  const LinearProblem<ScalarType, MV, OP, DM> &getProblem() const { return *lp_; }
 
   //! Get the blocksize to be used by the iterative solver in solving this linear problem.
   int getBlockSize() const { return numRHS_; }
@@ -165,8 +160,7 @@ class FixedPointIter : virtual public FixedPointIteration<ScalarType,MV,OP,DM> {
 
   //@}
 
-  private:
-
+ private:
   //
   // Internal methods
   //
@@ -176,9 +170,9 @@ class FixedPointIter : virtual public FixedPointIteration<ScalarType,MV,OP,DM> {
   //
   // Classes inputed through constructor that define the linear problem to be solved.
   //
-  const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> >    lp_;
-  const Teuchos::RCP<OutputManager<ScalarType> >          om_;
-  const Teuchos::RCP<StatusTest<ScalarType,MV,OP,DM> >       stest_;
+  const Teuchos::RCP<LinearProblem<ScalarType, MV, OP, DM> > lp_;
+  const Teuchos::RCP<OutputManager<ScalarType> > om_;
+  const Teuchos::RCP<StatusTest<ScalarType, MV, OP, DM> > stest_;
 
   // Algorithmic parameters
   //
@@ -210,213 +204,199 @@ class FixedPointIter : virtual public FixedPointIteration<ScalarType,MV,OP,DM> {
   // Preconditioned residual
   Teuchos::RCP<MV> Z_;
   //
-
 };
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  // Constructor.
-  template<class ScalarType, class MV, class OP, class DM>
-  FixedPointIter<ScalarType,MV,OP,DM>::FixedPointIter(const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > &problem,
-                                                      const Teuchos::RCP<OutputManager<ScalarType> > &printer,
-                                                      const Teuchos::RCP<StatusTest<ScalarType,MV,OP,DM> > &tester,
-                                                      Teuchos::ParameterList &params ):
-    lp_(problem),
-    om_(printer),
-    stest_(tester),
-    numRHS_(0),
-    initialized_(false),
-    stateStorageInitialized_(false),
-    iter_(0)
-  {
-    setBlockSize(params.get("Block Size",MVT::GetNumberVecs(*problem->getCurrRHSVec())));
-  }
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// Constructor.
+template <class ScalarType, class MV, class OP, class DM>
+FixedPointIter<ScalarType, MV, OP, DM>::FixedPointIter(const Teuchos::RCP<LinearProblem<ScalarType, MV, OP, DM> > &problem,
+                                                       const Teuchos::RCP<OutputManager<ScalarType> > &printer,
+                                                       const Teuchos::RCP<StatusTest<ScalarType, MV, OP, DM> > &tester,
+                                                       Teuchos::ParameterList &params)
+  : lp_(problem)
+  , om_(printer)
+  , stest_(tester)
+  , numRHS_(0)
+  , initialized_(false)
+  , stateStorageInitialized_(false)
+  , iter_(0) {
+  setBlockSize(params.get("Block Size", MVT::GetNumberVecs(*problem->getCurrRHSVec())));
+}
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  // Setup the state storage.
-  template<class ScalarType, class MV, class OP, class DM>
-  void FixedPointIter<ScalarType,MV,OP,DM>::setStateSize ()
-  {
-    if (!stateStorageInitialized_) {
-      // Check if there is any multivector to clone from.
-      Teuchos::RCP<const MV> lhsMV = lp_->getLHS();
-      Teuchos::RCP<const MV> rhsMV = lp_->getRHS();
-      if (lhsMV == Teuchos::null && rhsMV == Teuchos::null) {
-        stateStorageInitialized_ = false;
-        return;
-      }
-      else {
-
-        // Initialize the state storage
-        // If the subspace has not be initialized before, generate it using the LHS or RHS from lp_.
-        if (R_ == Teuchos::null) {
-          // Get the multivector that is not null.
-          Teuchos::RCP<const MV> tmp = ( (rhsMV!=Teuchos::null)? rhsMV: lhsMV );
-          TEUCHOS_TEST_FOR_EXCEPTION(tmp == Teuchos::null,std::invalid_argument,
-                             "Belos::FixedPointIter::setStateSize(): linear problem does not specify multivectors to clone from.");
-          R_ = MVT::Clone( *tmp, numRHS_ );
-          Z_ = MVT::Clone( *tmp, numRHS_ );
-        }
-
-        // State storage has now been initialized.
-        stateStorageInitialized_ = true;
-      }
-    }
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  // Set the block size and make necessary adjustments.
-  template<class ScalarType, class MV, class OP, class DM>
-  void FixedPointIter<ScalarType,MV,OP,DM>::setBlockSize(int blockSize)
-  {
-    // This routine only allocates space; it doesn't not perform any computation
-    // any change in size will invalidate the state of the solver.
-
-    TEUCHOS_TEST_FOR_EXCEPTION(blockSize != MVT::GetNumberVecs(*lp_->getCurrRHSVec()), std::invalid_argument, "Belos::FixedPointIter::setBlockSize size must match # RHS.");
-
-    TEUCHOS_TEST_FOR_EXCEPTION(blockSize <= 0, std::invalid_argument, "Belos::FixedPointIter::setBlockSize was passed a non-positive argument.");
-    if (blockSize == numRHS_) {
-      // do nothing
-      return;
-    }
-
-    if (blockSize!=numRHS_)
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// Setup the state storage.
+template <class ScalarType, class MV, class OP, class DM>
+void FixedPointIter<ScalarType, MV, OP, DM>::setStateSize() {
+  if (!stateStorageInitialized_) {
+    // Check if there is any multivector to clone from.
+    Teuchos::RCP<const MV> lhsMV = lp_->getLHS();
+    Teuchos::RCP<const MV> rhsMV = lp_->getRHS();
+    if (lhsMV == Teuchos::null && rhsMV == Teuchos::null) {
       stateStorageInitialized_ = false;
+      return;
+    } else {
+      // Initialize the state storage
+      // If the subspace has not be initialized before, generate it using the LHS or RHS from lp_.
+      if (R_ == Teuchos::null) {
+        // Get the multivector that is not null.
+        Teuchos::RCP<const MV> tmp = ((rhsMV != Teuchos::null) ? rhsMV : lhsMV);
+        TEUCHOS_TEST_FOR_EXCEPTION(tmp == Teuchos::null, std::invalid_argument,
+                                   "Belos::FixedPointIter::setStateSize(): linear problem does not specify multivectors to clone from.");
+        R_ = MVT::Clone(*tmp, numRHS_);
+        Z_ = MVT::Clone(*tmp, numRHS_);
+      }
 
-    numRHS_ = blockSize;
+      // State storage has now been initialized.
+      stateStorageInitialized_ = true;
+    }
+  }
+}
 
-    initialized_ = false;
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// Set the block size and make necessary adjustments.
+template <class ScalarType, class MV, class OP, class DM>
+void FixedPointIter<ScalarType, MV, OP, DM>::setBlockSize(int blockSize) {
+  // This routine only allocates space; it doesn't not perform any computation
+  // any change in size will invalidate the state of the solver.
 
-    // Use the current blockSize_ to initialize the state storage.
+  TEUCHOS_TEST_FOR_EXCEPTION(blockSize != MVT::GetNumberVecs(*lp_->getCurrRHSVec()), std::invalid_argument, "Belos::FixedPointIter::setBlockSize size must match # RHS.");
+
+  TEUCHOS_TEST_FOR_EXCEPTION(blockSize <= 0, std::invalid_argument, "Belos::FixedPointIter::setBlockSize was passed a non-positive argument.");
+  if (blockSize == numRHS_) {
+    // do nothing
+    return;
+  }
+
+  if (blockSize != numRHS_)
+    stateStorageInitialized_ = false;
+
+  numRHS_ = blockSize;
+
+  initialized_ = false;
+
+  // Use the current blockSize_ to initialize the state storage.
+  setStateSize();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// Initialize this iteration object
+template <class ScalarType, class MV, class OP, class DM>
+void FixedPointIter<ScalarType, MV, OP, DM>::initializeFixedPoint(FixedPointIterationState<ScalarType, MV> &newstate) {
+  // Initialize the state storage if it isn't already.
+  if (!stateStorageInitialized_)
     setStateSize();
 
+  TEUCHOS_TEST_FOR_EXCEPTION(!stateStorageInitialized_, std::invalid_argument,
+                             "Belos::FixedPointIter::initialize(): Cannot initialize state storage!");
+
+  // NOTE:  In FixedPointIter R_, the initial residual, is required!!!
+  //
+  std::string errstr("Belos::FixedPointIter::initialize(): Specified multivectors must have a consistent length and width.");
+
+  if (newstate.R != Teuchos::null) {
+    TEUCHOS_TEST_FOR_EXCEPTION(MVT::GetNumberVecs(*R_) != MVT::GetNumberVecs(*newstate.R),
+                               std::invalid_argument, errstr);
+
+    TEUCHOS_TEST_FOR_EXCEPTION(MVT::GetGlobalLength(*newstate.R) != MVT::GetGlobalLength(*R_),
+                               std::invalid_argument, errstr);
+    TEUCHOS_TEST_FOR_EXCEPTION(MVT::GetNumberVecs(*newstate.R) != numRHS_,
+                               std::invalid_argument, errstr);
+
+    // Copy basis vectors from newstate into V
+    if (newstate.R != R_) {
+      // copy over the initial residual (unpreconditioned).
+      MVT::Assign(*newstate.R, *R_);
+    }
+
+  } else {
+    TEUCHOS_TEST_FOR_EXCEPTION(newstate.R == Teuchos::null, std::invalid_argument,
+                               "Belos::FixedPointIter::initialize(): FixedPointIterationState does not have initial residual.");
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  // Initialize this iteration object
-  template<class ScalarType, class MV, class OP, class DM>
-  void FixedPointIter<ScalarType,MV,OP,DM>::initializeFixedPoint(FixedPointIterationState<ScalarType,MV>& newstate)
-  {
-    // Initialize the state storage if it isn't already.
-    if (!stateStorageInitialized_)
-      setStateSize();
+  // The solver is initialized
+  initialized_ = true;
+}
 
-    TEUCHOS_TEST_FOR_EXCEPTION(!stateStorageInitialized_,std::invalid_argument,
-                       "Belos::FixedPointIter::initialize(): Cannot initialize state storage!");
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// Iterate until the status test informs us we should stop.
+template <class ScalarType, class MV, class OP, class DM>
+void FixedPointIter<ScalarType, MV, OP, DM>::iterate() {
+  //
+  // Allocate/initialize data structures
+  //
+  if (initialized_ == false) {
+    initialize();
+  }
 
-    // NOTE:  In FixedPointIter R_, the initial residual, is required!!!
+  // Create convenience variables for zero and one.
+  const ScalarType one     = Teuchos::ScalarTraits<ScalarType>::one();
+  const MagnitudeType zero = Teuchos::ScalarTraits<MagnitudeType>::zero();  // unused
+
+  // Get the current solution vector.
+  Teuchos::RCP<MV> cur_soln_vec = lp_->getCurrLHSVec();
+
+  // Temp vector
+  Teuchos::RCP<MV> tmp = MVT::Clone(*R_, numRHS_);
+
+  if (lp_->getRightPrec() != Teuchos::null) {
+    // Set rhs to initial residual
+    Teuchos::RCP<MV> rhs = MVT::CloneCopy(*R_);
+
+    // Zero initial guess
+    MVT::MvInit(*Z_, zero);
+
+    ////////////////////////////////////////////////////////////////
+    // Iterate until the status test tells us to stop.
     //
-    std::string errstr("Belos::FixedPointIter::initialize(): Specified multivectors must have a consistent length and width.");
+    while (stest_->checkStatus(this) != Passed) {
+      // Increment the iteration
+      iter_++;
 
-    if (newstate.R != Teuchos::null) {
-      TEUCHOS_TEST_FOR_EXCEPTION( MVT::GetNumberVecs(*R_) != MVT::GetNumberVecs(*newstate.R),
-                                  std::invalid_argument, errstr );
+      // Apply preconditioner
+      lp_->applyRightPrec(*R_, *tmp);
 
-      TEUCHOS_TEST_FOR_EXCEPTION( MVT::GetGlobalLength(*newstate.R) != MVT::GetGlobalLength(*R_),
-                          std::invalid_argument, errstr );
-      TEUCHOS_TEST_FOR_EXCEPTION( MVT::GetNumberVecs(*newstate.R) != numRHS_,
-                          std::invalid_argument, errstr );
+      // Update solution vector
+      MVT::MvAddMv(one, *cur_soln_vec, one, *tmp, *cur_soln_vec);
+      lp_->updateSolution();
 
-      // Copy basis vectors from newstate into V
-      if (newstate.R != R_) {
-        // copy over the initial residual (unpreconditioned).
-        MVT::Assign( *newstate.R, *R_ );
+      // Update solution vector
+      MVT::MvAddMv(one, *Z_, one, *tmp, *Z_);
+
+      // Compute new residual
+      lp_->applyOp(*Z_, *tmp);
+      MVT::MvAddMv(one, *rhs, -one, *tmp, *R_);
+
+    }  // end while (sTest_->checkStatus(this) != Passed)
+
+  } else {
+    Teuchos::RCP<const MV> rhs = lp_->getCurrRHSVec();
+
+    ////////////////////////////////////////////////////////////////
+    // Iterate until the status test tells us to stop.
+    //
+    while (stest_->checkStatus(this) != Passed) {
+      // Increment the iteration
+      iter_++;
+
+      // Compute initial preconditioned residual
+      if (lp_->getLeftPrec() != Teuchos::null) {
+        lp_->applyLeftPrec(*R_, *Z_);
+      } else {
+        Z_ = R_;
       }
 
-    }
-    else {
-      TEUCHOS_TEST_FOR_EXCEPTION(newstate.R == Teuchos::null,std::invalid_argument,
-                         "Belos::FixedPointIter::initialize(): FixedPointIterationState does not have initial residual.");
-    }
+      // Update solution vector
+      MVT::MvAddMv(one, *cur_soln_vec, one, *Z_, *cur_soln_vec);
+      lp_->updateSolution();
 
-    // The solver is initialized
-    initialized_ = true;
+      // Compute new residual
+      lp_->applyOp(*cur_soln_vec, *tmp);
+      MVT::MvAddMv(one, *rhs, -one, *tmp, *R_);
+
+    }  // end while (sTest_->checkStatus(this) != Passed)
   }
+}
 
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  // Iterate until the status test informs us we should stop.
-  template<class ScalarType, class MV, class OP, class DM>
-  void FixedPointIter<ScalarType,MV,OP,DM>::iterate()
-  {
-    //
-    // Allocate/initialize data structures
-    //
-    if (initialized_ == false) {
-      initialize();
-    }
-
-    // Create convenience variables for zero and one.
-    const ScalarType one = Teuchos::ScalarTraits<ScalarType>::one();
-    const MagnitudeType zero = Teuchos::ScalarTraits<MagnitudeType>::zero(); // unused
-
-    // Get the current solution vector.
-    Teuchos::RCP<MV> cur_soln_vec = lp_->getCurrLHSVec();
-
-    // Temp vector
-    Teuchos::RCP<MV> tmp = MVT::Clone( *R_, numRHS_ );
-
-    if (lp_->getRightPrec() != Teuchos::null) {
-      // Set rhs to initial residual
-      Teuchos::RCP<MV> rhs = MVT::CloneCopy( *R_ );
-
-      // Zero initial guess
-      MVT::MvInit( *Z_, zero );
-
-      ////////////////////////////////////////////////////////////////
-      // Iterate until the status test tells us to stop.
-      //
-      while (stest_->checkStatus(this) != Passed) {
-
-        // Increment the iteration
-        iter_++;
-
-        // Apply preconditioner
-        lp_->applyRightPrec( *R_, *tmp );
-
-        // Update solution vector
-        MVT::MvAddMv( one, *cur_soln_vec, one, *tmp, *cur_soln_vec );
-        lp_->updateSolution();
-
-        // Update solution vector
-        MVT::MvAddMv( one, *Z_, one, *tmp, *Z_ );
-
-        // Compute new residual
-        lp_->applyOp (*Z_, *tmp );
-        MVT::MvAddMv( one, *rhs, -one, *tmp, *R_ );
-
-      } // end while (sTest_->checkStatus(this) != Passed)
-
-    } else {
-      Teuchos::RCP<const MV> rhs = lp_->getCurrRHSVec();
-
-      ////////////////////////////////////////////////////////////////
-      // Iterate until the status test tells us to stop.
-      //
-      while (stest_->checkStatus(this) != Passed) {
-
-        // Increment the iteration
-        iter_++;
-
-        // Compute initial preconditioned residual
-        if ( lp_->getLeftPrec() != Teuchos::null ) {
-          lp_->applyLeftPrec( *R_, *Z_ );
-        }
-        else {
-          Z_ = R_;
-        }
-
-        // Update solution vector
-        MVT::MvAddMv(one,*cur_soln_vec,one,*Z_,*cur_soln_vec);
-        lp_->updateSolution();
-
-        // Compute new residual
-        lp_->applyOp(*cur_soln_vec,*tmp);
-        MVT::MvAddMv(one,*rhs,-one,*tmp,*R_);
-
-      } // end while (sTest_->checkStatus(this) != Passed)
-    }
-  }
-
-} // end Belos namespace
+}  // namespace Belos
 
 #endif /* BELOS_FIXEDPOINT_ITER_HPP */

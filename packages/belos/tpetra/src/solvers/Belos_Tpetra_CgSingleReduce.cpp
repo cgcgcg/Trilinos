@@ -19,9 +19,8 @@
 namespace BelosTpetra {
 namespace Impl {
 
-template<class SC, class LO, class GO, class NT>
-void register_CgSingleReduce_tmpl (const bool verbose)
-{
+template <class SC, class LO, class GO, class NT>
+void register_CgSingleReduce_tmpl(const bool verbose) {
   using ::Belos::Impl::registerSolverSubclassForTypes;
   using MV = ::Tpetra::MultiVector<SC, LO, GO, NT>;
   using OP = ::Tpetra::Operator<SC, LO, GO, NT>;
@@ -29,16 +28,16 @@ void register_CgSingleReduce_tmpl (const bool verbose)
   if (verbose) {
     using Teuchos::TypeNameTraits;
     std::cout << "Registering BelosTpetra CgSingleReduceSolverManager<"
-	      << TypeNameTraits<SC>::name () << ", "
-	      << TypeNameTraits<LO>::name () << ", "
-	      << TypeNameTraits<GO>::name () << ", "
-	      << TypeNameTraits<NT>::name () << ">" << std::endl;
+              << TypeNameTraits<SC>::name() << ", "
+              << TypeNameTraits<LO>::name() << ", "
+              << TypeNameTraits<GO>::name() << ", "
+              << TypeNameTraits<NT>::name() << ">" << std::endl;
   }
   const char solverName[] = "TPETRA CG SINGLE REDUCE";
   {
-    using DM = ::Teuchos::SerialDenseMatrix<int, SC>;
+    using DM          = ::Teuchos::SerialDenseMatrix<int, SC>;
     using solver_type = CgSingleReduceSolverManager<SC, MV, OP>;
-    registerSolverSubclassForTypes<solver_type, SC, MV, OP, DM> (solverName);
+    registerSolverSubclassForTypes<solver_type, SC, MV, OP, DM>(solverName);
   }
 
   // {
@@ -54,19 +53,18 @@ void register_CgSingleReduce_tmpl (const bool verbose)
   // }
 }
 
-void register_CgSingleReduce (const bool verbose)
-{
+void register_CgSingleReduce(const bool verbose) {
   TPETRA_ETI_MANGLING_TYPEDEFS()
 
 #ifdef BELOS_TPETRA_REGISTER_CG_SINGLE_REDUCE
-#  undef BELOS_TPETRA_REGISTER_CG_SINGLE_REDUCE
-#endif // BELOS_TPETRA_REGISTER_CG_SINGLE_REDUCE
-#define BELOS_TPETRA_REGISTER_CG_SINGLE_REDUCE( SC, LO, GO, NT ) register_CgSingleReduce_tmpl<SC, LO, GO, NT> (verbose);
+#undef BELOS_TPETRA_REGISTER_CG_SINGLE_REDUCE
+#endif  // BELOS_TPETRA_REGISTER_CG_SINGLE_REDUCE
+#define BELOS_TPETRA_REGISTER_CG_SINGLE_REDUCE(SC, LO, GO, NT) register_CgSingleReduce_tmpl<SC, LO, GO, NT>(verbose);
 
-  TPETRA_INSTANTIATE_SLGN_NO_ORDINAL_SCALAR( BELOS_TPETRA_REGISTER_CG_SINGLE_REDUCE )
+  TPETRA_INSTANTIATE_SLGN_NO_ORDINAL_SCALAR(BELOS_TPETRA_REGISTER_CG_SINGLE_REDUCE)
 
 #undef BELOS_TPETRA_REGISTER_CG_SINGLE_REDUCE
 }
 
-} // namespace Impl
-} // namespace BelosTpetra
+}  // namespace Impl
+}  // namespace BelosTpetra

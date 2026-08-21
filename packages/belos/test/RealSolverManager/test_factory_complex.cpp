@@ -27,8 +27,7 @@
 // arithmetic support enabled.
 //
 
-TEUCHOS_UNIT_TEST( Factory, Real )
-{
+TEUCHOS_UNIT_TEST(Factory, Real) {
   using Teuchos::RCP;
   using Teuchos::rcp;
   typedef double ST;
@@ -39,8 +38,7 @@ TEUCHOS_UNIT_TEST( Factory, Real )
   factory_type factory;
 }
 
-TEUCHOS_UNIT_TEST( Factory, Complex )
-{
+TEUCHOS_UNIT_TEST(Factory, Complex) {
   using Teuchos::RCP;
   using Teuchos::rcp;
   typedef std::complex<double> ST;

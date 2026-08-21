@@ -1,5 +1,3 @@
-
-
 #
 # A) Package-specific configuration options
 #
@@ -23,17 +21,16 @@ TRIBITS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 
 TRIBITS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
-APPEND_SET(HEADERS
+APPEND_SET(
+  HEADERS
   BelosXpetraAdapter.hpp
   BelosXpetraAdapterOperator.hpp
   BelosSolverFactory_Xpetra.hpp
   BelosXpetraAdapterMultiVector.hpp
   Belos_Details_Xpetra_registerSolverFactory.hpp
-  )
+)
 
-APPEND_SET(SOURCES
-  Belos_Details_Xpetra_registerSolverFactory.cpp
-  )
+APPEND_SET(SOURCES Belos_Details_Xpetra_registerSolverFactory.cpp)
 
 #
 # C) Define the targets for package's library(s)
@@ -43,4 +40,4 @@ TRIBITS_ADD_LIBRARY(
   HEADERS ${HEADERS}
   SOURCES ${SOURCES}
   DEPLIBS belos
-  )
+)

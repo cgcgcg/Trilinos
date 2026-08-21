@@ -36,14 +36,13 @@
 
 namespace Belos {
 
-template <class ScalarType, class MV, class OP, class DM = DefaultDenseMatrix<int,ScalarType>>
-class StatusTestGenResSubNorm: public StatusTestResNorm<ScalarType,MV,OP,DM> {
-
+template <class ScalarType, class MV, class OP, class DM = DefaultDenseMatrix<int, ScalarType>>
+class StatusTestGenResSubNorm : public StatusTestResNorm<ScalarType, MV, OP, DM> {
  public:
   // Convenience typedefs
   typedef Teuchos::ScalarTraits<ScalarType> SCT;
   typedef typename SCT::magnitudeType MagnitudeType;
-  typedef MultiVecTraits<ScalarType,MV, DM>  MVT;
+  typedef MultiVecTraits<ScalarType, MV, DM> MVT;
 
   //! @name Constructors/destructors.
   //@{
@@ -61,13 +60,13 @@ class StatusTestGenResSubNorm: public StatusTestResNorm<ScalarType,MV,OP,DM> {
     @param showMaxResNormOnly: for output only
 
   */
-  StatusTestGenResSubNorm( MagnitudeType /* Tolerance */, size_t /* subIdx */, int /* quorum */ = -1, bool /* showMaxResNormOnly */ = false ) {
-    TEUCHOS_TEST_FOR_EXCEPTION(true,StatusTestError,
-          "StatusTestGenResSubNorm::StatusTestGenResSubNorm(): StatusTestGenResSubNorm only available for blocked operators (e.g., Thyra).");
+  StatusTestGenResSubNorm(MagnitudeType /* Tolerance */, size_t /* subIdx */, int /* quorum */ = -1, bool /* showMaxResNormOnly */ = false) {
+    TEUCHOS_TEST_FOR_EXCEPTION(true, StatusTestError,
+                               "StatusTestGenResSubNorm::StatusTestGenResSubNorm(): StatusTestGenResSubNorm only available for blocked operators (e.g., Thyra).");
   }
 
   //! Destructor
-  virtual ~StatusTestGenResSubNorm() { };
+  virtual ~StatusTestGenResSubNorm(){};
   //@}
 
   //! @name Form and parameter definition methods.
@@ -80,9 +79,9 @@ class StatusTestGenResSubNorm: public StatusTestResNorm<ScalarType,MV,OP,DM> {
     DefineScaleForm()).
     </ul>
   */
-  int defineResForm(  NormType /* TypeOfNorm */) {
-    TEUCHOS_TEST_FOR_EXCEPTION(true,StatusTestError,
-          "StatusTestGenResSubNorm::defineResForm(): StatusTestGenResSubNorm only available for blocked operators (e.g., Thyra).");
+  int defineResForm(NormType /* TypeOfNorm */) {
+    TEUCHOS_TEST_FOR_EXCEPTION(true, StatusTestError,
+                               "StatusTestGenResSubNorm::defineResForm(): StatusTestGenResSubNorm only available for blocked operators (e.g., Thyra).");
     TEUCHOS_UNREACHABLE_RETURN(0);
   }
 
@@ -107,9 +106,9 @@ class StatusTestGenResSubNorm: public StatusTestResNorm<ScalarType,MV,OP,DM> {
     </ul>
     </ol>
   */
-  int defineScaleForm( ScaleType /* TypeOfScaling */, NormType /* TypeOfNorm */, MagnitudeType /* ScaleValue */ = Teuchos::ScalarTraits<MagnitudeType>::one()) {
-    TEUCHOS_TEST_FOR_EXCEPTION(true,StatusTestError,
-          "StatusTestGenResSubNorm::defineScaleForm(): StatusTestGenResSubNorm only available for blocked operators (e.g., Thyra).");
+  int defineScaleForm(ScaleType /* TypeOfScaling */, NormType /* TypeOfNorm */, MagnitudeType /* ScaleValue */ = Teuchos::ScalarTraits<MagnitudeType>::one()) {
+    TEUCHOS_TEST_FOR_EXCEPTION(true, StatusTestError,
+                               "StatusTestGenResSubNorm::defineScaleForm(): StatusTestGenResSubNorm only available for blocked operators (e.g., Thyra).");
     TEUCHOS_UNREACHABLE_RETURN(0);
   }
 
@@ -122,7 +121,7 @@ class StatusTestGenResSubNorm: public StatusTestResNorm<ScalarType,MV,OP,DM> {
   //! Set the block index of which we want to check the norm of the sub-residuals
   /*! It does not really make sense to change/reset the index during the solution process
    */
-  int setSubIdx ( size_t subIdx ) { return 0;}
+  int setSubIdx(size_t subIdx) { return 0; }
 
   //! Sets the number of residuals that must pass the convergence test before Passed is returned.
   //! \note If \c quorum=-1 then all residuals must pass the convergence test before Passed is returned.
@@ -142,17 +141,17 @@ class StatusTestGenResSubNorm: public StatusTestResNorm<ScalarType,MV,OP,DM> {
 
     \return StatusType: Passed, Failed, or Undefined.
   */
-  StatusType checkStatus(Iteration<ScalarType,MV,OP,DM>* /* iSolver */) { return Undefined; }
+  StatusType checkStatus(Iteration<ScalarType, MV, OP, DM>* /* iSolver */) { return Undefined; }
 
   //! Return the result of the most recent CheckStatus call.
-  StatusType getStatus() const {return Undefined;}
+  StatusType getStatus() const { return Undefined; }
   //@}
 
   //! @name Reset methods
   //@{
 
   //! Resets the internal configuration to the initial state.
-  void reset() { }
+  void reset() {}
 
   //@}
 
@@ -160,10 +159,10 @@ class StatusTestGenResSubNorm: public StatusTestResNorm<ScalarType,MV,OP,DM> {
   //@{
 
   //! Output formatted description of stopping test to output stream.
-  void print(std::ostream& /* os */, int /* indent */ = 0) const { }
+  void print(std::ostream& /* os */, int /* indent */ = 0) const {}
 
   //! Print message for each status specific to this stopping test.
-  void printStatus(std::ostream& /* os */, StatusType /* type */) const { }
+  void printStatus(std::ostream& /* os */, StatusType /* type */) const {}
   //@}
 
   //! @name Methods to access data members.
@@ -188,23 +187,22 @@ class StatusTestGenResSubNorm: public StatusTestResNorm<ScalarType,MV,OP,DM> {
   std::vector<int> convIndices() { return std::vector<int>(0); }
 
   //! Returns the value of the tolerance, \f$ \tau \f$, set in the constructor.
-  MagnitudeType getTolerance() const {return SCT::magnitude(SCT::zero());};
+  MagnitudeType getTolerance() const { return SCT::magnitude(SCT::zero()); };
 
   //! Returns the test value, \f$ \frac{\|r\|}{\sigma} \f$, computed in most recent call to CheckStatus.
-  const std::vector<MagnitudeType>* getTestValue() const {return NULL;};
+  const std::vector<MagnitudeType>* getTestValue() const { return NULL; };
 
   //! Returns the residual norm value, \f$ \|r\| \f$, computed in most recent call to CheckStatus.
-  const std::vector<MagnitudeType>* getResNormValue() const {return NULL;};
+  const std::vector<MagnitudeType>* getResNormValue() const { return NULL; };
 
   //! Returns the scaled norm value, \f$ \sigma \f$.
-  const std::vector<MagnitudeType>* getScaledNormValue() const {return NULL;};
+  const std::vector<MagnitudeType>* getScaledNormValue() const { return NULL; };
 
   //! Returns a boolean indicating a loss of accuracy has been detected in computing the residual.
   //! \note This status test does not check for loss of accuracy, so this method will always return false.
   bool getLOADetected() const { return false; }
 
   //@}
-
 
   /** @name Misc. */
   //@{
@@ -214,7 +212,7 @@ class StatusTestGenResSubNorm: public StatusTestResNorm<ScalarType,MV,OP,DM> {
    * After this function is called <tt>getScaledNormValue()</tt> can be called
    * to get the scaling vector.
    */
-  StatusType firstCallCheckStatusSetup(Iteration<ScalarType,MV,OP,DM>* iSolver) {
+  StatusType firstCallCheckStatusSetup(Iteration<ScalarType, MV, OP, DM>* iSolver) {
     return Undefined;
   }
   //@}
@@ -223,8 +221,7 @@ class StatusTestGenResSubNorm: public StatusTestResNorm<ScalarType,MV,OP,DM> {
   //@{
 
   /** \brief Method to return description of the maximum iteration status test  */
-  std::string description() const
-  { return std::string(""); }
+  std::string description() const { return std::string(""); }
   //@}
 };
 
@@ -232,19 +229,18 @@ class StatusTestGenResSubNorm: public StatusTestResNorm<ScalarType,MV,OP,DM> {
 
 // specialization for Thyra
 template <class ScalarType>
-class StatusTestGenResSubNorm<ScalarType,Thyra::MultiVectorBase<ScalarType>,Thyra::LinearOpBase<ScalarType>,DefaultDenseMatrix<int,ScalarType> >
-   : public StatusTestResNorm<ScalarType,Thyra::MultiVectorBase<ScalarType>,Thyra::LinearOpBase<ScalarType>,DefaultDenseMatrix<int,ScalarType> > {
-
+class StatusTestGenResSubNorm<ScalarType, Thyra::MultiVectorBase<ScalarType>, Thyra::LinearOpBase<ScalarType>, DefaultDenseMatrix<int, ScalarType>>
+  : public StatusTestResNorm<ScalarType, Thyra::MultiVectorBase<ScalarType>, Thyra::LinearOpBase<ScalarType>, DefaultDenseMatrix<int, ScalarType>> {
  public:
   // Convenience typedefs
   typedef Thyra::MultiVectorBase<ScalarType> MV;
-  typedef Thyra::LinearOpBase<ScalarType>    OP;
-  typedef DefaultDenseMatrix<int,ScalarType> DM;
+  typedef Thyra::LinearOpBase<ScalarType> OP;
+  typedef DefaultDenseMatrix<int, ScalarType> DM;
 
   typedef Teuchos::ScalarTraits<ScalarType> SCT;
   typedef typename SCT::magnitudeType MagnitudeType;
-  typedef MultiVecTraits<ScalarType,MV,DM>  MVT;
-  typedef OperatorTraits<ScalarType,MV,OP>  OT;
+  typedef MultiVecTraits<ScalarType, MV, DM> MVT;
+  typedef OperatorTraits<ScalarType, MV, OP> OT;
 
   //! @name Constructors/destructors.
   //@{
@@ -261,26 +257,26 @@ class StatusTestGenResSubNorm<ScalarType,Thyra::MultiVectorBase<ScalarType>,Thyr
     @param showMaxResNormOnly: for output only
 
   */
-  StatusTestGenResSubNorm( MagnitudeType Tolerance, size_t subIdx, int quorum = -1, bool showMaxResNormOnly = false )
-  : tolerance_(Tolerance),
-    subIdx_(subIdx),
-    quorum_(quorum),
-    showMaxResNormOnly_(showMaxResNormOnly),
-    resnormtype_(TwoNorm),
-    scaletype_(NormOfInitRes),
-    scalenormtype_(TwoNorm),
-    scalevalue_(Teuchos::ScalarTraits<MagnitudeType>::one ()),
-    status_(Undefined),
-    curBlksz_(0),
-    curNumRHS_(0),
-    curLSNum_(0),
-    numrhs_(0),
-    firstcallCheckStatus_(true),
-    firstcallDefineResForm_(true),
-    firstcallDefineScaleForm_(true) { }
+  StatusTestGenResSubNorm(MagnitudeType Tolerance, size_t subIdx, int quorum = -1, bool showMaxResNormOnly = false)
+    : tolerance_(Tolerance)
+    , subIdx_(subIdx)
+    , quorum_(quorum)
+    , showMaxResNormOnly_(showMaxResNormOnly)
+    , resnormtype_(TwoNorm)
+    , scaletype_(NormOfInitRes)
+    , scalenormtype_(TwoNorm)
+    , scalevalue_(Teuchos::ScalarTraits<MagnitudeType>::one())
+    , status_(Undefined)
+    , curBlksz_(0)
+    , curNumRHS_(0)
+    , curLSNum_(0)
+    , numrhs_(0)
+    , firstcallCheckStatus_(true)
+    , firstcallDefineResForm_(true)
+    , firstcallDefineScaleForm_(true) {}
 
   //! Destructor
-  virtual ~StatusTestGenResSubNorm() { };
+  virtual ~StatusTestGenResSubNorm(){};
   //@}
 
   //! @name Form and parameter definition methods.
@@ -294,13 +290,13 @@ class StatusTestGenResSubNorm<ScalarType,Thyra::MultiVectorBase<ScalarType>,Thyr
     </ul>
   */
   int defineResForm(NormType TypeOfNorm) {
-    TEUCHOS_TEST_FOR_EXCEPTION(firstcallDefineResForm_==false,StatusTestError,
-          "StatusTestGenResSubNorm::defineResForm(): The residual form has already been defined.");
+    TEUCHOS_TEST_FOR_EXCEPTION(firstcallDefineResForm_ == false, StatusTestError,
+                               "StatusTestGenResSubNorm::defineResForm(): The residual form has already been defined.");
     firstcallDefineResForm_ = false;
 
     resnormtype_ = TypeOfNorm;
 
-    return(0);
+    return (0);
   }
 
   //! Define form of the scaling, its norm, its optional weighting vector, or, alternatively, define an explicit value.
@@ -324,35 +320,47 @@ class StatusTestGenResSubNorm<ScalarType,Thyra::MultiVectorBase<ScalarType>,Thyr
     </ul>
     </ol>
   */
-  int defineScaleForm( ScaleType TypeOfScaling, NormType TypeOfNorm, MagnitudeType ScaleValue = Teuchos::ScalarTraits<MagnitudeType>::one()) {
-    TEUCHOS_TEST_FOR_EXCEPTION(firstcallDefineScaleForm_==false,StatusTestError,
-          "StatusTestGenResSubNorm::defineScaleForm(): The scaling type has already been defined.");
+  int defineScaleForm(ScaleType TypeOfScaling, NormType TypeOfNorm, MagnitudeType ScaleValue = Teuchos::ScalarTraits<MagnitudeType>::one()) {
+    TEUCHOS_TEST_FOR_EXCEPTION(firstcallDefineScaleForm_ == false, StatusTestError,
+                               "StatusTestGenResSubNorm::defineScaleForm(): The scaling type has already been defined.");
     firstcallDefineScaleForm_ = false;
 
-    scaletype_ = TypeOfScaling;
+    scaletype_     = TypeOfScaling;
     scalenormtype_ = TypeOfNorm;
-    scalevalue_ = ScaleValue;
+    scalevalue_    = ScaleValue;
 
-    return(0);
+    return (0);
   }
 
   //! Set the value of the tolerance
   /*! We allow the tolerance to be reset for cases where, in the process of testing the residual,
     we find that the initial tolerance was too tight or too lax.
   */
-  int setTolerance(MagnitudeType tolerance) {tolerance_ = tolerance; return(0);}
+  int setTolerance(MagnitudeType tolerance) {
+    tolerance_ = tolerance;
+    return (0);
+  }
 
   //! Set the block index of which we want to check the norm of the sub-residuals
   /*! It does not really make sense to change/reset the index during the solution process
    */
-  int setSubIdx ( size_t subIdx ) { subIdx_ = subIdx; return(0);}
+  int setSubIdx(size_t subIdx) {
+    subIdx_ = subIdx;
+    return (0);
+  }
 
   //! Sets the number of residuals that must pass the convergence test before Passed is returned.
   //! \note If \c quorum=-1 then all residuals must pass the convergence test before Passed is returned.
-  int setQuorum(int quorum) {quorum_ = quorum; return(0);}
+  int setQuorum(int quorum) {
+    quorum_ = quorum;
+    return (0);
+  }
 
   //! Set whether the only maximum residual norm is displayed when the print() method is called
-  int setShowMaxResNormOnly(bool showMaxResNormOnly) {showMaxResNormOnly_ = showMaxResNormOnly; return(0);}
+  int setShowMaxResNormOnly(bool showMaxResNormOnly) {
+    showMaxResNormOnly_ = showMaxResNormOnly;
+    return (0);
+  }
 
   //@}
 
@@ -365,55 +373,57 @@ class StatusTestGenResSubNorm<ScalarType,Thyra::MultiVectorBase<ScalarType>,Thyr
 
     \return StatusType: Passed, Failed, or Undefined.
   */
-  StatusType checkStatus(Iteration<ScalarType,MV,OP,DM>* iSolver) {
-    MagnitudeType zero = Teuchos::ScalarTraits<MagnitudeType>::zero();
-    const LinearProblem<ScalarType,MV,OP,DM>& lp = iSolver->getProblem();
+  StatusType checkStatus(Iteration<ScalarType, MV, OP, DM>* iSolver) {
+    MagnitudeType zero                              = Teuchos::ScalarTraits<MagnitudeType>::zero();
+    const LinearProblem<ScalarType, MV, OP, DM>& lp = iSolver->getProblem();
     // Compute scaling term (done once for each block that's being solved)
     if (firstcallCheckStatus_) {
       StatusType status = firstCallCheckStatusSetup(iSolver);
-      if(status==Failed) {
+      if (status == Failed) {
         status_ = Failed;
-        return(status_);
+        return (status_);
       }
     }
 
     //
     // This section computes the norm of the residual vector
     //
-    if ( curLSNum_ != lp.getLSNumber() ) {
+    if (curLSNum_ != lp.getLSNumber()) {
       //
       // We have moved on to the next rhs block
       //
-      curLSNum_ = lp.getLSNumber();
-      curLSIdx_ = lp.getLSIndex();
-      curBlksz_ = (int)curLSIdx_.size();
+      curLSNum_   = lp.getLSNumber();
+      curLSIdx_   = lp.getLSIndex();
+      curBlksz_   = (int)curLSIdx_.size();
       int validLS = 0;
-      for (int i=0; i<curBlksz_; ++i) {
+      for (int i = 0; i < curBlksz_; ++i) {
         if (curLSIdx_[i] > -1 && curLSIdx_[i] < numrhs_)
           validLS++;
       }
       curNumRHS_ = validLS;
-      curSoln_ = Teuchos::null;
+      curSoln_   = Teuchos::null;
       //
     } else {
       //
       // We are in the same rhs block, return if we are converged
       //
-      if (status_==Passed) { return status_; }
+      if (status_ == Passed) {
+        return status_;
+      }
     }
 
     //
     // Request the true residual for this block of right-hand sides.
     //
     Teuchos::RCP<MV> cur_update = iSolver->getCurrentUpdate();
-    curSoln_ = lp.updateSolution( cur_update );
-    Teuchos::RCP<MV> cur_res = MVT::Clone( *curSoln_, MVT::GetNumberVecs( *curSoln_ ) );
-    lp.computeCurrResVec( &*cur_res, &*curSoln_ );
-    std::vector<MagnitudeType> tmp_resvector( MVT::GetNumberVecs( *cur_res ) );
-    MvSubNorm( *cur_res, subIdx_, tmp_resvector, resnormtype_ );
+    curSoln_                    = lp.updateSolution(cur_update);
+    Teuchos::RCP<MV> cur_res    = MVT::Clone(*curSoln_, MVT::GetNumberVecs(*curSoln_));
+    lp.computeCurrResVec(&*cur_res, &*curSoln_);
+    std::vector<MagnitudeType> tmp_resvector(MVT::GetNumberVecs(*cur_res));
+    MvSubNorm(*cur_res, subIdx_, tmp_resvector, resnormtype_);
 
     typename std::vector<int>::iterator pp = curLSIdx_.begin();
-    for (int i=0; pp<curLSIdx_.end(); ++pp, ++i) {
+    for (int i = 0; pp < curLSIdx_.end(); ++pp, ++i) {
       // Check if this index is valid
       if (*pp != -1)
         resvector_[*pp] = tmp_resvector[i];
@@ -423,58 +433,57 @@ class StatusTestGenResSubNorm<ScalarType,Thyra::MultiVectorBase<ScalarType>,Thyr
     // Compute the new linear system residuals for testing.
     // (if any of them don't meet the tolerance or are NaN, then we exit with that status)
     //
-    if ( scalevector_.size() > 0 ) {
+    if (scalevector_.size() > 0) {
       typename std::vector<int>::iterator p = curLSIdx_.begin();
-      for (; p<curLSIdx_.end(); ++p) {
+      for (; p < curLSIdx_.end(); ++p) {
         // Check if this index is valid
         if (*p != -1) {
           // Scale the std::vector accordingly
-          if ( scalevector_[ *p ] != zero ) {
+          if (scalevector_[*p] != zero) {
             // Don't intentionally divide by zero.
-            testvector_[ *p ] = resvector_[ *p ] / scalevector_[ *p ] / scalevalue_;
+            testvector_[*p] = resvector_[*p] / scalevector_[*p] / scalevalue_;
           } else {
-            testvector_[ *p ] = resvector_[ *p ] / scalevalue_;
+            testvector_[*p] = resvector_[*p] / scalevalue_;
           }
         }
       }
-    }
-    else {
+    } else {
       typename std::vector<int>::iterator ppp = curLSIdx_.begin();
-      for (; ppp<curLSIdx_.end(); ++ppp) {
+      for (; ppp < curLSIdx_.end(); ++ppp) {
         // Check if this index is valid
         if (*ppp != -1)
-          testvector_[ *ppp ] = resvector_[ *ppp ] / scalevalue_;
+          testvector_[*ppp] = resvector_[*ppp] / scalevalue_;
       }
     }
     // Check status of new linear system residuals and see if we have the quorum.
     int have = 0;
-    ind_.resize( curLSIdx_.size() );
+    ind_.resize(curLSIdx_.size());
     typename std::vector<int>::iterator p2 = curLSIdx_.begin();
-    for (; p2<curLSIdx_.end(); ++p2) {
+    for (; p2 < curLSIdx_.end(); ++p2) {
       // Check if this index is valid
       if (*p2 != -1) {
         // Check if any of the residuals are larger than the tolerance.
-        if (testvector_[ *p2 ] > tolerance_) {
+        if (testvector_[*p2] > tolerance_) {
           // do nothing.
-        } else if (testvector_[ *p2 ] <= tolerance_) {
+        } else if (testvector_[*p2] <= tolerance_) {
           ind_[have] = *p2;
           have++;
         } else {
           // Throw an std::exception if a NaN is found.
           status_ = Failed;
-          TEUCHOS_TEST_FOR_EXCEPTION(true,StatusTestNaNError,"StatusTestGenResSubNorm::checkStatus(): NaN has been detected.");
+          TEUCHOS_TEST_FOR_EXCEPTION(true, StatusTestNaNError, "StatusTestGenResSubNorm::checkStatus(): NaN has been detected.");
         }
       }
     }
     ind_.resize(have);
-    int need = (quorum_ == -1) ? curNumRHS_: quorum_;
-    status_ = (have >= need) ? Passed : Failed;
+    int need = (quorum_ == -1) ? curNumRHS_ : quorum_;
+    status_  = (have >= need) ? Passed : Failed;
     // Return the current status
     return status_;
   }
 
   //! Return the result of the most recent CheckStatus call.
-  StatusType getStatus() const {return(status_);};
+  StatusType getStatus() const { return (status_); };
   //@}
 
   //! @name Reset methods
@@ -482,14 +491,14 @@ class StatusTestGenResSubNorm<ScalarType,Thyra::MultiVectorBase<ScalarType>,Thyr
 
   //! Resets the internal configuration to the initial state.
   void reset() {
-    status_ = Undefined;
+    status_   = Undefined;
     curBlksz_ = 0;
     curLSNum_ = 0;
     curLSIdx_.resize(0);
     numrhs_ = 0;
     ind_.resize(0);
     firstcallCheckStatus_ = true;
-    curSoln_ = Teuchos::null;
+    curSoln_              = Teuchos::null;
   }
 
   //@}
@@ -500,29 +509,30 @@ class StatusTestGenResSubNorm<ScalarType,Thyra::MultiVectorBase<ScalarType>,Thyr
   //! Output formatted description of stopping test to output stream.
   void print(std::ostream& os, int indent = 0) const {
     os.setf(std::ios_base::scientific);
-    for (int j = 0; j < indent; j ++)
+    for (int j = 0; j < indent; j++)
       os << ' ';
     printStatus(os, status_);
     os << resFormStr();
-    if (status_==Undefined)
+    if (status_ == Undefined)
       os << ", tol = " << tolerance_ << std::endl;
     else {
       os << std::endl;
-      if(showMaxResNormOnly_ && curBlksz_ > 1) {
+      if (showMaxResNormOnly_ && curBlksz_ > 1) {
         const MagnitudeType maxRelRes = *std::max_element(
-          testvector_.begin()+curLSIdx_[0],testvector_.begin()+curLSIdx_[curBlksz_-1]
-          );
-        for (int j = 0; j < indent + 13; j ++)
+            testvector_.begin() + curLSIdx_[0], testvector_.begin() + curLSIdx_[curBlksz_ - 1]);
+        for (int j = 0; j < indent + 13; j++)
           os << ' ';
-        os << "max{residual["<<curLSIdx_[0]<<"..."<<curLSIdx_[curBlksz_-1]<<"]} = " << maxRelRes
-           << ( maxRelRes <= tolerance_ ? " <= " : " > " ) << tolerance_ << std::endl;
-      }
-      else {
-        for ( int i=0; i<numrhs_; i++ ) {
-          for (int j = 0; j < indent + 13; j ++)
+        os << "max{residual[" << curLSIdx_[0] << "..." << curLSIdx_[curBlksz_ - 1] << "]} = " << maxRelRes
+           << (maxRelRes <= tolerance_ ? " <= " : " > ") << tolerance_ << std::endl;
+      } else {
+        for (int i = 0; i < numrhs_; i++) {
+          for (int j = 0; j < indent + 13; j++)
             os << ' ';
-          os << "residual [ " << i << " ] = " << testvector_[ i ];
-          os << ((testvector_[i]<tolerance_) ? " < " : (testvector_[i]==tolerance_) ? " == " : (testvector_[i]>tolerance_) ? " > " : " "  ) << tolerance_ << std::endl;
+          os << "residual [ " << i << " ] = " << testvector_[i];
+          os << ((testvector_[i] < tolerance_) ? " < " : (testvector_[i] == tolerance_) ? " == "
+                                                     : (testvector_[i] > tolerance_)    ? " > "
+                                                                                        : " ")
+             << tolerance_ << std::endl;
         }
       }
     }
@@ -533,19 +543,19 @@ class StatusTestGenResSubNorm<ScalarType,Thyra::MultiVectorBase<ScalarType>,Thyr
   void printStatus(std::ostream& os, StatusType type) const {
     os << std::left << std::setw(13) << std::setfill('.');
     switch (type) {
-    case  Passed:
-      os << "Converged";
-      break;
-    case  Failed:
-      os << "Unconverged";
-      break;
-    case  Undefined:
-    default:
-      os << "**";
-      break;
+      case Passed:
+        os << "Converged";
+        break;
+      case Failed:
+        os << "Unconverged";
+        break;
+      case Undefined:
+      default:
+        os << "**";
+        break;
     }
     os << std::left << std::setfill(' ');
-      return;
+    return;
   }
   //@}
 
@@ -569,23 +579,22 @@ class StatusTestGenResSubNorm<ScalarType,Thyra::MultiVectorBase<ScalarType>,Thyr
   std::vector<int> convIndices() { return ind_; }
 
   //! Returns the value of the tolerance, \f$ \tau \f$, set in the constructor.
-  MagnitudeType getTolerance() const {return(tolerance_);};
+  MagnitudeType getTolerance() const { return (tolerance_); };
 
   //! Returns the test value, \f$ \frac{\|r\|}{\sigma} \f$, computed in most recent call to CheckStatus.
-  const std::vector<MagnitudeType>* getTestValue() const {return(&testvector_);};
+  const std::vector<MagnitudeType>* getTestValue() const { return (&testvector_); };
 
   //! Returns the residual norm value, \f$ \|r\| \f$, computed in most recent call to CheckStatus.
-  const std::vector<MagnitudeType>* getResNormValue() const {return(&resvector_);};
+  const std::vector<MagnitudeType>* getResNormValue() const { return (&resvector_); };
 
   //! Returns the scaled norm value, \f$ \sigma \f$.
-  const std::vector<MagnitudeType>* getScaledNormValue() const {return(&scalevector_);};
+  const std::vector<MagnitudeType>* getScaledNormValue() const { return (&scalevector_); };
 
   //! Returns a boolean indicating a loss of accuracy has been detected in computing the residual.
   //! \note This status test does not check for loss of accuracy, so this method will always return false.
   bool getLOADetected() const { return false; }
 
   //@}
-
 
   /** @name Misc. */
   //@{
@@ -595,11 +604,11 @@ class StatusTestGenResSubNorm<ScalarType,Thyra::MultiVectorBase<ScalarType>,Thyr
    * After this function is called <tt>getScaledNormValue()</tt> can be called
    * to get the scaling vector.
    */
-  StatusType firstCallCheckStatusSetup(Iteration<ScalarType,MV,OP,DM>* iSolver) {
+  StatusType firstCallCheckStatusSetup(Iteration<ScalarType, MV, OP, DM>* iSolver) {
     int i;
-    MagnitudeType zero = Teuchos::ScalarTraits<MagnitudeType>::zero();
-    MagnitudeType one = Teuchos::ScalarTraits<MagnitudeType>::one();
-    const LinearProblem<ScalarType,MV,OP,DM>& lp = iSolver->getProblem();
+    MagnitudeType zero                              = Teuchos::ScalarTraits<MagnitudeType>::zero();
+    MagnitudeType one                               = Teuchos::ScalarTraits<MagnitudeType>::one();
+    const LinearProblem<ScalarType, MV, OP, DM>& lp = iSolver->getProblem();
     // Compute scaling term (done once for each block that's being solved)
     if (firstcallCheckStatus_) {
       //
@@ -607,71 +616,66 @@ class StatusTestGenResSubNorm<ScalarType,Thyra::MultiVectorBase<ScalarType>,Thyr
       //
       firstcallCheckStatus_ = false;
 
-      if (scaletype_== NormOfRHS) {
+      if (scaletype_ == NormOfRHS) {
         Teuchos::RCP<const MV> rhs = lp.getRHS();
-        numrhs_ = MVT::GetNumberVecs( *rhs );
-        scalevector_.resize( numrhs_ );
-        MvSubNorm( *rhs, subIdx_, scalevector_, scalenormtype_ );
-      }
-      else if (scaletype_==NormOfInitRes) {
+        numrhs_                    = MVT::GetNumberVecs(*rhs);
+        scalevector_.resize(numrhs_);
+        MvSubNorm(*rhs, subIdx_, scalevector_, scalenormtype_);
+      } else if (scaletype_ == NormOfInitRes) {
         Teuchos::RCP<const MV> init_res = lp.getInitResVec();
-        numrhs_ = MVT::GetNumberVecs( *init_res );
-        scalevector_.resize( numrhs_ );
-        MvSubNorm( *init_res, subIdx_, scalevector_, scalenormtype_ );
-      }
-      else if (scaletype_==NormOfPrecInitRes) {
+        numrhs_                         = MVT::GetNumberVecs(*init_res);
+        scalevector_.resize(numrhs_);
+        MvSubNorm(*init_res, subIdx_, scalevector_, scalenormtype_);
+      } else if (scaletype_ == NormOfPrecInitRes) {
         Teuchos::RCP<const MV> init_res = lp.getInitPrecResVec();
-        numrhs_ = MVT::GetNumberVecs( *init_res );
-        scalevector_.resize( numrhs_ );
-        MvSubNorm( *init_res, subIdx_, scalevector_, scalenormtype_ );
-      }
-      else if (scaletype_==NormOfFullInitRes) {
+        numrhs_                         = MVT::GetNumberVecs(*init_res);
+        scalevector_.resize(numrhs_);
+        MvSubNorm(*init_res, subIdx_, scalevector_, scalenormtype_);
+      } else if (scaletype_ == NormOfFullInitRes) {
         Teuchos::RCP<const MV> init_res = lp.getInitResVec();
-        numrhs_ = MVT::GetNumberVecs( *init_res );
-        scalevector_.resize( numrhs_ );
-        MVT::MvNorm( *init_res, scalevector_, scalenormtype_ );
+        numrhs_                         = MVT::GetNumberVecs(*init_res);
+        scalevector_.resize(numrhs_);
+        MVT::MvNorm(*init_res, scalevector_, scalenormtype_);
         scalevalue_ = Teuchos::ScalarTraits<MagnitudeType>::one();
-      }
-      else if (scaletype_==NormOfFullPrecInitRes) {
+      } else if (scaletype_ == NormOfFullPrecInitRes) {
         Teuchos::RCP<const MV> init_res = lp.getInitPrecResVec();
-        numrhs_ = MVT::GetNumberVecs( *init_res );
-        scalevector_.resize( numrhs_ );
-        MVT::MvNorm( *init_res, scalevector_, scalenormtype_ );
+        numrhs_                         = MVT::GetNumberVecs(*init_res);
+        scalevector_.resize(numrhs_);
+        MVT::MvNorm(*init_res, scalevector_, scalenormtype_);
         scalevalue_ = Teuchos::ScalarTraits<MagnitudeType>::one();
-      }
-      else if (scaletype_==NormOfFullScaledInitRes) {
+      } else if (scaletype_ == NormOfFullScaledInitRes) {
         Teuchos::RCP<const MV> init_res = lp.getInitResVec();
-        numrhs_ = MVT::GetNumberVecs( *init_res );
-        scalevector_.resize( numrhs_ );
-        MVT::MvNorm( *init_res, scalevector_, scalenormtype_ );
-        MvScalingRatio( *init_res, subIdx_, scalevalue_ );
-      }
-      else if (scaletype_==NormOfFullScaledPrecInitRes) {
+        numrhs_                         = MVT::GetNumberVecs(*init_res);
+        scalevector_.resize(numrhs_);
+        MVT::MvNorm(*init_res, scalevector_, scalenormtype_);
+        MvScalingRatio(*init_res, subIdx_, scalevalue_);
+      } else if (scaletype_ == NormOfFullScaledPrecInitRes) {
         Teuchos::RCP<const MV> init_res = lp.getInitPrecResVec();
-        numrhs_ = MVT::GetNumberVecs( *init_res );
-        scalevector_.resize( numrhs_ );
-        MVT::MvNorm( *init_res, scalevector_, scalenormtype_ );
-        MvScalingRatio( *init_res, subIdx_, scalevalue_ );
-      }
-      else {
-        numrhs_ = MVT::GetNumberVecs( *(lp.getRHS()) );
+        numrhs_                         = MVT::GetNumberVecs(*init_res);
+        scalevector_.resize(numrhs_);
+        MVT::MvNorm(*init_res, scalevector_, scalenormtype_);
+        MvScalingRatio(*init_res, subIdx_, scalevalue_);
+      } else {
+        numrhs_ = MVT::GetNumberVecs(*(lp.getRHS()));
       }
 
-      resvector_.resize( numrhs_ );
-      testvector_.resize( numrhs_ );
+      resvector_.resize(numrhs_);
+      testvector_.resize(numrhs_);
 
-      curLSNum_ = lp.getLSNumber();
-      curLSIdx_ = lp.getLSIndex();
-      curBlksz_ = (int)curLSIdx_.size();
+      curLSNum_   = lp.getLSNumber();
+      curLSIdx_   = lp.getLSIndex();
+      curBlksz_   = (int)curLSIdx_.size();
       int validLS = 0;
-      for (i=0; i<curBlksz_; ++i) {
+      for (i = 0; i < curBlksz_; ++i) {
         if (curLSIdx_[i] > -1 && curLSIdx_[i] < numrhs_)
           validLS++;
       }
       curNumRHS_ = validLS;
       //
       // Initialize the testvector.
-      for (i=0; i<numrhs_; i++) { testvector_[i] = one; }
+      for (i = 0; i < numrhs_; i++) {
+        testvector_[i] = one;
+      }
 
       // Return an error if the scaling is zero.
       if (scalevalue_ == zero) {
@@ -686,8 +690,7 @@ class StatusTestGenResSubNorm<ScalarType,Thyra::MultiVectorBase<ScalarType>,Thyr
   //@{
 
   /** \brief Method to return description of the maximum iteration status test  */
-  std::string description() const
-  {
+  std::string description() const {
     std::ostringstream oss;
     oss << "Belos::StatusTestGenResSubNorm<>: " << resFormStr();
     oss << ", tol = " << tolerance_;
@@ -696,43 +699,41 @@ class StatusTestGenResSubNorm<ScalarType,Thyra::MultiVectorBase<ScalarType>,Thyr
   //@}
 
  protected:
-
  private:
-
   //! @name Private methods.
   //@{
   /** \brief Description of current residual form */
-  std::string resFormStr() const
-  {
+  std::string resFormStr() const {
     std::ostringstream oss;
     oss << "(";
-    oss << ((resnormtype_==OneNorm) ? "1-Norm" : (resnormtype_==TwoNorm) ? "2-Norm" : "Inf-Norm");
+    oss << ((resnormtype_ == OneNorm) ? "1-Norm" : (resnormtype_ == TwoNorm) ? "2-Norm"
+                                                                             : "Inf-Norm");
     oss << " Exp";
     oss << " Res Vec [" << subIdx_ << "]) ";
 
     // If there is no residual scaling, return current string.
-    if (scaletype_!=None)
-    {
+    if (scaletype_ != None) {
       // Insert division sign.
       oss << "/ ";
 
       // Determine output string for scaling, if there is any.
-      if (scaletype_==UserProvided)
+      if (scaletype_ == UserProvided)
         oss << " (User Scale)";
       else {
         oss << "(";
-        oss << ((scalenormtype_==OneNorm) ? "1-Norm" : (resnormtype_==TwoNorm) ? "2-Norm" : "Inf-Norm");
-        if (scaletype_==NormOfInitRes)
+        oss << ((scalenormtype_ == OneNorm) ? "1-Norm" : (resnormtype_ == TwoNorm) ? "2-Norm"
+                                                                                   : "Inf-Norm");
+        if (scaletype_ == NormOfInitRes)
           oss << " Res0 [" << subIdx_ << "]";
-        else if (scaletype_==NormOfPrecInitRes)
+        else if (scaletype_ == NormOfPrecInitRes)
           oss << " Prec Res0 [" << subIdx_ << "]";
-        else if (scaletype_==NormOfFullInitRes)
+        else if (scaletype_ == NormOfFullInitRes)
           oss << " Full Res0 [" << subIdx_ << "]";
-        else if (scaletype_==NormOfFullPrecInitRes)
+        else if (scaletype_ == NormOfFullPrecInitRes)
           oss << " Full Prec Res0 [" << subIdx_ << "]";
-        else if (scaletype_==NormOfFullScaledInitRes)
+        else if (scaletype_ == NormOfFullScaledInitRes)
           oss << " scaled Full Res0 [" << subIdx_ << "]";
-        else if (scaletype_==NormOfFullScaledPrecInitRes)
+        else if (scaletype_ == NormOfFullScaledPrecInitRes)
           oss << " scaled Full Prec Res0 [" << subIdx_ << "]";
         else
           oss << " RHS [" << subIdx_ << "]";
@@ -751,31 +752,33 @@ class StatusTestGenResSubNorm<ScalarType,Thyra::MultiVectorBase<ScalarType>,Thyr
   //@{
 
   // calculate norm of partial multivector
-  void MvSubNorm( const MV& mv, size_t block, std::vector<typename Teuchos::ScalarTraits<ScalarType>::magnitudeType>& normVec, NormType type = TwoNorm) {
+  void MvSubNorm(const MV& mv, size_t block, std::vector<typename Teuchos::ScalarTraits<ScalarType>::magnitudeType>& normVec, NormType type = TwoNorm) {
     Teuchos::RCP<const MV> input = Teuchos::rcpFromRef(mv);
 
     typedef typename Thyra::ProductMultiVectorBase<ScalarType> TPMVB;
     Teuchos::RCP<const TPMVB> thyProdVec = Teuchos::rcp_dynamic_cast<const TPMVB>(input);
 
     TEUCHOS_TEST_FOR_EXCEPTION(thyProdVec == Teuchos::null, std::invalid_argument,
-                             "Belos::StatusTestGenResSubNorm::MvSubNorm (Thyra specialization): "
-                             "mv must be a Thyra::ProductMultiVector, but is of type " << thyProdVec);
+                               "Belos::StatusTestGenResSubNorm::MvSubNorm (Thyra specialization): "
+                               "mv must be a Thyra::ProductMultiVector, but is of type "
+                                   << thyProdVec);
 
     Teuchos::RCP<const MV> thySubVec = thyProdVec->getMultiVectorBlock(block);
 
-    MVT::MvNorm(*thySubVec,normVec,type);
+    MVT::MvNorm(*thySubVec, normVec, type);
   }
 
   // calculate ration of sub-vector length to full vector length (for scalevalue_)
-  void MvScalingRatio( const MV& mv, size_t block, MagnitudeType& lengthRatio) {
+  void MvScalingRatio(const MV& mv, size_t block, MagnitudeType& lengthRatio) {
     Teuchos::RCP<const MV> input = Teuchos::rcpFromRef(mv);
 
     typedef typename Thyra::ProductMultiVectorBase<ScalarType> TPMVB;
     Teuchos::RCP<const TPMVB> thyProdVec = Teuchos::rcp_dynamic_cast<const TPMVB>(input);
 
     TEUCHOS_TEST_FOR_EXCEPTION(thyProdVec == Teuchos::null, std::invalid_argument,
-                             "Belos::StatusTestGenResSubNorm::MvScalingRatio (Thyra specialization): "
-                             "mv must be a Thyra::ProductMultiVector, but is of type " << thyProdVec);
+                               "Belos::StatusTestGenResSubNorm::MvScalingRatio (Thyra specialization): "
+                               "mv must be a Thyra::ProductMultiVector, but is of type "
+                                   << thyProdVec);
 
     Teuchos::RCP<const MV> thySubVec = thyProdVec->getMultiVectorBlock(block);
 
@@ -854,11 +857,10 @@ class StatusTestGenResSubNorm<ScalarType,Thyra::MultiVectorBase<ScalarType>,Thyr
   bool firstcallDefineScaleForm_;
 
   //@}
-
 };
 
-#endif // HAVE_BELOS_THYRA
+#endif  // HAVE_BELOS_THYRA
 
-} // end namespace Belos
+}  // end namespace Belos
 
 #endif /* BELOS_STATUS_TEST_RESSUBNORM_H */

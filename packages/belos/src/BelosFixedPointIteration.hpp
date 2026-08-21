@@ -20,33 +20,31 @@
 
 namespace Belos {
 
-  //! @name FixedPointIteration Structures 
-  //@{ 
-  
-  /** \brief Structure to contain pointers to FixedPointIteration state variables.
-   *
-   * This struct is utilized by FixedPointIteration::initialize() and FixedPointIteration::getState().
-   */
-  template <class ScalarType, class MV>
-  struct FixedPointIterationState {
+//! @name FixedPointIteration Structures
+//@{
 
-    /*! \brief The current residual. */
-    Teuchos::RCP<const MV> R;
+/** \brief Structure to contain pointers to FixedPointIteration state variables.
+ *
+ * This struct is utilized by FixedPointIteration::initialize() and FixedPointIteration::getState().
+ */
+template <class ScalarType, class MV>
+struct FixedPointIterationState {
+  /*! \brief The current residual. */
+  Teuchos::RCP<const MV> R;
 
-    /*! \brief The current preconditioned residual. */
-    Teuchos::RCP<const MV> Z;
-    
-    FixedPointIterationState() : R(Teuchos::null), Z(Teuchos::null)
-    {}
-  };
+  /*! \brief The current preconditioned residual. */
+  Teuchos::RCP<const MV> Z;
 
-template<class ScalarType, class MV, class OP, class DM>
-class FixedPointIteration : virtual public Iteration<ScalarType,MV,OP,DM> {
+  FixedPointIterationState()
+    : R(Teuchos::null)
+    , Z(Teuchos::null) {}
+};
 
-  public:
-
+template <class ScalarType, class MV, class OP, class DM>
+class FixedPointIteration : virtual public Iteration<ScalarType, MV, OP, DM> {
+ public:
   //! @name State methods
-  //@{ 
+  //@{
   /*! \brief Initialize the solver to an iterate, providing a complete state.
    *
    * The %FixedPointIteration contains a certain amount of state.
@@ -54,13 +52,13 @@ class FixedPointIteration : virtual public Iteration<ScalarType,MV,OP,DM> {
    * initialize() gives the user the opportunity to manually set these,
    * although only the current unpreconditioned residual is required.
    *
-   * \post 
+   * \post
    * <li>isInitialized() == \c true (see post-conditions of isInitialize())
    *
-   * \note For any pointer in \c newstate which directly points to the multivectors in 
+   * \note For any pointer in \c newstate which directly points to the multivectors in
    * the solver, the data is not copied.
    */
-  virtual void initializeFixedPoint(FixedPointIterationState<ScalarType,MV>& newstate) = 0;
+  virtual void initializeFixedPoint(FixedPointIterationState<ScalarType, MV>& newstate) = 0;
 
   /*! \brief Get the current state of the linear solver.
    *
@@ -68,11 +66,10 @@ class FixedPointIteration : virtual public Iteration<ScalarType,MV,OP,DM> {
    *
    * \returns A FixedPointIterationState object containing const pointers to the current solver state.
    */
-  virtual FixedPointIterationState<ScalarType,MV> getState() const = 0;
+  virtual FixedPointIterationState<ScalarType, MV> getState() const = 0;
   //@}
-
 };
 
-} // end Belos namespace
+}  // namespace Belos
 
 #endif /* BELOS_FIXEDPOINT_ITERATION_HPP */

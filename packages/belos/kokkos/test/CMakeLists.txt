@@ -5,5 +5,4 @@ TRIBITS_ADD_EXECUTABLE_AND_TEST(
   SOURCES KokkosMVOPTest.cpp
   COMM serial mpi
   NUM_MPI_PROCS 1
-  )
-
+)

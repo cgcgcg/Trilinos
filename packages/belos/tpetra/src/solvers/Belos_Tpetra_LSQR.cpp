@@ -17,9 +17,8 @@
 namespace BelosTpetra {
 namespace Impl {
 
-template<class SC, class LO, class GO, class NT>
-void register_LSQR_tmpl (const bool verbose)
-{
+template <class SC, class LO, class GO, class NT>
+void register_LSQR_tmpl(const bool verbose) {
   using ::Belos::Impl::registerSolverSubclassForTypes;
   using MV = ::Tpetra::MultiVector<SC, LO, GO, NT>;
   using OP = ::Tpetra::Operator<SC, LO, GO, NT>;
@@ -27,32 +26,31 @@ void register_LSQR_tmpl (const bool verbose)
   if (verbose) {
     using Teuchos::TypeNameTraits;
     std::cout << "Registering BelosTpetra LSQRSolMgr<"
-              << TypeNameTraits<SC>::name () << ", "
-              << TypeNameTraits<LO>::name () << ", "
-              << TypeNameTraits<GO>::name () << ", "
-              << TypeNameTraits<NT>::name () << ">" << std::endl;
+              << TypeNameTraits<SC>::name() << ", "
+              << TypeNameTraits<LO>::name() << ", "
+              << TypeNameTraits<GO>::name() << ", "
+              << TypeNameTraits<NT>::name() << ">" << std::endl;
   }
   const char solverName[] = "LSQR";
   {
-    using DM = ::Teuchos::SerialDenseMatrix<int, SC>;
+    using DM          = ::Teuchos::SerialDenseMatrix<int, SC>;
     using solver_type = ::Belos::LSQRSolMgr<SC, MV, OP, DM>;
-    registerSolverSubclassForTypes<solver_type, SC, MV, OP, DM> (solverName);
+    registerSolverSubclassForTypes<solver_type, SC, MV, OP, DM>(solverName);
   }
 }
 
-void register_LSQR (const bool verbose)
-{
+void register_LSQR(const bool verbose) {
   TPETRA_ETI_MANGLING_TYPEDEFS()
 
 #ifdef BELOS_TPETRA_REGISTER_LSQR
-#  undef BELOS_TPETRA_REGISTER_LSQR
-#endif // BELOS_TPETRA_REGISTER_LSQR
-#define BELOS_TPETRA_REGISTER_LSQR( SC, LO, GO, NT ) register_LSQR_tmpl<SC, LO, GO, NT> (verbose);
+#undef BELOS_TPETRA_REGISTER_LSQR
+#endif  // BELOS_TPETRA_REGISTER_LSQR
+#define BELOS_TPETRA_REGISTER_LSQR(SC, LO, GO, NT) register_LSQR_tmpl<SC, LO, GO, NT>(verbose);
 
-  TPETRA_INSTANTIATE_SLGN_NO_ORDINAL_SCALAR( BELOS_TPETRA_REGISTER_LSQR )
+  TPETRA_INSTANTIATE_SLGN_NO_ORDINAL_SCALAR(BELOS_TPETRA_REGISTER_LSQR)
 
 #undef BELOS_TPETRA_REGISTER_LSQR
 }
 
-} // namespace Impl
-} // namespace BelosTpetra
+}  // namespace Impl
+}  // namespace BelosTpetra

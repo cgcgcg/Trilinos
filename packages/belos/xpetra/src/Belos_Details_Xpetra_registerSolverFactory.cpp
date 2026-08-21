@@ -29,7 +29,7 @@
 
 #include "Xpetra_ConfigDefs.hpp"
 
-# include <TpetraCore_ETIHelperMacros.h>
+#include <TpetraCore_ETIHelperMacros.h>
 TPETRA_ETI_MANGLING_TYPEDEFS()
 
 namespace Belos {
@@ -37,72 +37,70 @@ namespace Details {
 namespace Xpetra {
 
 void registerSolverFactory() {
-
 #define BELOS_XPETRA_CALL(INSTMACRO) TPETRA_INSTANTIATE_SLGN_NO_ORDINAL_SCALAR(INSTMACRO)
 
-#define BELOS_LCL_CALL_FOR_MANAGER(manager, name, SC, LO, GO, NT)              \
-  Impl::registerSolverSubclassForTypes<                                        \
-      manager<SC, ::Xpetra::MultiVector<SC, LO, GO, NT>,                       \
-              ::Belos::OperatorT<::Xpetra::MultiVector<SC, LO, GO, NT>>,       \
-              ::Belos::DefaultDenseMatrix<int, SC>>,                           \
-      SC, ::Xpetra::MultiVector<SC, LO, GO, NT>,                               \
-      ::Belos::OperatorT<::Xpetra::MultiVector<SC, LO, GO, NT>>,               \
+#define BELOS_LCL_CALL_FOR_MANAGER(manager, name, SC, LO, GO, NT)        \
+  Impl::registerSolverSubclassForTypes<                                  \
+      manager<SC, ::Xpetra::MultiVector<SC, LO, GO, NT>,                 \
+              ::Belos::OperatorT<::Xpetra::MultiVector<SC, LO, GO, NT>>, \
+              ::Belos::DefaultDenseMatrix<int, SC>>,                     \
+      SC, ::Xpetra::MultiVector<SC, LO, GO, NT>,                         \
+      ::Belos::OperatorT<::Xpetra::MultiVector<SC, LO, GO, NT>>,         \
       ::Belos::DefaultDenseMatrix<int, SC>>(name);
 
-#define LCL_CALL(SC, LO, GO, NT)                                               \
+#define LCL_CALL(SC, LO, GO, NT) \
   BELOS_LCL_CALL_FOR_MANAGER(BiCGStabSolMgr, "BICGSTAB", SC, LO, GO, NT)
-  BELOS_XPETRA_CALL( LCL_CALL )
+  BELOS_XPETRA_CALL(LCL_CALL)
 
-  #undef LCL_CALL
-  #define LCL_CALL( SC, LO, GO, NT ) BELOS_LCL_CALL_FOR_MANAGER(BlockCGSolMgr, "BLOCK CG", SC, LO, GO, NT)
-  BELOS_XPETRA_CALL( LCL_CALL )
+#undef LCL_CALL
+#define LCL_CALL(SC, LO, GO, NT) BELOS_LCL_CALL_FOR_MANAGER(BlockCGSolMgr, "BLOCK CG", SC, LO, GO, NT)
+  BELOS_XPETRA_CALL(LCL_CALL)
 
-  #undef LCL_CALL
-  #define LCL_CALL( SC, LO, GO, NT ) BELOS_LCL_CALL_FOR_MANAGER(BlockGmresSolMgr, "BLOCK GMRES", SC, LO, GO, NT)
-  BELOS_XPETRA_CALL( LCL_CALL )
+#undef LCL_CALL
+#define LCL_CALL(SC, LO, GO, NT) BELOS_LCL_CALL_FOR_MANAGER(BlockGmresSolMgr, "BLOCK GMRES", SC, LO, GO, NT)
+  BELOS_XPETRA_CALL(LCL_CALL)
 
-  #undef LCL_CALL
-  #define LCL_CALL( SC, LO, GO, NT ) BELOS_LCL_CALL_FOR_MANAGER(FixedPointSolMgr, "FIXED POINT", SC, LO, GO, NT)
-  BELOS_XPETRA_CALL( LCL_CALL )
+#undef LCL_CALL
+#define LCL_CALL(SC, LO, GO, NT) BELOS_LCL_CALL_FOR_MANAGER(FixedPointSolMgr, "FIXED POINT", SC, LO, GO, NT)
+  BELOS_XPETRA_CALL(LCL_CALL)
 
-  #undef LCL_CALL
-  #define LCL_CALL( SC, LO, GO, NT ) BELOS_LCL_CALL_FOR_MANAGER(GCRODRSolMgr, "GCRODR", SC, LO, GO, NT)
-  BELOS_XPETRA_CALL( LCL_CALL )
+#undef LCL_CALL
+#define LCL_CALL(SC, LO, GO, NT) BELOS_LCL_CALL_FOR_MANAGER(GCRODRSolMgr, "GCRODR", SC, LO, GO, NT)
+  BELOS_XPETRA_CALL(LCL_CALL)
 
-  #undef LCL_CALL
-  #define LCL_CALL( SC, LO, GO, NT ) BELOS_LCL_CALL_FOR_MANAGER(LSQRSolMgr, "LSQR", SC, LO, GO, NT)
-  BELOS_XPETRA_CALL( LCL_CALL )
+#undef LCL_CALL
+#define LCL_CALL(SC, LO, GO, NT) BELOS_LCL_CALL_FOR_MANAGER(LSQRSolMgr, "LSQR", SC, LO, GO, NT)
+  BELOS_XPETRA_CALL(LCL_CALL)
 
-  #undef LCL_CALL
-  #define LCL_CALL( SC, LO, GO, NT ) BELOS_LCL_CALL_FOR_MANAGER(MinresSolMgr, "MINRES", SC, LO, GO, NT)
-  BELOS_XPETRA_CALL( LCL_CALL )
+#undef LCL_CALL
+#define LCL_CALL(SC, LO, GO, NT) BELOS_LCL_CALL_FOR_MANAGER(MinresSolMgr, "MINRES", SC, LO, GO, NT)
+  BELOS_XPETRA_CALL(LCL_CALL)
 
-  #undef LCL_CALL
-  #define LCL_CALL( SC, LO, GO, NT ) BELOS_LCL_CALL_FOR_MANAGER(PCPGSolMgr, "PCPG", SC, LO, GO, NT)
-  BELOS_XPETRA_CALL( LCL_CALL )
+#undef LCL_CALL
+#define LCL_CALL(SC, LO, GO, NT) BELOS_LCL_CALL_FOR_MANAGER(PCPGSolMgr, "PCPG", SC, LO, GO, NT)
+  BELOS_XPETRA_CALL(LCL_CALL)
 
-  #undef LCL_CALL
-  #define LCL_CALL( SC, LO, GO, NT ) BELOS_LCL_CALL_FOR_MANAGER(PseudoBlockCGSolMgr, "PSEUDOBLOCK CG", SC, LO, GO, NT)
-  BELOS_XPETRA_CALL( LCL_CALL )
+#undef LCL_CALL
+#define LCL_CALL(SC, LO, GO, NT) BELOS_LCL_CALL_FOR_MANAGER(PseudoBlockCGSolMgr, "PSEUDOBLOCK CG", SC, LO, GO, NT)
+  BELOS_XPETRA_CALL(LCL_CALL)
 
-  #undef LCL_CALL
-  #define LCL_CALL( SC, LO, GO, NT ) BELOS_LCL_CALL_FOR_MANAGER(PseudoBlockGmresSolMgr, "PSEUDOBLOCK GMRES", SC, LO, GO, NT)
-  BELOS_XPETRA_CALL( LCL_CALL )
+#undef LCL_CALL
+#define LCL_CALL(SC, LO, GO, NT) BELOS_LCL_CALL_FOR_MANAGER(PseudoBlockGmresSolMgr, "PSEUDOBLOCK GMRES", SC, LO, GO, NT)
+  BELOS_XPETRA_CALL(LCL_CALL)
 
-  #undef LCL_CALL
-  #define LCL_CALL( SC, LO, GO, NT ) BELOS_LCL_CALL_FOR_MANAGER(PseudoBlockTFQMRSolMgr, "PSEUDOBLOCK TFQMR", SC, LO, GO, NT)
-  BELOS_XPETRA_CALL( LCL_CALL )
+#undef LCL_CALL
+#define LCL_CALL(SC, LO, GO, NT) BELOS_LCL_CALL_FOR_MANAGER(PseudoBlockTFQMRSolMgr, "PSEUDOBLOCK TFQMR", SC, LO, GO, NT)
+  BELOS_XPETRA_CALL(LCL_CALL)
 
-  #undef LCL_CALL
-  #define LCL_CALL( SC, LO, GO, NT ) BELOS_LCL_CALL_FOR_MANAGER(RCGSolMgr, "RCG", SC, LO, GO, NT)
-  BELOS_XPETRA_CALL( LCL_CALL )
+#undef LCL_CALL
+#define LCL_CALL(SC, LO, GO, NT) BELOS_LCL_CALL_FOR_MANAGER(RCGSolMgr, "RCG", SC, LO, GO, NT)
+  BELOS_XPETRA_CALL(LCL_CALL)
 
-  #undef LCL_CALL
-  #define LCL_CALL( SC, LO, GO, NT ) BELOS_LCL_CALL_FOR_MANAGER(TFQMRSolMgr, "TFQMR", SC, LO, GO, NT)
-  BELOS_XPETRA_CALL( LCL_CALL )
+#undef LCL_CALL
+#define LCL_CALL(SC, LO, GO, NT) BELOS_LCL_CALL_FOR_MANAGER(TFQMRSolMgr, "TFQMR", SC, LO, GO, NT)
+  BELOS_XPETRA_CALL(LCL_CALL)
 }
 
-} // namespace Xpetra
-} // namespace Details
-} // namespace Belos
-
+}  // namespace Xpetra
+}  // namespace Details
+}  // namespace Belos

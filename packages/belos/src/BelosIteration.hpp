@@ -22,7 +22,6 @@
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ScalarTraits.hpp"
 
-
 namespace Belos {
 
 template <class ScalarType, class MV, class OP, class DM>
@@ -37,25 +36,22 @@ class StatusTest;
 template <class ScalarType, class MV, class OP, class DM>
 class MatOrthoManager;
 
-template<class ScalarType, class MV, class OP, class DM = DefaultDenseMatrix<int, ScalarType>>
+template <class ScalarType, class MV, class OP, class DM = DefaultDenseMatrix<int, ScalarType>>
 class Iteration {
-
-  public:
-
+ public:
   //! @name Constructors/Destructor
-  //@{ 
+  //@{
 
   //! Default Constructor.
-  Iteration() {};
+  Iteration(){};
 
   //! Destructor.
-  virtual ~Iteration() {};
+  virtual ~Iteration(){};
   //@}
 
-
   //! @name Solver methods
-  //@{ 
-  
+  //@{
+
   /*! \brief This method performs linear solver iterations until the status test
     indicates the need to stop or an error occurs (in which case, an std::exception is thrown).
   */
@@ -68,19 +64,18 @@ class Iteration {
 
   //@}
 
-  
   //! @name Status methods
-  //@{ 
+  //@{
 
   //! \brief Get the current iteration count.
   virtual int getNumIters() const = 0;
-  
+
   //! \brief Reset the iteration count to iter.
-  virtual void resetNumIters( int iter = 0 ) = 0;
+  virtual void resetNumIters(int iter = 0) = 0;
 
   //! Get the residuals native to the solver.
   //! \return A multivector with blockSize vectors containing the native residuals, else the native residual norm is returned.
-  virtual Teuchos::RCP<const MV> getNativeResiduals( std::vector<typename Teuchos::ScalarTraits<ScalarType>::magnitudeType> *norms ) const = 0;
+  virtual Teuchos::RCP<const MV> getNativeResiduals(std::vector<typename Teuchos::ScalarTraits<ScalarType>::magnitudeType>* norms) const = 0;
 
   //! Get the current update to the linear system.
   /*! \note Some solvers, like GMRES, do not compute updates to the solution every iteration.
@@ -90,17 +85,15 @@ class Iteration {
 
   //@}
 
-
-  
-    //! @name Accessor methods
-  //@{ 
+  //! @name Accessor methods
+  //@{
 
   //! Get a constant reference to the linear problem.
-  virtual const LinearProblem<ScalarType,MV,OP,DM>& getProblem() const = 0;
+  virtual const LinearProblem<ScalarType, MV, OP, DM>& getProblem() const = 0;
 
   //! Get the blocksize to be used by the iterative solver in solving this linear problem.
   virtual int getBlockSize() const = 0;
-  
+
   //! \brief Set the blocksize to be used by the iterative solver in solving this linear problem.
   virtual void setBlockSize(int blockSize) = 0;
 
@@ -108,9 +101,8 @@ class Iteration {
   virtual bool isInitialized() = 0;
 
   //@}
-
 };
 
-} // end Belos namespace
+}  // namespace Belos
 
 #endif /* BELOS_ITERATION_HPP */

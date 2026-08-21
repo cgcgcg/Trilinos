@@ -52,25 +52,23 @@ namespace Belos {
 /// Implementation of the preconditioned Minimal Residual Method
 /// (MINRES) iteration.  This a bilinear form implementation, that
 /// uses inner products of the form <x,My> to solve the preconditioned
-/// linear system.  Thus, it is necessary that the left preconditioner 
+/// linear system.  Thus, it is necessary that the left preconditioner
 /// M is positive definite.
 ///
 /// \ingroup belos_solver_framework
 ///
-template<class ScalarType, class MV, class OP, class DM>
-class MinresIter : virtual public MinresIteration<ScalarType,MV,OP,DM> {
-
-  public:
-
+template <class ScalarType, class MV, class OP, class DM>
+class MinresIter : virtual public MinresIteration<ScalarType, MV, OP, DM> {
+ public:
   //
   // Convenience typedefs
   //
-  typedef MultiVecTraits< ScalarType, MV, DM > MVT;
-  typedef DenseMatTraits<ScalarType, DM> DMT; 
-  typedef OperatorTraits< ScalarType, MV, OP > OPT;
-  typedef Teuchos::ScalarTraits< ScalarType > SCT;
+  typedef MultiVecTraits<ScalarType, MV, DM> MVT;
+  typedef DenseMatTraits<ScalarType, DM> DMT;
+  typedef OperatorTraits<ScalarType, MV, OP> OPT;
+  typedef Teuchos::ScalarTraits<ScalarType> SCT;
   typedef typename SCT::magnitudeType MagnitudeType;
-  typedef Teuchos::ScalarTraits< MagnitudeType > SMT;
+  typedef Teuchos::ScalarTraits<MagnitudeType> SMT;
 
   //! @name Constructors/Destructor
   //@{
@@ -83,15 +81,14 @@ class MinresIter : virtual public MinresIteration<ScalarType,MV,OP,DM> {
   ///   approximate solution has converged
   /// \params params Parameter list of solver options
   ///
-  MinresIter (const Teuchos::RCP< LinearProblem< ScalarType, MV, OP, DM> >& problem,
-	      const Teuchos::RCP< OutputManager< ScalarType > > &        printer,
-	      const Teuchos::RCP< StatusTest< ScalarType, MV, OP, DM> >&    tester,
-	      const Teuchos::ParameterList& params);
+  MinresIter(const Teuchos::RCP<LinearProblem<ScalarType, MV, OP, DM> > &problem,
+             const Teuchos::RCP<OutputManager<ScalarType> > &printer,
+             const Teuchos::RCP<StatusTest<ScalarType, MV, OP, DM> > &tester,
+             const Teuchos::ParameterList &params);
 
   //! Destructor
-  virtual ~MinresIter() {};
+  virtual ~MinresIter(){};
   //@}
-
 
   //! @name Solver methods
   //@{
@@ -126,16 +123,15 @@ class MinresIter : virtual public MinresIteration<ScalarType,MV,OP,DM> {
    * \note For any pointer in \c newstate which directly points to the multivectors in
    * the solver, the data is not copied.
    */
-  void initializeMinres (const MinresIterationState<ScalarType,MV> & newstate);
+  void initializeMinres(const MinresIterationState<ScalarType, MV> &newstate);
 
   /// \brief Initialize the solver
   ///
   /// Initialize the solver.  If a starting guess is provided in the
   /// linear problem, use that.  Otherwise, choose a random starting
   /// guess.
-  void initialize()
-  {
-    MinresIterationState<ScalarType,MV> empty;
+  void initialize() {
+    MinresIterationState<ScalarType, MV> empty;
     initializeMinres(empty);
   }
 
@@ -145,22 +141,22 @@ class MinresIter : virtual public MinresIteration<ScalarType,MV,OP,DM> {
   ///
   /// \return A MinresIterationState object containing const pointers
   ///         to the current solver state.
-  MinresIterationState<ScalarType,MV> getState() const {
-    if (! isInitialized())
-      throw std::logic_error("getState() cannot be called unless "
-			     "the state has been initialized");
-    MinresIterationState<ScalarType,MV> state;
-    state.Y = Y_;
+  MinresIterationState<ScalarType, MV> getState() const {
+    if (!isInitialized())
+      throw std::logic_error(
+          "getState() cannot be called unless "
+          "the state has been initialized");
+    MinresIterationState<ScalarType, MV> state;
+    state.Y  = Y_;
     state.R1 = R1_;
     state.R2 = R2_;
-    state.W = W_;
+    state.W  = W_;
     state.W1 = W1_;
     state.W2 = W2_;
     return state;
   }
 
   //@}
-
 
   //! @name Status methods
   //@{
@@ -169,30 +165,28 @@ class MinresIter : virtual public MinresIteration<ScalarType,MV,OP,DM> {
   int getNumIters() const { return iter_; }
 
   //! \brief Reset the iteration count.
-  void resetNumIters( int iter = 0 ) { iter_ = iter; }
+  void resetNumIters(int iter = 0) { iter_ = iter; }
 
   //! Get the norms of the residuals native to the solver.
   //! \return A std::vector of length blockSize containing the native residuals.
   Teuchos::RCP<const MV>
-  getNativeResiduals( std::vector<MagnitudeType> *norms ) const
-  {
-    if (norms != NULL)
-      {
-	std::vector<MagnitudeType>& theNorms = *norms;
-	if (theNorms.size() < 1)
-	  theNorms.resize(1);
-	theNorms[0] = phibar_;
-      }
+  getNativeResiduals(std::vector<MagnitudeType> *norms) const {
+    if (norms != NULL) {
+      std::vector<MagnitudeType> &theNorms = *norms;
+      if (theNorms.size() < 1)
+        theNorms.resize(1);
+      theNorms[0] = phibar_;
+    }
     return Teuchos::null;
   }
 
   //! Get the current update to the linear system.
   /*! \note This method returns a null pointer because the linear problem is current.
-  */
+   */
   Teuchos::RCP<MV> getCurrentUpdate() const { return Teuchos::null; }
 
   //!
-  void symOrtho( ScalarType a, ScalarType b, ScalarType *c, ScalarType *s, ScalarType *r );
+  void symOrtho(ScalarType a, ScalarType b, ScalarType *c, ScalarType *s, ScalarType *r);
 
   //@}
 
@@ -200,15 +194,15 @@ class MinresIter : virtual public MinresIteration<ScalarType,MV,OP,DM> {
   //@{
 
   //! Get a constant reference to the linear problem.
-  const LinearProblem<ScalarType,MV,OP,DM>& getProblem() const { return *lp_; }
+  const LinearProblem<ScalarType, MV, OP, DM> &getProblem() const { return *lp_; }
 
   //! Get the blocksize to be used by the iterative solver in solving this linear problem.
   int getBlockSize() const { return 1; }
 
   //! \brief Set the blocksize to be used by the iterative solver in solving this linear problem.
   void setBlockSize(int blockSize) {
-    TEUCHOS_TEST_FOR_EXCEPTION(blockSize!=1,std::invalid_argument,
-                       "Belos::MinresIter::setBlockSize(): Cannot use a block size that is not one.");
+    TEUCHOS_TEST_FOR_EXCEPTION(blockSize != 1, std::invalid_argument,
+                               "Belos::MinresIter::setBlockSize(): Cannot use a block size that is not one.");
   }
 
   //! States whether the solver has been initialized or not.
@@ -217,8 +211,7 @@ class MinresIter : virtual public MinresIteration<ScalarType,MV,OP,DM> {
 
   //@}
 
-  private:
-
+ private:
   //
   // Internal methods
   //
@@ -228,10 +221,9 @@ class MinresIter : virtual public MinresIteration<ScalarType,MV,OP,DM> {
   //
   // Classes inputed through constructor that define the linear problem to be solved.
   //
-  const Teuchos::RCP< LinearProblem< ScalarType, MV, OP, DM> > lp_;
-  const Teuchos::RCP< OutputManager< ScalarType > >         om_;
-  const Teuchos::RCP< StatusTest< ScalarType, MV, OP, DM > >    stest_;
-
+  const Teuchos::RCP<LinearProblem<ScalarType, MV, OP, DM> > lp_;
+  const Teuchos::RCP<OutputManager<ScalarType> > om_;
+  const Teuchos::RCP<StatusTest<ScalarType, MV, OP, DM> > stest_;
 
   /// \brief Whether the solver has been initialized
   ///
@@ -264,361 +256,345 @@ class MinresIter : virtual public MinresIteration<ScalarType,MV,OP,DM> {
   //
 
   //! Preconditioned residual
-  Teuchos::RCP< MV > Y_;
+  Teuchos::RCP<MV> Y_;
   //! Previous residual
-  Teuchos::RCP< MV > R1_;
+  Teuchos::RCP<MV> R1_;
   //! Previous residual
-  Teuchos::RCP< MV > R2_;
+  Teuchos::RCP<MV> R2_;
   //! Direction vector
-  Teuchos::RCP< MV > W_;
+  Teuchos::RCP<MV> W_;
   //! Previous direction vector
-  Teuchos::RCP< MV > W1_;
+  Teuchos::RCP<MV> W1_;
   //! Previous direction vector
-  Teuchos::RCP< MV > W2_;
+  Teuchos::RCP<MV> W2_;
 
   /// Coefficient in the MINRES iteration
   ScalarType beta1_;
   Teuchos::RCP<DM> tmpDM;
-
 };
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  // Constructor.
-  template<class ScalarType, class MV, class OP, class DM>
-  MinresIter<ScalarType,MV,OP,DM>::MinresIter(const Teuchos::RCP<LinearProblem<ScalarType,MV,OP,DM> > &problem,
-                                                   const Teuchos::RCP<OutputManager<ScalarType> > &printer,
-                                                   const Teuchos::RCP<StatusTest<ScalarType,MV,OP,DM> > &tester,
-                                                   const Teuchos::ParameterList &/* params */ ):
-    lp_(problem),
-    om_(printer),
-    stest_(tester),
-    initialized_(false),
-    stateStorageInitialized_(false),
-    iter_(0),
-    phibar_(0.0)
-  {
-  }
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// Constructor.
+template <class ScalarType, class MV, class OP, class DM>
+MinresIter<ScalarType, MV, OP, DM>::MinresIter(const Teuchos::RCP<LinearProblem<ScalarType, MV, OP, DM> > &problem,
+                                               const Teuchos::RCP<OutputManager<ScalarType> > &printer,
+                                               const Teuchos::RCP<StatusTest<ScalarType, MV, OP, DM> > &tester,
+                                               const Teuchos::ParameterList & /* params */)
+  : lp_(problem)
+  , om_(printer)
+  , stest_(tester)
+  , initialized_(false)
+  , stateStorageInitialized_(false)
+  , iter_(0)
+  , phibar_(0.0) {
+}
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  // Setup the state storage.
-  template <class ScalarType, class MV, class OP, class DM>
-  void MinresIter<ScalarType,MV,OP,DM>::setStateSize ()
-  {
-    if (!stateStorageInitialized_) {
-
-      // Check if there is any multivector to clone from.
-      Teuchos::RCP< const MV > lhsMV = lp_->getLHS();
-      Teuchos::RCP< const MV > rhsMV = lp_->getRHS();
-      if (lhsMV == Teuchos::null && rhsMV == Teuchos::null) {
-        stateStorageInitialized_ = false;
-        return;
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// Setup the state storage.
+template <class ScalarType, class MV, class OP, class DM>
+void MinresIter<ScalarType, MV, OP, DM>::setStateSize() {
+  if (!stateStorageInitialized_) {
+    // Check if there is any multivector to clone from.
+    Teuchos::RCP<const MV> lhsMV = lp_->getLHS();
+    Teuchos::RCP<const MV> rhsMV = lp_->getRHS();
+    if (lhsMV == Teuchos::null && rhsMV == Teuchos::null) {
+      stateStorageInitialized_ = false;
+      return;
+    } else {
+      // Initialize the state storage
+      // If the subspace has not be initialized before, generate it using the LHS or RHS from lp_.
+      if (Y_ == Teuchos::null) {
+        // Get the multivector that is not null.
+        Teuchos::RCP<const MV> tmp = ((rhsMV != Teuchos::null) ? rhsMV : lhsMV);
+        TEUCHOS_TEST_FOR_EXCEPTION(tmp == Teuchos::null,
+                                   std::invalid_argument,
+                                   "Belos::MinresIter::setStateSize(): linear problem does not specify multivectors to clone from.");
+        Y_  = MVT::Clone(*tmp, 1);
+        R1_ = MVT::Clone(*tmp, 1);
+        R2_ = MVT::Clone(*tmp, 1);
+        W_  = MVT::Clone(*tmp, 1);
+        W1_ = MVT::Clone(*tmp, 1);
+        W2_ = MVT::Clone(*tmp, 1);
       }
-      else {
-
-        // Initialize the state storage
-        // If the subspace has not be initialized before, generate it using the LHS or RHS from lp_.
-        if (Y_ == Teuchos::null) {
-          // Get the multivector that is not null.
-          Teuchos::RCP< const MV > tmp = ( (rhsMV!=Teuchos::null)? rhsMV: lhsMV );
-          TEUCHOS_TEST_FOR_EXCEPTION( tmp == Teuchos::null,
-                              std::invalid_argument,
-                              "Belos::MinresIter::setStateSize(): linear problem does not specify multivectors to clone from.");
-          Y_  = MVT::Clone( *tmp, 1 );
-          R1_ = MVT::Clone( *tmp, 1 );
-          R2_ = MVT::Clone( *tmp, 1 );
-          W_  = MVT::Clone( *tmp, 1 );
-          W1_ = MVT::Clone( *tmp, 1 );
-          W2_ = MVT::Clone( *tmp, 1 );
-        }
-        // State storage has now been initialized.
-        stateStorageInitialized_ = true;
-      }
+      // State storage has now been initialized.
+      stateStorageInitialized_ = true;
     }
   }
+}
 
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// Initialize this iteration object
+template <class ScalarType, class MV, class OP, class DM>
+void MinresIter<ScalarType, MV, OP, DM>::initializeMinres(const MinresIterationState<ScalarType, MV> &newstate) {
+  // Initialize the state storage if it isn't already.
+  if (!stateStorageInitialized_)
+    setStateSize();
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  // Initialize this iteration object
-  template <class ScalarType, class MV, class OP, class DM>
-  void MinresIter<ScalarType,MV,OP,DM>::initializeMinres(const MinresIterationState<ScalarType,MV> & newstate)
-  {
-    // Initialize the state storage if it isn't already.
-    if (!stateStorageInitialized_)
-      setStateSize();
+  TEUCHOS_TEST_FOR_EXCEPTION(!stateStorageInitialized_,
+                             std::invalid_argument,
+                             "Belos::MinresIter::initialize(): Cannot initialize state storage!");
 
-    TEUCHOS_TEST_FOR_EXCEPTION( !stateStorageInitialized_,
-                        std::invalid_argument,
-                        "Belos::MinresIter::initialize(): Cannot initialize state storage!" );
+  TEUCHOS_TEST_FOR_EXCEPTION(newstate.Y == Teuchos::null,
+                             std::invalid_argument,
+                             "Belos::MinresIter::initialize(): MinresIterationState does not have initial residual.");
 
-    TEUCHOS_TEST_FOR_EXCEPTION( newstate.Y == Teuchos::null,
-                        std::invalid_argument,
-                        "Belos::MinresIter::initialize(): MinresIterationState does not have initial residual.");
+  std::string errstr("Belos::MinresIter::initialize(): Specified multivectors must have a consistent length and width.");
+  TEUCHOS_TEST_FOR_EXCEPTION(MVT::GetGlobalLength(*newstate.Y) != MVT::GetGlobalLength(*Y_),
+                             std::invalid_argument,
+                             errstr);
+  TEUCHOS_TEST_FOR_EXCEPTION(MVT::GetNumberVecs(*newstate.Y) != 1,
+                             std::invalid_argument,
+                             errstr);
 
-    std::string errstr("Belos::MinresIter::initialize(): Specified multivectors must have a consistent length and width.");
-    TEUCHOS_TEST_FOR_EXCEPTION( MVT::GetGlobalLength(*newstate.Y) != MVT::GetGlobalLength(*Y_),
-                        std::invalid_argument,
-                        errstr );
-    TEUCHOS_TEST_FOR_EXCEPTION( MVT::GetNumberVecs(*newstate.Y) != 1,
-                        std::invalid_argument,
-                        errstr );
+  // Create convenience variables for zero, one.
+  const ScalarType one       = SCT::one();
+  const MagnitudeType m_zero = SMT::zero();
 
-    // Create convenience variables for zero, one.
-    const ScalarType one = SCT::one();
-    const MagnitudeType m_zero = SMT::zero();
+  // Set up y and v for the first Lanczos vector v_1.
+  // y  =  beta1_ P' v1,  where  P = C**(-1).
+  // v is really P' v1.
+  MVT::Assign(*newstate.Y, *R2_);
+  MVT::Assign(*newstate.Y, *R1_);
 
-    // Set up y and v for the first Lanczos vector v_1.
-    // y  =  beta1_ P' v1,  where  P = C**(-1).
-    // v is really P' v1.
-    MVT::Assign( *newstate.Y, *R2_ );
-    MVT::Assign( *newstate.Y, *R1_ );
+  // Initialize the W's to 0.
+  MVT::MvInit(*W_);
+  MVT::MvInit(*W2_);
 
-    // Initialize the W's to 0.
-    MVT::MvInit ( *W_ );
-    MVT::MvInit ( *W2_ );
-
-    if ( lp_->getLeftPrec() != Teuchos::null ) {
-      lp_->applyLeftPrec( *newstate.Y, *Y_ );
-      if ( lp_->getRightPrec() != Teuchos::null ) {
-        Teuchos::RCP<MV> tmp = MVT::CloneCopy( *Y_ );
-        lp_->applyRightPrec( *tmp, *Y_ );
-      }
+  if (lp_->getLeftPrec() != Teuchos::null) {
+    lp_->applyLeftPrec(*newstate.Y, *Y_);
+    if (lp_->getRightPrec() != Teuchos::null) {
+      Teuchos::RCP<MV> tmp = MVT::CloneCopy(*Y_);
+      lp_->applyRightPrec(*tmp, *Y_);
     }
-    else if ( lp_->getRightPrec() != Teuchos::null ) {
-      lp_->applyRightPrec( *newstate.Y, *Y_ );
+  } else if (lp_->getRightPrec() != Teuchos::null) {
+    lp_->applyRightPrec(*newstate.Y, *Y_);
+  } else {
+    if (newstate.Y != Y_) {
+      // copy over the initial residual (unpreconditioned).
+      MVT::Assign(*newstate.Y, *Y_);
     }
-    else {
-      if (newstate.Y != Y_) {
-        // copy over the initial residual (unpreconditioned).
-        MVT::Assign( *newstate.Y, *Y_ );
-      }
-    }
-
-    // beta1_ = b'*y;
-
-    tmpDM = DMT::Create(1,1);
-    MVT::MvTransMv( one, *newstate.Y, *Y_, *tmpDM);
-    DMT::SyncDeviceToHost(*tmpDM);
-    beta1_ = DMT::ValueConst(*tmpDM,0,0);
-
-    TEUCHOS_TEST_FOR_EXCEPTION( SCT::real(beta1_) < m_zero,
-                        std::invalid_argument,
-                        "The preconditioner is not positive definite." );
-
-    if( SCT::magnitude(beta1_) == m_zero )
-    {
-        // X = 0
-        Teuchos::RCP<MV> cur_soln_vec = lp_->getCurrLHSVec();
-        MVT::MvInit( *cur_soln_vec );
-    }
-
-    beta1_ = SCT::squareroot( beta1_ );
-
-    // The solver is initialized
-    initialized_ = true;
   }
 
+  // beta1_ = b'*y;
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  // Iterate until the status test informs us we should stop.
-  template <class ScalarType, class MV, class OP, class DM>
-  void MinresIter<ScalarType,MV,OP,DM>::iterate()
-  {
-    //
-    // Allocate/initialize data structures
-    //
-    if (initialized_ == false) {
-      initialize();
-    }
+  tmpDM = DMT::Create(1, 1);
+  MVT::MvTransMv(one, *newstate.Y, *Y_, *tmpDM);
+  DMT::SyncDeviceToHost(*tmpDM);
+  beta1_ = DMT::ValueConst(*tmpDM, 0, 0);
 
-    // Create convenience variables for zero and one.
-    const ScalarType one = SCT::one();
-    const ScalarType zero = SCT::zero();
-    const MagnitudeType m_zero = SMT::zero();
+  TEUCHOS_TEST_FOR_EXCEPTION(SCT::real(beta1_) < m_zero,
+                             std::invalid_argument,
+                             "The preconditioner is not positive definite.");
 
-    // Allocate memory for scalars.
-    ScalarType alpha, beta = beta1_;
-    phibar_ = Teuchos::ScalarTraits<ScalarType>::magnitude( beta1_ );
-
-    // Initialize a few variables.
-    ScalarType oldBeta = zero;
-    ScalarType epsln = zero;
-    ScalarType cs = -one;
-    ScalarType sn = zero;
-    ScalarType dbar = zero;
-
-    // Declare a few others that will be initialized in the loop.
-    ScalarType oldeps;
-    ScalarType delta;
-    ScalarType gbar;
-    ScalarType phi;
-    ScalarType gamma;
-
-    // Allocate workspace.
-    Teuchos::RCP<MV> V    = MVT::Clone( *Y_, 1 );
-    Teuchos::RCP<MV> tmpY, tmpW;  // Not allocated, just used to transfer ownership.
-
-    // Get the current solution vector.
+  if (SCT::magnitude(beta1_) == m_zero) {
+    // X = 0
     Teuchos::RCP<MV> cur_soln_vec = lp_->getCurrLHSVec();
-
-    // Check that the current solution vector only has one column.
-    TEUCHOS_TEST_FOR_EXCEPTION( MVT::GetNumberVecs(*cur_soln_vec) != 1,
-                        MinresIterateFailure,
-                        "Belos::MinresIter::iterate(): current linear system has more than one vector!" );
-
-    ////////////////////////////////////////////////////////////////
-    // Iterate until the status test tells us to stop.
-    //
-    while (stest_->checkStatus(this) != Passed) {
-
-      // Increment the iteration
-      iter_++;
-
-      // Normalize previous vector.
-      //   v = y / beta(0,0);
-      MVT::MvAddMv (one / beta, *Y_, zero, *Y_, *V);
-
-      // Apply operator.
-      lp_->applyOp (*V, *Y_);
-
-      if (iter_ > 1)
-        MVT::MvAddMv (one, *Y_, -beta/oldBeta, *R1_, *Y_);
-
-      // alpha := dot(V, Y_)
-      MVT::MvTransMv (one, *V, *Y_, *tmpDM);
-      DMT::SyncDeviceToHost(*tmpDM);
-      alpha = DMT::ValueConst(*tmpDM,0,0);
-
-      // y := y - alpha/beta r2
-      MVT::MvAddMv (one, *Y_, -alpha/beta, *R2_, *Y_);
-
-      // r1 = r2;
-      // r2 = y;
-      tmpY = R1_;
-      R1_ = R2_;
-      R2_ = Y_;
-      Y_ = tmpY;
-
-      // apply preconditioner
-      if ( lp_->getLeftPrec() != Teuchos::null ) {
-        lp_->applyLeftPrec( *R2_, *Y_ );
-        if ( lp_->getRightPrec() != Teuchos::null ) {
-          Teuchos::RCP<MV> tmp = MVT::CloneCopy( *Y_ );
-          lp_->applyRightPrec( *tmp, *Y_ );
-        }
-      }
-      else if ( lp_->getRightPrec() != Teuchos::null ) {
-        lp_->applyRightPrec( *R2_, *Y_ );
-      } // else "y = r2"
-      else {
-        MVT::Assign( *R2_, *Y_ );
-      }
-
-      // Get new beta.
-      oldBeta = beta;
-      MVT::MvTransMv( one, *R2_, *Y_, *tmpDM);
-      DMT::SyncDeviceToHost(*tmpDM);
-      beta = DMT::ValueConst(*tmpDM,0,0);
-
-      // Intercept beta <= 0.
-      //
-      // Note: we don't try to test for nonzero imaginary component of
-      // beta, because (a) it could be small and nonzero due to
-      // rounding error in computing the inner product, and (b) it's
-      // hard to tell how big "not small" should be, without computing
-      // some error bounds (for example, by modifying the linear
-      // algebra library to compute a posteriori rounding error bounds
-      // for the inner product, and then changing
-      // Belos::MultiVecTraits to make this information available).
-      TEUCHOS_TEST_FOR_EXCEPTION( SCT::real(beta) < m_zero,
-                          MinresIterateFailure,
-                          "Belos::MinresIter::iterate(): Encountered negative "
-			  "value " << beta << " for r2^H*M*r2 at itera"
-			  "tion " << iter_ << ": MINRES cannot continue." );
-      beta = SCT::squareroot( beta );
-
-      // Apply previous rotation Q_{k-1} to get
-      //
-      //    [delta_k epsln_{k+1}] = [cs  sn][dbar_k  0         ]
-      //    [gbar_k  dbar_{k+1} ]   [-sn cs][alpha_k beta_{k+1}].
-      //
-      oldeps = epsln;
-      delta  = cs*dbar + sn*alpha;
-      gbar   = sn*dbar - cs*alpha;
-      epsln  =           sn*beta;
-      dbar   =         - cs*beta;
-
-      // Compute the next plane rotation Q_k.
-      this->symOrtho(gbar, beta, &cs, &sn, &gamma);
-
-      phi    = cs * phibar_; // phi_k
-      phibar_ = Teuchos::ScalarTraits<ScalarType>::magnitude( sn * phibar_ ); // phibar_{k+1}
-
-      //  w1 = w2;
-      //  w2 = w;
-      MVT::Assign( *W_, *W1_ );
-      tmpW = W1_;
-      W1_ = W2_;
-      W2_ = W_;
-      W_ = tmpW;
-
-      //  w = (v - oldeps*w1 - delta*w2) / gamma;
-      MVT::MvAddMv( one, *V, -oldeps, *W1_, *W_ );
-      MVT::MvAddMv( one, *W_, -delta,  *W2_, *W_ );
-      MVT::MvScale( *W_, one / gamma );
-
-      // Update x:
-      // x = x + phi*w;
-      MVT::MvAddMv( one, *cur_soln_vec, phi, *W_, *cur_soln_vec );
-      lp_->updateSolution();
-    } // end while (sTest_->checkStatus(this) != Passed)
+    MVT::MvInit(*cur_soln_vec);
   }
 
+  beta1_ = SCT::squareroot(beta1_);
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  // Compute the next plane rotation Qk.
-  //   r = norm([a b]);
-  //   c = a / r;
-  //   s = b / r;
-  template <class ScalarType, class MV, class OP, class DM>
-  void MinresIter<ScalarType,MV,OP,DM>::symOrtho( ScalarType a, ScalarType b,
-                                                  ScalarType *c, ScalarType *s, ScalarType *r
-                                                )
-  {
-    const ScalarType one = SCT::one();
-    const ScalarType zero = SCT::zero();
-    const MagnitudeType m_zero = SMT::zero();
-    const MagnitudeType absA = SCT::magnitude( a );
-    const MagnitudeType absB = SCT::magnitude( b );
-    if ( absB == m_zero ) {
-        *s = zero;
-        *r = absA;
-        if ( absA == m_zero )
-            *c = one;
-        else
-            *c = a / absA;
-    } else if ( absA == m_zero ) {
-        *c = zero;
-        *s = b / absB;
-        *r = absB;
-    } else if ( absB >= absA ) { // && a!=0 && b!=0
-        ScalarType tau = a / b;
-        if ( Teuchos::ScalarTraits<ScalarType>::real(b) < m_zero )
-            *s = -one / SCT::squareroot( one+tau*tau );
-        else
-            *s =  one / SCT::squareroot( one+tau*tau );
-        *c = *s * tau;
-        *r = b / *s;
-    } else { // (absA > absB) && a!=0 && b!=0
-        ScalarType tau = b / a;
-        if ( Teuchos::ScalarTraits<ScalarType>::real(a) < m_zero )
-            *c = -one / SCT::squareroot( one+tau*tau );
-        else
-            *c =  one / SCT::squareroot( one+tau*tau );
-        *s = *c * tau;
-        *r = a / *c;
+  // The solver is initialized
+  initialized_ = true;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// Iterate until the status test informs us we should stop.
+template <class ScalarType, class MV, class OP, class DM>
+void MinresIter<ScalarType, MV, OP, DM>::iterate() {
+  //
+  // Allocate/initialize data structures
+  //
+  if (initialized_ == false) {
+    initialize();
+  }
+
+  // Create convenience variables for zero and one.
+  const ScalarType one       = SCT::one();
+  const ScalarType zero      = SCT::zero();
+  const MagnitudeType m_zero = SMT::zero();
+
+  // Allocate memory for scalars.
+  ScalarType alpha, beta = beta1_;
+  phibar_ = Teuchos::ScalarTraits<ScalarType>::magnitude(beta1_);
+
+  // Initialize a few variables.
+  ScalarType oldBeta = zero;
+  ScalarType epsln   = zero;
+  ScalarType cs      = -one;
+  ScalarType sn      = zero;
+  ScalarType dbar    = zero;
+
+  // Declare a few others that will be initialized in the loop.
+  ScalarType oldeps;
+  ScalarType delta;
+  ScalarType gbar;
+  ScalarType phi;
+  ScalarType gamma;
+
+  // Allocate workspace.
+  Teuchos::RCP<MV> V = MVT::Clone(*Y_, 1);
+  Teuchos::RCP<MV> tmpY, tmpW;  // Not allocated, just used to transfer ownership.
+
+  // Get the current solution vector.
+  Teuchos::RCP<MV> cur_soln_vec = lp_->getCurrLHSVec();
+
+  // Check that the current solution vector only has one column.
+  TEUCHOS_TEST_FOR_EXCEPTION(MVT::GetNumberVecs(*cur_soln_vec) != 1,
+                             MinresIterateFailure,
+                             "Belos::MinresIter::iterate(): current linear system has more than one vector!");
+
+  ////////////////////////////////////////////////////////////////
+  // Iterate until the status test tells us to stop.
+  //
+  while (stest_->checkStatus(this) != Passed) {
+    // Increment the iteration
+    iter_++;
+
+    // Normalize previous vector.
+    //   v = y / beta(0,0);
+    MVT::MvAddMv(one / beta, *Y_, zero, *Y_, *V);
+
+    // Apply operator.
+    lp_->applyOp(*V, *Y_);
+
+    if (iter_ > 1)
+      MVT::MvAddMv(one, *Y_, -beta / oldBeta, *R1_, *Y_);
+
+    // alpha := dot(V, Y_)
+    MVT::MvTransMv(one, *V, *Y_, *tmpDM);
+    DMT::SyncDeviceToHost(*tmpDM);
+    alpha = DMT::ValueConst(*tmpDM, 0, 0);
+
+    // y := y - alpha/beta r2
+    MVT::MvAddMv(one, *Y_, -alpha / beta, *R2_, *Y_);
+
+    // r1 = r2;
+    // r2 = y;
+    tmpY = R1_;
+    R1_  = R2_;
+    R2_  = Y_;
+    Y_   = tmpY;
+
+    // apply preconditioner
+    if (lp_->getLeftPrec() != Teuchos::null) {
+      lp_->applyLeftPrec(*R2_, *Y_);
+      if (lp_->getRightPrec() != Teuchos::null) {
+        Teuchos::RCP<MV> tmp = MVT::CloneCopy(*Y_);
+        lp_->applyRightPrec(*tmp, *Y_);
+      }
+    } else if (lp_->getRightPrec() != Teuchos::null) {
+      lp_->applyRightPrec(*R2_, *Y_);
+    }  // else "y = r2"
+    else {
+      MVT::Assign(*R2_, *Y_);
     }
-  }
 
-} // end Belos namespace
+    // Get new beta.
+    oldBeta = beta;
+    MVT::MvTransMv(one, *R2_, *Y_, *tmpDM);
+    DMT::SyncDeviceToHost(*tmpDM);
+    beta = DMT::ValueConst(*tmpDM, 0, 0);
+
+    // Intercept beta <= 0.
+    //
+    // Note: we don't try to test for nonzero imaginary component of
+    // beta, because (a) it could be small and nonzero due to
+    // rounding error in computing the inner product, and (b) it's
+    // hard to tell how big "not small" should be, without computing
+    // some error bounds (for example, by modifying the linear
+    // algebra library to compute a posteriori rounding error bounds
+    // for the inner product, and then changing
+    // Belos::MultiVecTraits to make this information available).
+    TEUCHOS_TEST_FOR_EXCEPTION(SCT::real(beta) < m_zero,
+                               MinresIterateFailure,
+                               "Belos::MinresIter::iterate(): Encountered negative "
+                               "value "
+                                   << beta << " for r2^H*M*r2 at itera"
+                                              "tion "
+                                   << iter_ << ": MINRES cannot continue.");
+    beta = SCT::squareroot(beta);
+
+    // Apply previous rotation Q_{k-1} to get
+    //
+    //    [delta_k epsln_{k+1}] = [cs  sn][dbar_k  0         ]
+    //    [gbar_k  dbar_{k+1} ]   [-sn cs][alpha_k beta_{k+1}].
+    //
+    oldeps = epsln;
+    delta  = cs * dbar + sn * alpha;
+    gbar   = sn * dbar - cs * alpha;
+    epsln  = sn * beta;
+    dbar   = -cs * beta;
+
+    // Compute the next plane rotation Q_k.
+    this->symOrtho(gbar, beta, &cs, &sn, &gamma);
+
+    phi     = cs * phibar_;                                                // phi_k
+    phibar_ = Teuchos::ScalarTraits<ScalarType>::magnitude(sn * phibar_);  // phibar_{k+1}
+
+    //  w1 = w2;
+    //  w2 = w;
+    MVT::Assign(*W_, *W1_);
+    tmpW = W1_;
+    W1_  = W2_;
+    W2_  = W_;
+    W_   = tmpW;
+
+    //  w = (v - oldeps*w1 - delta*w2) / gamma;
+    MVT::MvAddMv(one, *V, -oldeps, *W1_, *W_);
+    MVT::MvAddMv(one, *W_, -delta, *W2_, *W_);
+    MVT::MvScale(*W_, one / gamma);
+
+    // Update x:
+    // x = x + phi*w;
+    MVT::MvAddMv(one, *cur_soln_vec, phi, *W_, *cur_soln_vec);
+    lp_->updateSolution();
+  }  // end while (sTest_->checkStatus(this) != Passed)
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// Compute the next plane rotation Qk.
+//   r = norm([a b]);
+//   c = a / r;
+//   s = b / r;
+template <class ScalarType, class MV, class OP, class DM>
+void MinresIter<ScalarType, MV, OP, DM>::symOrtho(ScalarType a, ScalarType b,
+                                                  ScalarType *c, ScalarType *s, ScalarType *r) {
+  const ScalarType one       = SCT::one();
+  const ScalarType zero      = SCT::zero();
+  const MagnitudeType m_zero = SMT::zero();
+  const MagnitudeType absA   = SCT::magnitude(a);
+  const MagnitudeType absB   = SCT::magnitude(b);
+  if (absB == m_zero) {
+    *s = zero;
+    *r = absA;
+    if (absA == m_zero)
+      *c = one;
+    else
+      *c = a / absA;
+  } else if (absA == m_zero) {
+    *c = zero;
+    *s = b / absB;
+    *r = absB;
+  } else if (absB >= absA) {  // && a!=0 && b!=0
+    ScalarType tau = a / b;
+    if (Teuchos::ScalarTraits<ScalarType>::real(b) < m_zero)
+      *s = -one / SCT::squareroot(one + tau * tau);
+    else
+      *s = one / SCT::squareroot(one + tau * tau);
+    *c = *s * tau;
+    *r = b / *s;
+  } else {  // (absA > absB) && a!=0 && b!=0
+    ScalarType tau = b / a;
+    if (Teuchos::ScalarTraits<ScalarType>::real(a) < m_zero)
+      *c = -one / SCT::squareroot(one + tau * tau);
+    else
+      *c = one / SCT::squareroot(one + tau * tau);
+    *s = *c * tau;
+    *r = a / *c;
+  }
+}
+
+}  // namespace Belos
 
 #endif /* BELOS_MINRES_ITER_HPP */

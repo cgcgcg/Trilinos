@@ -7,16 +7,15 @@
 // *****************************************************************************
 // @HEADER
 
-
 #ifndef BELOS_DETAILS_XPETRA_REGISTERSOLVERFACTORY_HPP
 #define BELOS_DETAILS_XPETRA_REGISTERSOLVERFACTORY_HPP
 
 namespace Belos {
 namespace Details {
 namespace Xpetra {
-  void registerSolverFactory();
-} // Xpetra
-} // Details
-} // Belos
+void registerSolverFactory();
+}  // namespace Xpetra
+}  // namespace Details
+}  // namespace Belos
 
-#endif // BELOS_DETAILS_XPETRA_REGISTERSOLVERFACTORY_HPP
+#endif  // BELOS_DETAILS_XPETRA_REGISTERSOLVERFACTORY_HPP
