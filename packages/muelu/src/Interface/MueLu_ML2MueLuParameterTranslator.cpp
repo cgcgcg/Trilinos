@@ -313,6 +313,7 @@ Teuchos::RCP<Teuchos::ParameterList> ML2MueLuParameterTranslator::SetParameterLi
   } else {
     paramList.set("repartition: start level", 2);
   }
+  paramList.set("repartition: partitioner", "zoltan");
 
   // ML sets this to 5000
   if (!paramList.isParameter("repartition: put on single proc")) {
@@ -519,7 +520,23 @@ Teuchos::RCP<Teuchos::ParameterList> ML2MueLuParameterTranslator::SetParameterLi
         pname == "smoother: sweeps" ||
         pname == "smoother: damping factor" ||
         pname == "smoother: pre or post" ||
-        pname == "coarse: max size")
+        pname == "smoother: ifpack type" ||
+        pname == "smoother: Chebyshev alpha" ||
+        pname == "smoother: use l1 Gauss-Seidel" ||
+        pname == "smoother: Hiptmair efficient symmetric" ||
+        pname == "subsmoother: node sweeps" ||
+        pname == "subsmoother: edge sweeps" ||
+        pname == "subsmoother: type" ||
+        pname == "subsmoother: Chebyshev alpha" ||
+        pname == "coarse: max size" ||
+        pname == "x-coordinates" ||
+        pname == "y-coordinates" ||
+        pname == "z-coordinates" ||
+        pname == "node: x-coordinates" ||
+        pname == "node: y-coordinates" ||
+        pname == "node: z-coordinates" ||
+        pname == "repartition: partitioner" ||
+        pname == "eigen-analysis: type")
       hasBeenProcessed = true;
 
     if (paramList.isSublist(pname))
@@ -536,10 +553,6 @@ Teuchos::RCP<Teuchos::ParameterList> ML2MueLuParameterTranslator::SetParameterLi
   mueluss << "</ParameterList>" << std::endl;
 
   auto translatedList = Teuchos::getParametersFromXmlString(mueluss.str());
-
-  std::cout << "\n\ntranslatedList " << *translatedList << std::endl
-            << "muelu list " << mueluList << std::endl
-            << std::endl;
 
   // Check that none of the MueLu parameters that were passed in clash with interpreted ML parameters
   for (auto it = mueluList.begin(); it != mueluList.end(); ++it) {
