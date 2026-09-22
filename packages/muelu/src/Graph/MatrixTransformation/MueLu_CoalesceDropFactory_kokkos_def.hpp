@@ -17,6 +17,7 @@
 #include <tuple>
 
 #include "Xpetra_Matrix.hpp"
+#include "Xpetra_IO.hpp"
 
 #include "MueLu_CoalesceDropFactory_kokkos_decl.hpp"
 
@@ -699,8 +700,10 @@ std::tuple<GlobalOrdinal, GlobalOrdinal, typename MueLu::LWGraph_kokkos<LocalOrd
   LO dofsPerNode = 1;
   Set(currentLevel, "DofsPerNode", dofsPerNode);
   Set(currentLevel, "Graph", graph);
-  if (needToBuildFilteredA)
+  if (needToBuildFilteredA) {
+    Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Write("filteredA." + std::to_string(currentLevel.GetLevelID()), *filteredA);
     Set(currentLevel, "A", filteredA);
+  }
 
   return std::make_tuple(numDropped, (GlobalOrdinal)nnz_filtered, boundaryNodes);
 }

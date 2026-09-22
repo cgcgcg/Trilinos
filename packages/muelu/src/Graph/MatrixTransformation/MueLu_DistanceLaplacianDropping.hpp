@@ -312,8 +312,9 @@ class TensorMaterialDistanceFunctor {
   using material_type      = Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
   using memory_space       = typename local_matrix_type::memory_space;
 
-  using local_material_type = Kokkos::View<impl_scalar_type***, memory_space>;
-  using local_dist_type     = Kokkos::View<impl_scalar_type**, memory_space>;
+  using local_material_type     = typename material_type::dual_view_type_const::t_dev;
+  using local_inv_material_type = Kokkos::View<impl_scalar_type***, memory_space>;
+  using local_dist_type         = Kokkos::View<impl_scalar_type**, memory_space>;
 
   Teuchos::RCP<coords_type> coordsMV;
   Teuchos::RCP<coords_type> ghostedCoordsMV;
@@ -322,6 +323,7 @@ class TensorMaterialDistanceFunctor {
   local_coords_type ghostedCoords;
 
   local_material_type material;
+  local_inv_material_type invMaterial;
 
   local_dist_type lcl_dist;
 
@@ -355,11 +357,11 @@ class TensorMaterialDistanceFunctor {
       using range_type      = Kokkos::RangePolicy<LocalOrdinal, execution_space>;
 
       local_ordinal_type dim = std::sqrt(material_->getNumVectors());
-      auto lclMaterial       = ghostedMaterial->getLocalViewDevice(Tpetra::Access::ReadOnly);
-      material               = local_material_type("material", lclMaterial.extent(0), dim, dim);
-      lcl_dist               = local_dist_type("material", lclMaterial.extent(0), dim);
-      TensorInversion<local_ordinal_type, typename material_type::dual_view_type::t_dev_const_um, local_material_type> functor(lclMaterial, material);
-      Kokkos::parallel_for("MueLu:TensorMaterialDistanceFunctor::inversion", range_type(0, lclMaterial.extent(0)), functor);
+      material               = ghostedMaterial->getLocalViewDevice(Tpetra::Access::ReadOnly);
+      invMaterial            = local_inv_material_type("material", material.extent(0), dim, dim);
+      lcl_dist               = local_dist_type("dist", material.extent(0), dim);
+      TensorInversion<local_ordinal_type, typename material_type::dual_view_type::t_dev_const_um, local_inv_material_type> functor(material, invMaterial);
+      Kokkos::parallel_for("MueLu:TensorMaterialDistanceFunctor::inversion", range_type(0, material.extent(0)), functor);
     }
   }
 
@@ -369,18 +371,29 @@ class TensorMaterialDistanceFunctor {
     // where
     // S = inv(material(col))
 
+    //
+    impl_scalar_type fro_row  = implATS::zero();
+    impl_scalar_type fro_col  = implATS::zero();
+    impl_scalar_type diff_fro = implATS::zero();
+    for (size_t j = 0; j < material.extent(1); ++j) {
+      fro_row += material(row, j) * material(row, j);
+      fro_col += material(col, j) * material(col, j);
+      diff_fro += (material(row, j) - material(col, j)) * (material(row, j) - material(col, j));
+    }
+    // std::cout << "diff_fro: " << diff_fro << std::endl;
+
     // row material
     impl_scalar_type d_row = implATS::zero();
     {
-      auto matrix_row_material = Kokkos::subview(material, row, Kokkos::ALL(), Kokkos::ALL());
-      auto dist                = Kokkos::subview(lcl_dist, row, Kokkos::ALL());
+      auto matrix_row_inv_material = Kokkos::subview(invMaterial, row, Kokkos::ALL(), Kokkos::ALL());
+      auto dist                    = Kokkos::subview(lcl_dist, row, Kokkos::ALL());
 
       for (size_t j = 0; j < coords.extent(1); ++j) {
         dist(j) = coords(row, j) - ghostedCoords(col, j);
       }
 
-      KokkosBatched::SerialTrsv<KokkosBatched::Uplo::Lower, KokkosBatched::Trans::NoTranspose, KokkosBatched::Diag::Unit, KokkosBatched::Algo::Trsv::Unblocked>::invoke(one, matrix_row_material, dist);
-      KokkosBatched::SerialTrsv<KokkosBatched::Uplo::Upper, KokkosBatched::Trans::NoTranspose, KokkosBatched::Diag::NonUnit, KokkosBatched::Algo::Trsv::Unblocked>::invoke(one, matrix_row_material, dist);
+      KokkosBatched::SerialTrsv<KokkosBatched::Uplo::Lower, KokkosBatched::Trans::NoTranspose, KokkosBatched::Diag::Unit, KokkosBatched::Algo::Trsv::Unblocked>::invoke(one, matrix_row_inv_material, dist);
+      KokkosBatched::SerialTrsv<KokkosBatched::Uplo::Upper, KokkosBatched::Trans::NoTranspose, KokkosBatched::Diag::NonUnit, KokkosBatched::Algo::Trsv::Unblocked>::invoke(one, matrix_row_inv_material, dist);
 
       for (size_t j = 0; j < coords.extent(1); ++j) {
         d_row += dist(j) * (coords(row, j) - ghostedCoords(col, j));
@@ -390,22 +403,25 @@ class TensorMaterialDistanceFunctor {
     // column material
     impl_scalar_type d_col = implATS::zero();
     {
-      auto matrix_col_material = Kokkos::subview(material, col, Kokkos::ALL(), Kokkos::ALL());
-      auto dist                = Kokkos::subview(lcl_dist, row, Kokkos::ALL());
+      auto matrix_col_inv_material = Kokkos::subview(invMaterial, col, Kokkos::ALL(), Kokkos::ALL());
+      auto dist                    = Kokkos::subview(lcl_dist, row, Kokkos::ALL());
 
       for (size_t j = 0; j < coords.extent(1); ++j) {
         dist(j) = coords(row, j) - ghostedCoords(col, j);
       }
 
-      KokkosBatched::SerialTrsv<KokkosBatched::Uplo::Lower, KokkosBatched::Trans::NoTranspose, KokkosBatched::Diag::Unit, KokkosBatched::Algo::Trsv::Unblocked>::invoke(one, matrix_col_material, dist);
-      KokkosBatched::SerialTrsv<KokkosBatched::Uplo::Upper, KokkosBatched::Trans::NoTranspose, KokkosBatched::Diag::NonUnit, KokkosBatched::Algo::Trsv::Unblocked>::invoke(one, matrix_col_material, dist);
+      KokkosBatched::SerialTrsv<KokkosBatched::Uplo::Lower, KokkosBatched::Trans::NoTranspose, KokkosBatched::Diag::Unit, KokkosBatched::Algo::Trsv::Unblocked>::invoke(one, matrix_col_inv_material, dist);
+      KokkosBatched::SerialTrsv<KokkosBatched::Uplo::Upper, KokkosBatched::Trans::NoTranspose, KokkosBatched::Diag::NonUnit, KokkosBatched::Algo::Trsv::Unblocked>::invoke(one, matrix_col_inv_material, dist);
 
       for (size_t j = 0; j < coords.extent(1); ++j) {
         d_col += dist(j) * (coords(row, j) - ghostedCoords(col, j));
       }
     }
 
-    return Kokkos::max(implATS::magnitude(d_row), implATS::magnitude(d_col));
+    auto normalized_diff = implATS::magnitude(diff_fro / Kokkos::max(implATS::magnitude(fro_row), implATS::magnitude(fro_col)));
+    magnitudeType factor = Kokkos::max(Kokkos::exp(5. * (normalized_diff - 0.6)), 1.0);
+    // std::cout << "factor " << factor << std::endl;
+    return Kokkos::max(implATS::magnitude(d_row), implATS::magnitude(d_col)) * factor;
   }
 };
 
