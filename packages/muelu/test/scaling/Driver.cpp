@@ -136,7 +136,7 @@ void reorderMatrix(Teuchos::RCP<Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdin
                    DistObjs&... distObjs) {
 #include <MueLu_UseShortNames.hpp>
   auto ordering  = Utilities::ReverseCuthillMcKee(*Axpetra);
-  auto sourceMap = Axpetra->getMap();
+  auto sourceMap     = Axpetra->getMap();
   auto comm      = sourceMap->getComm();
 
   Kokkos::View<GlobalOrdinal*, typename Node::memory_space> elementList("", sourceMap->getLocalNumElements());
