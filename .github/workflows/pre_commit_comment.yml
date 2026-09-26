@@ -48,6 +48,18 @@ jobs:
         unzip format_patch_message.zip
         MY_PR_NUMBER=$(cat pr_number)
         echo "PR_NUMBER=$MY_PR_NUMBER" >> $GITHUB_ENV
+        
+    - name: Post once to get comment id
+      id: get_comment_id
+      uses: mshick/add-pr-comment@ec328af66588ab8f77cdeb2c264f14aba45bbf59 # v3.12.0.8.3.12.0
+      with:
+        message-id: format-patch
+        issue:  ${{ env.PR_NUMBER }}
+        refresh-message-position: true
+
+    - run: |
+        MY_COMMENT_ID=${{ steps.get_comment_id.outputs.comment-id }}
+        echo "COMMENT_ID=$MY_COMMENT_ID" >> $GITHUB_ENV
 
     - name: Post artifact in issue comment
       uses: mshick/add-pr-comment@ec328af66588ab8f77cdeb2c264f14aba45bbf59 # v3.12.0.8.3.12.0
@@ -56,3 +68,9 @@ jobs:
         issue:  ${{ env.PR_NUMBER }}
         refresh-message-position: true
         message-path: ${{ runner.temp }}/artifacts/format_patch_message.txt
+        find: |
+          PR_NUMBER
+          COMMENT_ID
+        replace: |
+          ${{ env.PR_NUMBER }}
+          ${{ env.COMMENT_ID }}

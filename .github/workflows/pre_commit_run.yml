@@ -31,7 +31,7 @@ jobs:
     - if: ${{ hashFiles('format_patch.txt') != '' }}
       run: |
         echo "Your PR updated files that did not respect package formatting settings." >> format_patch_message.txt
-        echo "Please apply the patch given below. Alternatively you can download a patch file [here](${{ steps.upload-artf.outputs.artifact-url }})." >> format_patch_message.txt
+        echo "Please apply the patch given below using `commonTools/patchFromComment/getPatchFromComment.sh https://github.com/trilinos/Trilinos/pull/PR_NUMBER#issuecomment-COMMENT_ID`. Alternatively you can download a patch file [here](${{ steps.upload-artf.outputs.artifact-url }})." >> format_patch_message.txt
         echo "<details>" >> format_patch_message.txt
         echo "<summary>Patch</summary>" >> format_patch_message.txt
         echo "" >> format_patch_message.txt
