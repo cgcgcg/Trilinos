@@ -387,7 +387,8 @@ bool ParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     useMaterial_ = true;
   } else {
     // Material based aggregation
-    if (test_param_2list<std::string>(paramList, *defaultList, "aggregation: distance laplacian metric", "material")) {
+    if (test_param_2list<std::string>(paramList, *defaultList, "aggregation: distance laplacian metric", "material") ||
+        test_param_2list<std::string>(paramList, *defaultList, "aggregation: distance laplacian metric", "new_material")) {
       useMaterial_ = true;
     }
 

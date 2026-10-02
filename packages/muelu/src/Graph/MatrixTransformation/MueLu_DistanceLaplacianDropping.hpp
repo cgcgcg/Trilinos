@@ -409,6 +409,136 @@ class TensorMaterialDistanceFunctor {
   }
 };
 
+template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+class NewTensorMaterialDistanceFunctor {
+ private:
+  using matrix_type        = Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
+  using local_matrix_type  = typename matrix_type::local_matrix_device_type;
+  using scalar_type        = typename local_matrix_type::value_type;
+  using local_ordinal_type = LocalOrdinal;
+  using ATS                = KokkosKernels::ArithTraits<scalar_type>;
+  using impl_scalar_type   = typename ATS::val_type;
+  using implATS            = KokkosKernels::ArithTraits<impl_scalar_type>;
+  using magnitudeType      = typename implATS::magnitudeType;
+  using magATS             = KokkosKernels::ArithTraits<magnitudeType>;
+  using coords_type        = Xpetra::MultiVector<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>;
+  using local_coords_type  = typename coords_type::dual_view_type_const::t_dev;
+  using material_type      = Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
+  using memory_space       = typename local_matrix_type::memory_space;
+
+  using local_material_type     = typename material_type::dual_view_type_const::t_dev;
+  using local_inv_material_type = Kokkos::View<impl_scalar_type***, memory_space>;
+  using local_dist_type         = Kokkos::View<impl_scalar_type**, memory_space>;
+
+  Teuchos::RCP<coords_type> coordsMV;
+  Teuchos::RCP<coords_type> ghostedCoordsMV;
+
+  local_coords_type coords;
+  local_coords_type ghostedCoords;
+
+  local_material_type material;
+  local_inv_material_type invMaterial;
+
+  local_dist_type lcl_dist;
+
+  const scalar_type one = ATS::one();
+
+ public:
+  NewTensorMaterialDistanceFunctor(matrix_type& A, Teuchos::RCP<coords_type>& coords_, Teuchos::RCP<material_type>& material_) {
+    coordsMV = coords_;
+
+    auto importer = A.getCrsGraph()->getImporter();
+    if (!importer.is_null()) {
+      ghostedCoordsMV = Xpetra::MultiVectorFactory<magnitudeType, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), coordsMV->getNumVectors(), false);
+      ghostedCoordsMV->doImport(*coordsMV, *importer, Xpetra::INSERT);
+      coords        = coordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
+      ghostedCoords = ghostedCoordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
+    } else {
+      coords        = coordsMV->getLocalViewDevice(Tpetra::Access::ReadOnly);
+      ghostedCoords = coords;
+    }
+
+    {
+      Teuchos::RCP<material_type> ghostedMaterial;
+      if (!importer.is_null()) {
+        ghostedMaterial = Xpetra::MultiVectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(importer->getTargetMap(), material_->getNumVectors(), false);
+        ghostedMaterial->doImport(*material_, *importer, Xpetra::INSERT);
+      } else {
+        ghostedMaterial = material_;
+      }
+
+      using execution_space = typename Node::execution_space;
+      using range_type      = Kokkos::RangePolicy<LocalOrdinal, execution_space>;
+
+      local_ordinal_type dim = std::sqrt(material_->getNumVectors());
+      material               = ghostedMaterial->getLocalViewDevice(Tpetra::Access::ReadOnly);
+      invMaterial            = local_inv_material_type("material", material.extent(0), dim, dim);
+      lcl_dist               = local_dist_type("dist", material.extent(0), dim);
+      TensorInversion<local_ordinal_type, typename material_type::dual_view_type::t_dev_const_um, local_inv_material_type> functor(material, invMaterial);
+      Kokkos::parallel_for("MueLu:NewTensorMaterialDistanceFunctor::inversion", range_type(0, material.extent(0)), functor);
+    }
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  magnitudeType distance2(const local_ordinal_type row, const local_ordinal_type col) const {
+    // || x_row - x_col ||_S^2
+    // where
+    // S = inv(material(col))
+
+    //
+    impl_scalar_type fro_row  = implATS::zero();
+    impl_scalar_type fro_col  = implATS::zero();
+    impl_scalar_type diff_fro = implATS::zero();
+    for (size_t j = 0; j < material.extent(1); ++j) {
+      fro_row += material(row, j) * material(row, j);
+      fro_col += material(col, j) * material(col, j);
+      diff_fro += (material(row, j) - material(col, j)) * (material(row, j) - material(col, j));
+    }
+    // std::cout << "diff_fro: " << diff_fro << std::endl;
+
+    // row material
+    impl_scalar_type d_row = implATS::zero();
+    {
+      auto matrix_row_inv_material = Kokkos::subview(invMaterial, row, Kokkos::ALL(), Kokkos::ALL());
+      auto dist                    = Kokkos::subview(lcl_dist, row, Kokkos::ALL());
+
+      for (size_t j = 0; j < coords.extent(1); ++j) {
+        dist(j) = coords(row, j) - ghostedCoords(col, j);
+      }
+
+      KokkosBatched::SerialTrsv<KokkosBatched::Uplo::Lower, KokkosBatched::Trans::NoTranspose, KokkosBatched::Diag::Unit, KokkosBatched::Algo::Trsv::Unblocked>::invoke(one, matrix_row_inv_material, dist);
+      KokkosBatched::SerialTrsv<KokkosBatched::Uplo::Upper, KokkosBatched::Trans::NoTranspose, KokkosBatched::Diag::NonUnit, KokkosBatched::Algo::Trsv::Unblocked>::invoke(one, matrix_row_inv_material, dist);
+
+      for (size_t j = 0; j < coords.extent(1); ++j) {
+        d_row += dist(j) * (coords(row, j) - ghostedCoords(col, j));
+      }
+    }
+
+    // column material
+    impl_scalar_type d_col = implATS::zero();
+    {
+      auto matrix_col_inv_material = Kokkos::subview(invMaterial, col, Kokkos::ALL(), Kokkos::ALL());
+      auto dist                    = Kokkos::subview(lcl_dist, row, Kokkos::ALL());
+
+      for (size_t j = 0; j < coords.extent(1); ++j) {
+        dist(j) = coords(row, j) - ghostedCoords(col, j);
+      }
+
+      KokkosBatched::SerialTrsv<KokkosBatched::Uplo::Lower, KokkosBatched::Trans::NoTranspose, KokkosBatched::Diag::Unit, KokkosBatched::Algo::Trsv::Unblocked>::invoke(one, matrix_col_inv_material, dist);
+      KokkosBatched::SerialTrsv<KokkosBatched::Uplo::Upper, KokkosBatched::Trans::NoTranspose, KokkosBatched::Diag::NonUnit, KokkosBatched::Algo::Trsv::Unblocked>::invoke(one, matrix_col_inv_material, dist);
+
+      for (size_t j = 0; j < coords.extent(1); ++j) {
+        d_col += dist(j) * (coords(row, j) - ghostedCoords(col, j));
+      }
+    }
+
+    auto normalized_diff = implATS::magnitude(diff_fro / Kokkos::max(implATS::magnitude(fro_row), implATS::magnitude(fro_col)));
+    magnitudeType factor = Kokkos::max(Kokkos::exp(5. * (normalized_diff - 0.6)), 1.0);
+    // std::cout << "factor " << factor << std::endl;
+    return Kokkos::max(implATS::magnitude(d_row), implATS::magnitude(d_col)) * factor;
+  }
+};
+
 /*!
 Method to compute ghosted distance Laplacian diagonal.
 */

@@ -17,6 +17,7 @@
 #include <tuple>
 
 #include "Xpetra_Matrix.hpp"
+#include "Xpetra_IO.hpp"
 
 #include "MueLu_CoalesceDropFactory_kokkos_decl.hpp"
 
@@ -93,7 +94,7 @@ RCP<const ParameterList> CoalesceDropFactory_kokkos<Scalar, LocalOrdinal, Global
 #endif
   validParamList->getEntry("aggregation: strength-of-connection: matrix").setValidator(rcp(new Teuchos::StringValidator(Teuchos::tuple<std::string>("A", "distance laplacian", "MinvA"))));
   validParamList->getEntry("aggregation: strength-of-connection: measure").setValidator(rcp(new Teuchos::StringValidator(Teuchos::tuple<std::string>("smoothed aggregation", "signed smoothed aggregation", "signed ruge-stueben", "unscaled"))));
-  validParamList->getEntry("aggregation: distance laplacian metric").setValidator(rcp(new Teuchos::StringValidator(Teuchos::tuple<std::string>("unweighted", "material"))));
+  validParamList->getEntry("aggregation: distance laplacian metric").setValidator(rcp(new Teuchos::StringValidator(Teuchos::tuple<std::string>("unweighted", "material", "new_material"))));
   validParamList->getEntry("aggregation: Minv scheme").setValidator(rcp(new Teuchos::StringValidator(Teuchos::tuple<std::string>("spai", "fsai"))));
   validParamList->getEntry("aggregation: symmetrize graph after dropping").setValidator(rcp(new Teuchos::StringValidator(Teuchos::tuple<std::string>("no symmetrization", "weak wins", "strong wins"))));
   validParamList->getEntry("aggregation: symmetrize color graph").setValidator(rcp(new Teuchos::StringValidator(Teuchos::tuple<std::string>("weak wins", "strong wins"))));
@@ -132,7 +133,7 @@ void CoalesceDropFactory_kokkos<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Decl
   if (needCoords) {
     Input(currentLevel, "Coordinates");
     std::string distLaplMetric = pL.get<std::string>("aggregation: distance laplacian metric");
-    if (distLaplMetric == "material")
+    if ((distLaplMetric == "material") || (distLaplMetric == "new_material"))
       Input(currentLevel, "Material");
   }
   if (needM && (currentLevel.GetLevelID() != 0)) {
@@ -720,8 +721,10 @@ std::tuple<GlobalOrdinal, GlobalOrdinal, typename MueLu::LWGraph_kokkos<LocalOrd
   LO dofsPerNode = 1;
   Set(currentLevel, "DofsPerNode", dofsPerNode);
   Set(currentLevel, "Graph", graph);
-  if (needToBuildFilteredA)
+  if (needToBuildFilteredA) {
+    // Xpetra::IO<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Write("filteredA." + std::to_string(currentLevel.GetLevelID()), *filteredA);
     Set(currentLevel, "A", filteredA);
+  }
 
   return std::make_tuple(numDropped, (GlobalOrdinal)nnz_filtered, boundaryNodes);
 }

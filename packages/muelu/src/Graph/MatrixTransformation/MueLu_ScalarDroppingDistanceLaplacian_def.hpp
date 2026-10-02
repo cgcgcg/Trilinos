@@ -67,6 +67,41 @@ void ScalarDroppingDistanceLaplacian<Scalar, LocalOrdinal, GlobalOrdinal, Node, 
       auto dist2 = DistanceLaplacian::TensorMaterialDistanceFunctor(A, coords, material);
       runDroppingFunctors_on_dlap_inner(A, results, filtered_rowptr, nnz_filtered, boundaryNodes, boundaryNodesColMap, droppingMethod, threshold, aggregationMayCreateDirichlet, useBlocking, dist2, level, factory);
     }
+  } else if (distanceLaplacianMetric == "new_material") {
+    auto material = level.template Get<Teuchos::RCP<Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>>("Material", factory.GetFactory("Material").get());
+
+    if (factory.IsPrint(Runtime0)) {
+      auto spatialDim = coords->getNumVectors();
+      if (material->getNumVectors() == 1) {
+        factory.GetOStream(Runtime0) << "material scalar mean = " << material->getVector(0)->meanValue() << std::endl;
+      } else {
+        TEUCHOS_TEST_FOR_EXCEPTION(spatialDim * spatialDim != material->getNumVectors(), Exceptions::RuntimeError, "Need \"Material\" to have spatialDim^2 vectors.");
+        {
+          Teuchos::Array<Scalar> means(material->getNumVectors());
+          material->meanValue(means());
+          std::stringstream ss;
+          ss << "material tensor mean =" << std::endl;
+          size_t k = 0;
+          for (size_t i = 0; i < spatialDim; ++i) {
+            ss << "   ";
+            for (size_t j = 0; j < spatialDim; ++j) {
+              ss << means[k] << " ";
+              ++k;
+            }
+            ss << std::endl;
+          }
+          factory.GetOStream(Runtime0) << ss.str();
+        }
+      }
+    }
+
+    if (material->getNumVectors() == 1) {
+      auto dist2 = DistanceLaplacian::ScalarMaterialDistanceFunctor(A, coords, material);
+      runDroppingFunctors_on_dlap_inner(A, results, filtered_rowptr, nnz_filtered, boundaryNodes, boundaryNodesColMap, droppingMethod, threshold, aggregationMayCreateDirichlet, useBlocking, dist2, level, factory);
+    } else {
+      auto dist2 = DistanceLaplacian::NewTensorMaterialDistanceFunctor(A, coords, material);
+      runDroppingFunctors_on_dlap_inner(A, results, filtered_rowptr, nnz_filtered, boundaryNodes, boundaryNodesColMap, droppingMethod, threshold, aggregationMayCreateDirichlet, useBlocking, dist2, level, factory);
+    }
   }
 }
 }  // namespace MueLu
