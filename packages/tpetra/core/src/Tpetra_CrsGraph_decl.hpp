@@ -405,9 +405,9 @@ class CrsGraph : public RowGraph<LocalOrdinal, GlobalOrdinal, Node>,
   /// \brief Constructor specifying row and column Map and an existing graph to view.
   ///
   /// \param rowMap [in] New distribution of rows of the graph.
-  ///   Needs to have the same number of elements as the row map of originalGraph.
+  ///   Needs to have the same number of elements on each rank as the row map of originalGraph.
   /// \param colMap [in] Distribution of columns of the graph.
-  ///   Needs to have the same number of elements as the column map of originalGraph.
+  ///   Needs to have the same number of elements on each rank as the column map of originalGraph.
   /// \param originalGraph [in] The existing graph to view.
   ///
   /// \param params [in/out] Optional list of parameters.  If not
@@ -421,13 +421,13 @@ class CrsGraph : public RowGraph<LocalOrdinal, GlobalOrdinal, Node>,
   /// \brief Constructor specifying maps and an existing graph to view.
   ///
   /// \param rowMap [in] Distribution of rows of the graph.
-  ///   Needs to have the same number of elements as the row map of originalGraph.
+  ///   Needs to have the same number of elements on each rank as the row map of originalGraph.
   /// \param colMap [in] Distribution of columns of the graph.
-  ///   Needs to have the same number of elements as the column map of originalGraph.
+  ///   Needs to have the same number of elements on each rank as the column map of originalGraph.
   /// \param domainMap [in] Distribution of domain of the graph.
-  ///   Needs to have the same number of elements as the domain map of originalGraph.
+  ///   Needs to have the same number of elements on each rank as the domain map of originalGraph.
   /// \param domainMap [in] Distribution of range of the graph.
-  ///   Needs to have the same number of elements as the range map of originalGraph.
+  ///   Needs to have the same number of elements on each rank as the range map of originalGraph.
   /// \param originalGraph [in] The existing graph to view.
   ///
   /// \param params [in/out] Optional list of parameters.  If not
