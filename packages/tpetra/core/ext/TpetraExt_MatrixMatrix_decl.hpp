@@ -97,11 +97,11 @@ template <class Scalar,
           class GlobalOrdinal,
           class Node>
 void Multiply(
-    const Teuchos::RCP<const BlockCrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node> >& A,
+    const Teuchos::RCP<const BlockCrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>& A,
     bool transposeA,
-    const Teuchos::RCP<const BlockCrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node> >& B,
+    const Teuchos::RCP<const BlockCrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>& B,
     bool transposeB,
-    Teuchos::RCP<BlockCrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node> >& C,
+    Teuchos::RCP<BlockCrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>& C,
     const std::string& label = std::string());
 
 /** Given CrsMatrix objects A and B, compute B := scalarB*B + scalarA*Op(A).
@@ -159,16 +159,16 @@ template <class Scalar,
           class LocalOrdinal,
           class GlobalOrdinal,
           class Node>
-Teuchos::RCP<CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node> >
+Teuchos::RCP<CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
 add(const Scalar& alpha,
     const bool transposeA,
     const CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& A,
     const Scalar& beta,
     const bool transposeB,
     const CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& B,
-    const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node> >& domainMap = Teuchos::null,
-    const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node> >& rangeMap  = Teuchos::null,
-    const Teuchos::RCP<Teuchos::ParameterList>& params                           = Teuchos::null);
+    const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node>>& domainMap = Teuchos::null,
+    const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node>>& rangeMap  = Teuchos::null,
+    const Teuchos::RCP<Teuchos::ParameterList>& params                          = Teuchos::null);
 
 /// \brief Compute the sparse matrix sum <tt>C = scalarA * Op(A) +
 ///   scalarB * Op(B)</tt>, where Op(X) is either X or its transpose.
@@ -216,9 +216,9 @@ void add(const Scalar& alpha,
          const bool transposeB,
          const CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& B,
          CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& C,
-         const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node> >& domainMap = Teuchos::null,
-         const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node> >& rangeMap  = Teuchos::null,
-         const Teuchos::RCP<Teuchos::ParameterList>& params                           = Teuchos::null);
+         const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node>>& domainMap = Teuchos::null,
+         const Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node>>& rangeMap  = Teuchos::null,
+         const Teuchos::RCP<Teuchos::ParameterList>& params                          = Teuchos::null);
 
 /// \brief Compute the sparse matrix sum <tt>C = scalarA * Op(A) +
 ///   scalarB * Op(B)</tt>, where Op(X) is either X or its transpose.
@@ -265,7 +265,7 @@ void Add(
     const CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& B,
     bool transposeB,
     Scalar scalarB,
-    Teuchos::RCP<CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node> >& C);
+    Teuchos::RCP<CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>& C);
 
 /// \brief Compute the sparse matrix sum <tt>C = scalarA * Op(A) +
 ///   scalarB * Op(B)</tt>, where Op(X) is either X or its transpose.
@@ -307,7 +307,7 @@ void Add(
     const CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& B,
     bool transposeB,
     Scalar scalarB,
-    const Teuchos::RCP<CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node> >& C);
+    const Teuchos::RCP<CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>& C);
 
 /** Given CrsMatrix objects A, B and C, and Vector Dinv, form the product C = (I-omega * Dinv A)*B
     In a parallel setting, A and B need not have matching distributions,
@@ -390,7 +390,7 @@ template <class Scalar,
 void mult_A_B_newmatrix(
     BlockCrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Aview,
     BlockCrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Bview,
-    Teuchos::RCP<BlockCrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node> >& C);
+    Teuchos::RCP<BlockCrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>& C);
 
 template <class Scalar,
           class LocalOrdinal,
@@ -437,9 +437,9 @@ template <class Scalar,
           class Node>
 void import_and_extract_views(
     const CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& M,
-    Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node> > targetMap,
+    Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node>> targetMap,
     CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Mview,
-    Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node> > prototypeImporter,
+    Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node>> prototypeImporter,
     bool userAssertsThereAreNoRemotes,
     const std::string& label,
     const Teuchos::RCP<Teuchos::ParameterList>& params);
@@ -450,9 +450,9 @@ template <class Scalar,
           class Node>
 void import_and_extract_views(
     const BlockCrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& M,
-    Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node> > targetMap,
+    Teuchos::RCP<const Map<LocalOrdinal, GlobalOrdinal, Node>> targetMap,
     BlockCrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Mview,
-    Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node> > prototypeImporter,
+    Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node>> prototypeImporter,
     bool userAssertsThereAreNoRemotes);
 
 template <class Scalar,
@@ -470,6 +470,23 @@ template <class Scalar,
           class GlobalOrdinal,
           class Node,
           class LocalOrdinalViewType>
+void host_mult_A_B_newmatrix(
+    CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Aview,
+    CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Bview,
+    const LocalOrdinalViewType& Acol2Brow,
+    const LocalOrdinalViewType& Acol2Irow,
+    const LocalOrdinalViewType& Bcol2Ccol,
+    const LocalOrdinalViewType& Icol2Ccol,
+    CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& C,
+    Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node>> Cimport,
+    const std::string& label,
+    const Teuchos::RCP<Teuchos::ParameterList>& params);
+
+template <class Scalar,
+          class LocalOrdinal,
+          class GlobalOrdinal,
+          class Node,
+          class LocalOrdinalViewType>
 void kokkos_kernels_mult_A_B_newmatrix(
     CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Aview,
     CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Bview,
@@ -478,7 +495,7 @@ void kokkos_kernels_mult_A_B_newmatrix(
     const LocalOrdinalViewType& Bcol2Ccol,
     const LocalOrdinalViewType& Icol2Ccol,
     CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& C,
-    Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node> > Cimport,
+    Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node>> Cimport,
     const std::string& label,
     const Teuchos::RCP<Teuchos::ParameterList>& params);
 
@@ -495,9 +512,27 @@ void host_mult_A_B_reuse(
     const LocalOrdinalViewType& Bcol2Ccol_dev,
     const LocalOrdinalViewType& Icol2Ccol_dev,
     CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& C,
-    Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node> > Cimport,
+    Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node>> Cimport,
     const std::string& label,
     const Teuchos::RCP<Teuchos::ParameterList>& params);
+
+template <class Scalar,
+          class LocalOrdinal,
+          class GlobalOrdinal,
+          class Node,
+          class LocalOrdinalViewType>
+void host_jacobi_A_B_newmatrix(typename Teuchos::ScalarTraits<Scalar>::magnitudeType omega,
+                               const Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Dinv,
+                               CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Aview,
+                               CrsMatrixStruct<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Bview,
+                               const LocalOrdinalViewType& targetMapToOrigRow,
+                               const LocalOrdinalViewType& targetMapToImportRow,
+                               const LocalOrdinalViewType& Bcol2Ccol,
+                               const LocalOrdinalViewType& Icol2Ccol,
+                               CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& C,
+                               Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node>> Cimport,
+                               const std::string& label,
+                               const Teuchos::RCP<Teuchos::ParameterList>& params);
 
 template <class Scalar,
           class LocalOrdinal,
@@ -513,7 +548,7 @@ void kokkos_kernels_jacobi_A_B_newmatrix(typename Teuchos::ScalarTraits<Scalar>:
                                          const LocalOrdinalViewType& Bcol2Ccol,
                                          const LocalOrdinalViewType& Icol2Ccol,
                                          CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& C,
-                                         Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node> > Cimport,
+                                         Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node>> Cimport,
                                          const std::string& label,
                                          const Teuchos::RCP<Teuchos::ParameterList>& params);
 
@@ -531,7 +566,7 @@ void host_jacobi_A_B_reuse(typename Teuchos::ScalarTraits<Scalar>::magnitudeType
                            const LocalOrdinalViewType& Bcol2Ccol_dev,
                            const LocalOrdinalViewType& Icol2Ccol_dev,
                            CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& C,
-                           Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node> > Cimport,
+                           Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node>> Cimport,
                            const std::string& label,
                            const Teuchos::RCP<Teuchos::ParameterList>& params);
 
@@ -550,7 +585,7 @@ struct KernelWrappers {
                                                        const LocalOrdinalViewType& Bcol2Ccol,
                                                        const LocalOrdinalViewType& Icol2Ccol,
                                                        CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& C,
-                                                       Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node> > Cimport,
+                                                       Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node>> Cimport,
                                                        const std::string& label                           = std::string(),
                                                        const Teuchos::RCP<Teuchos::ParameterList>& params = Teuchos::null);
 
@@ -561,7 +596,7 @@ struct KernelWrappers {
                                                    const LocalOrdinalViewType& Bcol2Ccol,
                                                    const LocalOrdinalViewType& Icol2Ccol,
                                                    CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& C,
-                                                   Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node> > Cimport,
+                                                   Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node>> Cimport,
                                                    const std::string& label                           = std::string(),
                                                    const Teuchos::RCP<Teuchos::ParameterList>& params = Teuchos::null);
 };
@@ -584,7 +619,7 @@ struct KernelWrappers2 {
                                                          const LocalOrdinalViewType& Bcol2Ccol,
                                                          const LocalOrdinalViewType& Icol2Ccol,
                                                          CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& C,
-                                                         Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node> > Cimport,
+                                                         Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node>> Cimport,
                                                          const std::string& label                           = std::string(),
                                                          const Teuchos::RCP<Teuchos::ParameterList>& params = Teuchos::null);
 
@@ -597,7 +632,7 @@ struct KernelWrappers2 {
                                                      const LocalOrdinalViewType& Bcol2Ccol,
                                                      const LocalOrdinalViewType& Icol2Ccol,
                                                      CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& C,
-                                                     Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node> > Cimport,
+                                                     Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node>> Cimport,
                                                      const std::string& label                           = std::string(),
                                                      const Teuchos::RCP<Teuchos::ParameterList>& params = Teuchos::null);
 };
@@ -618,7 +653,7 @@ struct KernelWrappers3 {
                                                          const LocalOrdinalViewType& Pcol2Ccol,
                                                          const LocalOrdinalViewType& PIcol2Ccol,
                                                          CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Ac,
-                                                         Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node> > Acimport,
+                                                         Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node>> Acimport,
                                                          const std::string& label                           = std::string(),
                                                          const Teuchos::RCP<Teuchos::ParameterList>& params = Teuchos::null);
 
@@ -630,7 +665,7 @@ struct KernelWrappers3 {
                                                      const LocalOrdinalViewType& Pcol2Ccol,
                                                      const LocalOrdinalViewType& PIcol2Ccol,
                                                      CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Ac,
-                                                     Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node> > Acimport,
+                                                     Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node>> Acimport,
                                                      const std::string& label                           = std::string(),
                                                      const Teuchos::RCP<Teuchos::ParameterList>& params = Teuchos::null);
 
@@ -641,7 +676,7 @@ struct KernelWrappers3 {
                                                           const LocalOrdinalViewType& Pcol2Ccol,
                                                           const LocalOrdinalViewType& PIcol2Ccol,
                                                           CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Ac,
-                                                          Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node> > Acimport,
+                                                          Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node>> Acimport,
                                                           const std::string& label                           = std::string(),
                                                           const Teuchos::RCP<Teuchos::ParameterList>& params = Teuchos::null);
 
@@ -652,7 +687,7 @@ struct KernelWrappers3 {
                                                       const LocalOrdinalViewType& Pcol2Ccol,
                                                       const LocalOrdinalViewType& PIcol2Ccol,
                                                       CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& Ac,
-                                                      Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node> > Acimport,
+                                                      Teuchos::RCP<const Import<LocalOrdinal, GlobalOrdinal, Node>> Acimport,
                                                       const std::string& label                           = std::string(),
                                                       const Teuchos::RCP<Teuchos::ParameterList>& params = Teuchos::null);
 };
