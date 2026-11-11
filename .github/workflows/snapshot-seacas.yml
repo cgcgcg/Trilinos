@@ -12,14 +12,14 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    if: ${{ github.repository == 'trilinos/Trilinos' }}
+    # if: ${{ github.repository == 'trilinos/Trilinos' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
-        id: generate-token
-        with:
-          client-id: ${{ secrets.SNAPSHOT_APP_ID }}
-          private-key: ${{ secrets.SNAPSHOT_APP_PRIVATE_KEY }}
+      # - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+      #   id: generate-token
+      #   with:
+      #     client-id: ${{ secrets.SNAPSHOT_APP_ID }}
+      #     private-key: ${{ secrets.SNAPSHOT_APP_PRIVATE_KEY }}
 
       - name: Clone Trilinos
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -33,6 +33,7 @@ jobs:
           repository: sandialabs/seacas
           ref: master
           path: seacas
+          fetch-depth: 0
 
       - name: Configure git
         run: |
@@ -41,20 +42,25 @@ jobs:
 
       - name: Snapshot SEACAS
         run: |
-          seacas/cmake/tribits/snapshot.py --skip-commit --orig-dir=seacas/packages/seacas/ --dest-dir=trilinos/packages/seacas/
-          cd trilinos
+          cd seacas
+          cmake/tribits/python_utils/snapshot-dir.py --skip-commit --orig-dir=packages/seacas/ --dest-dir=../Trilinos/packages/seacas/ || true
+          cd ../Trilinos
+          echo "Switched to Trilinos"
           git restore packages/seacas/libraries/ioss/src/private_copy_fmt
           git restore packages/seacas/libraries/suplib_cpp/fmt
           git restore packages/seacas/libraries/aprepro_lib/fmt
           git restore packages/seacas/libraries/ioss/cmake/Dependencies.cmake
           git restore packages/seacas/libraries/suplib_cpp/cmake/Dependencies.cmake
           git restore packages/seacas/scripts/CMakeLists.txt
+          git add *
+          git commit -m "SEACAS snapshot"
+          git status
 
       - name: Create/update PR
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           path: Trilinos
-          token: ${{ steps.generate-token.outputs.token }}
+          # token: ${{ steps.generate-token.outputs.token }}
           commit-message: "Snapshot SEACAS"
           title: "Snapshot of SEACAS"
           body: |
