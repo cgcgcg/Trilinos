@@ -13,10 +13,15 @@
 #include <Xpetra_Matrix.hpp>
 #include <Xpetra_MatrixMatrix.hpp>
 
+#include "Kokkos_Abort.hpp"
+#include "Kokkos_Printf.hpp"
 #include "MueLu_EdgeProlongatorPatternFactory_decl.hpp"
 
 #include "MueLu_Monitor.hpp"
+#include "Teuchos_Assert.hpp"
+#include "Teuchos_OrdinalTraits.hpp"
 #include "Teuchos_ScalarTraits.hpp"
+#include "MueLu_Behavior.hpp"
 
 namespace MueLu {
 
@@ -135,7 +140,163 @@ void EdgeProlongatorPatternFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::B
 
   auto Ppattern = filtered->getCrsGraph();
 
+  if (Behavior::debug()) {
+    CheckPattern(Dc, Ppattern);
+  }
+
   Set(coarseLevel, "Ppattern", Ppattern);
+}
+
+template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+bool EdgeProlongatorPatternFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::CheckPattern(RCP<Matrix>& Dc, RCP<const CrsGraph>& Ppattern) const {
+  // Ppattern is the sparsity pattern for all admissible edge prolongators Pe.
+  // The constraints on Pe are
+  //  Pe*Dc = D*Pn.
+  // The vectorized form of the equation is
+  //  X*vec(P) = vec(D*Pn).
+  // A solution candidate that we want to use is
+  //  vec(P) := X^T * (X*X^T)^\dagger * vec(D*Pn).
+  // X*X^T is a block diagonal matrix with blocks corresponding to rows of Ppattern*Dc (i.e. fine edges).
+  // The block sizes correspond to the number of nonzero entries in each row of Ppattern*Dc (i.e. a set of coarse nodes).
+  // On such a diagonal block, X*X^T corresponds to the restriction of Dc^T*Dc (a Laplacian-like operator) to the set of coarse nodes.
+  // Generally, such a subblock is singular with the constant vector being in the nullspace.
+  // What we do not want is that the nullspace has dimension > 1.
+  // We check if the subblock has more than one connected component.
+  // If we find more than one component for a fine edge e then we will need to make the pattern Ppattern in row e denser.
+  // A denser row e implies more coarse nodes in Ppattern*Dc.
+
+  using execution_space = typename Node::execution_space;
+  // using memory_space    = typename Node::memory_space;
+  using range_type = Kokkos::RangePolicy<LocalOrdinal, execution_space>;
+
+  // Compute graph of Ppattern*Dc
+  RCP<Matrix> absPe_absDc;
+  {
+    const auto one = Teuchos::ScalarTraits<Scalar>::one();
+    auto absDc     = MatrixFactory::BuildCopy(Dc);
+    absDc->setAllToScalar(one);
+
+    auto absPe = MatrixFactory::Build(Ppattern);
+    absPe->setAllToScalar(one);
+    absPe->fillComplete();
+
+    absPe_absDc = MatrixMatrix::Multiply(*absPe, false, *absDc, false, GetOStream(Statistics2), true, true);
+  }
+
+  // Dct_Dc ghosted to column map of absPe_absDc
+  RCP<Matrix> ghosted_Dct_Dc;
+  {
+    // Compute Dc^T * Dc
+    RCP<Matrix> Dct_Dc = MatrixMatrix::Multiply(*Dc, true, *Dc, false, GetOStream(Statistics2), true, true);
+
+    auto importer = absPe_absDc->getCrsGraph()->getImporter();
+
+    // ghost Dc^T * Dc
+    if (!importer.is_null())
+      ghosted_Dct_Dc = MatrixFactory::Build(Dct_Dc, *importer);
+    else
+      ghosted_Dct_Dc = Dct_Dc;
+  }
+
+  // Check that Dc^T*Dc has a single component on the column entries of each row of Ppattern*Dc.
+  LocalOrdinal numBadFineEdges = 0;
+  {
+    auto lcl_Dct_Dc        = ghosted_Dct_Dc->getLocalMatrixDevice();
+    auto lcl_absPe_absDc   = absPe_absDc->getLocalMatrixDevice();
+    auto constraints_range = range_type(0, lcl_absPe_absDc.numRows());
+
+    auto reachable = Kokkos::View<LocalOrdinal*>(Kokkos::ViewAllocateWithoutInitializing("reachable"), lcl_absPe_absDc.nnz());
+
+    auto lcl_rowmap_Dct_Dc      = ghosted_Dct_Dc->getRowMap()->getLocalMap();
+    auto lcl_colmap_Dct_Dc      = ghosted_Dct_Dc->getColMap()->getLocalMap();
+    auto lcl_rowmap_absPe_absDc = absPe_absDc->getRowMap()->getLocalMap();
+    auto lcl_colmap_absPe_absDc = absPe_absDc->getColMap()->getLocalMap();
+
+    const auto LO_INVALID = Teuchos::OrdinalTraits<LocalOrdinal>::invalid();
+
+    Kokkos::parallel_reduce(
+        constraints_range, KOKKOS_LAMBDA(const LocalOrdinal m, LocalOrdinal& myNumBadFineEdges) {
+          // get row of graph of Pe*Dc
+          auto row_Pe_Dc = lcl_absPe_absDc.rowConst(m);
+          if (row_Pe_Dc.length > 0) {
+            auto offset    = lcl_absPe_absDc.graph.row_map(m);
+            auto offsetEnd = lcl_absPe_absDc.graph.row_map(m + 1);
+            // Create initial set of coarse nodes with an entry in row_Pe_Dc as single entry.
+            {
+              // Grab an entry (m, n) of Pe_Dc
+              auto n_clid = row_Pe_Dc.colidx(0);
+              auto n_gid  = lcl_colmap_absPe_absDc.getGlobalElement(n_clid);
+              auto n_rlid = lcl_rowmap_Dct_Dc.getLocalElement(n_gid);
+              TEUCHOS_ASSERT(n_rlid != LO_INVALID);
+              reachable(offset) = n_rlid;
+            }
+            LocalOrdinal previouslyNumReachable = 0;
+            LocalOrdinal numReachable           = 1;
+
+            // continue looping until we find no connected entries anymore
+            while (previouslyNumReachable < numReachable) {
+              LocalOrdinal newlyFound = 0;
+              // loop over current index set of coarse nodes
+              for (LocalOrdinal l = 0; l < numReachable; ++l) {
+                auto i_rlid     = reachable(offset + l);
+                auto row_Dct_Dc = lcl_Dct_Dc.rowConst(i_rlid);
+                // loop over entries (i, j) in row i of Dct_Dc
+                for (int kk = 0; kk < row_Dct_Dc.length; ++kk) {
+                  auto j_clid = row_Dct_Dc.colidx(kk);
+                  auto j_gid  = lcl_colmap_Dct_Dc.getGlobalElement(j_clid);
+                  auto j_rlid = lcl_rowmap_Dct_Dc.getLocalElement(j_gid);
+                  TEUCHOS_ASSERT(j_rlid != LO_INVALID);
+
+                  // Check if j is in row m of Pe_Dc
+                  bool inRow = false;
+                  for (LocalOrdinal k = 0; k < row_Pe_Dc.length; ++k) {
+                    auto n_clid = row_Pe_Dc.colidx(k);
+                    auto n_gid  = lcl_colmap_absPe_absDc.getGlobalElement(n_clid);
+                    if (n_gid == j_gid) {
+                      inRow = true;
+                      break;
+                    }
+                  }
+                  if (!inRow)
+                    continue;
+
+                  // Check if j is already in the index set. Add it if not.
+                  bool found = false;
+                  for (LocalOrdinal k = 0; k < numReachable + newlyFound; ++k) {
+                    if (reachable(offset + k) == j_rlid) {
+                      found = true;
+                      break;
+                    }
+                  }
+                  if (!found) {
+#ifdef HAVE_MUELU_DEBUG
+                    if (numReachable + newlyFound == row_Pe_Dc.length) {
+                      // We should never be able to get here.
+                      Kokkos::abort("Found too many entries in subblock");
+                    }
+#endif
+                    reachable(offset + numReachable + newlyFound) = j_rlid;
+                    ++newlyFound;
+                  }
+                }
+              }
+              previouslyNumReachable = numReachable;
+              numReachable           = numReachable + newlyFound;
+            }
+
+            if (numReachable != row_Pe_Dc.length) {
+              ++myNumBadFineEdges;
+              Kokkos::printf("multiple components for row_Pe_Dc %i: %i < %i\n", m, numReachable, row_Pe_Dc.length);
+            }
+          }
+        },
+        numBadFineEdges);
+  }
+
+  GetOStream(Statistics0) << "CheckEdgeProlongatorPattern: number of constraints with multiple components = " << numBadFineEdges << std::endl;
+
+  TEUCHOS_ASSERT(numBadFineEdges == 0);
+  return (numBadFineEdges == 0);
 }
 
 }  // namespace MueLu

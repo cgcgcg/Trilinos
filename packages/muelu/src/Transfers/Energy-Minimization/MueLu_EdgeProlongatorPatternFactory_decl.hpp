@@ -65,6 +65,8 @@ class EdgeProlongatorPatternFactory : public TwoLevelFactoryBase {
 
   //@}
 
+  bool CheckPattern(RCP<Matrix>& Dc, RCP<const CrsGraph>& Ppattern) const;
+
 };  // class EdgeProlongatorFactory
 
 }  // namespace MueLu
