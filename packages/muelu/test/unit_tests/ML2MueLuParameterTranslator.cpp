@@ -81,6 +81,7 @@ TEUCHOS_UNIT_TEST(ML2MueLuParameterTranslator, SA_plus_translate) {
   goldList.set("sa: eigenvalue estimate num iterations", 10);
   goldList.set("smoother: type", "RELAXATION");
   goldList.set("smoother: pre or post", "both");
+  goldList.set("repartition: partitioner", "zoltan");
   goldList.set("repartition: start level", 2);
   goldList.set("repartition: put on single proc", 5000);
   goldList.set("coarse: type", "klu");
@@ -132,6 +133,7 @@ TEUCHOS_UNIT_TEST(ML2MueLuParameterTranslator, SA_plus_translate_plus_MueLu) {
   goldList.set("smoother: pre or post", "both");
   goldList.set("repartition: start level", 2);
   goldList.set("repartition: put on single proc", 5000);
+  goldList.set("repartition: partitioner", "zoltan");
   goldList.set("coarse: type", "klu");
   goldList.set("coarse: max size", 128);
   goldList.sublist("smoother: params").set("relaxation: type", "Symmetric Gauss-Seidel");
@@ -197,6 +199,7 @@ TEUCHOS_UNIT_TEST(ML2MueLuParameterTranslator, Maxwell1_translate) {
   goldList.sublist("maxwell1: 22list").set("multigrid algorithm", "unsmoothed");
   goldList.sublist("maxwell1: 22list").set("aggregation: type", "uncoupled");
   goldList.sublist("maxwell1: 22list").set("aggregation: backend", "host");
+  goldList.sublist("maxwell1: 22list").set("repartition: partitioner", "zoltan");
   goldList.sublist("maxwell1: 22list").set("smoother: type", "none");
   goldList.sublist("maxwell1: 22list").set("coarse: type", "none");
   goldList.sublist("maxwell1: 22list").set("rap: fix zero diagonals", true);

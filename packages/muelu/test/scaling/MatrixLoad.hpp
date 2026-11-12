@@ -7,6 +7,7 @@
 // *****************************************************************************
 // @HEADER
 
+#include "Teuchos_ParameterList.hpp"
 #ifndef MATRIXLOAD_HPP
 #include <cstdio>
 #include <iomanip>
@@ -32,6 +33,7 @@
 #include "MueLu_Zoltan2Interface.hpp"
 #include "MueLu_RepartitionFactory_decl.hpp"
 #include "MueLu_RepartitionUtilities.hpp"
+#include <MueLu_ML2MueLuParameterTranslator.hpp>
 
 #include <MueLu.hpp>
 
@@ -109,11 +111,21 @@ void MatrixLoad(Teuchos::RCP<const Teuchos::Comm<int> >& comm, Xpetra::Underlyin
   bool needMaterial    = true;
   bool needMass        = false;
   if (!paramList.is_null()) {
-    needCoordinates = ParameterListInterpreter::needCoordinates(*paramList);
-    needBlockNumber = ParameterListInterpreter::needBlockNumber(*paramList);
-    needMaterial    = ParameterListInterpreter::needMaterial(*paramList);
-    needMass        = ParameterListInterpreter::needMass(*paramList);
-    if (paramList->isSublist("Run1") && paramList->sublist("Run1").isSublist("MueLu")) {
+    RCP<Teuchos::ParameterList> mueluParamList;
+    std::string syntaxStr = "parameterlist: syntax";
+    if (paramList->isParameter(syntaxStr) && paramList->get<std::string>(syntaxStr) == "ml") {
+      mueluParamList = Teuchos::rcp(new Teuchos::ParameterList(*paramList));
+      mueluParamList->remove(syntaxStr);
+      mueluParamList = MueLu::ML2MueLuParameterTranslator::translate(*mueluParamList, "");
+    } else {
+      mueluParamList = paramList;
+    }
+
+    needCoordinates = ParameterListInterpreter::needCoordinates(*mueluParamList);
+    needBlockNumber = ParameterListInterpreter::needBlockNumber(*mueluParamList);
+    needMaterial    = ParameterListInterpreter::needMaterial(*mueluParamList);
+    needMass        = ParameterListInterpreter::needMass(*mueluParamList);
+    if (mueluParamList->isSublist("Run1") && mueluParamList->sublist("Run1").isSublist("MueLu")) {
       auto mueluList = paramList->sublist("Run1").sublist("MueLu");
       needCoordinates |= ParameterListInterpreter::needCoordinates(mueluList);
       needBlockNumber |= ParameterListInterpreter::needBlockNumber(mueluList);

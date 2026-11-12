@@ -313,7 +313,6 @@ Teuchos::RCP<Teuchos::ParameterList> ML2MueLuParameterTranslator::SetParameterLi
   } else {
     paramList.set("repartition: start level", 2);
   }
-  paramList.set("repartition: partitioner", "zoltan");
 
   // ML sets this to 5000
   if (!paramList.isParameter("repartition: put on single proc")) {
@@ -560,6 +559,9 @@ Teuchos::RCP<Teuchos::ParameterList> ML2MueLuParameterTranslator::SetParameterLi
   }
   // Add the MueLu parameters to the translated list
   translatedList->setParameters(mueluList);
+
+  if (!translatedList->isType<std::string>("repartition: partitioner"))
+    translatedList->set("repartition: partitioner", "zoltan");
 
   if (defaultVals == "Maxwell") {
     // ML used a flat list for Maxwell1.
