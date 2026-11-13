@@ -562,6 +562,8 @@ Teuchos::RCP<Teuchos::ParameterList> ML2MueLuParameterTranslator::SetParameterLi
 
   if (!translatedList->isType<std::string>("repartition: partitioner"))
     translatedList->set("repartition: partitioner", "zoltan");
+  if (!translatedList->isType<bool>("repartition: remap parts"))
+    translatedList->set("repartition: remap parts", false);
 
   if (defaultVals == "Maxwell") {
     // ML used a flat list for Maxwell1.
