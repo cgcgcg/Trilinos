@@ -1,6 +1,88 @@
 ###############################################################################
 #                                                                             #
-# Trilinos Release 17.3.0 Release Notes                     November XX, 2026 #
+# Trilinos Release 18.0.0 Release Notes                     December XX, 2026 #
+#                                                                             #
+###############################################################################
+
+
+Compadre:
+
+  - Inclusion of version 1.7.6
+    https://github.com/trilinos/Trilinos/pull/15894
+
+
+Framework:
+
+  - Addition of a Spack package repository to minimize breakage caused by
+    Kokkos or Trilinos version updates
+    https://github.com/trilinos/spack_wrappers
+
+  - Testing with CompSim configuration
+    https://github.com/trilinos/Trilinos/pull/15727
+
+
+Kokkos, KokkosKernels:
+
+  - Inclusion of version 5.3.0
+    https://github.com/trilinos/Trilinos/pull/15900
+
+
+Ifpack2:
+
+  - Amesos2 subdomain solvers for Additive Schwarz were not correctly updated
+    when matrix values changed.
+    https://github.com/trilinos/Trilinos/pull/15910
+    
+
+Intrepid2:
+
+  - Add a Partial-Assembly (Matrix-Free) Operator for Tensor-Product Integrals
+    https://github.com/trilinos/Trilinos/pull/15871
+
+
+Phalanx:
+
+  - Simplify the TemplateManager
+    https://github.com/trilinos/Trilinos/pull/15927
+    Please see also https://github.com/orgs/trilinos/discussions/15941
+
+
+Piro:
+
+  - Time-integrated and sum-over-times objectives in transient optimization
+    https://github.com/trilinos/Trilinos/pull/15864
+    
+
+SEACAS:
+
+  - Update to v2026-11-12
+    https://github.com/trilinos/Trilinos/pull/15945
+
+
+STK:
+
+  - Inclusion of version 5.33.2
+    https://github.com/trilinos/Trilinos/pull/15946
+
+
+Tempus:
+
+  - Adjoint sensitivities for distributed-in-time responses and index-1 DAEs
+    https://github.com/trilinos/Trilinos/pull/15849
+    
+
+Thyra:
+
+  - Addition of simple toTpetra() conversion routines.
+    https://github.com/trilinos/Trilinos/pull/15874
+
+  - Correctly handle off-diagonal blocks in DefaultBlockedTriangularLinearOpWithSolve
+    https://github.com/trilinos/Trilinos/pull/15953
+
+
+###############################################################################
+#                                                                             #
+# Trilinos Release 17.3.0 Release Notes                      November 4, 2026 #
 #                                                                             #
 ###############################################################################
 
